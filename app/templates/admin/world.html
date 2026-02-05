@@ -1,0 +1,107 @@
+{% extends "layouts/base.html" %}
+{% block title %}{{ t("world_map") }}{% endblock %}
+{% set body_class = "admin-theme" %}
+
+{% block head %}{% endblock %}
+
+{% block content %}
+<div class="admin-board">
+
+    <div class="admin-hero">
+        <div>
+            <div class="admin-title">{{ t("world_map") }}</div>
+            <div class="admin-sub">{{ t("world_map_sub") }}</div>
+        </div>
+        <div class="admin-actions">
+            <a class="btn btn-admin" href="{{ url_for('admin.dashboard') }}">{{ t("back_to_dashboard") }}</a>
+        </div>
+    </div>
+
+    <div class="admin-panel">
+        <div class="admin-globe large">
+            <iframe id="worldMapFrame"
+                    class="admin-map-frame"
+                    title="{{ t("google_map") }}"
+                    loading="lazy"
+                    referrerpolicy="no-referrer-when-downgrade"
+                    src="https://www.google.com/maps?q=0,0&z=2&output=embed"></iframe>
+        </div>
+        <div class="admin-map-meta">
+            <span class="admin-map-chip">
+                {{ t("lat") }}:
+                <input id="worldMapLatInput" class="admin-map-input" type="number" step="0.000001">
+            </span>
+            <span class="admin-map-chip">
+                {{ t("lng") }}:
+                <input id="worldMapLngInput" class="admin-map-input" type="number" step="0.000001">
+            </span>
+            <button id="worldMapUpdate" class="admin-map-action" type="button">
+                {{ t("update_map") }}
+            </button>
+            <a id="worldMapOpen"
+               class="admin-map-action"
+               href="#"
+               target="_blank"
+               rel="noopener">
+                {{ t("open_in_maps") }}
+            </a>
+        </div>
+        <div class="small text-muted mt-2">
+            {{ t("map_hint") }}
+        </div>
+        <button id="worldMapLocate" class="admin-map-locate" type="button">
+            {{ t("use_my_location") }}
+        </button>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const scanPoints = {{ scan_points|default([])|tojson }};
+const latInput = document.getElementById("worldMapLatInput");
+const lngInput = document.getElementById("worldMapLngInput");
+const openEl = document.getElementById("worldMapOpen");
+const frameEl = document.getElementById("worldMapFrame");
+const updateBtn = document.getElementById("worldMapUpdate");
+const locateBtn = document.getElementById("worldMapLocate");
+
+function updateMap(lat, lng) {
+    const latNum = Number(lat);
+    const lngNum = Number(lng);
+    if (!Number.isFinite(latNum) || !Number.isFinite(lngNum)) return;
+    const latFixed = latNum.toFixed(6);
+    const lngFixed = lngNum.toFixed(6);
+    if (latInput) latInput.value = latFixed;
+    if (lngInput) lngInput.value = lngFixed;
+    if (openEl) {
+        openEl.href = "https://www.google.com/maps?q=" + latFixed + "," + lngFixed;
+    }
+    if (frameEl) {
+        frameEl.src = "https://www.google.com/maps?q=" + latFixed + "," + lngFixed + "&z=12&output=embed";
+    }
+}
+
+const defaultPoint = (scanPoints && scanPoints.length > 0)
+    ? scanPoints[0]
+    : { lat: 11.5564, lng: 104.9282 };
+
+updateMap(defaultPoint.lat, defaultPoint.lng);
+
+if (updateBtn) {
+    updateBtn.addEventListener("click", () => {
+        updateMap(latInput.value, lngInput.value);
+    });
+}
+
+if (locateBtn && navigator.geolocation) {
+    locateBtn.addEventListener("click", () => {
+        navigator.geolocation.getCurrentPosition(
+            (pos) => updateMap(pos.coords.latitude, pos.coords.longitude),
+            () => alert("{{ t("location_unavailable") }}")
+        );
+    });
+}
+</script>
+{% endblock %}

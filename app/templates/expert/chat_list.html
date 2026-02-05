@@ -1,5 +1,5 @@
 {% extends "layouts/base.html" %}
-{% block title %}Expert Chats{% endblock %}
+{% block title %}{{ t("expert_chats_title") }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid mt-4">
@@ -11,18 +11,18 @@
             {% for c in chats %}
                 <li class="list-group-item d-flex justify-content-between">
                     <div>
-                        <strong>Farmer ID:</strong> {{ c.farmer_id }}<br>
+                        <strong>{{ t("farmer_id") }}:</strong> {{ c.farmer_id }}<br>
                         <small>{{ c.message[:80] }}...</small>
                     </div>
                     <a href="{{ url_for('expert.reply_chat', farmer_id=c.farmer_id) }}"
                        class="btn btn-sm btn-success">
-                        Reply
+                        {{ t("reply") }}
                     </a>
                 </li>
             {% endfor %}
         </ul>
     {% else %}
-        <p>No farmer messages</p>
+        <p>{{ t("no_farmer_messages") }}</p>
     {% endif %}
 
 </div>

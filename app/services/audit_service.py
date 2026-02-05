@@ -2,13 +2,16 @@ from flask_login import current_user
 from app.extensions import db
 from app.models.audit_log import AuditLog
 
-def log_action(action, target_type=None, target_id=None):
+
+def log_action(action, target_user=None, detail=None):
+    if not current_user.is_authenticated:
+        return
+
     log = AuditLog(
-        user_id=current_user.id if current_user.is_authenticated else None,
-        username=current_user.username if current_user.is_authenticated else "System",
+        user_id=current_user.id,
         action=action,
-        target_type=target_type,
-        target_id=target_id
+        target_user=target_user,
+        detail=detail
     )
     db.session.add(log)
     db.session.commit()

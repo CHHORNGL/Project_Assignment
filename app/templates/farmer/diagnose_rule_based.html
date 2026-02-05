@@ -1,0 +1,302 @@
+{% extends "layouts/farmer_dashboard_base.html" %}
+{% block title %}Full Rule-Based Inference{% endblock %}
+
+{% block content %}
+<div class="container-fluid d-flex justify-content-center">
+    <div class="card shadow-sm guided-card" style="max-width: 880px; width:100%;">
+        <div class="card-body">
+
+            <h4 class="mb-2 text-success">
+                 Full Rule-Based Inference
+            </h4>
+
+            <p class="text-muted mb-4">
+                This guided interface uses only the rule-based expert system.
+                Select a crop, then confirm symptoms through the wizard.
+            </p>
+
+            <div class="guided-steps">
+                <div class="guided-step active" data-step="1">1. Select Crop</div>
+                <div class="guided-step" data-step="2">2. Answer Questions</div>
+            </div>
+
+            <form method="POST" id="guided-diagnosis-form">
+
+                <!-- ===============================
+                     STEP 1: CROP SELECTION
+                =============================== -->
+                <section class="guided-panel" id="step-1">
+                    <div class="form-group mb-3">
+                        <label class="font-weight-bold">
+                            Crop
+                        </label>
+                        <select name="crop_id" id="crop-select" class="form-control" required>
+                            <option value="" disabled selected>
+                                -- Select crop --
+                            </option>
+                            {% for crop in crops %}
+                            <option value="{{ crop.id }}">
+                                {{ localize(crop, "name") }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="{{ url_for('farmer.dashboard') }}"
+                           class="btn btn-outline-secondary">
+                            Back
+                        </a>
+                        <button type="button" class="btn btn-success px-4" id="go-step-2" disabled>
+                            Next
+                        </button>
+                    </div>
+                </section>
+
+                <!-- ===============================
+                     STEP 2: SYMPTOMS SELECTION
+                =============================== -->
+                <section class="guided-panel d-none" id="step-2">
+                    <div class="mb-3 d-flex justify-content-between align-items-center flex-wrap">
+                        <div>
+                            <div class="font-weight-bold">Guided Questions</div>
+                            <div class="text-muted small">Answer Yes/No to refine diagnosis.</div>
+                        </div>
+                        <div class="guided-counter">
+                            Confirmed: <span id="selected-count">0</span>
+                        </div>
+                    </div>
+
+                    <div class="guided-question-card">
+                        <div class="guided-progress mb-3">
+                            <div class="progress">
+                                <div class="progress-bar" id="question-progress" role="progressbar" style="width: 0%"></div>
+                            </div>
+                            <div class="text-muted small mt-2">
+                                Answered: <span id="answered-count">0</span>/<span id="total-count">0</span>
+                            </div>
+                        </div>
+                        <div class="text-muted small mb-2">Does the crop show this symptom?</div>
+                        <div class="guided-question" id="question-text">Select a crop to begin.</div>
+                        <div class="guided-actions mt-3">
+                            <button type="button" class="btn btn-outline-danger" id="answer-no" disabled>No</button>
+                            <button type="button" class="btn btn-success" id="answer-yes" disabled>Yes</button>
+                            <button type="button" class="btn btn-outline-primary" id="answer-skip" disabled>Skip</button>
+                        </div>
+                        <div class="guided-meta mt-3">
+                            <button type="button" class="btn btn-link p-0" id="undo-last" disabled>Undo last answer</button>
+                        </div>
+                    </div>
+
+                    <div class="guided-selected mt-4">
+                        <div class="font-weight-bold mb-2">Confirmed Symptoms</div>
+                        <div id="confirmed-list" class="confirmed-list text-muted small">None yet.</div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mt-4">
+                        <button type="button" class="btn btn-outline-secondary" id="back-step-1">
+                            Back
+                        </button>
+                        <button type="submit" class="btn btn-success px-4" id="submit-rule-based" disabled>
+                            Diagnose Now
+                        </button>
+                    </div>
+                </section>
+
+            </form>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    const symptomsByCrop = {{ symptoms_by_crop|tojson }};
+    const rulesByCrop = {{ rules_by_crop|tojson }};
+
+    const cropSelect = document.getElementById("crop-select");
+    const goStep2 = document.getElementById("go-step-2");
+    const step1 = document.getElementById("step-1");
+    const step2 = document.getElementById("step-2");
+    const backStep1 = document.getElementById("back-step-1");
+    const questionText = document.getElementById("question-text");
+    const answerYes = document.getElementById("answer-yes");
+    const answerNo = document.getElementById("answer-no");
+    const answerSkip = document.getElementById("answer-skip");
+    const undoLast = document.getElementById("undo-last");
+    const selectedCount = document.getElementById("selected-count");
+    const confirmedList = document.getElementById("confirmed-list");
+    const submitButton = document.getElementById("submit-rule-based");
+    const answeredCount = document.getElementById("answered-count");
+    const totalCount = document.getElementById("total-count");
+    const questionProgress = document.getElementById("question-progress");
+
+    let currentCropId = null;
+    let currentSymptomId = null;
+    let yesSet = new Set();
+    let noSet = new Set();
+    let skipSet = new Set();
+    let history = [];
+
+    function setStep(step) {
+        if (step === 1) {
+            step1.classList.remove("d-none");
+            step2.classList.add("d-none");
+        } else {
+            step1.classList.add("d-none");
+            step2.classList.remove("d-none");
+        }
+        document.querySelectorAll(".guided-step").forEach((el) => {
+            el.classList.toggle("active", Number(el.dataset.step) === step);
+        });
+    }
+
+    function ensureHiddenInputs() {
+        document.querySelectorAll("input[name='symptoms']").forEach((el) => el.remove());
+        yesSet.forEach((id) => {
+            const input = document.createElement("input");
+            input.type = "hidden";
+            input.name = "symptoms";
+            input.value = String(id);
+            document.getElementById("guided-diagnosis-form").appendChild(input);
+        });
+    }
+
+    function updateSelectedCount() {
+        selectedCount.textContent = yesSet.size;
+        submitButton.disabled = yesSet.size === 0;
+    }
+
+    function updateProgress() {
+        const total = (symptomsByCrop[currentCropId] || []).length;
+        const answered = yesSet.size + noSet.size + skipSet.size;
+        totalCount.textContent = total;
+        answeredCount.textContent = answered;
+        const percent = total ? Math.min(100, Math.round((answered / total) * 100)) : 0;
+        questionProgress.style.width = `${percent}%`;
+    }
+
+    function updateConfirmedList() {
+        const lookup = {};
+        (symptomsByCrop[currentCropId] || []).forEach((s) => {
+            lookup[s.id] = s.name;
+        });
+        if (!yesSet.size) {
+            confirmedList.textContent = "None yet.";
+            return;
+        }
+        const names = Array.from(yesSet).map((id) => lookup[id]).filter(Boolean);
+        confirmedList.textContent = names.join(", ");
+    }
+
+    function pickNextSymptom() {
+        const rules = rulesByCrop[currentCropId] || [];
+        const scores = {};
+        const lookup = {};
+        (symptomsByCrop[currentCropId] || []).forEach((s) => {
+            lookup[s.id] = s.name;
+        });
+
+        rules.forEach((rule) => {
+            const hasAllYes = Array.from(yesSet).every((id) => rule.includes(id));
+            const hasNo = rule.some((id) => noSet.has(id));
+            if (!hasAllYes || hasNo) return;
+            rule.forEach((id) => {
+                if (!yesSet.has(id) && !noSet.has(id) && !skipSet.has(id)) {
+                    scores[id] = (scores[id] || 0) + 1;
+                }
+            });
+        });
+
+        const sorted = Object.entries(scores)
+            .sort((a, b) => b[1] - a[1])
+            .map(([id]) => Number(id));
+
+        if (!sorted.length) {
+            currentSymptomId = null;
+            questionText.textContent = "No more guided questions. You can submit now.";
+            answerYes.disabled = true;
+            answerNo.disabled = true;
+            answerSkip.disabled = true;
+            return;
+        }
+
+        currentSymptomId = sorted[0];
+        questionText.textContent = lookup[currentSymptomId] || "Symptom";
+        answerYes.disabled = false;
+        answerNo.disabled = false;
+        answerSkip.disabled = false;
+    }
+
+    cropSelect.addEventListener("change", () => {
+        goStep2.disabled = !cropSelect.value;
+    });
+
+    goStep2.addEventListener("click", () => {
+        if (!cropSelect.value) return;
+        currentCropId = Number(cropSelect.value);
+        yesSet = new Set();
+        noSet = new Set();
+        skipSet = new Set();
+        history = [];
+        ensureHiddenInputs();
+        updateSelectedCount();
+        updateConfirmedList();
+        updateProgress();
+        pickNextSymptom();
+        undoLast.disabled = true;
+        setStep(2);
+    });
+
+    backStep1.addEventListener("click", () => setStep(1));
+
+    answerYes.addEventListener("click", () => {
+        if (!currentSymptomId) return;
+        yesSet.add(currentSymptomId);
+        history.push({ id: currentSymptomId, value: "yes" });
+        ensureHiddenInputs();
+        updateSelectedCount();
+        updateConfirmedList();
+        updateProgress();
+        undoLast.disabled = false;
+        pickNextSymptom();
+    });
+
+    answerNo.addEventListener("click", () => {
+        if (!currentSymptomId) return;
+        noSet.add(currentSymptomId);
+        history.push({ id: currentSymptomId, value: "no" });
+        undoLast.disabled = false;
+        updateProgress();
+        pickNextSymptom();
+    });
+
+    answerSkip.addEventListener("click", () => {
+        if (!currentSymptomId) return;
+        skipSet.add(currentSymptomId);
+        history.push({ id: currentSymptomId, value: "skip" });
+        undoLast.disabled = false;
+        updateProgress();
+        pickNextSymptom();
+    });
+
+    undoLast.addEventListener("click", () => {
+        const last = history.pop();
+        if (!last) return;
+        if (last.value === "yes") {
+            yesSet.delete(last.id);
+            ensureHiddenInputs();
+        } else {
+            if (last.value === "no") {
+                noSet.delete(last.id);
+            } else {
+                skipSet.delete(last.id);
+            }
+        }
+        updateSelectedCount();
+        updateConfirmedList();
+        updateProgress();
+        undoLast.disabled = history.length === 0;
+        pickNextSymptom();
+    });
+</script>
+{% endblock %}

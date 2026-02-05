@@ -1,0 +1,831 @@
+{% extends "layouts/base.html" %}
+{% block title %}{{ t("translations_title") }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h1 class="h4 mb-1 font-weight-bold">
+                <i class="fas fa-language mr-2 text-primary"></i>
+                {{ t("translations_title") }}
+            </h1>
+            <div class="text-muted">{{ t("translations_sub") }}</div>
+        </div>
+        <a class="btn btn-outline-secondary" href="{{ url_for('admin.dashboard') }}">
+            {{ t("back_to_dashboard") }}
+        </a>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form method="GET" class="form-row align-items-end">
+                <div class="col-md-4 mb-2">
+                    <label class="small text-muted mb-1">{{ t("search") }}</label>
+                    <input type="text"
+                           name="q"
+                           value="{{ q }}"
+                           class="form-control"
+                           placeholder="{{ t("translations_search_placeholder") }}">
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label class="small text-muted mb-1">{{ t("translations_section") }}</label>
+                    <select name="section" class="form-control">
+                        <option value="crops" {% if current_section == "crops" %}selected{% endif %}>{{ t("translations_crops") }}</option>
+                        <option value="diseases" {% if current_section == "diseases" %}selected{% endif %}>{{ t("translations_diseases") }}</option>
+                        <option value="symptoms" {% if current_section == "symptoms" %}selected{% endif %}>{{ t("translations_symptoms") }}</option>
+                    </select>
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label class="small text-muted mb-1 d-block">{{ t("translations_missing_only") }}</label>
+                    <div class="form-check">
+                        <input class="form-check-input"
+                               type="checkbox"
+                               name="missing"
+                               value="1"
+                               id="missing-only"
+                               {% if missing_only %}checked{% endif %}>
+                        <label class="form-check-label" for="missing-only">
+                            {{ t("translations_missing_label") }}
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-2 mb-2">
+                    <button class="btn btn-primary w-100">{{ t("apply") }}</button>
+                </div>
+            </form>
+            <form method="POST" enctype="multipart/form-data" class="mt-3">
+                <div class="d-flex flex-wrap align-items-center" style="gap: 8px;">
+                    <button class="btn btn-outline-secondary btn-sm" name="action" value="export_all">
+                        <i class="fas fa-file-archive mr-1"></i>{{ t("export_all") }}
+                    </button>
+                    <div class="custom-file" style="width:240px;">
+                        <input type="file" class="custom-file-input" id="import-all" name="file" accept=".zip">
+                        <label class="custom-file-label" for="import-all">{{ t("choose_zip") }}</label>
+                    </div>
+                    <button class="btn btn-outline-primary btn-sm" name="action" value="import_all">
+                        <i class="fas fa-file-import mr-1"></i>{{ t("import_all") }}
+                    </button>
+                </div>
+            </form>
+            <form method="POST" action="{{ url_for('admin.translations_undo') }}" class="mt-2">
+                <button class="btn btn-outline-danger btn-sm" type="submit">
+                    <i class="fas fa-undo mr-1"></i>{{ t("undo_last_import") }}
+                </button>
+            </form>
+            <a href="{{ url_for('admin.translations_backups') }}"
+               class="btn btn-outline-secondary btn-sm mt-2">
+                <i class="fas fa-history mr-1"></i>{{ t("view_backups") }}
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header d-flex align-items-center justify-content-between">
+            <div class="font-weight-bold">{{ t("translations_keyboard") }}</div>
+            <div class="text-muted small">{{ t("translations_keyboard_hint") }}</div>
+        </div>
+        <div class="card-body">
+            <div class="khmer-keyboard">
+                <button class="kh-key" type="button" data-char="ក">ក</button>
+                <button class="kh-key" type="button" data-char="ខ">ខ</button>
+                <button class="kh-key" type="button" data-char="គ">គ</button>
+                <button class="kh-key" type="button" data-char="ឃ">ឃ</button>
+                <button class="kh-key" type="button" data-char="ង">ង</button>
+                <button class="kh-key" type="button" data-char="ច">ច</button>
+                <button class="kh-key" type="button" data-char="ឆ">ឆ</button>
+                <button class="kh-key" type="button" data-char="ជ">ជ</button>
+                <button class="kh-key" type="button" data-char="ឈ">ឈ</button>
+                <button class="kh-key" type="button" data-char="ញ">ញ</button>
+                <button class="kh-key" type="button" data-char="ដ">ដ</button>
+                <button class="kh-key" type="button" data-char="ឋ">ឋ</button>
+                <button class="kh-key" type="button" data-char="ឌ">ឌ</button>
+                <button class="kh-key" type="button" data-char="ឍ">ឍ</button>
+                <button class="kh-key" type="button" data-char="ណ">ណ</button>
+                <button class="kh-key" type="button" data-char="ត">ត</button>
+                <button class="kh-key" type="button" data-char="ថ">ថ</button>
+                <button class="kh-key" type="button" data-char="ទ">ទ</button>
+                <button class="kh-key" type="button" data-char="ធ">ធ</button>
+                <button class="kh-key" type="button" data-char="ន">ន</button>
+                <button class="kh-key" type="button" data-char="ប">ប</button>
+                <button class="kh-key" type="button" data-char="ផ">ផ</button>
+                <button class="kh-key" type="button" data-char="ព">ព</button>
+                <button class="kh-key" type="button" data-char="ភ">ភ</button>
+                <button class="kh-key" type="button" data-char="ម">ម</button>
+                <button class="kh-key" type="button" data-char="យ">យ</button>
+                <button class="kh-key" type="button" data-char="រ">រ</button>
+                <button class="kh-key" type="button" data-char="ល">ល</button>
+                <button class="kh-key" type="button" data-char="វ">វ</button>
+                <button class="kh-key" type="button" data-char="ស">ស</button>
+                <button class="kh-key" type="button" data-char="ហ">ហ</button>
+                <button class="kh-key" type="button" data-char="អ">អ</button>
+                <button class="kh-key" type="button" data-char="ា">ា</button>
+                <button class="kh-key" type="button" data-char="ិ">ិ</button>
+                <button class="kh-key" type="button" data-char="ី">ី</button>
+                <button class="kh-key" type="button" data-char="ឹ">ឹ</button>
+                <button class="kh-key" type="button" data-char="ឺ">ឺ</button>
+                <button class="kh-key" type="button" data-char="ុ">ុ</button>
+                <button class="kh-key" type="button" data-char="ូ">ូ</button>
+                <button class="kh-key" type="button" data-char="ួ">ួ</button>
+                <button class="kh-key" type="button" data-char="េ">េ</button>
+                <button class="kh-key" type="button" data-char="ែ">ែ</button>
+                <button class="kh-key" type="button" data-char="ៃ">ៃ</button>
+                <button class="kh-key" type="button" data-char="ោ">ោ</button>
+                <button class="kh-key" type="button" data-char="ៅ">ៅ</button>
+                <button class="kh-key" type="button" data-char="ំ">ំ</button>
+                <button class="kh-key" type="button" data-char="ះ">ះ</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===============================
+         CROPS
+    =============================== -->
+    <div class="card shadow-sm mb-4" id="crops">
+        <div class="card-header d-flex align-items-center justify-content-between">
+            <div class="font-weight-bold">{{ t("translations_crops") }}</div>
+            <div class="d-flex align-items-center" style="gap: 12px;">
+                <span class="text-muted small">{{ t("total_count", count=crops|length) }}</span>
+                <button class="btn btn-sm btn-outline-primary js-copy-en"
+                        type="button"
+                        data-section="crops">
+                    <i class="fas fa-copy mr-1"></i>{{ t("copy_en_to_kh") }}
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="translation-preview mb-3" id="preview-crops">
+                <div class="small text-muted">{{ t("translations_preview") }}</div>
+                <div class="preview-title">—</div>
+                <div class="preview-sub text-muted small">—</div>
+            </div>
+            <form method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="section" value="crops">
+                <input type="hidden" name="q" value="{{ q }}">
+                <input type="hidden" name="missing" value="{{ 1 if missing_only else 0 }}">
+                <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+                    <div class="text-muted small">{{ t("translations_hint") }}</div>
+                    <div class="d-flex flex-wrap" style="gap: 8px;">
+                        <button class="btn btn-sm btn-outline-secondary" name="action" value="export">
+                            <i class="fas fa-file-export mr-1"></i>{{ t("export_csv") }}
+                        </button>
+                        <button class="btn btn-sm btn-outline-primary js-ai-batch"
+                                type="button"
+                                data-section="crops">
+                            <i class="fas fa-robot mr-1"></i>{{ t("ai_translate_missing") }}
+                        </button>
+                        <button class="btn btn-sm btn-outline-primary js-ai-selected"
+                                type="button"
+                                data-section="crops">
+                            <i class="fas fa-magic mr-1"></i>{{ t("ai_translate_selected") }}
+                        </button>
+                        <div class="custom-file" style="width:220px;">
+                            <input type="file" class="custom-file-input" id="import-crops" name="file" accept=".csv">
+                            <label class="custom-file-label" for="import-crops">{{ t("choose_file") }}</label>
+                        </div>
+                        <button class="btn btn-sm btn-outline-primary" name="action" value="import">
+                            <i class="fas fa-file-import mr-1"></i>{{ t("import_csv") }}
+                        </button>
+                    </div>
+                </div>
+                <div class="table-responsive table-scroll">
+                    <table class="table table-bordered mb-0">
+                        <thead class="thead-light">
+                            <tr>
+                                <th style="width:48px">
+                                    <input type="checkbox" class="js-select-all" data-section="crops">
+                                </th>
+                                <th style="width:20%">{{ t("crop_name") }}</th>
+                                <th style="width:20%">{{ t("crop_name_kh") }}</th>
+                                <th style="width:30%">{{ t("description_label") }}</th>
+                                <th style="width:30%">{{ t("description_kh") }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for crop in crops %}
+                            <tr class="js-preview-row"
+                                data-preview-title="{{ crop.name }}"
+                                data-preview-sub="{{ crop.description or '-' }}">
+                                <td>
+                                    <input type="checkbox" class="js-row-select" data-section="crops">
+                                </td>
+                                <td class="align-middle">{{ crop.name }}</td>
+                                <td>
+                                    <div class="input-group input-group-sm">
+                                        <input type="text"
+                                           class="form-control form-control-sm"
+                                           name="crop_name_kh_{{ crop.id }}"
+                                           data-kh="1"
+                                           value="{{ crop.name_kh or '' }}">
+                                        <div class="input-group-append">
+                                            <button class="btn btn-outline-secondary js-ai-translate"
+                                                    type="button"
+                                                    data-text="{{ crop.name }}">
+                                                <i class="fas fa-robot"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="align-middle small text-muted">{{ crop.description or "-" }}</td>
+                                <td>
+                                    <div class="input-group input-group-sm">
+                                        <textarea class="form-control form-control-sm"
+                                              name="crop_desc_kh_{{ crop.id }}"
+                                              data-kh="1"
+                                              rows="2">{{ crop.description_kh or '' }}</textarea>
+                                        <div class="input-group-append">
+                                            <button class="btn btn-outline-secondary js-ai-translate"
+                                                    type="button"
+                                                    data-text="{{ crop.description or '' }}">
+                                                <i class="fas fa-robot"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-4">
+                                    {{ t("no_crops_found") }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="mt-3">
+                    <button class="btn btn-primary" name="action" value="save">{{ t("save_changes") }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===============================
+         DISEASES
+    =============================== -->
+    <div class="card shadow-sm mb-4" id="diseases">
+        <div class="card-header d-flex align-items-center justify-content-between">
+            <div class="font-weight-bold">{{ t("translations_diseases") }}</div>
+            <div class="d-flex align-items-center" style="gap: 12px;">
+                <span class="text-muted small">{{ t("total_count", count=diseases|length) }}</span>
+                <button class="btn btn-sm btn-outline-primary js-copy-en"
+                        type="button"
+                        data-section="diseases">
+                    <i class="fas fa-copy mr-1"></i>{{ t("copy_en_to_kh") }}
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="translation-preview mb-3" id="preview-diseases">
+                <div class="small text-muted">{{ t("translations_preview") }}</div>
+                <div class="preview-title">—</div>
+                <div class="preview-sub text-muted small">—</div>
+            </div>
+            <form method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="section" value="diseases">
+                <input type="hidden" name="q" value="{{ q }}">
+                <input type="hidden" name="missing" value="{{ 1 if missing_only else 0 }}">
+                <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+                    <div class="text-muted small">{{ t("translations_hint") }}</div>
+                    <div class="d-flex flex-wrap" style="gap: 8px;">
+                        <button class="btn btn-sm btn-outline-secondary" name="action" value="export">
+                            <i class="fas fa-file-export mr-1"></i>{{ t("export_csv") }}
+                        </button>
+                        <button class="btn btn-sm btn-outline-primary js-ai-batch"
+                                type="button"
+                                data-section="diseases">
+                            <i class="fas fa-robot mr-1"></i>{{ t("ai_translate_missing") }}
+                        </button>
+                        <button class="btn btn-sm btn-outline-primary js-ai-selected"
+                                type="button"
+                                data-section="diseases">
+                            <i class="fas fa-magic mr-1"></i>{{ t("ai_translate_selected") }}
+                        </button>
+                        <div class="custom-file" style="width:220px;">
+                            <input type="file" class="custom-file-input" id="import-diseases" name="file" accept=".csv">
+                            <label class="custom-file-label" for="import-diseases">{{ t("choose_file") }}</label>
+                        </div>
+                        <button class="btn btn-sm btn-outline-primary" name="action" value="import">
+                            <i class="fas fa-file-import mr-1"></i>{{ t("import_csv") }}
+                        </button>
+                    </div>
+                </div>
+                <div class="table-responsive table-scroll">
+                    <table class="table table-bordered mb-0">
+                        <thead class="thead-light">
+                            <tr>
+                                <th style="width:48px">
+                                    <input type="checkbox" class="js-select-all" data-section="diseases">
+                                </th>
+                                <th style="width:16%">{{ t("disease_name") }}</th>
+                                <th style="width:16%">{{ t("disease_name_kh") }}</th>
+                                <th style="width:14%">{{ t("crop_label") }}</th>
+                                <th style="width:27%">{{ t("symptoms_description_kh") }}</th>
+                                <th style="width:27%">{{ t("treatment_kh") }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for disease in diseases %}
+                            <tr class="js-preview-row"
+                                data-preview-title="{{ disease.name }}"
+                                data-preview-sub="{{ disease.description or '-' }}">
+                                <td>
+                                    <input type="checkbox" class="js-row-select" data-section="diseases">
+                                </td>
+                                <td class="align-middle">{{ disease.name }}</td>
+                                <td>
+                                    <div class="input-group input-group-sm">
+                                        <input type="text"
+                                           class="form-control form-control-sm"
+                                           name="disease_name_kh_{{ disease.id }}"
+                                           data-kh="1"
+                                           value="{{ disease.name_kh or '' }}">
+                                        <div class="input-group-append">
+                                            <button class="btn btn-outline-secondary js-ai-translate"
+                                                    type="button"
+                                                    data-text="{{ disease.name }}">
+                                                <i class="fas fa-robot"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="align-middle">{{ localize(disease.crop, "name", "-") }}</td>
+                                <td>
+                                    <div class="input-group input-group-sm">
+                                        <textarea class="form-control form-control-sm"
+                                              name="disease_desc_kh_{{ disease.id }}"
+                                              data-kh="1"
+                                              rows="2">{{ disease.description_kh or '' }}</textarea>
+                                        <div class="input-group-append">
+                                            <button class="btn btn-outline-secondary js-ai-translate"
+                                                    type="button"
+                                                    data-text="{{ disease.description or '' }}">
+                                                <i class="fas fa-robot"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="input-group input-group-sm">
+                                        <textarea class="form-control form-control-sm"
+                                              name="disease_treatment_kh_{{ disease.id }}"
+                                              data-kh="1"
+                                              rows="2">{{ disease.treatment_kh or '' }}</textarea>
+                                        <div class="input-group-append">
+                                            <button class="btn btn-outline-secondary js-ai-translate"
+                                                    type="button"
+                                                    data-text="{{ disease.treatment or '' }}">
+                                                <i class="fas fa-robot"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-4">
+                                    {{ t("no_diseases_found") }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="mt-3">
+                    <button class="btn btn-primary" name="action" value="save">{{ t("save_changes") }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===============================
+         SYMPTOMS
+    =============================== -->
+    <div class="card shadow-sm mb-4" id="symptoms">
+        <div class="card-header d-flex align-items-center justify-content-between">
+            <div class="font-weight-bold">{{ t("translations_symptoms") }}</div>
+            <div class="d-flex align-items-center" style="gap: 12px;">
+                <span class="text-muted small">{{ t("total_count", count=symptoms|length) }}</span>
+                <button class="btn btn-sm btn-outline-primary js-copy-en"
+                        type="button"
+                        data-section="symptoms">
+                    <i class="fas fa-copy mr-1"></i>{{ t("copy_en_to_kh") }}
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="translation-preview mb-3" id="preview-symptoms">
+                <div class="small text-muted">{{ t("translations_preview") }}</div>
+                <div class="preview-title">—</div>
+                <div class="preview-sub text-muted small">—</div>
+            </div>
+            <form method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="section" value="symptoms">
+                <input type="hidden" name="q" value="{{ q }}">
+                <input type="hidden" name="missing" value="{{ 1 if missing_only else 0 }}">
+                <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+                    <div class="text-muted small">{{ t("translations_hint") }}</div>
+                    <div class="d-flex flex-wrap" style="gap: 8px;">
+                        <button class="btn btn-sm btn-outline-secondary" name="action" value="export">
+                            <i class="fas fa-file-export mr-1"></i>{{ t("export_csv") }}
+                        </button>
+                        <button class="btn btn-sm btn-outline-primary js-ai-batch"
+                                type="button"
+                                data-section="symptoms">
+                            <i class="fas fa-robot mr-1"></i>{{ t("ai_translate_missing") }}
+                        </button>
+                        <button class="btn btn-sm btn-outline-primary js-ai-selected"
+                                type="button"
+                                data-section="symptoms">
+                            <i class="fas fa-magic mr-1"></i>{{ t("ai_translate_selected") }}
+                        </button>
+                        <div class="custom-file" style="width:220px;">
+                            <input type="file" class="custom-file-input" id="import-symptoms" name="file" accept=".csv">
+                            <label class="custom-file-label" for="import-symptoms">{{ t("choose_file") }}</label>
+                        </div>
+                        <button class="btn btn-sm btn-outline-primary" name="action" value="import">
+                            <i class="fas fa-file-import mr-1"></i>{{ t("import_csv") }}
+                        </button>
+                    </div>
+                </div>
+                <div class="table-responsive table-scroll">
+                    <table class="table table-bordered mb-0">
+                        <thead class="thead-light">
+                            <tr>
+                                <th style="width:48px">
+                                    <input type="checkbox" class="js-select-all" data-section="symptoms">
+                                </th>
+                                <th style="width:20%">{{ t("symptom_name") }}</th>
+                                <th style="width:20%">{{ t("symptom_name_kh") }}</th>
+                                <th style="width:30%">{{ t("description_label") }}</th>
+                                <th style="width:30%">{{ t("symptom_description_kh") }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for symptom in symptoms %}
+                            <tr class="js-preview-row"
+                                data-preview-title="{{ symptom.name }}"
+                                data-preview-sub="{{ symptom.description or '-' }}">
+                                <td>
+                                    <input type="checkbox" class="js-row-select" data-section="symptoms">
+                                </td>
+                                <td class="align-middle">{{ symptom.name }}</td>
+                                <td>
+                                    <div class="input-group input-group-sm">
+                                        <input type="text"
+                                           class="form-control form-control-sm"
+                                           name="symptom_name_kh_{{ symptom.id }}"
+                                           data-kh="1"
+                                           value="{{ symptom.name_kh or '' }}">
+                                        <div class="input-group-append">
+                                            <button class="btn btn-outline-secondary js-ai-translate"
+                                                    type="button"
+                                                    data-text="{{ symptom.name }}">
+                                                <i class="fas fa-robot"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="align-middle small text-muted">{{ symptom.description or "-" }}</td>
+                                <td>
+                                    <div class="input-group input-group-sm">
+                                        <textarea class="form-control form-control-sm"
+                                              name="symptom_desc_kh_{{ symptom.id }}"
+                                              data-kh="1"
+                                              rows="2">{{ symptom.description_kh or '' }}</textarea>
+                                        <div class="input-group-append">
+                                            <button class="btn btn-outline-secondary js-ai-translate"
+                                                    type="button"
+                                                    data-text="{{ symptom.description or '' }}">
+                                                <i class="fas fa-robot"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-4">
+                                    {{ t("no_symptoms_found") }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="mt-3">
+                    <button class="btn btn-primary" name="action" value="save">{{ t("save_changes") }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+<style>
+.translation-preview {
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    background: #f9fafb;
+}
+.preview-title {
+    font-weight: 600;
+}
+.kh-warning {
+    border-color: #f59e0b !important;
+    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.12);
+}
+.khmer-keyboard {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(36px, 1fr));
+    gap: 6px;
+}
+.kh-key {
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    background: #ffffff;
+    border-radius: 8px;
+    padding: 6px 4px;
+    text-align: center;
+    cursor: pointer;
+    font-weight: 600;
+}
+.kh-key:hover {
+    background: #f3f4f6;
+}
+.translation-progress {
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    background: #ffffff;
+    margin-bottom: 14px;
+}
+
+.dark-mode .translation-preview,
+.dark-mode .translation-progress {
+    background: #0f1623;
+    border-color: #1f2a37;
+    color: #e6eaf2;
+}
+
+.dark-mode .preview-sub,
+.dark-mode .preview-title,
+.dark-mode .translation-progress .small {
+    color: #e6eaf2 !important;
+}
+
+.dark-mode .kh-key {
+    background: #0f1623;
+    border-color: #1f2a37;
+    color: #e6eaf2;
+}
+</style>
+
+<div class="translation-progress" id="translation-progress" style="display:none;">
+    <div class="small text-muted mb-1">{{ t("translation_progress") }}</div>
+    <div class="progress">
+        <div class="progress-bar" role="progressbar" style="width:0%"></div>
+    </div>
+    <div class="small text-muted mt-1" id="translation-progress-text"></div>
+</div>
+
+<script>
+document.querySelectorAll(".custom-file-input").forEach((input) => {
+    input.addEventListener("change", () => {
+        const label = input.nextElementSibling;
+        if (label && input.files.length) {
+            label.textContent = input.files[0].name;
+        }
+    });
+});
+
+const khmerRegex = /[\u1780-\u17FF]/;
+const latinRegex = /[A-Za-z]/;
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+function updateKhmerWarning(input) {
+    const value = input.value || "";
+    if (!value.trim()) {
+        input.classList.remove("kh-warning");
+        return;
+    }
+    const hasKhmer = khmerRegex.test(value);
+    const hasLatin = latinRegex.test(value);
+    if (!hasKhmer && hasLatin) {
+        input.classList.add("kh-warning");
+    } else {
+        input.classList.remove("kh-warning");
+    }
+}
+
+document.querySelectorAll("[data-kh='1']").forEach((input) => {
+    updateKhmerWarning(input);
+    input.addEventListener("input", () => updateKhmerWarning(input));
+});
+
+document.querySelectorAll(".js-copy-en").forEach((btn) => {
+    btn.addEventListener("click", () => {
+        const section = btn.dataset.section;
+        const table = document.querySelector(`#${section} table`);
+        if (!table) return;
+        table.querySelectorAll("tbody tr").forEach((row) => {
+            const cells = row.querySelectorAll("td");
+            if (section === "crops") {
+                const nameEn = cells[0]?.textContent?.trim() || "";
+                const descEn = cells[2]?.textContent?.trim() || "";
+                const nameKh = row.querySelector("input[name^='crop_name_kh_']");
+                const descKh = row.querySelector("textarea[name^='crop_desc_kh_']");
+                if (nameKh && !nameKh.value.trim()) nameKh.value = nameEn;
+                if (descKh && !descKh.value.trim()) descKh.value = descEn;
+                if (nameKh) updateKhmerWarning(nameKh);
+                if (descKh) updateKhmerWarning(descKh);
+            }
+            if (section === "diseases") {
+                const nameEn = cells[0]?.textContent?.trim() || "";
+                const descEn = cells[3]?.textContent?.trim() || "";
+                const nameKh = row.querySelector("input[name^='disease_name_kh_']");
+                const descKh = row.querySelector("textarea[name^='disease_desc_kh_']");
+                const treatKh = row.querySelector("textarea[name^='disease_treatment_kh_']");
+                if (nameKh && !nameKh.value.trim()) nameKh.value = nameEn;
+                if (descKh && !descKh.value.trim()) descKh.value = descEn;
+                if (treatKh && !treatKh.value.trim()) treatKh.value = "";
+                if (nameKh) updateKhmerWarning(nameKh);
+                if (descKh) updateKhmerWarning(descKh);
+                if (treatKh) updateKhmerWarning(treatKh);
+            }
+            if (section === "symptoms") {
+                const nameEn = cells[0]?.textContent?.trim() || "";
+                const descEn = cells[2]?.textContent?.trim() || "";
+                const nameKh = row.querySelector("input[name^='symptom_name_kh_']");
+                const descKh = row.querySelector("textarea[name^='symptom_desc_kh_']");
+                if (nameKh && !nameKh.value.trim()) nameKh.value = nameEn;
+                if (descKh && !descKh.value.trim()) descKh.value = descEn;
+                if (nameKh) updateKhmerWarning(nameKh);
+                if (descKh) updateKhmerWarning(descKh);
+            }
+        });
+    });
+});
+
+document.querySelectorAll(".js-preview-row").forEach((row) => {
+    row.addEventListener("mouseenter", () => {
+        const section = row.closest(".card")?.id;
+        const preview = section ? document.querySelector(`#preview-${section}`) : null;
+        if (!preview) return;
+        const title = row.dataset.previewTitle || "—";
+        const sub = row.dataset.previewSub || "—";
+        const titleEl = preview.querySelector(".preview-title");
+        const subEl = preview.querySelector(".preview-sub");
+        if (titleEl) titleEl.textContent = title;
+        if (subEl) subEl.textContent = sub;
+    });
+});
+
+let lastFocused = null;
+document.querySelectorAll("[data-kh='1']").forEach((input) => {
+    input.addEventListener("focus", () => {
+        lastFocused = input;
+    });
+});
+
+document.querySelectorAll(".kh-key").forEach((btn) => {
+    btn.addEventListener("click", () => {
+        if (!lastFocused) return;
+        const char = btn.dataset.char || btn.textContent;
+        const start = lastFocused.selectionStart ?? lastFocused.value.length;
+        const end = lastFocused.selectionEnd ?? lastFocused.value.length;
+        const value = lastFocused.value;
+        lastFocused.value = value.slice(0, start) + char + value.slice(end);
+        const pos = start + char.length;
+        lastFocused.setSelectionRange(pos, pos);
+        lastFocused.focus();
+        updateKhmerWarning(lastFocused);
+    });
+});
+
+async function aiTranslate(text) {
+    const res = await fetch("/admin/translations/ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text })
+    });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || "Translation failed");
+    return data.translation;
+}
+
+function setProgress(current, total) {
+    const bar = document.querySelector(".translation-progress .progress-bar");
+    const text = document.getElementById("translation-progress-text");
+    const wrapper = document.getElementById("translation-progress");
+    if (!bar || !text || !wrapper) return;
+    const pct = total ? Math.round((current / total) * 100) : 0;
+    wrapper.style.display = "block";
+    bar.style.width = `${pct}%`;
+    text.textContent = `${current} / ${total}`;
+    if (current >= total) {
+        setTimeout(() => { wrapper.style.display = "none"; }, 1200);
+    }
+}
+
+document.querySelectorAll(".js-ai-translate").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+        const text = btn.dataset.text || "";
+        if (!text.trim()) return;
+        const target = btn.closest(".input-group")?.querySelector("[data-kh='1']");
+        if (!target) return;
+        btn.disabled = true;
+        try {
+            const translated = await aiTranslate(text);
+            target.value = translated;
+            updateKhmerWarning(target);
+        } catch (e) {
+            alert(e.message);
+        } finally {
+            btn.disabled = false;
+        }
+    });
+});
+
+document.querySelectorAll(".js-ai-batch").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+        const section = btn.dataset.section;
+        const card = document.getElementById(section);
+        if (!card) return;
+        btn.disabled = true;
+        const rows = Array.from(card.querySelectorAll("tbody tr"));
+        const tasks = [];
+        for (const row of rows) {
+            const targets = row.querySelectorAll("[data-kh='1']");
+            for (const target of targets) {
+                if (target.value.trim()) continue;
+                const sourceText = target.closest(".input-group")?.querySelector(".js-ai-translate")?.dataset?.text || "";
+                if (!sourceText.trim()) continue;
+                tasks.push({ target, sourceText });
+            }
+        }
+        let translatedCount = 0;
+        setProgress(0, tasks.length);
+        for (const task of tasks) {
+            try {
+                const translated = await aiTranslate(task.sourceText);
+                task.target.value = translated;
+                updateKhmerWarning(task.target);
+                translatedCount += 1;
+                setProgress(translatedCount, tasks.length);
+                if (translatedCount % 5 === 0) {
+                    await sleep(400);
+                }
+            } catch (e) {}
+        }
+        btn.disabled = false;
+    });
+});
+
+document.querySelectorAll(".js-ai-selected").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+        const section = btn.dataset.section;
+        const card = document.getElementById(section);
+        if (!card) return;
+        const rows = Array.from(card.querySelectorAll("tbody tr"))
+            .filter((row) => row.querySelector(".js-row-select")?.checked);
+        if (!rows.length) return;
+        btn.disabled = true;
+        const tasks = [];
+        for (const row of rows) {
+            const targets = row.querySelectorAll("[data-kh='1']");
+            for (const target of targets) {
+                if (target.value.trim()) continue;
+                const sourceText = target.closest(".input-group")?.querySelector(".js-ai-translate")?.dataset?.text || "";
+                if (!sourceText.trim()) continue;
+                tasks.push({ target, sourceText });
+            }
+        }
+        let translatedCount = 0;
+        setProgress(0, tasks.length);
+        for (const task of tasks) {
+            try {
+                const translated = await aiTranslate(task.sourceText);
+                task.target.value = translated;
+                updateKhmerWarning(task.target);
+                translatedCount += 1;
+                setProgress(translatedCount, tasks.length);
+                if (translatedCount % 5 === 0) {
+                    await sleep(400);
+                }
+            } catch (e) {}
+        }
+        btn.disabled = false;
+    });
+});
+
+document.querySelectorAll(".js-select-all").forEach((input) => {
+    input.addEventListener("change", () => {
+        const section = input.dataset.section;
+        const card = document.getElementById(section);
+        if (!card) return;
+        card.querySelectorAll(".js-row-select").forEach((row) => {
+            row.checked = input.checked;
+        });
+    });
+});
+</script>
+</div>
+{% endblock %}

@@ -1,5 +1,5 @@
 {% extends "layouts/base.html" %}
-{% block title %}Audit Logs{% endblock %}
+{% block title %}{{ t("audit_logs_title") }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
@@ -8,7 +8,8 @@
          PAGE HEADING
     =============================== -->
     <h1 class="h4 text-gray-800 mb-4">
-        🧾 System Audit Logs
+        <i class="fas fa-clipboard-list mr-2 text-primary"></i>
+        {{ t("system_audit_logs") }}
     </h1>
 
     <!-- ===============================
@@ -22,11 +23,11 @@
                     <thead class="thead-light">
                         <tr>
                             <th style="width:50px">#</th>
-                            <th>Admin</th>
-                            <th>Action</th>
-                            <th>Target</th>
-                            <th>Detail</th>
-                            <th style="width:160px">Date</th>
+                            <th>{{ t("admin_label") }}</th>
+                            <th>{{ t("action") }}</th>
+                            <th>{{ t("target_label") }}</th>
+                            <th>{{ t("detail") }}</th>
+                            <th style="width:160px">{{ t("date") }}</th>
                         </tr>
                     </thead>
 
@@ -37,7 +38,7 @@
 
                             <td>
                                 <strong>
-                                    {{ log.user.username if log.user else "System" }}
+                                    {{ log.user.username if log.user else t("system_label") }}
                                 </strong>
                             </td>
 
@@ -62,7 +63,7 @@
                         {% else %}
                         <tr>
                             <td colspan="6" class="text-center text-muted">
-                                No audit logs found
+                                {{ t("no_audit_logs_found") }}
                             </td>
                         </tr>
                         {% endfor %}

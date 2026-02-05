@@ -1,4 +1,4 @@
-{% extends "layouts/farmer_base.html" %}
+{% extends "layouts/farmer_dashboard_base.html" %}
 {% block title %}Diagnosis Result{% endblock %}
 
 {% block content %}
@@ -9,7 +9,7 @@
     =============================== -->
     <div class="border-bottom bg-white px-4 py-3">
         <h5 class="mb-0 text-success">
-            🌱 Diagnosis Result
+             Diagnosis Result
         </h5>
     </div>
 
@@ -24,7 +24,7 @@
         <div class="d-flex justify-content-end mb-4">
             <div class="bg-success text-white p-3 rounded"
                  style="max-width:70%;">
-                <strong>🧑‍🌾 Farmer Symptoms</strong>
+                <strong><i class="fas fa-seedling mr-2"></i>{{ t("farmer_symptoms") }}</strong>
                 <hr class="my-2 bg-white">
                 {{ diagnosis.symptoms }}
             </div>
@@ -38,20 +38,21 @@
                  style="max-width:70%;">
 
                 <strong class="text-success">
-                    🤖 System Diagnosis
+                    <i class="fas fa-microscope mr-2"></i>System Diagnosis
                 </strong>
                 <hr class="my-2">
 
                 <p class="mb-2">
-                    <strong>Crop:</strong>
-                    {{ diagnosis.crop_name }}
-                </p>
+                        <strong>{{ t("crop_label") }}:</strong>
+                        {{ localize(diagnosis.crop, "name", diagnosis.crop_name) }}
+                    </p>
 
                 {% if diagnosis.disease_name and diagnosis.disease_name != "Unknown" %}
+                    {% set disease_label = (diagnosis.disease.name_kh if current_lang == 'km' and diagnosis.disease and diagnosis.disease.name_kh else diagnosis.disease_name) %}
                     <p class="mb-2">
-                        <strong>Detected Disease:</strong>
+                        <strong>{{ t("disease_label") }}:</strong>
                         <span class="text-danger">
-                            {{ diagnosis.disease_name }}
+                            {{ disease_label }}
                         </span>
                     </p>
 
@@ -71,6 +72,18 @@
                         ❓ No disease could be confidently detected
                         based on the provided symptoms.
                     </div>
+                    {% if possible_diseases and possible_diseases|length > 0 %}
+                        <div class="mt-3">
+                            <div class="small text-muted mb-2">Possible diseases for this crop:</div>
+                            <div class="d-flex flex-wrap" style="gap:8px;">
+                                {% for d in possible_diseases %}
+                                    <span class="badge badge-info">
+                                        {{ d.name_kh if current_lang == 'km' and d.name_kh else d.name }}
+                                    </span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
                 {% endif %}
 
             </div>
@@ -84,7 +97,7 @@
                  style="max-width:70%;">
 
                 <strong class="text-primary">
-                    🧑‍⚕️ Expert Review
+                    <i class="fas fa-user-md mr-2"></i>Expert Review
                 </strong>
                 <hr class="my-2">
 
@@ -110,7 +123,7 @@
                     </span>
 
                     <p class="text-danger mb-0">
-                        ❌ This diagnosis was rejected by the expert.
+                        <i class="fas fa-times-circle mr-2"></i>This diagnosis was rejected by the expert.
                         Please submit a new diagnosis or ask the expert directly.
                     </p>
 
@@ -120,7 +133,7 @@
                     </span>
 
                     <p class="text-muted mb-0">
-                        ⏳ Your diagnosis is waiting for expert verification.
+                        <i class="far fa-clock mr-2"></i>Your diagnosis is waiting for expert verification.
                     </p>
                 {% endif %}
 
@@ -135,12 +148,12 @@
     <div class="border-top bg-light px-4 py-3 d-flex justify-content-between">
         <a href="{{ url_for('farmer.diagnose') }}"
            class="btn btn-outline-success btn-sm">
-            ➕ New Diagnosis
+            <i class="fas fa-plus-circle mr-2"></i>New Diagnosis
         </a>
 
         <a href="{{ url_for('farmer.chat') }}"
            class="btn btn-success btn-sm">
-            💬 Ask Expert
+            <i class="fas fa-comments mr-2"></i>Ask Expert
         </a>
     </div>
 

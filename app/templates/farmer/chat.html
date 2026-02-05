@@ -1,79 +1,51 @@
 {% extends "layouts/farmer_base.html" %}
-{% block title %}Ask Expert{% endblock %}
+{% block title %}{{ t("ask_expert") }}{% endblock %}
 
 {% block content %}
-<div class="container-fluid p-0" style="height: calc(100vh - 70px);">
+<div class="d-flex flex-column h-100">
 
-    <div class="row h-100">
-
-        <!-- LEFT PANEL (Chat History / Info) -->
-        <div class="col-md-3 border-end bg-white d-none d-md-flex flex-column">
-            <div class="p-3 border-bottom">
-                <h5 class="mb-0">🌾 Farmer Chat</h5>
-            </div>
-
-            <div class="p-3 small text-muted">
-                Ask experts about crop diseases, symptoms, and treatments.
-            </div>
-
-            <div class="mt-auto p-3">
-                <a href="{{ url_for('farmer.dashboard') }}"
-                   class="btn btn-outline-secondary btn-sm w-100">
-                    ← Back to Dashboard
-                </a>
-            </div>
-        </div>
-
-        <!-- CHAT AREA -->
-        <div class="col-md-9 d-flex flex-column bg-light">
-
-            <!-- CHAT MESSAGES -->
-            <div class="flex-grow-1 overflow-auto p-4">
-
-                {% if messages and messages|length > 0 %}
-                    {% for m in messages %}
-                        {% if m.sender == "farmer" %}
-                            <!-- Farmer message -->
-                            <div class="d-flex justify-content-end mb-3">
-                                <div class="p-3 rounded shadow-sm"
-                                     style="max-width:70%; background:#DCF8C6;">
-                                    {{ m.message }}
-                                </div>
-                            </div>
-                        {% else %}
-                            <!-- Expert / System -->
-                            <div class="d-flex justify-content-start mb-3">
-                                <div class="p-3 rounded shadow-sm bg-white">
-                                    {{ m.message }}
-                                </div>
-                            </div>
-                        {% endif %}
-                    {% endfor %}
-                {% else %}
-                    <div class="text-center text-muted mt-5">
-                        <h5>💬 Start a conversation</h5>
-                        <p>Ask anything about your crop problems</p>
+    {% if messages and messages|length > 0 %}
+        {% for m in messages %}
+            {% if m.sender == "farmer" %}
+                <!-- USER -->
+                <div class="d-flex justify-content-end mb-3">
+                    <div class="chat-bubble-user">
+                        {{ m.message }}
                     </div>
-                {% endif %}
-
-            </div>
-
-            <!-- INPUT AREA (ChatGPT style) -->
-            <form method="POST" class="border-top bg-white p-3">
-                <div class="input-group">
-                    <input type="text"
-                           name="message"
-                           class="form-control"
-                           placeholder="Ask about crop disease, symptoms, treatment..."
-                           required>
-                    <button class="btn btn-success px-4">
-                        Send
-                    </button>
                 </div>
-            </form>
-
+            {% else %}
+                <!-- AI / EXPERT -->
+                <div class="d-flex justify-content-start mb-3">
+                    <div class="chat-bubble-ai">
+                         {{ m.message }}
+                    </div>
+                </div>
+            {% endif %}
+        {% endfor %}
+    {% else %}
+        <div class="text-center text-muted mt-5">
+            <h5>💬 Ask the Agriculture Expert</h5>
+            <p>{{ t("ask_expert_sub") }}</p>
         </div>
+    {% endif %}
 
-    </div>
 </div>
+{% endblock %}
+
+
+{% block input %}
+<form method="POST" class="d-flex gap-2">
+    <input type="text"
+           name="message"
+           id="farmer-chat-input"
+           class="form-control rounded-pill px-4"
+           placeholder="{{ t("ask_expert_placeholder") }}"
+           autocomplete="off"
+           autofocus
+           required>
+
+    <button class="btn btn-success rounded-pill px-4">
+        {{ t("send") }}
+    </button>
+</form>
 {% endblock %}

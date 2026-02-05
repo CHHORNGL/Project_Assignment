@@ -1,45 +1,135 @@
 {% extends "layouts/base.html" %}
-{% block title %}Diseases{% endblock %}
+{% block title %}{{ t("diseases") }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
 
     <div class="d-flex justify-content-between mb-3">
-        <h3 class="font-weight-bold">🧑‍⚕️ Crop Diseases</h3>
+        <h3 class="font-weight-bold">{{ t("crop_diseases") }}</h3>
         <a href="{{ url_for('expert.create_disease') }}"
            class="btn btn-success">
-           ➕ Add Disease
+           {{ t("add_disease") }}
         </a>
     </div>
 
-    <table class="table table-bordered shadow-sm">
-        <thead>
-            <tr>
-                <th>Crop</th>
-                <th>Disease</th>
-                <th width="180">Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for d in diseases %}
-            <tr>
-                <td>{{ d.crop.name }}</td>
-                <td>{{ d.name }}</td>
-                <td>
-                    <a href="{{ url_for('expert.edit_disease', disease_id=d.id) }}"
-                       class="btn btn-sm btn-primary">Edit</a>
+    <div class="card shadow-sm">
+        <div class="card-header d-flex justify-content-between">
+            <span class="font-weight-bold">{{ t("diseases") }}</span>
+            <span class="text-muted small">{{ t("total_count", count=diseases|length) }}</span>
+        </div>
+        <div class="card-body border-bottom">
+            <form id="bulk-diseases-form"
+                  method="POST"
+                  action="{{ url_for('expert.diseases_bulk') }}"
+                  data-total="{{ diseases|length }}">
+                <input type="hidden" name="scope" value="selected" id="diseases-scope">
+                <div class="form-inline">
+                    <select name="action" class="form-control form-control-sm mr-2">
+                        <option value="">{{ t("bulk_action") }}</option>
+                        <option value="delete">{{ t("delete_selected") }}</option>
+                    </select>
+                    <button class="btn btn-sm btn-outline-danger">{{ t("apply") }}</button>
+                    <div class="form-check ml-3">
+                        <input class="form-check-input" type="checkbox" id="apply-all-diseases">
+                        <label class="form-check-label small text-muted" for="apply-all-diseases">
+                            {{ t("apply_all_results", count=diseases|length) }}
+                        </label>
+                    </div>
+                </div>
+            </form>
+        </div>
 
-                    <form method="POST"
-                          action="{{ url_for('expert.delete_disease', disease_id=d.id) }}"
-                          class="d-inline"
-                          onsubmit="return confirm('Delete disease?')">
-                        <button class="btn btn-sm btn-danger">Delete</button>
-                    </form>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+        <div class="card-body p-0">
+            <table class="table table-bordered mb-0">
+                <thead>
+                    <tr>
+                        <th>
+                            <input type="checkbox" id="select-all-diseases">
+                        </th>
+                        <th>{{ t("crop_label") }}</th>
+                        <th>{{ t("disease_label") }}</th>
+                        <th width="180">{{ t("actions") }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for d in diseases %}
+                    <tr>
+                        <td>
+                            <input type="checkbox"
+                                   class="disease-select"
+                                   name="disease_ids"
+                                   value="{{ d.id }}"
+                                   data-name="{{ d.name_kh if current_lang == 'km' and d.name_kh else d.name }}"
+                                   data-crop="{{ localize(d.crop, 'name', '-') }}"
+                                   form="bulk-diseases-form">
+                        </td>
+                        <td>{{ localize(d.crop, "name", "-") }}</td>
+                        <td>{{ d.name_kh if current_lang == 'km' and d.name_kh else d.name }}</td>
+                        <td>
+                            <a href="{{ url_for('expert.edit_disease', disease_id=d.id) }}"
+                               class="btn btn-sm btn-primary">{{ t("edit") }}</a>
+
+                            <form method="POST"
+                                  action="{{ url_for('expert.delete_disease', disease_id=d.id) }}"
+                                  class="d-inline"
+                                  onsubmit="return confirm('{{ t("confirm_delete_disease") }}')">
+                                <button class="btn btn-sm btn-danger">{{ t("delete") }}</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" class="text-center text-muted py-4">
+                            {{ t("no_diseases_found") }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 
 </div>
+{% endblock %}
+
+{% block scripts %}
+{% set modal_id = "bulkDiseasesConfirmModal" %}
+{% set modal_title = t("confirm_bulk_action") %}
+{% set modal_title_id = "bulk-diseases-confirm-title" %}
+{% set modal_body_id = "bulk-diseases-confirm-body" %}
+{% set modal_confirm_id = "bulk-diseases-confirm-submit" %}
+{% set modal_copy_id = "bulk-diseases-confirm-copy" %}
+{% include "partials/bulk_confirm_modal.html" %}
+
+<script src="{{ url_for('static', filename='js/bulk_confirm.js') }}"></script>
+<script>
+(function () {
+    new window.BulkConfirmController({
+        formId: "bulk-diseases-form",
+        scopeFieldId: "diseases-scope",
+        applyAllId: "apply-all-diseases",
+        selectAllId: "select-all-diseases",
+        rowSelector: ".disease-select",
+        modalId: "bulkDiseasesConfirmModal",
+        modalBodyId: "bulk-diseases-confirm-body",
+        modalConfirmId: "bulk-diseases-confirm-submit",
+        modalCopyId: "bulk-diseases-confirm-copy",
+        modalTitleId: "bulk-diseases-confirm-title",
+        modalBaseTitle: "{{ t("confirm_bulk_action") }}",
+        itemLabel: "{{ t("item_label_disease") }}",
+        previewColumns: [
+            { key: "id", label: "{{ t("id_label") }}" },
+            { key: "name", label: "{{ t("disease_label") }}" },
+            { key: "crop", label: "{{ t("crop_label") }}" }
+        ],
+        getPreviewRow: (checkbox) => ({
+            id: checkbox.value,
+            name: checkbox.getAttribute("data-name") || "",
+            crop: checkbox.getAttribute("data-crop") || ""
+        }),
+        getFiltersLabel: () => "{{ t("no_filters") }}",
+        actionLabel: (action) => (action === "delete" ? "{{ t("delete") }}" : "{{ t("export_label") }}")
+    });
+})();
+</script>
 {% endblock %}

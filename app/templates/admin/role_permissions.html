@@ -1,5 +1,5 @@
 {% extends "layouts/base.html" %}
-{% block title %}Role Permissions{% endblock %}
+{% block title %}{{ t("roles_permissions") }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
@@ -31,12 +31,12 @@
 
                 <div class="mt-4">
                     <button type="submit" class="btn btn-success">
-                        💾 Save Permissions
+                        💾 {{ t("save_permissions") }}
                     </button>
 
                     <a href="{{ url_for('admin.roles') }}"
                        class="btn btn-secondary ml-2">
-                        Cancel
+                        {{ t("cancel") }}
                     </a>
                 </div>
 

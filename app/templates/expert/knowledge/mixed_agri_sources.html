@@ -1,0 +1,230 @@
+{% extends "layouts/base.html" %}
+{% block title %}{{ t("mixed_agri_sources") }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <h3 class="font-weight-bold text-primary">{{ t("mixed_agri_sources") }}</h3>
+        <div>
+            <a href="{{ url_for('expert.mixed_agri_dashboard') }}"
+               class="btn btn-light btn-sm shadow-sm">
+                Back
+            </a>
+            <a href="{{ url_for('expert.mixed_agri_source_create') }}"
+               class="btn btn-sm btn-success ml-2">
+                Add Source
+            </a>
+            <a href="{{ url_for('expert.mixed_agri_sources_export', format='csv', q=q) }}"
+               class="btn btn-sm btn-outline-secondary ml-2">
+                Export CSV
+            </a>
+            <a href="{{ url_for('expert.mixed_agri_sources_export', format='json', q=q) }}"
+               class="btn btn-sm btn-outline-secondary ml-2">
+                Export JSON
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form method="GET" class="form-inline">
+                <input type="text"
+                       name="q"
+                       value="{{ q }}"
+                       class="form-control form-control-sm mr-2"
+                       placeholder="{{ t("search_sources_placeholder") }}">
+                <select name="per_page" class="form-control form-control-sm mr-2">
+                    <option value="25" {% if pagination.per_page == 25 %}selected{% endif %}>25</option>
+                    <option value="50" {% if pagination.per_page == 50 %}selected{% endif %}>50</option>
+                    <option value="100" {% if pagination.per_page == 100 %}selected{% endif %}>100</option>
+                </select>
+                <button class="btn btn-sm btn-primary">{{ t("search") }}</button>
+                {% if q %}
+                <a href="{{ url_for('expert.mixed_agri_sources') }}"
+                   class="btn btn-sm btn-outline-secondary ml-2">{{ t("clear") }}</a>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header d-flex justify-content-between">
+            <span class="font-weight-bold">{{ t("sources") }}</span>
+            <span class="text-muted small">{{ t("total_count", count=pagination.total) }}</span>
+        </div>
+
+        <div class="card-body border-bottom">
+            <form id="bulk-sources-form"
+                  method="POST"
+                  action="{{ url_for('expert.mixed_agri_sources_bulk') }}"
+                  data-total="{{ pagination.total }}"
+                  data-query="{{ q|default('') }}">
+                <input type="hidden" name="next" value="{{ current_path }}">
+                <input type="hidden" name="scope" value="selected" id="sources-scope">
+                <input type="hidden" name="q" value="{{ q }}">
+                <div class="form-inline">
+                    <select name="action" class="form-control form-control-sm mr-2">
+                        <option value="">{{ t("bulk_action") }}</option>
+                        <option value="delete">{{ t("delete_selected") }}</option>
+                        <option value="export_csv">{{ t("export_selected_csv") }}</option>
+                        <option value="export_json">{{ t("export_selected_json") }}</option>
+                    </select>
+                    <button class="btn btn-sm btn-outline-danger">{{ t("apply") }}</button>
+                    <div class="form-check ml-3">
+                        <input class="form-check-input" type="checkbox" id="apply-all-sources">
+                        <label class="form-check-label small text-muted" for="apply-all-sources">
+                            {{ t("apply_all_filtered", count=pagination.total) }}
+                        </label>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>
+                                <input type="checkbox" id="select-all-sources">
+                            </th>
+                            <th>{{ t("id_label") }}</th>
+                            <th>{{ t("title") }}</th>
+                            <th>{{ t("org") }}</th>
+                            <th>{{ t("year") }}</th>
+                            <th>{{ t("type") }}</th>
+                            <th>{{ t("url") }}</th>
+                            <th>{{ t("accessed") }}</th>
+                            <th>{{ t("facts") }}</th>
+                            <th>{{ t("actions") }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in sources %}
+                        <tr>
+                            <td>
+                                <input type="checkbox"
+                                       class="source-select"
+                                       name="source_ids"
+                                       value="{{ s.id }}"
+                                       data-title="{{ s.source_title }}"
+                                       data-org="{{ s.source_org }}"
+                                       form="bulk-sources-form">
+                            </td>
+                            <td>#{{ s.id }}</td>
+                            <td class="small">{{ s.source_title }}</td>
+                            <td class="small">{{ s.source_org }}</td>
+                            <td>{{ s.publication_year or '-' }}</td>
+                            <td class="small">{{ s.source_type or '-' }}</td>
+                            <td class="small">
+                                {% if s.source_url %}
+                                <a href="{{ s.source_url }}" target="_blank" rel="noopener">
+                                    {{ s.source_url | truncate(40) }}
+                                </a>
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                            <td>{{ s.accessed_at }}</td>
+                            <td>{{ s.facts | length }}</td>
+                            <td>
+                                <a href="{{ url_for('expert.mixed_agri_source_edit', source_id=s.id) }}"
+                                   class="btn btn-sm btn-outline-primary">{{ t("edit") }}</a>
+                                <a href="{{ url_for('expert.mixed_agri_fact_create', source_id=s.id) }}"
+                                   class="btn btn-sm btn-outline-success ml-1">{{ t("add_fact") }}</a>
+                                <form method="POST"
+                                      action="{{ url_for('expert.mixed_agri_source_delete', source_id=s.id) }}"
+                                      class="d-inline"
+                                      onsubmit="return confirm('{{ t("confirm_delete_source") }}')">
+                                    <button class="btn btn-sm btn-outline-danger ml-1">{{ t("delete") }}</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="9" class="text-center text-muted py-4">
+                                {{ t("no_sources_found") }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center p-3">
+            <div class="text-muted small">
+                {{ t("showing_range", start=pagination.start, end=pagination.end, total=pagination.total) }}
+            </div>
+            <div>
+                {% if pagination.has_prev %}
+                <a class="btn btn-sm btn-outline-secondary"
+                   href="{{ url_for('expert.mixed_agri_sources', page=pagination.page - 1, q=q, per_page=pagination.per_page) }}">
+                    Prev
+                </a>
+                {% else %}
+                <span class="btn btn-sm btn-outline-secondary disabled">{{ t("prev") }}</span>
+                {% endif %}
+
+                <span class="mx-2 small">{{ t("page_of", page=pagination.page, pages=pagination.pages) }}</span>
+
+                {% if pagination.has_next %}
+                <a class="btn btn-sm btn-outline-secondary"
+                   href="{{ url_for('expert.mixed_agri_sources', page=pagination.page + 1, q=q, per_page=pagination.per_page) }}">
+                    Next
+                </a>
+                {% else %}
+                <span class="btn btn-sm btn-outline-secondary disabled">{{ t("next") }}</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% set modal_id = "bulkConfirmModal" %}
+{% set modal_title = t("confirm_bulk_action") %}
+{% set modal_title_id = "bulk-confirm-title" %}
+{% set modal_body_id = "bulk-confirm-body" %}
+{% set modal_confirm_id = "bulk-confirm-submit" %}
+{% set modal_copy_id = "bulk-confirm-copy" %}
+{% include "partials/bulk_confirm_modal.html" %}
+
+<script src="{{ url_for('static', filename='js/bulk_confirm.js') }}"></script>
+<script>
+(function () {
+    new window.BulkConfirmController({
+        formId: "bulk-sources-form",
+        scopeFieldId: "sources-scope",
+        applyAllId: "apply-all-sources",
+        selectAllId: "select-all-sources",
+        rowSelector: ".source-select",
+        modalId: "bulkConfirmModal",
+        modalBodyId: "bulk-confirm-body",
+        modalConfirmId: "bulk-confirm-submit",
+        modalCopyId: "bulk-confirm-copy",
+        modalTitleId: "bulk-confirm-title",
+        modalBaseTitle: "{{ t("confirm_bulk_action") }}",
+        itemLabel: "{{ t("item_label_source") }}",
+        previewColumns: [
+            { key: "id", label: "{{ t("id_label") }}" },
+            { key: "title", label: "{{ t("title") }}" },
+            { key: "org", label: "{{ t("org") }}" }
+        ],
+        getPreviewRow: (checkbox) => ({
+            id: checkbox.value,
+            title: checkbox.getAttribute("data-title") || "",
+            org: checkbox.getAttribute("data-org") || ""
+        }),
+        getFiltersLabel: (form) => {
+            const q = form.dataset.query || "";
+            return q ? `q="${q}"` : "{{ t("no_search_filter") }}";
+        },
+        actionLabel: (action) => (action === "delete" ? "{{ t("delete") }}" : "{{ t("export_label") }}")
+    });
+})();
+</script>
+{% endblock %}

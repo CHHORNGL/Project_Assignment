@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="200" viewBox="0 0 320 200">
+<defs>
+  <linearGradient id="leafGrad" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#48b07b"/>
+    <stop offset="1" stop-color="#1b6b46"/>
+  </linearGradient>
+  <linearGradient id="leafGradWarm" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#f3c06a"/>
+    <stop offset="1" stop-color="#c98c2a"/>
+  </linearGradient>
+</defs>
+<rect width="320" height="200" rx="24" fill="#f6f8fb"/>
+<path d="M120 120c20-38 50-60 80-60 32 0 58 18 70 46-16 10-36 18-70 22-40 4-62-4-80-8z" fill="url(#leafGrad)"/>
+<path d="M150 132c10 10 16 20 18 30" stroke="#7a4b3a" stroke-width="6" stroke-linecap="round"/>
+<ellipse cx="172" cy="170" rx="18" ry="12" fill="#6b4f3f"/>
+<ellipse cx="172" cy="172" rx="10" ry="6" fill="#5a3f30"/>
+</svg>

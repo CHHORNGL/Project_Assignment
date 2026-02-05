@@ -1,4 +1,29 @@
-from flask import Blueprint, render_template
+# app/blueprints/user/routes.py
+
+import os
+from uuid import uuid4
+
+from flask import (
+    Blueprint,
+    render_template,
+    request,
+    jsonify,
+    redirect,
+    url_for,
+    flash,
+    current_app
+)
+from flask_login import login_required, current_user
+from werkzeug.utils import secure_filename
+
+from app.extensions import db
+from app.models.user import User
+from app.services.khmer_calendar import build_khmer_calendar_month
+from app.utils.i18n import set_current_language, get_current_language
+
+
+ALLOWED_AVATAR_EXTS = {".jpg", ".jpeg", ".png", ".gif", ".webp"}
+
 
 user_bp = Blueprint(
     "user",
@@ -7,6 +32,195 @@ user_bp = Blueprint(
 )
 
 
+# ===============================
+# USER HOME
+# ===============================
 @user_bp.route("/")
+@login_required
 def index():
-    return render_template("users/index.html")
+    """
+    User dashboard / home
+    """
+    return render_template(
+        "users/index.html",
+        theme=current_user.theme
+    )
+
+
+# ===============================
+# 🌗 UPDATE USER THEME
+# ===============================
+@user_bp.route("/theme", methods=["POST"])
+@login_required
+def update_theme():
+    """
+    Save user theme preference
+    Accepted values: light | dark | system
+    """
+    data = request.get_json(silent=True) or {}
+    theme = data.get("theme")
+
+    if theme not in ("light", "dark", "system"):
+        return jsonify({
+            "status": "error",
+            "message": "Invalid theme value"
+        }), 400
+
+    # Save preference
+    current_user.theme = theme
+    db.session.commit()
+
+    return jsonify({
+        "status": "success",
+        "theme": theme
+    })
+
+
+# ===============================
+# 🌐 UPDATE GLOBAL LANGUAGE
+# ===============================
+@user_bp.route("/language", methods=["POST"])
+@login_required
+def update_language():
+    """
+    Set global language preference for all users.
+    Accepted values: en | km
+    """
+    data = request.get_json(silent=True) or {}
+    lang = data.get("language")
+    lang = set_current_language(lang)
+    return jsonify({
+        "status": "success",
+        "language": lang
+    })
+
+
+# ===============================
+# USER PROFILE
+# ===============================
+@user_bp.route("/profile", methods=["GET", "POST"])
+@login_required
+def profile():
+    if request.method == "POST":
+        username = request.form.get("username", "").strip()
+        full_name = request.form.get("full_name", "").strip()
+        email_value = request.form.get("email", "").strip().lower()
+        current_password = request.form.get("current_password", "")
+        new_password = request.form.get("new_password", "")
+        confirm_password = request.form.get("confirm_password", "")
+        avatar_file = request.files.get("avatar")
+
+        if username and username != current_user.username:
+            existing = User.query.filter_by(username=username).first()
+            if existing:
+                flash("❌ Username already exists", "danger")
+                return redirect(url_for("user.profile"))
+            current_user.username = username
+
+        if email_value and email_value != (current_user.email or ""):
+            existing_email = (
+                User.query
+                .filter(User.email == email_value, User.id != current_user.id)
+                .first()
+            )
+            if existing_email:
+                flash("❌ Email already exists", "danger")
+                return redirect(url_for("user.profile"))
+            current_user.email = email_value
+        elif not email_value:
+            current_user.email = None
+
+        if full_name:
+            current_user.full_name = full_name
+        else:
+            current_user.full_name = None
+
+        if avatar_file and avatar_file.filename:
+            ext = os.path.splitext(avatar_file.filename)[1].lower()
+            if ext not in ALLOWED_AVATAR_EXTS:
+                flash("❌ Invalid avatar file type", "danger")
+                return redirect(url_for("user.profile"))
+
+            filename = secure_filename(f"avatar_{current_user.id}_{uuid4().hex}{ext}")
+            upload_dir = os.path.join(current_app.root_path, "static", "uploads", "avatars")
+            os.makedirs(upload_dir, exist_ok=True)
+            save_path = os.path.join(upload_dir, filename)
+            avatar_file.save(save_path)
+
+            # Remove old avatar if it exists
+            if current_user.avatar_path:
+                old_path = os.path.join(current_app.root_path, "static", current_user.avatar_path)
+                if os.path.isfile(old_path):
+                    try:
+                        os.remove(old_path)
+                    except OSError:
+                        pass
+
+            current_user.avatar_path = f"uploads/avatars/{filename}"
+
+        if new_password or confirm_password:
+            if not current_password:
+                flash("❌ Current password is required", "danger")
+                return redirect(url_for("user.profile"))
+            if not current_user.check_password(current_password):
+                flash("❌ Current password is incorrect", "danger")
+                return redirect(url_for("user.profile"))
+            if new_password != confirm_password:
+                flash("❌ New passwords do not match", "danger")
+                return redirect(url_for("user.profile"))
+            if len(new_password) < 6:
+                flash("❌ Password must be at least 6 characters", "danger")
+                return redirect(url_for("user.profile"))
+            current_user.set_password(new_password)
+
+        db.session.commit()
+        flash("✅ Profile updated successfully", "success")
+        return redirect(url_for("user.profile"))
+
+    if current_user.has_role("farmer"):
+        return render_template("farmer/profile.html")
+    return render_template("users/profile.html")
+
+
+# ===============================
+# USER SETTINGS
+# ===============================
+@user_bp.route("/settings", methods=["GET", "POST"])
+@login_required
+def settings():
+    if request.method == "POST":
+        theme = request.form.get("theme", "system")
+        if theme not in ("light", "dark", "system"):
+            flash("❌ Invalid theme option", "danger")
+            return redirect(url_for("user.settings"))
+        current_user.theme = theme
+        db.session.commit()
+        flash("✅ Settings saved", "success")
+        return redirect(url_for("user.settings"))
+
+    if current_user.has_role("farmer"):
+        return render_template("farmer/settings.html", current_lang=get_current_language())
+    return render_template("users/settings.html", current_lang=get_current_language())
+
+
+# ===============================
+# KHMER LUNAR CALENDAR DATA
+# ===============================
+@user_bp.route("/khmer-calendar")
+@login_required
+def khmer_calendar():
+    try:
+        year = int(request.args.get("year", ""))
+        month = int(request.args.get("month", ""))
+    except ValueError:
+        return jsonify({"error": "Invalid year or month"}), 400
+
+    if month < 1 or month > 12 or year < 1900 or year > 2100:
+        return jsonify({"error": "Invalid year or month"}), 400
+
+    days = build_khmer_calendar_month(year, month)
+    return jsonify({
+        "year": year,
+        "month": month,
+        "days": days
+    })

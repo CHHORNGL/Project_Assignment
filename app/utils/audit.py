@@ -5,9 +5,11 @@ from app.models.audit_log import AuditLog
 
 
 def log_action(admin, action, target_user=None, detail=None):
+    if not admin:
+        return
+
     log = AuditLog(
-        admin_id=admin.id,
-        admin_username=admin.username,
+        user_id=admin.id,
         action=action,
         target_user=target_user,
         detail=detail

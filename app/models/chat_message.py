@@ -25,6 +25,13 @@ class ChatMessage(db.Model):
         nullable=True
     )
 
+    # Chat session
+    session_id = db.Column(
+        db.Integer,
+        db.ForeignKey("chat_sessions.id", ondelete="CASCADE"),
+        nullable=True
+    )
+
     created_at = db.Column(
         db.DateTime,
         default=datetime.utcnow

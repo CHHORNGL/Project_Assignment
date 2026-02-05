@@ -3,7 +3,9 @@ from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import (
     DataRequired,
     Length,
-    EqualTo
+    EqualTo,
+    Optional,
+    Email
 )
 
 
@@ -12,7 +14,7 @@ from wtforms.validators import (
 # ===============================
 class LoginForm(FlaskForm):
     username = StringField(
-        "Username",
+        "Username or Email",
         validators=[
             DataRequired(message="Username is required"),
             Length(min=3, max=80)
@@ -39,6 +41,14 @@ class RegisterForm(FlaskForm):
         validators=[
             DataRequired(message="Username is required"),
             Length(min=3, max=80)
+        ]
+    )
+
+    email = StringField(
+        "Email (optional)",
+        validators=[
+            Optional(),
+            Email(message="Enter a valid email address")
         ]
     )
 

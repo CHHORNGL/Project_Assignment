@@ -1,150 +1,86 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ current_lang }}">
 <head>
     <meta charset="UTF-8">
-    <title>Login</title>
+    <title>{{ t("auth_login_title") }}</title>
 
-    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Kantumruy+Pro:wght@300;400;500;600;700&display=swap"
-        rel="stylesheet"
-    >
+    <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;500;600;700&family=Noto+Sans+Khmer:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <style>
-        body {
-            font-family: "Inter", "Kantumruy Pro", sans-serif;
-            background: #f8f9fc;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-
-        .login-box {
-            background: #fff;
-            padding: 30px;
-            width: 380px;
-            border-radius: 10px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-        }
-
-        h2 {
-            text-align: center;
-            margin-bottom: 25px;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        label {
-            font-weight: 500;
-            display: block;
-            margin-bottom: 5px;
-        }
-
-        input {
-            width: 100%;
-            padding: 10px;
-            border-radius: 6px;
-            border: 1px solid #ddd;
-        }
-
-        button {
-            width: 100%;
-            padding: 10px;
-            background: #4e73df;
-            border: none;
-            color: white;
-            font-weight: 600;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background: #2e59d9;
-        }
-
-        .register-link {
-            margin-top: 15px;
-            text-align: center;
-            font-size: 14px;
-        }
-
-        .register-link a {
-            color: #1cc88a;
-            text-decoration: none;
-            font-weight: 600;
-        }
-
-        .register-link a:hover {
-            text-decoration: underline;
-        }
-
-        .flash {
-            margin-bottom: 15px;
-            padding: 10px;
-            border-radius: 6px;
-            font-size: 14px;
-        }
-
-        .flash-danger {
-            background: #f8d7da;
-            color: #842029;
-        }
-
-        .flash-success {
-            background: #d1e7dd;
-            color: #0f5132;
-        }
-    </style>
+    <link href="{{ url_for('static', filename='css/auth.css') }}" rel="stylesheet">
 </head>
-<body>
+<body class="auth-body">
 
-<div class="login-box">
-
-    <h2> Login</h2>
-
-    <!-- FLASH MESSAGES -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="flash flash-{{ category }}">
-                    {{ message }}
+<main class="auth-shell">
+    <section class="auth-card" style="--auth-hero: url('{{ url_for('static', filename='img/auth/login-hero.jpg') }}');">
+        <div class="auth-visual">
+            <div class="auth-visual-top">
+                <div class="auth-brand">
+                    <span class="auth-brand-mark">Agri System</span>
+                    <span class="auth-brand-sub">{{ t("auth_brand_sub_expert") }}</span>
                 </div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
+                <div class="auth-pill">{{ t("auth_pill_trusted") }}</div>
+            </div>
 
-    <form method="POST">
-        {{ form.hidden_tag() }}
-
-        <div class="form-group">
-            {{ form.username.label }}
-            {{ form.username(class="form-control") }}
+            <div class="auth-visual-content">
+                <h1 class="auth-visual-title">{{ t("auth_visual_title_login") }}</h1>
+                <p>{{ t("auth_visual_sub_login") }}</p>
+                <ul class="auth-feature-list">
+                    <li><span class="auth-dot"></span>{{ t("auth_feature_login_1") }}</li>
+                    <li><span class="auth-dot"></span>{{ t("auth_feature_login_2") }}</li>
+                    <li><span class="auth-dot"></span>{{ t("auth_feature_login_3") }}</li>
+                </ul>
+            </div>
         </div>
 
-        <div class="form-group">
-            {{ form.password.label }}
-            {{ form.password(class="form-control") }}
+        <div class="auth-panel">
+            <div class="auth-panel-head auth-stagger delay-1">
+                <h2 class="auth-title">{{ t("auth_welcome_back") }}</h2>
+                <p class="auth-subtitle">{{ t("auth_sign_in_sub") }}</p>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="flash flash-{{ category }} auth-stagger delay-2">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form method="POST" class="auth-form auth-stagger delay-3">
+                {{ form.hidden_tag() }}
+
+                <div class="auth-field">
+                    {{ form.username.label }}
+                    {{ form.username(class="auth-input", placeholder=t("auth_username_email_placeholder")) }}
+                </div>
+
+                <div class="auth-field">
+                    {{ form.password.label }}
+                    {{ form.password(class="auth-input", placeholder=t("auth_password_placeholder")) }}
+                </div>
+
+                <button type="submit" class="auth-button">
+                    {{ form.submit.label.text }}
+                </button>
+            </form>
+
+            <div class="auth-divider auth-stagger delay-4">{{ t("auth_continue_with") }}</div>
+            <a class="auth-oauth-btn auth-stagger delay-5" href="{{ url_for('auth.google_login') }}">
+                <span class="auth-oauth-icon">G</span>
+                {{ t("auth_google") }}
+            </a>
+
+            <div class="auth-foot auth-stagger delay-6">
+                {{ t("auth_farmer") }}
+                <a href="{{ url_for('auth.register') }}">{{ t("auth_create_farmer") }}</a>
+            </div>
         </div>
-
-        <button type="submit">
-            {{ form.submit.label.text }}
-        </button>
-    </form>
-
-    <!-- REGISTER LINK -->
-    <div class="register-link">
-         Farmer? 
-        <a href="{{ url_for('auth.register') }}">
-            Create an account
-        </a>
-    </div>
-
-</div>
+    </section>
+</main>
 
 </body>
 </html>

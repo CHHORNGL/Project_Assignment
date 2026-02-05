@@ -1,5 +1,5 @@
 {% extends "layouts/base.html" %}
-{% block title %}Crops{% endblock %}
+{% block title %}{{ t("crops_title") }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
@@ -7,57 +7,79 @@
     <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h4 font-weight-bold text-gray-800">
-            🌱 Crop Management
+            {{ t("crop_management") }}
         </h1>
 
-        <!-- ✅ FIXED URL -->
-        <a href="{{ url_for('admin.create_crop') }}"
+        <a href="{{ url_for('admin_crop.create') }}"
            class="btn btn-success shadow-sm">
-           ➕ Add Crop
+           {{ t("add_crop") }}
         </a>
     </div>
 
     <!-- Crop Table -->
     <div class="card shadow-sm">
+        <div class="card-header d-flex justify-content-between">
+            <span class="font-weight-bold">{{ t("crops_title") }}</span>
+            <span class="text-muted small">{{ t("total_count", count=crops|length) }}</span>
+        </div>
+        <div class="card-body border-bottom">
+            <form id="bulk-crops-form"
+                  method="POST"
+                  action="{{ url_for('admin_crop.bulk') }}"
+                  data-total="{{ crops|length }}">
+                <input type="hidden" name="scope" value="selected" id="crops-scope">
+                <div class="form-inline">
+                    <select name="action" class="form-control form-control-sm mr-2">
+                        <option value="">{{ t("bulk_action") }}</option>
+                        <option value="delete">{{ t("delete_selected") }}</option>
+                    </select>
+                    <button class="btn btn-sm btn-outline-danger">{{ t("apply") }}</button>
+                    <div class="form-check ml-3">
+                        <input class="form-check-input" type="checkbox" id="apply-all-crops">
+                        <label class="form-check-label small text-muted" for="apply-all-crops">
+                            {{ t("apply_all_results", count=crops|length) }}
+                        </label>
+                    </div>
+                </div>
+            </form>
+        </div>
         <div class="card-body p-0">
             <table class="table table-bordered mb-0">
                 <thead class="bg-light">
                     <tr>
-                        <th>Name</th>
-                        <th>Description</th>
-                        <th width="180" class="text-center">Actions</th>
+                        <th>
+                            <input type="checkbox" id="select-all-crops">
+                        </th>
+                        <th>{{ t("name_label") }}</th>
+                        <th>{{ t("description_label") }}</th>
+                        <th width="160" class="text-center">{{ t("actions") }}</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for crop in crops %}
                     <tr>
-                        <td>{{ crop.name }}</td>
-                        <td>{{ crop.description or "-" }}</td>
+                        <td>
+                            <input type="checkbox"
+                                   class="crop-select"
+                                   name="crop_ids"
+                                   value="{{ crop.id }}"
+                                   data-name="{{ localize(crop, 'name') }}"
+                                   form="bulk-crops-form">
+                        </td>
+                        <td>{{ localize(crop, "name") }}</td>
+                        <td>{{ localize(crop, "description", crop.description or "-") }}</td>
                         <td class="text-center">
-
-                            <!-- Edit -->
-                            <a href="{{ url_for('admin.edit_crop', crop_id=crop.id) }}"
-                               class="btn btn-sm btn-primary mr-1">
-                                Edit
+                            <a href="{{ url_for('admin_crop.delete', id=crop.id) }}"
+                               class="btn btn-sm btn-danger"
+                               onclick="return confirm('{{ t("confirm_delete_crop") }}')">
+                                Delete
                             </a>
-
-                            <!-- Delete -->
-                            <form method="POST"
-                                  action="{{ url_for('admin.delete_crop', crop_id=crop.id) }}"
-                                  class="d-inline"
-                                  onsubmit="return confirm('Are you sure you want to delete this crop?')">
-                                <button type="submit"
-                                        class="btn btn-sm btn-danger">
-                                    Delete
-                                </button>
-                            </form>
-
                         </td>
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="3" class="text-center text-muted py-4">
-                            No crops found.
+                        <td colspan="4" class="text-center text-muted py-4">
+                            {{ t("no_crops_found") }}
                         </td>
                     </tr>
                     {% endfor %}
@@ -67,4 +89,44 @@
     </div>
 
 </div>
+{% endblock %}
+
+{% block scripts %}
+{% set modal_id = "bulkCropsConfirmModal" %}
+{% set modal_title = t("confirm_bulk_action") %}
+{% set modal_title_id = "bulk-crops-confirm-title" %}
+{% set modal_body_id = "bulk-crops-confirm-body" %}
+{% set modal_confirm_id = "bulk-crops-confirm-submit" %}
+{% set modal_copy_id = "bulk-crops-confirm-copy" %}
+{% include "partials/bulk_confirm_modal.html" %}
+
+<script src="{{ url_for('static', filename='js/bulk_confirm.js') }}"></script>
+<script>
+(function () {
+    new window.BulkConfirmController({
+        formId: "bulk-crops-form",
+        scopeFieldId: "crops-scope",
+        applyAllId: "apply-all-crops",
+        selectAllId: "select-all-crops",
+        rowSelector: ".crop-select",
+        modalId: "bulkCropsConfirmModal",
+        modalBodyId: "bulk-crops-confirm-body",
+        modalConfirmId: "bulk-crops-confirm-submit",
+        modalCopyId: "bulk-crops-confirm-copy",
+        modalTitleId: "bulk-crops-confirm-title",
+        modalBaseTitle: "{{ t("confirm_bulk_action") }}",
+        itemLabel: "{{ t("item_label_crop") }}",
+        previewColumns: [
+            { key: "id", label: "{{ t("id_label") }}" },
+            { key: "name", label: "{{ t("name_label") }}" }
+        ],
+        getPreviewRow: (checkbox) => ({
+            id: checkbox.value,
+            name: checkbox.getAttribute("data-name") || ""
+        }),
+        getFiltersLabel: () => "{{ t("no_filters") }}",
+        actionLabel: (action) => (action === "delete" ? "{{ t("delete") }}" : "{{ t("export_label") }}")
+    });
+})();
+</script>
 {% endblock %}

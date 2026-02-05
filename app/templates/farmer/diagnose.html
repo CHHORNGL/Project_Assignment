@@ -1,39 +1,97 @@
-{% extends "layouts/farmer_base.html" %}
+{% extends "layouts/farmer_dashboard_base.html" %}
 {% block title %}Diagnose Crop{% endblock %}
 
 {% block content %}
 <div class="container-fluid d-flex justify-content-center">
     <div class="card shadow-sm" style="max-width: 720px; width:100%;">
-        <div class="card-body">
+        <div class="card-body form-scroll">
 
             <h4 class="mb-3 text-success">
-                🌾 Crop Diagnosis
+                 {{ t("diagnose_title") }}
             </h4>
 
             <p class="text-muted mb-4">
-                Select your crop and describe the symptoms you observe.
-                The system will automatically diagnose using expert rules.
+                {{ t("diagnose_sub") }}
             </p>
 
-            <form method="POST">
+            <form method="POST" enctype="multipart/form-data">
 
                 <!-- ===============================
                      CROP SELECTION
                 =============================== -->
                 <div class="form-group mb-3">
                     <label class="font-weight-bold">
-                        🌱 Crop
+                        <i class="fas fa-seedling label-icon"></i>{{ t("crop_label") }}
                     </label>
                     <select name="crop_id" class="form-control" required>
                         <option value="" disabled selected>
-                            -- Select crop --
+                            {{ t("crop_placeholder") }}
                         </option>
                         {% for crop in crops %}
                         <option value="{{ crop.id }}">
-                            {{ crop.name }}
+                            {{ localize(crop, "name") }}
                         </option>
                         {% endfor %}
                     </select>
+                </div>
+
+                <!-- ===============================
+                     IMAGE-BASED SYMPTOM PICKER
+                =============================== -->
+                <div class="form-group mb-4">
+                    <label class="font-weight-bold">
+                        <i class="far fa-images label-icon"></i>{{ t("symptom_picker_title") }}
+                    </label>
+                    <div class="small text-muted mb-3">
+                        {{ t("symptom_picker_sub") }}
+                    </div>
+                    <div class="symptom-picker" id="symptom-picker">
+                        <div class="symptom-card" data-symptoms-en="brown spots on leaves, gray spots on leaves" data-symptoms-km="ស្លឹកមានចំណុចត្នោត, ស្លឹកមានចំណុចប្រផេះ">
+                            <img src="{{ url_for('static', filename='img/symptoms/leaf-spots.svg') }}" alt="Leaf spots">
+                            <div class="symptom-card-title">{{ t("symptom_spots_title") }}</div>
+                            <div class="symptom-card-sub">{{ t("symptom_spots_desc") }}</div>
+                        </div>
+                        <div class="symptom-card" data-symptoms-en="yellowing leaves, pale leaves" data-symptoms-km="ស្លឹកលឿង, ស្លឹកស្លេក">
+                            <img src="{{ url_for('static', filename='img/symptoms/leaf-yellow.svg') }}" alt="Yellow leaf">
+                            <div class="symptom-card-title">{{ t("symptom_yellow_title") }}</div>
+                            <div class="symptom-card-sub">{{ t("symptom_yellow_desc") }}</div>
+                        </div>
+                        <div class="symptom-card" data-symptoms-en="holes in leaves, chewed leaf edges" data-symptoms-km="ស្លឹកមានរន្ធ, ជ្រុងស្លឹកខូច">
+                            <img src="{{ url_for('static', filename='img/symptoms/leaf-damaged.svg') }}" alt="Damaged leaf">
+                            <div class="symptom-card-title">{{ t("symptom_damage_title") }}</div>
+                            <div class="symptom-card-sub">{{ t("symptom_damage_desc") }}</div>
+                        </div>
+                        <div class="symptom-card" data-symptoms-en="wilting leaves, drooping leaves" data-symptoms-km="ស្លឹករោយ, ស្លឹកទម្លាក់">
+                            <img src="{{ url_for('static', filename='img/symptoms/leaf-wilt.svg') }}" alt="Wilting leaf">
+                            <div class="symptom-card-title">{{ t("symptom_wilt_title") }}</div>
+                            <div class="symptom-card-sub">{{ t("symptom_wilt_desc") }}</div>
+                        </div>
+                        <div class="symptom-card" data-symptoms-en="leaf curl, curled edges" data-symptoms-km="ស្លឹករមួល, ជ្រុងស្លឹករមួល">
+                            <img src="{{ url_for('static', filename='img/symptoms/leaf-curl.svg') }}" alt="Leaf curl">
+                            <div class="symptom-card-title">{{ t("symptom_curl_title") }}</div>
+                            <div class="symptom-card-sub">{{ t("symptom_curl_desc") }}</div>
+                        </div>
+                        <div class="symptom-card" data-symptoms-en="white mold, powdery patches" data-symptoms-km="ពពួកស, ពពួកសជាបន្ទះ">
+                            <img src="{{ url_for('static', filename='img/symptoms/leaf-mold.svg') }}" alt="White mold">
+                            <div class="symptom-card-title">{{ t("symptom_mold_title") }}</div>
+                            <div class="symptom-card-sub">{{ t("symptom_mold_desc") }}</div>
+                        </div>
+                        <div class="symptom-card" data-symptoms-en="black leaf edges, burnt leaf tips" data-symptoms-km="ជ្រុងស្លឹកខ្មៅ, ចុងស្លឹកខ្មៅ">
+                            <img src="{{ url_for('static', filename='img/symptoms/leaf-edges.svg') }}" alt="Black leaf edges">
+                            <div class="symptom-card-title">{{ t("symptom_edges_title") }}</div>
+                            <div class="symptom-card-sub">{{ t("symptom_edges_desc") }}</div>
+                        </div>
+                        <div class="symptom-card" data-symptoms-en="stem rot, soft brown stem base" data-symptoms-km="ក្បាលដើមរលួយ, ក្បាលដើមទន់ត្នោត">
+                            <img src="{{ url_for('static', filename='img/symptoms/stem-rot.svg') }}" alt="Stem rot">
+                            <div class="symptom-card-title">{{ t("symptom_stem_rot_title") }}</div>
+                            <div class="symptom-card-sub">{{ t("symptom_stem_rot_desc") }}</div>
+                        </div>
+                        <div class="symptom-card" data-symptoms-en="webbing on leaves, tiny insects" data-symptoms-km="សសៃលើស្លឹក, សត្វល្អិតតូចៗ">
+                            <img src="{{ url_for('static', filename='img/symptoms/leaf-webbing.svg') }}" alt="Insect webbing">
+                            <div class="symptom-card-title">{{ t("symptom_webbing_title") }}</div>
+                            <div class="symptom-card-sub">{{ t("symptom_webbing_desc") }}</div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- ===============================
@@ -41,18 +99,18 @@
                 =============================== -->
                 <div class="form-group mb-4">
                     <label class="font-weight-bold">
-                        🧾 Symptoms
+                        <i class="fas fa-notes-medical label-icon"></i>{{ t("symptom_text_label") }}
                     </label>
                     <textarea
                         name="symptoms"
                         class="form-control"
                         rows="4"
-                        placeholder="Example: yellow leaves, brown spots, wilting"
+                        placeholder="{{ t('symptom_placeholder') }}"
                         required></textarea>
 
                     <small class="form-text text-muted">
-                        • Separate symptoms using commas<br>
-                        • Use simple words (e.g. yellow leaves, spots, rot)
+                        • {{ t("symptom_tip_1") }}<br>
+                        • {{ t("symptom_tip_2") }}
                     </small>
                 </div>
 
@@ -62,11 +120,11 @@
                 <div class="d-flex justify-content-between align-items-center">
                     <a href="{{ url_for('farmer.dashboard') }}"
                        class="btn btn-outline-secondary">
-                        ← Back
+                        <i class="fas fa-arrow-left btn-icon"></i>{{ t("back") }}
                     </a>
 
                     <button type="submit" class="btn btn-success px-4">
-                        🔍 Diagnose Now
+                        <i class="fas fa-stethoscope btn-icon"></i>{{ t("diagnose_now") }}
                     </button>
                 </div>
 
@@ -75,4 +133,54 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+    const picker = document.getElementById("symptom-picker");
+    const textarea = document.querySelector("textarea[name='symptoms']");
+
+    if (!picker || !textarea) return;
+
+    const lang = "{{ current_lang }}";
+    if (textarea) {
+        textarea.dataset.lang = textarea.dataset.lang || lang;
+    }
+    const getText = (card) => {
+        if (lang === "km") return card.dataset.symptomsKm || "";
+        return card.dataset.symptomsEn || "";
+    };
+
+    function parseCurrent() {
+        return textarea.value
+            .split(",")
+            .map((t) => t.trim())
+            .filter(Boolean);
+    }
+
+    if (picker && textarea) {
+        picker.querySelectorAll(".symptom-card").forEach((card) => {
+            card.addEventListener("click", () => {
+                if (textarea.dataset.lang !== lang) {
+                    textarea.value = "";
+                    textarea.dataset.lang = lang;
+                }
+                card.classList.toggle("selected");
+                const current = new Set(parseCurrent());
+                const phrases = getText(card)
+                    .split(",")
+                    .map((t) => t.trim())
+                    .filter(Boolean);
+                if (card.classList.contains("selected")) {
+                    phrases.forEach((p) => current.add(p));
+                } else {
+                    phrases.forEach((p) => current.delete(p));
+                }
+                textarea.value = Array.from(current).join(", ");
+            });
+        });
+    }
+})();
+</script>
 {% endblock %}

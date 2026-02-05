@@ -1,167 +1,159 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ current_lang }}">
 <head>
-    <meta charset="UTF-8">
-    <title>{% block title %}Agri Expert System{% endblock %}</title>
+<meta charset="UTF-8">
+<title>{% block title %}Agri Expert System{% endblock %}</title>
 
-    <!-- ===============================
-         META (Responsive)
-    =============================== -->
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <!-- ===============================
-         GOOGLE FONTS (EN + KH)
-    =============================== -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- ===============================
+     GOOGLE FONTS
+=============================== -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-    <!-- English -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-          rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;500;600;700&family=Noto+Sans+Khmer:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- Khmer -->
-    <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;500;600;700&display=swap"
-          rel="stylesheet">
+<!-- ===============================
+     FONT AWESOME
+=============================== -->
+<link href="{{ url_for('static', filename='sb-admin/vendor/fontawesome-free/css/all.min.css') }}" rel="stylesheet">
 
-    <!-- ===============================
-         FONT AWESOME (Icons)
-    =============================== -->
-    <link href="{{ url_for('static', filename='sb-admin/vendor/fontawesome-free/css/all.min.css') }}"
-          rel="stylesheet">
+<!-- ===============================
+     SB ADMIN
+=============================== -->
+<link href="{{ url_for('static', filename='sb-admin/css/sb-admin-2.min.css') }}" rel="stylesheet">
 
-    <!-- ===============================
-         SB ADMIN CSS
-    =============================== -->
-    <link href="{{ url_for('static', filename='sb-admin/css/sb-admin-2.min.css') }}"
-          rel="stylesheet">
+<!-- ===============================
+     CUSTOM STYLE
+=============================== -->
+<link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
 
-    <!-- ===============================
-         CUSTOM GLOBAL STYLE (OVERRIDE)
-         MUST BE LAST
-    =============================== -->
-    <link href="{{ url_for('static', filename='css/style.css') }}"
-          rel="stylesheet">
+<!-- ===============================
+     GLOBAL TYPOGRAPHY
+=============================== -->
+<style>
+:root {
+    --font-en: "Inter", system-ui, sans-serif;
+    --font-kh: "Kantumruy Pro", "Noto Sans Khmer", "Khmer OS", sans-serif;
+}
+* { font-family: var(--font-en), var(--font-kh); }
+body { font-size: .95rem; line-height: 1.6; }
+h1,h2,h3,h4,h5,h6 { font-weight: 600; }
+.kh { font-family: var(--font-kh) !important; }
+</style>
 
-    <!-- ===============================
-         GLOBAL FONT OVERRIDE
-    =============================== -->
-    <style>
-        :root {
-            --font-en: "Inter", "Poppins", sans-serif;
-            --font-kh: "Kantumruy Pro", "Khmer OS", sans-serif;
-            --primary: #1cc88a;
-            --secondary: #4e73df;
-            --dark: #2d3748;
-            --muted: #718096;
-        }
+{% block head %}{% endblock %}
 
-        /* Force override SB Admin */
-        * {
-            font-family: var(--font-en), var(--font-kh) !important;
-        }
+<!-- ===============================
+     🌗 NO-FLASH THEME LOADER
+     Priority: DB → localStorage → OS
+=============================== -->
+<script>
+(function () {
+    const userTheme = "{{ current_user.theme if current_user.is_authenticated else 'system' }}";
+    const storedTheme = localStorage.getItem("theme");
 
-        body {
-            font-size: 0.95rem;
-            line-height: 1.6;
-            color: var(--dark);
-            background-color: #f8f9fc;
-        }
+    function prefersDark() {
+        return window.matchMedia("(prefers-color-scheme: dark)").matches;
+    }
 
-        /* Headings */
-        h1, h2, h3, h4, h5, h6 {
-            font-weight: 600;
-            color: #1a202c;
-        }
+    function applyTheme(theme) {
+        document.documentElement.classList.remove("dark-mode");
+        if (theme === "dark") document.documentElement.classList.add("dark-mode");
+        if (theme === "system" && prefersDark()) document.documentElement.classList.add("dark-mode");
+    }
 
-        /* Khmer text helper */
-        .kh {
-            font-family: var(--font-kh), var(--font-en) !important;
-        }
+    if (userTheme && userTheme !== "system") applyTheme(userTheme);
+    else if (storedTheme) applyTheme(storedTheme);
+    else applyTheme("system");
 
-        /* Sidebar */
-        .sidebar {
-            font-size: 0.9rem;
-        }
-
-        .sidebar .nav-item .nav-link span {
-            font-weight: 500;
-        }
-
-        /* Topbar */
-        .topbar {
-            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-        }
-
-        /* Cards */
-        .card {
-            border-radius: 14px;
-        }
-
-        .card-header {
-            background-color: #fff;
-            border-bottom: 1px solid #edf2f7;
-        }
-
-        /* Buttons */
-        .btn {
-            border-radius: 10px;
-            font-weight: 500;
-        }
-
-        /* Tables */
-        table {
-            font-size: 0.9rem;
-        }
-    </style>
-
+    if (userTheme === "system" || storedTheme === "system") {
+        window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", e => {
+            document.documentElement.classList.toggle("dark-mode", e.matches);
+        });
+    }
+})();
+</script>
 </head>
 
-<body id="page-top">
-
+<body id="page-top" class="app-shell {{ body_class|default('') }}">
 <div id="wrapper">
 
-    <!-- ===============================
-         SIDEBAR
-    =============================== -->
-    {% include "layouts/sidebar.html" %}
+{% include "layouts/sidebar.html" %}
 
-    <!-- ===============================
-         CONTENT WRAPPER
-    =============================== -->
-    <div id="content-wrapper" class="d-flex flex-column">
+<div id="content-wrapper" class="d-flex flex-column">
+<div id="content">
 
-        <!-- Main Content -->
-        <div id="content">
+{% set page_title = self.title() %}
+{% include "layouts/topbar.html" %}
 
-            <!-- ===============================
-                 TOPBAR
-            =============================== -->
-            {% include "layouts/topbar.html" %}
+<div class="container-fluid pt-3">
+{% block content %}{% endblock %}
+</div>
 
-            <!-- ===============================
-                 PAGE CONTENT
-            =============================== -->
-            <div class="container-fluid pt-3">
-                {% block content %}{% endblock %}
-            </div>
-
-        </div>
-
-        <!-- ===============================
-             FOOTER
-        =============================== -->
-        {% include "layouts/footer.html" %}
-
-    </div>
-
+</div>
+{% include "layouts/footer.html" %}
+</div>
 </div>
 
 <!-- ===============================
-     SB ADMIN JS
+     JS
 =============================== -->
 <script src="{{ url_for('static', filename='sb-admin/vendor/jquery/jquery.min.js') }}"></script>
 <script src="{{ url_for('static', filename='sb-admin/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
 <script src="{{ url_for('static', filename='sb-admin/js/sb-admin-2.min.js') }}"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- ===============================
+     🌗 THEME SWITCH HANDLER
+=============================== -->
+<script>
+document.querySelectorAll(".theme-option[data-theme]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+        const theme = btn.dataset.theme;
+
+        document.documentElement.classList.remove("dark-mode");
+        if (theme === "dark") document.documentElement.classList.add("dark-mode");
+        if (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches) {
+            document.documentElement.classList.add("dark-mode");
+        }
+
+        localStorage.setItem("theme", theme);
+
+        try {
+            await fetch("/users/theme", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ theme })
+            });
+        } catch (e) {}
+    });
+});
+</script>
+
+<!-- ===============================
+     🌐 LANGUAGE SWITCH HANDLER
+=============================== -->
+<script>
+document.querySelectorAll(".lang-option[data-lang]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+        const language = btn.dataset.lang;
+        try {
+            await fetch("/users/language", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ language })
+            });
+        } catch (e) {}
+        window.location.reload();
+    });
+});
+</script>
+
+{% block scripts %}{% endblock %}
 
 </body>
 </html>

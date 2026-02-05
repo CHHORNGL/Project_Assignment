@@ -1,90 +1,110 @@
-{% extends "layouts/base.html" %}
-{% block title %}Farmer Registration{% endblock %}
+<!DOCTYPE html>
+<html lang="{{ current_lang }}">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ t("auth_register_title") }}</title>
 
-{% block content %}
-<div class="container-fluid d-flex justify-content-center align-items-center"
-     style="min-height: 85vh;">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;500;600;700&family=Noto+Sans+Khmer:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <div class="card shadow border-0"
-         style="max-width:420px; width:100%; border-radius:14px;">
+    <link href="{{ url_for('static', filename='css/auth.css') }}" rel="stylesheet">
+</head>
+<body class="auth-body">
 
-        <!-- HEADER -->
-        <div class="card-header bg-success text-white text-center"
-             style="border-radius:14px 14px 0 0;">
-            <h4 class="mb-0 font-weight-bold">
-                 Farmer Registration
-            </h4>
-            <small>Create your farmer account</small>
+<main class="auth-shell">
+    <section class="auth-card" style="--auth-hero: url('{{ url_for('static', filename='img/auth/register-hero.jpg') }}');">
+        <div class="auth-visual">
+            <div class="auth-visual-top">
+                <div class="auth-brand">
+                    <span class="auth-brand-mark">Agri System</span>
+                    <span class="auth-brand-sub">{{ t("auth_brand_sub_farmer") }}</span>
+                </div>
+                <div class="auth-pill">{{ t("auth_pill_new_account") }}</div>
+            </div>
+
+            <div class="auth-visual-content">
+                <h1 class="auth-visual-title">{{ t("auth_visual_title_register") }}</h1>
+                <p>{{ t("auth_visual_sub_register") }}</p>
+                <ul class="auth-feature-list">
+                    <li><span class="auth-dot"></span>{{ t("auth_feature_register_1") }}</li>
+                    <li><span class="auth-dot"></span>{{ t("auth_feature_register_2") }}</li>
+                    <li><span class="auth-dot"></span>{{ t("auth_feature_register_3") }}</li>
+                </ul>
+            </div>
         </div>
 
-        <!-- BODY -->
-        <div class="card-body p-4">
+        <div class="auth-panel">
+            <div class="auth-panel-head auth-stagger delay-1">
+                <h2 class="auth-title">{{ t("auth_create_account") }}</h2>
+                <p class="auth-subtitle">
+                    {{ t("auth_already_have") }}
+                    <a href="{{ url_for('auth.login') }}">{{ t("auth_log_in") }}</a>
+                </p>
+            </div>
 
-            <form method="POST" novalidate>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="flash flash-{{ category }} auth-stagger delay-2">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form method="POST" novalidate class="auth-form auth-stagger delay-3">
                 {{ form.hidden_tag() }}
 
-                <!-- USERNAME -->
-                <div class="form-group mb-3">
-                    <label class="font-weight-bold">
-                        <i class="fas fa-user mr-1"></i> Username
-                    </label>
-                    {{ form.username(
-                        class="form-control",
-                        placeholder="Enter username"
-                    ) }}
+                <div class="auth-field">
+                    {{ form.username.label }}
+                    {{ form.username(class="auth-input", placeholder=t("auth_username_placeholder")) }}
                     {% for error in form.username.errors %}
-                        <small class="text-danger">{{ error }}</small>
+                        <div class="auth-errors">{{ error }}</div>
                     {% endfor %}
                 </div>
 
-                <!-- PASSWORD -->
-                <div class="form-group mb-3">
-                    <label class="font-weight-bold">
-                        <i class="fas fa-lock mr-1"></i> Password
-                    </label>
-                    {{ form.password(
-                        class="form-control",
-                        placeholder="Enter password"
-                    ) }}
+                <div class="auth-field">
+                    {{ form.email.label }}
+                    {{ form.email(class="auth-input", placeholder=t("auth_email_optional_placeholder")) }}
+                    {% for error in form.email.errors %}
+                        <div class="auth-errors">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="auth-field">
+                    {{ form.password.label }}
+                    {{ form.password(class="auth-input", placeholder=t("auth_password_placeholder")) }}
                     {% for error in form.password.errors %}
-                        <small class="text-danger">{{ error }}</small>
+                        <div class="auth-errors">{{ error }}</div>
                     {% endfor %}
                 </div>
 
-                <!-- CONFIRM PASSWORD -->
-                <div class="form-group mb-4">
-                    <label class="font-weight-bold">
-                        <i class="fas fa-lock mr-1"></i> Confirm Password
-                    </label>
-                    {{ form.confirm_password(
-                        class="form-control",
-                        placeholder="Confirm password"
-                    ) }}
+                <div class="auth-field">
+                    {{ form.confirm_password.label }}
+                    {{ form.confirm_password(class="auth-input", placeholder=t("auth_confirm_password_placeholder")) }}
                     {% for error in form.confirm_password.errors %}
-                        <small class="text-danger">{{ error }}</small>
+                        <div class="auth-errors">{{ error }}</div>
                     {% endfor %}
                 </div>
 
-                <!-- SUBMIT -->
-                <button type="submit"
-                        class="btn btn-success btn-block py-2 font-weight-bold">
-                    <i class="fas fa-user-plus mr-1"></i>
-                    Register
+                <button type="submit" class="auth-button">
+                    {{ form.submit.label.text }}
                 </button>
             </form>
 
-            <hr>
+            <div class="auth-divider auth-stagger delay-4">{{ t("auth_continue_with") }}</div>
+            <a class="auth-oauth-btn auth-stagger delay-5" href="{{ url_for('auth.google_login') }}">
+                <span class="auth-oauth-icon">G</span>
+                {{ t("auth_google") }}
+            </a>
 
-            <!-- LOGIN LINK -->
-            <p class="text-center mb-0">
-                Already have an account?
-                <a href="{{ url_for('auth.login') }}"
-                   class="font-weight-bold text-success">
-                    Login
-                </a>
-            </p>
-
+            <div class="auth-foot auth-stagger delay-6">
+                {{ t("auth_terms") }}
+            </div>
         </div>
-    </div>
-</div>
-{% endblock %}
+    </section>
+</main>
+
+</body>
+</html>

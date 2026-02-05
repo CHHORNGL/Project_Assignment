@@ -1,5 +1,5 @@
 {% extends "layouts/base.html" %}
-{% block title %}Assign Role{% endblock %}
+{% block title %}{{ t("assign_role") }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
@@ -15,7 +15,7 @@
             <div class="card shadow mb-4">
                 <div class="card-header py-3">
                     <h6 class="m-0 font-weight-bold text-primary">
-                        User Role Assignment
+                        {{ t("user_role_assignment") }}
                     </h6>
                 </div>
 
@@ -26,7 +26,7 @@
                         <!-- Role Select -->
                         <div class="form-group">
                             <label for="role_id" class="font-weight-bold">
-                                Select Role
+                                {{ t("select_role") }}
                             </label>
 
                             <select name="role_id"
@@ -44,7 +44,7 @@
                             </select>
 
                             <small class="form-text text-muted">
-                                Assign a role to this user.
+                                {{ t("assign_role_help") }}
                             </small>
                         </div>
 
@@ -52,12 +52,12 @@
                         <div class="mt-4">
                             <button type="submit"
                                     class="btn btn-success">
-                                💾 Save Role
+                                 {{ t("save_role") }}
                             </button>
 
                             <a href="{{ url_for('admin.users') }}"
                                class="btn btn-secondary ml-2">
-                                Cancel
+                                {{ t("cancel") }}
                             </a>
                         </div>
 

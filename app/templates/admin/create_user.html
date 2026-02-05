@@ -1,41 +1,41 @@
 {% extends "layouts/base.html" %}
-{% block title %}Create User{% endblock %}
+{% block title %}{{ t("create_user") }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid" style="max-width:600px">
 
-    <h3 class="mb-4"> Create User</h3>
+    <h3 class="mb-4"> {{ t("create_user") }}</h3>
 
     <form method="POST" action="{{ url_for('admin.create_user') }}">
 
         <!-- Username -->
         <div class="form-group">
-            <label>Username</label>
+            <label>{{ t("username") }}</label>
             <input
                 name="username"
                 class="form-control"
-                placeholder="Enter username"
+                placeholder="{{ t("enter_username") }}"
                 required
             >
         </div>
 
         <!-- Password -->
         <div class="form-group">
-            <label>Password</label>
+            <label>{{ t("password") }}</label>
             <input
                 name="password"
                 type="password"
                 class="form-control"
-                placeholder="Enter password"
+                placeholder="{{ t("enter_password") }}"
                 required
             >
         </div>
 
         <!-- Role -->
         <div class="form-group">
-            <label>Role</label>
+            <label>{{ t("role") }}</label>
             <select name="role" class="form-control" required>
-                <option value="" disabled selected>-- Select Role --</option>
+                <option value="" disabled selected>{{ t("select_role") }}</option>
                 {% for r in roles %}
                 <option value="{{ r.name }}">
                     {{ r.name|capitalize }}
@@ -47,11 +47,11 @@
         <!-- Actions -->
         <div class="mt-4">
             <button type="submit" class="btn btn-success">
-                ✅ Create User
+                <i class="fas fa-user-plus btn-icon"></i>{{ t("create_user") }}
             </button>
             <a href="{{ url_for('admin.users') }}"
                class="btn btn-secondary ml-2">
-                Cancel
+                {{ t("cancel") }}
             </a>
         </div>
 

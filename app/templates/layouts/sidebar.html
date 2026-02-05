@@ -1,7 +1,7 @@
 <!-- Sidebar -->
-<ul class="navbar-nav sidebar accordion"
-    id="accordionSidebar"
-    style="background:#ffffff;border-right:1px solid #e5e7eb;">
+{% set path = request.path %}
+<ul class="navbar-nav sidebar accordion app-sidebar"
+    id="accordionSidebar">
 
     <!-- ===============================
          BRAND / LOGO
@@ -11,123 +11,196 @@
        style="text-decoration:none;">
         <img src="{{ url_for('static', filename='img/logo.jpg') }}"
              alt="Agri Logo"
+             class="sidebar-logo logo-light"
              style="height:36px;width:auto;">
-        <span class="ml-2 font-weight-bold"
-              style="color:#1f2937;font-size:16px;">
+        <img src="{{ url_for('static', filename='img/logo-black.jpg') }}"
+             alt="Agri Logo"
+             class="sidebar-logo logo-dark"
+             style="height:36px;width:auto;">
+        <span class="ml-2 font-weight-bold sidebar-logo-text">
             Agri System
         </span>
     </a>
 
     <!-- ===============================
-         ADMIN
+         ADMIN SECTION
     =============================== -->
-    {% if current_user.is_authenticated and current_user.has_permission("view_dashboard") %}
-    <li class="nav-item">
-        <a class="nav-link" href="{{ url_for('admin.dashboard') }}">
-            <img src="{{ url_for('static', filename='img/logo/dashboard-48.png') }}" class="menu-icon">
-            <span>Dashboard</span>
-        </a>
-    </li>
-    {% endif %}
+    {% if current_user.is_authenticated and current_user.has_role("admin") %}
 
-    {% if current_user.is_authenticated and current_user.has_permission("view_reports") %}
-    <li class="nav-item">
-        <a class="nav-link" href="{{ url_for('admin.expert_statistics') }}">
-            <img src="{{ url_for('static', filename='img/logo/Expert Statistics.png') }}" class="menu-icon">
-            <span>Expert Statistics</span>
-        </a>
-    </li>
-    {% endif %}
+    <div class="sidebar-heading mt-3">
+        {{ t("admin") }}
+    </div>
 
-    {% if current_user.is_authenticated and current_user.has_permission("view_dashboard") %}
     <li class="nav-item">
-        <a class="nav-link" href="{{ url_for('admin.audit_logs') }}">
-            <img src="{{ url_for('static', filename='img/logo/Audit Logs.png') }}" class="menu-icon">
-            <span>Audit Logs</span>
+        <a class="nav-link {% if path == url_for('admin.dashboard') %}active{% endif %}"
+           href="{{ url_for('admin.dashboard') }}">
+            <i class="menu-icon fas fa-home"></i>
+            <span>{{ t("dashboard") }}</span>
         </a>
     </li>
+
+    <li class="nav-item">
+        <a class="nav-link {% if path.startswith('/admin/users') %}active{% endif %}"
+           href="{{ url_for('admin.users') }}">
+            <i class="menu-icon fas fa-users"></i>
+            <span>{{ t("users") }}</span>
+        </a>
+    </li>
+
+    <li class="nav-item">
+        <a class="nav-link {% if path.startswith('/admin/roles') %}active{% endif %}"
+           href="{{ url_for('admin.roles') }}">
+            <i class="menu-icon fas fa-user-shield"></i>
+            <span>{{ t("roles_permissions") }}</span>
+        </a>
+    </li>
+
+    <li class="nav-item">
+        <a class="nav-link {% if path.startswith('/admin/audit-logs') %}active{% endif %}"
+           href="{{ url_for('admin.audit_logs') }}">
+            <i class="menu-icon fas fa-clipboard-list"></i>
+            <span>{{ t("audit_logs") }}</span>
+        </a>
+    </li>
+
+    <li class="nav-item">
+        <a class="nav-link {% if path.startswith('/admin/crops') %}active{% endif %}"
+           href="{{ url_for('admin_crop.index') }}">
+            <i class="menu-icon fas fa-seedling"></i>
+            <span>{{ t("crops") }}</span>
+        </a>
+    </li>
+
+    <li class="nav-item">
+        <a class="nav-link {% if path.startswith('/admin/translations') %}active{% endif %}"
+           href="{{ url_for('admin.translations') }}">
+            <i class="menu-icon fas fa-language"></i>
+            <span>{{ t("translations") }}</span>
+        </a>
+    </li>
+
+    <li class="nav-item">
+        <a class="nav-link {% if path.startswith('/admin/world') %}active{% endif %}"
+           href="{{ url_for('admin.world') }}">
+            <i class="menu-icon fas fa-globe-asia"></i>
+            <span>{{ t("world_map") }}</span>
+        </a>
+    </li>
+
     {% endif %}
 
     <!-- ===============================
-         ADMINISTRATION
-    =============================== -->
-    {% if current_user.is_authenticated and current_user.has_permission("manage_users") %}
-    <div class="sidebar-heading mt-3">Administration</div>
-
-    <li class="nav-item">
-        <a class="nav-link" href="{{ url_for('admin.users') }}">
-            <img src="{{ url_for('static', filename='img/logo/Users.png') }}" class="menu-icon">
-            <span>Users</span>
-        </a>
-    </li>
-    {% endif %}
-
-    {% if current_user.is_authenticated and current_user.has_permission("manage_roles") %}
-    <li class="nav-item">
-        <a class="nav-link" href="{{ url_for('admin.roles') }}">
-            <img src="{{ url_for('static', filename='img/logo/Roles & Permissions.png') }}" class="menu-icon">
-            <span>Roles & Permissions</span>
-        </a>
-    </li>
-    {% endif %}
-
-    <!-- ===============================
-         EXPERT
+         EXPERT SECTION
     =============================== -->
     {% if current_user.is_authenticated and current_user.has_role("expert") %}
-    <div class="sidebar-heading mt-3">Expert</div>
+
+    <div class="sidebar-heading mt-4">
+        {{ t("expert_panel") }}
+    </div>
 
     <li class="nav-item">
-        <a class="nav-link" href="{{ url_for('expert.dashboard') }}">
-            <img src="{{ url_for('static', filename='img/logo/pending-diagnoses.png') }}" class="menu-icon">
-            <span>Diagnoses</span>
+        <a class="nav-link {% if path == url_for('expert.dashboard') %}active{% endif %}"
+           href="{{ url_for('expert.dashboard') }}">
+            <i class="menu-icon fas fa-home"></i>
+            <span>{{ t("dashboard") }}</span>
         </a>
     </li>
 
     <li class="nav-item">
-        <a class="nav-link" href="{{ url_for('expert.farmer_chats') }}">
-            <img src="{{ url_for('static', filename='img/logo/chat-messages.png') }}" class="menu-icon">
-            <span>Farmer Chats</span>
+        <a class="nav-link {% if path.startswith('/expert/pending') %}active{% endif %}"
+           href="{{ url_for('expert.pending_diagnoses') }}">
+            <i class="menu-icon fas fa-hourglass-half"></i>
+            <span>{{ t("pending_diagnoses") }}</span>
         </a>
     </li>
+
+    <li class="nav-item">
+        <a class="nav-link {% if path.startswith('/expert/farmer-chats') or path.startswith('/expert/chat') %}active{% endif %}"
+           href="{{ url_for('expert.farmer_chats') }}">
+            <i class="menu-icon fas fa-comments"></i>
+            <span>{{ t("farmer_chats") }}</span>
+        </a>
+    </li>
+
+    <li class="nav-item">
+        <a class="nav-link {% if path.startswith('/expert/support') %}active{% endif %}"
+           href="{{ url_for('expert.support_hub') }}">
+            <i class="menu-icon fas fa-headset"></i>
+            <span>{{ t("support_hub") }}</span>
+        </a>
+    </li>
+
+    <li class="nav-item">
+        <a class="nav-link {% if path.startswith('/expert/diseases') %}active{% endif %}"
+           href="{{ url_for('expert.diseases') }}">
+            <i class="menu-icon fas fa-virus"></i>
+            <span>{{ t("diseases") }}</span>
+        </a>
+    </li>
+
+    {% set knowledge_path = url_for('expert.knowledge_dashboard') %}
+    <li class="nav-item">
+        <a class="nav-link {% if path == knowledge_path %}active{% endif %}"
+           href="{{ knowledge_path }}">
+            <i class="menu-icon fas fa-book-open"></i>
+            <span>{{ t("knowledge_base") }}</span>
+        </a>
+    </li>
+
+    <li class="nav-item">
+        <a class="nav-link {% if path.startswith('/expert/knowledge/mixed-agri') %}active{% endif %}"
+           href="{{ url_for('expert.mixed_agri_dashboard') }}">
+            <i class="menu-icon fas fa-leaf"></i>
+            <span>{{ t("mixed_agriculture") }}</span>
+        </a>
+    </li>
+
     {% endif %}
 
     <!-- ===============================
-         FARMER
+         FARMER SECTION
     =============================== -->
     {% if current_user.is_authenticated and current_user.has_role("farmer") %}
-    <div class="sidebar-heading mt-3">Farmer</div>
+
+    <div class="sidebar-heading mt-4">
+        {{ t("farmer") }}
+    </div>
 
     <li class="nav-item">
-        <a class="nav-link" href="{{ url_for('farmer.dashboard') }}">
-            <img src="{{ url_for('static', filename='img/logo/dashboard-48.png') }}" class="menu-icon">
-            <span>Dashboard</span>
+        <a class="nav-link {% if path == url_for('farmer.dashboard') %}active{% endif %}"
+           href="{{ url_for('farmer.dashboard') }}">
+            <i class="menu-icon fas fa-home"></i>
+            <span>{{ t("dashboard") }}</span>
         </a>
     </li>
 
     <li class="nav-item">
-        <a class="nav-link" href="{{ url_for('farmer.diagnose') }}">
-            <img src="{{ url_for('static', filename='img/logo/total-diagnoses.png') }}" class="menu-icon">
-            <span>New Diagnosis</span>
+        <a class="nav-link {% if path.startswith('/farmer/diagnose') %}active{% endif %}"
+           href="{{ url_for('farmer.diagnose') }}">
+            <i class="menu-icon fas fa-notes-medical"></i>
+            <span>{{ t("new_diagnosis") }}</span>
         </a>
     </li>
 
     <li class="nav-item">
-        <a class="nav-link" href="{{ url_for('farmer.chat') }}">
-            <img src="{{ url_for('static', filename='img/logo/chat-messages.png') }}" class="menu-icon">
-            <span>Ask Expert</span>
+        <a class="nav-link {% if path.startswith('/farmer/chat') %}active{% endif %}"
+           href="{{ url_for('farmer.chat') }}">
+            <i class="menu-icon fas fa-comment-dots"></i>
+            <span>{{ t("ask_expert") }}</span>
         </a>
     </li>
+
     {% endif %}
 
     <!-- ===============================
          LOGOUT
     =============================== -->
     {% if current_user.is_authenticated %}
-    <li class="nav-item mt-3">
-        <a class="nav-link text-danger" href="{{ url_for('auth.logout') }}">
-            <img src="{{ url_for('static', filename='img/logo/Logout.png') }}" class="menu-icon">
-            <span>Logout</span>
+    <li class="nav-item mt-4">
+        <a class="nav-link text-danger"
+           href="{{ url_for('auth.logout') }}">
+            <i class="menu-icon fas fa-sign-out-alt"></i>
+            <span>{{ t("logout") }}</span>
         </a>
     </li>
     {% endif %}

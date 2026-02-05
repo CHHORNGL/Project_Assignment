@@ -1,0 +1,100 @@
+{% extends "layouts/base.html" %}
+{% block title %}{{ t("edit") if is_edit else t("add") }} {{ t("fact") }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="max-width:900px">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="font-weight-bold text-primary">
+            {{ t("edit") if is_edit else t("add") }} {{ t("fact") }}
+        </h3>
+
+        <a href="{{ url_for('expert.mixed_agri_facts') }}"
+           class="btn btn-light btn-sm shadow-sm">
+            Back
+        </a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form method="POST">
+                <div class="form-group">
+                    <label class="font-weight-bold">{{ t("source") }}</label>
+                    <select name="source_id" class="form-control" required>
+                        <option value="">{{ t("select_source") }}</option>
+                        {% for s in sources %}
+                        <option value="{{ s.id }}" {% if selected_source_id == s.id %}selected{% endif %}>
+                            {{ s.source_title }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="font-weight-bold">{{ t("topic") }}</label>
+                    <input type="text"
+                           name="topic"
+                           class="form-control"
+                           value="{{ fact.topic if fact else '' }}"
+                           required>
+                </div>
+
+                <div class="form-group">
+                    <label class="font-weight-bold">{{ t("region") }}</label>
+                    <input type="text"
+                           name="region"
+                           class="form-control"
+                           value="{{ fact.region if fact else '' }}">
+                </div>
+
+                <div class="form-group">
+                    <label class="font-weight-bold">{{ t("fact_text") }}</label>
+                    <textarea name="fact_text"
+                              class="form-control"
+                              rows="4"
+                              required>{{ fact.fact_text if fact else '' }}</textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        <label class="font-weight-bold">{{ t("metric_value") }}</label>
+                        <input type="text"
+                               name="metric_value"
+                               class="form-control"
+                               value="{{ fact.metric_value if fact and fact.metric_value is not none else '' }}"
+                               placeholder="{{ t("metric_value_placeholder") }}">
+                    </div>
+
+                    <div class="form-group col-md-4">
+                        <label class="font-weight-bold">{{ t("metric_unit") }}</label>
+                        <input type="text"
+                               name="metric_unit"
+                               class="form-control"
+                               value="{{ fact.metric_unit if fact else '' }}"
+                               placeholder="{{ t("metric_unit_placeholder") }}">
+                    </div>
+
+                    <div class="form-group col-md-4">
+                        <label class="font-weight-bold">{{ t("metric_year") }}</label>
+                        <input type="number"
+                               name="metric_year"
+                               class="form-control"
+                               value="{{ fact.metric_year if fact and fact.metric_year is not none else '' }}">
+                    </div>
+                </div>
+
+                <div class="text-right mt-4">
+                    <button class="btn btn-success px-4">
+                        {{ t("update") if is_edit else t("save") }} {{ t("fact") }}
+                    </button>
+                    <a href="{{ url_for('expert.mixed_agri_facts') }}"
+                       class="btn btn-secondary ml-2">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

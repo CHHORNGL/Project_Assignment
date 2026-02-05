@@ -1,5 +1,5 @@
 {% extends "layouts/base.html" %}
-{% block title %}Roles Management{% endblock %}
+{% block title %}{{ t("roles_management_title") }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
@@ -9,7 +9,7 @@
     =============================== -->
     <div class="d-flex align-items-center justify-content-between mb-4">
         <h1 class="h3 mb-0">
-            Roles Management
+            {{ t("roles_management_title") }}
         </h1>
     </div>
 
@@ -20,7 +20,7 @@
 
         <div class="card-header">
             <h6 class="m-0 font-weight-bold text-primary">
-                System Roles
+                {{ t("system_roles") }}
             </h6>
         </div>
 
@@ -30,16 +30,16 @@
                 <table class="table table-hover align-middle" width="100%">
                     <thead class="thead-light">
                         <tr>
-                            <th style="width:30%">Role Name</th>
-                            <th style="width:30%">Total Permissions</th>
-                            <th style="width:40%">Actions</th>
+                            <th style="width:30%">{{ t("role_name") }}</th>
+                            <th style="width:30%">{{ t("total_permissions") }}</th>
+                            <th style="width:40%">{{ t("actions") }}</th>
                         </tr>
                     </thead>
 
                     <tbody>
                         {% for role in roles %}
                         <tr>
-                            <!-- Role Name -->
+                            <!-- {{ t("role_name") }} -->
                             <td class="font-weight-bold text-uppercase">
                                 {{ role.name }}
                             </td>
@@ -47,28 +47,25 @@
                             <!-- Permissions Count -->
                             <td>
                                 <span class="badge badge-info">
-                                    {{ role.permissions|length }} permissions
+                                    {{ role.permissions|length }} {{ t("permissions_label") }}
                                 </span>
                             </td>
 
-                            <!-- Actions -->
+                            <!-- {{ t("actions") }} -->
                             <td>
                                 <a href="{{ url_for('admin.manage_role_permissions', role_id=role.id) }}"
                                    class="btn btn-success btn-sm d-inline-flex align-items-center gap-2">
 
-                                    <!-- PNG ICON -->
-                                    <img src="{{ url_for('static', filename='img/logo/manage-permissions.png') }}"
-                                         alt="Manage Permissions"
-                                         style="width:16px;height:16px;">
+                                    <i class="fas fa-user-shield mr-2"></i>
 
-                                    <span>Manage Permissions</span>
+                                    <span>{{ t("manage_permissions") }}</span>
                                 </a>
                             </td>
                         </tr>
                         {% else %}
                         <tr>
                             <td colspan="3" class="text-center text-muted py-4">
-                                No roles found.
+                                {{ t("no_roles_found") }}
                             </td>
                         </tr>
                         {% endfor %}

@@ -1,12 +1,24 @@
-<h2>Diagnosis Detail</h2>
+<h2>{{ t("diagnosis_detail") }}</h2>
 
-<p><b>Crop:</b> {{ diagnosis.crop_name }}</p>
-<p><b>Disease:</b> {{ diagnosis.disease_name }}</p>
-<p><b>Status:</b> {{ diagnosis.status }}</p>
+<p><b>{{ t("crop_label") }}:</b> {{ localize(diagnosis.crop, "name", diagnosis.crop_name) }}</p>
+{% set disease_label = (diagnosis.disease.name_kh if current_lang == 'km' and diagnosis.disease and diagnosis.disease.name_kh else diagnosis.disease_name) %}
+<p><b>{{ t("disease_label") }}:</b> {{ disease_label }}</p>
+{% if diagnosis.status == "PENDING" %}
+  {% set status_label = t("status_pending") %}
+{% elif diagnosis.status == "APPROVED" %}
+  {% set status_label = t("status_approved") %}
+{% elif diagnosis.status == "REJECTED" %}
+  {% set status_label = t("status_rejected") %}
+{% elif diagnosis.status == "AUTO" %}
+  {% set status_label = t("status_auto") %}
+{% else %}
+  {% set status_label = diagnosis.status %}
+{% endif %}
+<p><b>{{ t("diagnosis_status") }}:</b> {{ status_label }}</p>
 
 {% if diagnosis.status == "APPROVED" %}
   <hr>
-  <h3>Expert Solution</h3>
+  <h3>{{ t("expert_solution") }}</h3>
   <p>{{ diagnosis.solution }}</p>
 {% else %}
   <p>⏳ Waiting for expert review...</p>

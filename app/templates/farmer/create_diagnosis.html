@@ -1,10 +1,10 @@
 {% extends "layouts/base.html" %}
-{% block title %}Create Diagnosis{% endblock %}
+{% block title %}{{ t("create_diagnosis") }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid mt-4">
 
-    <h2 class="mb-4">🌱 Create Diagnosis Request</h2>
+    <h2 class="mb-4"><i class="fas fa-seedling label-icon"></i>{{ t("create_diagnosis") }}</h2>
 
     <div class="card shadow-sm">
         <div class="card-body">
@@ -15,7 +15,7 @@
                 <!-- Crop Name -->
                 <div class="form-group">
                     {{ form.crop_name.label(class="form-label") }}
-                    {{ form.crop_name(class="form-control", placeholder="Enter crop name") }}
+                    {{ form.crop_name(class="form-control", placeholder="{{ t("enter_crop_name") }}") }}
                     {% for error in form.crop_name.errors %}
                         <small class="text-danger">{{ error }}</small>
                     {% endfor %}
@@ -24,7 +24,7 @@
                 <!-- Disease Name -->
                 <div class="form-group">
                     {{ form.disease_name.label(class="form-label") }}
-                    {{ form.disease_name(class="form-control", placeholder="Describe disease or symptoms") }}
+                    {{ form.disease_name(class="form-control", placeholder="{{ t("describe_disease_symptoms") }}") }}
                     {% for error in form.disease_name.errors %}
                         <small class="text-danger">{{ error }}</small>
                     {% endfor %}
@@ -32,7 +32,7 @@
 
                 <!-- Submit -->
                 <button type="submit" class="btn btn-success">
-                    ✅ Submit Diagnosis
+                    <i class="fas fa-paper-plane btn-icon"></i>{{ t("submit_diagnosis") }}
                 </button>
 
                 <a href="{{ url_for('farmer.dashboard') }}"

@@ -1,63 +1,64 @@
 {% extends "layouts/base.html" %}
 
-{% block title %}Expert Form{% endblock %}
+{% block title %}{{ t("expert_form") }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid" style="max-width: 800px">
 
     <h3 class="mb-4 font-weight-bold">
-        🧠 Expert Knowledge Input
+        <i class="fas fa-brain mr-2 text-primary"></i>
+        Expert Knowledge Input
     </h3>
 
     <div class="card shadow-sm">
-        <div class="card-body">
+        <div class="card-body form-scroll">
 
             <form method="POST">
 
                 <!-- Crop -->
                 <div class="form-group">
-                    <label class="font-weight-semibold">Crop Name</label>
+                    <label class="font-weight-semibold">{{ t("crop_name") }}</label>
                     <input
                         type="text"
                         name="crop_name"
                         class="form-control"
-                        placeholder="e.g. Rice"
+                        placeholder="{{ t("crop_example") }}"
                         required
                     >
                 </div>
 
                 <!-- Disease -->
                 <div class="form-group">
-                    <label class="font-weight-semibold">Disease Name</label>
+                    <label class="font-weight-semibold">{{ t("disease_name") }}</label>
                     <input
                         type="text"
                         name="disease_name"
                         class="form-control"
-                        placeholder="e.g. Rice Blast"
+                        placeholder="{{ t("disease_example_placeholder") }}"
                         required
                     >
                 </div>
 
-                <!-- Symptoms -->
+                <!-- {{ t("symptoms_label") }} -->
                 <div class="form-group">
-                    <label class="font-weight-semibold">Symptoms</label>
+                    <label class="font-weight-semibold">{{ t("symptoms_label") }}</label>
                     <textarea
                         name="symptoms"
                         class="form-control"
                         rows="4"
-                        placeholder="Describe symptoms..."
+                        placeholder="{{ t("description_placeholder") }}"
                         required
                     ></textarea>
                 </div>
 
                 <!-- Solution -->
                 <div class="form-group">
-                    <label class="font-weight-semibold">Solution / Treatment</label>
+                    <label class="font-weight-semibold">{{ t("treatment") }}</label>
                     <textarea
                         name="solution"
                         class="form-control"
                         rows="4"
-                        placeholder="Expert recommended solution..."
+                        placeholder="{{ t("expert_solution_placeholder") }}"
                         required
                     ></textarea>
                 </div>
@@ -65,7 +66,7 @@
                 <!-- Actions -->
                 <div class="text-right">
                     <button class="btn btn-success">
-                        💾 Save Knowledge
+                        <i class="fas fa-save mr-2"></i>{{ t("save_knowledge") }}
                     </button>
 
                     <a href="{{ url_for('expert.dashboard') }}"

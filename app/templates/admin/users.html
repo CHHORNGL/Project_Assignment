@@ -1,17 +1,21 @@
 {% extends "layouts/base.html" %}
-{% block title %}User Management{% endblock %}
+{% block title %}{{ t("admin_user_management_title") }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
 
     <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h4 text-gray-800">👥 User Management</h1>
+        <h1 class="h4 text-gray-800">
+            <i class="fas fa-users-cog mr-2 text-primary"></i>
+            {{ t("admin_user_management_title") }}
+        </h1>
 
-        <!-- Create User -->
+        <!-- {{ t("create_user") }} -->
         <a href="{{ url_for('admin.users') }}#create-user"
            class="btn btn-primary">
-            ➕ Create User
+            <i class="fas fa-user-plus mr-2"></i>
+            {{ t("create_user") }}
         </a>
     </div>
 
@@ -21,7 +25,7 @@
     <div class="card shadow mb-4" id="create-user">
         <div class="card-header">
             <h6 class="m-0 font-weight-bold text-primary">
-                Create New User
+                {{ t("create_new_user") }}
             </h6>
         </div>
         <div class="card-body">
@@ -31,18 +35,24 @@
 
                 <div class="col-md-3 mb-2">
                     <input name="username" class="form-control"
-                           placeholder="Username" required>
+                           placeholder="{{ t("username") }}" required>
                 </div>
 
                 <div class="col-md-3 mb-2">
+                    <input name="email" type="email"
+                           class="form-control"
+                           placeholder="{{ t("email_optional") }}">
+                </div>
+
+                <div class="col-md-2 mb-2">
                     <input name="password" type="password"
                            class="form-control"
-                           placeholder="Password" required>
+                           placeholder="{{ t("password") }}" required>
                 </div>
 
-                <div class="col-md-3 mb-2">
+                <div class="col-md-2 mb-2">
                     <select name="role" class="form-control" required>
-                        <option value="">-- Role --</option>
+                        <option value="">{{ t("role_placeholder") }}</option>
                         {% for r in roles %}
                         <option value="{{ r.name }}">
                             {{ r.name|capitalize }}
@@ -51,9 +61,10 @@
                     </select>
                 </div>
 
-                <div class="col-md-3 mb-2">
+                <div class="col-md-2 mb-2">
                     <button class="btn btn-success w-100">
-                        ✅ Create
+                        <i class="fas fa-plus-circle mr-2"></i>
+                        {{ t("create") }}
                     </button>
                 </div>
 
@@ -66,10 +77,57 @@
          USERS TABLE
     =============================== -->
     <div class="card shadow mb-4">
-        <div class="card-header">
+        <div class="card-header d-flex justify-content-between align-items-center">
             <h6 class="m-0 font-weight-bold text-primary">
-                All Users
+                {{ t("all_users") }}
             </h6>
+            <form method="GET" class="form-inline">
+                <input type="text"
+                       name="q"
+                       value="{{ q }}"
+                       class="form-control form-control-sm mr-2"
+                       placeholder="{{ t("search_users_placeholder") }}">
+                <button class="btn btn-sm btn-outline-primary">{{ t("search") }}</button>
+                {% if q %}
+                <a href="{{ url_for('admin.users') }}"
+                   class="btn btn-sm btn-outline-secondary ml-2">{{ t("clear") }}</a>
+                {% endif %}
+            </form>
+        </div>
+
+        <div class="card-body border-bottom">
+            <form id="bulk-users-form"
+                  method="POST"
+                  action="{{ url_for('admin.users_bulk') }}"
+                  data-total="{{ users|length }}"
+                  data-query="{{ q|default('') }}">
+                <input type="hidden" name="scope" value="selected" id="users-scope">
+                <input type="hidden" name="q" value="{{ q }}">
+                <div class="form-inline">
+                    <select name="action" class="form-control form-control-sm mr-2">
+                        <option value="">{{ t("bulk_action") }}</option>
+                        <option value="ban">{{ t("ban_selected") }}</option>
+                        <option value="unban">{{ t("unban_selected") }}</option>
+                        <option value="export_csv">{{ t("export_selected_csv") }}</option>
+                        <option value="export_json">{{ t("export_selected_json") }}</option>
+                    </select>
+                    <a href="{{ url_for('admin.users_export', format='csv', q=q) }}"
+                       class="btn btn-sm btn-outline-secondary mr-2">
+                        {{ t("export_csv") }}
+                    </a>
+                    <a href="{{ url_for('admin.users_export', format='json', q=q) }}"
+                       class="btn btn-sm btn-outline-secondary mr-2">
+                        {{ t("export_json") }}
+                    </a>
+                    <button class="btn btn-sm btn-outline-danger">{{ t("apply") }}</button>
+                    <div class="form-check ml-3">
+                        <input class="form-check-input" type="checkbox" id="apply-all-users">
+                        <label class="form-check-label small text-muted" for="apply-all-users">
+                            {{ t("apply_all_results", count=users|length) }}
+                        </label>
+                    </div>
+                </div>
+            </form>
         </div>
 
         <div class="card-body">
@@ -78,11 +136,16 @@
                 <table class="table table-bordered table-hover">
                     <thead class="thead-light">
                         <tr>
+                            <th>
+                                <input type="checkbox" id="select-all-users">
+                            </th>
                             <th>#</th>
-                            <th>Username</th>
-                            <th>Role</th>
-                            <th>Status</th>
-                            <th style="width:240px">Actions</th>
+                            <th>{{ t("avatar") }}</th>
+                            <th>{{ t("username") }}</th>
+                            <th>{{ t("email") }}</th>
+                            <th>{{ t("role") }}</th>
+                            <th>{{ t("status") }}</th>
+                            <th style="width:320px">{{ t("actions") }}</th>
                         </tr>
                     </thead>
 
@@ -90,10 +153,36 @@
                         {% for user in users %}
                         <tr>
 
+                            <td>
+                                <input type="checkbox"
+                                       class="user-select"
+                                       name="user_ids"
+                                       value="{{ user.id }}"
+                                       data-username="{{ user.username }}"
+                                       data-email="{{ user.email or '' }}"
+                                       data-role="{{ user.roles[0].name if user.roles else 'None' }}"
+                                       data-status="{{ t("active") if user.is_active else t("banned") }}"
+                                       form="bulk-users-form">
+                            </td>
+
                             <td>{{ loop.index }}</td>
 
                             <td>
+                                <img class="admin-user-avatar"
+                                     src="{% if user.avatar_path %}{{ url_for('static', filename=user.avatar_path) }}{% else %}{{ url_for('static', filename='img/avatar.png') }}{% endif %}"
+                                     alt="{{ user.username }} avatar">
+                            </td>
+
+                            <td>
                                 <strong>{{ user.username }}</strong>
+                            </td>
+
+                            <td>
+                                {% if user.email %}
+                                    {{ user.email }}
+                                {% else %}
+                                    <span class="text-muted">—</span>
+                                {% endif %}
                             </td>
 
                             <!-- ROLE -->
@@ -104,7 +193,7 @@
                                     </span>
                                 {% else %}
                                     <span class="badge badge-secondary">
-                                        None
+                                        {{ t("none_label") }}
                                     </span>
                                 {% endif %}
                             </td>
@@ -113,11 +202,11 @@
                             <td>
                                 {% if user.is_active %}
                                     <span class="badge badge-success">
-                                        Active
+                                        {{ t("active") }}
                                     </span>
                                 {% else %}
                                     <span class="badge badge-danger">
-                                        Banned
+                                        {{ t("banned") }}
                                     </span>
                                 {% endif %}
                             </td>
@@ -148,8 +237,46 @@
                                       class="d-inline">
                                     <button class="btn btn-sm
                                         {% if user.is_active %}btn-danger{% else %}btn-success{% endif %}">
-                                        {% if user.is_active %}Ban{% else %}Unban{% endif %}
+                                        {% if user.is_active %}{{ t("ban") }}{% else %}{{ t("unban") }}{% endif %}
                                     </button>
+                                </form>
+                                {% endif %}
+
+                                <!-- Update Email -->
+                                <form method="POST"
+                                      action="{{ url_for('admin.update_user_email', user_id=user.id) }}"
+                                      class="d-inline">
+                                    <div class="input-group input-group-sm mt-2">
+                                        <input type="email"
+                                               name="email"
+                                               class="form-control"
+                                               placeholder="{{ t("email_optional") }}"
+                                               value="{{ user.email or '' }}">
+                                        <div class="input-group-append">
+                                            <button class="btn btn-outline-info" type="submit">
+                                                {{ t("save") }}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+
+                                <!-- Reset Password -->
+                                {% if not user.has_role('admin') %}
+                                <form method="POST"
+                                      action="{{ url_for('admin.reset_user_password', user_id=user.id) }}"
+                                      class="d-inline">
+                                    <div class="input-group input-group-sm mt-2">
+                                        <input type="password"
+                                               name="new_password"
+                                               class="form-control"
+                                               placeholder="{{ t("new_password") }}"
+                                               required>
+                                        <div class="input-group-append">
+                                            <button class="btn btn-outline-primary" type="submit">
+                                                {{ t("reset") }}
+                                            </button>
+                                        </div>
+                                    </div>
                                 </form>
                                 {% endif %}
 
@@ -165,4 +292,62 @@
     </div>
 
 </div>
+{% endblock %}
+
+{% block scripts %}
+{% set modal_id = "bulkUsersConfirmModal" %}
+{% set modal_title = t("confirm_bulk_action") %}
+{% set modal_title_id = "bulk-users-confirm-title" %}
+{% set modal_body_id = "bulk-users-confirm-body" %}
+{% set modal_confirm_id = "bulk-users-confirm-submit" %}
+{% set modal_copy_id = "bulk-users-confirm-copy" %}
+{% include "partials/bulk_confirm_modal.html" %}
+
+<script src="{{ url_for('static', filename='js/bulk_confirm.js') }}"></script>
+<script>
+(function () {
+    new window.BulkConfirmController({
+        formId: "bulk-users-form",
+        scopeFieldId: "users-scope",
+        applyAllId: "apply-all-users",
+        selectAllId: "select-all-users",
+        rowSelector: ".user-select",
+        modalId: "bulkUsersConfirmModal",
+        modalBodyId: "bulk-users-confirm-body",
+        modalConfirmId: "bulk-users-confirm-submit",
+        modalCopyId: "bulk-users-confirm-copy",
+        modalTitleId: "bulk-users-confirm-title",
+        modalBaseTitle: "{{ t("confirm_bulk_action") }}",
+        itemLabel: "{{ t("item_label_user") }}",
+        previewColumns: [
+            { key: "id", label: "{{ t("id_label") }}" },
+            { key: "username", label: "{{ t("username") }}" },
+            { key: "email", label: "{{ t("email") }}" },
+            { key: "status", label: "{{ t("status") }}" }
+        ],
+        getPreviewRow: (checkbox) => ({
+            id: checkbox.value,
+            username: checkbox.getAttribute("data-username") || "",
+            email: checkbox.getAttribute("data-email") || "",
+            status: checkbox.getAttribute("data-status") || ""
+        }),
+        getFiltersLabel: (form) => {
+            const q = form.dataset.query || "";
+            return q ? `q="${q}"` : "{{ t("no_search_filter") }}"; 
+        },
+        actionLabel: (action) => {
+            if (action === "ban") return "{{ t("ban") }}";
+            if (action === "unban") return "{{ t("unban") }}";
+            return "{{ t("export_label") }}";
+        },
+        confirmLabel: (action) => {
+            if (action === "ban") return "{{ t("confirm_ban") }}";
+            if (action === "unban") return "{{ t("confirm_unban") }}";
+            return "{{ t("confirm_export") }}";
+        },
+        confirmIsDanger: (action) => action === "ban",
+        allowedActions: ["ban", "unban", "export_csv", "export_json"]
+    });
+})();
+</script>
 {% endblock %}

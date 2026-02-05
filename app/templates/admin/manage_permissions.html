@@ -1,5 +1,5 @@
 {% extends "layouts/base.html" %}
-{% block title %}Manage Permissions{% endblock %}
+{% block title %}{{ t("manage_permissions") }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
@@ -8,10 +8,9 @@
          PAGE TITLE
     =============================== -->
     <div class="d-flex align-items-center mb-4">
-        <img src="{{ url_for('static', filename='img/logo/manage-permissions.png') }}"
-             style="width:28px;height:28px;margin-right:10px;">
+        <i class="fas fa-user-shield mr-2 text-success" style="font-size:20px;"></i>
         <h1 class="h4 mb-0 font-weight-bold">
-            Manage Permissions – {{ role.name }}
+            Manage Permissions – {{ role.name | upper }}
         </h1>
     </div>
 
@@ -26,17 +25,17 @@
                 {% for perm in permissions %}
                 <label class="permission-item d-flex align-items-center mb-3">
 
-                    <!-- Hidden checkbox (still works) -->
+                    <!-- REAL CHECKBOX (hidden safely) -->
                     <input type="checkbox"
+                           class="permission-checkbox"
                            name="permissions"
                            value="{{ perm.id }}"
-                           {% if perm in role.permissions %}checked{% endif %}
-                           hidden>
+                           {% if perm in role.permissions %}checked{% endif %}>
 
-                    <!-- Custom checkbox UI -->
+                    <!-- CUSTOM CHECK UI -->
                     <span class="permission-box"></span>
 
-                    <!-- Permission text -->
+                    <!-- TEXT -->
                     <div class="ml-3">
                         <div class="font-weight-bold">
                             {{ perm.code }}
@@ -53,14 +52,13 @@
                      ACTION BUTTONS
                 =============================== -->
                 <div class="mt-4">
-                    <button type="submit"
-                            class="btn btn-success mr-2">
-                        Save Permissions
+                    <button type="submit" class="btn btn-success mr-2">
+                        💾 {{ t("save_permissions") }}
                     </button>
 
                     <a href="{{ url_for('admin.roles') }}"
                        class="btn btn-secondary">
-                        Cancel
+                        {{ t("cancel") }}
                     </a>
                 </div>
 
@@ -72,13 +70,21 @@
 </div>
 
 <!-- ===============================
-     LOCAL STYLE (SAFE)
+     LOCAL SAFE STYLE
 =============================== -->
 <style>
 .permission-item {
     cursor: pointer;
 }
 
+/* Hide checkbox but keep it functional */
+.permission-checkbox {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Custom checkbox */
 .permission-box {
     width: 18px;
     height: 18px;
@@ -88,13 +94,15 @@
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    transition: all 0.2s ease;
 }
 
-.permission-item input:checked + .permission-box {
+/* Checked state */
+.permission-checkbox:checked + .permission-box {
     background-color: #22c55e;
 }
 
-.permission-item input:checked + .permission-box::after {
+.permission-checkbox:checked + .permission-box::after {
     content: "✓";
     color: white;
     font-size: 12px;

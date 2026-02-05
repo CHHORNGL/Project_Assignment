@@ -12,12 +12,23 @@ class Disease(db.Model):
     )
 
     name = db.Column(db.String(100), nullable=False)
+    name_kh = db.Column(db.String(120))
     description = db.Column(db.Text)
+    description_kh = db.Column(db.Text)
+    treatment = db.Column(db.Text)
+    treatment_kh = db.Column(db.Text)
     severity_level = db.Column(db.String(50))
 
     crop = db.relationship(
         "Crop",
         back_populates="diseases"
+    )
+
+    rules = db.relationship(
+        "Rule",
+        back_populates="disease",
+        cascade="all, delete-orphan",
+        passive_deletes=True
     )
 
     def __repr__(self):

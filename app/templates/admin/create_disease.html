@@ -1,12 +1,14 @@
 {% extends "layouts/base.html" %}
-{% block title %}Add Disease{% endblock %}
+{% set page_title = t("edit_disease") if edit_mode else t("add_disease") %}
+{% set back_href = back_url if back_url is defined else url_for('admin.diseases') %}
+{% block title %}{{ page_title }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid" style="max-width:700px">
 
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h4 font-weight-bold">🦠 Add New Disease</h1>
-        <a href="{{ url_for('admin.diseases') }}"
+        <h1 class="h4 font-weight-bold">🦠 {{ page_title }}</h1>
+        <a href="{{ back_href }}"
            class="btn btn-sm btn-secondary">
             ← Back
         </a>
@@ -16,52 +18,90 @@
 
         <!-- Crop -->
         <div class="form-group">
-            <label class="font-weight-bold">Crop</label>
+            <label class="font-weight-bold">{{ t("crop_label") }}</label>
             <select name="crop_id" class="form-control" required>
-                <option value="">-- Select Crop --</option>
+                <option value="">{{ t("select_crop") }}</option>
                 {% for crop in crops %}
-                <option value="{{ crop.id }}">{{ crop.name }}</option>
+                <option value="{{ crop.id }}" {% if disease and disease.crop_id == crop.id %}selected{% endif %}>{{ localize(crop, "name") }}</option>
                 {% endfor %}
             </select>
         </div>
 
         <!-- Disease Name -->
         <div class="form-group">
-            <label class="font-weight-bold">Disease Name</label>
+            <label class="font-weight-bold">{{ t("disease_name") }}</label>
             <input type="text"
                    name="name"
                    class="form-control"
-                   placeholder="e.g. Rice Blast"
+                   placeholder="{{ t("disease_example_placeholder") }}"
+                   value="{{ disease.name if disease else '' }}"
                    required>
+        </div>
+
+        <!-- Disease Name (Khmer) -->
+        <div class="form-group">
+            <label class="font-weight-bold">{{ t("disease_name_kh") }}</label>
+            <input type="text"
+                   name="name_kh"
+                   class="form-control"
+                   placeholder="ឧ. ជំងឺអាចម៍ដី"
+                   value="{{ disease.name_kh if disease else '' }}">
         </div>
 
         <!-- Description -->
         <div class="form-group">
-            <label class="font-weight-bold">Description</label>
+            <label class="font-weight-bold">{{ t("description_label") }}</label>
             <textarea name="description"
                       class="form-control"
                       rows="3"
-                      placeholder="Describe symptoms..."></textarea>
+                      placeholder="{{ t("description_placeholder") }}">{{ disease.description if disease else '' }}</textarea>
+        </div>
+
+        <!-- Description (Khmer) -->
+        <div class="form-group">
+            <label class="font-weight-bold">{{ t("description_kh") }}</label>
+            <textarea name="description_kh"
+                      class="form-control"
+                      rows="3"
+                      placeholder="ពិពណ៌នាអំពីរោគសញ្ញា...">{{ disease.description_kh if disease else '' }}</textarea>
+        </div>
+
+        <!-- Treatment -->
+        <div class="form-group">
+            <label class="font-weight-bold">{{ t("treatment") }}</label>
+            <textarea name="treatment"
+                      class="form-control"
+                      rows="3"
+                      placeholder="{{ t("treatment_placeholder") }}">{{ disease.treatment if disease else '' }}</textarea>
+        </div>
+
+        <!-- Treatment (Khmer) -->
+        <div class="form-group">
+            <label class="font-weight-bold">{{ t("treatment_kh") }}</label>
+            <textarea name="treatment_kh"
+                      class="form-control"
+                      rows="3"
+                      placeholder="វិធីព្យាបាល ឬការការពារ">{{ disease.treatment_kh if disease else '' }}</textarea>
         </div>
 
         <!-- Severity -->
         <div class="form-group">
-            <label class="font-weight-bold">Severity Level</label>
+            <label class="font-weight-bold">{{ t("severity_level") }}</label>
             <select name="severity_level" class="form-control">
-                <option value="">-- Select Severity --</option>
-                <option value="Low">Low</option>
-                <option value="Medium">Medium</option>
-                <option value="High">High</option>
+                <option value="">{{ t("select_severity") }}</option>
+                <option value="Low" {% if disease and disease.severity_level == 'Low' %}selected{% endif %}>{{ t("severity_low") }}</option>
+                <option value="Medium" {% if disease and disease.severity_level == 'Medium' %}selected{% endif %}>{{ t("severity_medium") }}</option>
+                <option value="High" {% if disease and disease.severity_level == 'High' %}selected{% endif %}>{{ t("severity_high") }}</option>
             </select>
         </div>
 
         <div class="mt-4">
             <button class="btn btn-success">
-                💾 Save Disease
+                💾 {{ t("update_disease") if edit_mode else t("save_disease") }}
             </button>
-            <a href="{{ url_for('admin.diseases') }}"
+            <a href="{{ back_href }}"
                class="btn btn-light ml-2">
-                Cancel
+                {{ t("cancel") }}
             </a>
         </div>
 

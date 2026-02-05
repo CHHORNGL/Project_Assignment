@@ -1,108 +1,192 @@
-<!-- Topbar -->
-<nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow-sm">
+<!-- ===============================
+     TOPBAR
+================================ -->
+<nav class="navbar navbar-expand navbar-light topbar app-topbar mb-4 static-top shadow-sm">
 
-    <!-- Sidebar Toggle (Mobile) -->
+    <!-- ===============================
+         MOBILE SIDEBAR TOGGLE
+    =============================== -->
     <button id="sidebarToggleTop"
-            class="btn btn-link d-md-none rounded-circle mr-3">
-        <img src="{{ url_for('static', filename='img/logo/dashboard-48.png') }}"
-             style="width:20px;height:20px;">
+            class="btn icon-btn d-md-none mr-3 p-0"
+            aria-label="Toggle sidebar">
+        <i class="fas fa-bars"></i>
     </button>
 
     <!-- ===============================
          PAGE TITLE
     =============================== -->
-    <div class="d-none d-sm-inline-block font-weight-bold text-gray-700">
-        Dashboard
-    </div>
+    <span class="d-none d-sm-inline-block topbar-title">
+        {{ page_title }}
+    </span>
 
     <!-- ===============================
-         TOPBAR NAV
+         TOPBAR RIGHT
     =============================== -->
-    <ul class="navbar-nav ml-auto">
+    <ul class="navbar-nav ml-auto align-items-center">
 
         <!-- ===============================
              NOTIFICATIONS
         =============================== -->
-        <li class="nav-item dropdown no-arrow mx-1">
-            <a class="nav-link dropdown-toggle" href="#"
+        <li class="nav-item dropdown no-arrow mx-3">
+            <a class="nav-link dropdown-toggle p-0"
+               href="#"
                id="alertsDropdown"
                role="button"
-               data-toggle="dropdown">
+               data-toggle="dropdown"
+               aria-haspopup="true"
+               aria-expanded="false">
 
-                <img src="{{ url_for('static', filename='img/logo/Notification.png') }}"
-                     style="width:20px;height:20px;">
+                <span class="notification-wrapper">
+                    <span class="icon-btn notification-btn">
+                        <i class="fas fa-bell"></i>
+                    </span>
+                    {% if notifications_count and notifications_count > 0 %}
+                        <span class="badge-counter">{{ notifications_count }}</span>
+                    {% endif %}
+                </span>
 
-                <span class="badge badge-danger badge-counter">3</span>
             </a>
 
-            <div class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in">
+            <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in notification-menu"
+                 aria-labelledby="alertsDropdown">
 
-                <h6 class="dropdown-header">
-                    Notifications
-                </h6>
-
-                <a class="dropdown-item d-flex align-items-center" href="#">
-                    <img src="{{ url_for('static', filename='img/logo/pending-diagnoses.png') }}"
-                         style="width:24px;height:24px;margin-right:10px;">
+                <div class="notification-header">
                     <div>
-                        <div class="small text-gray-500">Today</div>
-                        Diagnosis approved
+                        <div class="notification-title">{{ t("notifications") }}</div>
+                        <div class="notification-subtitle">{{ t("notifications_latest") }}</div>
                     </div>
-                </a>
+                    <div class="notification-count">
+                        {{ notifications_count if notifications_count else 0 }}
+                    </div>
+                </div>
 
-                <a class="dropdown-item text-center small text-gray-500" href="#">
-                    View All
-                </a>
+                <div class="notification-list">
+                    {% if notifications and notifications|length > 0 %}
+                        {% for item in notifications %}
+                            <a class="notification-item" href="{{ item.url if item.url else '#' }}">
+                                <div class="notification-item-icon is-{{ item.level }}">
+                                    <i class="{{ item.icon }}"></i>
+                                </div>
+                                <div class="notification-item-body">
+                                    <div class="notification-item-title">{{ item.title }}</div>
+                                    <div class="notification-item-sub">{{ item.subtitle }}</div>
+                                </div>
+                                <div class="notification-item-time">{{ item.time }}</div>
+                            </a>
+                        {% endfor %}
+                    {% else %}
+                        <div class="notification-empty">
+                            {{ t("notifications_empty") }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                {% if notifications_link %}
+                    <a class="notification-footer" href="{{ notifications_link }}">
+                        {{ t("notifications_view_all") }}
+                    </a>
+                {% endif %}
             </div>
         </li>
 
+        <!-- Divider -->
         <div class="topbar-divider d-none d-sm-block"></div>
+
+        <!-- ===============================
+             LANGUAGE
+        =============================== -->
+        <li class="nav-item dropdown mx-3">
+            <a class="nav-link dropdown-toggle d-flex align-items-center p-0"
+               href="#"
+               id="langDropdown"
+               role="button"
+               data-toggle="dropdown">
+                <span class="icon-btn">
+                    <i class="fas fa-language"></i>
+                </span>
+            </a>
+
+            <div class="dropdown-menu dropdown-menu-right shadow">
+                <button class="dropdown-item lang-option d-flex justify-content-between"
+                        type="button" data-lang="en">
+                    <span>{{ t("english") }}</span>
+                </button>
+                <button class="dropdown-item lang-option d-flex justify-content-between"
+                        type="button" data-lang="km">
+                    <span>{{ t("khmer") }}</span>
+                </button>
+            </div>
+        </li>
+
+        <!-- ===============================
+             THEME MODE
+        =============================== -->
+        <li class="nav-item dropdown mx-3">
+            <a class="nav-link dropdown-toggle d-flex align-items-center p-0"
+               href="#"
+               id="themeDropdown"
+               role="button"
+               data-toggle="dropdown">
+                <span class="icon-btn">
+                    <i class="fas fa-adjust"></i>
+                </span>
+            </a>
+
+            <div class="dropdown-menu dropdown-menu-right shadow">
+                <button class="dropdown-item theme-option d-flex justify-content-between"
+                        type="button" data-theme="system">
+                    <span>{{ t("system") }}</span><span class="theme-check d-none">Selected</span>
+                </button>
+                <button class="dropdown-item theme-option d-flex justify-content-between"
+                        type="button" data-theme="light">
+                    <span>{{ t("light") }}</span><span class="theme-check d-none">Selected</span>
+                </button>
+                <button class="dropdown-item theme-option d-flex justify-content-between"
+                        type="button" data-theme="dark">
+                    <span>{{ t("dark") }}</span><span class="theme-check d-none">Selected</span>
+                </button>
+            </div>
+        </li>
 
         <!-- ===============================
              USER PROFILE
         =============================== -->
         <li class="nav-item dropdown no-arrow">
-            <a class="nav-link dropdown-toggle" href="#"
+            <a class="nav-link dropdown-toggle d-flex align-items-center p-0"
+               href="#"
                id="userDropdown"
                role="button"
                data-toggle="dropdown">
 
-                <span class="mr-2 d-none d-lg-inline text-gray-600 small">
+                <span class="mr-2 d-none d-lg-inline text-muted small">
                     {{ current_user.username }}
                 </span>
 
                 <img class="img-profile rounded-circle"
-                     src="{{ url_for('static', filename='img/avatar.png') }}"
-                     style="width:36px;height:36px;">
+                     src="{% if current_user.avatar_path %}{{ url_for('static', filename=current_user.avatar_path) }}{% else %}{{ url_for('static', filename='img/avatar.png') }}{% endif %}"
+                     style="width:36px;height:36px;object-fit:cover;">
             </a>
 
-            <!-- Dropdown -->
             <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in">
-
-                <a class="dropdown-item" href="#">
-                    <img src="{{ url_for('static', filename='img/logo/Profile.png') }}"
-                         style="width:18px;height:18px;margin-right:8px;">
-                    Profile
+                <a class="dropdown-item d-flex align-items-center" href="{{ url_for('user.profile') }}">
+                    <i class="fas fa-user mr-2"></i>
+                    {{ t("profile") }}
                 </a>
 
-                <a class="dropdown-item" href="#">
-                    <img src="{{ url_for('static', filename='img/logo/Setting.png') }}"
-                         style="width:18px;height:18px;margin-right:8px;">
-                    Settings
+                <a class="dropdown-item d-flex align-items-center" href="{{ url_for('user.settings') }}">
+                    <i class="fas fa-cog mr-2"></i>
+                    {{ t("settings") }}
                 </a>
 
                 <div class="dropdown-divider"></div>
 
-                <a class="dropdown-item text-danger"
+                <a class="dropdown-item d-flex align-items-center text-danger"
                    href="{{ url_for('auth.logout') }}">
-                    <img src="{{ url_for('static', filename='img/logo/Logout.png') }}"
-                         style="width:18px;height:18px;margin-right:8px;">
-                    Logout
+                    <i class="fas fa-sign-out-alt mr-2"></i>
+                    {{ t("logout") }}
                 </a>
             </div>
         </li>
 
     </ul>
-
 </nav>
-<!-- End of Topbar -->

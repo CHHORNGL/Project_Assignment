@@ -1,107 +1,397 @@
 {% extends "layouts/base.html" %}
-{% block title %}Admin Dashboard{% endblock %}
+{% block title %}{{ t("admin_dashboard_title") }}{% endblock %}
+{% set body_class = "admin-theme" %}
+
+{% block head %}{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
+<div class="admin-board">
 
-    <!-- Page Heading -->
-    <div class="d-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0">Admin Dashboard</h1>
+    <div class="admin-hero">
+        <div>
+            <div class="admin-title">{{ t("admin_control_center") }}</div>
+            <div class="admin-sub">{{ t("admin_control_sub") }}</div>
+        </div>
+        <div class="admin-actions">
+            <a class="btn btn-admin" href="{{ url_for('admin.users') }}">{{ t("manage_users") }}</a>
+            <a class="btn btn-admin-outline" href="{{ url_for('admin.roles') }}">{{ t("roles") }}</a>
+            <a class="btn btn-admin-outline" href="{{ url_for('admin.audit_logs') }}">{{ t("audit_logs") }}</a>
+            <a class="btn btn-admin-outline" href="{{ url_for('admin.world') }}">{{ t("world_map") }}</a>
+        </div>
     </div>
 
-    <!-- ===============================
-         STATISTICS CARDS
-    =============================== -->
-    <div class="row">
-
-        <!-- Total Users -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card stat-card h-100">
-                <div class="card-body d-flex align-items-center justify-content-between">
-                    <div>
-                        <div class="stat-title">Total Users</div>
-                        <div class="stat-value">{{ total_users }}</div>
-                    </div>
-                    <img src="{{ url_for('static', filename='img/logo/total-users.png') }}"
-                         alt="Total Users"
-                         class="stat-icon-img">
-                </div>
-            </div>
+    <div class="admin-calendar-bar mb-4">
+        <div class="admin-clock admin-clock-compact">
+            <div class="admin-clock-time" id="adminClockTime">--:--:--</div>
+            <div class="admin-clock-date" id="adminClockDate">--</div>
+            <div class="admin-clock-tz" id="adminClockTz">--</div>
         </div>
-
-        <!-- Total Diagnoses -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card stat-card h-100">
-                <div class="card-body d-flex align-items-center justify-content-between">
-                    <div>
-                        <div class="stat-title">Total Diagnoses</div>
-                        <div class="stat-value">{{ total_diagnoses }}</div>
-                    </div>
-                    <img src="{{ url_for('static', filename='img/logo/total-diagnoses.png') }}"
-                         alt="Total Diagnoses"
-                         class="stat-icon-img">
-                </div>
+        <div class="admin-calendar-block admin-calendar-compact">
+            <div class="admin-calendar-head">
+                <button class="admin-cal-nav" type="button" data-admin-cal="-1">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <div class="admin-cal-title" id="adminCalTitle">--</div>
+                <button class="admin-cal-nav" type="button" data-admin-cal="1">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
             </div>
-        </div>
-
-        <!-- Pending Diagnoses -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card stat-card h-100">
-                <div class="card-body d-flex align-items-center justify-content-between">
-                    <div>
-                        <div class="stat-title">Pending Diagnoses</div>
-                        <div class="stat-value">{{ pending_diagnoses }}</div>
-                    </div>
-                    <img src="{{ url_for('static', filename='img/logo/pending-diagnoses.png') }}"
-                         alt="Pending Diagnoses"
-                         class="stat-icon-img">
-                </div>
+            <div class="admin-calendar-week">
+                <span>{{ t("sun") }}</span>
+                <span>{{ t("mon") }}</span>
+                <span>{{ t("tue") }}</span>
+                <span>{{ t("wed") }}</span>
+                <span>{{ t("thu") }}</span>
+                <span>{{ t("fri") }}</span>
+                <span>{{ t("sat") }}</span>
             </div>
+            <div class="admin-calendar-grid" id="adminCalGrid"></div>
         </div>
-
-        <!-- Chat Messages -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card stat-card h-100">
-                <div class="card-body d-flex align-items-center justify-content-between">
-                    <div>
-                        <div class="stat-title">Chat Messages</div>
-                        <div class="stat-value">{{ total_chats }}</div>
-                    </div>
-                    <img src="{{ url_for('static', filename='img/logo/chat-messages.png') }}"
-                         alt="Chat Messages"
-                         class="stat-icon-img">
-                </div>
-            </div>
-        </div>
-
     </div>
 
-    <!-- ===============================
-         QUICK ACTIONS
-    =============================== -->
-    <div class="card shadow-sm mb-4">
-        <div class="card-header font-weight-bold">
-            Quick Actions
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="admin-kpi">
+                <div>
+                    <div class="admin-kpi-label">{{ t("total_users") }}</div>
+                    <div class="admin-kpi-value">{{ total_users }}</div>
+                </div>
+                <div class="admin-kpi-icon"><i class="fas fa-users"></i></div>
+            </div>
         </div>
-        <div class="card-body">
 
-            <a href="{{ url_for('admin.users') }}"
-               class="btn btn-success mr-2 mb-2">
-                Manage Users
-            </a>
+        <div class="col-md-3 mb-3">
+            <div class="admin-kpi">
+                <div>
+                    <div class="admin-kpi-label">{{ t("total_diagnoses") }}</div>
+                    <div class="admin-kpi-value">{{ total_diagnoses }}</div>
+                </div>
+                <div class="admin-kpi-icon"><i class="fas fa-notes-medical"></i></div>
+            </div>
+        </div>
 
-            <a href="{{ url_for('admin.roles') }}"
-               class="btn btn-secondary mr-2 mb-2">
-                Roles & Permissions
-            </a>
+        <div class="col-md-3 mb-3">
+            <div class="admin-kpi">
+                <div>
+                    <div class="admin-kpi-label">{{ t("pending_diagnoses_title") }}</div>
+                    <div class="admin-kpi-value">{{ pending_diagnoses }}</div>
+                </div>
+                <div class="admin-kpi-icon"><i class="fas fa-hourglass-half"></i></div>
+            </div>
+        </div>
 
-            <a href="{{ url_for('admin.expert_statistics') }}"
-               class="btn btn-info mb-2">
-                Expert Statistics
-            </a>
+        <div class="col-md-3 mb-3">
+            <div class="admin-kpi">
+                <div>
+                    <div class="admin-kpi-label">{{ t("active_chats") }}</div>
+                    <div class="admin-kpi-value">{{ total_chats }}</div>
+                </div>
+                <div class="admin-kpi-icon"><i class="fas fa-comments"></i></div>
+            </div>
+        </div>
+    </div>
 
+    {% set processed = total_diagnoses - pending_diagnoses %}
+    {% set completion = (processed / total_diagnoses * 100) if total_diagnoses else 0 %}
+
+    <div class="row mb-4">
+        <div class="col-lg-5 mb-3">
+            <div class="admin-panel h-100">
+                <div class="admin-panel-title">{{ t("system_health") }}</div>
+
+                <div class="admin-list">
+                    <div class="admin-list-item">
+                        <div>
+                            <div class="font-weight-bold">{{ t("processing_rate") }}</div>
+                            <div class="small text-muted">{{ t("processed_out_of", processed=processed, total=total_diagnoses) }}</div>
+                        </div>
+                        <span class="admin-pill">{{ completion|round(0) }}%</span>
+                    </div>
+
+                    <div class="admin-progress">
+                        <span style="width: {{ completion|round(0) }}%;"></span>
+                    </div>
+
+                    <div class="admin-list-item">
+                        <div>
+                        <div class="font-weight-bold">{{ t("pending") }}</div>
+                            <div class="small text-muted">{{ t("cases_waiting_review") }}</div>
+                        </div>
+                        <span class="admin-pill">{{ pending_diagnoses }}</span>
+                    </div>
+
+                    <div class="admin-list-item">
+                        <div>
+                            <div class="font-weight-bold">{{ t("recent_audit_events") }}</div>
+                            <div class="small text-muted">{{ t("latest_admin_actions") }}</div>
+                        </div>
+                        <span class="admin-pill">{{ recent_logs|length }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-7 mb-3">
+            <div class="admin-panel">
+                <div class="admin-panel-title">{{ t("google_map") }}</div>
+                <div class="admin-globe">
+                    <iframe id="adminMapFrame"
+                            class="admin-map-frame"
+                            title="{{ t("google_map") }}"
+                            loading="lazy"
+                            referrerpolicy="no-referrer-when-downgrade"
+                            src="https://www.google.com/maps?q=0,0&z=2&output=embed"></iframe>
+                </div>
+                <div class="admin-map-meta">
+                    <span class="admin-map-chip">
+                        {{ t("lat") }}:
+                        <input id="adminMapLatInput" class="admin-map-input" type="number" step="0.000001">
+                    </span>
+                    <span class="admin-map-chip">
+                        {{ t("lng") }}:
+                        <input id="adminMapLngInput" class="admin-map-input" type="number" step="0.000001">
+                    </span>
+                    <button id="adminMapUpdate" class="admin-map-action" type="button">
+                        {{ t("update_map") }}
+                    </button>
+                    <a id="adminMapOpen"
+                       class="admin-map-action"
+                       href="#"
+                       target="_blank"
+                       rel="noopener">
+                        {{ t("open_in_maps") }}
+                    </a>
+                </div>
+                <div class="small text-muted mt-2">
+                    {{ t("map_hint") }}
+                </div>
+                <button id="adminMapLocate" class="admin-map-locate" type="button">
+                    {{ t("use_my_location") }}
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="admin-panel mb-4">
+        <div class="admin-panel-title">{{ t("recent_activity") }}</div>
+        <div class="admin-list">
+            {% for log in recent_logs %}
+            <div class="admin-list-item">
+                <div>
+                    <div class="font-weight-bold">{{ log.action }}</div>
+                    <div class="small text-muted">
+                        {% if log.target_user %}{{ t("target_label") }}: {{ log.target_user }}{% endif %}
+                        {% if log.detail %}{% if log.target_user %} | {% endif %}{{ log.detail }}{% endif %}
+                    </div>
+                </div>
+                <span class="admin-pill">
+                    {{ log.created_at.strftime("%b %d, %H:%M") if log.created_at else "" }}
+                </span>
+            </div>
+            {% else %}
+            <div class="text-muted small">{{ t("no_recent_activity") }}</div>
+            {% endfor %}
+        </div>
+    </div>
+
+    {% set max_value = [total_users, total_diagnoses, pending_diagnoses, total_chats]|max %}
+    <div class="admin-panel">
+        <div class="admin-panel-title">{{ t("operations_volume") }}</div>
+        <div class="admin-chart">
+            {% set v = total_users %}
+            {% set h = (v / max_value * 100) if max_value else 0 %}
+            <div style="flex:1;">
+                <div class="admin-bar" style="height: {{ h }}%;">{{ v }}</div>
+                <div class="admin-bar-label">{{ t("users") }}</div>
+            </div>
+
+            {% set v = total_diagnoses %}
+            {% set h = (v / max_value * 100) if max_value else 0 %}
+            <div style="flex:1;">
+                <div class="admin-bar" style="height: {{ h }}%;">{{ v }}</div>
+                <div class="admin-bar-label">{{ t("diagnoses_label") }}</div>
+            </div>
+
+            {% set v = pending_diagnoses %}
+            {% set h = (v / max_value * 100) if max_value else 0 %}
+            <div style="flex:1;">
+                <div class="admin-bar" style="height: {{ h }}%;">{{ v }}</div>
+                <div class="admin-bar-label">{{ t("status_pending") }}</div>
+            </div>
+
+            {% set v = total_chats %}
+            {% set h = (v / max_value * 100) if max_value else 0 %}
+            <div style="flex:1;">
+                <div class="admin-bar" style="height: {{ h }}%;">{{ v }}</div>
+                <div class="admin-bar-label">{{ t("chats_label") }}</div>
+            </div>
         </div>
     </div>
 
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const scanPoints = {{ scan_points|default([])|tojson }};
+const latInput = document.getElementById("adminMapLatInput");
+const lngInput = document.getElementById("adminMapLngInput");
+const openEl = document.getElementById("adminMapOpen");
+const frameEl = document.getElementById("adminMapFrame");
+const updateBtn = document.getElementById("adminMapUpdate");
+const locateBtn = document.getElementById("adminMapLocate");
+
+function updateMap(lat, lng) {
+    const latNum = Number(lat);
+    const lngNum = Number(lng);
+    if (!Number.isFinite(latNum) || !Number.isFinite(lngNum)) return;
+    const latFixed = latNum.toFixed(6);
+    const lngFixed = lngNum.toFixed(6);
+    if (latInput) latInput.value = latFixed;
+    if (lngInput) lngInput.value = lngFixed;
+    if (openEl) {
+        openEl.href = "https://www.google.com/maps?q=" + latFixed + "," + lngFixed;
+    }
+    if (frameEl) {
+        frameEl.src = "https://www.google.com/maps?q=" + latFixed + "," + lngFixed + "&z=12&output=embed";
+    }
+}
+
+const defaultPoint = (scanPoints && scanPoints.length > 0)
+    ? scanPoints[0]
+    : { lat: 11.5564, lng: 104.9282 };
+
+updateMap(defaultPoint.lat, defaultPoint.lng);
+
+if (updateBtn) {
+    updateBtn.addEventListener("click", () => {
+        updateMap(latInput.value, lngInput.value);
+    });
+}
+
+if (locateBtn && navigator.geolocation) {
+    locateBtn.addEventListener("click", () => {
+        navigator.geolocation.getCurrentPosition(
+            (pos) => updateMap(pos.coords.latitude, pos.coords.longitude),
+            () => alert("{{ t("location_unavailable") }}")
+        );
+    });
+}
+
+(function initAdminCalendar() {
+    const timeEl = document.getElementById("adminClockTime");
+    const dateEl = document.getElementById("adminClockDate");
+    const tzEl = document.getElementById("adminClockTz");
+    const titleEl = document.getElementById("adminCalTitle");
+    const gridEl = document.getElementById("adminCalGrid");
+    const navButtons = document.querySelectorAll("[data-admin-cal]");
+
+    if (!timeEl || !dateEl || !tzEl || !titleEl || !gridEl) return;
+
+    const locale = navigator.language || "en-US";
+    const timeFormatter = new Intl.DateTimeFormat(locale, {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+    });
+    const dateFormatter = new Intl.DateTimeFormat(locale, {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric"
+    });
+    const monthFormatter = new Intl.DateTimeFormat(locale, {
+        month: "long",
+        year: "numeric"
+    });
+    const tzFormatter = new Intl.DateTimeFormat(locale, { timeZoneName: "short" });
+
+    function getTimeZoneLabel(date) {
+        const parts = tzFormatter.formatToParts(date);
+        const tzPart = parts.find((part) => part.type === "timeZoneName");
+        return tzPart ? tzPart.value : "";
+    }
+
+    function renderClock() {
+        const now = new Date();
+        timeEl.textContent = timeFormatter.format(now);
+        dateEl.textContent = dateFormatter.format(now);
+        tzEl.textContent = getTimeZoneLabel(now);
+    }
+
+    let viewDate = new Date();
+    viewDate.setDate(1);
+
+    let khmerDays = {};
+
+    async function loadKhmerCalendar(year, month) {
+        try {
+            const res = await fetch(`/users/khmer-calendar?year=${year}&month=${month}`);
+            if (!res.ok) throw new Error("Failed to load Khmer calendar");
+            const data = await res.json();
+            khmerDays = data.days || {};
+        } catch (e) {
+            khmerDays = {};
+        }
+    }
+
+    async function renderCalendar() {
+        const year = viewDate.getFullYear();
+        const month = viewDate.getMonth();
+        const firstDay = new Date(year, month, 1);
+        const startDay = firstDay.getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const daysInPrevMonth = new Date(year, month, 0).getDate();
+        const today = new Date();
+        const isCurrentMonth = today.getFullYear() === year && today.getMonth() === month;
+
+        titleEl.textContent = monthFormatter.format(firstDay);
+        gridEl.innerHTML = "";
+
+        await loadKhmerCalendar(year, month + 1);
+
+        for (let i = 0; i < 42; i += 1) {
+            const cell = document.createElement("div");
+            cell.className = "admin-cal-cell";
+
+            const dayNumber = i - startDay + 1;
+            if (dayNumber < 1) {
+                cell.innerHTML = `<div class="cal-day">${daysInPrevMonth + dayNumber}</div>`;
+                cell.classList.add("is-muted");
+            } else if (dayNumber > daysInMonth) {
+                cell.innerHTML = `<div class="cal-day">${dayNumber - daysInMonth}</div>`;
+                cell.classList.add("is-muted");
+            } else {
+                const dateKey = `${year}-${String(month + 1).padStart(2, "0")}-${String(dayNumber).padStart(2, "0")}`;
+                const lunar = khmerDays[dateKey];
+                const lunarText = lunar ? `${lunar.lunar_day} ${lunar.lunar_month}` : "";
+                cell.innerHTML = `
+                    <div class="cal-day">${dayNumber}</div>
+                    <div class="cal-lunar">${lunarText}</div>
+                `;
+                if (lunar && lunar.full) {
+                    cell.title = lunar.full;
+                }
+                if (isCurrentMonth && dayNumber === today.getDate()) {
+                    cell.classList.add("is-today");
+                }
+            }
+
+            gridEl.appendChild(cell);
+        }
+    }
+
+    navButtons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+            const dir = Number(btn.dataset.adminCal || 0);
+            viewDate.setMonth(viewDate.getMonth() + dir);
+            renderCalendar();
+        });
+    });
+
+    renderClock();
+    renderCalendar();
+    setInterval(renderClock, 1000);
+})();
+</script>
 {% endblock %}

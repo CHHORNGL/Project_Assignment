@@ -1,0 +1,253 @@
+{% extends "layouts/base.html" %}
+{% block title %}{{ t("support_hub_title") }}{% endblock %}
+{% set body_class = "agro-theme expert-simple" %}
+
+{% block content %}
+<div class="agro-board expert-board">
+    <div class="expert-hero">
+        <div>
+            <div class="expert-title">{{ t("support_hub_title") }}</div>
+            <div class="expert-sub">{{ t("support_hub_sub") }}</div>
+        </div>
+        <div class="expert-hero-actions">
+            <a class="btn btn-agro" href="{{ url_for('expert.farmer_chats') }}">{{ t("open_chats") }}</a>
+            <a class="btn btn-agro-outline" href="{{ url_for('expert.pending_diagnoses') }}">{{ t("pending_diagnoses_title") }}</a>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="expert-metric">
+                <div>
+                    <div class="expert-metric-label">{{ t("rule_sessions") }}</div>
+                    <div class="expert-metric-value">{{ total_rule_sessions }}</div>
+                    <div class="expert-metric-sub">{{ t("rule_sessions_sub") }}</div>
+                </div>
+                <div class="expert-metric-icon"><i class="fas fa-comments"></i></div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="expert-metric">
+                <div>
+                    <div class="expert-metric-label">{{ t("rule_messages") }}</div>
+                    <div class="expert-metric-value">{{ total_rule_messages }}</div>
+                    <div class="expert-metric-sub">{{ t("rule_messages_sub") }}</div>
+                </div>
+                <div class="expert-metric-icon"><i class="fas fa-comment-dots"></i></div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="expert-metric">
+                <div>
+                    <div class="expert-metric-label">{{ t("farmers") }}</div>
+                    <div class="expert-metric-value">{{ rule_unique_farmers }}</div>
+                    <div class="expert-metric-sub">{{ t("farmers_sub") }}</div>
+                </div>
+                <div class="expert-metric-icon"><i class="fas fa-users"></i></div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="expert-metric">
+                <div>
+                    <div class="expert-metric-label">{{ t("last_24h") }}</div>
+                    <div class="expert-metric-value">{{ last_24h_rule_messages }}</div>
+                    <div class="expert-metric-sub">{{ t("rule_messages_short") }}</div>
+                </div>
+                <div class="expert-metric-icon"><i class="fas fa-clock"></i></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-lg-6 mb-3">
+            <div class="expert-panel">
+                <div class="expert-panel-header">
+                    <div>
+                        <div class="expert-panel-title">{{ t("farmer_chats_title") }}</div>
+                        <div class="expert-panel-sub">{{ t("farmer_chats_sub") }}</div>
+                    </div>
+                </div>
+                <div class="expert-actions-grid">
+                    <a class="expert-action-card" href="{{ url_for('expert.farmer_chats') }}">
+                        <div class="expert-action-icon"><i class="fas fa-headset"></i></div>
+                        <div>
+                            <div class="expert-action-title">{{ t("farmer_chats_title") }}</div>
+                            <div class="expert-action-sub">{{ t("respond_now") }}</div>
+                        </div>
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                    <a class="expert-action-card" href="{{ url_for('expert.farmer_chats') }}">
+                        <div class="expert-action-icon"><i class="fas fa-comments"></i></div>
+                        <div>
+                            <div class="expert-action-title">{{ t("chat_queue") }}</div>
+                            <div class="expert-action-sub">{{ t("chat_queue_sub") }}</div>
+                        </div>
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 mb-3">
+            <div class="expert-panel">
+                <div class="expert-panel-header">
+                    <div>
+                        <div class="expert-panel-title">{{ t("rule_cases_title") }}</div>
+                        <div class="expert-panel-sub">{{ t("rule_cases_sub") }}</div>
+                    </div>
+                </div>
+                <div class="expert-actions-grid">
+                    <a class="expert-action-card" href="{{ url_for('expert.pending_diagnoses') }}">
+                        <div class="expert-action-icon"><i class="fas fa-clipboard-check"></i></div>
+                        <div>
+                            <div class="expert-action-title">{{ t("pending_review") }}</div>
+                            <div class="expert-action-sub">{{ t("approve_reject") }}</div>
+                        </div>
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                    <a class="expert-action-card" href="{{ url_for('expert.diseases') }}">
+                        <div class="expert-action-icon"><i class="fas fa-database"></i></div>
+                        <div>
+                            <div class="expert-action-title">{{ t("knowledge_updates") }}</div>
+                            <div class="expert-action-sub">{{ t("knowledge_updates_sub") }}</div>
+                        </div>
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="expert-panel">
+        <div class="expert-panel-header">
+            <div>
+                <div class="expert-panel-title">{{ t("rule_cases_title") }}</div>
+                <div class="expert-panel-sub">{{ t("rule_cases_filter_sub") }}</div>
+            </div>
+        </div>
+        <div class="card-body pt-3">
+            <form class="form-row mb-3" method="GET">
+                <div class="col-md-3 mb-2">
+                    <label class="small text-muted">{{ t("crop_label") }}</label>
+                    <select name="crop_id" class="form-control">
+                        <option value="">{{ t("all_crops") }}</option>
+                        {% for crop in crops %}
+                            <option value="{{ crop.id }}" {% if filter_crop_id == crop.id %}selected{% endif %}>
+                                {{ localize(crop, "name") }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label class="small text-muted">{{ t("diagnosis_status") }}</label>
+                    <select name="status" class="form-control">
+                        <option value="AUTO" {% if filter_status == "AUTO" %}selected{% endif %}>{{ t("status_auto") }}</option>
+                        <option value="PENDING" {% if filter_status == "PENDING" %}selected{% endif %}>{{ t("status_pending") }}</option>
+                        <option value="APPROVED" {% if filter_status == "APPROVED" %}selected{% endif %}>{{ t("status_approved") }}</option>
+                        <option value="REJECTED" {% if filter_status == "REJECTED" %}selected{% endif %}>{{ t("status_rejected") }}</option>
+                    </select>
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label class="small text-muted">{{ t("from") }}</label>
+                    <input type="date" name="date_from" class="form-control"
+                           value="{{ filter_date_from or '' }}">
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label class="small text-muted">{{ t("to") }}</label>
+                    <input type="date" name="date_to" class="form-control"
+                           value="{{ filter_date_to or '' }}">
+                </div>
+                <div class="col-12 d-flex mt-2">
+                    <button class="btn btn-agro-outline btn-sm mr-2" type="submit">{{ t("apply_filters") }}</button>
+                    <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('expert.support_hub') }}">{{ t("reset") }}</a>
+                </div>
+            </form>
+        </div>
+        <div class="expert-queue">
+            {% for d in auto_cases %}
+            <div class="expert-queue-item">
+                <div>
+                    <div class="expert-queue-title">#{{ d.id }} • {{ localize(d.crop, "name", t("unknown_crop")) }}</div>
+                    <div class="expert-queue-sub">
+                        {{ d.symptoms[:80] }}{% if d.symptoms|length > 80 %}...{% endif %}
+                    </div>
+                </div>
+                <div class="expert-queue-meta">
+                    <span class="expert-queue-date">{{ d.created_at.strftime("%b %d") }}</span>
+                    <a href="{{ url_for('expert.review_diagnosis', diagnosis_id=d.id) }}"
+                       class="btn btn-sm btn-agro-outline">
+                        {{ t("review") }}
+                    </a>
+                </div>
+            </div>
+            {% else %}
+            <div class="text-muted small">{{ t("no_auto_cases") }}</div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="expert-panel mt-4">
+        <div class="expert-panel-header">
+            <div>
+                <div class="expert-panel-title">{{ t("rule_chat_messages") }}</div>
+                <div class="expert-panel-sub">{{ t("rule_chat_messages_sub") }}</div>
+            </div>
+        </div>
+        <div class="card-body pt-3">
+            <form class="form-row mb-3" method="GET">
+                <div class="col-md-3 mb-2">
+                    <label class="small text-muted">{{ t("farmer_label") }}</label>
+                    <select name="chat_farmer_id" class="form-control">
+                        <option value="">{{ t("all_farmers") }}</option>
+                        {% for f in rule_farmers %}
+                            <option value="{{ f.id }}" {% if chat_farmer_id == f.id %}selected{% endif %}>
+                                {{ f.username }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label class="small text-muted">{{ t("keyword") }}</label>
+                    <input type="text" name="chat_keyword" class="form-control"
+                           placeholder="{{ t('search_messages') }}"
+                           value="{{ chat_keyword or '' }}">
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label class="small text-muted">{{ t("from") }}</label>
+                    <input type="date" name="chat_date_from" class="form-control"
+                           value="{{ chat_date_from or '' }}">
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label class="small text-muted">{{ t("to") }}</label>
+                    <input type="date" name="chat_date_to" class="form-control"
+                           value="{{ chat_date_to or '' }}">
+                </div>
+                <div class="col-12 d-flex mt-2">
+                    <button class="btn btn-agro-outline btn-sm mr-2" type="submit">{{ t("apply_filters") }}</button>
+                    <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('expert.support_hub') }}">{{ t("reset") }}</a>
+                </div>
+            </form>
+        </div>
+        <div class="expert-queue">
+            {% for m in rule_chat_messages %}
+            <div class="expert-queue-item">
+                <div>
+                    <div class="expert-queue-title">
+                        {{ t("farmer_label") if m.sender == "farmer" else t("system_label") }} •
+                        {{ t("session") }} #{{ m.session_id }}
+                    </div>
+                    <div class="expert-queue-sub">
+                        {{ m.message[:120] }}{% if m.message|length > 120 %}...{% endif %}
+                    </div>
+                </div>
+                <div class="expert-queue-meta">
+                    <span class="expert-queue-date">{{ m.created_at.strftime("%Y-%m-%d %H:%M") }}</span>
+                </div>
+            </div>
+            {% else %}
+            <div class="text-muted small">{{ t("no_rule_chat_messages") }}</div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

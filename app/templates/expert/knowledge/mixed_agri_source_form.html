@@ -1,0 +1,89 @@
+{% extends "layouts/base.html" %}
+{% block title %}{{ t("edit") if is_edit else t("add") }} {{ t("source") }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="max-width:900px">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="font-weight-bold text-primary">
+            {{ t("edit") if is_edit else t("add") }} {{ t("source") }}
+        </h3>
+
+        <a href="{{ url_for('expert.mixed_agri_sources') }}"
+           class="btn btn-light btn-sm shadow-sm">
+            Back
+        </a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form method="POST">
+                <div class="form-group">
+                    <label class="font-weight-bold">{{ t("source_title") }}</label>
+                    <input type="text"
+                           name="source_title"
+                           class="form-control"
+                           value="{{ source.source_title if source else '' }}"
+                           required>
+                </div>
+
+                <div class="form-group">
+                    <label class="font-weight-bold">{{ t("organization") }}</label>
+                    <input type="text"
+                           name="source_org"
+                           class="form-control"
+                           value="{{ source.source_org if source else '' }}"
+                           required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        <label class="font-weight-bold">{{ t("publication_year") }}</label>
+                        <input type="number"
+                               name="publication_year"
+                               class="form-control"
+                               value="{{ source.publication_year if source and source.publication_year is not none else '' }}">
+                    </div>
+
+                    <div class="form-group col-md-4">
+                        <label class="font-weight-bold">{{ t("source_type") }}</label>
+                        <input type="text"
+                               name="source_type"
+                               class="form-control"
+                               value="{{ source.source_type if source else '' }}">
+                    </div>
+
+                    <div class="form-group col-md-4">
+                        <label class="font-weight-bold">{{ t("accessed_date") }}</label>
+                        <input type="date"
+                               name="accessed_at"
+                               class="form-control"
+                               value="{{ source.accessed_at.strftime('%Y-%m-%d') if source and source.accessed_at else '' }}"
+                               required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="font-weight-bold">{{ t("source_url") }}</label>
+                    <input type="url"
+                           name="source_url"
+                           class="form-control"
+                           value="{{ source.source_url if source else '' }}"
+                           placeholder="{{ t("url_placeholder") }}">
+                </div>
+
+                <div class="text-right mt-4">
+                    <button class="btn btn-success px-4">
+                        {{ t("update") if is_edit else t("save") }} {{ t("source") }}
+                    </button>
+                    <a href="{{ url_for('expert.mixed_agri_sources') }}"
+                       class="btn btn-secondary ml-2">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

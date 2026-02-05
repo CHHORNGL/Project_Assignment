@@ -66,6 +66,7 @@ class Diagnosis(db.Model):
         nullable=True
     )
 
+
     # ===============================
     # STATUS
     # ===============================

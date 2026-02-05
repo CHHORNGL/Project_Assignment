@@ -1,0 +1,387 @@
+{% extends "layouts/base.html" %}
+{% block title %}{{ t("mixed_agri_knowledge") }}{% endblock %}
+{% set body_class = "agri-knowledge-page" %}
+
+{% block head %}
+<link href="https://fonts.googleapis.com/css2-family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Spline+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+.agri-knowledge-page {
+    --agri-ink: #18212f;
+    --agri-muted: #5d6b82;
+    --agri-border: #e3e8f1;
+    --agri-surface: #ffffff;
+    --agri-soft: #f5f7fb;
+    --agri-accent: #2a7f62;
+    --agri-accent-2: #2f6fb2;
+    --agri-highlight: #d3f5e5;
+    --agri-shadow: 0 18px 45px rgba(24, 33, 47, 0.08);
+    --agri-radius: 18px;
+    --agri-title: "Fraunces", "Times New Roman", serif;
+    --agri-body: "Spline Sans", "Segoe UI", sans-serif;
+}
+
+.agri-knowledge-page #content {
+    background: radial-gradient(circle at 15% -5%, #f0f6ff 0%, transparent 55%),
+                radial-gradient(circle at 85% 0%, #f1fff7 0%, transparent 48%),
+                #f7f9fc;
+}
+
+.agri-knowledge {
+    position: relative;
+    font-family: var(--agri-body);
+    color: var(--agri-ink);
+    padding: 6px 6px 24px;
+}
+
+.agri-hero {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 24px;
+    padding: 28px 30px;
+    background: var(--agri-surface);
+    border-radius: var(--agri-radius);
+    box-shadow: var(--agri-shadow);
+    border: 1px solid var(--agri-border);
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+    animation: agriFade 0.7s ease-out;
+}
+
+.agri-hero::after {
+    content: "";
+    position: absolute;
+    right: -80px;
+    top: -120px;
+    width: 220px;
+    height: 220px;
+    background: linear-gradient(140deg, rgba(47, 111, 178, 0.18), rgba(42, 127, 98, 0.08));
+    border-radius: 50%;
+}
+
+.agri-hero-title {
+    font-family: var(--agri-title);
+    font-size: 1.9rem;
+    margin-bottom: 6px;
+}
+
+.agri-hero-sub {
+    color: var(--agri-muted);
+    max-width: 520px;
+}
+
+.agri-hero-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.agri-btn {
+    border-radius: 999px;
+    font-size: 0.85rem;
+    padding: 8px 16px;
+    border: 1px solid transparent;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.agri-btn-primary {
+    background: var(--agri-accent);
+    color: #fff;
+    box-shadow: 0 10px 22px rgba(42, 127, 98, 0.25);
+}
+
+.agri-btn-outline {
+    background: #fff;
+    color: var(--agri-accent-2);
+    border-color: #cfe0f4;
+}
+
+.agri-btn:hover {
+    transform: translateY(-1px);
+}
+
+.agri-kpi-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 18px;
+    margin-bottom: 24px;
+}
+
+.agri-kpi-card {
+    background: var(--agri-surface);
+    border: 1px solid var(--agri-border);
+    border-radius: var(--agri-radius);
+    padding: 20px 22px;
+    box-shadow: var(--agri-shadow);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: transform 0.25s ease;
+}
+
+.agri-kpi-card:hover {
+    transform: translateY(-2px);
+}
+
+.agri-kpi-title {
+    color: var(--agri-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.7rem;
+    margin-bottom: 6px;
+}
+
+.agri-kpi-value {
+    font-family: var(--agri-title);
+    font-size: 1.5rem;
+}
+
+.agri-kpi-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    display: grid;
+    place-items: center;
+    background: var(--agri-highlight);
+    color: var(--agri-accent);
+    font-size: 1.1rem;
+}
+
+.agri-panel {
+    background: var(--agri-surface);
+    border-radius: calc(var(--agri-radius) + 2px);
+    border: 1px solid var(--agri-border);
+    box-shadow: var(--agri-shadow);
+    overflow: hidden;
+}
+
+.agri-panel-head {
+    padding: 22px 26px 16px;
+    border-bottom: 1px solid var(--agri-border);
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: center;
+}
+
+.agri-panel-title {
+    font-family: var(--agri-title);
+    font-size: 1.35rem;
+    margin-bottom: 4px;
+}
+
+.agri-panel-sub {
+    color: var(--agri-muted);
+    font-size: 0.9rem;
+}
+
+.agri-panel-meta {
+    background: #f2f6fb;
+    color: var(--agri-muted);
+    font-size: 0.8rem;
+    padding: 6px 12px;
+    border-radius: 999px;
+}
+
+.agri-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 26px;
+    border-bottom: 1px solid var(--agri-border);
+    background: #fbfcff;
+}
+
+.agri-toolbar select {
+    border-radius: 10px;
+    border-color: var(--agri-border);
+}
+
+.agri-table {
+    margin: 0;
+}
+
+.agri-table thead th {
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    color: var(--agri-muted);
+    border-top: none;
+    background: #f6f8fb;
+}
+
+.agri-table tbody tr:hover {
+    background: #f3f7fb;
+}
+
+.agri-table td {
+    vertical-align: top;
+}
+
+.agri-pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 24px;
+}
+
+.agri-page-btn {
+    border-radius: 10px;
+    border: 1px solid var(--agri-border);
+    padding: 6px 14px;
+    font-size: 0.85rem;
+}
+
+.agri-fade-in {
+    animation: agriRise 0.6s ease-out;
+}
+
+@keyframes agriFade {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes agriRise {
+    from { opacity: 0; transform: translateY(14px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 768px) {
+    .agri-hero {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .agri-toolbar {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <section class="agri-knowledge">
+        <div class="agri-hero">
+            <div>
+                <div class="agri-hero-title">{{ t("mixed_agri_knowledge_hub") }}</div>
+                <div class="agri-hero-sub">
+                    {{ t("mixed_agri_hero_sub") }}
+                </div>
+            </div>
+            <div class="agri-hero-actions">
+                <a href="{{ url_for('expert.mixed_agri_sources') }}"
+                   class="agri-btn agri-btn-outline">
+                    {{ t("manage_sources") }}
+                </a>
+                <a href="{{ url_for('expert.mixed_agri_facts') }}"
+                   class="agri-btn agri-btn-primary">
+                    {{ t("manage_facts") }}
+                </a>
+            </div>
+        </div>
+
+        <div class="agri-kpi-row agri-fade-in">
+            <div class="agri-kpi-card">
+                <div>
+                    <div class="agri-kpi-title">{{ t("sources") }}</div>
+                    <div class="agri-kpi-value">{{ source_count }}</div>
+                </div>
+                <div class="agri-kpi-icon">
+                    <i class="fas fa-book"></i>
+                </div>
+            </div>
+            <div class="agri-kpi-card">
+                <div>
+                    <div class="agri-kpi-title">{{ t("facts") }}</div>
+                    <div class="agri-kpi-value">{{ fact_count }}</div>
+                </div>
+                <div class="agri-kpi-icon" style="background:#e5f1ff;color:#2f6fb2;">
+                    <i class="fas fa-leaf"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="agri-panel agri-fade-in">
+            <div class="agri-panel-head">
+                <div>
+                    <div class="agri-panel-title">{{ t("facts_library") }}</div>
+                    <div class="agri-panel-sub">{{ t("facts_library_sub") }}</div>
+                </div>
+                <div class="agri-panel-meta">{{ t("total_count", count=pagination.total) }}</div>
+            </div>
+
+            <div class="agri-toolbar">
+                <form method="GET" class="form-inline">
+                    <select name="per_page" class="form-control form-control-sm mr-2">
+                        <option value="10" {% if pagination.per_page == 10 %}selected{% endif %}>10</option>
+                        <option value="25" {% if pagination.per_page == 25 %}selected{% endif %}>25</option>
+                        <option value="50" {% if pagination.per_page == 50 %}selected{% endif %}>50</option>
+                    </select>
+                    <button class="btn btn-sm btn-outline-primary">{{ t("apply") }}</button>
+                </form>
+                <div class="text-muted small">{{ t("adjust_density") }}</div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover agri-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>{{ t("id_label") }}</th>
+                            <th>{{ t("source") }}</th>
+                            <th>{{ t("topic") }}</th>
+                            <th>{{ t("region") }}</th>
+                            <th>{{ t("fact") }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for f in facts %}
+                        <tr>
+                            <td>#{{ f.id }}</td>
+                            <td class="small">{{ f.source.source_title if f.source else '-' }}</td>
+                            <td>{{ f.topic }}</td>
+                            <td>{{ f.region or '-' }}</td>
+                            <td class="text-muted small">{{ f.fact_text | truncate(140) }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-4">
+                                {{ t("no_facts_added") }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="agri-pagination">
+                <div class="text-muted small">
+                    {{ t("showing_range", start=pagination.start, end=pagination.end, total=pagination.total) }}
+                </div>
+                <div>
+                    {% if pagination.has_prev %}
+                    <a class="agri-page-btn"
+                       href="{{ url_for('expert.mixed_agri_dashboard', page=pagination.page - 1, per_page=pagination.per_page) }}">
+                        Prev
+                    </a>
+                    {% else %}
+                    <span class="agri-page-btn disabled">{{ t("prev") }}</span>
+                    {% endif %}
+
+                    <span class="mx-2 small">{{ t("page_of", page=pagination.page, pages=pagination.pages) }}</span>
+
+                    {% if pagination.has_next %}
+                    <a class="agri-page-btn"
+                       href="{{ url_for('expert.mixed_agri_dashboard', page=pagination.page + 1, per_page=pagination.per_page) }}">
+                        Next
+                    </a>
+                    {% else %}
+                    <span class="agri-page-btn disabled">{{ t("next") }}</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

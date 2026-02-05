@@ -1,33 +1,33 @@
 {% extends "layouts/base.html" %}
-{% block title %}Farmer Chats{% endblock %}
+{% block title %}{{ t("farmer_chats") }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid mt-4" style="max-width: 900px;">
 
-    <h4 class="mb-4">💬 Farmer Chat Requests</h4>
+    <h4 class="mb-4"><i class="fas fa-comments label-icon"></i>{{ t("farmer_chat_requests") }}</h4>
 
-    {% if farmers %}
-        <div class="list-group">
-            {% for farmer in farmers %}
-                <a href="{{ url_for('expert.reply_chat', farmer_id=farmer.id) }}"
+    {% if sessions %}
+        <div class="list-group form-scroll">
+            {% for session in sessions %}
+                <a href="{{ url_for('expert.reply_chat_session', session_id=session.id) }}"
                    class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
 
                     <div>
-                        <strong>{{ farmer.username }}</strong><br>
+                        <strong>{{ session.farmer.username if session.farmer else t("farmer") }}</strong><br>
                         <small class="text-muted">
-                            Click to reply messages
+                            {{ session.title if session.title else t("new_chat") }}
                         </small>
                     </div>
 
                     <span class="badge badge-success badge-pill">
-                        Chat
+                        {{ t("session") }}
                     </span>
                 </a>
             {% endfor %}
         </div>
     {% else %}
         <p class="text-muted">
-            No farmer chats yet.
+            {{ t("no_farmer_chats") }}
         </p>
     {% endif %}
 

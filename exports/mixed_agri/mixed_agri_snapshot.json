@@ -1,0 +1,1156 @@
+{
+  "exported_at": "2026-02-05",
+  "sources": [
+    {
+      "id": 1,
+      "source_title": "Mixed crop-livestock farming - What is mixed farming?",
+      "source_org": "FAO",
+      "publication_year": null,
+      "source_type": "Report chapter",
+      "source_url": "https://www.fao.org/3/Y0501E/y0501e03.htm",
+      "accessed_at": "2026-02-04",
+      "facts": [
+        {
+          "id": 1,
+          "source_id": 1,
+          "topic": "definition",
+          "region": "Global",
+          "fact_text": "Mixed farming exists in many forms shaped by external factors (weather, market prices, political stability, technological developments) and internal factors (soil characteristics, family composition, farmers' ingenuity).",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        },
+        {
+          "id": 2,
+          "source_id": 1,
+          "topic": "benefit",
+          "region": "Global",
+          "fact_text": "Farmers may choose mixed enterprises to save resources by interchanging them on-farm; this can enable wider crop rotations, reduce dependence on chemicals, align with nature-based preferences, and diversify risk.",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        },
+        {
+          "id": 3,
+          "source_id": 1,
+          "topic": "definition",
+          "region": "Global",
+          "fact_text": "Even pastoralists can practice mixed farming because their livelihoods depend on managing different feed resources and animal species.",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        },
+        {
+          "id": 4,
+          "source_id": 1,
+          "topic": "practice",
+          "region": "Global",
+          "fact_text": "Mixed farming can include mixed cropping (e.g., multiple crops or varieties with different life cycles on the same field) to use space efficiently and spread risks.",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        },
+        {
+          "id": 5,
+          "source_id": 1,
+          "topic": "classification",
+          "region": "Global",
+          "fact_text": "Three major mixed-farming categories are distinguished: on-farm vs between-farm mixing; mixing within crops and/or animal systems; and diversified vs integrated systems.",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        },
+        {
+          "id": 6,
+          "source_id": 1,
+          "topic": "classification",
+          "region": "Global",
+          "fact_text": "Modes of farming are described by land, labor and input availability: expansion agriculture (EXPAGR), low external input agriculture (LEIA), high external input agriculture (HEIA), and new conservation agriculture (NCA).",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        },
+        {
+          "id": 7,
+          "source_id": 1,
+          "topic": "classification",
+          "region": "Global",
+          "fact_text": "On-farm mixing refers to mixing on the same farm; between-farm mixing refers to exchanging resources between different farms.",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        },
+        {
+          "id": 8,
+          "source_id": 1,
+          "topic": "system_type",
+          "region": "Global",
+          "fact_text": "In integrated crop-livestock systems, crops provide fodder (grass, legumes, leys, weeds, residues) while animals provide draught and manure and serve as a savings account.",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        },
+        {
+          "id": 9,
+          "source_id": 1,
+          "topic": "principle",
+          "region": "Global",
+          "fact_text": "In mixed systems, maximizing the combined yield of components can be more important than maximizing the yield of any single component.",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        },
+        {
+          "id": 10,
+          "source_id": 1,
+          "topic": "challenge",
+          "region": "Global",
+          "fact_text": "Mixed farming can be poverty-induced; resource-poor farmers may rely on labor-intensive techniques and, with low purchasing power, may overexploit the environment.",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "source_title": "Mixed crop-livestock farming - Integrating crops and livestock",
+      "source_org": "FAO",
+      "publication_year": null,
+      "source_type": "Report chapter",
+      "source_url": "https://www.fao.org/4/y0501e/y0501e07.htm",
+      "accessed_at": "2026-02-04",
+      "facts": [
+        {
+          "id": 11,
+          "source_id": 2,
+          "topic": "practice",
+          "region": "Global",
+          "fact_text": "Livestock products in mixed systems largely come from animals fed local resources (pasture, crop residues, fodder trees/shrubs) and village-industry by-products (oil extraction, grain milling, cane crushing).",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        },
+        {
+          "id": 12,
+          "source_id": 2,
+          "topic": "benefit",
+          "region": "Global",
+          "fact_text": "Recycling these resources saves money and reduces waste within the farming system, can create employment, and can improve soil texture and fertility while incentivizing multipurpose animals.",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        },
+        {
+          "id": 13,
+          "source_id": 2,
+          "topic": "benefit",
+          "region": "Global",
+          "fact_text": "Integrating crops and livestock intensifies organic matter and nutrient cycling; crop residues are the main on-farm source of organic matter and nutrients.",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        },
+        {
+          "id": 14,
+          "source_id": 2,
+          "topic": "benefit",
+          "region": "Global",
+          "fact_text": "Livestock act as capital assets for security and savings, provide cash income, and are part of nutrient flows; residue management is closely tied to animal feeding.",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        },
+        {
+          "id": 15,
+          "source_id": 2,
+          "topic": "benefit",
+          "region": "Global",
+          "fact_text": "Integration adds value to crop residues (especially legumes) through animal products and income.",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        },
+        {
+          "id": 16,
+          "source_id": 2,
+          "topic": "challenge",
+          "region": "Global",
+          "fact_text": "Long-term maintenance requires external nutrient inputs; as feed demand grows, cropland per capita shrinks, and crop yields decline, integration faces new constraints.",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "source_title": "Mixed crop-livestock farming - Foreword",
+      "source_org": "FAO",
+      "publication_year": null,
+      "source_type": "Report foreword",
+      "source_url": "https://www.fao.org/4/y0501e/y0501e01.htm",
+      "accessed_at": "2026-02-04",
+      "facts": [
+        {
+          "id": 17,
+          "source_id": 3,
+          "topic": "practice",
+          "region": "Global",
+          "fact_text": "In mixed systems, livestock can use products not exploited by humans, such as kitchen waste, roadside/wasteland grasses, and crop residues.",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        },
+        {
+          "id": 18,
+          "source_id": 3,
+          "topic": "benefit",
+          "region": "Global",
+          "fact_text": "Animals provide multiple outputs (meat, eggs, milk, fiber, social status, income) and dung/urine that fertilize gardens, fields, and fish ponds.",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        },
+        {
+          "id": 19,
+          "source_id": 3,
+          "topic": "context",
+          "region": "Global",
+          "fact_text": "Traditional animal-keeping systems adapt to changes such as population pressure, fertilizer use, and consumption patterns; knowledge exchange helps develop useful technologies.",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "source_title": "A classification of livestock production systems",
+      "source_org": "FAO",
+      "publication_year": null,
+      "source_type": "Technical article",
+      "source_url": "https://www.fao.org/4/v8180t/v8180t0y.htm",
+      "accessed_at": "2026-02-04",
+      "facts": [
+        {
+          "id": 20,
+          "source_id": 4,
+          "topic": "definition",
+          "region": "Global",
+          "fact_text": "Mixed-farming systems are livestock systems where more than 10% of dry matter feed comes from crop by-products or stubble, or more than 10% of total production value comes from non-livestock activities.",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        },
+        {
+          "id": 21,
+          "source_id": 4,
+          "topic": "classification",
+          "region": "Global",
+          "fact_text": "Rain-fed mixed-farming systems (MR) are mixed systems where more than 90% of non-livestock production value comes from rain-fed land use.",
+          "metric_value": 90.0,
+          "metric_unit": "percent threshold (more than)",
+          "metric_year": null
+        },
+        {
+          "id": 22,
+          "source_id": 4,
+          "topic": "classification",
+          "region": "Global",
+          "fact_text": "Irrigated mixed-farming systems (MI) are mixed systems where more than 10% of non-livestock production value comes from irrigated land use.",
+          "metric_value": 10.0,
+          "metric_unit": "percent threshold (more than)",
+          "metric_year": null
+        },
+        {
+          "id": 23,
+          "source_id": 4,
+          "topic": "classification",
+          "region": "Global",
+          "fact_text": "Landless monogastric systems rely on monogastric species (mainly chickens and pigs) fed from outside the farm, separating feed-use decisions from feed production and making nutrient flows open.",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        },
+        {
+          "id": 24,
+          "source_id": 4,
+          "topic": "statistic",
+          "region": "Global",
+          "fact_text": "Mixed-farming systems contribute the largest share of total meat production globally (53.9%).",
+          "metric_value": 53.9,
+          "metric_unit": "percent",
+          "metric_year": null
+        },
+        {
+          "id": 25,
+          "source_id": 4,
+          "topic": "statistic",
+          "region": "Global",
+          "fact_text": "More than 90% of global milk production is generated in mixed-farming systems.",
+          "metric_value": 90.0,
+          "metric_unit": "percent (more than)",
+          "metric_year": null
+        },
+        {
+          "id": 26,
+          "source_id": 4,
+          "topic": "statistic",
+          "region": "Global",
+          "fact_text": "Developed countries and Asia together contribute about 70% of total meat production from mixed-farming systems.",
+          "metric_value": 70.0,
+          "metric_unit": "percent (about)",
+          "metric_year": null
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "source_title": "Chapter 1. Introduction (Mixed farming systems definition and scope)",
+      "source_org": "FAO",
+      "publication_year": null,
+      "source_type": "Report chapter",
+      "source_url": "https://www.fao.org/4/x5478e/x5478e02.htm",
+      "accessed_at": "2026-02-04",
+      "facts": [
+        {
+          "id": 27,
+          "source_id": 5,
+          "topic": "definition",
+          "region": "Global",
+          "fact_text": "Mixed farming systems exist where crop and livestock production occur in the same locality and ownership of crops/land and livestock is integrated.",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        },
+        {
+          "id": 28,
+          "source_id": 5,
+          "topic": "definition",
+          "region": "Global",
+          "fact_text": "Specialized livestock in the same locality may still be included as mixed systems if resource-sharing occurs, even with separate ownership.",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        },
+        {
+          "id": 29,
+          "source_id": 5,
+          "topic": "practice",
+          "region": "Global",
+          "fact_text": "Some mixed farming systems use farm trees for fodder.",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        },
+        {
+          "id": 30,
+          "source_id": 5,
+          "topic": "statistic",
+          "region": "Sub-Saharan Africa (SAZ)",
+          "fact_text": "In the semi-arid zone (SAZ), no smallholder farming systems were found lacking a livestock component.",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        },
+        {
+          "id": 31,
+          "source_id": 5,
+          "topic": "benefit",
+          "region": "Sub-Saharan Africa (SAZ)",
+          "fact_text": "Livestock provide investment capital and wealth creation for households, including for women.",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        },
+        {
+          "id": 32,
+          "source_id": 5,
+          "topic": "benefit",
+          "region": "Sub-Saharan Africa (SAZ)",
+          "fact_text": "Livestock provide recurrent income, manure for nutrient recycling, energy for traction/transport, and productive uses for farm residues.",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        },
+        {
+          "id": 33,
+          "source_id": 5,
+          "topic": "benefit",
+          "region": "Sub-Saharan Africa (SAZ)",
+          "fact_text": "Livestock offer a least-cost route to intensification through nutrient cycling, especially when inorganic fertilizers are costly.",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        },
+        {
+          "id": 34,
+          "source_id": 5,
+          "topic": "benefit",
+          "region": "Sub-Saharan Africa (SAZ)",
+          "fact_text": "Mixed farming can provide more productive use of scarce land, more defensible access to resources, a diversified and resilient household economy, and investment funds to rebuild livestock holdings.",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "source_title": "Mixed-farming system; mixed farming (Glossary)",
+      "source_org": "UN ESCWA (FAO source)",
+      "publication_year": 1999,
+      "source_type": "Glossary entry",
+      "source_url": "https://www.unescwa.org/sd-glossary/mixed-farming-system-mixed-farming",
+      "accessed_at": "2026-02-04",
+      "facts": [
+        {
+          "id": 35,
+          "source_id": 6,
+          "topic": "definition",
+          "region": "Global",
+          "fact_text": "Mixed-farming systems involve crops, livestock and/or trees; livestock systems qualify when more than 10% of animal feed dry matter comes from crop by-products/stubble or more than 10% of total production value comes from non-livestock activities.",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "source_title": "Integrated crop-livestock systems - a key to sustainable intensification in Africa",
+      "source_org": "Tropical Grasslands-Forrajes Tropicales (CIAT)",
+      "publication_year": 2013,
+      "source_type": "Journal article",
+      "source_url": "https://www.tropicalgrasslands.info/index.php/tgft/article/view/87",
+      "accessed_at": "2026-02-04",
+      "facts": [
+        {
+          "id": 36,
+          "source_id": 7,
+          "topic": "statistic",
+          "region": "Global",
+          "fact_text": "Mixed crop-livestock systems provide livelihoods for about one billion people.",
+          "metric_value": 1.0,
+          "metric_unit": "billion people (about)",
+          "metric_year": null
+        },
+        {
+          "id": 37,
+          "source_id": 7,
+          "topic": "statistic",
+          "region": "Global",
+          "fact_text": "Mixed crop-livestock systems produce about half of the world's cereal.",
+          "metric_value": 50.0,
+          "metric_unit": "percent (about)",
+          "metric_year": null
+        },
+        {
+          "id": 38,
+          "source_id": 7,
+          "topic": "statistic",
+          "region": "Global",
+          "fact_text": "Mixed crop-livestock systems produce around a third of the world's beef.",
+          "metric_value": 33.0,
+          "metric_unit": "percent (around)",
+          "metric_year": null
+        },
+        {
+          "id": 39,
+          "source_id": 7,
+          "topic": "statistic",
+          "region": "Global",
+          "fact_text": "Mixed crop-livestock systems produce around a third of the world's milk.",
+          "metric_value": 33.0,
+          "metric_unit": "percent (around)",
+          "metric_year": null
+        },
+        {
+          "id": 40,
+          "source_id": 7,
+          "topic": "driver",
+          "region": "Africa",
+          "fact_text": "Market orientation and strong, growing demand for food provide incentives for sustainable intensification of crop and livestock enterprises in smallholder mixed systems in Africa.",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        },
+        {
+          "id": 41,
+          "source_id": 7,
+          "topic": "benefit",
+          "region": "Africa",
+          "fact_text": "Better exploitation of the mutually reinforcing nature of crop and livestock systems can support positive, inclusive growth that is ecologically and economically sustainable.",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        },
+        {
+          "id": 42,
+          "source_id": 7,
+          "topic": "challenge",
+          "region": "Africa",
+          "fact_text": "Livestock intensification is often neglected relative to crops, even though livestock can raise the productivity of the entire farming system.",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        },
+        {
+          "id": 43,
+          "source_id": 7,
+          "topic": "benefit",
+          "region": "Africa",
+          "fact_text": "Intensifying crop production can benefit livestock and improve natural resource management via increased biomass availability.",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        },
+        {
+          "id": 44,
+          "source_id": 7,
+          "topic": "benefit",
+          "region": "Africa",
+          "fact_text": "Improved efficiency of livestock production means fewer greenhouse gases per unit of milk and more milk per unit of water.",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        },
+        {
+          "id": 45,
+          "source_id": 7,
+          "topic": "policy",
+          "region": "Africa",
+          "fact_text": "Greater investment in research for development is needed to identify win-win outcomes and enabling policies, technologies, and institutions for sustainable mixed crop-livestock systems.",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "source_title": "Policies for the Future of Farming and Food in the European Union",
+      "source_org": "OECD",
+      "publication_year": 2023,
+      "source_type": "Report",
+      "source_url": "https://www.oecd.org/content/dam/oecd/en/publications/reports/2023/10/policies-for-the-future-of-farming-and-food-in-the-european-union_1eda4da6/32810cf6-en.pdf",
+      "accessed_at": "2026-02-04",
+      "facts": [
+        {
+          "id": 46,
+          "source_id": 8,
+          "topic": "statistic",
+          "region": "EU",
+          "fact_text": "Share of crop farms among EU farms was 43% in 2005.",
+          "metric_value": 43.0,
+          "metric_unit": "percent",
+          "metric_year": 2005
+        },
+        {
+          "id": 47,
+          "source_id": 8,
+          "topic": "statistic",
+          "region": "EU",
+          "fact_text": "Share of crop farms among EU farms was 58% in 2020.",
+          "metric_value": 58.0,
+          "metric_unit": "percent",
+          "metric_year": 2020
+        },
+        {
+          "id": 48,
+          "source_id": 8,
+          "topic": "statistic",
+          "region": "EU",
+          "fact_text": "Share of mixed cropping farms was 30% in 2005.",
+          "metric_value": 30.0,
+          "metric_unit": "percent",
+          "metric_year": 2005
+        },
+        {
+          "id": 49,
+          "source_id": 8,
+          "topic": "statistic",
+          "region": "EU",
+          "fact_text": "Share of mixed cropping farms was 19% in 2020.",
+          "metric_value": 19.0,
+          "metric_unit": "percent",
+          "metric_year": 2020
+        },
+        {
+          "id": 50,
+          "source_id": 8,
+          "topic": "statistic",
+          "region": "EU",
+          "fact_text": "Share of livestock-specialized farms was 24% in 2005.",
+          "metric_value": 24.0,
+          "metric_unit": "percent",
+          "metric_year": 2005
+        },
+        {
+          "id": 51,
+          "source_id": 8,
+          "topic": "statistic",
+          "region": "EU",
+          "fact_text": "Share of livestock-specialized farms was 22% in 2020.",
+          "metric_value": 22.0,
+          "metric_unit": "percent",
+          "metric_year": 2020
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "source_title": "Farming Systems and Poverty - Mixed Farming System (Central Europe)",
+      "source_org": "FAO",
+      "publication_year": null,
+      "source_type": "Report chapter",
+      "source_url": "https://www.fao.org/3/Y1860E/y1860e06.htm",
+      "accessed_at": "2026-02-04",
+      "facts": [
+        {
+          "id": 52,
+          "source_id": 9,
+          "topic": "statistic",
+          "region": "Central Europe (EU accession countries)",
+          "fact_text": "The Mixed Farming System in Central Europe covers an estimated 85 million hectares, mainly in the moist subhumid agro-ecological zone.",
+          "metric_value": 85.0,
+          "metric_unit": "million ha",
+          "metric_year": null
+        },
+        {
+          "id": 53,
+          "source_id": 9,
+          "topic": "statistic",
+          "region": "Central Europe (EU accession countries)",
+          "fact_text": "Rural populations are estimated at about 25-35% of total population and are declining.",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        },
+        {
+          "id": 54,
+          "source_id": 9,
+          "topic": "statistic",
+          "region": "Central Europe (EU accession countries)",
+          "fact_text": "Agricultural population in the system is about 16 million.",
+          "metric_value": 16.0,
+          "metric_unit": "million people",
+          "metric_year": null
+        },
+        {
+          "id": 55,
+          "source_id": 9,
+          "topic": "statistic",
+          "region": "Central Europe (EU accession countries)",
+          "fact_text": "Most of the 35 million ha of crop area is dedicated to wheat, maize, oil crops and barley, with smaller areas of fruit and vegetables.",
+          "metric_value": 35.0,
+          "metric_unit": "million ha",
+          "metric_year": null
+        },
+        {
+          "id": 56,
+          "source_id": 9,
+          "topic": "statistic",
+          "region": "Central Europe (EU accession countries)",
+          "fact_text": "There are an estimated 14 million head of cattle within the system.",
+          "metric_value": 14.0,
+          "metric_unit": "million head",
+          "metric_year": null
+        },
+        {
+          "id": 57,
+          "source_id": 9,
+          "topic": "statistic",
+          "region": "Central Europe (EU accession countries)",
+          "fact_text": "Total population of the farming system is about 99 million.",
+          "metric_value": 99.0,
+          "metric_unit": "million people",
+          "metric_year": null
+        },
+        {
+          "id": 58,
+          "source_id": 9,
+          "topic": "statistic",
+          "region": "Central Europe (EU accession countries)",
+          "fact_text": "Rural population within the system is about 36 million.",
+          "metric_value": 36.0,
+          "metric_unit": "million people",
+          "metric_year": null
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "source_title": "Farming Systems and Poverty - East Asia and Pacific",
+      "source_org": "FAO",
+      "publication_year": null,
+      "source_type": "Report chapter",
+      "source_url": "https://www.fao.org/3/y1860e/y1860e08.htm",
+      "accessed_at": "2026-02-04",
+      "facts": [
+        {
+          "id": 59,
+          "source_id": 10,
+          "topic": "statistic",
+          "region": "East Asia and Pacific",
+          "fact_text": "Tree Crop Mixed Farming System total area is 85 million ha.",
+          "metric_value": 85.0,
+          "metric_unit": "million ha",
+          "metric_year": null
+        },
+        {
+          "id": 60,
+          "source_id": 10,
+          "topic": "statistic",
+          "region": "East Asia and Pacific",
+          "fact_text": "Tree Crop Mixed Farming System agricultural population is 30 million.",
+          "metric_value": 30.0,
+          "metric_unit": "million people",
+          "metric_year": null
+        },
+        {
+          "id": 61,
+          "source_id": 10,
+          "topic": "statistic",
+          "region": "East Asia and Pacific",
+          "fact_text": "Tree Crop Mixed Farming System cultivated area is estimated at 18 million ha.",
+          "metric_value": 18.0,
+          "metric_unit": "million ha",
+          "metric_year": null
+        },
+        {
+          "id": 62,
+          "source_id": 10,
+          "topic": "statistic",
+          "region": "East Asia and Pacific",
+          "fact_text": "Tree Crop Mixed Farming System irrigated area is little more than 12 percent.",
+          "metric_value": 12.0,
+          "metric_unit": "percent (little more than)",
+          "metric_year": null
+        },
+        {
+          "id": 63,
+          "source_id": 10,
+          "topic": "practice",
+          "region": "East Asia and Pacific",
+          "fact_text": "Tree Crop Mixed systems include rubber, oil palm, coconut, coffee, tea and cocoa, with associated crops such as pepper and spices.",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        },
+        {
+          "id": 64,
+          "source_id": 10,
+          "topic": "poverty",
+          "region": "East Asia and Pacific",
+          "fact_text": "Poverty in the Tree Crop Mixed Farming System is extensive, varying from moderate to very severe.",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        },
+        {
+          "id": 65,
+          "source_id": 10,
+          "topic": "statistic",
+          "region": "East Asia and Pacific",
+          "fact_text": "Upland Intensive Mixed Farming System total area is 314 million ha.",
+          "metric_value": 314.0,
+          "metric_unit": "million ha",
+          "metric_year": null
+        },
+        {
+          "id": 66,
+          "source_id": 10,
+          "topic": "statistic",
+          "region": "East Asia and Pacific",
+          "fact_text": "Upland Intensive Mixed Farming System agricultural population is 310 million.",
+          "metric_value": 310.0,
+          "metric_unit": "million people",
+          "metric_year": null
+        },
+        {
+          "id": 67,
+          "source_id": 10,
+          "topic": "statistic",
+          "region": "East Asia and Pacific",
+          "fact_text": "Upland Intensive Mixed Farming System cultivated area is 75 million ha.",
+          "metric_value": 75.0,
+          "metric_unit": "million ha",
+          "metric_year": null
+        },
+        {
+          "id": 68,
+          "source_id": 10,
+          "topic": "statistic",
+          "region": "East Asia and Pacific",
+          "fact_text": "Upland Intensive Mixed Farming System irrigated area is just under one quarter of cultivated area.",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        },
+        {
+          "id": 69,
+          "source_id": 10,
+          "topic": "statistic",
+          "region": "East Asia and Pacific",
+          "fact_text": "Upland Intensive Mixed Farming System supports about 52 million large ruminants.",
+          "metric_value": 52.0,
+          "metric_unit": "million head",
+          "metric_year": null
+        },
+        {
+          "id": 70,
+          "source_id": 10,
+          "topic": "statistic",
+          "region": "East Asia and Pacific",
+          "fact_text": "Upland Intensive Mixed Farming System supports about 49 million small ruminants.",
+          "metric_value": 49.0,
+          "metric_unit": "million head",
+          "metric_year": null
+        },
+        {
+          "id": 71,
+          "source_id": 10,
+          "topic": "poverty",
+          "region": "East Asia and Pacific",
+          "fact_text": "Poverty in the Upland Intensive Mixed Farming System is moderate to severe.",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        },
+        {
+          "id": 72,
+          "source_id": 10,
+          "topic": "statistic",
+          "region": "East Asia and Pacific",
+          "fact_text": "Highland Extensive Mixed Farming System total area is 89 million ha.",
+          "metric_value": 89.0,
+          "metric_unit": "million ha",
+          "metric_year": null
+        },
+        {
+          "id": 73,
+          "source_id": 10,
+          "topic": "statistic",
+          "region": "East Asia and Pacific",
+          "fact_text": "Highland Extensive Mixed Farming System agricultural population is 47 million.",
+          "metric_value": 47.0,
+          "metric_unit": "million people",
+          "metric_year": null
+        },
+        {
+          "id": 74,
+          "source_id": 10,
+          "topic": "statistic",
+          "region": "East Asia and Pacific",
+          "fact_text": "Highland Extensive Mixed Farming System cultivated area is 8 million ha.",
+          "metric_value": 8.0,
+          "metric_unit": "million ha",
+          "metric_year": null
+        },
+        {
+          "id": 75,
+          "source_id": 10,
+          "topic": "statistic",
+          "region": "East Asia and Pacific",
+          "fact_text": "Highland Extensive Mixed Farming System irrigated area is about one fifth of cultivated area.",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        },
+        {
+          "id": 76,
+          "source_id": 10,
+          "topic": "statistic",
+          "region": "East Asia and Pacific",
+          "fact_text": "Highland Extensive Mixed Farming System provides grazing for about 16 million large ruminants.",
+          "metric_value": 16.0,
+          "metric_unit": "million head",
+          "metric_year": null
+        },
+        {
+          "id": 77,
+          "source_id": 10,
+          "topic": "poverty",
+          "region": "East Asia and Pacific",
+          "fact_text": "Poverty in the Highland Extensive Mixed Farming System is moderate to severe.",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        },
+        {
+          "id": 78,
+          "source_id": 10,
+          "topic": "statistic",
+          "region": "East Asia and Pacific",
+          "fact_text": "Temperate Mixed Farming System total area is 99 million ha.",
+          "metric_value": 99.0,
+          "metric_unit": "million ha",
+          "metric_year": null
+        },
+        {
+          "id": 79,
+          "source_id": 10,
+          "topic": "statistic",
+          "region": "East Asia and Pacific",
+          "fact_text": "Temperate Mixed Farming System agricultural population is 162 million.",
+          "metric_value": 162.0,
+          "metric_unit": "million people",
+          "metric_year": null
+        },
+        {
+          "id": 80,
+          "source_id": 10,
+          "topic": "statistic",
+          "region": "East Asia and Pacific",
+          "fact_text": "Temperate Mixed Farming System cultivated area is 31 million ha.",
+          "metric_value": 31.0,
+          "metric_unit": "million ha",
+          "metric_year": null
+        },
+        {
+          "id": 81,
+          "source_id": 10,
+          "topic": "statistic",
+          "region": "East Asia and Pacific",
+          "fact_text": "Temperate Mixed Farming System irrigated area is about one-third of cultivated area.",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        },
+        {
+          "id": 82,
+          "source_id": 10,
+          "topic": "practice",
+          "region": "East Asia and Pacific",
+          "fact_text": "Major crops in the Temperate Mixed Farming System include wheat and maize, with smaller areas of rice, cotton, soybeans, sweet potato and rape; livestock such as cattle, pigs and poultry are important.",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        },
+        {
+          "id": 83,
+          "source_id": 10,
+          "topic": "poverty",
+          "region": "East Asia and Pacific",
+          "fact_text": "Poverty in the Temperate Mixed Farming System is moderate.",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        },
+        {
+          "id": 84,
+          "source_id": 10,
+          "topic": "statistic",
+          "region": "East Asia and Pacific",
+          "fact_text": "Tree Crop Mixed Farming System accounts for 5% of regional land area and 3% of agricultural population.",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        },
+        {
+          "id": 85,
+          "source_id": 10,
+          "topic": "statistic",
+          "region": "East Asia and Pacific",
+          "fact_text": "Upland Intensive Mixed Farming System accounts for 19% of regional land area and 27% of agricultural population.",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        },
+        {
+          "id": 86,
+          "source_id": 10,
+          "topic": "statistic",
+          "region": "East Asia and Pacific",
+          "fact_text": "Highland Extensive Mixed Farming System accounts for 5% of regional land area and 4% of agricultural population.",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        },
+        {
+          "id": 87,
+          "source_id": 10,
+          "topic": "statistic",
+          "region": "East Asia and Pacific",
+          "fact_text": "Temperate Mixed Farming System accounts for 6% of regional land area and 14% of agricultural population.",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "source_title": "Farming Systems and Poverty - South Asia",
+      "source_org": "FAO",
+      "publication_year": null,
+      "source_type": "Report chapter",
+      "source_url": "https://www.fao.org/4/ac349e/ac349e07.htm",
+      "accessed_at": "2026-02-04",
+      "facts": [
+        {
+          "id": 88,
+          "source_id": 11,
+          "topic": "integration",
+          "region": "South Asia",
+          "fact_text": "In the Rice-Wheat Farming System there is significant crop-livestock integration, with about 119 million bovines and 73 million small ruminants.",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        },
+        {
+          "id": 89,
+          "source_id": 11,
+          "topic": "statistic",
+          "region": "South Asia",
+          "fact_text": "Rice-Wheat Farming System total area is 97 million ha with about 62 million ha cultivated.",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        },
+        {
+          "id": 90,
+          "source_id": 11,
+          "topic": "statistic",
+          "region": "South Asia",
+          "fact_text": "Rice-Wheat Farming System cultivated area is around 78 percent irrigated.",
+          "metric_value": 78.0,
+          "metric_unit": "percent (around)",
+          "metric_year": null
+        },
+        {
+          "id": 91,
+          "source_id": 11,
+          "topic": "statistic",
+          "region": "South Asia",
+          "fact_text": "Rice-Wheat Farming System agricultural population is about 254 million.",
+          "metric_value": 254.0,
+          "metric_unit": "million people",
+          "metric_year": null
+        },
+        {
+          "id": 92,
+          "source_id": 11,
+          "topic": "statistic",
+          "region": "South Asia",
+          "fact_text": "Highland Mixed Farming System total area is 65 million ha with about 19 million ha cultivated.",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        },
+        {
+          "id": 93,
+          "source_id": 11,
+          "topic": "statistic",
+          "region": "South Asia",
+          "fact_text": "Highland Mixed Farming System cultivated area is around 14 percent irrigated.",
+          "metric_value": 14.0,
+          "metric_unit": "percent (around)",
+          "metric_year": null
+        },
+        {
+          "id": 94,
+          "source_id": 11,
+          "topic": "statistic",
+          "region": "South Asia",
+          "fact_text": "Highland Mixed Farming System agricultural population is nearly 53 million.",
+          "metric_value": 53.0,
+          "metric_unit": "million people (nearly)",
+          "metric_year": null
+        },
+        {
+          "id": 95,
+          "source_id": 11,
+          "topic": "statistic",
+          "region": "South Asia",
+          "fact_text": "Highland Mixed Farming System includes about 45 million bovines and 66 million small ruminants.",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        },
+        {
+          "id": 96,
+          "source_id": 11,
+          "topic": "poverty",
+          "region": "South Asia",
+          "fact_text": "Poverty in the Highland Mixed Farming System is between moderate and extensive.",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        },
+        {
+          "id": 97,
+          "source_id": 11,
+          "topic": "statistic",
+          "region": "South Asia",
+          "fact_text": "Rainfed Mixed Farming System total area is 147 million ha with about 87 million ha cultivated.",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        },
+        {
+          "id": 98,
+          "source_id": 11,
+          "topic": "statistic",
+          "region": "South Asia",
+          "fact_text": "Rainfed Mixed Farming System cultivated area is around 16 percent irrigated.",
+          "metric_value": 16.0,
+          "metric_unit": "percent (around)",
+          "metric_year": null
+        },
+        {
+          "id": 99,
+          "source_id": 11,
+          "topic": "statistic",
+          "region": "South Asia",
+          "fact_text": "Rainfed Mixed Farming System agricultural population is about 226 million.",
+          "metric_value": 226.0,
+          "metric_unit": "million people",
+          "metric_year": null
+        },
+        {
+          "id": 100,
+          "source_id": 11,
+          "topic": "statistic",
+          "region": "South Asia",
+          "fact_text": "Rainfed Mixed Farming System includes about 126 million bovines and 64 million small ruminants.",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        },
+        {
+          "id": 101,
+          "source_id": 11,
+          "topic": "poverty",
+          "region": "South Asia",
+          "fact_text": "Poverty in the Rainfed Mixed Farming System is extensive and becomes more severe after droughts.",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        },
+        {
+          "id": 102,
+          "source_id": 11,
+          "topic": "statistic",
+          "region": "South Asia",
+          "fact_text": "Highland Mixed Farming System accounts for 12% of regional land area and 7% of agricultural population.",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        },
+        {
+          "id": 103,
+          "source_id": 11,
+          "topic": "statistic",
+          "region": "South Asia",
+          "fact_text": "Rainfed Mixed Farming System accounts for 29% of regional land area and 30% of agricultural population.",
+          "metric_value": null,
+          "metric_unit": null,
+          "metric_year": null
+        }
+      ]
+    }
+  ]
+}

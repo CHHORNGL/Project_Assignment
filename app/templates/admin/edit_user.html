@@ -1,5 +1,5 @@
 {% extends "layouts/base.html" %}
-{% block title %}Edit Crop{% endblock %}
+{% block title %}{{ t("edit_crop_title") }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid" style="max-width:700px">
@@ -7,7 +7,7 @@
     <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h3 class="font-weight-bold text-gray-800">
-            ✏️ Edit Crop
+            ✏️ {{ t("edit_crop_title") }}
         </h3>
 
         <a href="{{ url_for('admin.crops') }}"
@@ -22,10 +22,10 @@
 
             <form method="POST">
 
-                <!-- Crop Name -->
+                <!-- {{ t("crop_name") }} -->
                 <div class="form-group">
                     <label class="font-weight-bold">
-                        Crop Name
+                        {{ t("crop_name") }}
                     </label>
                     <input type="text"
                            name="name"
@@ -34,22 +34,22 @@
                            required>
                 </div>
 
-                <!-- Description -->
+                <!-- {{ t("description_label") }} -->
                 <div class="form-group">
                     <label class="font-weight-bold">
-                        Description
+                        {{ t("description_label") }}
                     </label>
                     <textarea name="description"
                               class="form-control"
                               rows="4"
-                              placeholder="Optional crop description...">{{ crop.description }}</textarea>
+                              placeholder="{{ t("crop_description_optional") }}">{{ crop.description }}</textarea>
                 </div>
 
                 <!-- Actions -->
                 <div class="mt-4">
                     <button type="submit"
                             class="btn btn-success">
-                        💾 Save Changes
+                        💾 {{ t("save_changes") }}
                     </button>
 
                     <a href="{{ url_for('admin.crops') }}"

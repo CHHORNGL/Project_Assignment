@@ -1,5 +1,5 @@
 {% extends "layouts/base.html" %}
-{% block title %}Disease Management{% endblock %}
+{% block title %}{{ t("disease_management") }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
@@ -7,14 +7,14 @@
     <!-- Page Heading -->
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
         <h1 class="h4 mb-0 text-gray-800 font-weight-bold">
-            🦠 បញ្ជីជំងឺរុក្ខជាតិ (Diseases List)
+            <i class="fas fa-virus label-icon"></i>{{ t("disease_management") }}
         </h1>
 
         <div>
             <a href="{{ url_for('admin.dashboard') }}"
                class="btn btn-sm btn-secondary shadow-sm">
                 <i class="fas fa-arrow-left fa-sm"></i>
-                Dashboard
+                {{ t("dashboard") }}
             </a>
 
             <a href="{{ url_for('admin.create_disease') }}"
@@ -43,8 +43,30 @@
     <div class="card shadow mb-4 border-left-danger">
         <div class="card-header py-3">
             <h6 class="m-0 font-weight-bold text-danger">
-                📋 ព័ត៌មានជំងឺក្នុងប្រព័ន្ធ
+                <i class="fas fa-clipboard-list label-icon"></i>{{ t("disease_management") }}
             </h6>
+        </div>
+
+        <div class="card-body border-bottom">
+            <form id="bulk-admin-diseases-form"
+                  method="POST"
+                  action="{{ url_for('admin.diseases_bulk') }}"
+                  data-total="{{ diseases|length }}">
+                <input type="hidden" name="scope" value="selected" id="admin-diseases-scope">
+                <div class="form-inline">
+                    <select name="action" class="form-control form-control-sm mr-2">
+                        <option value="">{{ t("bulk_action") }}</option>
+                        <option value="delete">{{ t("delete_selected") }}</option>
+                    </select>
+                    <button class="btn btn-sm btn-outline-danger">{{ t("apply") }}</button>
+                    <div class="form-check ml-3">
+                        <input class="form-check-input" type="checkbox" id="apply-all-admin-diseases">
+                        <label class="form-check-label small text-muted" for="apply-all-admin-diseases">
+                            {{ t("apply_all_results", count=diseases|length) }}
+                        </label>
+                    </div>
+                </div>
+            </form>
         </div>
 
         <div class="card-body">
@@ -52,7 +74,8 @@
                 <table class="table table-hover table-bordered">
                     <thead class="bg-light text-dark text-center">
                         <tr>
-                            <th width="60">ID</th>
+                            <th><input type="checkbox" id="select-all-admin-diseases"></th>
+                            <th width="60">{{ t("id_label") }}</th>
                             <th>ឈ្មោះជំងឺ</th>
                             <th>រោគសញ្ញា</th>
                             <th width="150">សកម្មភាព</th>
@@ -61,12 +84,27 @@
                     <tbody>
                         {% for disease in diseases %}
                         <tr>
+                            <td class="text-center">
+                                <input type="checkbox"
+                                       class="admin-disease-select"
+                                       name="disease_ids"
+                                       value="{{ disease.id }}"
+                                       data-name="{{ disease.name_kh if current_lang == 'km' and disease.name_kh else disease.name }}"
+                                       data-crop="{{ localize(disease.crop, 'name', '-') }}"
+                                       form="bulk-admin-diseases-form">
+                            </td>
                             <td class="text-center">{{ disease.id }}</td>
                             <td class="font-weight-bold text-primary">
-                                {{ disease.name }}
+                                {{ disease.name_kh if current_lang == 'km' and disease.name_kh else disease.name }}
                             </td>
                             <td>
-                                {{ disease.description|truncate(120) if disease.description else "-" }}
+                                {% if current_lang == 'km' and disease.description_kh %}
+                                    {{ disease.description_kh|truncate(120) }}
+                                {% elif disease.description %}
+                                    {{ disease.description|truncate(120) }}
+                                {% else %}
+                                    -
+                                {% endif %}
                             </td>
                             <td class="text-center">
                                 <a href="{{ url_for('admin.edit_disease', disease_id=disease.id) }}"
@@ -88,9 +126,9 @@
                         </tr>
                         {% else %}
                         <tr>
-                            <td colspan="4"
+                            <td colspan="5"
                                 class="text-center text-muted py-4">
-                                ❌ មិនទាន់មានទិន្នន័យជំងឺនៅឡើយទេ
+                                <i class="fas fa-ban mr-2"></i>{{ t("no_diseases_found") }}
                             </td>
                         </tr>
                         {% endfor %}
@@ -102,3 +140,45 @@
 
 </div>
 {% endblock %}
+{% block scripts %}
+{% set modal_id = "bulkAdminDiseasesConfirmModal" %}
+{% set modal_title = t("confirm_bulk_action") %}
+{% set modal_title_id = "bulk-admin-diseases-confirm-title" %}
+{% set modal_body_id = "bulk-admin-diseases-confirm-body" %}
+{% set modal_confirm_id = "bulk-admin-diseases-confirm-submit" %}
+{% set modal_copy_id = "bulk-admin-diseases-confirm-copy" %}
+{% include "partials/bulk_confirm_modal.html" %}
+
+<script src="{{ url_for('static', filename='js/bulk_confirm.js') }}"></script>
+<script>
+(function () {
+    new window.BulkConfirmController({
+        formId: "bulk-admin-diseases-form",
+        scopeFieldId: "admin-diseases-scope",
+        applyAllId: "apply-all-admin-diseases",
+        selectAllId: "select-all-admin-diseases",
+        rowSelector: ".admin-disease-select",
+        modalId: "bulkAdminDiseasesConfirmModal",
+        modalBodyId: "bulk-admin-diseases-confirm-body",
+        modalConfirmId: "bulk-admin-diseases-confirm-submit",
+        modalCopyId: "bulk-admin-diseases-confirm-copy",
+        modalTitleId: "bulk-admin-diseases-confirm-title",
+        modalBaseTitle: "{{ t("confirm_bulk_action") }}",
+        itemLabel: "{{ t("item_label_disease") }}",
+        previewColumns: [
+            { key: "id", label: "{{ t("id_label") }}" },
+            { key: "name", label: "{{ t("disease_label") }}" },
+            { key: "crop", label: "{{ t("crop_label") }}" }
+        ],
+        getPreviewRow: (checkbox) => ({
+            id: checkbox.value,
+            name: checkbox.getAttribute("data-name") || "",
+            crop: checkbox.getAttribute("data-crop") || ""
+        }),
+        getFiltersLabel: () => "{{ t("no_filters") }}",
+        actionLabel: (action) => (action === "delete" ? "{{ t("delete") }}" : "{{ t("export_label") }}")
+    });
+})();
+</script>
+{% endblock %}
+

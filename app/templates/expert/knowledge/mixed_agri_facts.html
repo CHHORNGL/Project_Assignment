@@ -1,0 +1,238 @@
+{% extends "layouts/base.html" %}
+{% block title %}{{ t("mixed_agri_facts") }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <h3 class="font-weight-bold text-primary">{{ t("mixed_agri_facts") }}</h3>
+        <div>
+            <a href="{{ url_for('expert.mixed_agri_dashboard') }}"
+               class="btn btn-light btn-sm shadow-sm">
+                Back
+            </a>
+            <a href="{{ url_for('expert.mixed_agri_fact_create') }}"
+               class="btn btn-sm btn-success ml-2">
+                Add Fact
+            </a>
+            <a href="{{ url_for('expert.mixed_agri_facts_export', format='csv', q=q, source_id=source_id) }}"
+               class="btn btn-sm btn-outline-secondary ml-2">
+                Export CSV
+            </a>
+            <a href="{{ url_for('expert.mixed_agri_facts_export', format='json', q=q, source_id=source_id) }}"
+               class="btn btn-sm btn-outline-secondary ml-2">
+                Export JSON
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form method="GET" class="form-inline">
+                <select name="source_id" class="form-control form-control-sm mr-2">
+                    <option value="">{{ t("all_sources") }}</option>
+                    {% for s in sources %}
+                    <option value="{{ s.id }}" {% if source_id == s.id %}selected{% endif %}>
+                        {{ s.source_title }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <input type="text"
+                       name="q"
+                       value="{{ q }}"
+                       class="form-control form-control-sm mr-2"
+                       placeholder="{{ t("search_facts_placeholder") }}">
+                <select name="per_page" class="form-control form-control-sm mr-2">
+                    <option value="25" {% if pagination.per_page == 25 %}selected{% endif %}>25</option>
+                    <option value="50" {% if pagination.per_page == 50 %}selected{% endif %}>50</option>
+                    <option value="100" {% if pagination.per_page == 100 %}selected{% endif %}>100</option>
+                </select>
+                <button class="btn btn-sm btn-primary">{{ t("filter") }}</button>
+                {% if q or source_id %}
+                <a href="{{ url_for('expert.mixed_agri_facts') }}"
+                   class="btn btn-sm btn-outline-secondary ml-2">{{ t("clear") }}</a>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header d-flex justify-content-between">
+            <span class="font-weight-bold">{{ t("facts") }}</span>
+            <span class="text-muted small">{{ t("total_count", count=pagination.total) }}</span>
+        </div>
+
+        <div class="card-body border-bottom">
+            <form id="bulk-facts-form"
+                  method="POST"
+                  action="{{ url_for('expert.mixed_agri_facts_bulk') }}"
+                  data-total="{{ pagination.total }}"
+                  data-query="{{ q|default('') }}"
+                  data-source="{{ source_id|default('') }}">
+                <input type="hidden" name="next" value="{{ current_path }}">
+                <input type="hidden" name="scope" value="selected" id="facts-scope">
+                <input type="hidden" name="q" value="{{ q }}">
+                <input type="hidden" name="source_id" value="{{ source_id }}">
+                <div class="form-inline">
+                    <select name="action" class="form-control form-control-sm mr-2">
+                        <option value="">{{ t("bulk_action") }}</option>
+                        <option value="delete">{{ t("delete_selected") }}</option>
+                        <option value="export_csv">{{ t("export_selected_csv") }}</option>
+                        <option value="export_json">{{ t("export_selected_json") }}</option>
+                    </select>
+                    <button class="btn btn-sm btn-outline-danger">{{ t("apply") }}</button>
+                    <div class="form-check ml-3">
+                        <input class="form-check-input" type="checkbox" id="apply-all-facts">
+                        <label class="form-check-label small text-muted" for="apply-all-facts">
+                            {{ t("apply_all_filtered", count=pagination.total) }}
+                        </label>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>
+                                <input type="checkbox" id="select-all-facts">
+                            </th>
+                            <th>{{ t("id_label") }}</th>
+                            <th>{{ t("source") }}</th>
+                            <th>{{ t("topic") }}</th>
+                            <th>{{ t("region") }}</th>
+                            <th>{{ t("metric") }}</th>
+                            <th>{{ t("fact") }}</th>
+                            <th>{{ t("actions") }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for f in facts %}
+                        <tr>
+                            <td>
+                                <input type="checkbox"
+                                       class="fact-select"
+                                       name="fact_ids"
+                                       value="{{ f.id }}"
+                                       data-topic="{{ f.topic }}"
+                                       data-region="{{ f.region }}"
+                                       form="bulk-facts-form">
+                            </td>
+                            <td>#{{ f.id }}</td>
+                            <td class="small">{{ f.source.source_title if f.source else '-' }}</td>
+                            <td>{{ f.topic }}</td>
+                            <td>{{ f.region or '-' }}</td>
+                            <td class="small">
+                                {% if f.metric_value is not none %}
+                                    {{ f.metric_value }}
+                                    {% if f.metric_unit %} {{ f.metric_unit }}{% endif %}
+                                    {% if f.metric_year %} ({{ f.metric_year }}){% endif %}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td class="text-muted small">{{ f.fact_text | truncate(160) }}</td>
+                            <td>
+                                <a href="{{ url_for('expert.mixed_agri_fact_edit', fact_id=f.id) }}"
+                                   class="btn btn-sm btn-outline-primary">{{ t("edit") }}</a>
+                                <form method="POST"
+                                      action="{{ url_for('expert.mixed_agri_fact_delete', fact_id=f.id) }}"
+                                      class="d-inline"
+                                      onsubmit="return confirm('{{ t("confirm_delete_fact") }}')">
+                                    <button class="btn btn-sm btn-outline-danger ml-1">{{ t("delete") }}</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">
+                                {{ t("no_facts_found") }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center p-3">
+            <div class="text-muted small">
+                {{ t("showing_range", start=pagination.start, end=pagination.end, total=pagination.total) }}
+            </div>
+            <div>
+                {% if pagination.has_prev %}
+                <a class="btn btn-sm btn-outline-secondary"
+                   href="{{ url_for('expert.mixed_agri_facts', page=pagination.page - 1, q=q, source_id=source_id, per_page=pagination.per_page) }}">
+                    Prev
+                </a>
+                {% else %}
+                <span class="btn btn-sm btn-outline-secondary disabled">{{ t("prev") }}</span>
+                {% endif %}
+
+                <span class="mx-2 small">{{ t("page_of", page=pagination.page, pages=pagination.pages) }}</span>
+
+                {% if pagination.has_next %}
+                <a class="btn btn-sm btn-outline-secondary"
+                   href="{{ url_for('expert.mixed_agri_facts', page=pagination.page + 1, q=q, source_id=source_id, per_page=pagination.per_page) }}">
+                    Next
+                </a>
+                {% else %}
+                <span class="btn btn-sm btn-outline-secondary disabled">{{ t("next") }}</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% set modal_id = "bulkFactsConfirmModal" %}
+{% set modal_title = t("confirm_bulk_action") %}
+{% set modal_title_id = "bulk-facts-confirm-title" %}
+{% set modal_body_id = "bulk-facts-confirm-body" %}
+{% set modal_confirm_id = "bulk-facts-confirm-submit" %}
+{% set modal_copy_id = "bulk-facts-confirm-copy" %}
+{% include "partials/bulk_confirm_modal.html" %}
+
+<script src="{{ url_for('static', filename='js/bulk_confirm.js') }}"></script>
+<script>
+(function () {
+    new window.BulkConfirmController({
+        formId: "bulk-facts-form",
+        scopeFieldId: "facts-scope",
+        applyAllId: "apply-all-facts",
+        selectAllId: "select-all-facts",
+        rowSelector: ".fact-select",
+        modalId: "bulkFactsConfirmModal",
+        modalBodyId: "bulk-facts-confirm-body",
+        modalConfirmId: "bulk-facts-confirm-submit",
+        modalCopyId: "bulk-facts-confirm-copy",
+        modalTitleId: "bulk-facts-confirm-title",
+        modalBaseTitle: "{{ t("confirm_bulk_action") }}",
+        itemLabel: "{{ t("item_label_fact") }}",
+        previewColumns: [
+            { key: "id", label: "{{ t("id_label") }}" },
+            { key: "topic", label: "{{ t("topic") }}" },
+            { key: "region", label: "{{ t("region") }}" }
+        ],
+        getPreviewRow: (checkbox) => ({
+            id: checkbox.value,
+            topic: checkbox.getAttribute("data-topic") || "",
+            region: checkbox.getAttribute("data-region") || ""
+        }),
+        getFiltersLabel: (form) => {
+            const q = form.dataset.query || "";
+            const sourceId = form.dataset.source || "";
+            const parts = [];
+            if (q) parts.push(`q="${q}"`);
+            if (sourceId) parts.push(`source_id=${sourceId}`);
+            return parts.length ? parts.join(", ") : "{{ t("no_filters") }}";
+        },
+        actionLabel: (action) => (action === "delete" ? "{{ t("delete") }}" : "{{ t("export_label") }}")
+    });
+})();
+</script>
+{% endblock %}

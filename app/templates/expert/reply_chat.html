@@ -4,7 +4,11 @@
 {% block content %}
 <div class="container-fluid mt-4" style="max-width: 900px;">
 
-    <h4 class="mb-3">👨‍⚕️ Expert ↔ Farmer Chat</h4>
+    <h4 class="mb-2">Expert -> Farmer Chat</h4>
+    <div class="text-muted mb-3">
+        {{ session.farmer.username if session and session.farmer else "Farmer" }}
+        {% if session and session.title %} - {{ session.title }}{% endif %}
+    </div>
 
     <!-- Chat Window -->
     <div class="card shadow-sm mb-3" style="height: 60vh; overflow-y: auto;">
@@ -16,14 +20,14 @@
                         <!-- Farmer message -->
                         <div class="text-left mb-3">
                             <div class="d-inline-block bg-success text-white p-2 rounded">
-                                🌾 {{ m.message }}
+                                Farmer: {{ m.message }}
                             </div>
                         </div>
                     {% else %}
                         <!-- Expert / system message -->
                         <div class="text-right mb-3">
                             <div class="d-inline-block bg-info text-white p-2 rounded">
-                                👨‍⚕️ {{ m.message }}
+                                Expert: {{ m.message }}
                             </div>
                         </div>
                     {% endif %}

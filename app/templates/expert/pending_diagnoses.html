@@ -1,0 +1,65 @@
+{% extends "layouts/base.html" %}
+{% block title %}{{ t("pending_diagnoses_title") }}{% endblock %}
+{% set body_class = "agro-theme expert-simple" %}
+
+{% block content %}
+<div class="agro-board">
+    <div class="expert-hero">
+        <div>
+            <div class="expert-title">{{ t("pending_diagnoses_title") }}</div>
+            <div class="expert-sub">Cases awaiting expert review.</div>
+        </div>
+        <div class="expert-hero-actions">
+            <a class="btn btn-agro" href="{{ url_for('expert.dashboard') }}">Back to Dashboard</a>
+        </div>
+    </div>
+
+    <div class="expert-panel">
+        <div class="expert-panel-header">
+            <div>
+                <div class="expert-panel-title">Queue</div>
+                <div class="expert-panel-sub">Review and validate pending cases</div>
+            </div>
+            <span class="expert-pill">{{ diagnoses|length }} pending</span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Crop</th>
+                        <th>Symptoms</th>
+                        <th>Date</th>
+                        <th class="text-right">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for d in diagnoses %}
+                    <tr>
+                        <td>#{{ d.id }}</td>
+                        <td>{{ localize(d.crop, "name", "-") }}</td>
+                        <td class="text-muted small">
+                            {{ d.symptoms[:60] }}{% if d.symptoms|length > 60 %}...{% endif %}
+                        </td>
+                        <td class="small">{{ d.created_at.strftime("%Y-%m-%d") }}</td>
+                        <td class="text-right">
+                            <a href="{{ url_for('expert.review_diagnosis', diagnosis_id=d.id) }}"
+                               class="btn btn-sm btn-agro-outline">
+                                Review
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-4">
+                            No pending diagnoses
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

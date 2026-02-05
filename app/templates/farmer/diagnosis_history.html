@@ -1,0 +1,53 @@
+{% extends "layouts/farmer_dashboard_base.html" %}
+{% block title %}All Diagnoses{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span class="section-title">All Diagnoses</span>
+        <a href="{{ url_for('farmer.diagnose') }}"
+           class="btn btn-sm btn-outline-success">
+            New Diagnosis
+        </a>
+    </div>
+    <div class="card-body">
+        {% if diagnoses and diagnoses|length > 0 %}
+            <div class="diag-list">
+                {% for d in diagnoses %}
+                <a class="diag-item text-decoration-none text-reset"
+                   href="{{ url_for('farmer.diagnosis_result', diagnosis_id=d.id) }}">
+                    {% set disease_label = (d.disease.name_kh if current_lang == 'km' and d.disease and d.disease.name_kh else d.disease_name) %}
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="mr-3">
+                            <div class="font-weight-bold">{{ localize(d.crop, "name", d.crop_name) }}</div>
+                            <div class="small text-muted">{{ t("disease_label") }}: {{ disease_label }}</div>
+                            <div class="small text-muted">
+                                {{ t("symptoms_label") }}: {{ d.symptoms[:90] }}{% if d.symptoms|length > 90 %}...{% endif %}
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="small text-muted">
+                                {{ d.created_at.strftime("%Y-%m-%d") if d.created_at else "" }}
+                            </div>
+                            {% if d.status == "PENDING" %}
+                                <span class="badge badge-warning">{{ t("status_pending") }}</span>
+                            {% elif d.status == "APPROVED" %}
+                                <span class="badge badge-success">{{ t("status_approved") }}</span>
+                            {% elif d.status == "REJECTED" %}
+                                <span class="badge badge-danger">{{ t("status_rejected") }}</span>
+                            {% else %}
+                                <span class="badge badge-secondary">{{ d.status }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center text-muted py-4">
+                No diagnoses yet. Start by creating your first diagnosis.
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

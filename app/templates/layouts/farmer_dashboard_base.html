@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="{{ current_lang }}">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Farmer Dashboard{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Kantumruy+Pro:wght@400;500;600;700&family=Noto+Sans+Khmer:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <link href="{{ url_for('static', filename='sb-admin/vendor/fontawesome-free/css/all.min.css') }}" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <style>
+        body { font-family: "Inter", "Kantumruy Pro", "Noto Sans Khmer", sans-serif; }
+    </style>
+
+    <!-- Theme loader (same behavior as base.html) -->
+    <script>
+    (function () {
+        const userTheme = "{{ current_user.theme if current_user.is_authenticated else 'system' }}";
+        const storedTheme = localStorage.getItem("theme");
+
+        function prefersDark() {
+            return window.matchMedia("(prefers-color-scheme: dark)").matches;
+        }
+
+        function applyTheme(theme) {
+            document.documentElement.classList.remove("dark-mode");
+            if (theme === "dark") document.documentElement.classList.add("dark-mode");
+            if (theme === "system" && prefersDark()) document.documentElement.classList.add("dark-mode");
+        }
+
+        if (userTheme && userTheme !== "system") applyTheme(userTheme);
+        else if (storedTheme) applyTheme(storedTheme);
+        else applyTheme("system");
+    })();
+    </script>
+</head>
+
+<body class="app-shell farmer-dash-theme">
+    {% set recent = diagnoses|default([]) %}
+
+    <div class="farmer-dash-layout">
+        <aside class="farmer-dash-sidebar">
+            <div class="farmer-dash-brand">
+                <span class="farmer-dash-logo">Agri System</span>
+                <span class="farmer-dash-sub">{{ t("farmer_panel") }}</span>
+            </div>
+
+            <nav class="farmer-dash-nav">
+                <a class="{% if request.path == url_for('farmer.dashboard') %}active{% endif %}"
+                   href="{{ url_for('farmer.dashboard') }}">
+                    <i class="fas fa-home"></i>
+                    {{ t("dashboard") }}
+                </a>
+                <a href="{{ url_for('farmer.diagnose') }}">
+                    <i class="fas fa-notes-medical"></i>
+                    {{ t("new_diagnosis") }}
+                </a>
+                <a class="{% if request.path == url_for('farmer.diagnose_rule_based') %}active{% endif %}"
+                   href="{{ url_for('farmer.diagnose_rule_based') }}">
+                    <i class="fas fa-cogs"></i>
+                    {{ t("full_rule_based") }}
+                </a>
+                <a class="sub-link {% if request.path == url_for('farmer.rule_inference_history') %}active{% endif %}"
+                   href="{{ url_for('farmer.rule_inference_history') }}">
+                    <i class="fas fa-history"></i>
+                    {{ t("rule_history") }}
+                </a>
+                <a href="{{ url_for('farmer.chat') }}">
+                    <i class="fas fa-comments"></i>
+                    {{ t("ask_expert") }}
+                </a>
+            </nav>
+
+            <div class="farmer-dash-section-title">{{ t("recent_diagnoses") }}</div>
+            <div class="farmer-dash-history">
+                {% if recent and recent|length > 0 %}
+                    {% for d in recent[:8] %}
+                    <div class="farmer-dash-history-item text-truncate">
+                        {{ localize(d.crop, "name", d.crop_name) }} - {{ localize(d.disease, "name", d.disease_name) }}
+                    </div>
+                    {% endfor %}
+                    {% if recent|length > 8 %}
+                    <a class="farmer-dash-history-item text-center"
+                       href="{{ url_for('farmer.diagnosis_history') }}">
+                        {{ t("see_all") }}
+                    </a>
+                    {% endif %}
+                {% else %}
+                    <div class="small text-muted">{{ t("no_history_yet") }}</div>
+                {% endif %}
+            </div>
+
+            <div class="farmer-dash-footer">
+                <button type="button" class="farmer-user-card" id="farmer-user-toggle" aria-expanded="true">
+                    <div class="farmer-user-avatar">
+                        {% if current_user.avatar_path %}
+                            <img src="{{ url_for('static', filename=current_user.avatar_path) }}"
+                                 alt="{{ t("profile_avatar") }}">
+                        {% else %}
+                            {{ current_user.username[:2]|upper }}
+                        {% endif %}
+                    </div>
+                    <div class="farmer-user-meta">
+                        <div class="farmer-user-name">{{ current_user.full_name or current_user.username }}</div>
+                        <div class="farmer-user-sub">{{ current_user.username }}</div>
+                    </div>
+                    <i class="fas fa-chevron-down farmer-user-caret"></i>
+                </button>
+
+                <div class="farmer-user-menu">
+                    <div class="farmer-user-actions">
+                        <a class="farmer-dash-footer-btn primary"
+                           href="{{ url_for('farmer.dashboard') }}">
+                            <i class="fas fa-columns"></i>
+                            {{ t("dashboard") }}
+                        </a>
+                        <a class="farmer-dash-footer-btn"
+                           href="{{ url_for('user.profile') }}">
+                            <i class="fas fa-user-circle"></i>
+                            {{ t("profile") }}
+                        </a>
+                        <a class="farmer-dash-footer-btn"
+                           href="{{ url_for('user.settings') }}">
+                            <i class="fas fa-sliders-h"></i>
+                            {{ t("settings") }}
+                        </a>
+                        <a class="farmer-dash-footer-btn danger"
+                           href="{{ url_for('auth.logout') }}">
+                            <i class="fas fa-sign-out-alt"></i>
+                            {{ t("logout") }}
+                        </a>
+                    </div>
+
+                    <div class="farmer-user-section">
+                        <div class="farmer-dash-section-title">{{ t("language") }}</div>
+                        <div class="farmer-user-grid">
+                            <button type="button" class="farmer-dash-footer-btn lang-option" data-lang="en">
+                                {{ t("english") }}
+                            </button>
+                            <button type="button" class="farmer-dash-footer-btn lang-option" data-lang="km">
+                                {{ t("khmer") }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="farmer-dash-main">
+            <div class="farmer-dash-content">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    <script>
+    document.querySelectorAll(".lang-option[data-lang]").forEach(btn => {
+        btn.addEventListener("click", async () => {
+            const language = btn.dataset.lang;
+            try {
+                await fetch("/users/language", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ language })
+                });
+            } catch (e) {}
+            window.location.reload();
+        });
+    });
+    </script>
+
+    <script>
+    document.querySelectorAll(".theme-option[data-theme]").forEach(btn => {
+        btn.addEventListener("click", async () => {
+            const theme = btn.dataset.theme;
+
+            document.documentElement.classList.remove("dark-mode");
+            if (theme === "dark") document.documentElement.classList.add("dark-mode");
+            if (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches) {
+                document.documentElement.classList.add("dark-mode");
+            }
+
+            localStorage.setItem("theme", theme);
+
+            try {
+                await fetch("/users/theme", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ theme })
+                });
+            } catch (e) {}
+        });
+    });
+
+    (function () {
+        const activeTheme = localStorage.getItem("theme") || "{{ current_user.theme if current_user.is_authenticated else 'system' }}";
+        document.querySelectorAll(".theme-option[data-theme]").forEach(btn => {
+            btn.classList.toggle("is-active", btn.dataset.theme === activeTheme);
+        });
+    })();
+    </script>
+
+    <script>
+    (function () {
+        const toggle = document.getElementById("farmer-user-toggle");
+        const menu = document.querySelector(".farmer-user-menu");
+        const storageKey = "farmer_user_menu_open";
+
+        if (!toggle || !menu) return;
+
+        const isOpen = localStorage.getItem(storageKey) !== "0";
+        menu.classList.toggle("is-collapsed", !isOpen);
+        toggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
+
+        toggle.addEventListener("click", () => {
+            const next = menu.classList.toggle("is-collapsed");
+            toggle.setAttribute("aria-expanded", next ? "false" : "true");
+            localStorage.setItem(storageKey, next ? "0" : "1");
+        });
+    })();
+    </script>
+</body>
+</html>

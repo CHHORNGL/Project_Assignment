@@ -1,0 +1,89 @@
+{% extends "layouts/farmer_dashboard_base.html" %}
+{% block title %}{{ t("settings") }}{% endblock %}
+
+{% block content %}
+<div class="settings-shell farmer-settings">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <div>
+            <h4 class="mb-1">{{ t("settings") }}</h4>
+            <div class="text-muted small">{{ t("personalize_experience") }}</div>
+        </div>
+        <a class="btn btn-sm btn-outline-primary" href="{{ url_for('user.profile') }}">
+            <i class="fas fa-user-circle mr-1"></i>
+            {{ t("profile") }}
+        </a>
+    </div>
+
+    <div class="settings-card">
+        <div class="settings-header">
+            <div>
+                <h5 class="mb-1">{{ t("settings") }}</h5>
+                <p class="text-muted small mb-0">{{ t("personalize_experience") }}</p>
+            </div>
+        </div>
+
+        <div class="settings-body">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="flash flash-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form method="POST">
+                <div class="settings-section">
+                    <div class="settings-section-title">{{ t("appearance") }}</div>
+                    <div class="settings-section-sub">{{ t("appearance_sub") }}</div>
+
+                    <div class="theme-choice">
+                        <label class="settings-theme-option">
+                            <input type="radio" name="theme" value="light"
+                                   {% if current_user.theme == 'light' %}checked{% endif %}>
+                            <span>{{ t("light") }}</span>
+                        </label>
+
+                        <label class="settings-theme-option">
+                            <input type="radio" name="theme" value="dark"
+                                   {% if current_user.theme == 'dark' %}checked{% endif %}>
+                            <span>{{ t("dark") }}</span>
+                        </label>
+
+                        <label class="settings-theme-option">
+                            <input type="radio" name="theme" value="system"
+                                   {% if current_user.theme == 'system' %}checked{% endif %}>
+                            <span>{{ t("system") }}</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <div class="settings-section-title">{{ t("language") }}</div>
+                    <div class="settings-section-sub">
+                        {{ t("language") }}: {{ t("english") }} / {{ t("khmer") }}
+                    </div>
+                    <div class="theme-choice">
+                        <button type="button" class="settings-theme-option lang-option" data-lang="en">
+                            {{ t("english") }}
+                        </button>
+                        <button type="button" class="settings-theme-option lang-option" data-lang="km">
+                            {{ t("khmer") }}
+                        </button>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <div class="settings-section-title">{{ t("account") }}</div>
+                    <div class="settings-section-sub">
+                        {{ t("signed_in_as") }} <strong>{{ current_user.username }}</strong>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn settings-save-btn">
+                    {{ t("save_settings") }}
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

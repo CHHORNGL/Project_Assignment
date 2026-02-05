@@ -1,49 +1,518 @@
 {% extends "layouts/base.html" %}
-{% block title %}Expert Dashboard{% endblock %}
+{% block title %}{{ t("expert_dashboard_title") }}{% endblock %}
+{% set body_class = "agro-theme expert-simple" %}
 
 {% block content %}
-<div class="container-fluid">
+<div class="agro-board expert-board">
 
-    <h3 class="mb-4 text-primary">
-        🧑‍⚕️ Expert Dashboard
-    </h3>
+    {% set pending = diagnoses|length %}
+    {% set reviewed = approved_count + rejected_count %}
+    {% set total_cases = pending + reviewed %}
+    {% set completion = (reviewed / total_cases * 100) if total_cases else 0 %}
+    {% set safe_total = total_cases if total_cases else 1 %}
+    {% set donut_total = pending + approved_count + rejected_count %}
+    {% set donut_safe_total = donut_total if donut_total else 1 %}
+    {% set pending_pct = (pending / donut_safe_total * 100) %}
+    {% set approved_pct = (approved_count / donut_safe_total * 100) %}
+    {% set rejected_pct = (rejected_count / donut_safe_total * 100) %}
+    {% set approved_end = pending_pct + approved_pct %}
 
-    <div class="row">
+    <div class="expert-hero">
+        <div>
+            <div class="expert-title">{{ t("expert_command_center") }}</div>
+            <div class="expert-sub">{{ t("expert_command_sub") }}</div>
+            <div class="expert-hero-meta">
+                <span class="expert-chip">{{ t("status_pending") }} {{ pending }}</span>
+                <span class="expert-chip">{{ t("reviewed") }} {{ reviewed }}</span>
+                <span class="expert-chip">{{ t("completion") }} {{ completion|round(0) }}%</span>
+            </div>
+        </div>
+        <div class="expert-hero-actions">
+            <a class="btn btn-agro" href="{{ url_for('expert.create_rule') }}">{{ t("add_rule") }}</a>
+            <a class="btn btn-agro-outline" href="{{ url_for('expert.knowledge_dashboard') }}">{{ t("knowledge_base") }}</a>
+        </div>
+    </div>
 
-        <div class="col-md-4 mb-3">
-            <div class="card shadow-sm">
-                <div class="card-body text-center">
-                    <h5>Pending Diagnoses</h5>
-                    <p class="display-6 text-warning">
-                        {{ pending_count or 0 }}
-                    </p>
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="expert-metric">
+                <div>
+                    <div class="expert-metric-label">{{ t("pending_cases") }}</div>
+                    <div class="expert-metric-value">{{ pending }}</div>
+                    <div class="expert-metric-sub">{{ t("awaiting_review") }}</div>
+                </div>
+                <div class="expert-metric-icon"><i class="fas fa-hourglass-half"></i></div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="expert-metric">
+                <div>
+                    <div class="expert-metric-label">{{ t("status_approved") }}</div>
+                    <div class="expert-metric-value">{{ approved_count }}</div>
+                    <div class="expert-metric-sub">{{ t("validated_diagnoses") }}</div>
+                </div>
+                <div class="expert-metric-icon"><i class="fas fa-check-circle"></i></div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="expert-metric">
+                <div>
+                    <div class="expert-metric-label">{{ t("status_rejected") }}</div>
+                    <div class="expert-metric-value">{{ rejected_count }}</div>
+                    <div class="expert-metric-sub">{{ t("needs_correction") }}</div>
+                </div>
+                <div class="expert-metric-icon"><i class="fas fa-times-circle"></i></div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="expert-metric">
+                <div>
+                    <div class="expert-metric-label">{{ t("active_chats") }}</div>
+                    <div class="expert-metric-value">{{ chat_count }}</div>
+                    <div class="expert-metric-sub">{{ t("live_farmer_support") }}</div>
+                </div>
+                <div class="expert-metric-icon"><i class="fas fa-comments"></i></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-lg-7 mb-3">
+            <div class="expert-panel">
+                <div class="expert-panel-header">
+                    <div>
+                        <div class="expert-panel-title">{{ t("review_pipeline") }}</div>
+                        <div class="expert-panel-sub">{{ t("progress_all_status") }}</div>
+                    </div>
+                    <span class="expert-pill">{{ completion|round(0) }}% {{ t("completion") }}</span>
+                </div>
+
+                <div class="expert-progress-stack">
+                    <div class="expert-progress-row">
+                        <span class="label">{{ t("reviewed") }}</span>
+                        <div class="expert-progress">
+                            <span style="width: {{ (reviewed / safe_total * 100)|round(0) }}%;"></span>
+                        </div>
+                        <span class="value">{{ reviewed }}</span>
+                    </div>
+                    <div class="expert-progress-row">
+                        <span class="label">{{ t("status_approved") }}</span>
+                        <div class="expert-progress">
+                            <span style="width: {{ (approved_count / safe_total * 100)|round(0) }}%;"></span>
+                        </div>
+                        <span class="value">{{ approved_count }}</span>
+                    </div>
+                    <div class="expert-progress-row">
+                        <span class="label">{{ t("status_rejected") }}</span>
+                        <div class="expert-progress">
+                            <span style="width: {{ (rejected_count / safe_total * 100)|round(0) }}%;"></span>
+                        </div>
+                        <span class="value">{{ rejected_count }}</span>
+                    </div>
+                    <div class="expert-progress-row">
+                        <span class="label">{{ t("status_pending") }}</span>
+                        <div class="expert-progress">
+                            <span style="width: {{ (pending / safe_total * 100)|round(0) }}%;"></span>
+                        </div>
+                        <span class="value">{{ pending }}</span>
+                    </div>
+                </div>
+
+                <div class="expert-donut-section">
+                    <div class="expert-panel-sub">{{ t("case_breakdown") }}</div>
+                    <div class="expert-donut-wrap">
+                        <div class="expert-donut"
+                             style="{% if donut_total %}
+                                    background: conic-gradient(
+                                        var(--donut-pending) 0 {{ pending_pct|round(2) }}%,
+                                        var(--donut-approved) {{ pending_pct|round(2) }}% {{ approved_end|round(2) }}%,
+                                        var(--donut-rejected) {{ approved_end|round(2) }}% 100%
+                                    );
+                                    {% else %}
+                                    background: conic-gradient(var(--donut-muted) 0 100%);
+                                    {% endif %}">
+                            <div class="expert-donut-hole">
+                                <div class="expert-donut-total">{{ donut_total }}</div>
+                                <div class="expert-donut-label">{{ t("total_cases") }}</div>
+                            </div>
+                        </div>
+                        <div class="expert-donut-legend">
+                            <div class="expert-donut-item">
+                                <span class="expert-donut-dot pending"></span>
+                                <div>
+                                    <div class="expert-donut-name">{{ t("status_pending") }}</div>
+                                    <div class="expert-donut-meta">{{ pending }} • {{ pending_pct|round(0) }}%</div>
+                                </div>
+                            </div>
+                            <div class="expert-donut-item">
+                                <span class="expert-donut-dot approved"></span>
+                                <div>
+                                    <div class="expert-donut-name">{{ t("status_approved") }}</div>
+                                    <div class="expert-donut-meta">{{ approved_count }} • {{ approved_pct|round(0) }}%</div>
+                                </div>
+                            </div>
+                            <div class="expert-donut-item">
+                                <span class="expert-donut-dot rejected"></span>
+                                <div>
+                                    <div class="expert-donut-name">{{ t("status_rejected") }}</div>
+                                    <div class="expert-donut-meta">{{ rejected_count }} • {{ rejected_pct|round(0) }}%</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-4 mb-3">
-            <div class="card shadow-sm">
-                <div class="card-body text-center">
-                    <h5>Total Reviewed</h5>
-                    <p class="display-6 text-success">
-                        {{ reviewed_count or 0 }}
-                    </p>
+        <div class="col-lg-5 mb-3">
+            <div class="expert-panel">
+                <div class="expert-panel-header">
+                    <div>
+                        <div class="expert-panel-title">{{ t("calendar_time") }}</div>
+                        <div class="expert-panel-sub">{{ t("review_schedule") }}</div>
+                    </div>
+                </div>
+                <div class="agro-calendar-layout">
+                    <div class="agro-clock">
+                        <div class="agro-clock-time" id="expertClockTime">--:--:--</div>
+                        <div class="agro-clock-date" id="expertClockDate">--</div>
+                        <div class="agro-clock-tz" id="expertClockTz">--</div>
+                    </div>
+                    <div class="agro-calendar-block">
+                        <div class="agro-calendar-head">
+                            <button class="agro-cal-nav" type="button" data-expert-cal="-1">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <div class="agro-cal-title" id="expertCalTitle">--</div>
+                            <button class="agro-cal-nav" type="button" data-expert-cal="1">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                        <div class="agro-calendar-week">
+                            <span>{{ t("sun") }}</span>
+                            <span>{{ t("mon") }}</span>
+                            <span>{{ t("tue") }}</span>
+                            <span>{{ t("wed") }}</span>
+                            <span>{{ t("thu") }}</span>
+                            <span>{{ t("fri") }}</span>
+                            <span>{{ t("sat") }}</span>
+                        </div>
+                        <div class="agro-calendar-grid" id="expertCalGrid"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-lg-5 mb-3">
+            <div class="expert-panel">
+                <div class="expert-panel-header">
+                    <div>
+                        <div class="expert-panel-title">{{ t("quick_actions") }}</div>
+                        <div class="expert-panel-sub">{{ t("jump_tools") }}</div>
+                    </div>
+                </div>
+                <div class="expert-actions-grid">
+                    <a class="expert-action-card" href="{{ url_for('expert.knowledge_dashboard') }}">
+                        <div class="expert-action-icon"><i class="fas fa-book"></i></div>
+                        <div>
+                            <div class="expert-action-title">{{ t("knowledge_base") }}</div>
+                            <div class="expert-action-sub">{{ t("manage_rules_symptoms") }}</div>
+                        </div>
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                    <a class="expert-action-card" href="{{ url_for('expert.farmer_chats') }}">
+                        <div class="expert-action-icon"><i class="fas fa-headset"></i></div>
+                        <div>
+                            <div class="expert-action-title">{{ t("farmer_chats_title") }}</div>
+                            <div class="expert-action-sub">{{ t("respond_requests") }}</div>
+                        </div>
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                    <a class="expert-action-card" href="{{ url_for('expert.pending_diagnoses') }}">
+                        <div class="expert-action-icon"><i class="fas fa-stethoscope"></i></div>
+                        <div>
+                            <div class="expert-action-title">{{ t("rule_based_cases") }}</div>
+                            <div class="expert-action-sub">{{ t("review_auto_diagnoses") }}</div>
+                        </div>
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                    <a class="expert-action-card" href="{{ url_for('expert.create_disease') }}">
+                        <div class="expert-action-icon"><i class="fas fa-seedling"></i></div>
+                        <div>
+                            <div class="expert-action-title">{{ t("add_disease") }}</div>
+                            <div class="expert-action-sub">{{ t("expand_disease_library") }}</div>
+                        </div>
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-4 mb-3">
-            <div class="card shadow-sm">
-                <div class="card-body text-center">
-                    <h5>Farmer Chats</h5>
-                    <p class="display-6 text-info">
-                        {{ chat_count or 0 }}
-                    </p>
+        <div class="col-lg-7 mb-3">
+            <div class="expert-panel">
+                <div class="expert-panel-header">
+                    <div>
+                        <div class="expert-panel-title">{{ t("priority_queue") }}</div>
+                        <div class="expert-panel-sub">{{ t("next_cases") }}</div>
+                    </div>
+                    <span class="expert-pill">{{ pending }} {{ t("pending_count") }}</span>
+                </div>
+                <div class="expert-queue">
+                    {% for d in diagnoses[:5] %}
+                    <div class="expert-queue-item">
+                        <div>
+                            <div class="expert-queue-title">#{{ d.id }} • {{ localize(d.crop, "name", t("unknown_crop")) }}</div>
+                            <div class="expert-queue-sub">
+                                {{ d.symptoms[:80] }}{% if d.symptoms|length > 80 %}...{% endif %}
+                            </div>
+                        </div>
+                        <div class="expert-queue-meta">
+                            <span class="expert-queue-date">{{ d.created_at.strftime("%b %d") }}</span>
+                            <a href="{{ url_for('expert.review_diagnosis', diagnosis_id=d.id) }}"
+                               class="btn btn-sm btn-agro-outline">
+                                {{ t("review") }}
+                            </a>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-muted small">{{ t("no_cases_waiting") }}</div>
+                    {% endfor %}
                 </div>
             </div>
         </div>
+    </div>
 
+    <div class="row mb-4">
+        <div class="col-lg-12">
+            <div class="expert-panel">
+                <div class="expert-panel-header">
+                    <div>
+                        <div class="expert-panel-title">{{ t("support_hub_short") }}</div>
+                        <div class="expert-panel-sub">{{ t("support_hub_quick") }}</div>
+                    </div>
+                    <div class="expert-hero-actions">
+                        <a class="btn btn-agro-outline" href="{{ url_for('expert.farmer_chats') }}">{{ t("open_chats") }}</a>
+                        <a class="btn btn-agro-outline" href="{{ url_for('expert.pending_diagnoses') }}">{{ t("review_auto_cases") }}</a>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-6 mb-3">
+                        <div class="expert-panel-sub mb-2">{{ t("recent_auto_diagnoses") }}</div>
+                        <div class="expert-queue">
+                            {% for d in auto_cases %}
+                            <div class="expert-queue-item">
+                                <div>
+                                    <div class="expert-queue-title">#{{ d.id }} • {{ localize(d.crop, "name", t("unknown_crop")) }}</div>
+                                    <div class="expert-queue-sub">
+                                        {{ d.symptoms[:80] }}{% if d.symptoms|length > 80 %}...{% endif %}
+                                    </div>
+                                </div>
+                                <div class="expert-queue-meta">
+                                    <span class="expert-queue-date">{{ d.created_at.strftime("%b %d") }}</span>
+                                    <a href="{{ url_for('expert.review_diagnosis', diagnosis_id=d.id) }}"
+                                       class="btn btn-sm btn-agro-outline">
+                                        {{ t("review") }}
+                                    </a>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="text-muted small">{{ t("no_auto_cases") }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="col-lg-6 mb-3">
+                        <div class="expert-panel-sub mb-2">{{ t("support_shortcuts") }}</div>
+                        <div class="expert-actions-grid">
+                            <a class="expert-action-card" href="{{ url_for('expert.farmer_chats') }}">
+                                <div class="expert-action-icon"><i class="fas fa-comments"></i></div>
+                                <div>
+                                    <div class="expert-action-title">{{ t("farmer_chats_title") }}</div>
+                                    <div class="expert-action-sub">{{ t("respond_now") }}</div>
+                                </div>
+                                <i class="fas fa-arrow-right"></i>
+                            </a>
+                            <a class="expert-action-card" href="{{ url_for('expert.pending_diagnoses') }}">
+                                <div class="expert-action-icon"><i class="fas fa-clipboard-check"></i></div>
+                                <div>
+                                    <div class="expert-action-title">{{ t("auto_diagnoses") }}</div>
+                                    <div class="expert-action-sub">{{ t("approve_reject") }}</div>
+                                </div>
+                                <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="expert-panel" id="pending-diagnoses">
+        <div class="expert-panel-header">
+            <div>
+                <div class="expert-panel-title">{{ t("pending_diagnoses_title") }}</div>
+                <div class="expert-panel-sub">{{ t("full_queue_review") }}</div>
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>{{ t("crop_header") }}</th>
+                        <th>{{ t("symptoms_header") }}</th>
+                        <th>{{ t("date") }}</th>
+                        <th class="text-right">{{ t("action") }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for d in diagnoses %}
+                    <tr>
+                        <td>#{{ d.id }}</td>
+                        <td>{{ localize(d.crop, "name", "-") }}</td>
+                        <td class="text-muted small">
+                            {{ d.symptoms[:60] }}{% if d.symptoms|length > 60 %}...{% endif %}
+                        </td>
+                        <td class="small">{{ d.created_at.strftime("%Y-%m-%d") }}</td>
+                        <td class="text-right">
+                            <a href="{{ url_for('expert.review_diagnosis', diagnosis_id=d.id) }}"
+                               class="btn btn-sm btn-agro-outline">
+                                {{ t("review") }}
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-4">
+                            {{ t("no_pending_diagnoses") }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function initExpertCalendar() {
+    const timeEl = document.getElementById("expertClockTime");
+    const dateEl = document.getElementById("expertClockDate");
+    const tzEl = document.getElementById("expertClockTz");
+    const titleEl = document.getElementById("expertCalTitle");
+    const gridEl = document.getElementById("expertCalGrid");
+    const navButtons = document.querySelectorAll("[data-expert-cal]");
+
+    if (!timeEl || !dateEl || !tzEl || !titleEl || !gridEl) return;
+
+    const locale = navigator.language || "en-US";
+    const timeFormatter = new Intl.DateTimeFormat(locale, {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+    });
+    const dateFormatter = new Intl.DateTimeFormat(locale, {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric"
+    });
+    const monthFormatter = new Intl.DateTimeFormat(locale, {
+        month: "long",
+        year: "numeric"
+    });
+    const tzFormatter = new Intl.DateTimeFormat(locale, { timeZoneName: "short" });
+
+    function getTimeZoneLabel(date) {
+        const parts = tzFormatter.formatToParts(date);
+        const tzPart = parts.find((part) => part.type === "timeZoneName");
+        return tzPart ? tzPart.value : "";
+    }
+
+    function renderClock() {
+        const now = new Date();
+        timeEl.textContent = timeFormatter.format(now);
+        dateEl.textContent = dateFormatter.format(now);
+        tzEl.textContent = getTimeZoneLabel(now);
+    }
+
+    let viewDate = new Date();
+    viewDate.setDate(1);
+
+    let khmerDays = {};
+
+    async function loadKhmerCalendar(year, month) {
+        try {
+            const res = await fetch(`/users/khmer-calendar?year=${year}&month=${month}`);
+            if (!res.ok) throw new Error("Failed to load Khmer calendar");
+            const data = await res.json();
+            khmerDays = data.days || {};
+        } catch (e) {
+            khmerDays = {};
+        }
+    }
+
+    async function renderCalendar() {
+        const year = viewDate.getFullYear();
+        const month = viewDate.getMonth();
+        const firstDay = new Date(year, month, 1);
+        const startDay = firstDay.getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const daysInPrevMonth = new Date(year, month, 0).getDate();
+        const today = new Date();
+        const isCurrentMonth = today.getFullYear() === year && today.getMonth() === month;
+
+        titleEl.textContent = monthFormatter.format(firstDay);
+        gridEl.innerHTML = "";
+
+        await loadKhmerCalendar(year, month + 1);
+
+        for (let i = 0; i < 42; i += 1) {
+            const cell = document.createElement("div");
+            cell.className = "agro-cal-cell";
+
+            const dayNumber = i - startDay + 1;
+            if (dayNumber < 1) {
+                cell.innerHTML = `<div class="cal-day">${daysInPrevMonth + dayNumber}</div>`;
+                cell.classList.add("is-muted");
+            } else if (dayNumber > daysInMonth) {
+                cell.innerHTML = `<div class="cal-day">${dayNumber - daysInMonth}</div>`;
+                cell.classList.add("is-muted");
+            } else {
+                const dateKey = `${year}-${String(month + 1).padStart(2, "0")}-${String(dayNumber).padStart(2, "0")}`;
+                const lunar = khmerDays[dateKey];
+                const lunarText = lunar ? `${lunar.lunar_day} ${lunar.lunar_month}` : "";
+                cell.innerHTML = `
+                    <div class="cal-day">${dayNumber}</div>
+                    <div class="cal-lunar">${lunarText}</div>
+                `;
+                if (lunar && lunar.full) {
+                    cell.title = lunar.full;
+                }
+                if (isCurrentMonth && dayNumber === today.getDate()) {
+                    cell.classList.add("is-today");
+                }
+            }
+
+            gridEl.appendChild(cell);
+        }
+    }
+
+    navButtons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+            const dir = Number(btn.dataset.expertCal || 0);
+            viewDate.setMonth(viewDate.getMonth() + dir);
+            renderCalendar();
+        });
+    });
+
+    renderClock();
+    renderCalendar();
+    setInterval(renderClock, 1000);
+})();
+</script>
 {% endblock %}

@@ -1,0 +1,155 @@
+{% extends "layouts/base.html" %}
+{% block title %}{{ t("knowledge_base") }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <h3 class="font-weight-bold text-primary">
+            {{ t("knowledge_base") }}
+        </h3>
+        <div>
+            <a href="{{ url_for('expert.create_symptom') }}"
+               class="btn btn-sm btn-outline-primary">
+                {{ t("add_symptom") }}
+            </a>
+            <a href="{{ url_for('expert.create_rule') }}"
+               class="btn btn-sm btn-success ml-2">
+                {{ t("add_rule") }}
+            </a>
+            <a href="{{ url_for('expert.mixed_agri_dashboard') }}"
+               class="btn btn-sm btn-outline-secondary ml-2">
+                {{ t("mixed_agriculture") }}
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card stat-card h-100 p-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="stat-title">{{ t("symptoms_label") }}</div>
+                        <div class="stat-value text-info">{{ symptom_count }}</div>
+                    </div>
+                    <i class="fas fa-notes-medical fa-2x text-info"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card stat-card h-100 p-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="stat-title">{{ t("rules_engine") }}</div>
+                        <div class="stat-value text-success">{{ rule_count }}</div>
+                    </div>
+                    <i class="fas fa-cogs fa-2x text-success"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card stat-card h-100 p-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="stat-title">{{ t("diseases") }}</div>
+                        <div class="stat-value text-warning">{{ disease_count }}</div>
+                    </div>
+                    <i class="fas fa-virus fa-2x text-warning"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- {{ t("mixed_agriculture") }} -->
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card stat-card h-100 p-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="stat-title">{{ t("mixed_agri_sources") }}</div>
+                        <div class="stat-value text-primary">{{ mixed_source_count }}</div>
+                    </div>
+                    <i class="fas fa-book fa-2x text-primary"></i>
+                </div>
+                <div class="mt-2">
+                    <a href="{{ url_for('expert.mixed_agri_sources') }}" class="small">{{ t("manage_sources") }}</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card stat-card h-100 p-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="stat-title">{{ t("mixed_agri_facts") }}</div>
+                        <div class="stat-value text-success">{{ mixed_fact_count }}</div>
+                    </div>
+                    <i class="fas fa-leaf fa-2x text-success"></i>
+                </div>
+                <div class="mt-2">
+                    <a href="{{ url_for('expert.mixed_agri_facts') }}" class="small">{{ t("manage_facts") }}</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- {{ t("rules_engine") }} Table -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header d-flex justify-content-between">
+            <span class="font-weight-bold">Diagnosis {{ t("rules_engine") }}</span>
+            <span class="text-muted small">{{ t("total_count", count=rule_count) }}</span>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>{{ t("id_label") }}</th>
+                            <th>{{ t("rule_name") }}</th>
+                            <th>{{ t("disease_label") }}</th>
+                            <th>{{ t("symptoms_label") }}</th>
+                            <th>{{ t("confidence_label") }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in rules %}
+                        <tr>
+                            <td>#{{ r.id }}</td>
+                            <td>{{ r.name }}</td>
+                            <td>
+                                {% if r.disease %}
+                                    {{ r.disease.name_kh if current_lang == 'km' and r.disease.name_kh else r.disease.name }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td class="text-muted small">
+                                {{ r.symptom_names()|join(", ") }}
+                            </td>
+                            <td>
+                                {% if r.confidence is not none %}
+                                    {{ (r.confidence * 100) | round(0) }}%
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-4">
+                                {{ t("no_rules_added") }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

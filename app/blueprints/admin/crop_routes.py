@@ -16,7 +16,7 @@ admin_crop_bp = Blueprint(
 @permission_required("manage_crops")
 def index():
     crops = Crop.query.all()
-    return render_template("admin/crops/index.html", crops=crops)
+    return render_template("admin/crops.html", crops=crops)
 
 
 @admin_crop_bp.route("/create", methods=["GET", "POST"])
@@ -25,20 +25,27 @@ def index():
 def create():
     if request.method == "POST":
         name = request.form.get("name")
+        name_kh = request.form.get("name_kh")
         description = request.form.get("description")
+        description_kh = request.form.get("description_kh")
 
         if not name:
             flash("❌ Crop name is required", "danger")
             return redirect(request.url)
 
-        crop = Crop(name=name, description=description)
+        crop = Crop(
+            name=name,
+            name_kh=name_kh,
+            description=description,
+            description_kh=description_kh
+        )
         db.session.add(crop)
         db.session.commit()
 
         flash("✅ Crop added successfully", "success")
         return redirect(url_for("admin_crop.index"))
 
-    return render_template("admin/crops/create.html")
+    return render_template("admin/create_crop.html")
 
 
 @admin_crop_bp.route("/<int:id>/delete")
@@ -50,4 +57,36 @@ def delete(id):
     db.session.commit()
 
     flash("🗑 Crop deleted", "warning")
+    return redirect(url_for("admin_crop.index"))
+
+
+@admin_crop_bp.route("/bulk", methods=["POST"])
+@login_required
+@permission_required("manage_crops")
+def bulk():
+    action = request.form.get("action")
+    scope = request.form.get("scope", "selected")
+
+    if action != "delete":
+        flash("Select a bulk action", "danger")
+        return redirect(url_for("admin_crop.index"))
+
+    if scope == "all":
+        crops = Crop.query.all()
+    else:
+        crop_ids = request.form.getlist("crop_ids")
+        if not crop_ids:
+            flash("Select at least one crop", "warning")
+            return redirect(url_for("admin_crop.index"))
+        crops = Crop.query.filter(Crop.id.in_(crop_ids)).all()
+
+    if not crops:
+        flash("No crops found to delete", "warning")
+        return redirect(url_for("admin_crop.index"))
+
+    for crop in crops:
+        db.session.delete(crop)
+    db.session.commit()
+
+    flash(f"Deleted {len(crops)} crop(s)", "warning")
     return redirect(url_for("admin_crop.index"))

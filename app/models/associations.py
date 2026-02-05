@@ -39,3 +39,23 @@ role_permissions = db.Table(
         primary_key=True,
     ),
 )
+
+# =====================================================
+# 🧠 RULE ↔ SYMPTOM (Expert System Knowledge Base)
+# =====================================================
+rule_symptoms = db.Table(
+    "rule_symptoms",
+    db.metadata,   # 🔥 IMPORTANT: use shared metadata
+    db.Column(
+        "rule_id",
+        db.Integer,
+        db.ForeignKey("rules.id", ondelete="CASCADE"),
+        primary_key=True,
+    ),
+    db.Column(
+        "symptom_id",
+        db.Integer,
+        db.ForeignKey("symptoms.id", ondelete="CASCADE"),
+        primary_key=True,
+    ),
+)

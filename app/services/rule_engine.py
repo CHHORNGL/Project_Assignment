@@ -1,9 +1,33 @@
 # app/services/rule_engine.py
 
+import re
+from typing import Optional
+
+from sqlalchemy.orm import joinedload
+
 from app.models.rule import Rule
+from app.models.disease import Disease
 
 
-def diagnose(symptoms_input: list):
+def _normalize(text: str) -> str:
+    if not text:
+        return ""
+    text = text.lower().strip()
+    text = re.sub(r"[^a-z0-9\s]+", " ", text)
+    text = re.sub(r"\s+", " ", text)
+    return text.strip()
+
+
+def _symptom_matches(rule_symptom: str, user_symptoms: list) -> bool:
+    for user_symptom in user_symptoms:
+        if rule_symptom == user_symptom:
+            return True
+        if rule_symptom in user_symptom or user_symptom in rule_symptom:
+            return True
+    return False
+
+
+def diagnose(symptoms_input: list, crop_id: Optional[int] = None):
     """
     Rule-based diagnosis engine
 
@@ -11,7 +35,8 @@ def diagnose(symptoms_input: list):
            Example: ['yellow leaves', 'brown spots']
     :return: dict {
         rule: Rule,
-        matched_symptoms: list[str]
+        matched_symptoms: list[str],
+        confidence: float  # 0-1 final score
     } or None
     """
 
@@ -22,9 +47,9 @@ def diagnose(symptoms_input: list):
     # Normalize input symptoms
     # ---------------------------------
     symptoms_input = [
-        s.strip().lower()
+        _normalize(s)
         for s in symptoms_input
-        if s.strip()
+        if _normalize(s)
     ]
 
     matched_results = []
@@ -32,29 +57,44 @@ def diagnose(symptoms_input: list):
     # ---------------------------------
     # Iterate through all rules
     # ---------------------------------
-    for rule in Rule.query.all():
+    rules_query = (
+        Rule.query.options(
+            joinedload(Rule.symptoms),
+            joinedload(Rule.disease)
+        )
+    )
+
+    if crop_id:
+        rules_query = rules_query.join(Rule.disease).filter(
+            Disease.crop_id == crop_id
+        )
+
+    for rule in rules_query.all():
 
         if not rule.symptoms:
             continue
 
-        # Rule symptoms (comma-separated)
+        # Rule symptoms (relationship list)
         rule_symptoms = [
-            s.strip().lower()
-            for s in rule.symptoms.split(",")
-            if s.strip()
+            _normalize(s.name)
+            for s in rule.symptoms
+            if s and getattr(s, "name", None) and _normalize(s.name)
         ]
 
         # Find matched symptoms
         matched = [
             s for s in rule_symptoms
-            if s in symptoms_input
+            if _symptom_matches(s, symptoms_input)
         ]
 
         # If at least one symptom matches → consider rule
         if matched:
+            match_ratio = len(matched) / len(rule_symptoms)
+            final_confidence = match_ratio * (rule.confidence or 1.0)
             matched_results.append({
                 "rule": rule,
-                "matched_symptoms": matched
+                "matched_symptoms": matched,
+                "confidence": final_confidence
             })
 
     # ---------------------------------
@@ -67,7 +107,7 @@ def diagnose(symptoms_input: list):
     # Sort by confidence (highest first)
     # ---------------------------------
     matched_results.sort(
-        key=lambda r: r["rule"].confidence or 0,
+        key=lambda r: (r["confidence"], len(r["matched_symptoms"])),
         reverse=True
     )
 

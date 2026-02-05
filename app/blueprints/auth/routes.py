@@ -1,5 +1,8 @@
 # app/blueprints/auth/routes.py
 
+import re
+import secrets
+
 from flask import (
     Blueprint,
     render_template,
@@ -14,8 +17,9 @@ from flask_login import (
     login_required
 )
 from werkzeug.security import check_password_hash
+from sqlalchemy import or_
 
-from app.extensions import db
+from app.extensions import db, oauth
 from app.models.user import User
 from app.models.role import Role
 from app.forms.auth_forms import LoginForm, RegisterForm
@@ -26,6 +30,26 @@ auth_bp = Blueprint(
     __name__,
     url_prefix="/auth"
 )
+
+
+def _get_google_client():
+    return oauth.create_client("google")
+
+
+def _slugify_username(value: str) -> str:
+    value = (value or "").strip().lower()
+    value = re.sub(r"[^a-z0-9_]+", "", value)
+    return value or "user"
+
+
+def _unique_username(base: str) -> str:
+    base = _slugify_username(base)
+    candidate = base
+    counter = 1
+    while User.query.filter_by(username=candidate).first():
+        candidate = f"{base}{counter}"
+        counter += 1
+    return candidate
 
 # ==================================================
 # LOGIN
@@ -39,8 +63,12 @@ def login():
     form = LoginForm()
 
     if form.validate_on_submit():
-        user = User.query.filter_by(
-            username=form.username.data
+        identifier = (form.username.data or "").strip()
+        user = User.query.filter(
+            or_(
+                User.username == identifier,
+                User.email == identifier
+            )
         ).first()
 
         # ❌ Invalid username or password
@@ -98,8 +126,18 @@ def register():
                 form=form
             )
 
+        email_value = (form.email.data or "").strip().lower()
+        if email_value and User.query.filter_by(email=email_value).first():
+            flash("❌ Email already exists", "danger")
+            return render_template(
+                "auth/register.html",
+                form=form
+            )
+
         # ✅ Create farmer user
         user = User(username=form.username.data)
+        if email_value:
+            user.email = email_value
         user.set_password(form.password.data)
 
         farmer_role = Role.query.filter_by(name="farmer").first()
@@ -133,3 +171,93 @@ def logout():
     logout_user()
     flash("ℹ️ Logged out successfully", "info")
     return redirect(url_for("auth.login"))
+
+
+# ==================================================
+# GOOGLE OAUTH
+# ==================================================
+@auth_bp.route("/google")
+def google_login():
+    if current_user.is_authenticated:
+        return redirect(url_for("main.index"))
+
+    google = _get_google_client()
+    if not google:
+        flash("Google login is not configured yet.", "danger")
+        return redirect(url_for("auth.login"))
+
+    redirect_uri = url_for("auth.google_callback", _external=True)
+    return google.authorize_redirect(redirect_uri)
+
+
+@auth_bp.route("/google/callback")
+def google_callback():
+    google = _get_google_client()
+    if not google:
+        flash("Google login is not configured yet.", "danger")
+        return redirect(url_for("auth.login"))
+
+    try:
+        token = google.authorize_access_token()
+    except Exception:
+        flash("Google login failed. Please try again.", "danger")
+        return redirect(url_for("auth.login"))
+
+    user_info = None
+    try:
+        user_info = google.parse_id_token(token)
+    except Exception:
+        user_info = None
+
+    if not user_info:
+        resp = google.get("userinfo")
+        if resp and resp.ok:
+            user_info = resp.json()
+
+    if not user_info:
+        flash("Unable to read Google profile information.", "danger")
+        return redirect(url_for("auth.login"))
+
+    google_sub = user_info.get("sub")
+    email = user_info.get("email")
+    display_name = user_info.get("name") or (email.split("@")[0] if email else "user")
+
+    if not google_sub:
+        flash("Google login failed. Missing account identifier.", "danger")
+        return redirect(url_for("auth.login"))
+
+    user = User.query.filter_by(google_sub=google_sub).first()
+
+    if not user and email:
+        user = User.query.filter_by(email=email).first()
+        if user and not user.google_sub:
+            user.google_sub = google_sub
+            if not user.full_name and display_name:
+                user.full_name = display_name
+
+    if not user:
+        user = User(
+            username=_unique_username(display_name),
+            email=email,
+            google_sub=google_sub
+        )
+        if display_name:
+            user.full_name = display_name
+        user.set_password(secrets.token_urlsafe(16))
+
+        farmer_role = Role.query.filter_by(name="farmer").first()
+        if not farmer_role:
+            flash("Farmer role not found. Contact admin.", "danger")
+            return redirect(url_for("auth.login"))
+        user.roles.append(farmer_role)
+
+        db.session.add(user)
+
+    if not user.is_active:
+        flash("🚫 Your account has been banned. Please contact administrator.", "danger")
+        return redirect(url_for("auth.login"))
+
+    db.session.commit()
+    login_user(user)
+    flash("✅ Welcome back!", "success")
+    return redirect(url_for("main.index"))

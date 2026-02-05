@@ -1,45 +1,49 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Approve Diagnosis</title>
-</head>
-<body>
+{% extends "layouts/base.html" %}
+{% block title %}Approve Diagnosis{% endblock %}
 
-<h2>🧑‍🔬 Approve Diagnosis</h2>
+{% block content %}
+<div class="container mt-4">
 
-<p><strong>Crop:</strong> {{ diagnosis.crop_name }}</p>
-<p><strong>Disease:</strong> {{ diagnosis.disease_name }}</p>
-<p>
-    <strong>Status:</strong>
-    {% if diagnosis.status == "PENDING" %}
-        <span style="color: orange;">PENDING</span>
-    {% else %}
-        <span style="color: green;">APPROVED</span>
-    {% endif %}
-</p>
+    <h2 class="mb-4">Approve Diagnosis</h2>
 
-<hr>
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <p><strong>Crop:</strong> {{ diagnosis.crop_name }}</p>
+            <p><strong>Disease:</strong> {{ diagnosis.disease_name }}</p>
+            <p>
+                <strong>Status:</strong>
+                {% if diagnosis.status == "PENDING" %}
+                    <span class="badge bg-warning text-dark">PENDING</span>
+                {% else %}
+                    <span class="badge bg-success">APPROVED</span>
+                {% endif %}
+            </p>
+        </div>
+    </div>
 
-<!-- ✅ IMPORTANT: correct action URL -->
-<form method="POST" action="{{ url_for('expert.approve_diagnosis', id=diagnosis.id) }}">
-    <label for="solution"><strong>Expert Solution</strong></label><br>
-    <textarea
-        id="solution"
-        name="solution"
-        rows="6"
-        cols="60"
-        placeholder="Write treatment / recommendation here..."
-        required
-    ></textarea>
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('expert.approve_diagnosis', id=diagnosis.id) }}">
+                {{ csrf_token() }}
 
-    <br><br>
+                <div class="mb-3">
+                    <label for="solution" class="form-label fw-bold">Expert Solution</label>
+                    <textarea
+                        id="solution"
+                        name="solution"
+                        class="form-control"
+                        rows="5"
+                        placeholder="Write treatment or recommendation here..."
+                        required></textarea>
+                </div>
 
-    <button type="submit">✅ Approve Diagnosis</button>
-</form>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-success">Approve Diagnosis</button>
+                    <a href="{{ url_for('expert.dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+                </div>
+            </form>
+        </div>
+    </div>
 
-<br>
-<a href="{{ url_for('expert.dashboard') }}">⬅ Back to Dashboard</a>
-
-</body>
-</html>
+</div>
+{% endblock %}

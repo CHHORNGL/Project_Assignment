@@ -1,0 +1,68 @@
+{% extends "layouts/base.html" %}
+{% block title %}Add Symptom{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="max-width:700px">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="font-weight-bold text-primary">
+            Add Symptom
+        </h3>
+
+        <a href="{{ url_for('expert.knowledge_dashboard') }}"
+           class="btn btn-light btn-sm shadow-sm">
+            Back
+        </a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form method="POST">
+                <div class="form-group">
+                    <label class="font-weight-bold">{{ t("symptom_name") }}</label>
+                    <input type="text"
+                           name="name"
+                           class="form-control"
+                           placeholder="{{ t("symptom_name_placeholder") }}"
+                           required>
+                </div>
+
+                <div class="form-group">
+                    <label class="font-weight-bold">{{ t("description_label") }}</label>
+                    <textarea name="description"
+                              class="form-control"
+                              rows="3"
+                              placeholder="{{ t("description_placeholder") }}"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="font-weight-bold">{{ t("symptom_name_kh") }}</label>
+                    <input type="text"
+                           name="name_kh"
+                           class="form-control"
+                           placeholder="{{ t("symptom_name_kh_placeholder") }}">
+                </div>
+
+                <div class="form-group">
+                    <label class="font-weight-bold">{{ t("symptom_description_kh") }}</label>
+                    <textarea name="description_kh"
+                              class="form-control"
+                              rows="3"
+                              placeholder="{{ t("description_kh_placeholder") }}"></textarea>
+                </div>
+
+                <div class="text-right mt-4">
+                    <button class="btn btn-success px-4">
+                        Save Symptom
+                    </button>
+                    <a href="{{ url_for('expert.knowledge_dashboard') }}"
+                       class="btn btn-secondary ml-2">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

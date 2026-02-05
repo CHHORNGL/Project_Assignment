@@ -1,5 +1,5 @@
 {% extends "layouts/base.html" %}
-{% block title %}Expert Statistics{% endblock %}
+{% block title %}{{ t("expert_statistics_title") }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
@@ -8,10 +8,9 @@
          PAGE TITLE
     =============================== -->
     <div class="d-flex align-items-center mb-4">
-        <img src="{{ url_for('static', filename='img/logo/Expert Statistics.png') }}"
-             style="width:28px;height:28px;margin-right:10px;">
+        <i class="fas fa-chart-line mr-2 text-success" style="font-size:20px;"></i>
         <h1 class="h4 mb-0 font-weight-bold text-success">
-            Expert Statistics Dashboard
+            {{ t("expert_statistics_dashboard") }}
         </h1>
     </div>
 
@@ -26,15 +25,13 @@
                 <div class="d-flex align-items-center justify-content-between">
                     <div>
                         <div class="text-muted text-uppercase small mb-1">
-                            Total Diagnoses
+                            {{ t("total_diagnoses") }}
                         </div>
                         <div class="dashboard-number">
                             {{ total_diagnoses or 0 }}
                         </div>
                     </div>
-                    <img src="{{ url_for('static', filename='img/logo/total-diagnoses.png') }}"
-                         class="stat-icon-img"
-                         alt="Total Diagnoses">
+                    <i class="fas fa-notes-medical stat-icon-img"></i>
                 </div>
             </div>
         </div>
@@ -45,15 +42,13 @@
                 <div class="d-flex align-items-center justify-content-between">
                     <div>
                         <div class="text-muted text-uppercase small mb-1">
-                            Approved
+                            {{ t("status_approved") }}
                         </div>
                         <div class="dashboard-number">
                             {{ approved_count or 0 }}
                         </div>
                     </div>
-                    <img src="{{ url_for('static', filename='img/logo/total-diagnoses.png') }}"
-                         class="stat-icon-img"
-                         alt="Approved">
+                    <i class="fas fa-check-circle stat-icon-img"></i>
                 </div>
             </div>
         </div>
@@ -64,15 +59,13 @@
                 <div class="d-flex align-items-center justify-content-between">
                     <div>
                         <div class="text-muted text-uppercase small mb-1">
-                            Pending
+                            {{ t("status_pending") }}
                         </div>
                         <div class="dashboard-number">
                             {{ pending_count or 0 }}
                         </div>
                     </div>
-                    <img src="{{ url_for('static', filename='img/logo/pending-diagnoses.png') }}"
-                         class="stat-icon-img"
-                         alt="Pending Diagnoses">
+                    <i class="fas fa-hourglass-half stat-icon-img"></i>
                 </div>
             </div>
         </div>
@@ -88,9 +81,8 @@
         <div class="col-lg-8 mb-4">
             <div class="card shadow-sm">
                 <div class="card-header d-flex align-items-center">
-                    <img src="{{ url_for('static', filename='img/logo/Expert Statistics.png') }}"
-                         style="width:18px;height:18px;margin-right:8px;">
-                    <span class="font-weight-bold">Monthly Diagnoses</span>
+                    <i class="fas fa-chart-area mr-2 text-success"></i>
+                    <span class="font-weight-bold">{{ t("monthly_diagnoses") }}</span>
                 </div>
                 <div class="card-body">
                     <canvas id="monthlyChart" height="120"></canvas>
@@ -102,9 +94,8 @@
         <div class="col-lg-4 mb-4">
             <div class="card shadow-sm">
                 <div class="card-header d-flex align-items-center">
-                    <img src="{{ url_for('static', filename='img/logo/Expert Statistics.png') }}"
-                         style="width:18px;height:18px;margin-right:8px;">
-                    <span class="font-weight-bold">Top Diseases</span>
+                    <i class="fas fa-disease mr-2 text-success"></i>
+                    <span class="font-weight-bold">{{ t("top_diseases") }}</span>
                 </div>
                 <div class="card-body">
                     <canvas id="diseaseChart"></canvas>
@@ -133,7 +124,7 @@ if (monthlyCtx) {
         data: {
             labels: {{ months|default([])|tojson }},
             datasets: [{
-                label: "Diagnoses",
+                label: "{{ t("diagnoses_label") }}",
                 data: {{ month_values|default([])|tojson }},
                 borderColor: "#1f7a6e",
                 backgroundColor: "rgba(31,122,110,0.1)",

@@ -27,7 +27,8 @@ with app.app_context():
         "view_dashboard",
         "view_reports",
         "manage_users",
-        "manage_roles"
+        "manage_roles",
+        "manage_crops"
     ]
 
     for perm_code in permissions:

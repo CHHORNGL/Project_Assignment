@@ -1,29 +1,31 @@
 {% extends "layouts/base.html" %}
-{% block title %}Rules Engine{% endblock %}
+{% block title %}{{ t("rules_engine") }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
 
     <div class="d-flex justify-content-between mb-3">
-        <h1 class="h4 font-weight-bold">🧠 Diagnosis Rules</h1>
+        <h1 class="h4 font-weight-bold">🧠 {{ t("diagnosis_rules") }}</h1>
         <a href="{{ url_for('admin.create_rule') }}"
-           class="btn btn-success">➕ Add Rule</a>
+           class="btn btn-success">➕ {{ t("add_rule") }}</a>
     </div>
 
     <table class="table table-bordered">
         <thead>
             <tr>
-                <th>Rule</th>
-                <th>Disease</th>
-                <th>Symptoms</th>
-                <th>Confidence</th>
+                <th>{{ t("rule_name") }}</th>
+                <th>{{ t("disease_label") }}</th>
+                <th>{{ t("symptoms_label") }}</th>
+                <th>{{ t("confidence_label") }}</th>
             </tr>
         </thead>
         <tbody>
             {% for r in rules %}
             <tr>
                 <td>{{ r.name }}</td>
-                <td>{{ r.disease.name }}</td>
+                <td>
+                    {{ r.disease.name_kh if current_lang == 'km' and r.disease and r.disease.name_kh else r.disease.name }}
+                </td>
                 <td>{{ r.symptoms }}</td>
                 <td>{{ r.confidence }}</td>
             </tr>

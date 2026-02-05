@@ -1,0 +1,35 @@
+{% extends "layouts/farmer_dashboard_base.html" %}
+{% block title %}Rule Chat History{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span class="section-title">Rule Chat History</span>
+        <a href="{{ url_for('farmer.rule_chat') }}" class="btn btn-sm btn-outline-success">
+            Open Rule Chat
+        </a>
+    </div>
+    <div class="card-body">
+        {% if questions and questions|length > 0 %}
+            <div class="diag-list">
+                {% for item in questions %}
+                    {% set msg = item[0] %}
+                    {% set sess = item[1] %}
+                    <a class="diag-item text-decoration-none text-reset"
+                       href="{{ url_for('farmer.rule_chat', session_id=sess.id) }}">
+                        <div class="font-weight-bold">Question</div>
+                        <div class="small text-muted">
+                            {{ msg.message[:140] }}{% if msg.message|length > 140 %}...{% endif %}
+                        </div>
+                        <div class="small text-muted mt-1">
+                            {{ msg.created_at.strftime("%Y-%m-%d %H:%M") if msg.created_at else "" }}
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-muted small">No questions yet.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
