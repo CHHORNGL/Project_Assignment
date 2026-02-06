@@ -288,7 +288,7 @@ TRANSLATIONS = {
         "new_diagnosis": "New Diagnosis",
         "ask_expert": "Ask Expert",
         "farmer_panel": "Farmer Panel",
-        "full_rule_based": "Full Rule-Based Inference",
+        "full_rule_based": "Ask Full Expert",
         "rule_history": "Rule-Based History",
         "rule_chat": "Rule-Based Chat",
         "recent_diagnoses": "Recent Diagnoses",

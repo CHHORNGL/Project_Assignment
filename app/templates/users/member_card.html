@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Member Card</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <link href="{{ url_for('static', filename='sb-admin/vendor/fontawesome-free/css/all.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+<body class="member-card-page">
+    <div class="member-card">
+        <div class="member-card-header">
+            <div class="member-card-brand">
+                <div class="member-card-logo">AS</div>
+                <div>
+                    <div class="member-card-project">Agri Expert System</div>
+                    <div class="member-card-sub">Project Member Card</div>
+                </div>
+            </div>
+            <span class="member-card-badge">{{ rep_label }}</span>
+        </div>
+
+        <div class="member-card-body">
+            <div class="member-card-avatar">
+                {% if member.avatar_path %}
+                    <img src="{{ url_for('static', filename=member.avatar_path) }}"
+                         alt="{{ member.full_name or member.username }}">
+                {% else %}
+                    {{ (member.full_name or member.username)[:2]|upper }}
+                {% endif %}
+            </div>
+            <div class="member-card-info">
+                <div class="member-card-name">{{ member.full_name or member.username }}</div>
+                <div class="member-card-role">{{ role_names }}</div>
+                <div class="member-card-meta">
+                    <i class="fas fa-envelope"></i>
+                    {{ member.email or "No email provided" }}
+                </div>
+                <div class="member-card-meta">
+                    <i class="fas fa-calendar-alt"></i>
+                    Joined {{ member.created_at.strftime('%b %d, %Y') }}
+                </div>
+            </div>
+        </div>
+
+        <div class="member-card-footer">
+            Agri Expert System — Official Representative
+        </div>
+    </div>
+</body>
+</html>

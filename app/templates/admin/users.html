@@ -1,101 +1,114 @@
 {% extends "layouts/base.html" %}
 {% block title %}{{ t("admin_user_management_title") }}{% endblock %}
+{% set body_class = "admin-theme admin-users-page" %}
 
 {% block content %}
-<div class="container-fluid">
+<div class="admin-board admin-users-board">
 
     <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h4 text-gray-800">
-            <i class="fas fa-users-cog mr-2 text-primary"></i>
-            {{ t("admin_user_management_title") }}
-        </h1>
-
-        <!-- {{ t("create_user") }} -->
-        <a href="{{ url_for('admin.users') }}#create-user"
-           class="btn btn-primary">
-            <i class="fas fa-user-plus mr-2"></i>
-            {{ t("create_user") }}
-        </a>
+    <div class="admin-hero admin-users-hero">
+        <div>
+            <div class="admin-title">{{ t("admin_user_management_title") }}</div>
+            <div class="admin-sub">{{ t("admin_control_sub") }}</div>
+        </div>
+        <div class="admin-actions">
+            <a href="{{ url_for('admin.users') }}#create-user"
+               class="btn btn-admin">
+                <i class="fas fa-user-plus mr-2"></i>
+                {{ t("create_user") }}
+            </a>
+        </div>
     </div>
 
     <!-- ===============================
          CREATE USER FORM
     =============================== -->
-    <div class="card shadow mb-4" id="create-user">
-        <div class="card-header">
-            <h6 class="m-0 font-weight-bold text-primary">
-                {{ t("create_new_user") }}
-            </h6>
+    <div class="admin-user-form-card mb-4" id="create-user">
+        <div class="admin-user-form-header">
+            <div class="admin-user-header">
+                <div class="admin-user-icon">
+                    <i class="fas fa-user-plus"></i>
+                </div>
+                <div>
+                    <div class="admin-user-title">{{ t("create_new_user") }}</div>
+                    <div class="admin-user-sub">{{ t("assign_role_help") }}</div>
+                </div>
+            </div>
+            <div class="admin-user-chip">{{ t("users") }}</div>
         </div>
-        <div class="card-body">
 
-            <form method="POST" action="{{ url_for('admin.create_user') }}"
-                  class="row">
+        <form method="POST"
+              action="{{ url_for('admin.create_user') }}"
+              class="admin-user-form-grid">
 
-                <div class="col-md-3 mb-2">
-                    <input name="username" class="form-control"
-                           placeholder="{{ t("username") }}" required>
-                </div>
+            <div class="admin-user-field">
+                <label class="admin-user-label">{{ t("username") }}</label>
+                <input name="username"
+                       class="form-control"
+                       placeholder="{{ t("username") }}"
+                       required>
+            </div>
 
-                <div class="col-md-3 mb-2">
-                    <input name="email" type="email"
-                           class="form-control"
-                           placeholder="{{ t("email_optional") }}">
-                </div>
+            <div class="admin-user-field">
+                <label class="admin-user-label">{{ t("email") }}</label>
+                <input name="email"
+                       type="email"
+                       class="form-control"
+                       placeholder="{{ t("email_optional") }}">
+            </div>
 
-                <div class="col-md-2 mb-2">
-                    <input name="password" type="password"
-                           class="form-control"
-                           placeholder="{{ t("password") }}" required>
-                </div>
+            <div class="admin-user-field">
+                <label class="admin-user-label">{{ t("password") }}</label>
+                <input name="password"
+                       type="password"
+                       class="form-control"
+                       placeholder="{{ t("password") }}"
+                       required>
+            </div>
 
-                <div class="col-md-2 mb-2">
-                    <select name="role" class="form-control" required>
-                        <option value="">{{ t("role_placeholder") }}</option>
-                        {% for r in roles %}
-                        <option value="{{ r.name }}">
-                            {{ r.name|capitalize }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                </div>
+            <div class="admin-user-field">
+                <label class="admin-user-label">{{ t("role") }}</label>
+                <select name="role" class="custom-select" required>
+                    <option value="">{{ t("role_placeholder") }}</option>
+                    {% for r in roles %}
+                    <option value="{{ r.name }}">
+                        {{ r.name|capitalize }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
 
-                <div class="col-md-2 mb-2">
-                    <button class="btn btn-success w-100">
-                        <i class="fas fa-plus-circle mr-2"></i>
-                        {{ t("create") }}
-                    </button>
-                </div>
+            <div class="admin-user-field admin-user-action">
+                <button class="btn btn-admin w-100">
+                    <i class="fas fa-plus-circle mr-2"></i>
+                    {{ t("create") }}
+                </button>
+            </div>
 
-            </form>
-
-        </div>
+        </form>
     </div>
 
     <!-- ===============================
-         USERS TABLE
+         ALL USERS (CARD GRID)
     =============================== -->
-    <div class="card shadow mb-4">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h6 class="m-0 font-weight-bold text-primary">
-                {{ t("all_users") }}
-            </h6>
-            <form method="GET" class="form-inline">
+    <div class="admin-panel admin-users-panel">
+        <div class="admin-users-panel-head">
+            <div class="admin-panel-title">{{ t("all_users") }}</div>
+            <form method="GET" class="admin-users-search">
                 <input type="text"
                        name="q"
                        value="{{ q }}"
-                       class="form-control form-control-sm mr-2"
+                       class="form-control form-control-sm"
                        placeholder="{{ t("search_users_placeholder") }}">
-                <button class="btn btn-sm btn-outline-primary">{{ t("search") }}</button>
+                <button class="btn btn-sm btn-admin-outline">{{ t("search") }}</button>
                 {% if q %}
                 <a href="{{ url_for('admin.users') }}"
-                   class="btn btn-sm btn-outline-secondary ml-2">{{ t("clear") }}</a>
+                   class="btn btn-sm btn-outline-secondary">{{ t("clear") }}</a>
                 {% endif %}
             </form>
         </div>
 
-        <div class="card-body border-bottom">
+        <div class="admin-users-panel-tools">
             <form id="bulk-users-form"
                   method="POST"
                   action="{{ url_for('admin.users_bulk') }}"
@@ -103,191 +116,108 @@
                   data-query="{{ q|default('') }}">
                 <input type="hidden" name="scope" value="selected" id="users-scope">
                 <input type="hidden" name="q" value="{{ q }}">
-                <div class="form-inline">
-                    <select name="action" class="form-control form-control-sm mr-2">
-                        <option value="">{{ t("bulk_action") }}</option>
-                        <option value="ban">{{ t("ban_selected") }}</option>
-                        <option value="unban">{{ t("unban_selected") }}</option>
-                        <option value="export_csv">{{ t("export_selected_csv") }}</option>
-                        <option value="export_json">{{ t("export_selected_json") }}</option>
-                    </select>
-                    <a href="{{ url_for('admin.users_export', format='csv', q=q) }}"
-                       class="btn btn-sm btn-outline-secondary mr-2">
-                        {{ t("export_csv") }}
-                    </a>
-                    <a href="{{ url_for('admin.users_export', format='json', q=q) }}"
-                       class="btn btn-sm btn-outline-secondary mr-2">
-                        {{ t("export_json") }}
-                    </a>
-                    <button class="btn btn-sm btn-outline-danger">{{ t("apply") }}</button>
-                    <div class="form-check ml-3">
-                        <input class="form-check-input" type="checkbox" id="apply-all-users">
-                        <label class="form-check-label small text-muted" for="apply-all-users">
-                            {{ t("apply_all_results", count=users|length) }}
+                <div class="admin-users-toolbar">
+                    <div class="admin-users-toolbar-group">
+                        <select name="action" class="custom-select custom-select-sm">
+                            <option value="">{{ t("bulk_action") }}</option>
+                            <option value="ban">{{ t("ban_selected") }}</option>
+                            <option value="unban">{{ t("unban_selected") }}</option>
+                            <option value="export_csv">{{ t("export_selected_csv") }}</option>
+                            <option value="export_json">{{ t("export_selected_json") }}</option>
+                        </select>
+                        <button class="btn btn-sm btn-outline-danger">{{ t("apply") }}</button>
+                    </div>
+                    <div class="admin-users-toolbar-group">
+                        <a href="{{ url_for('admin.users_export', format='csv', q=q) }}"
+                           class="btn btn-sm btn-outline-secondary">
+                            {{ t("export_csv") }}
+                        </a>
+                        <a href="{{ url_for('admin.users_export', format='json', q=q) }}"
+                           class="btn btn-sm btn-outline-secondary">
+                            {{ t("export_json") }}
+                        </a>
+                        <label class="form-check admin-users-check-all">
+                            <input class="form-check-input" type="checkbox" id="apply-all-users">
+                            <span class="form-check-label small text-muted">
+                                {{ t("apply_all_results", count=users|length) }}
+                            </span>
+                        </label>
+                        <label class="form-check admin-users-check-all">
+                            <input class="form-check-input" type="checkbox" id="select-all-users">
+                            <span class="form-check-label small text-muted">Select all</span>
                         </label>
                     </div>
                 </div>
             </form>
         </div>
 
-        <div class="card-body">
-            <div class="table-responsive">
+        <div class="admin-users-grid">
+            {% for user in users %}
+            {% set role_label = user.roles[0].name if user.roles else t("none_label") %}
+            {% set role_slug = (user.roles[0].name|lower|replace(' ', '-')) if user.roles else 'none' %}
+            {% set role_key = (user.roles[0].name|lower) if user.roles else 'none' %}
+            {% set role_icon = "fa-user" %}
+            {% if role_key == "admin" %}
+                {% set role_icon = "fa-user-shield" %}
+            {% elif role_key == "expert" %}
+                {% set role_icon = "fa-user-astronaut" %}
+            {% elif role_key == "farmer" %}
+                {% set role_icon = "fa-seedling" %}
+            {% endif %}
+            <div class="admin-user-card role-{{ role_slug }}">
+                <div class="admin-user-card-top">
+                    <label class="admin-user-check">
+                        <input type="checkbox"
+                               class="user-select"
+                               name="user_ids"
+                               value="{{ user.id }}"
+                               data-username="{{ user.username }}"
+                               data-email="{{ user.email or '' }}"
+                               data-role="{{ role_label }}"
+                               data-status="{{ t("active") if user.is_active else t("banned") }}"
+                               form="bulk-users-form">
+                        <span></span>
+                    </label>
+                    <div class="admin-user-top-icon">
+                        <i class="fas {{ role_icon }}"></i>
+                    </div>
+                    <div class="admin-user-top-meta">
+                        <span class="admin-user-role">{{ role_label }}</span>
+                        <span class="admin-user-status {% if user.is_active %}is-active{% else %}is-banned{% endif %}">
+                            {{ t("active") if user.is_active else t("banned") }}
+                        </span>
+                    </div>
+                    <div class="admin-user-top-art"></div>
+                </div>
 
-                <table class="table table-bordered table-hover">
-                    <thead class="thead-light">
-                        <tr>
-                            <th>
-                                <input type="checkbox" id="select-all-users">
-                            </th>
-                            <th>#</th>
-                            <th>{{ t("avatar") }}</th>
-                            <th>{{ t("username") }}</th>
-                            <th>{{ t("email") }}</th>
-                            <th>{{ t("role") }}</th>
-                            <th>{{ t("status") }}</th>
-                            <th style="width:320px">{{ t("actions") }}</th>
-                        </tr>
-                    </thead>
+                <div class="admin-user-card-body">
+                    <div class="admin-user-name">{{ user.username }}</div>
+                    <div class="admin-user-email">
+                        {% if user.email %}
+                            {{ user.email }}
+                        {% else %}
+                            <span class="text-muted">&mdash;</span>
+                        {% endif %}
+                    </div>
+                    <div class="admin-user-meta">
+                        <span>#{{ user.id }}</span>
+                        <span>{{ user.created_at.strftime('%b %d, %Y') if user.created_at else '' }}</span>
+                    </div>
+                </div>
 
-                    <tbody>
-                        {% for user in users %}
-                        <tr>
-
-                            <td>
-                                <input type="checkbox"
-                                       class="user-select"
-                                       name="user_ids"
-                                       value="{{ user.id }}"
-                                       data-username="{{ user.username }}"
-                                       data-email="{{ user.email or '' }}"
-                                       data-role="{{ user.roles[0].name if user.roles else 'None' }}"
-                                       data-status="{{ t("active") if user.is_active else t("banned") }}"
-                                       form="bulk-users-form">
-                            </td>
-
-                            <td>{{ loop.index }}</td>
-
-                            <td>
-                                <img class="admin-user-avatar"
-                                     src="{% if user.avatar_path %}{{ url_for('static', filename=user.avatar_path) }}{% else %}{{ url_for('static', filename='img/avatar.png') }}{% endif %}"
-                                     alt="{{ user.username }} avatar">
-                            </td>
-
-                            <td>
-                                <strong>{{ user.username }}</strong>
-                            </td>
-
-                            <td>
-                                {% if user.email %}
-                                    {{ user.email }}
-                                {% else %}
-                                    <span class="text-muted">—</span>
-                                {% endif %}
-                            </td>
-
-                            <!-- ROLE -->
-                            <td>
-                                {% if user.roles %}
-                                    <span class="badge badge-info">
-                                        {{ user.roles[0].name }}
-                                    </span>
-                                {% else %}
-                                    <span class="badge badge-secondary">
-                                        {{ t("none_label") }}
-                                    </span>
-                                {% endif %}
-                            </td>
-
-                            <!-- STATUS -->
-                            <td>
-                                {% if user.is_active %}
-                                    <span class="badge badge-success">
-                                        {{ t("active") }}
-                                    </span>
-                                {% else %}
-                                    <span class="badge badge-danger">
-                                        {{ t("banned") }}
-                                    </span>
-                                {% endif %}
-                            </td>
-
-                            <!-- ACTIONS -->
-                            <td>
-
-                                <!-- Change Role -->
-                                <form method="POST"
-                                      action="{{ url_for('admin.change_user_role', user_id=user.id) }}"
-                                      class="d-inline">
-                                    <select name="role"
-                                            class="custom-select custom-select-sm"
-                                            onchange="this.form.submit()">
-                                        {% for r in roles %}
-                                        <option value="{{ r.name }}"
-                                          {% if user.roles and user.roles[0].name == r.name %}selected{% endif %}>
-                                            {{ r.name }}
-                                        </option>
-                                        {% endfor %}
-                                    </select>
-                                </form>
-
-                                <!-- Ban / Unban -->
-                                {% if not user.has_role('admin') %}
-                                <form method="POST"
-                                      action="{{ url_for('admin.toggle_user_status', user_id=user.id) }}"
-                                      class="d-inline">
-                                    <button class="btn btn-sm
-                                        {% if user.is_active %}btn-danger{% else %}btn-success{% endif %}">
-                                        {% if user.is_active %}{{ t("ban") }}{% else %}{{ t("unban") }}{% endif %}
-                                    </button>
-                                </form>
-                                {% endif %}
-
-                                <!-- Update Email -->
-                                <form method="POST"
-                                      action="{{ url_for('admin.update_user_email', user_id=user.id) }}"
-                                      class="d-inline">
-                                    <div class="input-group input-group-sm mt-2">
-                                        <input type="email"
-                                               name="email"
-                                               class="form-control"
-                                               placeholder="{{ t("email_optional") }}"
-                                               value="{{ user.email or '' }}">
-                                        <div class="input-group-append">
-                                            <button class="btn btn-outline-info" type="submit">
-                                                {{ t("save") }}
-                                            </button>
-                                        </div>
-                                    </div>
-                                </form>
-
-                                <!-- Reset Password -->
-                                {% if not user.has_role('admin') %}
-                                <form method="POST"
-                                      action="{{ url_for('admin.reset_user_password', user_id=user.id) }}"
-                                      class="d-inline">
-                                    <div class="input-group input-group-sm mt-2">
-                                        <input type="password"
-                                               name="new_password"
-                                               class="form-control"
-                                               placeholder="{{ t("new_password") }}"
-                                               required>
-                                        <div class="input-group-append">
-                                            <button class="btn btn-outline-primary" type="submit">
-                                                {{ t("reset") }}
-                                            </button>
-                                        </div>
-                                    </div>
-                                </form>
-                                {% endif %}
-
-                            </td>
-
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-
+                <div class="admin-user-card-footer">
+                    <div class="admin-user-avatar-wrap">
+                        <img class="admin-user-avatar"
+                             src="{% if user.avatar_path %}{{ url_for('static', filename=user.avatar_path) }}{% else %}{{ url_for('static', filename='img/avatar.png') }}{% endif %}"
+                             alt="{{ user.username }} avatar">
+                    </div>
+                    <a class="btn admin-user-open"
+                       href="{{ url_for('admin.user_detail', user_id=user.id, q=q) }}">
+                        Open <i class="fas fa-arrow-right ml-2"></i>
+                    </a>
+                </div>
             </div>
+            {% endfor %}
         </div>
     </div>
 
@@ -333,7 +263,7 @@
         }),
         getFiltersLabel: (form) => {
             const q = form.dataset.query || "";
-            return q ? `q="${q}"` : "{{ t("no_search_filter") }}"; 
+            return q ? `q="${q}"` : "{{ t("no_search_filter") }}";
         },
         actionLabel: (action) => {
             if (action === "ban") return "{{ t("ban") }}";

@@ -27,6 +27,25 @@
                 <i class="fas fa-calendar-alt mr-2"></i>
                 {{ t("joined") }} {{ current_user.created_at.strftime('%b %d, %Y') }}
             </div>
+
+            {% if rep_label %}
+            <div class="profile-qr">
+                <div class="profile-qr-title">{{ rep_label }} QR</div>
+                <div class="profile-qr-box" id="profile-qr-code"
+                     data-qr="{{ member_card_url }}"
+                     data-qr-img="{{ member_card_qr_url }}">
+                    <img class="profile-qr-img"
+                         src="{{ member_card_qr_url }}"
+                         alt="QR code">
+                </div>
+                <div class="profile-qr-sub">Scan to view member card</div>
+                <a class="profile-qr-link"
+                   href="{{ url_for('user.member_card', user_id=current_user.id) }}"
+                   target="_blank" rel="noopener">
+                    Open Member Card
+                </a>
+            </div>
+            {% endif %}
         </div>
 
         <div class="profile-form">
@@ -109,4 +128,32 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+{% if rep_label %}
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script>
+(() => {
+    const holder = document.getElementById("profile-qr-code");
+    if (!holder) return;
+    if (typeof QRCode === "undefined") return;
+    const url = holder.dataset.qr;
+    const canvas = document.createElement("canvas");
+    QRCode.toCanvas(canvas, url, {
+        width: 140,
+        margin: 1,
+        color: { dark: "#0f172a", light: "#ffffff" }
+    }, (err) => {
+        if (err) {
+            holder.textContent = "QR unavailable";
+            return;
+        }
+        holder.innerHTML = "";
+        holder.appendChild(canvas);
+    });
+})();
+</script>
+{% endif %}
 {% endblock %}

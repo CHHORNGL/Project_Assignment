@@ -940,6 +940,20 @@ def users():
     )
 
 
+@admin_bp.route("/users/<int:user_id>")
+@login_required
+@permission_required("manage_users")
+def user_detail(user_id):
+    q = (request.args.get("q") or "").strip()
+    user = User.query.get_or_404(user_id)
+    return render_template(
+        "admin/user_detail.html",
+        user=user,
+        roles=Role.query.all(),
+        q=q
+    )
+
+
 # ==================================================
 # BULK USER ACTIONS
 # ==================================================

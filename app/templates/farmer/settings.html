@@ -2,18 +2,22 @@
 {% block title %}{{ t("settings") }}{% endblock %}
 
 {% block content %}
-<div class="settings-shell farmer-settings">
-    <div class="d-flex align-items-center justify-content-between mb-3">
+<div class="farmer-hero mb-4">
+    <div class="d-flex justify-content-between align-items-center flex-wrap">
         <div>
-            <h4 class="mb-1">{{ t("settings") }}</h4>
+            <h4 class="mb-1 font-weight-bold text-success">{{ t("settings") }}</h4>
             <div class="text-muted small">{{ t("personalize_experience") }}</div>
         </div>
-        <a class="btn btn-sm btn-outline-primary" href="{{ url_for('user.profile') }}">
-            <i class="fas fa-user-circle mr-1"></i>
-            {{ t("profile") }}
-        </a>
+        <div class="mt-3 mt-md-0">
+            <a class="btn btn-sm btn-outline-success" href="{{ url_for('user.profile') }}">
+                <i class="fas fa-user-circle mr-1"></i>
+                {{ t("profile") }}
+            </a>
+        </div>
     </div>
+</div>
 
+<div class="settings-shell farmer-settings">
     <div class="settings-card">
         <div class="settings-header">
             <div>

@@ -1,0 +1,147 @@
+{% extends "layouts/base.html" %}
+{% block title %}{{ t("manage_users") }} - {{ user.username }}{% endblock %}
+{% set body_class = "admin-theme admin-users-page admin-user-detail-page" %}
+
+{% block content %}
+<div class="admin-board admin-users-board">
+
+    <div class="admin-hero admin-users-hero">
+        <div>
+            <div class="admin-title">{{ t("user") }}: {{ user.username }}</div>
+            <div class="admin-sub">{{ t("admin_control_sub") }}</div>
+        </div>
+        <div class="admin-actions">
+            <a href="{{ url_for('admin.users', q=q) }}" class="btn btn-admin-outline">
+                <i class="fas fa-arrow-left mr-2"></i>
+                {{ t("back") }}
+            </a>
+        </div>
+    </div>
+
+    {% set role_label = user.roles[0].name if user.roles else t("none_label") %}
+    {% set role_slug = (user.roles[0].name|lower|replace(' ', '-')) if user.roles else 'none' %}
+    {% set role_key = (user.roles[0].name|lower) if user.roles else 'none' %}
+    {% set role_icon = "fa-user" %}
+    {% if role_key == "admin" %}
+        {% set role_icon = "fa-user-shield" %}
+    {% elif role_key == "expert" %}
+        {% set role_icon = "fa-user-astronaut" %}
+    {% elif role_key == "farmer" %}
+        {% set role_icon = "fa-seedling" %}
+    {% endif %}
+
+    <div class="admin-user-detail-grid">
+        <div class="admin-user-card role-{{ role_slug }}">
+            <div class="admin-user-card-top">
+                <div class="admin-user-top-icon">
+                    <i class="fas {{ role_icon }}"></i>
+                </div>
+                <div class="admin-user-top-meta">
+                    <span class="admin-user-role">{{ role_label }}</span>
+                    <span class="admin-user-status {% if user.is_active %}is-active{% else %}is-banned{% endif %}">
+                        {{ t("active") if user.is_active else t("banned") }}
+                    </span>
+                </div>
+                <div class="admin-user-top-art"></div>
+            </div>
+
+            <div class="admin-user-card-body">
+                <div class="admin-user-name">{{ user.username }}</div>
+                <div class="admin-user-email">
+                    {% if user.email %}
+                        {{ user.email }}
+                    {% else %}
+                        <span class="text-muted">&mdash;</span>
+                    {% endif %}
+                </div>
+                <div class="admin-user-meta">
+                    <span>#{{ user.id }}</span>
+                    <span>{{ user.created_at.strftime('%b %d, %Y') if user.created_at else '' }}</span>
+                </div>
+            </div>
+
+            <div class="admin-user-card-footer">
+                <div class="admin-user-avatar-wrap">
+                    <img class="admin-user-avatar"
+                         src="{% if user.avatar_path %}{{ url_for('static', filename=user.avatar_path) }}{% else %}{{ url_for('static', filename='img/avatar.png') }}{% endif %}"
+                         alt="{{ user.username }} avatar">
+                </div>
+                <span class="admin-user-status {% if user.is_active %}is-active{% else %}is-banned{% endif %}">
+                    {{ t("active") if user.is_active else t("banned") }}
+                </span>
+            </div>
+
+            <div class="admin-user-control">
+                <div class="admin-user-control-inner">
+                    <form method="POST"
+                          action="{{ url_for('admin.change_user_role', user_id=user.id) }}"
+                          class="admin-user-control-form">
+                        <label class="admin-user-control-label">{{ t("role") }}</label>
+                        <select name="role"
+                                class="custom-select custom-select-sm"
+                                onchange="this.form.submit()">
+                            {% for r in roles %}
+                            <option value="{{ r.name }}"
+                              {% if user.roles and user.roles[0].name == r.name %}selected{% endif %}>
+                                {{ r.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </form>
+
+                    {% if not user.has_role('admin') %}
+                    <form method="POST"
+                          action="{{ url_for('admin.toggle_user_status', user_id=user.id) }}"
+                          class="admin-user-control-form">
+                        <label class="admin-user-control-label">{{ t("status") }}</label>
+                        <button class="btn btn-sm
+                            {% if user.is_active %}btn-danger{% else %}btn-success{% endif %}">
+                            {% if user.is_active %}{{ t("ban") }}{% else %}{{ t("unban") }}{% endif %}
+                        </button>
+                    </form>
+                    {% endif %}
+
+                    <form method="POST"
+                          action="{{ url_for('admin.update_user_email', user_id=user.id) }}"
+                          class="admin-user-control-form admin-user-control-wide">
+                        <label class="admin-user-control-label">{{ t("email") }}</label>
+                        <div class="input-group input-group-sm">
+                            <input type="email"
+                                   name="email"
+                                   class="form-control"
+                                   placeholder="{{ t("email_optional") }}"
+                                   value="{{ user.email or '' }}">
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-info" type="submit">
+                                    {{ t("save") }}
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                    {% if not user.has_role('admin') %}
+                    <form method="POST"
+                          action="{{ url_for('admin.reset_user_password', user_id=user.id) }}"
+                          class="admin-user-control-form admin-user-control-wide">
+                        <label class="admin-user-control-label">{{ t("new_password") }}</label>
+                        <div class="input-group input-group-sm">
+                            <input type="password"
+                                   name="new_password"
+                                   class="form-control"
+                                   placeholder="{{ t("new_password") }}"
+                                   required>
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-primary" type="submit">
+                                    {{ t("reset") }}
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

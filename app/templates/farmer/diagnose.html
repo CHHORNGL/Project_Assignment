@@ -2,24 +2,32 @@
 {% block title %}Diagnose Crop{% endblock %}
 
 {% block content %}
-<div class="container-fluid d-flex justify-content-center">
-    <div class="card shadow-sm" style="max-width: 720px; width:100%;">
+<div class="farmer-hero mb-4">
+    <div class="d-flex justify-content-between align-items-center flex-wrap">
+        <div>
+            <h4 class="mb-1 font-weight-bold text-success">{{ t("diagnose_title") }}</h4>
+            <div class="text-muted small">{{ t("diagnose_sub") }}</div>
+        </div>
+        <div class="mt-3 mt-md-0">
+            <a href="{{ url_for('farmer.dashboard') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-arrow-left mr-1"></i>{{ t("back") }}
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="mx-auto" style="max-width: 860px;">
+    <div class="card shadow-sm">
         <div class="card-body form-scroll">
-
-            <h4 class="mb-3 text-success">
-                 {{ t("diagnose_title") }}
-            </h4>
-
-            <p class="text-muted mb-4">
-                {{ t("diagnose_sub") }}
-            </p>
-
             <form method="POST" enctype="multipart/form-data">
 
                 <!-- ===============================
                      CROP SELECTION
                 =============================== -->
-                <div class="form-group mb-3">
+                <div class="farmer-section">
+                    <div class="farmer-section-title">{{ t("crop_label") }}</div>
+                    <div class="farmer-section-sub">{{ t("crop_placeholder") }}</div>
+                    <div class="form-group mb-3">
                     <label class="font-weight-bold">
                         <i class="fas fa-seedling label-icon"></i>{{ t("crop_label") }}
                     </label>
@@ -34,11 +42,15 @@
                         {% endfor %}
                     </select>
                 </div>
+                </div>
 
                 <!-- ===============================
                      IMAGE-BASED SYMPTOM PICKER
                 =============================== -->
-                <div class="form-group mb-4">
+                <div class="farmer-section">
+                    <div class="farmer-section-title">{{ t("symptom_picker_title") }}</div>
+                    <div class="farmer-section-sub">{{ t("symptom_picker_sub") }}</div>
+                    <div class="form-group mb-4">
                     <label class="font-weight-bold">
                         <i class="far fa-images label-icon"></i>{{ t("symptom_picker_title") }}
                     </label>
@@ -93,11 +105,15 @@
                         </div>
                     </div>
                 </div>
+                </div>
 
                 <!-- ===============================
                      SYMPTOMS INPUT
                 =============================== -->
-                <div class="form-group mb-4">
+                <div class="farmer-section">
+                    <div class="farmer-section-title">{{ t("symptom_text_label") }}</div>
+                    <div class="farmer-section-sub">{{ t("symptom_tip_1") }}</div>
+                    <div class="form-group mb-4">
                     <label class="font-weight-bold">
                         <i class="fas fa-notes-medical label-icon"></i>{{ t("symptom_text_label") }}
                     </label>
@@ -112,12 +128,13 @@
                         • {{ t("symptom_tip_1") }}<br>
                         • {{ t("symptom_tip_2") }}
                     </small>
+                    </div>
                 </div>
 
                 <!-- ===============================
                      SUBMIT
                 =============================== -->
-                <div class="d-flex justify-content-between align-items-center">
+                <div class="farmer-actions d-flex justify-content-between align-items-center">
                     <a href="{{ url_for('farmer.dashboard') }}"
                        class="btn btn-outline-secondary">
                         <i class="fas fa-arrow-left btn-icon"></i>{{ t("back") }}

@@ -1,48 +1,61 @@
-{% extends "layouts/base.html" %}
+{% extends "layouts/farmer_dashboard_base.html" %}
 {% block title %}{{ t("create_diagnosis") }}{% endblock %}
 
 {% block content %}
-<div class="container-fluid mt-4">
-
-    <h2 class="mb-4"><i class="fas fa-seedling label-icon"></i>{{ t("create_diagnosis") }}</h2>
-
-    <div class="card shadow-sm">
-        <div class="card-body">
-
-            <form method="POST">
-                {{ form.hidden_tag() }}
-
-                <!-- Crop Name -->
-                <div class="form-group">
-                    {{ form.crop_name.label(class="form-label") }}
-                    {{ form.crop_name(class="form-control", placeholder="{{ t("enter_crop_name") }}") }}
-                    {% for error in form.crop_name.errors %}
-                        <small class="text-danger">{{ error }}</small>
-                    {% endfor %}
-                </div>
-
-                <!-- Disease Name -->
-                <div class="form-group">
-                    {{ form.disease_name.label(class="form-label") }}
-                    {{ form.disease_name(class="form-control", placeholder="{{ t("describe_disease_symptoms") }}") }}
-                    {% for error in form.disease_name.errors %}
-                        <small class="text-danger">{{ error }}</small>
-                    {% endfor %}
-                </div>
-
-                <!-- Submit -->
-                <button type="submit" class="btn btn-success">
-                    <i class="fas fa-paper-plane btn-icon"></i>{{ t("submit_diagnosis") }}
-                </button>
-
-                <a href="{{ url_for('farmer.dashboard') }}"
-                   class="btn btn-secondary ml-2">
-                    Cancel
-                </a>
-            </form>
-
+<div class="farmer-hero mb-4">
+    <div class="d-flex justify-content-between align-items-center flex-wrap">
+        <div>
+            <h4 class="mb-1 font-weight-bold text-success">{{ t("create_diagnosis") }}</h4>
+            <div class="text-muted small">{{ t("diagnosis_information") }}</div>
+        </div>
+        <div class="mt-3 mt-md-0">
+            <a href="{{ url_for('farmer.dashboard') }}" class="btn btn-outline-secondary btn-sm">
+                {{ t("back_to_dashboard") }}
+            </a>
         </div>
     </div>
+</div>
 
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <span class="section-title">{{ t("diagnosis_information") }}</span>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            {{ form.crop_name.label(class="form-label") }}
+                            {{ form.crop_name(class="form-control", placeholder=t("enter_crop_name")) }}
+                            {% for error in form.crop_name.errors %}
+                                <small class="text-danger">{{ error }}</small>
+                            {% endfor %}
+                        </div>
+
+                        <div class="form-group col-md-6">
+                            {{ form.disease_name.label(class="form-label") }}
+                            {{ form.disease_name(class="form-control", placeholder=t("describe_disease_symptoms")) }}
+                            {% for error in form.disease_name.errors %}
+                                <small class="text-danger">{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end">
+                        <a href="{{ url_for('farmer.dashboard') }}"
+                           class="btn btn-outline-secondary">
+                            {{ t("back") }}
+                        </a>
+                        <button type="submit" class="btn btn-success ml-2">
+                            <i class="fas fa-paper-plane btn-icon"></i>{{ t("submit_diagnosis") }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}

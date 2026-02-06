@@ -9,6 +9,34 @@
     <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;500;600;700&family=Noto+Sans+Khmer:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <link href="{{ url_for('static', filename='css/auth.css') }}" rel="stylesheet">
+
+    <script>
+    (function () {
+        const storedTheme = localStorage.getItem("theme");
+
+        function prefersDark() {
+            return window.matchMedia("(prefers-color-scheme: dark)").matches;
+        }
+
+        function applyTheme(theme) {
+            document.documentElement.classList.remove("dark-mode");
+            if (theme === "dark") document.documentElement.classList.add("dark-mode");
+            if (theme === "system" && prefersDark()) document.documentElement.classList.add("dark-mode");
+        }
+
+        if (storedTheme === "light" || storedTheme === "dark" || storedTheme === "system") {
+            applyTheme(storedTheme);
+        } else {
+            applyTheme("system");
+        }
+
+        if (!storedTheme || storedTheme === "system") {
+            window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", e => {
+                document.documentElement.classList.toggle("dark-mode", e.matches);
+            });
+        }
+    })();
+    </script>
 </head>
 <body class="auth-body">
 

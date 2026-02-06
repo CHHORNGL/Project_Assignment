@@ -321,4 +321,17 @@ def create_app():
             "notifications_link": notifications_link,
         }
 
+    @app.context_processor
+    def inject_body_class():
+        body_class = ""
+        try:
+            if current_user.is_authenticated:
+                if current_user.has_role("admin"):
+                    body_class = "admin-theme"
+                elif current_user.has_role("expert"):
+                    body_class = "expert-simple"
+        except Exception:
+            body_class = ""
+        return {"body_class": body_class}
+
     return app

@@ -97,7 +97,7 @@
         </div>
 
         <div class="farmer-chat-footer">
-            <button type="button" class="farmer-user-card" id="farmer-user-toggle" aria-expanded="true">
+            <button type="button" class="farmer-user-card" id="farmer-user-toggle" aria-expanded="false">
                 <div class="farmer-user-avatar">
                     {% if current_user.avatar_path %}
                         <img src="{{ url_for('static', filename=current_user.avatar_path) }}"
@@ -113,7 +113,7 @@
                 <i class="fas fa-chevron-down farmer-user-caret"></i>
             </button>
 
-            <div class="farmer-user-menu">
+            <div class="farmer-user-menu is-collapsed">
                 <div class="farmer-user-actions">
                     <a href="{{ url_for('farmer.dashboard') }}" class="farmer-chat-footer-btn primary">
                         <i class="fas fa-columns"></i>
@@ -265,18 +265,15 @@ document.querySelectorAll(".theme-option[data-theme]").forEach(btn => {
 (function () {
     const toggle = document.getElementById("farmer-user-toggle");
     const menu = document.querySelector(".farmer-user-menu");
-    const storageKey = "farmer_user_menu_open";
 
     if (!toggle || !menu) return;
 
-    const isOpen = localStorage.getItem(storageKey) !== "0";
-    menu.classList.toggle("is-collapsed", !isOpen);
-    toggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
+    menu.classList.add("is-collapsed");
+    toggle.setAttribute("aria-expanded", "false");
 
     toggle.addEventListener("click", () => {
-        const next = menu.classList.toggle("is-collapsed");
-        toggle.setAttribute("aria-expanded", next ? "false" : "true");
-        localStorage.setItem(storageKey, next ? "0" : "1");
+        const isCollapsed = menu.classList.toggle("is-collapsed");
+        toggle.setAttribute("aria-expanded", isCollapsed ? "false" : "true");
     });
 })();
 </script>

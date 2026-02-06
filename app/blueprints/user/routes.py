@@ -2,6 +2,7 @@
 
 import os
 from uuid import uuid4
+from urllib.parse import quote_plus
 
 from flask import (
     Blueprint,
@@ -11,7 +12,8 @@ from flask import (
     redirect,
     url_for,
     flash,
-    current_app
+    current_app,
+    abort
 )
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
@@ -30,6 +32,17 @@ user_bp = Blueprint(
     __name__,
     url_prefix="/users"
 )
+
+
+def _representative_label(user: User):
+    roles = []
+    if user.has_role("admin"):
+        roles.append("Admin")
+    if user.has_role("expert"):
+        roles.append("Expert")
+    if not roles:
+        return None
+    return f"{' & '.join(roles)} Representative"
 
 
 # ===============================
@@ -179,7 +192,43 @@ def profile():
 
     if current_user.has_role("farmer"):
         return render_template("farmer/profile.html")
-    return render_template("users/profile.html")
+    rep_label = _representative_label(current_user)
+    member_card_url = None
+    member_card_qr_url = None
+    if rep_label:
+        member_card_url = url_for("user.member_card", user_id=current_user.id, _external=True)
+        member_card_qr_url = (
+            "https://api.qrserver.com/v1/create-qr-code/?size=160x160&data="
+            + quote_plus(member_card_url)
+        )
+    return render_template(
+        "users/profile.html",
+        rep_label=rep_label,
+        member_card_url=member_card_url,
+        member_card_qr_url=member_card_qr_url
+    )
+
+
+# ===============================
+# MEMBER CARD (PUBLIC)
+# ===============================
+@user_bp.route("/member-card/<int:user_id>")
+def member_card(user_id: int):
+    member = User.query.get(user_id)
+    if not member:
+        abort(404)
+
+    rep_label = _representative_label(member)
+    if not rep_label:
+        abort(404)
+
+    role_names = ", ".join([role.name for role in member.roles])
+    return render_template(
+        "users/member_card.html",
+        member=member,
+        rep_label=rep_label,
+        role_names=role_names
+    )
 
 
 # ===============================
