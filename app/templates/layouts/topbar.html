@@ -8,9 +8,26 @@
     =============================== -->
     <button id="sidebarToggleTop"
             class="btn icon-btn d-md-none mr-3 p-0"
+            type="button"
+            aria-controls="accordionSidebar"
+            aria-expanded="false"
             aria-label="Toggle sidebar">
         <i class="fas fa-bars"></i>
     </button>
+
+    <!-- ===============================
+         DESKTOP SIDEBAR MODE TOGGLE (ICON-ONLY)
+    =============================== -->
+    <button id="sidebar-icon-toggle"
+            class="btn icon-btn sidebar-mode-toggle d-none d-md-inline-flex mr-2 p-0"
+            type="button"
+            aria-label="{{ t('toggle_menu') }}"
+            title="{{ t('toggle_menu') }}"
+            aria-pressed="false">
+        <i class="fas fa-columns"></i>
+    </button>
+
+    <div class="topbar-divider d-none d-md-block mx-2"></div>
 
     <!-- ===============================
          PAGE TITLE
@@ -63,16 +80,30 @@
                 <div class="notification-list">
                     {% if notifications and notifications|length > 0 %}
                         {% for item in notifications %}
-                            <a class="notification-item" href="{{ item.url if item.url else '#' }}">
-                                <div class="notification-item-icon is-{{ item.level }}">
-                                    <i class="{{ item.icon }}"></i>
+                            {% set item_classes = "notification-item" + (" is-unread" if item.unread else "") %}
+                            {% if item.url %}
+                                <a class="{{ item_classes }}" href="{{ item.url }}" data-notification-id="{{ item.id }}">
+                                    <div class="notification-item-icon is-{{ item.level }}">
+                                        <i class="{{ item.icon }}"></i>
+                                    </div>
+                                    <div class="notification-item-body">
+                                        <div class="notification-item-title">{{ item.title }}</div>
+                                        <div class="notification-item-sub">{{ item.subtitle }}</div>
+                                    </div>
+                                    <div class="notification-item-time">{{ item.time }}</div>
+                                </a>
+                            {% else %}
+                                <div class="{{ item_classes }} is-disabled" data-notification-id="{{ item.id }}">
+                                    <div class="notification-item-icon is-{{ item.level }}">
+                                        <i class="{{ item.icon }}"></i>
+                                    </div>
+                                    <div class="notification-item-body">
+                                        <div class="notification-item-title">{{ item.title }}</div>
+                                        <div class="notification-item-sub">{{ item.subtitle }}</div>
+                                    </div>
+                                    <div class="notification-item-time">{{ item.time }}</div>
                                 </div>
-                                <div class="notification-item-body">
-                                    <div class="notification-item-title">{{ item.title }}</div>
-                                    <div class="notification-item-sub">{{ item.subtitle }}</div>
-                                </div>
-                                <div class="notification-item-time">{{ item.time }}</div>
-                            </a>
+                            {% endif %}
                         {% endfor %}
                     {% else %}
                         <div class="notification-empty">

@@ -1,110 +1,95 @@
-{% extends "layouts/farmer_dashboard_base.html" %}
+{% extends "layouts/farmer_shell.html" %}
 {% block title %}{{ t("farmer_dashboard_title") }}{% endblock %}
 
 {% block content %}
-<div class="h-100 d-flex flex-column">
+{% set total = diagnoses|length %}
+{% set pending = diagnoses|selectattr("status", "equalto", "PENDING")|list|length %}
+{% set approved = diagnoses|selectattr("status", "equalto", "APPROVED")|list|length %}
+{% set rejected = diagnoses|selectattr("status", "equalto", "REJECTED")|list|length %}
 
+<div class="mx-auto" style="max-width: 1240px;">
     <div class="farmer-hero mb-4">
         <div class="d-flex justify-content-between align-items-center flex-wrap">
             <div>
                 <h4 class="mb-1 font-weight-bold text-success">{{ t("farmer_dashboard_title") }}</h4>
                 <div class="text-muted small">{{ t("farmer_dashboard_sub") }}</div>
             </div>
-            <div class="mt-3 mt-md-0">
-                <a href="{{ url_for('farmer.diagnose') }}"
-                   class="btn btn-success btn-sm">
+            <div class="mt-3 mt-md-0 d-flex flex-wrap" style="gap:10px;">
+                <a href="{{ url_for('farmer.diagnose') }}" class="btn btn-success btn-sm">
                     {{ t("new_diagnosis") }}
                 </a>
-                <a href="{{ url_for('farmer.chat') }}"
-                   class="btn btn-outline-success btn-sm ml-2">
+                <a href="{{ url_for('farmer.chat') }}" class="btn btn-outline-success btn-sm">
                     {{ t("ask_expert") }}
                 </a>
             </div>
         </div>
     </div>
 
-    {% set total = diagnoses|length %}
-    {% set pending = diagnoses|selectattr("status", "equalto", "PENDING")|list|length %}
-    {% set approved = diagnoses|selectattr("status", "equalto", "APPROVED")|list|length %}
-    {% set rejected = diagnoses|selectattr("status", "equalto", "REJECTED")|list|length %}
-
-    <div class="row">
+    <div class="row mb-4">
         <div class="col-md-3 mb-3">
             <div class="metric-card">
                 <div>
                     <div class="metric-label">{{ t("total_diagnoses") }}</div>
                     <div class="metric-value">{{ total }}</div>
                 </div>
-                <div class="metric-icon">
-                    <i class="fas fa-notes-medical"></i>
-                </div>
+                <div class="metric-icon"><i class="fas fa-notes-medical"></i></div>
             </div>
         </div>
-
         <div class="col-md-3 mb-3">
             <div class="metric-card">
                 <div>
                     <div class="metric-label">{{ t("pending") }}</div>
                     <div class="metric-value">{{ pending }}</div>
                 </div>
-                <div class="metric-icon">
-                    <i class="fas fa-hourglass-half"></i>
-                </div>
+                <div class="metric-icon"><i class="fas fa-hourglass-half"></i></div>
             </div>
         </div>
-
         <div class="col-md-3 mb-3">
             <div class="metric-card">
                 <div>
                     <div class="metric-label">{{ t("approved") }}</div>
                     <div class="metric-value">{{ approved }}</div>
                 </div>
-                <div class="metric-icon">
-                    <i class="fas fa-check-circle"></i>
-                </div>
+                <div class="metric-icon"><i class="fas fa-check-circle"></i></div>
             </div>
         </div>
-
         <div class="col-md-3 mb-3">
             <div class="metric-card">
                 <div>
                     <div class="metric-label">{{ t("rejected") }}</div>
                     <div class="metric-value">{{ rejected }}</div>
                 </div>
-                <div class="metric-icon">
-                    <i class="fas fa-times-circle"></i>
-                </div>
+                <div class="metric-icon"><i class="fas fa-times-circle"></i></div>
             </div>
         </div>
     </div>
 
-    <div class="card shadow-sm">
-        <div class="card-header d-flex justify-content-between align-items-center">
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
             <span class="section-title">{{ t("recent_diagnoses_title") }}</span>
-            <div class="d-flex">
-                <a href="{{ url_for('farmer.diagnosis_history') }}"
-                   class="btn btn-sm btn-outline-secondary mr-2">
+            <div class="mt-2 mt-md-0 d-flex flex-wrap" style="gap:10px;">
+                <a href="{{ url_for('farmer.diagnosis_history') }}" class="btn btn-sm btn-outline-success">
                     {{ t("see_all") }}
                 </a>
-                <a href="{{ url_for('farmer.diagnose') }}"
-                   class="btn btn-sm btn-outline-success">
+                <a href="{{ url_for('farmer.diagnose') }}" class="btn btn-sm btn-success">
                     {{ t("create_new") }}
                 </a>
             </div>
         </div>
-
         <div class="card-body">
             {% if diagnoses and diagnoses|length > 0 %}
                 <div class="diag-list">
                     {% for d in diagnoses[:6] %}
-                    <div class="diag-item">
-                        {% set disease_label = (d.disease.name_kh if current_lang == 'km' and d.disease and d.disease.name_kh else d.disease_name) %}
+                    {% set disease_label = (d.disease.name_kh if current_lang == 'km' and d.disease and d.disease.name_kh else d.disease_name) %}
+                    <a class="diag-item text-decoration-none text-reset"
+                       href="{{ url_for('farmer.diagnosis_result', diagnosis_id=d.id) }}">
                         <div class="d-flex justify-content-between align-items-start">
                             <div class="mr-3">
                                 <div class="font-weight-bold">{{ localize(d.crop, "name", d.crop_name) }}</div>
                                 <div class="small text-muted">{{ t("disease_label") }}: {{ disease_label }}</div>
                                 <div class="small text-muted">
-                                    {{ t("symptoms_label") }}: {{ d.symptoms[:80] }}{% if d.symptoms|length > 80 %}...{% endif %}
+                                    {{ t("symptoms_label") }}:
+                                    {{ d.symptoms[:90] }}{% if d.symptoms|length > 90 %}...{% endif %}
                                 </div>
                             </div>
                             <div class="text-right">
@@ -117,12 +102,14 @@
                                     <span class="badge badge-success">{{ t("status_approved") }}</span>
                                 {% elif d.status == "REJECTED" %}
                                     <span class="badge badge-danger">{{ t("status_rejected") }}</span>
+                                {% elif d.status == "AUTO" %}
+                                    <span class="badge badge-info">{{ t("status_auto") }}</span>
                                 {% else %}
                                     <span class="badge badge-secondary">{{ d.status }}</span>
                                 {% endif %}
                             </div>
                         </div>
-                    </div>
+                    </a>
                     {% endfor %}
                 </div>
             {% else %}
@@ -133,27 +120,31 @@
         </div>
     </div>
 
-    <div class="row mt-4">
-        <div class="col-md-6 mb-3">
-            <div class="card shadow-sm h-100">
-                <div class="card-header d-flex justify-content-between align-items-center">
+    <div class="row mb-4">
+        <div class="col-lg-7 mb-3">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
                     <span class="section-title">{{ t("ask_expert_history") }}</span>
-                    <a href="{{ url_for('farmer.ai_history') }}"
-                       class="btn btn-sm btn-outline-success">
-                        {{ t("view_all") }}
-                    </a>
+                    <div class="mt-2 mt-md-0 d-flex flex-wrap" style="gap:10px;">
+                        <a href="{{ url_for('farmer.ai_history') }}" class="btn btn-sm btn-outline-success">
+                            {{ t("view_all") }}
+                        </a>
+                        <a href="{{ url_for('farmer.chat') }}" class="btn btn-sm btn-success">
+                            {{ t("open_chat") }}
+                        </a>
+                    </div>
                 </div>
                 <div class="card-body">
                     {% if ai_questions and ai_questions|length > 0 %}
                         <div class="diag-list">
-                            {% for item in ai_questions %}
+                            {% for item in ai_questions[:4] %}
                                 {% set msg = item[0] %}
                                 {% set sess = item[1] %}
                                 <a class="diag-item text-decoration-none text-reset"
                                    href="{{ url_for('farmer.chat', session_id=sess.id) }}">
                                     <div class="font-weight-bold">{{ t("question") }}</div>
                                     <div class="small text-muted">
-                                        {{ msg.message[:90] }}{% if msg.message|length > 90 %}...{% endif %}
+                                        {{ msg.message[:120] }}{% if msg.message|length > 120 %}...{% endif %}
                                     </div>
                                     <div class="small text-muted mt-1">
                                         {{ msg.created_at.strftime("%Y-%m-%d") if msg.created_at else "" }}
@@ -167,8 +158,41 @@
                 </div>
             </div>
         </div>
-
+        <div class="col-lg-5 mb-3">
+            <div class="card h-100">
+                <div class="card-header">
+                    <span class="section-title">{{ t("quick_actions") }}</span>
+                </div>
+                <div class="card-body">
+                    <div class="action-grid">
+                        <a class="action-card" href="{{ url_for('farmer.diagnose') }}">
+                            <div class="action-icon"><i class="fas fa-notes-medical"></i></div>
+                            <div>
+                                <div class="action-title">{{ t("new_diagnosis") }}</div>
+                                <div class="action-sub">{{ t("diagnose_title") }}</div>
+                            </div>
+                            <i class="fas fa-arrow-right ml-auto text-muted"></i>
+                        </a>
+                        <a class="action-card" href="{{ url_for('farmer.diagnose_rule_based') }}">
+                            <div class="action-icon"><i class="fas fa-cogs"></i></div>
+                            <div>
+                                <div class="action-title">{{ t("full_rule_based") }}</div>
+                                <div class="action-sub">{{ t("rule_inference") }}</div>
+                            </div>
+                            <i class="fas fa-arrow-right ml-auto text-muted"></i>
+                        </a>
+                        <a class="action-card" href="{{ url_for('farmer.chat') }}">
+                            <div class="action-icon"><i class="fas fa-headset"></i></div>
+                            <div>
+                                <div class="action-title">{{ t("ask_expert") }}</div>
+                                <div class="action-sub">{{ t("ask_expert_sub") }}</div>
+                            </div>
+                            <i class="fas fa-arrow-right ml-auto text-muted"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-
 </div>
 {% endblock %}

@@ -17,7 +17,7 @@ def index():
 
     # 🧑‍🔬 Expert → Expert main form/dashboard
     if current_user.has_role("expert"):
-        return redirect(url_for("expert.form"))
+        return redirect(url_for("expert.dashboard"))
 
     # 🌾 Farmer → Farmer dashboard
     if current_user.has_role("farmer"):

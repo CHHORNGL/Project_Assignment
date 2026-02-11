@@ -55,6 +55,13 @@ def permission_required(permission_code: str):
             if not current_user.is_authenticated:
                 abort(401)
 
+            # Admin role bypass (admins can access any permission-protected route).
+            try:
+                if hasattr(current_user, "has_role") and current_user.has_role("admin"):
+                    return func(*args, **kwargs)
+            except Exception:
+                pass
+
             # User model missing has_permission()
             if not hasattr(current_user, "has_permission"):
                 abort(500, description="User model missing has_permission()")

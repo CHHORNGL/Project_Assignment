@@ -2,13 +2,15 @@
 
 import re
 import secrets
+from typing import Optional
 
 from flask import (
     Blueprint,
     render_template,
     redirect,
     url_for,
-    flash
+    flash,
+    request
 )
 from flask_login import (
     login_user,
@@ -51,6 +53,20 @@ def _unique_username(base: str) -> str:
         counter += 1
     return candidate
 
+
+def _normalize_login_role(value: Optional[str]) -> str:
+    role = (value or "").strip().lower()
+    if role in {"farmer", "expert"}:
+        return role
+    return "farmer"
+
+
+def _safe_next_url(value: Optional[str]) -> Optional[str]:
+    if value and value.startswith("/"):
+        return value
+    return None
+
+
 # ==================================================
 # LOGIN
 # ==================================================
@@ -61,6 +77,8 @@ def login():
         return redirect(url_for("main.index"))
 
     form = LoginForm()
+    active_role = _normalize_login_role(request.args.get("role"))
+    next_url = _safe_next_url(request.args.get("next"))
 
     if form.validate_on_submit():
         identifier = (form.username.data or "").strip()
@@ -76,33 +94,57 @@ def login():
             user.password_hash,
             form.password.data
         ):
-            flash("❌ Invalid username or password", "danger")
+            flash("Invalid username or password.", "danger")
             return render_template(
                 "auth/login.html",
-                form=form
+                form=form,
+                active_role=active_role,
+                next_url=next_url
             )
 
         # 🚫 BANNED USER CHECK
         if not user.is_active:
-            flash(
-                "🚫 Your account has been banned. Please contact administrator.",
-                "danger"
-            )
+            flash("Your account has been banned. Please contact administrator.", "danger")
             return render_template(
                 "auth/login.html",
-                form=form
+                form=form,
+                active_role=active_role,
+                next_url=next_url
+            )
+
+        # ✅ Role gate by form
+        if active_role == "farmer" and not user.has_role("farmer"):
+            flash("This login is for Farmers only.", "danger")
+            return render_template(
+                "auth/login.html",
+                form=form,
+                active_role=active_role,
+                next_url=next_url
+            )
+
+        if active_role == "expert" and not (
+            user.has_role("expert") or user.has_role("admin")
+        ):
+            flash("This login is for Expert & Admin only.", "danger")
+            return render_template(
+                "auth/login.html",
+                form=form,
+                active_role=active_role,
+                next_url=next_url
             )
 
         # ✅ Login success
         login_user(user)
-        flash("✅ Welcome back!", "success")
+        flash("Welcome back!", "success")
 
         # 🔁 Centralized redirect (role-based in main.index)
-        return redirect(url_for("main.index"))
+        return redirect(next_url or url_for("main.index"))
 
     return render_template(
         "auth/login.html",
-        form=form
+        form=form,
+        active_role=active_role,
+        next_url=next_url
     )
 
 
@@ -120,7 +162,7 @@ def register():
     if form.validate_on_submit():
         # ❌ Username exists
         if User.query.filter_by(username=form.username.data).first():
-            flash("❌ Username already exists", "danger")
+            flash("Username already exists.", "danger")
             return render_template(
                 "auth/register.html",
                 form=form
@@ -128,7 +170,7 @@ def register():
 
         email_value = (form.email.data or "").strip().lower()
         if email_value and User.query.filter_by(email=email_value).first():
-            flash("❌ Email already exists", "danger")
+            flash("Email already exists.", "danger")
             return render_template(
                 "auth/register.html",
                 form=form
@@ -136,16 +178,16 @@ def register():
 
         # ✅ Create farmer user
         user = User(username=form.username.data)
+        full_name_value = (form.full_name.data or "").strip()
+        if full_name_value:
+            user.full_name = full_name_value
         if email_value:
             user.email = email_value
         user.set_password(form.password.data)
 
         farmer_role = Role.query.filter_by(name="farmer").first()
         if not farmer_role:
-            flash(
-                "❌ Farmer role not found. Contact admin.",
-                "danger"
-            )
+            flash("Farmer role not found. Contact admin.", "danger")
             return redirect(url_for("auth.register"))
 
         user.roles.append(farmer_role)
@@ -153,8 +195,8 @@ def register():
         db.session.add(user)
         db.session.commit()
 
-        flash("✅ Registration successful! Please login.", "success")
-        return redirect(url_for("auth.login"))
+        flash("Registration successful. Please log in.", "success")
+        return redirect(url_for("auth.login", role="farmer"))
 
     return render_template(
         "auth/register.html",
@@ -169,8 +211,8 @@ def register():
 @login_required
 def logout():
     logout_user()
-    flash("ℹ️ Logged out successfully", "info")
-    return redirect(url_for("auth.login"))
+    flash("Logged out successfully.", "info")
+    return redirect(url_for("auth.login", role="farmer"))
 
 
 # ==================================================
@@ -184,7 +226,7 @@ def google_login():
     google = _get_google_client()
     if not google:
         flash("Google login is not configured yet.", "danger")
-        return redirect(url_for("auth.login"))
+        return redirect(url_for("auth.login", role="farmer"))
 
     redirect_uri = url_for("auth.google_callback", _external=True)
     return google.authorize_redirect(redirect_uri)
@@ -195,13 +237,13 @@ def google_callback():
     google = _get_google_client()
     if not google:
         flash("Google login is not configured yet.", "danger")
-        return redirect(url_for("auth.login"))
+        return redirect(url_for("auth.login", role="farmer"))
 
     try:
         token = google.authorize_access_token()
     except Exception:
         flash("Google login failed. Please try again.", "danger")
-        return redirect(url_for("auth.login"))
+        return redirect(url_for("auth.login", role="farmer"))
 
     user_info = None
     try:
@@ -216,7 +258,7 @@ def google_callback():
 
     if not user_info:
         flash("Unable to read Google profile information.", "danger")
-        return redirect(url_for("auth.login"))
+        return redirect(url_for("auth.login", role="farmer"))
 
     google_sub = user_info.get("sub")
     email = user_info.get("email")
@@ -224,7 +266,7 @@ def google_callback():
 
     if not google_sub:
         flash("Google login failed. Missing account identifier.", "danger")
-        return redirect(url_for("auth.login"))
+        return redirect(url_for("auth.login", role="farmer"))
 
     user = User.query.filter_by(google_sub=google_sub).first()
 
@@ -248,16 +290,16 @@ def google_callback():
         farmer_role = Role.query.filter_by(name="farmer").first()
         if not farmer_role:
             flash("Farmer role not found. Contact admin.", "danger")
-            return redirect(url_for("auth.login"))
+            return redirect(url_for("auth.login", role="farmer"))
         user.roles.append(farmer_role)
 
         db.session.add(user)
 
     if not user.is_active:
-        flash("🚫 Your account has been banned. Please contact administrator.", "danger")
-        return redirect(url_for("auth.login"))
+        flash("Your account has been banned. Please contact administrator.", "danger")
+        return redirect(url_for("auth.login", role="farmer"))
 
     db.session.commit()
     login_user(user)
-    flash("✅ Welcome back!", "success")
+    flash("Welcome back!", "success")
     return redirect(url_for("main.index"))

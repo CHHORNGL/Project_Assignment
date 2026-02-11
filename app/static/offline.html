@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>Offline</title>
+    <style>
+        :root {
+            --bg-1: #0b1223;
+            --bg-2: #111c33;
+            --card: rgba(15, 23, 42, 0.82);
+            --text: rgba(226, 232, 240, 0.96);
+            --muted: rgba(226, 232, 240, 0.72);
+            --border: rgba(148, 163, 184, 0.18);
+            --accent: #60a5fa;
+            --accent-2: #34d399;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, "Noto Sans", "Liberation Sans", sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(900px circle at 12% 12%, rgba(96, 165, 250, 0.18), transparent 55%),
+                radial-gradient(720px circle at 90% 18%, rgba(52, 211, 153, 0.16), transparent 52%),
+                linear-gradient(160deg, var(--bg-1), var(--bg-2));
+            display: grid;
+            place-items: center;
+            padding: 26px;
+        }
+
+        .shell {
+            width: min(920px, 100%);
+        }
+
+        .card {
+            position: relative;
+            overflow: hidden;
+            border-radius: 22px;
+            padding: 26px;
+            border: 1px solid var(--border);
+            background: var(--card);
+            box-shadow: 0 28px 60px rgba(2, 6, 23, 0.55);
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 22px;
+        }
+
+        .card::before {
+            content: "";
+            position: absolute;
+            inset: -1px;
+            border-radius: 22px;
+            pointer-events: none;
+            background: radial-gradient(900px 220px at 18% 0%, rgba(255, 255, 255, 0.16), transparent 55%);
+            opacity: 0.85;
+        }
+
+        .left {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            width: fit-content;
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(96, 165, 250, 0.26);
+            background: rgba(96, 165, 250, 0.10);
+            color: rgba(191, 219, 254, 0.95);
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            font-size: 0.72rem;
+        }
+
+        .title {
+            font-size: 1.9rem;
+            line-height: 1.15;
+            margin: 0;
+            letter-spacing: -0.02em;
+        }
+
+        .desc {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.55;
+            max-width: 44ch;
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            appearance: none;
+            border: 0;
+            cursor: pointer;
+            border-radius: 12px;
+            padding: 10px 14px;
+            font-weight: 800;
+            color: #0b1223;
+            background: linear-gradient(135deg, rgba(96, 165, 250, 1), rgba(52, 211, 153, 1));
+            box-shadow: 0 14px 28px rgba(96, 165, 250, 0.24);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn.secondary {
+            color: var(--text);
+            background: transparent;
+            border: 1px solid var(--border);
+            box-shadow: none;
+        }
+
+        .btn:disabled { opacity: 0.7; cursor: default; }
+
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border-radius: 999px;
+            border: 2px solid rgba(11, 18, 35, 0.35);
+            border-top-color: rgba(11, 18, 35, 0.95);
+            display: none;
+            animation: spin 0.8s linear infinite;
+        }
+
+        .btn.is-loading .spinner { display: inline-block; }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .right {
+            position: relative;
+            z-index: 1;
+            border-radius: 18px;
+            border: 1px solid var(--border);
+            background: rgba(2, 6, 23, 0.26);
+            padding: 16px;
+            color: var(--muted);
+            font-size: 0.92rem;
+            line-height: 1.55;
+        }
+
+        .hint-title {
+            color: rgba(226, 232, 240, 0.92);
+            font-weight: 900;
+            margin-bottom: 8px;
+        }
+
+        .hint-list {
+            margin: 0;
+            padding-left: 18px;
+            display: grid;
+            gap: 6px;
+        }
+
+        .status {
+            margin-top: 12px;
+            font-size: 0.86rem;
+            color: rgba(191, 219, 254, 0.92);
+        }
+
+        @media (max-width: 860px) {
+            .card { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="shell">
+        <div class="card">
+            <div class="left">
+                <div class="badge">OFFLINE MODE</div>
+                <h1 class="title">You're offline</h1>
+                <p class="desc">
+                    We can't reach the server right now. Check your internet connection, then retry.
+                </p>
+
+                <div class="actions">
+                    <button type="button" class="btn" id="retryBtn">
+                        <span class="spinner" aria-hidden="true"></span>
+                        Retry connection
+                    </button>
+                    <button type="button" class="btn secondary" id="homeBtn">Go to last page</button>
+                </div>
+                <div class="status" id="statusText" role="status" aria-live="polite"></div>
+            </div>
+
+            <div class="right">
+                <div class="hint-title">Quick checks</div>
+                <ul class="hint-list">
+                    <li>Confirm Wi-Fi or mobile data is on</li>
+                    <li>Try turning airplane mode off and on</li>
+                    <li>If you're on a restricted network, try a different connection</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function () {
+        const HEALTH_URL = "/healthz";
+        const STORAGE_LAST_URL = "last_good_url_v1";
+
+        const retryBtn = document.getElementById("retryBtn");
+        const homeBtn = document.getElementById("homeBtn");
+        const statusText = document.getElementById("statusText");
+
+        function setStatus(msg) {
+            if (!statusText) return;
+            statusText.textContent = String(msg || "");
+        }
+
+        function lastUrl() {
+            try { return localStorage.getItem(STORAGE_LAST_URL); } catch (e) { return null; }
+        }
+
+        function goLast() {
+            const url = lastUrl();
+            if (url) window.location.href = url;
+            else window.location.href = "/";
+        }
+
+        async function ping() {
+            if (!window.fetch) return false;
+            const controller = ("AbortController" in window) ? new AbortController() : null;
+            let t = null;
+            if (controller) t = window.setTimeout(() => controller.abort(), 2500);
+            try {
+                const res = await fetch(HEALTH_URL, { method: "GET", cache: "no-store", credentials: "same-origin", signal: controller ? controller.signal : undefined });
+                return !!(res && res.ok);
+            } catch (e) {
+                return false;
+            } finally {
+                if (t) window.clearTimeout(t);
+            }
+        }
+
+        async function retry() {
+            if (!retryBtn) return;
+            retryBtn.disabled = true;
+            retryBtn.classList.add("is-loading");
+            setStatus("Checking connection...");
+
+            const ok = await ping();
+            if (ok) {
+                setStatus("Back online. Redirecting...");
+                goLast();
+                return;
+            }
+
+            setStatus("Still offline. Please try again.");
+            retryBtn.disabled = false;
+            retryBtn.classList.remove("is-loading");
+        }
+
+        if (retryBtn) retryBtn.addEventListener("click", retry);
+        if (homeBtn) homeBtn.addEventListener("click", goLast);
+
+        // Auto-retry every 6s so the page recovers without user action.
+        window.setInterval(() => retry().catch(() => {}), 6000);
+
+        setStatus("Waiting for connection...");
+    })();
+    </script>
+</body>
+</html>
+

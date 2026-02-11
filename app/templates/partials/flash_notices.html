@@ -1,0 +1,69 @@
+{# Professional UI feedback notifications (Flask flash messages).
+   Auto-detects state from flash category:
+   - success: check icon + "SUCCESS" title + friendly confirmation message
+   - danger/error: cross icon + "FAILED" title + clear error message
+
+   Also supports warning/info categories (styled separately).
+#}
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="flash-stack" data-flash-stack>
+      {% for category, message in messages %}
+        {% set cat = (category or 'info')|lower %}
+        {% set msg = (message or '')|trim %}
+
+        {% if cat in ['success'] %}
+          {% set kind = 'success' %}
+          {% set icon_class = 'fas fa-check-circle' %}
+          {% set title = 'SUCCESS' %}
+          {% set timeout_ms = 3000 %}
+          {% set fallback = 'Your request has been processed successfully.' %}
+        {% elif cat in ['danger', 'error', 'failed', 'fail'] %}
+          {% set kind = 'danger' %}
+          {% set icon_class = 'fas fa-times-circle' %}
+          {% set title = 'FAILED' %}
+          {% set timeout_ms = 3000 %}
+          {% set fallback = 'An error occurred. Please try again.' %}
+        {% elif cat in ['warning'] %}
+          {% set kind = 'warning' %}
+          {% set icon_class = 'fas fa-exclamation-triangle' %}
+          {% set title = 'NOTICE' %}
+          {% set timeout_ms = 3000 %}
+          {% set fallback = 'Please review the message and try again.' %}
+        {% else %}
+          {% set kind = 'info' %}
+          {% set icon_class = 'fas fa-info-circle' %}
+          {% set title = 'INFO' %}
+          {% set timeout_ms = 3000 %}
+          {% set fallback = 'Action completed.' %}
+        {% endif %}
+
+        <div class="flash flash-{{ kind }}"
+             role="{{ 'alert' if kind == 'danger' else 'status' }}"
+             aria-live="{{ 'assertive' if kind == 'danger' else 'polite' }}"
+             data-timeout="{{ timeout_ms }}"
+             data-flash-category="{{ cat }}"
+             style="--toast-duration: {{ timeout_ms }}ms;">
+          <div class="flash-inner">
+            <span class="flash-icon" aria-hidden="true">
+              <i class="{{ icon_class }}"></i>
+            </span>
+            <span class="flash-text">
+              <span class="flash-title"><strong>{{ title }}</strong></span>
+              <span class="flash-message">{{ msg if msg else fallback }}</span>
+            </span>
+            <button type="button"
+                    class="flash-dismiss"
+                    data-flash-dismiss
+                    aria-label="Dismiss notification">
+              <i class="far fa-times-circle" aria-hidden="true"></i>
+            </button>
+          </div>
+          <div class="flash-progress" aria-hidden="true"></div>
+        </div>
+      {% endfor %}
+    </div>
+
+  {% endif %}
+{% endwith %}

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="{{ current_lang }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>{% block title %}Auth{% endblock %}</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <link href="{{ url_for('static', filename='sb-admin/vendor/fontawesome-free/css/all.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/auth.css', v=static_version) }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/notifications.css', v=static_version) }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/system_status.css', v=static_version) }}" rel="stylesheet">
+
+    {% block head %}{% endblock %}
+
+    <script>
+    (function () {
+        const storedTheme = localStorage.getItem("theme");
+        const mq = window.matchMedia("(prefers-color-scheme: dark)");
+
+        function applyTheme(theme) {
+            document.documentElement.classList.toggle(
+                "dark-mode",
+                theme === "dark" || (theme === "system" && mq.matches)
+            );
+        }
+
+        if (storedTheme === "light" || storedTheme === "dark" || storedTheme === "system") {
+            applyTheme(storedTheme);
+        } else {
+            // Auth pages default to Light mode unless the user explicitly chose otherwise.
+            applyTheme("light");
+        }
+
+        mq.addEventListener("change", e => {
+            const now = localStorage.getItem("theme");
+            if (now === "system") document.documentElement.classList.toggle("dark-mode", e.matches);
+        });
+    })();
+    </script>
+</head>
+<body class="auth-body">
+
+<main class="auth-shell">
+    <section class="auth-card">
+        <div class="auth-visual">
+            {% block visual %}{% endblock %}
+        </div>
+
+        <div class="auth-panel">
+            {% include "partials/flash_notices.html" %}
+            {% block panel %}{% endblock %}
+        </div>
+    </section>
+</main>
+
+{% block scripts %}{% endblock %}
+<script src="{{ url_for('static', filename='js/toast.js') }}"></script>
+<script src="{{ url_for('static', filename='js/system_status.js', v=static_version) }}"></script>
+
+</body>
+</html>

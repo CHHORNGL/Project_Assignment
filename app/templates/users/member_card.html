@@ -10,13 +10,17 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <link href="{{ url_for('static', filename='sb-admin/vendor/fontawesome-free/css/all.min.css') }}" rel="stylesheet">
-    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css', v=static_version) }}" rel="stylesheet">
 </head>
 <body class="member-card-page">
     <div class="member-card">
         <div class="member-card-header">
             <div class="member-card-brand">
-                <div class="member-card-logo">AS</div>
+                <div class="member-card-logo">
+                    <img src="{{ url_for('static', filename='img/logo.jpg') }}"
+                         alt="Agri System"
+                         class="app-logo-circle">
+                </div>
                 <div>
                     <div class="member-card-project">Agri Expert System</div>
                     <div class="member-card-sub">Project Member Card</div>

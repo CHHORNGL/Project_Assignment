@@ -52,14 +52,6 @@
             <h5>{{ t("account_details") }}</h5>
             <p class="text-muted small mb-4">{{ t("account_details_sub") }}</p>
 
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="flash flash-{{ category }}">{{ message }}</div>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
-
             <form method="POST" enctype="multipart/form-data">
                 <div class="form-group">
                     <label>{{ t("username") }}</label>

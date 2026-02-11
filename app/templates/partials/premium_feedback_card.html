@@ -1,0 +1,37 @@
+{# Premium UI feedback cards (inline component).
+   Usage:
+     {% from "partials/premium_feedback_card.html" import feedback_card %}
+     {{ feedback_card("success", "Success", "Your action was completed successfully.") }}
+     {{ feedback_card("error", "Error", "We couldn't complete your request. Please try again.") }}
+#}
+
+{% macro feedback_card(kind, title, message) -%}
+  {% set k = (kind or 'success')|lower %}
+  {% set is_error = (k in ['error', 'danger', 'failed', 'fail']) %}
+
+  <div class="feedback-card feedback-card--{{ 'error' if is_error else 'success' }}"
+       role="{{ 'alert' if is_error else 'status' }}"
+       aria-live="{{ 'assertive' if is_error else 'polite' }}">
+    <div class="feedback-card__icon" aria-hidden="true">
+      {% if is_error %}
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none">
+          <path d="M12 9v5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <path d="M12 17h.01" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+          <path d="M10.3 3.9 1.8 19a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"
+                stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+        </svg>
+      {% else %}
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none">
+          <path d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20Z" stroke="currentColor" stroke-width="2"/>
+          <path d="m8 12 2.6 2.6L16.8 8.5"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      {% endif %}
+    </div>
+
+    <div class="feedback-card__body">
+      <div class="feedback-card__title">{{ title }}</div>
+      <div class="feedback-card__message">{{ message }}</div>
+    </div>
+  </div>
+{%- endmacro %}

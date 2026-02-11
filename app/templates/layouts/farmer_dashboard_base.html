@@ -11,7 +11,8 @@
 
     <link href="{{ url_for('static', filename='sb-admin/vendor/fontawesome-free/css/all.min.css') }}" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', v=static_version) }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/system_status.css', v=static_version) }}">
 
     <style>
         body { font-family: "Manrope", "Kantumruy Pro", "Noto Sans Khmer", sans-serif; }
@@ -46,35 +47,68 @@
     <div class="farmer-dash-layout">
         <aside class="farmer-dash-sidebar">
             <div class="farmer-dash-brand">
-                <span class="farmer-dash-logo">Agri System</span>
-                <span class="farmer-dash-sub">{{ t("farmer_panel") }}</span>
+                <img src="{{ url_for('static', filename='img/logo.jpg') }}"
+                     alt="Agri System"
+                     class="farmer-brand-logo app-logo-circle">
+                <div class="farmer-dash-brand-text">
+                    <span class="farmer-dash-logo">Agri System</span>
+                    <span class="farmer-dash-sub">{{ t("farmer_panel") }}</span>
+                </div>
             </div>
+            <button type="button"
+                    class="farmer-nav-toggle"
+                    id="farmer-nav-toggle"
+                    aria-label="{{ t('toggle_menu') }}"
+                    title="{{ t('toggle_menu') }}">
+                <i class="fas fa-columns"></i>
+            </button>
 
+            {% set path = request.path %}
             <nav class="farmer-dash-nav">
-                <a class="{% if request.path == url_for('farmer.dashboard') %}active{% endif %}"
-                   href="{{ url_for('farmer.dashboard') }}">
-                    <i class="fas fa-home"></i>
-                    {{ t("dashboard") }}
+                <a class="farmer-nav-link {% if path == url_for('farmer.dashboard') %}active{% endif %}"
+                   href="{{ url_for('farmer.dashboard') }}"
+                   aria-current="{% if path == url_for('farmer.dashboard') %}page{% else %}false{% endif %}"
+                   data-tooltip="{{ t('dashboard') }}"
+                   aria-label="{{ t('dashboard') }}">
+                    <span class="nav-icon"><i class="fas fa-home"></i></span>
+                    <span class="nav-label">{{ t("dashboard") }}</span>
+                    <span class="nav-chevron"><i class="fas fa-chevron-right"></i></span>
                 </a>
-                <a class="{% if request.path == url_for('farmer.diagnose') %}active{% endif %}"
-                   href="{{ url_for('farmer.diagnose') }}">
-                    <i class="fas fa-notes-medical"></i>
-                    {{ t("new_diagnosis") }}
+                <a class="farmer-nav-link {% if path == url_for('farmer.diagnose') %}active{% endif %}"
+                   href="{{ url_for('farmer.diagnose') }}"
+                   aria-current="{% if path == url_for('farmer.diagnose') %}page{% else %}false{% endif %}"
+                   data-tooltip="{{ t('new_diagnosis') }}"
+                   aria-label="{{ t('new_diagnosis') }}">
+                    <span class="nav-icon"><i class="fas fa-notes-medical"></i></span>
+                    <span class="nav-label">{{ t("new_diagnosis") }}</span>
+                    <span class="nav-chevron"><i class="fas fa-chevron-right"></i></span>
                 </a>
-                <a class="{% if request.path == url_for('farmer.diagnose_rule_based') %}active{% endif %}"
-                   href="{{ url_for('farmer.diagnose_rule_based') }}">
-                    <i class="fas fa-cogs"></i>
-                    {{ t("full_rule_based") }}
+                <a class="farmer-nav-link {% if path == url_for('farmer.diagnose_rule_based') %}active{% endif %}"
+                   href="{{ url_for('farmer.diagnose_rule_based') }}"
+                   aria-current="{% if path == url_for('farmer.diagnose_rule_based') %}page{% else %}false{% endif %}"
+                   data-tooltip="{{ t('full_rule_based') }}"
+                   aria-label="{{ t('full_rule_based') }}">
+                    <span class="nav-icon"><i class="fas fa-cogs"></i></span>
+                    <span class="nav-label">{{ t("full_rule_based") }}</span>
+                    <span class="nav-chevron"><i class="fas fa-chevron-right"></i></span>
                 </a>
-                <a class="sub-link {% if request.path == url_for('farmer.rule_inference_history') %}active{% endif %}"
-                   href="{{ url_for('farmer.rule_inference_history') }}">
-                    <i class="fas fa-history"></i>
-                    {{ t("rule_history") }}
+                <a class="farmer-nav-link sub-link {% if path == url_for('farmer.rule_inference_history') %}active{% endif %}"
+                   href="{{ url_for('farmer.rule_inference_history') }}"
+                   aria-current="{% if path == url_for('farmer.rule_inference_history') %}page{% else %}false{% endif %}"
+                   data-tooltip="{{ t('rule_history') }}"
+                   aria-label="{{ t('rule_history') }}">
+                    <span class="nav-icon"><i class="fas fa-history"></i></span>
+                    <span class="nav-label">{{ t("rule_history") }}</span>
+                    <span class="nav-chevron"><i class="fas fa-chevron-right"></i></span>
                 </a>
-                <a class="{% if request.path.startswith('/farmer/chat') %}active{% endif %}"
-                   href="{{ url_for('farmer.chat') }}">
-                    <i class="fas fa-comments"></i>
-                    {{ t("ask_expert") }}
+                <a class="farmer-nav-link {% if path.startswith('/farmer/chat') %}active{% endif %}"
+                   href="{{ url_for('farmer.chat') }}"
+                   aria-current="{% if path.startswith('/farmer/chat') %}page{% else %}false{% endif %}"
+                   data-tooltip="{{ t('ask_expert') }}"
+                   aria-label="{{ t('ask_expert') }}">
+                    <span class="nav-icon"><i class="fas fa-comments"></i></span>
+                    <span class="nav-label">{{ t("ask_expert") }}</span>
+                    <span class="nav-chevron"><i class="fas fa-chevron-right"></i></span>
                 </a>
             </nav>
 
@@ -223,5 +257,55 @@
         });
     })();
     </script>
+
+    <script>
+    (function () {
+        const storageKey = "nav_mode_farmer";
+        const legacyKey = "nav_mode";
+        const sidebar = document.querySelector(".farmer-dash-sidebar");
+        const toggle = document.getElementById("farmer-nav-toggle");
+        if (!sidebar || !toggle) return;
+
+        function applyMode(mode) {
+            const iconOnly = mode !== "full";
+            sidebar.classList.toggle("icon-only", iconOnly);
+            toggle.setAttribute("aria-pressed", iconOnly ? "true" : "false");
+            toggle.classList.toggle("is-collapsed", iconOnly);
+            const icon = toggle.querySelector("i");
+            if (icon) {
+                icon.className = "fas fa-columns";
+            }
+        }
+
+        let saved = "full";
+        try {
+            saved = localStorage.getItem(storageKey);
+            if (!saved) {
+                saved = localStorage.getItem(legacyKey);
+                if (saved) {
+                    localStorage.setItem(storageKey, saved);
+                }
+            }
+            saved = saved || "full";
+        } catch (e) {
+            saved = "full";
+        }
+        applyMode(saved);
+
+        toggle.addEventListener("click", () => {
+            const next = sidebar.classList.contains("icon-only") ? "full" : "icon";
+            try {
+                localStorage.setItem(storageKey, next);
+            } catch (e) {
+                // Ignore storage failures (private mode).
+            }
+            applyMode(next);
+        });
+    })();
+    </script>
+
+    {% include "layouts/ai_helper_widget.html" %}
+
+    <script src="{{ url_for('static', filename='js/system_status.js', v=static_version) }}"></script>
 </body>
 </html>

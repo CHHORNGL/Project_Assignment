@@ -16,7 +16,8 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <!-- Global Style -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', v=static_version) }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/system_status.css', v=static_version) }}">
 
     <style>
         body { margin: 0; overflow: hidden; }
@@ -61,12 +62,17 @@
     <aside class="farmer-chat-sidebar">
 
         <div class="farmer-chat-brand">
-            <div class="farmer-chat-logo">{{ t("farmer_expert") }}</div>
+            <div class="farmer-chat-logo">
+                <img src="{{ url_for('static', filename='img/logo.jpg') }}"
+                     alt="Agri System"
+                     class="app-logo-circle">
+                <span>{{ t("farmer_expert") }}</span>
+            </div>
             <div class="farmer-chat-brand-sub">{{ t("agri_assistant") }}</div>
         </div>
 
         <button type="button" class="farmer-chat-toggle" id="farmer-chat-toggle" aria-label="Toggle sidebar">
-            <i class="fas fa-bars"></i>
+            <i class="fas fa-columns"></i>
         </button>
 
         <a href="{{ url_for('farmer.new_chat') }}" class="farmer-chat-new">
@@ -144,6 +150,21 @@
                         </button>
                     </div>
                 </div>
+
+                <div class="farmer-user-section">
+                    <div class="farmer-chat-section">{{ t("theme") }}</div>
+                    <div class="farmer-user-grid">
+                        <button type="button" class="farmer-chat-footer-btn theme-option" data-theme="system">
+                            {{ t("system") }}
+                        </button>
+                        <button type="button" class="farmer-chat-footer-btn theme-option" data-theme="light">
+                            {{ t("light") }}
+                        </button>
+                        <button type="button" class="farmer-chat-footer-btn theme-option" data-theme="dark">
+                            {{ t("dark") }}
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -159,8 +180,28 @@
                 <div class="farmer-chat-title">{{ t("ask_agri_expert") }}</div>
                 <div class="farmer-chat-sub">{{ t("expert_guidance") }}</div>
             </div>
-            <span class="farmer-chat-status">{{ t("ai_online") }}</span>
+            <div class="farmer-chat-actions">
+                <button type="button" class="farmer-chat-help-btn" id="ai-help-toggle">
+                    <span class="help-icon"><i class="fas fa-headset"></i></span>
+                    <span>{{ t("ai_help") }}</span>
+                </button>
+                <span class="farmer-chat-status">{{ t("ai_online") }}</span>
+            </div>
         </header>
+
+        <div class="farmer-chat-help-panel is-collapsed" id="ai-help-panel">
+            <div class="help-title">{{ t("ai_help_title") }}</div>
+            <div class="help-text">{{ t("chat_need_crop_and_symptoms") }}</div>
+            <div class="help-actions">
+                <button type="button"
+                        class="farmer-chat-help-action"
+                        id="ai-help-example"
+                        data-example="{{ t('ai_help_example') }}">
+                    <i class="fas fa-magic"></i>
+                    {{ t("use_example") }}
+                </button>
+            </div>
+        </div>
 
         <div class="farmer-chat-thread" id="farmer-chat-thread">
             {% block content %}{% endblock %}
@@ -235,7 +276,9 @@ document.querySelectorAll(".theme-option[data-theme]").forEach(btn => {
 });
 
 (function () {
-    const activeTheme = localStorage.getItem("theme") || "{{ current_user.theme if current_user.is_authenticated else 'system' }}";
+    const dbTheme = "{{ current_user.theme if current_user.is_authenticated else 'system' }}";
+    const storedTheme = localStorage.getItem("theme");
+    const activeTheme = (dbTheme && dbTheme !== "system") ? dbTheme : (storedTheme || "system");
     document.querySelectorAll(".theme-option[data-theme]").forEach(btn => {
         btn.classList.toggle("is-active", btn.dataset.theme === activeTheme);
     });
@@ -293,6 +336,35 @@ document.querySelectorAll(".theme-option[data-theme]").forEach(btn => {
     });
 })();
 </script>
+
+<script>
+(function () {
+    const toggle = document.getElementById("ai-help-toggle");
+    const panel = document.getElementById("ai-help-panel");
+    const exampleBtn = document.getElementById("ai-help-example");
+    const input = document.getElementById("farmer-chat-input");
+
+    if (!toggle || !panel) return;
+
+    toggle.addEventListener("click", () => {
+        panel.classList.toggle("is-collapsed");
+    });
+
+    if (exampleBtn && input) {
+        exampleBtn.addEventListener("click", () => {
+            const example = exampleBtn.dataset.example || "";
+            if (example) {
+                input.value = example;
+            }
+            input.focus();
+        });
+    }
+})();
+</script>
+
+{% include "layouts/ai_helper_widget.html" %}
+
+<script src="{{ url_for('static', filename='js/system_status.js', v=static_version) }}"></script>
 
 </body>
 </html>

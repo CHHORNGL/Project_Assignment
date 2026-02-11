@@ -30,7 +30,7 @@ def create():
         description_kh = request.form.get("description_kh")
 
         if not name:
-            flash("❌ Crop name is required", "danger")
+            flash("Crop name is required.", "danger")
             return redirect(request.url)
 
         crop = Crop(
@@ -42,7 +42,7 @@ def create():
         db.session.add(crop)
         db.session.commit()
 
-        flash("✅ Crop added successfully", "success")
+        flash("Crop added successfully.", "success")
         return redirect(url_for("admin_crop.index"))
 
     return render_template("admin/create_crop.html")
@@ -56,7 +56,7 @@ def delete(id):
     db.session.delete(crop)
     db.session.commit()
 
-    flash("🗑 Crop deleted", "warning")
+    flash("Crop deleted.", "warning")
     return redirect(url_for("admin_crop.index"))
 
 

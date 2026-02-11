@@ -1,6 +1,7 @@
 # app/blueprints/user/routes.py
 
 import os
+from datetime import datetime
 from uuid import uuid4
 from urllib.parse import quote_plus
 
@@ -20,6 +21,8 @@ from werkzeug.utils import secure_filename
 
 from app.extensions import db
 from app.models.user import User
+from app.models.notification import Notification
+from app.services.notification_service import serialize_notification
 from app.services.khmer_calendar import build_khmer_calendar_month
 from app.utils.i18n import set_current_language, get_current_language
 
@@ -43,6 +46,25 @@ def _representative_label(user: User):
     if not roles:
         return None
     return f"{' & '.join(roles)} Representative"
+
+
+def _notification_query(user_id: int):
+    return (
+        Notification.query
+        .filter(Notification.user_id == user_id)
+        .order_by(Notification.created_at.desc())
+    )
+
+
+def _paginate_notifications(query, page: int, per_page: int):
+    per_page = max(10, min(per_page or 30, 50))
+    page = max(page or 1, 1)
+    offset = (page - 1) * per_page
+    rows = query.offset(offset).limit(per_page + 1).all()
+    next_page = page + 1 if len(rows) > per_page else None
+    if next_page:
+        rows = rows[:-1]
+    return rows, next_page, per_page
 
 
 # ===============================
@@ -126,7 +148,7 @@ def profile():
         if username and username != current_user.username:
             existing = User.query.filter_by(username=username).first()
             if existing:
-                flash("❌ Username already exists", "danger")
+                flash("Username already exists.", "danger")
                 return redirect(url_for("user.profile"))
             current_user.username = username
 
@@ -137,7 +159,7 @@ def profile():
                 .first()
             )
             if existing_email:
-                flash("❌ Email already exists", "danger")
+                flash("Email already exists.", "danger")
                 return redirect(url_for("user.profile"))
             current_user.email = email_value
         elif not email_value:
@@ -151,7 +173,7 @@ def profile():
         if avatar_file and avatar_file.filename:
             ext = os.path.splitext(avatar_file.filename)[1].lower()
             if ext not in ALLOWED_AVATAR_EXTS:
-                flash("❌ Invalid avatar file type", "danger")
+                flash("Invalid avatar file type.", "danger")
                 return redirect(url_for("user.profile"))
 
             filename = secure_filename(f"avatar_{current_user.id}_{uuid4().hex}{ext}")
@@ -173,21 +195,21 @@ def profile():
 
         if new_password or confirm_password:
             if not current_password:
-                flash("❌ Current password is required", "danger")
+                flash("Current password is required.", "danger")
                 return redirect(url_for("user.profile"))
             if not current_user.check_password(current_password):
-                flash("❌ Current password is incorrect", "danger")
+                flash("Current password is incorrect.", "danger")
                 return redirect(url_for("user.profile"))
             if new_password != confirm_password:
-                flash("❌ New passwords do not match", "danger")
+                flash("New passwords do not match.", "danger")
                 return redirect(url_for("user.profile"))
             if len(new_password) < 6:
-                flash("❌ Password must be at least 6 characters", "danger")
+                flash("Password must be at least 6 characters.", "danger")
                 return redirect(url_for("user.profile"))
             current_user.set_password(new_password)
 
         db.session.commit()
-        flash("✅ Profile updated successfully", "success")
+        flash("Profile updated successfully.", "success")
         return redirect(url_for("user.profile"))
 
     if current_user.has_role("farmer"):
@@ -240,16 +262,92 @@ def settings():
     if request.method == "POST":
         theme = request.form.get("theme", "system")
         if theme not in ("light", "dark", "system"):
-            flash("❌ Invalid theme option", "danger")
+            flash("Invalid theme option.", "danger")
             return redirect(url_for("user.settings"))
         current_user.theme = theme
         db.session.commit()
-        flash("✅ Settings saved", "success")
+        flash("Settings saved.", "success")
         return redirect(url_for("user.settings"))
 
     if current_user.has_role("farmer"):
         return render_template("farmer/settings.html", current_lang=get_current_language())
     return render_template("users/settings.html", current_lang=get_current_language())
+
+
+# ===============================
+# NOTIFICATIONS
+# ===============================
+@user_bp.route("/notifications")
+@login_required
+def notifications():
+    page = request.args.get("page", type=int) or 1
+    per_page = request.args.get("per_page", type=int) or 30
+
+    query = _notification_query(current_user.id)
+    rows, next_page, per_page = _paginate_notifications(query, page, per_page)
+
+    template = "farmer/notifications.html" if current_user.has_role("farmer") else "users/notifications.html"
+    return render_template(
+        template,
+        notifications_items=[serialize_notification(item) for item in rows],
+        notifications_next_page=next_page,
+        notifications_per_page=per_page,
+    )
+
+
+@user_bp.route("/notifications/data")
+@login_required
+def notifications_data():
+    page = request.args.get("page", type=int) or 1
+    per_page = request.args.get("per_page", type=int) or 30
+
+    query = _notification_query(current_user.id)
+    rows, next_page, per_page = _paginate_notifications(query, page, per_page)
+    return jsonify({
+        "ok": True,
+        "items": [serialize_notification(item) for item in rows],
+        "next_page": next_page,
+    })
+
+
+@user_bp.route("/notifications/seen", methods=["POST"])
+@login_required
+def notifications_seen():
+    payload = request.get_json(silent=True) or {}
+    ids = payload.get("ids") if isinstance(payload, dict) else None
+
+    query = (
+        Notification.query
+        .filter(
+            Notification.user_id == current_user.id,
+            Notification.read_at.is_(None),
+        )
+    )
+    if ids:
+        try:
+            id_list = [int(val) for val in ids]
+        except (TypeError, ValueError):
+            id_list = []
+        if id_list:
+            query = query.filter(Notification.id.in_(id_list))
+
+    updated = query.update({"read_at": datetime.utcnow()}, synchronize_session=False)
+    db.session.commit()
+
+    unread_count = (
+        Notification.query
+        .filter(
+            Notification.user_id == current_user.id,
+            Notification.read_at.is_(None),
+        )
+        .count()
+    )
+
+    return jsonify({
+        "ok": True,
+        "updated": updated,
+        "unread_count": unread_count,
+    })
 
 
 # ===============================

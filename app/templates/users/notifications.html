@@ -1,0 +1,185 @@
+{% extends "layouts/base.html" %}
+{% block title %}{{ t("notifications") }}{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between flex-wrap mb-3">
+    <div class="mb-2">
+        <h1 class="h3 text-gray-800 font-weight-bold mb-1">{{ t("notifications") }}</h1>
+        <div class="text-muted small">{{ t("notifications_all_sub") }}</div>
+    </div>
+    <div class="mb-2">
+        <button type="button"
+                class="btn btn-sm btn-outline-primary"
+                id="notifications-mark-all-read">
+            {{ t("notifications_mark_all_read") }}
+        </button>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        <div class="notification-list is-page"
+             id="notifications-feed"
+             data-next-page="{{ notifications_next_page or '' }}"
+             data-per-page="{{ notifications_per_page }}">
+            {% if notifications_items and notifications_items|length > 0 %}
+                {% for item in notifications_items %}
+                    {% set item_classes = "notification-item" + (" is-unread" if item.unread else "") %}
+                    {% if item.url %}
+                        <a class="{{ item_classes }}" href="{{ item.url }}" data-notification-id="{{ item.id }}">
+                            <div class="notification-item-icon is-{{ item.level }}">
+                                <i class="{{ item.icon }}"></i>
+                            </div>
+                            <div class="notification-item-body">
+                                <div class="notification-item-title">{{ item.title }}</div>
+                                <div class="notification-item-sub">{{ item.subtitle }}</div>
+                            </div>
+                            <div class="notification-item-time">{{ item.time }}</div>
+                        </a>
+                    {% else %}
+                        <div class="{{ item_classes }} is-disabled" data-notification-id="{{ item.id }}">
+                            <div class="notification-item-icon is-{{ item.level }}">
+                                <i class="{{ item.icon }}"></i>
+                            </div>
+                            <div class="notification-item-body">
+                                <div class="notification-item-title">{{ item.title }}</div>
+                                <div class="notification-item-sub">{{ item.subtitle }}</div>
+                            </div>
+                            <div class="notification-item-time">{{ item.time }}</div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            {% else %}
+                <div class="notification-empty">
+                    {{ t("notifications_empty") }}
+                </div>
+            {% endif %}
+
+            <div class="notification-feed-loading" id="notifications-loading" hidden>
+                {{ t("loading") }}
+            </div>
+            <div id="notifications-sentinel"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    const feed = document.getElementById("notifications-feed");
+    if (!feed) return;
+
+    const loading = document.getElementById("notifications-loading");
+    const sentinel = document.getElementById("notifications-sentinel");
+    const markBtn = document.getElementById("notifications-mark-all-read");
+
+    const perPage = parseInt(feed.dataset.perPage || "30", 10) || 30;
+    let nextPageRaw = (feed.dataset.nextPage || "").trim();
+    let nextPage = nextPageRaw ? parseInt(nextPageRaw, 10) : null;
+    if (Number.isNaN(nextPage)) nextPage = null;
+
+    let isLoading = false;
+
+    function clearUnreadUi() {
+        document.querySelectorAll(".badge-counter").forEach(el => el.remove());
+        document.querySelectorAll(".notification-count").forEach(el => el.textContent = "0");
+        feed.querySelectorAll(".is-unread").forEach(el => el.classList.remove("is-unread"));
+    }
+
+    function buildItemEl(item) {
+        const root = document.createElement(item.url ? "a" : "div");
+        root.className = "notification-item";
+        if (!item.url) root.classList.add("is-disabled");
+        if (item.unread) root.classList.add("is-unread");
+        if (item.url) root.href = item.url;
+        if (item.id) root.dataset.notificationId = item.id;
+
+        const iconWrap = document.createElement("div");
+        iconWrap.className = "notification-item-icon is-" + (item.level || "info");
+        const i = document.createElement("i");
+        i.className = item.icon || "fas fa-bell";
+        iconWrap.appendChild(i);
+
+        const body = document.createElement("div");
+        body.className = "notification-item-body";
+        const title = document.createElement("div");
+        title.className = "notification-item-title";
+        title.textContent = item.title || "";
+        const sub = document.createElement("div");
+        sub.className = "notification-item-sub";
+        sub.textContent = item.subtitle || "";
+        body.appendChild(title);
+        body.appendChild(sub);
+
+        const time = document.createElement("div");
+        time.className = "notification-item-time";
+        time.textContent = item.time || "";
+
+        root.appendChild(iconWrap);
+        root.appendChild(body);
+        root.appendChild(time);
+
+        return root;
+    }
+
+    async function loadNextPage() {
+        if (!nextPage || isLoading) return;
+        isLoading = true;
+        if (loading) loading.hidden = false;
+
+        try {
+            const url = new URL("{{ url_for('user.notifications_data') }}", window.location.origin);
+            url.searchParams.set("page", String(nextPage));
+            url.searchParams.set("per_page", String(perPage));
+            const res = await fetch(url.toString(), { headers: { "Accept": "application/json" } });
+            const data = await res.json();
+
+            if (!data || !data.ok) {
+                nextPage = null;
+                return;
+            }
+
+            (data.items || []).forEach(item => {
+                feed.insertBefore(buildItemEl(item), sentinel);
+            });
+
+            nextPage = data.next_page ? parseInt(data.next_page, 10) : null;
+            if (Number.isNaN(nextPage)) nextPage = null;
+        } catch (e) {
+            nextPage = null;
+        } finally {
+            isLoading = false;
+            if (loading) loading.hidden = true;
+        }
+    }
+
+    if (sentinel && nextPage) {
+        const io = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (!entry.isIntersecting) return;
+                loadNextPage();
+            });
+        }, { root: feed, rootMargin: "200px", threshold: 0.01 });
+        io.observe(sentinel);
+    }
+
+    async function markAllRead() {
+        try {
+            await fetch("/users/notifications/seen", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: "{}"
+            });
+        } catch (e) {}
+        clearUnreadUi();
+    }
+
+    if (markBtn) {
+        markBtn.addEventListener("click", markAllRead);
+    }
+
+    if (feed.querySelector(".is-unread")) {
+        markAllRead();
+    }
+})();
+</script>
+{% endblock %}

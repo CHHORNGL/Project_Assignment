@@ -29,7 +29,9 @@
 <!-- ===============================
      CUSTOM STYLE
 =============================== -->
-<link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+<link href="{{ url_for('static', filename='css/style.css', v=static_version) }}" rel="stylesheet">
+<link href="{{ url_for('static', filename='css/notifications.css') }}" rel="stylesheet">
+<link href="{{ url_for('static', filename='css/system_status.css', v=static_version) }}" rel="stylesheet">
 
 <!-- ===============================
      GLOBAL TYPOGRAPHY
@@ -82,7 +84,11 @@ h1,h2,h3,h4,h5,h6 { font-weight: 600; }
 <body id="page-top" class="app-shell {{ body_class|default('') }}">
 <div id="wrapper">
 
+{% include "partials/flash_notices.html" %}
+
 {% include "layouts/sidebar.html" %}
+
+<div class="mobile-sidebar-backdrop" id="mobile-sidebar-backdrop" aria-hidden="true"></div>
 
 <div id="content-wrapper" class="d-flex flex-column">
 <div id="content">
@@ -106,6 +112,8 @@ h1,h2,h3,h4,h5,h6 { font-weight: 600; }
 <script src="{{ url_for('static', filename='sb-admin/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
 <script src="{{ url_for('static', filename='sb-admin/js/sb-admin-2.min.js') }}"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='js/toast.js') }}"></script>
+<script src="{{ url_for('static', filename='js/system_status.js', v=static_version) }}"></script>
 
 <!-- ===============================
      🌗 THEME SWITCH HANDLER
@@ -153,7 +161,223 @@ document.querySelectorAll(".lang-option[data-lang]").forEach(btn => {
 });
 </script>
 
+<!-- ===============================
+     NOTIFICATION READ HANDLER
+=============================== -->
+<script>
+(function () {
+    const dropdown = document.getElementById("alertsDropdown");
+    if (!dropdown) return;
+
+    let hasUnread = !!document.querySelector(".badge-counter");
+    if (!hasUnread) return;
+
+    let marked = false;
+
+    function setCount(value) {
+        document.querySelectorAll(".notification-count").forEach(el => {
+            el.textContent = String(value);
+        });
+        const badge = document.querySelector(".badge-counter");
+        if (!badge) return;
+        if (value > 0) {
+            badge.textContent = String(value);
+        } else {
+            badge.remove();
+        }
+    }
+
+    function clearUnreadUi() {
+        document.querySelectorAll(".notification-item.is-unread").forEach(el => {
+            el.classList.remove("is-unread");
+        });
+        setCount(0);
+    }
+
+    function markAllRead() {
+        if (marked) return;
+        marked = true;
+
+        fetch("/users/notifications/seen", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: "{}"
+        }).catch(() => {});
+
+        clearUnreadUi();
+    }
+
+    const dropdownRoot = dropdown.closest(".dropdown") || dropdown;
+
+    if (window.jQuery && window.jQuery.fn && window.jQuery.fn.dropdown) {
+        window.jQuery(dropdownRoot).on("show.bs.dropdown", markAllRead);
+    }
+
+    dropdown.addEventListener("click", markAllRead);
+})();
+</script>
+
 {% block scripts %}{% endblock %}
+
+<script>
+(function () {
+    const path = window.location.pathname || "";
+    const body = document.body;
+    const sidebar = document.querySelector(".app-sidebar");
+    const toggle = document.getElementById("sidebar-icon-toggle");
+    const desktopMq = window.matchMedia ? window.matchMedia("(min-width: 768px)") : null;
+    if (!body || !sidebar) return;
+
+    let scope = "app";
+    if (body.classList.contains("admin-theme") || path.startsWith("/admin")) scope = "admin";
+    else if (body.classList.contains("expert-simple") || path.startsWith("/expert")) scope = "expert";
+    else if (body.classList.contains("farmer-dash-theme") || path.startsWith("/farmer")) scope = "farmer";
+
+    const storageKey = `nav_mode_${scope}`;
+    const legacyKey = "nav_mode";
+
+    function applyMode(mode) {
+        const iconOnly = mode !== "full";
+        const isDesktop = desktopMq ? desktopMq.matches : true;
+
+        if (isDesktop) {
+            body.classList.remove("sidebar-toggled");
+            sidebar.classList.remove("toggled");
+            body.classList.toggle("icon-nav", iconOnly);
+            sidebar.classList.toggle("icon-only", iconOnly);
+        } else {
+            body.classList.remove("icon-nav");
+            sidebar.classList.remove("icon-only");
+        }
+
+        if (toggle) {
+            toggle.setAttribute("aria-pressed", iconOnly ? "true" : "false");
+            toggle.classList.toggle("is-collapsed", iconOnly);
+            const icon = toggle.querySelector("i");
+            if (icon) {
+                icon.className = "fas fa-columns";
+            }
+        }
+    }
+
+    let saved = "full";
+    try {
+        saved = localStorage.getItem(storageKey);
+        if (!saved) {
+            saved = localStorage.getItem(legacyKey);
+            if (saved) {
+                localStorage.setItem(storageKey, saved);
+            }
+        }
+        saved = saved || "full";
+    } catch (e) {
+        saved = "full";
+    }
+    let current = saved;
+    applyMode(current);
+
+    if (desktopMq) {
+        const onChange = () => applyMode(current);
+        if (typeof desktopMq.addEventListener === "function") {
+            desktopMq.addEventListener("change", onChange);
+        } else if (typeof desktopMq.addListener === "function") {
+            desktopMq.addListener(onChange);
+        }
+    }
+
+    if (toggle) {
+        toggle.addEventListener("click", () => {
+            const next = current === "full" ? "icon" : "full";
+            try {
+                localStorage.setItem(storageKey, next);
+            } catch (e) {
+                // Ignore storage failures (private mode).
+            }
+            current = next;
+            applyMode(current);
+        });
+    }
+})();
+</script>
+
+<script>
+(function () {
+    const body = document.body;
+    const sidebar = document.querySelector(".app-sidebar");
+    const toggle = document.getElementById("sidebarToggleTop");
+    const backdrop = document.getElementById("mobile-sidebar-backdrop");
+    const mobileMq = window.matchMedia ? window.matchMedia("(max-width: 767.98px)") : null;
+
+    if (!body || !sidebar || !mobileMq) return;
+
+    function setOpen(open) {
+        body.classList.toggle("mobile-nav-open", open);
+        if (toggle) toggle.setAttribute("aria-expanded", open ? "true" : "false");
+    }
+
+    function syncFromSidebarState() {
+        if (!mobileMq.matches) {
+            setOpen(false);
+            return;
+        }
+        const open = !sidebar.classList.contains("toggled");
+        setOpen(open);
+    }
+
+    function forceClosed() {
+        body.classList.add("sidebar-toggled");
+        sidebar.classList.add("toggled");
+        setOpen(false);
+    }
+
+    function init() {
+        if (!mobileMq.matches) {
+            setOpen(false);
+            return;
+        }
+        forceClosed();
+    }
+
+    init();
+
+    if (toggle) {
+        toggle.addEventListener("click", () => {
+            window.setTimeout(syncFromSidebarState, 0);
+        });
+    }
+
+    if (backdrop) {
+        backdrop.addEventListener("click", forceClosed);
+    }
+
+    sidebar.addEventListener("click", (event) => {
+        const link = event.target && event.target.closest ? event.target.closest("a.nav-link") : null;
+        if (!link) return;
+        if (!mobileMq.matches) return;
+        forceClosed();
+    });
+
+    document.addEventListener("keydown", (event) => {
+        if (event.key !== "Escape") return;
+        if (!mobileMq.matches) return;
+        forceClosed();
+    });
+
+    window.addEventListener("resize", syncFromSidebarState);
+
+    const onMqChange = () => {
+        if (mobileMq.matches) forceClosed();
+        else setOpen(false);
+    };
+    if (typeof mobileMq.addEventListener === "function") {
+        mobileMq.addEventListener("change", onMqChange);
+    } else if (typeof mobileMq.addListener === "function") {
+        mobileMq.addListener(onMqChange);
+    }
+})();
+</script>
+
+{% include "layouts/ai_helper_widget.html" %}
 
 </body>
 </html>

@@ -34,7 +34,9 @@ from app.models.crop import Crop
 from app.models.disease import Disease
 from app.models.symptom import Symptom
 from app.models.translation_backup import TranslationBackup
+from app.models.support_request import SupportRequest
 from app.services.translator import translate_to_khmer
+from app.services.notification_service import notify_user, _snippet
 
 admin_bp = Blueprint(
     "admin",
@@ -1134,26 +1136,33 @@ def create_user():
     username = request.form.get("username")
     password = request.form.get("password")
     role_name = request.form.get("role")
+    full_name = (request.form.get("full_name") or "").strip()
     email_value = (request.form.get("email") or "").strip().lower()
 
     if not all([username, password, role_name]):
-        flash("❌ All fields are required", "danger")
+        flash("All fields are required.", "danger")
         return redirect(url_for("admin.users"))
 
     if User.query.filter_by(username=username).first():
-        flash("❌ Username already exists", "danger")
+        flash("Username already exists.", "danger")
         return redirect(url_for("admin.users"))
 
     if email_value and User.query.filter_by(email=email_value).first():
-        flash("❌ Email already exists", "danger")
+        flash("Email already exists.", "danger")
+        return redirect(url_for("admin.users"))
+
+    if full_name and len(full_name) > 120:
+        flash("Full name is too long.", "danger")
         return redirect(url_for("admin.users"))
 
     role = Role.query.filter_by(name=role_name).first()
     if not role:
-        flash("❌ Invalid role", "danger")
+        flash("Invalid role.", "danger")
         return redirect(url_for("admin.users"))
 
     user = User(username=username)
+    if full_name:
+        user.full_name = full_name
     if email_value:
         user.email = email_value
     user.set_password(password)
@@ -1172,7 +1181,7 @@ def create_user():
     )
 
     db.session.commit()
-    flash("✅ User created successfully", "success")
+    flash("User created successfully.", "success")
     return redirect(url_for("admin.users"))
 
 
@@ -1186,7 +1195,7 @@ def toggle_user_status(user_id):
     user = User.query.get_or_404(user_id)
 
     if user.has_role("admin"):
-        flash("❌ Cannot modify admin account", "danger")
+        flash("Cannot modify admin account.", "danger")
         return redirect(url_for("admin.users"))
 
     user.is_active = not user.is_active
@@ -1201,7 +1210,7 @@ def toggle_user_status(user_id):
     )
 
     db.session.commit()
-    flash("⚠️ User status updated", "warning")
+    flash("User status updated.", "warning")
     return redirect(url_for("admin.users"))
 
 
@@ -1217,7 +1226,7 @@ def change_user_role(user_id):
 
     role = Role.query.filter_by(name=new_role_name).first()
     if not role:
-        flash("❌ Invalid role", "danger")
+        flash("Invalid role.", "danger")
         return redirect(url_for("admin.users"))
 
     old_roles = [r.name for r in user.roles]
@@ -1235,7 +1244,7 @@ def change_user_role(user_id):
     )
 
     db.session.commit()
-    flash("✅ Role updated", "success")
+    flash("Role updated.", "success")
     return redirect(url_for("admin.users"))
 
 
@@ -1249,12 +1258,12 @@ def reset_user_password(user_id):
     user = User.query.get_or_404(user_id)
 
     if user.has_role("admin"):
-        flash("❌ Cannot change admin password here", "danger")
+        flash("Cannot change admin password here.", "danger")
         return redirect(url_for("admin.users"))
 
     new_password = request.form.get("new_password", "").strip()
     if not new_password or len(new_password) < 6:
-        flash("❌ Password must be at least 6 characters", "danger")
+        flash("Password must be at least 6 characters.", "danger")
         return redirect(url_for("admin.users"))
 
     user.set_password(new_password)
@@ -1269,7 +1278,7 @@ def reset_user_password(user_id):
     )
 
     db.session.commit()
-    flash("✅ Password updated", "success")
+    flash("Password updated.", "success")
     return redirect(url_for("admin.users"))
 
 
@@ -1290,7 +1299,7 @@ def update_user_email(user_id):
             .first()
         )
         if existing:
-            flash("❌ Email already exists", "danger")
+            flash("Email already exists.", "danger")
             return redirect(url_for("admin.users"))
     else:
         new_email = None
@@ -1307,7 +1316,7 @@ def update_user_email(user_id):
     )
 
     db.session.commit()
-    flash("✅ Email updated", "success")
+    flash("Email updated.", "success")
     return redirect(url_for("admin.users"))
 
 
@@ -1359,7 +1368,7 @@ def manage_role_permissions(role_id):
         )
 
         db.session.commit()
-        flash("✅ Permissions updated", "success")
+        flash("Permissions updated.", "success")
         return redirect(url_for("admin.roles"))
 
     return render_template(
@@ -1387,3 +1396,91 @@ def audit_logs():
         "admin/audit_logs.html",
         logs=logs
     )
+
+
+# ==================================================
+# 🛟 SUPPORT REQUESTS (AI Helper "Contact Admin")
+# ==================================================
+@admin_bp.route("/support-requests")
+@login_required
+@permission_required("view_dashboard")
+def support_requests():
+    filter_status = (request.args.get("status") or "open").strip().lower()
+    if filter_status not in {"open", "resolved", "all"}:
+        filter_status = "open"
+
+    q = (request.args.get("q") or "").strip()
+
+    query = SupportRequest.query.join(User, SupportRequest.requester_id == User.id)
+    if filter_status in {"open", "resolved"}:
+        query = query.filter(SupportRequest.status == filter_status)
+
+    if q:
+        like = f"%{q}%"
+        query = query.filter(
+            or_(
+                SupportRequest.message.ilike(like),
+                SupportRequest.page.ilike(like),
+                User.username.ilike(like),
+                User.email.ilike(like),
+            )
+        )
+
+    support_requests = (
+        query
+        .order_by(SupportRequest.created_at.desc())
+        .limit(250)
+        .all()
+    )
+
+    return render_template(
+        "admin/support_requests.html",
+        support_requests=support_requests,
+        filter_status=filter_status,
+        q=q,
+    )
+
+
+@admin_bp.route("/support-requests/<int:req_id>/resolve", methods=["POST"])
+@login_required
+@permission_required("view_dashboard")
+def resolve_support_request(req_id):
+    req = SupportRequest.query.get_or_404(req_id)
+
+    if req.status == "resolved":
+        flash("Support request already resolved.", "info")
+    else:
+        req.status = "resolved"
+        req.resolved_at = datetime.utcnow()
+        req.resolved_by_id = current_user.id
+
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            flash("Unable to resolve support request. Please try again.", "danger")
+            return redirect(url_for("admin.support_requests"))
+
+        # Notify requester (best-effort).
+        try:
+            notify_user(
+                user_id=req.requester_id,
+                kind="support_request_resolved",
+                title="Support request resolved",
+                subtitle=_snippet(req.message),
+                url=req.page or None,
+                icon="fas fa-life-ring",
+                level="success",
+                source_id=req.id,
+            )
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+
+        flash("Support request marked as resolved.", "success")
+
+    next_status = (request.form.get("status") or "open").strip().lower()
+    next_q = (request.form.get("q") or "").strip()
+    if next_status not in {"open", "resolved", "all"}:
+        next_status = "open"
+    return redirect(url_for("admin.support_requests", status=next_status, q=next_q))

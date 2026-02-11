@@ -1,0 +1,447 @@
+/* Animated popup alerts (Flask flash messages)
+   Rendered by: templates/partials/flash_notices.html
+
+   - Floating "toast" stack (bottom-right)
+   - Smooth fade-in for all
+   - Gentle shake for failure
+   - Glowing borders for success/failure
+*/
+
+.flash-stack[data-flash-stack] {
+    position: fixed;
+    right: 18px;
+    top: calc(18px + env(safe-area-inset-top, 0px));
+    z-index: 2500;
+
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    max-width: min(420px, calc(100vw - 36px));
+    pointer-events: none;
+}
+
+.flash-stack[data-flash-stack] .flash {
+    pointer-events: auto;
+
+    position: relative;
+    transform-origin: 90% 0%;
+    animation: flashIn 0.34s cubic-bezier(.2, .9, .2, 1) both;
+    will-change: transform, opacity, filter;
+
+    /* Override base flash backgrounds for a modern floating toast look. */
+    border-radius: 16px;
+    padding: 12px 14px 18px;
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(148, 163, 184, 0.38);
+    box-shadow: 0 18px 44px rgba(2, 6, 23, 0.18), 0 4px 14px rgba(2, 6, 23, 0.08);
+}
+
+.flash-stack[data-flash-stack] .flash-inner {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.dark-mode .flash-stack[data-flash-stack] .flash,
+html.auth-panel-dark .flash-stack[data-flash-stack] .flash {
+    background: rgba(15, 23, 42, 0.66);
+    border-color: rgba(148, 163, 184, 0.24);
+    box-shadow: 0 18px 44px rgba(0, 0, 0, 0.42), 0 4px 14px rgba(0, 0, 0, 0.24);
+}
+
+.dark-mode .flash-stack[data-flash-stack] .flash-success,
+html.auth-panel-dark .flash-stack[data-flash-stack] .flash-success {
+    background: linear-gradient(135deg, rgba(20, 83, 45, 0.46), rgba(15, 23, 42, 0.70));
+    border-color: rgba(34, 197, 94, 0.28) !important;
+    color: #bbf7d0;
+}
+
+.dark-mode .flash-stack[data-flash-stack] .flash-danger,
+html.auth-panel-dark .flash-stack[data-flash-stack] .flash-danger {
+    background: linear-gradient(135deg, rgba(127, 29, 29, 0.38), rgba(15, 23, 42, 0.72));
+    border-color: rgba(239, 68, 68, 0.26) !important;
+    color: #fecaca;
+}
+
+.dark-mode .flash-stack[data-flash-stack] .flash-warning,
+html.auth-panel-dark .flash-stack[data-flash-stack] .flash-warning {
+    background: linear-gradient(135deg, rgba(146, 64, 14, 0.34), rgba(15, 23, 42, 0.72));
+    border-color: rgba(245, 158, 11, 0.26) !important;
+    color: #fde68a;
+}
+
+.dark-mode .flash-stack[data-flash-stack] .flash-info,
+html.auth-panel-dark .flash-stack[data-flash-stack] .flash-info {
+    background: linear-gradient(135deg, rgba(30, 58, 138, 0.30), rgba(15, 23, 42, 0.72));
+    border-color: rgba(59, 130, 246, 0.22) !important;
+    color: #bfdbfe;
+}
+
+.flash-stack[data-flash-stack] .flash::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 5px;
+    border-radius: 16px 0 0 16px;
+    background: currentColor;
+    opacity: 0.22;
+    pointer-events: none;
+}
+
+.flash-stack[data-flash-stack] .flash-progress {
+    position: absolute;
+    left: 14px;
+    right: 14px;
+    bottom: 10px;
+    height: 3px;
+    border-radius: 999px;
+    overflow: hidden;
+    background: rgba(15, 23, 42, 0.10);
+    pointer-events: none;
+}
+
+.dark-mode .flash-stack[data-flash-stack] .flash-progress,
+html.auth-panel-dark .flash-stack[data-flash-stack] .flash-progress {
+    background: rgba(148, 163, 184, 0.20);
+}
+
+.flash-stack[data-flash-stack] .flash-progress::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: currentColor;
+    opacity: 0.55;
+    transform-origin: left;
+    transform: scaleX(1);
+    animation: toastProgress var(--toast-duration, 3000ms) linear forwards;
+}
+
+.flash-stack[data-flash-stack] .flash:hover .flash-progress::after,
+.flash-stack[data-flash-stack] .flash:focus-within .flash-progress::after {
+    animation-play-state: paused;
+}
+
+.flash-stack[data-flash-stack] .flash.is-leaving .flash-progress::after {
+    animation: none;
+    transform: scaleX(0);
+}
+
+.flash-stack[data-flash-stack] .flash-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    font-size: 1.05rem;
+    line-height: 1;
+    margin-top: 1px;
+
+    background: rgba(15, 23, 42, 0.06);
+    border: 1px solid rgba(15, 23, 42, 0.10);
+}
+
+.flash-stack[data-flash-stack] .flash-icon i {
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.dark-mode .flash-stack[data-flash-stack] .flash-icon,
+html.auth-panel-dark .flash-stack[data-flash-stack] .flash-icon {
+    background: rgba(148, 163, 184, 0.14);
+    border-color: rgba(148, 163, 184, 0.22);
+}
+
+.flash-stack[data-flash-stack] .flash-text {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.flash-stack[data-flash-stack] .flash-title {
+    font-size: 0.74rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    line-height: 1.2;
+}
+
+.flash-stack[data-flash-stack] .flash-message {
+    font-size: 0.92rem;
+    line-height: 1.45;
+    opacity: 0.9;
+}
+
+.flash-stack[data-flash-stack] .flash-success {
+    border-color: rgba(22, 163, 74, 0.35) !important;
+    background: linear-gradient(135deg, rgba(236, 253, 245, 0.98), rgba(240, 253, 250, 0.90));
+    color: #14532d;
+    box-shadow:
+        0 18px 44px rgba(2, 6, 23, 0.16),
+        0 4px 14px rgba(2, 6, 23, 0.08),
+        0 0 0 1px rgba(22, 163, 74, 0.12);
+}
+
+.flash-stack[data-flash-stack] .flash-danger {
+    border-color: rgba(220, 38, 38, 0.36) !important;
+    background: linear-gradient(135deg, rgba(254, 242, 242, 0.98), rgba(255, 247, 237, 0.90));
+    color: #7f1d1d;
+    box-shadow:
+        0 18px 44px rgba(2, 6, 23, 0.16),
+        0 4px 14px rgba(2, 6, 23, 0.08),
+        0 0 0 1px rgba(220, 38, 38, 0.12);
+}
+
+.flash-stack[data-flash-stack] .flash-warning {
+    border-color: rgba(245, 158, 11, 0.40) !important;
+    background: linear-gradient(135deg, rgba(255, 251, 235, 0.98), rgba(255, 247, 237, 0.92));
+    color: #92400e;
+}
+
+.flash-stack[data-flash-stack] .flash-info {
+    border-color: rgba(59, 130, 246, 0.34) !important;
+    background: linear-gradient(135deg, rgba(239, 246, 255, 0.98), rgba(255, 255, 255, 0.92));
+    color: #1d4ed8;
+}
+
+.flash-stack[data-flash-stack] .flash-success .flash-icon {
+    background: rgba(22, 163, 74, 0.14);
+    border-color: rgba(22, 163, 74, 0.26);
+}
+
+.flash-stack[data-flash-stack] .flash-danger .flash-icon {
+    background: rgba(220, 38, 38, 0.12);
+    border-color: rgba(220, 38, 38, 0.26);
+}
+
+.flash-stack[data-flash-stack] .flash-warning .flash-icon {
+    background: rgba(245, 158, 11, 0.14);
+    border-color: rgba(245, 158, 11, 0.26);
+}
+
+.flash-stack[data-flash-stack] .flash-info .flash-icon {
+    background: rgba(59, 130, 246, 0.14);
+    border-color: rgba(59, 130, 246, 0.24);
+}
+
+.dark-mode .flash-stack[data-flash-stack] .flash-success .flash-icon,
+html.auth-panel-dark .flash-stack[data-flash-stack] .flash-success .flash-icon {
+    background: rgba(34, 197, 94, 0.16);
+    border-color: rgba(34, 197, 94, 0.28);
+}
+
+.dark-mode .flash-stack[data-flash-stack] .flash-danger .flash-icon,
+html.auth-panel-dark .flash-stack[data-flash-stack] .flash-danger .flash-icon {
+    background: rgba(239, 68, 68, 0.16);
+    border-color: rgba(239, 68, 68, 0.26);
+}
+
+.dark-mode .flash-stack[data-flash-stack] .flash-warning .flash-icon,
+html.auth-panel-dark .flash-stack[data-flash-stack] .flash-warning .flash-icon {
+    background: rgba(245, 158, 11, 0.18);
+    border-color: rgba(245, 158, 11, 0.28);
+}
+
+.dark-mode .flash-stack[data-flash-stack] .flash-info .flash-icon,
+html.auth-panel-dark .flash-stack[data-flash-stack] .flash-info .flash-icon {
+    background: rgba(59, 130, 246, 0.18);
+    border-color: rgba(59, 130, 246, 0.26);
+}
+
+.flash-stack[data-flash-stack] .flash-danger .flash-inner {
+    animation: flashShake 0.46s ease-in-out 0.12s both;
+}
+
+@media (max-width: 520px) {
+    .flash-stack[data-flash-stack] {
+        right: 12px;
+        left: 12px;
+        top: calc(12px + env(safe-area-inset-top, 0px));
+        max-width: none;
+    }
+}
+
+.flash-dismiss {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    color: currentColor;
+    cursor: pointer;
+    opacity: 0.65;
+
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0;
+    margin-left: 6px;
+    font-size: 1rem;
+    line-height: 1;
+    border-radius: 999px;
+
+    transition:
+        opacity 0.15s ease,
+        background-color 0.15s ease,
+        transform 0.15s ease;
+}
+
+.flash-dismiss i {
+    font-size: 0.95rem;
+    line-height: 1;
+}
+
+.flash-dismiss:hover {
+    opacity: 1;
+    background: rgba(15, 23, 42, 0.06);
+}
+
+.dark-mode .flash-dismiss:hover,
+html.auth-panel-dark .flash-dismiss:hover {
+    background: rgba(148, 163, 184, 0.12);
+}
+
+.flash-dismiss:active {
+    transform: scale(0.96);
+}
+
+.flash-dismiss:focus {
+    outline: 2px solid rgba(59, 130, 246, 0.55);
+    outline-offset: 2px;
+}
+
+.flash-stack[data-flash-stack] .flash.is-leaving {
+    animation: flashOut 0.18s ease-in both;
+}
+
+@keyframes flashIn {
+    from {
+        opacity: 0;
+        transform: translateY(-12px) scale(0.98);
+        filter: blur(2px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0);
+    }
+}
+
+@keyframes flashOut {
+    to {
+        opacity: 0;
+        transform: translateY(-8px) scale(0.98);
+        filter: blur(2px);
+    }
+}
+
+@keyframes flashShake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-4px); }
+    40% { transform: translateX(4px); }
+    60% { transform: translateX(-3px); }
+    80% { transform: translateX(3px); }
+}
+
+@keyframes toastProgress {
+    from { transform: scaleX(1); }
+    to { transform: scaleX(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .flash-stack[data-flash-stack] .flash {
+        animation: none !important;
+        filter: none !important;
+        transform: none !important;
+    }
+    .flash-stack[data-flash-stack] .flash.is-leaving {
+        animation: none !important;
+    }
+    .flash-stack[data-flash-stack] .flash-progress::after {
+        animation: none !important;
+    }
+    .flash-stack[data-flash-stack] .flash-danger .flash-inner {
+        animation: none !important;
+        transform: none !important;
+    }
+}
+
+/* =========================================
+   Premium Feedback Cards (Inline Use)
+   Markup: templates/partials/premium_feedback_card.html
+========================================= */
+
+.feedback-card {
+    --radius: 18px;
+    --shadow: 0 18px 50px rgba(2, 6, 23, 0.18), 0 6px 18px rgba(2, 6, 23, 0.10);
+
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+
+    padding: 16px 18px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+
+    color: rgba(255, 255, 255, 0.94);
+}
+
+.feedback-card::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+        radial-gradient(1200px 140px at 18% 0%, rgba(255, 255, 255, 0.38), transparent 58%),
+        radial-gradient(900px 240px at 92% 120%, rgba(255, 255, 255, 0.20), transparent 56%);
+    mix-blend-mode: overlay;
+    opacity: 0.75;
+}
+
+.feedback-card__icon {
+    flex: 0 0 auto;
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    display: grid;
+    place-items: center;
+    background: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+
+.feedback-card__body {
+    min-width: 0;
+}
+
+.feedback-card__title {
+    font-weight: 800;
+    letter-spacing: 0.2px;
+    font-size: 1rem;
+    line-height: 1.1;
+}
+
+.feedback-card__message {
+    margin-top: 6px;
+    font-size: 0.92rem;
+    line-height: 1.45;
+    color: rgba(255, 255, 255, 0.90);
+}
+
+.feedback-card--success {
+    background: linear-gradient(135deg, #16a34a 0%, #22c55e 42%, #10b981 100%);
+}
+
+.feedback-card--error {
+    background: linear-gradient(135deg, #dc2626 0%, #ef4444 46%, #f97316 112%);
+}

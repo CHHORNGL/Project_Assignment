@@ -23,6 +23,7 @@ from app.models.disease import Disease
 from app.models.rule import Rule
 from app.models.symptom import Symptom
 from app.models.user import User
+from app.services.notification_service import notify_user, _snippet
 
 from . import expert_bp
 
@@ -277,7 +278,7 @@ def review_diagnosis(diagnosis_id):
             solution = request.form.get("solution")
 
             if not solution:
-                flash("❌ Solution is required", "danger")
+                flash("Solution is required.", "danger")
                 return redirect(request.url)
 
             diagnosis.approve(
@@ -285,12 +286,40 @@ def review_diagnosis(diagnosis_id):
                 solution=solution
             )
             db.session.commit()
-            flash("✅ Diagnosis approved", "success")
+            try:
+                notify_user(
+                    user_id=diagnosis.farmer_id,
+                    kind="diagnosis_approved",
+                    title="Diagnosis approved",
+                    subtitle=_snippet(solution),
+                    url=url_for("farmer.diagnosis_result", diagnosis_id=diagnosis.id),
+                    icon="fas fa-check-circle",
+                    level="success",
+                    source_id=diagnosis.id,
+                )
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+            flash("Diagnosis approved.", "success")
 
         elif action == "reject":
             diagnosis.reject(expert_id=current_user.id)
             db.session.commit()
-            flash("⚠️ Diagnosis rejected", "warning")
+            try:
+                notify_user(
+                    user_id=diagnosis.farmer_id,
+                    kind="diagnosis_rejected",
+                    title="Diagnosis rejected",
+                    subtitle="Your diagnosis was rejected. Please review and resubmit.",
+                    url=url_for("farmer.diagnosis_result", diagnosis_id=diagnosis.id),
+                    icon="fas fa-times-circle",
+                    level="danger",
+                    source_id=diagnosis.id,
+                )
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+            flash("Diagnosis rejected.", "warning")
 
         return redirect(url_for("expert.dashboard"))
 
@@ -347,16 +376,30 @@ def reply_chat_session(session_id):
         message = request.form.get("message")
 
         if message:
-            db.session.add(
-                ChatMessage(
-                    sender="expert",
-                    message=message,
-                    farmer_id=session.farmer_id,
-                    session_id=session.id
-                )
+            expert_message = ChatMessage(
+                sender="expert",
+                message=message,
+                farmer_id=session.farmer_id,
+                session_id=session.id
             )
+            db.session.add(expert_message)
             session.updated_at = db.func.now()
             db.session.commit()
+
+            try:
+                notify_user(
+                    user_id=session.farmer_id,
+                    kind="expert_message",
+                    title="Expert replied",
+                    subtitle=_snippet(message),
+                    url=url_for("farmer.chat", session_id=session.id),
+                    icon="fas fa-comment-dots",
+                    level="info",
+                    source_id=expert_message.id,
+                )
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
         return redirect(
             url_for("expert.reply_chat_session", session_id=session.id)
         )
@@ -541,7 +584,7 @@ def form():
         solution_text = request.form.get("solution", "").strip()
 
         if not crop_name or not disease_name or not symptoms_text:
-            flash("❌ Please fill in crop, disease, and symptoms.", "danger")
+            flash("Please fill in crop, disease, and symptoms.", "danger")
             return redirect(request.url)
 
         def normalize_name(value: str) -> str:
@@ -605,7 +648,7 @@ def form():
 
         db.session.commit()
 
-        flash("✅ Knowledge saved to rule base.", "success")
+        flash("Knowledge saved to rule base.", "success")
         return redirect(url_for("expert.knowledge_dashboard"))
 
     return render_template("expert/form.html")

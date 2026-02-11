@@ -1,0 +1,163 @@
+:root {
+    --net-status-bg: rgba(255, 255, 255, 0.94);
+    --net-status-border: rgba(148, 163, 184, 0.38);
+    --net-status-shadow: 0 18px 44px rgba(2, 6, 23, 0.18), 0 4px 14px rgba(2, 6, 23, 0.08);
+    --net-status-text: rgba(15, 23, 42, 0.92);
+    --net-status-muted: rgba(15, 23, 42, 0.66);
+    --net-status-focus: rgba(59, 130, 246, 0.55);
+
+    --net-status-danger: #ef4444;
+    --net-status-warn: #f59e0b;
+    --net-status-ok: #16a34a;
+}
+
+.dark-mode,
+html.auth-panel-dark {
+    --net-status-bg: rgba(15, 23, 42, 0.72);
+    --net-status-border: rgba(148, 163, 184, 0.24);
+    --net-status-shadow: 0 18px 44px rgba(0, 0, 0, 0.42), 0 4px 14px rgba(0, 0, 0, 0.24);
+    --net-status-text: rgba(226, 232, 240, 0.95);
+    --net-status-muted: rgba(226, 232, 240, 0.72);
+}
+
+/* Network status widget (created by static/js/system_status.js) */
+.net-status {
+    position: fixed;
+    left: 18px;
+    bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+    z-index: 2600;
+
+    width: min(380px, calc(100vw - 36px));
+    border-radius: 16px;
+    border: 1px solid var(--net-status-border);
+    background: var(--net-status-bg);
+    box-shadow: var(--net-status-shadow);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    color: var(--net-status-text);
+
+    display: grid;
+    grid-template-columns: 38px 1fr auto;
+    gap: 10px;
+    align-items: center;
+    padding: 12px 12px;
+
+    opacity: 0;
+    transform: translateY(10px);
+    pointer-events: none;
+    transition:
+        opacity 0.18s ease,
+        transform 0.18s ease;
+}
+
+.net-status.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.net-status__icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    background: rgba(15, 23, 42, 0.06);
+    border: 1px solid rgba(15, 23, 42, 0.10);
+}
+
+.dark-mode .net-status__icon,
+html.auth-panel-dark .net-status__icon {
+    background: rgba(148, 163, 184, 0.14);
+    border-color: rgba(148, 163, 184, 0.22);
+}
+
+.net-status__icon svg {
+    width: 20px;
+    height: 20px;
+}
+
+.net-status[data-state="offline"] .net-status__icon svg {
+    color: var(--net-status-danger);
+}
+
+.net-status[data-state="checking"] .net-status__icon svg {
+    color: var(--net-status-warn);
+}
+
+.net-status[data-state="online"] .net-status__icon svg {
+    color: var(--net-status-ok);
+}
+
+.net-status__title {
+    font-weight: 800;
+    font-size: 0.95rem;
+    letter-spacing: 0.2px;
+    line-height: 1.1;
+}
+
+.net-status__desc {
+    margin-top: 2px;
+    font-size: 0.86rem;
+    line-height: 1.35;
+    color: var(--net-status-muted);
+}
+
+.net-status__btn {
+    appearance: none;
+    border: 0;
+    cursor: pointer;
+    border-radius: 999px;
+    padding: 8px 12px;
+    font-weight: 800;
+    font-size: 0.86rem;
+    color: #ffffff;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.96), rgba(99, 102, 241, 0.96));
+    box-shadow: 0 12px 26px rgba(59, 130, 246, 0.25);
+    transition: transform 0.15s ease, filter 0.15s ease, opacity 0.15s ease;
+    white-space: nowrap;
+}
+
+.net-status__btn:hover { filter: brightness(1.05); }
+.net-status__btn:active { transform: scale(0.98); }
+.net-status__btn:disabled { opacity: 0.65; cursor: default; }
+
+.net-status__btn:focus {
+    outline: 2px solid var(--net-status-focus);
+    outline-offset: 2px;
+}
+
+.net-status__btn .net-status__spinner {
+    display: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 999px;
+    border: 2px solid rgba(255, 255, 255, 0.55);
+    border-top-color: rgba(255, 255, 255, 1);
+    margin-right: 8px;
+    animation: netSpin 0.85s linear infinite;
+}
+
+.net-status__btn.is-loading .net-status__spinner {
+    display: inline-block;
+}
+
+@keyframes netSpin {
+    to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .net-status {
+        transition: none !important;
+        transform: none !important;
+    }
+    .net-status__btn,
+    .net-status__btn:hover,
+    .net-status__btn:active {
+        transition: none !important;
+        transform: none !important;
+    }
+    .net-status__btn .net-status__spinner {
+        animation: none !important;
+    }
+}

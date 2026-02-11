@@ -12,14 +12,6 @@
         </div>
 
         <div class="settings-body">
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="flash flash-{{ category }}">{{ message }}</div>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
-
             <form method="POST">
                 <div class="settings-section">
                     <div class="settings-section-title">{{ t("appearance") }}</div>

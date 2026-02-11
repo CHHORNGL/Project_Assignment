@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="{{ current_lang }}">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ error_code }} - {{ error_title }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&family=Sora:wght@600;700&display=swap" rel="stylesheet">
+
+    <link href="{{ url_for('static', filename='sb-admin/vendor/fontawesome-free/css/all.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/errors.css', v=static_version) }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/system_status.css', v=static_version) }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/notifications.css') }}" rel="stylesheet">
+</head>
+<body class="error-page"
+      style="--error-accent: {{ accent|default('#7c5cff') }}; --error-accent2: {{ accent2|default('#5b8cff') }}; --error-glow1: {{ glow1|default('rgba(124, 92, 255, 0.18)') }}; --error-glow2: {{ glow2|default('rgba(59, 130, 246, 0.22)') }};">
+    <div class="error-shell">
+        <div class="error-card">
+            <div class="error-left">
+                <div class="error-topline">
+                    <div class="error-mark" aria-hidden="true">
+                        <i class="{{ icon_class|default('fas fa-exclamation') }}"></i>
+                    </div>
+                    <div class="error-code">{{ error_code }}</div>
+                </div>
+
+                <h1 class="error-title">{{ error_title }}</h1>
+                <p class="error-message">{{ error_message }}</p>
+
+                <div class="error-actions">
+                    {% block primary_action %}
+                        <a href="{{ home_url }}" class="btn">{{ t("go_to_dashboard") }}</a>
+                    {% endblock %}
+
+                    {% block secondary_action %}
+                        <a href="{{ referrer if referrer else home_url }}" class="btn secondary">{{ t("go_back") }}</a>
+                    {% endblock %}
+
+                    {% block tertiary_action %}{% endblock %}
+                </div>
+            </div>
+
+            <div class="error-right">
+                <div class="error-data-title">{{ t("request_details") }}</div>
+                <div class="error-data">
+                    <div class="error-data-row">{{ t("path") }} <span title="{{ request_path }}">{{ request_path }}</span></div>
+                    <div class="error-data-row">{{ t("method") }} <span>{{ request_method }}</span></div>
+                    <div class="error-data-row">{{ t("user") }} <span title="{{ user_label }}">{{ user_label }}</span></div>
+                    <div class="error-data-row">{{ t("request_id") }} <span title="{{ request_id }}">{{ request_id }}</span></div>
+                    <div class="error-data-row">{{ t("time_utc") }} <span>{{ timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</span></div>
+                </div>
+
+                {% block details_extra %}{% endblock %}
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/toast.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/system_status.js', v=static_version) }}"></script>
+    <script src="{{ url_for('static', filename='js/error_pages.js', v=static_version) }}"></script>
+</body>
+</html>
+

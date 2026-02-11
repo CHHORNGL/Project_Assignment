@@ -36,7 +36,7 @@ def create():
         db.session.add(disease)
         db.session.commit()
 
-        flash("✅ Disease added", "success")
+        flash("Disease added.", "success")
         return redirect(url_for("expert_disease.index"))
 
     return render_template(

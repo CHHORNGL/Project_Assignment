@@ -28,6 +28,7 @@ from app.models.chat_message import ChatMessage
 from app.models.chat_session import ChatSession
 from app.services.rule_engine import diagnose as rule_diagnose
 from app.services.openai_assistant import generate_assistant_reply
+from app.services.notification_service import notify_role, _snippet
 from app.utils.i18n import t, get_current_language
 
 
@@ -92,24 +93,10 @@ def dashboard():
         .all()
     )
 
-    rule_questions = (
-        db.session.query(ChatMessage, ChatSession)
-        .join(ChatSession, ChatSession.id == ChatMessage.session_id)
-        .filter(
-            ChatSession.farmer_id == current_user.id,
-            ChatSession.session_type == "rule",
-            ChatMessage.sender == "farmer"
-        )
-        .order_by(ChatMessage.created_at.desc())
-        .limit(6)
-        .all()
-    )
-
     return render_template(
         "farmer/dashboard.html",
         diagnoses=diagnoses,
-        ai_questions=ai_questions,
-        rule_questions=rule_questions
+        ai_questions=ai_questions
     )
 
 
@@ -134,27 +121,6 @@ def ai_history():
         "farmer/ai_history.html",
         questions=questions
     )
-
-
-@farmer_bp.route("/history/rule")
-@farmer_required
-def rule_history():
-    questions = (
-        db.session.query(ChatMessage, ChatSession)
-        .join(ChatSession, ChatSession.id == ChatMessage.session_id)
-        .filter(
-            ChatSession.farmer_id == current_user.id,
-            ChatSession.session_type == "rule",
-            ChatMessage.sender == "farmer"
-        )
-        .order_by(ChatMessage.created_at.desc())
-        .all()
-    )
-    return render_template(
-        "farmer/rule_history.html",
-        questions=questions
-    )
-
 
 # ===============================
 # FARMER RULE-BASED INFERENCE HISTORY
@@ -247,6 +213,32 @@ def _process_diagnose_post():
 
     db.session.add(diagnosis)
     db.session.commit()
+
+    try:
+        subtitle = _snippet(f"{crop.name}: {symptoms_text}")
+        notify_role(
+            role_name="admin",
+            kind="diagnosis_created",
+            title="New diagnosis submitted",
+            subtitle=subtitle,
+            url=url_for("admin.dashboard"),
+            icon="fas fa-seedling",
+            level="info",
+            source_id=diagnosis.id,
+        )
+        notify_role(
+            role_name="expert",
+            kind="diagnosis_created",
+            title="New diagnosis to review",
+            subtitle=subtitle,
+            url=url_for("expert.review_diagnosis", diagnosis_id=diagnosis.id),
+            icon="fas fa-notes-medical",
+            level="warning",
+            source_id=diagnosis.id,
+        )
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
 
     flash("??? Diagnosis completed successfully", "success")
 
@@ -347,6 +339,32 @@ def diagnose_rule_based():
         db.session.add(diagnosis)
         db.session.commit()
 
+        try:
+            subtitle = _snippet(f"{crop.name}: {symptoms_text}")
+            notify_role(
+                role_name="admin",
+                kind="diagnosis_created",
+                title="New diagnosis submitted",
+                subtitle=subtitle,
+                url=url_for("admin.dashboard"),
+                icon="fas fa-seedling",
+                level="info",
+                source_id=diagnosis.id,
+            )
+            notify_role(
+                role_name="expert",
+                kind="diagnosis_created",
+                title="New diagnosis to review",
+                subtitle=subtitle,
+                url=url_for("expert.review_diagnosis", diagnosis_id=diagnosis.id),
+                icon="fas fa-notes-medical",
+                level="warning",
+                source_id=diagnosis.id,
+            )
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+
         flash("Diagnosis completed successfully.", "success")
 
         return redirect(
@@ -424,7 +442,7 @@ def diagnosis_result(diagnosis_id):
 
     # Security: owner only
     if diagnosis.farmer_id != current_user.id:
-        flash("❌ Access denied", "danger")
+        flash("Access denied.", "danger")
         return redirect(url_for("farmer.dashboard"))
 
     # Sidebar: recent diagnoses
@@ -486,15 +504,6 @@ def new_chat():
     return redirect(url_for("farmer.chat", session_id=session.id))
 
 
-@farmer_bp.route("/rule-chat/new")
-@farmer_required
-def new_rule_chat():
-    session = ChatSession(farmer_id=current_user.id, title="Rule Chat", session_type="rule")
-    db.session.add(session)
-    db.session.commit()
-    return redirect(url_for("farmer.rule_chat", session_id=session.id))
-
-
 @farmer_bp.route("/chat", methods=["GET", "POST"])
 @farmer_bp.route("/chat/<int:session_id>", methods=["GET", "POST"])
 @farmer_required
@@ -531,14 +540,13 @@ def chat(session_id=None):
         user_message = request.form.get("message", "").strip()
 
         if user_message:
-            db.session.add(
-                ChatMessage(
-                    sender="farmer",
-                    message=user_message,
-                    farmer_id=current_user.id,
-                    session_id=session.id
-                )
+            farmer_message = ChatMessage(
+                sender="farmer",
+                message=user_message,
+                farmer_id=current_user.id,
+                session_id=session.id
             )
+            db.session.add(farmer_message)
 
             # Try to answer using expert rule base
             message_lower = user_message.lower()
@@ -667,6 +675,21 @@ def chat(session_id=None):
             session.updated_at = db.func.now()
             db.session.commit()
 
+            try:
+                notify_role(
+                    role_name="expert",
+                    kind="farmer_message",
+                    title="New farmer message",
+                    subtitle=_snippet(user_message),
+                    url=url_for("expert.reply_chat_session", session_id=session.id),
+                    icon="fas fa-comment-dots",
+                    level="info",
+                    source_id=farmer_message.id,
+                )
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+
         return redirect(url_for("farmer.chat", session_id=session.id))
 
     # ---------------------------------
@@ -681,201 +704,6 @@ def chat(session_id=None):
 
     return render_template(
         "farmer/chat.html",
-        messages=messages,
-        sessions=sessions,
-        active_session=session
-    )
-
-
-# ===============================
-# FARMER RULE-BASED CHAT
-# ===============================
-@farmer_bp.route("/rule-chat", methods=["GET", "POST"])
-@farmer_bp.route("/rule-chat/<int:session_id>", methods=["GET", "POST"])
-@farmer_required
-def rule_chat(session_id=None):
-    """
-    Farmer chat page (rule-based only)
-    """
-
-    def _normalize(text: str) -> str:
-        return _normalize_text(text)
-
-    sessions = (
-        ChatSession.query
-        .filter_by(farmer_id=current_user.id, session_type="rule")
-        .order_by(ChatSession.updated_at.desc())
-        .all()
-    )
-
-    if session_id is None:
-        if sessions:
-            return redirect(url_for("farmer.rule_chat", session_id=sessions[0].id))
-        return redirect(url_for("farmer.new_rule_chat"))
-
-    session = (
-        ChatSession.query
-        .filter_by(id=session_id, farmer_id=current_user.id, session_type="rule")
-        .first_or_404()
-    )
-
-    # ---------------------------------
-    # POST -> Save message
-    # ---------------------------------
-    if request.method == "POST":
-        user_message = request.form.get("message", "").strip()
-
-        if user_message:
-            db.session.add(
-                ChatMessage(
-                    sender="farmer",
-                    message=user_message,
-                    farmer_id=current_user.id,
-                    session_id=session.id
-                )
-            )
-
-            message_lower = user_message.lower()
-            crops = Crop.query.order_by(Crop.name.asc()).all()
-
-            def find_crop():
-                if not crops:
-                    return None
-                crop_match = re.search(r"crop\\s*[:\\-]\\s*([a-z0-9\\s]+)", message_lower)
-                if crop_match:
-                    crop_text = crop_match.group(1).strip()
-                    for crop in sorted(crops, key=lambda c: len(c.name), reverse=True):
-                        if crop.name and crop.name.lower() in crop_text:
-                            return crop
-                        if crop.name_kh and crop.name_kh in crop_text:
-                            return crop
-                for crop in sorted(crops, key=lambda c: len(c.name), reverse=True):
-                    candidates = [crop.name, crop.name_kh]
-                    for candidate in candidates:
-                        if not candidate:
-                            continue
-                        pattern = r"\\b" + re.escape(_normalize(candidate)) + r"\\b"
-                        if re.search(pattern, _normalize(message_lower)):
-                            return crop
-                return None
-
-            def extract_symptoms(text: str):
-                explicit = False
-                match = re.search(r"(symptoms?|signs?)\\s*[:\\-]\\s*(.+)", text, re.I)
-                if match:
-                    text = match.group(2)
-                    explicit = True
-                text = re.sub(r"\\band\\b|និង", ",", text, flags=re.I)
-                tokens = [
-                    t.strip().lower()
-                    for t in re.split(r"[,\\n;/]+", text)
-                    if t.strip()
-                ]
-                tokens = [t for t in tokens if len(t) >= 3]
-                return tokens, explicit
-
-            crop = find_crop()
-            symptoms_list, explicit_symptoms = extract_symptoms(user_message)
-
-            # Smart filtering: map tokens to known symptoms
-            matched_symptoms = []
-            if symptoms_list:
-                all_symptoms = Symptom.query.order_by(Symptom.name.asc()).all()
-                symptom_map = {}
-                for s in all_symptoms:
-                    if not s or not s.name:
-                        continue
-                    symptom_map[_normalize(s.name)] = s.name
-                    if s.name_kh:
-                        symptom_map[_normalize(s.name_kh)] = s.name_kh
-                for token in symptoms_list:
-                    token_norm = _normalize(token)
-                    for key, original in symptom_map.items():
-                        if key and (key in token_norm or token_norm in key):
-                            matched_symptoms.append(original)
-                matched_symptoms = list(dict.fromkeys(matched_symptoms))
-                if not matched_symptoms and symptoms_list:
-                    matched_symptoms = symptoms_list
-
-            reply = None
-
-            if not crop:
-                top_crops = ", ".join([_localize_field(c, "name", c.name) for c in crops[:6]]) if crops else ""
-                examples_text = f" {t('examples')}: {top_crops}." if top_crops else ""
-                reply = t("rule_chat_need_crop", examples=examples_text)
-            elif not matched_symptoms:
-                # suggest symptoms for crop
-                rules = (
-                    Rule.query
-                    .options(joinedload(Rule.symptoms), joinedload(Rule.disease))
-                    .filter(Rule.disease.has(crop_id=crop.id))
-                    .all()
-                )
-                symptom_set = set()
-                for rule in rules:
-                    for s in rule.symptoms:
-                        if s and s.name:
-                            symptom_set.add(s.name)
-                suggestions = ", ".join(sorted(symptom_set)[:8])
-                suggestions_text = ""
-                if suggestions:
-                    suggestions_text = f"{t('common_symptoms')}: {suggestions}."
-                reply = t(
-                    "rule_chat_need_symptoms",
-                    crop=_localize_field(crop, "name", crop.name),
-                    suggestions=suggestions_text
-                )
-            elif len(matched_symptoms) < 2 and not explicit_symptoms:
-                reply = t("rule_chat_need_more_symptoms")
-            else:
-                result = rule_diagnose(matched_symptoms, crop_id=crop.id)
-                if result:
-                    rule = result["rule"]
-                    disease = rule.disease
-                    disease_name = _localize_field(disease, "name", "Unknown")
-                    confidence = result.get("confidence")
-                    conf_text = f"{int(round(confidence * 100))}%" if confidence is not None else "N/A"
-                    description = _localize_field(disease, "description", t("no_description"))
-                    reply = t(
-                        "rule_chat_result",
-                        crop=_localize_field(crop, "name", crop.name),
-                        disease=disease_name,
-                        confidence=conf_text,
-                        matched=", ".join(matched_symptoms),
-                        description=description
-                    )
-                else:
-                    reply = t("rule_chat_no_match")
-
-            db.session.add(
-                ChatMessage(
-                    sender="system",
-                    message=reply,
-                    farmer_id=current_user.id,
-                    session_id=session.id
-                )
-            )
-
-            if not session.title or session.title.lower().startswith("rule chat"):
-                short = (user_message[:40] + "...") if len(user_message) > 40 else user_message
-                session.title = f"Rule Chat: {short}"
-            session.updated_at = db.func.now()
-            db.session.commit()
-
-        return redirect(url_for("farmer.rule_chat", session_id=session.id))
-
-    # ---------------------------------
-    # GET -> Load messages
-    # ---------------------------------
-    messages = (
-        ChatMessage.query
-        .filter_by(farmer_id=current_user.id, session_id=session.id)
-        .order_by(ChatMessage.created_at.asc())
-        .all()
-    )
-
-    return render_template(
-        "farmer/rule_chat.html",
         messages=messages,
         sessions=sessions,
         active_session=session

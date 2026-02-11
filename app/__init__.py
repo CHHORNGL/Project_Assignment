@@ -1,14 +1,17 @@
 from datetime import datetime
+import os
+import time
 from uuid import uuid4
+import logging
+from logging.handlers import RotatingFileHandler
 
-from flask import Flask, url_for, request, render_template
+from flask import Flask, url_for, request, render_template, redirect, g, send_from_directory, has_request_context
 from flask_login import current_user
 
 from .extensions import db, login_manager, migrate, oauth
 from .config import Config
-from app.models.audit_log import AuditLog
-from app.models.diagnosis import Diagnosis
-from app.models.chat_message import ChatMessage
+from app.models.notification import Notification
+from app.services.notification_service import serialize_notification
 from app.utils.i18n import t, get_current_language
 
 
@@ -17,11 +20,77 @@ def create_app():
     app.config.from_object(Config)
 
     # ===============================
+    # LOGGING
+    # ===============================
+    class _RequestContextFilter(logging.Filter):
+        def filter(self, record):
+            if has_request_context():
+                record.request_id = getattr(g, "request_id", "-")
+                record.path = getattr(request, "path", "-")
+                record.method = getattr(request, "method", "-")
+                try:
+                    record.user = current_user.username if current_user.is_authenticated else "anonymous"
+                except Exception:
+                    record.user = "anonymous"
+            else:
+                record.request_id = "-"
+                record.path = "-"
+                record.method = "-"
+                record.user = "-"
+            return True
+
+    try:
+        log_dir = os.path.join(app.instance_path, "logs")
+        os.makedirs(log_dir, exist_ok=True)
+        log_path = os.path.join(log_dir, "app.log")
+
+        file_handler = RotatingFileHandler(
+            log_path,
+            maxBytes=1_000_000,
+            backupCount=5,
+            encoding="utf-8",
+        )
+        file_handler.setLevel(logging.INFO)
+        file_handler.addFilter(_RequestContextFilter())
+        file_handler.setFormatter(
+            logging.Formatter(
+                "%(asctime)s %(levelname)s [%(request_id)s] %(method)s %(path)s user=%(user)s %(message)s"
+            )
+        )
+        app.logger.setLevel(logging.INFO)
+        app.logger.addHandler(file_handler)
+        app.logger.propagate = False
+    except Exception:
+        # Logging must never prevent the app from starting.
+        pass
+
+    # ===============================
     # INIT EXTENSIONS
     # ===============================
     db.init_app(app)
     login_manager.init_app(app)
     login_manager.login_view = "auth.login"
+
+    def _infer_login_role(path: str) -> str:
+        if path.startswith("/admin") or path.startswith("/expert"):
+            return "expert"
+        return "farmer"
+
+    def _safe_next_url(value):
+        if value and value.startswith("/"):
+            return value
+        return None
+
+    @login_manager.unauthorized_handler
+    def _unauthorized():
+        role = _infer_login_role(request.path or "")
+        next_url = request.full_path or request.path
+        if next_url.endswith("?"):
+            next_url = request.path
+        next_url = _safe_next_url(next_url)
+        if next_url:
+            return redirect(url_for("auth.login", role=role, next=next_url))
+        return redirect(url_for("auth.login", role=role))
 
     # 🔑 IMPORTANT: Flask-Migrate
     migrate.init_app(app, db)
@@ -48,6 +117,7 @@ def create_app():
     from app.blueprints.auth.routes import auth_bp
     from app.blueprints.admin.routes import admin_bp
     from app.blueprints.admin.crop_routes import admin_crop_bp
+    from app.blueprints.assistant.routes import assistant_bp
     from app.blueprints.expert.routes import expert_bp
     from app.blueprints.farmer.routes import farmer_bp
     from app.blueprints.user.routes import user_bp
@@ -59,6 +129,7 @@ def create_app():
     # Role-based Blueprints
     app.register_blueprint(admin_bp)    # /admin/...
     app.register_blueprint(admin_crop_bp)  # /admin/crops/...
+    app.register_blueprint(assistant_bp)  # /assistant/...
     app.register_blueprint(expert_bp)   # /expert/...
     app.register_blueprint(farmer_bp)   # /farmer/...
     app.register_blueprint(user_bp)     # /user/...
@@ -84,6 +155,7 @@ def create_app():
 
     @app.errorhandler(404)
     def not_found(error):
+        request_id = getattr(g, "request_id", uuid4().hex[:12])
         return (
             render_template(
                 "errors/404.html",
@@ -93,7 +165,7 @@ def create_app():
                 request_path=request.path,
                 request_method=request.method,
                 referrer=request.referrer,
-                request_id=uuid4().hex[:8],
+                request_id=request_id,
                 timestamp=datetime.utcnow(),
                 user_label=current_user.username if current_user.is_authenticated else "Guest",
                 home_url=_resolve_home_url(),
@@ -103,6 +175,7 @@ def create_app():
 
     @app.errorhandler(405)
     def method_not_allowed(error):
+        request_id = getattr(g, "request_id", uuid4().hex[:12])
         valid_methods = sorted(getattr(error, "valid_methods", []) or [])
         return (
             render_template(
@@ -113,7 +186,7 @@ def create_app():
                 request_path=request.path,
                 request_method=request.method,
                 referrer=request.referrer,
-                request_id=uuid4().hex[:8],
+                request_id=request_id,
                 timestamp=datetime.utcnow(),
                 user_label=current_user.username if current_user.is_authenticated else "Guest",
                 home_url=_resolve_home_url(),
@@ -124,16 +197,17 @@ def create_app():
 
     @app.errorhandler(500)
     def server_error(error):
+        request_id = getattr(g, "request_id", uuid4().hex[:12])
         return (
             render_template(
                 "errors/500.html",
                 error_code=500,
                 error_title="Server error",
-                error_message="Something went wrong on our side. Please try again.",
+                error_message="We hit a snag while processing your request. Please try again.",
                 request_path=request.path,
                 request_method=request.method,
                 referrer=request.referrer,
-                request_id=uuid4().hex[:8],
+                request_id=request_id,
                 timestamp=datetime.utcnow(),
                 user_label=current_user.username if current_user.is_authenticated else "Guest",
                 home_url=_resolve_home_url(),
@@ -146,7 +220,14 @@ def create_app():
     # ===============================
     @app.before_request
     def before_request():
-        """Ensure database session is clean at the start of each request."""
+        # Request ID for correlation (also used by client-side reporting).
+        rid = (request.headers.get("X-Request-ID") or "").strip()
+        if rid:
+            g.request_id = rid[:64]
+        else:
+            g.request_id = uuid4().hex[:12]
+
+        # Ensure database session is clean at the start of each request.
         try:
             # If there's an active but failed transaction, rollback
             if db.session.is_active and db.session.in_transaction():
@@ -160,9 +241,104 @@ def create_app():
         if exception is not None:
             db.session.rollback()
 
+    @app.after_request
+    def attach_request_id_header(response):
+        rid = getattr(g, "request_id", None)
+        if rid:
+            response.headers.setdefault("X-Request-ID", rid)
+        return response
+
+    @app.teardown_request
+    def log_unhandled_exceptions(exception=None):
+        # Log unexpected exceptions with stack trace; ignore expected HTTP errors.
+        if exception is None:
+            return
+        try:
+            from werkzeug.exceptions import HTTPException
+            if isinstance(exception, HTTPException):
+                return
+        except Exception:
+            pass
+        try:
+            app.logger.error(
+                "Unhandled exception",
+                exc_info=(type(exception), exception, getattr(exception, "__traceback__", None)),
+            )
+        except Exception:
+            pass
+
+    # ===============================
+    # HEALTH + SERVICE WORKER + CLIENT LOGS
+    # ===============================
+    @app.get("/healthz")
+    def healthz():
+        # Lightweight ping endpoint for offline detection.
+        return ("", 204, {"Cache-Control": "no-store"})
+
+    @app.get("/sw.js")
+    def sw():
+        # Serve service worker at the origin root so it can control all routes.
+        resp = send_from_directory(app.static_folder, "sw.js")
+        resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        resp.headers["Pragma"] = "no-cache"
+        resp.headers["Expires"] = "0"
+        resp.mimetype = "application/javascript"
+        return resp
+
+    @app.post("/client-logs")
+    def client_logs():
+        # Accept client-side error reports (best effort).
+        if not request.is_json:
+            return ("", 400)
+        payload = request.get_json(silent=True) or {}
+        try:
+            level = str(payload.get("level") or "error").lower()
+            msg = str(payload.get("message") or "")[:2000]
+            stack = str(payload.get("stack") or "")[:8000]
+            url = str(payload.get("url") or "")[:2000]
+            ua = str(payload.get("userAgent") or request.headers.get("User-Agent") or "")[:500]
+
+            log_line = f"ClientLog level={level} url={url} msg={msg} ua={ua}"
+            if level in {"warning", "warn"}:
+                app.logger.warning(log_line)
+            else:
+                app.logger.error(log_line)
+            if stack:
+                app.logger.info("ClientLog stack=%s", stack)
+        except Exception:
+            pass
+        return ("", 204)
+
     # ===============================
     # GLOBAL NOTIFICATIONS (TOPBAR)
     # ===============================
+    def _static_version():
+        try:
+            static_root = os.path.join(app.root_path, "static")
+            candidates = [
+                os.path.join(static_root, "css", "style.css"),
+                os.path.join(static_root, "css", "auth.css"),
+                os.path.join(static_root, "css", "notifications.css"),
+                os.path.join(static_root, "css", "system_status.css"),
+                os.path.join(static_root, "css", "errors.css"),
+                os.path.join(static_root, "js", "toast.js"),
+                os.path.join(static_root, "js", "system_status.js"),
+                os.path.join(static_root, "js", "error_pages.js"),
+                os.path.join(static_root, "sw.js"),
+            ]
+            mtimes = []
+            for path in candidates:
+                try:
+                    if os.path.exists(path):
+                        mtimes.append(os.path.getmtime(path))
+                except Exception:
+                    continue
+            if mtimes:
+                return int(max(mtimes))
+            return int(time.time())
+        except Exception:
+            return int(time.time())
+
     @app.context_processor
     def inject_language():
         def localize(obj, field, fallback=None):
@@ -182,6 +358,7 @@ def create_app():
             "t": t,
             "current_lang": get_current_language(),
             "localize": localize,
+            "static_version": _static_version(),
         }
 
     @app.context_processor
@@ -189,135 +366,37 @@ def create_app():
         if not current_user.is_authenticated:
             return {"notifications": [], "notifications_count": 0, "notifications_link": None}
 
-        def time_ago(dt):
-            if not dt:
-                return ""
-            now = datetime.utcnow()
-            diff = now - dt
-            seconds = diff.total_seconds()
-            if seconds < 60:
-                return "Just now"
-            if seconds < 3600:
-                return f"{int(seconds // 60)}m ago"
-            if seconds < 86400:
-                return f"{int(seconds // 3600)}h ago"
-            if seconds < 172800:
-                return "Yesterday"
-            return dt.strftime("%b %d")
-
         notifications = []
-        notifications_link = None
+        notifications_link = url_for("user.notifications")
+        unread_count = 0
 
         try:
-            if current_user.has_role("admin"):
-                pending_q = Diagnosis.query.filter_by(status="PENDING")
-                pending_count = pending_q.count()
-                latest_pending = pending_q.order_by(Diagnosis.created_at.desc()).first()
-                if pending_count > 0:
-                    notifications.append(
-                        {
-                            "title": "Pending diagnoses",
-                            "subtitle": f"{pending_count} case(s) awaiting review",
-                            "time": time_ago(latest_pending.created_at if latest_pending else None),
-                            "icon": "fas fa-hourglass-half",
-                            "level": "warning",
-                            "url": url_for("admin.dashboard"),
-                            "time_value": latest_pending.created_at if latest_pending else datetime.utcnow(),
-                        }
-                    )
-
-                logs = (
-                    AuditLog.query
-                    .order_by(AuditLog.created_at.desc())
-                    .limit(4)
-                    .all()
+            notifications_query = (
+                Notification.query
+                .filter(Notification.user_id == current_user.id)
+                .order_by(Notification.created_at.desc())
+            )
+            notifications = [
+                serialize_notification(item)
+                for item in notifications_query.limit(6).all()
+            ]
+            unread_count = (
+                Notification.query
+                .filter(
+                    Notification.user_id == current_user.id,
+                    Notification.read_at.is_(None),
                 )
-                action_map = {
-                    "CREATE_USER": ("fas fa-user-plus", "success", "User created"),
-                    "BAN_USER": ("fas fa-user-slash", "danger", "User banned"),
-                    "UNBAN_USER": ("fas fa-user-check", "success", "User unbanned"),
-                    "CHANGE_ROLE": ("fas fa-user-tag", "info", "Role updated"),
-                }
-                for log in logs:
-                    icon, level, title = action_map.get(
-                        log.action,
-                        ("fas fa-bell", "info", log.action.replace("_", " ").title())
-                    )
-                    subtitle_parts = []
-                    if log.target_user:
-                        subtitle_parts.append(log.target_user)
-                    if log.detail:
-                        subtitle_parts.append(log.detail)
-                    subtitle = " • ".join(subtitle_parts) if subtitle_parts else "System activity"
-                    notifications.append(
-                        {
-                            "title": title,
-                            "subtitle": subtitle,
-                            "time": time_ago(log.created_at),
-                            "icon": icon,
-                            "level": level,
-                            "url": url_for("admin.audit_logs"),
-                            "time_value": log.created_at,
-                        }
-                    )
-
-                notifications_link = url_for("admin.audit_logs")
-
-            elif current_user.has_role("expert"):
-                pending_q = Diagnosis.query.filter_by(status="PENDING")
-                pending_count = pending_q.count()
-                latest_pending = pending_q.order_by(Diagnosis.created_at.desc()).first()
-                if pending_count > 0:
-                    notifications.append(
-                        {
-                            "title": "Pending diagnoses",
-                            "subtitle": f"{pending_count} case(s) ready to review",
-                            "time": time_ago(latest_pending.created_at if latest_pending else None),
-                            "icon": "fas fa-hourglass-half",
-                            "level": "warning",
-                            "url": url_for("expert.pending_diagnoses"),
-                            "time_value": latest_pending.created_at if latest_pending else datetime.utcnow(),
-                        }
-                    )
-
-                latest_message = (
-                    ChatMessage.query
-                    .filter_by(sender="farmer")
-                    .order_by(ChatMessage.created_at.desc())
-                    .first()
-                )
-                if latest_message:
-                    snippet = latest_message.message.strip()
-                    if len(snippet) > 60:
-                        snippet = snippet[:57] + "..."
-                    notifications.append(
-                        {
-                            "title": "New farmer message",
-                            "subtitle": snippet if snippet else "New message received",
-                            "time": time_ago(latest_message.created_at),
-                            "icon": "fas fa-comment-dots",
-                            "level": "info",
-                            "url": url_for("expert.farmer_chats"),
-                            "time_value": latest_message.created_at,
-                        }
-                    )
-
-                notifications_link = url_for("expert.farmer_chats")
-
-            notifications.sort(key=lambda n: n.get("time_value") or datetime.min, reverse=True)
-            for n in notifications:
-                n.pop("time_value", None)
-
+                .count()
+            )
         except Exception as e:
-            # Rollback any failed transaction to prevent "current transaction is aborted" errors
             db.session.rollback()
             print(f"Error generating notifications: {e}")
             notifications = []
-            notifications_link = None
+            unread_count = 0
 
         return {
             "notifications": notifications,
-            "notifications_count": len(notifications),
+            "notifications_count": unread_count,
             "notifications_link": notifications_link,
         }
 
@@ -326,10 +405,19 @@ def create_app():
         body_class = ""
         try:
             if current_user.is_authenticated:
-                if current_user.has_role("admin"):
+                path = (request.path or "").lower()
+                if path.startswith("/farmer") and current_user.has_role("farmer"):
+                    body_class = "farmer-dash-theme"
+                elif path.startswith("/admin") and current_user.has_role("admin"):
+                    body_class = "admin-theme"
+                elif path.startswith("/expert") and current_user.has_role("expert"):
+                    body_class = "expert-simple"
+                elif current_user.has_role("admin"):
                     body_class = "admin-theme"
                 elif current_user.has_role("expert"):
                     body_class = "expert-simple"
+                elif current_user.has_role("farmer"):
+                    body_class = "farmer-dash-theme"
         except Exception:
             body_class = ""
         return {"body_class": body_class}

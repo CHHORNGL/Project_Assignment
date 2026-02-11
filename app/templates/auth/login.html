@@ -2,46 +2,50 @@
 <html lang="{{ current_lang }}">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>{{ t("auth_login_title") }}</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;500;600;700&family=Noto+Sans+Khmer:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <link href="{{ url_for('static', filename='css/auth.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='sb-admin/vendor/fontawesome-free/css/all.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/auth.css', v=static_version) }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/notifications.css', v=static_version) }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/system_status.css', v=static_version) }}" rel="stylesheet">
 
     <script>
     (function () {
         const storedTheme = localStorage.getItem("theme");
-
-        function prefersDark() {
-            return window.matchMedia("(prefers-color-scheme: dark)").matches;
-        }
+        const mq = window.matchMedia("(prefers-color-scheme: dark)");
 
         function applyTheme(theme) {
-            document.documentElement.classList.remove("dark-mode");
-            if (theme === "dark") document.documentElement.classList.add("dark-mode");
-            if (theme === "system" && prefersDark()) document.documentElement.classList.add("dark-mode");
+            document.documentElement.classList.toggle(
+                "auth-panel-dark",
+                theme === "dark" || (theme === "system" && mq.matches)
+            );
         }
 
         if (storedTheme === "light" || storedTheme === "dark" || storedTheme === "system") {
             applyTheme(storedTheme);
         } else {
-            applyTheme("system");
+            // Auth pages default to Light mode unless the user explicitly chose otherwise.
+            applyTheme("light");
         }
 
-        if (!storedTheme || storedTheme === "system") {
-            window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", e => {
-                document.documentElement.classList.toggle("dark-mode", e.matches);
-            });
-        }
+        mq.addEventListener("change", e => {
+            const now = localStorage.getItem("theme");
+            if (now === "system") document.documentElement.classList.toggle("auth-panel-dark", e.matches);
+        });
     })();
     </script>
 </head>
 <body class="auth-body">
 
+{% include "partials/flash_notices.html" %}
+
 <main class="auth-shell">
-    <section class="auth-card" style="--auth-hero: url('{{ url_for('static', filename='img/auth/login-hero.jpg') }}');">
+    <section class="auth-card">
         <div class="auth-visual">
             <div class="auth-visual-top">
                 <div class="auth-brand">
@@ -63,22 +67,39 @@
         </div>
 
         <div class="auth-panel">
-            <div class="auth-panel-head auth-stagger delay-1">
+            <div class="auth-panel-tools auth-stagger delay-1">
+                <div class="auth-theme-toggle" role="group" aria-label="{{ t('theme') }}">
+                    <button type="button" class="auth-theme-btn" data-auth-theme="light" aria-label="{{ t('light') }}" title="{{ t('light') }}">
+                        <i class="fas fa-sun" aria-hidden="true"></i>
+                    </button>
+                    <button type="button" class="auth-theme-btn" data-auth-theme="dark" aria-label="{{ t('dark') }}" title="{{ t('dark') }}">
+                        <i class="fas fa-moon" aria-hidden="true"></i>
+                    </button>
+                    <button type="button" class="auth-theme-btn" data-auth-theme="system" aria-label="{{ t('system') }}" title="{{ t('system') }}">
+                        <i class="fas fa-desktop" aria-hidden="true"></i>
+                    </button>
+                </div>
+            </div>
+
+            {% set active_role = active_role|default('farmer') %}
+            {% set next_url = next_url|default(None) %}
+            <div class="auth-tabs auth-stagger delay-2">
+                <a class="auth-tab {% if active_role == 'farmer' %}is-active{% endif %}"
+                   href="{{ url_for('auth.login', role='farmer', next=next_url) if next_url else url_for('auth.login', role='farmer') }}">
+                    {{ t("farmer") }}
+                </a>
+                <a class="auth-tab {% if active_role == 'expert' %}is-active{% endif %}"
+                   href="{{ url_for('auth.login', role='expert', next=next_url) if next_url else url_for('auth.login', role='expert') }}">
+                    {{ t("expert_admin") }}
+                </a>
+            </div>
+
+            <div class="auth-panel-head auth-stagger delay-3">
                 <h2 class="auth-title">{{ t("auth_welcome_back") }}</h2>
                 <p class="auth-subtitle">{{ t("auth_sign_in_sub") }}</p>
             </div>
 
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="flash flash-{{ category }} auth-stagger delay-2">
-                            {{ message }}
-                        </div>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
-
-            <form method="POST" class="auth-form auth-stagger delay-3">
+            <form method="POST" action="{{ url_for('auth.login', role=active_role, next=next_url) if next_url else url_for('auth.login', role=active_role) }}" class="auth-form auth-stagger delay-5">
                 {{ form.hidden_tag() }}
 
                 <div class="auth-field">
@@ -96,19 +117,62 @@
                 </button>
             </form>
 
-            <div class="auth-divider auth-stagger delay-4">{{ t("auth_continue_with") }}</div>
-            <a class="auth-oauth-btn auth-stagger delay-5" href="{{ url_for('auth.google_login') }}">
-                <span class="auth-oauth-icon">G</span>
-                {{ t("auth_google") }}
-            </a>
+            {% if active_role == 'farmer' %}
+                <div class="auth-divider auth-stagger delay-5">{{ t("auth_continue_with") }}</div>
+                <a class="auth-oauth-btn auth-stagger delay-6" href="{{ url_for('auth.google_login') }}">
+                    <span class="auth-oauth-icon">G</span>
+                    {{ t("auth_google") }}
+                </a>
 
-            <div class="auth-foot auth-stagger delay-6">
-                {{ t("auth_farmer") }}
-                <a href="{{ url_for('auth.register') }}">{{ t("auth_create_farmer") }}</a>
-            </div>
+                <div class="auth-foot auth-stagger delay-6">
+                    {{ t("auth_farmer") }}
+                    <a href="{{ url_for('auth.register') }}">{{ t("auth_create_farmer") }}</a>
+                </div>
+            {% endif %}
         </div>
     </section>
 </main>
+
+<script src="{{ url_for('static', filename='js/toast.js') }}"></script>
+<script src="{{ url_for('static', filename='js/system_status.js', v=static_version) }}"></script>
+<script>
+(function () {
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    const buttons = Array.from(document.querySelectorAll("[data-auth-theme]"));
+    if (!buttons.length) return;
+
+    function normalize(value) {
+        const t = String(value || "").toLowerCase();
+        if (t === "light" || t === "dark" || t === "system") return t;
+        return "light";
+    }
+
+    function applyTheme(theme) {
+        document.documentElement.classList.toggle(
+            "auth-panel-dark",
+            theme === "dark" || (theme === "system" && mq.matches)
+        );
+    }
+
+    function setActive(theme) {
+        buttons.forEach((btn) => {
+            btn.classList.toggle("is-active", btn.getAttribute("data-auth-theme") === theme);
+        });
+    }
+
+    const initial = normalize(localStorage.getItem("theme"));
+    setActive(initial);
+
+    buttons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+            const theme = normalize(btn.getAttribute("data-auth-theme"));
+            localStorage.setItem("theme", theme);
+            applyTheme(theme);
+            setActive(theme);
+        });
+    });
+})();
+</script>
 
 </body>
 </html>
