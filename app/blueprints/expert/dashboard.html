@@ -4,7 +4,7 @@
 {% block content %}
 <div class="container mt-4">
 
-    <h2 class="mb-4">🧑‍🔬 Pending Diagnoses</h2>
+    <h2 class="mb-4"><i class="fas fa-user-md text-success mr-2" aria-hidden="true"></i>Pending Diagnoses</h2>
 
     {% if diagnoses %}
         <div class="card shadow-sm">
@@ -26,11 +26,11 @@
                             <td>{{ d.disease_name }}</td>
                             <td>
                                 <span class="badge bg-warning text-dark">
-                                    ⏳ Pending
+                                    <i class="fas fa-hourglass-half mr-1" aria-hidden="true"></i>Pending
                                 </span>
                             </td>
                             <td>
-                                <!-- ✅ FIXED ENDPOINT -->
+                                <!-- Fixed endpoint -->
                                 <a href="{{ url_for('expert.review_diagnosis', diagnosis_id=d.id) }}"
                                    class="btn btn-sm btn-primary">
                                     Review
@@ -45,7 +45,7 @@
         </div>
     {% else %}
         <div class="alert alert-success">
-            ✅ No pending diagnoses
+            <i class="fas fa-check-circle mr-1" aria-hidden="true"></i>No pending diagnoses
         </div>
     {% endif %}
 

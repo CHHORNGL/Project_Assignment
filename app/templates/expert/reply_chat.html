@@ -1,12 +1,12 @@
 {% extends "layouts/base.html" %}
-{% block title %}Reply Farmer{% endblock %}
+{% block title %}{{ t("reply_farmer") }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid mt-4" style="max-width: 900px;">
 
-    <h4 class="mb-2">Expert -> Farmer Chat</h4>
+    <h4 class="mb-2">{{ t("expert_farmer_chat") }}</h4>
     <div class="text-muted mb-3">
-        {{ session.farmer.username if session and session.farmer else "Farmer" }}
+        {{ session.farmer.username if session and session.farmer else t("farmer") }}
         {% if session and session.title %} - {{ session.title }}{% endif %}
     </div>
 
@@ -20,21 +20,21 @@
                         <!-- Farmer message -->
                         <div class="text-left mb-3">
                             <div class="d-inline-block bg-success text-white p-2 rounded">
-                                Farmer: {{ m.message }}
+                                {{ t("farmer") }}: {{ m.message }}
                             </div>
                         </div>
                     {% else %}
                         <!-- Expert / system message -->
                         <div class="text-right mb-3">
                             <div class="d-inline-block bg-info text-white p-2 rounded">
-                                Expert: {{ m.message }}
+                                {{ t("expert") }}: {{ m.message }}
                             </div>
                         </div>
                     {% endif %}
                 {% endfor %}
             {% else %}
                 <p class="text-muted">
-                    No messages yet.
+                    {{ t("no_messages_yet") }}
                 </p>
             {% endif %}
 
@@ -46,12 +46,12 @@
         <input type="text"
                name="message"
                class="form-control"
-               placeholder="Type your expert advice..."
+               placeholder="{{ t('type_expert_advice_placeholder') }}"
                required>
 
         <button type="submit"
                 class="btn btn-primary ml-2">
-            Send
+            {{ t("send") }}
         </button>
     </form>
 

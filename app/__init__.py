@@ -120,6 +120,7 @@ def create_app():
     from app.blueprints.assistant.routes import assistant_bp
     from app.blueprints.expert.routes import expert_bp
     from app.blueprints.farmer.routes import farmer_bp
+    from app.blueprints.weather_intelligence.routes import weather_intelligence_bp
     from app.blueprints.user.routes import user_bp
 
     # Main & Auth
@@ -132,6 +133,7 @@ def create_app():
     app.register_blueprint(assistant_bp)  # /assistant/...
     app.register_blueprint(expert_bp)   # /expert/...
     app.register_blueprint(farmer_bp)   # /farmer/...
+    app.register_blueprint(weather_intelligence_bp)  # /weather-intelligence/...
     app.register_blueprint(user_bp)     # /user/...
 
     # ===============================
@@ -321,9 +323,11 @@ def create_app():
                 os.path.join(static_root, "css", "notifications.css"),
                 os.path.join(static_root, "css", "system_status.css"),
                 os.path.join(static_root, "css", "errors.css"),
+                os.path.join(static_root, "css", "weather_intelligence.css"),
                 os.path.join(static_root, "js", "toast.js"),
                 os.path.join(static_root, "js", "system_status.js"),
                 os.path.join(static_root, "js", "error_pages.js"),
+                os.path.join(static_root, "js", "weather_intelligence.js"),
                 os.path.join(static_root, "sw.js"),
             ]
             mtimes = []

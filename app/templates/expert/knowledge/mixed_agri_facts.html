@@ -9,19 +9,19 @@
         <div>
             <a href="{{ url_for('expert.mixed_agri_dashboard') }}"
                class="btn btn-light btn-sm shadow-sm">
-                Back
+                {{ t("back") }}
             </a>
             <a href="{{ url_for('expert.mixed_agri_fact_create') }}"
                class="btn btn-sm btn-success ml-2">
-                Add Fact
+                {{ t("add_fact") }}
             </a>
             <a href="{{ url_for('expert.mixed_agri_facts_export', format='csv', q=q, source_id=source_id) }}"
                class="btn btn-sm btn-outline-secondary ml-2">
-                Export CSV
+                {{ t("export_csv") }}
             </a>
             <a href="{{ url_for('expert.mixed_agri_facts_export', format='json', q=q, source_id=source_id) }}"
                class="btn btn-sm btn-outline-secondary ml-2">
-                Export JSON
+                {{ t("export_json") }}
             </a>
         </div>
     </div>
@@ -165,7 +165,7 @@
                 {% if pagination.has_prev %}
                 <a class="btn btn-sm btn-outline-secondary"
                    href="{{ url_for('expert.mixed_agri_facts', page=pagination.page - 1, q=q, source_id=source_id, per_page=pagination.per_page) }}">
-                    Prev
+                    {{ t("prev") }}
                 </a>
                 {% else %}
                 <span class="btn btn-sm btn-outline-secondary disabled">{{ t("prev") }}</span>
@@ -176,7 +176,7 @@
                 {% if pagination.has_next %}
                 <a class="btn btn-sm btn-outline-secondary"
                    href="{{ url_for('expert.mixed_agri_facts', page=pagination.page + 1, q=q, source_id=source_id, per_page=pagination.per_page) }}">
-                    Next
+                    {{ t("next") }}
                 </a>
                 {% else %}
                 <span class="btn btn-sm btn-outline-secondary disabled">{{ t("next") }}</span>

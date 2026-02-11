@@ -50,8 +50,8 @@ h1,h2,h3,h4,h5,h6 { font-weight: 600; }
 {% block head %}{% endblock %}
 
 <!-- ===============================
-     🌗 NO-FLASH THEME LOADER
-     Priority: DB → localStorage → OS
+     NO-FLASH THEME LOADER
+     Priority: DB > localStorage > OS
 =============================== -->
 <script>
 (function () {
@@ -116,7 +116,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 600; }
 <script src="{{ url_for('static', filename='js/system_status.js', v=static_version) }}"></script>
 
 <!-- ===============================
-     🌗 THEME SWITCH HANDLER
+     THEME SWITCH HANDLER
 =============================== -->
 <script>
 document.querySelectorAll(".theme-option[data-theme]").forEach(btn => {
@@ -143,7 +143,7 @@ document.querySelectorAll(".theme-option[data-theme]").forEach(btn => {
 </script>
 
 <!-- ===============================
-     🌐 LANGUAGE SWITCH HANDLER
+     LANGUAGE SWITCH HANDLER
 =============================== -->
 <script>
 document.querySelectorAll(".lang-option[data-lang]").forEach(btn => {

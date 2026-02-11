@@ -186,8 +186,9 @@
     </li>
 
     {% set knowledge_path = url_for('expert.knowledge_dashboard') %}
+    {% set mixed_agri_path = url_for('expert.mixed_agri_dashboard') %}
     <li class="nav-item">
-        <a class="nav-link {% if path.startswith(knowledge_path) %}active{% endif %}"
+        <a class="nav-link {% if path.startswith(knowledge_path) and not path.startswith(mixed_agri_path) %}active{% endif %}"
            href="{{ knowledge_path }}"
            data-tooltip="{{ t('knowledge_base') }}"
            aria-label="{{ t('knowledge_base') }}">
@@ -197,7 +198,7 @@
     </li>
 
     <li class="nav-item">
-        <a class="nav-link {% if path.startswith('/expert/knowledge/mixed-agri') %}active{% endif %}"
+        <a class="nav-link {% if path.startswith(mixed_agri_path) %}active{% endif %}"
            href="{{ url_for('expert.mixed_agri_dashboard') }}"
            data-tooltip="{{ t('mixed_agriculture') }}"
            aria-label="{{ t('mixed_agriculture') }}">

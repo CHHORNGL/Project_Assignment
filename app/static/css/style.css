@@ -29,6 +29,17 @@
     --toggle-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
     --toggle-hover-bg: #ffffff;
     --toggle-hover-border: #cbd5e1;
+    --surface-soft: #f8fafc;
+    --surface-muted: #f1f5f9;
+    --input-bg: #ffffff;
+    --input-border: #dbe3ef;
+    --input-focus-border: #4e73df;
+    --input-focus-ring: rgba(78, 115, 223, 0.16);
+    --table-head-bg: #f3f6fb;
+    --table-row-hover: #f8faff;
+    --table-stripe-bg: #f7f9fd;
+    --muted-chip-bg: rgba(15, 23, 42, 0.06);
+    --muted-chip-border: rgba(15, 23, 42, 0.1);
 }
 
 /* =========================================
@@ -150,6 +161,68 @@ h1, h2, h3, h4, h5, h6 {
     font-family: "Manrope", "Noto Sans Khmer", "Inter", sans-serif;
     font-weight: 600;
     letter-spacing: -0.01em;
+}
+
+/* =========================================
+   THEME COMPATIBILITY HELPERS
+========================================= */
+.card,
+.modal-content,
+.dropdown-menu {
+    background-color: var(--card-bg);
+    border-color: var(--border-light);
+    color: var(--text-main);
+}
+
+.thead-light th,
+.table thead th {
+    background-color: var(--table-head-bg);
+    border-color: var(--border-light);
+    color: var(--text-main);
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: var(--table-stripe-bg);
+}
+
+.table-hover tbody tr:hover {
+    background-color: var(--table-row-hover);
+}
+
+.form-control,
+.custom-select,
+.custom-file-label,
+.input-group-text {
+    background-color: var(--input-bg);
+    border-color: var(--input-border);
+    color: var(--text-main);
+}
+
+.form-control::placeholder,
+textarea::placeholder,
+input::placeholder {
+    color: var(--text-muted);
+}
+
+.form-control:focus,
+.custom-select:focus,
+.custom-file-input:focus ~ .custom-file-label,
+textarea:focus,
+input:focus {
+    border-color: var(--input-focus-border);
+    box-shadow: 0 0 0 0.2rem var(--input-focus-ring);
+}
+
+.btn-light {
+    background-color: var(--surface-soft);
+    border-color: var(--input-border);
+    color: var(--text-main);
+}
+
+.btn-light:hover {
+    background-color: var(--surface-muted);
+    border-color: var(--input-focus-border);
+    color: var(--text-main);
 }
 
 .label-icon {
@@ -1342,6 +1415,17 @@ body.icon-nav {
     --toggle-shadow: 0 12px 22px rgba(2, 8, 23, 0.5);
     --toggle-hover-bg: #111d35;
     --toggle-hover-border: #2b3a5a;
+    --surface-soft: #111827;
+    --surface-muted: #0f1623;
+    --input-bg: #0f1623;
+    --input-border: #1f2a37;
+    --input-focus-border: #5b7cfa;
+    --input-focus-ring: rgba(91, 124, 250, 0.24);
+    --table-head-bg: #0f1623;
+    --table-row-hover: #182033;
+    --table-stripe-bg: #121722;
+    --muted-chip-bg: rgba(148, 163, 184, 0.14);
+    --muted-chip-border: rgba(148, 163, 184, 0.22);
 }
 
 .dark-mode body {
@@ -1541,6 +1625,42 @@ body.icon-nav {
 .dark-mode .text-gray-600,
 .dark-mode .text-gray-500 {
     color: #d0d6e2 !important;
+}
+
+.dark-mode .text-gray-900,
+.dark-mode .text-dark,
+.dark-mode .text-body {
+    color: var(--text-main) !important;
+}
+
+.dark-mode .thead-light th {
+    background-color: var(--table-head-bg) !important;
+    border-color: #1f2a37 !important;
+    color: #cbd5e1 !important;
+}
+
+.dark-mode .card-header.bg-white,
+.dark-mode .card-footer.bg-white {
+    background-color: #0f1623 !important;
+    border-color: #1f2a37 !important;
+}
+
+.dark-mode .btn-light {
+    background: #1a2332 !important;
+    border-color: #2f3843 !important;
+    color: #e6eaf2 !important;
+}
+
+.dark-mode .btn-light:hover {
+    background: #223045 !important;
+    border-color: #3a4a63 !important;
+    color: #ffffff !important;
+}
+
+.dark-mode .custom-file-label::after {
+    background: #1b2433 !important;
+    color: #e6eaf2 !important;
+    border-color: #2f3843 !important;
 }
 
 .dark-mode .bg-white {

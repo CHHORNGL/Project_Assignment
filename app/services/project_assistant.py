@@ -97,7 +97,7 @@ def _fallback_reply(user_message: str, *, user_role: str, page: str, lang: str) 
             )
         if any(k in msg_l for k in ("menu", "sidebar", "navigation")):
             return (
-                "លើទូរសព្ទ សូមចុចប៊ូតុងម៉ឺនុយ (☰) ដើម្បីបើក/បិទ Sidebar។ "
+                "លើទូរសព្ទ សូមចុចប៊ូតុងម៉ឺនុយ ដើម្បីបើក/បិទ Sidebar។ "
                 "អ្នកអាចអូស (drag) ប៊ូតុង AI Helper ទៅទីតាំងដែលមិនរាំងការចុចបាន។"
             )
         if any(k in msg_l for k in ("error", "bug", "wrong", "issue", "problem")):
@@ -127,7 +127,7 @@ def _fallback_reply(user_message: str, *, user_role: str, page: str, lang: str) 
 
     if any(k in msg_l for k in ("menu", "sidebar", "navigation", "routes")):
         return (
-            "On mobile, use the hamburger button (☰) to open/close the sidebar. "
+            "On mobile, use the menu button to open/close the sidebar. "
             "You can drag the AI Helper button to any clear spot so it doesn't block buttons."
         )
 

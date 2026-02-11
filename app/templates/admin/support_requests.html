@@ -6,7 +6,7 @@
     <div class="mb-2">
         <h1 class="h3 text-gray-800 font-weight-bold mb-1">{{ t("support_requests") }}</h1>
         <div class="text-muted small">
-            Messages sent from the AI Helper widget (Farmers and Experts).
+            {{ t("support_requests_sub") }}
         </div>
     </div>
 
@@ -16,7 +16,7 @@
                type="text"
                name="q"
                value="{{ q }}"
-               placeholder="Search...">
+               placeholder="{{ t('search') }}...">
         <button class="btn btn-sm btn-success" type="submit">{{ t("apply") }}</button>
     </form>
 </div>
@@ -26,19 +26,19 @@
         <div class="btn-group btn-group-sm mb-2" role="group" aria-label="Filter status">
             <a class="btn {% if filter_status == 'open' %}btn-success{% else %}btn-outline-success{% endif %}"
                href="{{ url_for('admin.support_requests', status='open', q=q) }}">
-                Open
+                {{ t("open") }}
             </a>
             <a class="btn {% if filter_status == 'resolved' %}btn-success{% else %}btn-outline-success{% endif %}"
                href="{{ url_for('admin.support_requests', status='resolved', q=q) }}">
-                Resolved
+                {{ t("resolved") }}
             </a>
             <a class="btn {% if filter_status not in ['open', 'resolved'] %}btn-success{% else %}btn-outline-success{% endif %}"
                href="{{ url_for('admin.support_requests', status='all', q=q) }}">
-                All
+                {{ t("all") }}
             </a>
         </div>
         <div class="text-muted small mb-2">
-            {{ support_requests|length }} item(s)
+            {{ t("total_count", count=support_requests|length) }}
         </div>
     </div>
 
@@ -48,12 +48,12 @@
             <table class="table table-hover mb-0">
                 <thead class="thead-light">
                     <tr>
-                        <th style="width:70px;">ID</th>
-                        <th style="width:180px;">From</th>
-                        <th>Message</th>
-                        <th style="width:240px;">Page</th>
-                        <th style="width:160px;">Date</th>
-                        <th style="width:110px;">Status</th>
+                        <th style="width:70px;">{{ t("id_label") }}</th>
+                        <th style="width:180px;">{{ t("from") }}</th>
+                        <th>{{ t("message_label") }}</th>
+                        <th style="width:240px;">{{ t("page") }}</th>
+                        <th style="width:160px;">{{ t("date") }}</th>
+                        <th style="width:110px;">{{ t("status") }}</th>
                         <th style="width:120px;"></th>
                     </tr>
                 </thead>
@@ -85,9 +85,9 @@
                         </td>
                         <td>
                             {% if r.status == 'open' %}
-                                <span class="badge badge-warning">Open</span>
+                                <span class="badge badge-warning">{{ t("open") }}</span>
                             {% else %}
-                                <span class="badge badge-success">Resolved</span>
+                                <span class="badge badge-success">{{ t("resolved") }}</span>
                             {% endif %}
                         </td>
                         <td class="text-right">
@@ -98,11 +98,11 @@
                                 <input type="hidden" name="status" value="{{ filter_status }}">
                                 <input type="hidden" name="q" value="{{ q }}">
                                 <button type="submit" class="btn btn-sm btn-outline-success">
-                                    Resolve
+                                    {{ t("resolve") }}
                                 </button>
                             </form>
                             {% else %}
-                                <span class="text-muted small">OK</span>
+                                <span class="text-muted small">{{ t("ok") }}</span>
                             {% endif %}
                         </td>
                     </tr>
@@ -112,7 +112,7 @@
         </div>
         {% else %}
         <div class="p-4 text-muted">
-            No support requests.
+            {{ t("no_support_requests") }}
         </div>
         {% endif %}
     </div>

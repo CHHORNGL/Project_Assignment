@@ -1,17 +1,17 @@
 {% extends "layouts/base.html" %}
-{% block title %}Add Symptom{% endblock %}
+{% block title %}{{ t("add_symptom") }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid" style="max-width:700px">
 
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h3 class="font-weight-bold text-primary">
-            Add Symptom
+            {{ t("add_symptom") }}
         </h3>
 
         <a href="{{ url_for('expert.knowledge_dashboard') }}"
            class="btn btn-light btn-sm shadow-sm">
-            Back
+            {{ t("back") }}
         </a>
     </div>
 
@@ -53,11 +53,11 @@
 
                 <div class="text-right mt-4">
                     <button class="btn btn-success px-4">
-                        Save Symptom
+                        {{ t("save_symptom") }}
                     </button>
                     <a href="{{ url_for('expert.knowledge_dashboard') }}"
                        class="btn btn-secondary ml-2">
-                        Cancel
+                        {{ t("cancel") }}
                     </a>
                 </div>
             </form>

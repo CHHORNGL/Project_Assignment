@@ -9,7 +9,7 @@
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
         <h1 class="h3 mb-0 text-gray-900 font-weight-bold">{{ t("new_admin") }}</h1>
 
-        <!-- ✅ FIXED BACK BUTTON -->
+        <!-- Fixed back button -->
         <a href="{{ url_for('admin.users') }}"
            class="btn btn-light btn-sm shadow-sm rounded-pill px-3">
             <i class="fas fa-arrow-left mr-1"></i> {{ t("back") }}
@@ -85,19 +85,25 @@
     }
 
     .custom-input {
-        border: 2px solid #f1f3f9;
+        border: 2px solid var(--input-border);
+        background: var(--input-bg);
+        color: var(--text-main);
         border-radius: 0.75rem;
         padding: 0.75rem 1rem;
         transition: all 0.3s ease;
     }
 
+    .custom-input::placeholder {
+        color: var(--text-muted);
+    }
+
     .custom-input:focus {
-        border-color: #1cc88a;
-        box-shadow: 0 0 0 0.2rem rgba(28, 200, 138, 0.1);
+        border-color: var(--success);
+        box-shadow: 0 0 0 0.2rem rgba(28, 200, 138, 0.12);
     }
 
     .btn-success {
-        background-color: #1cc88a;
+        background-color: var(--success);
         border: none;
     }
 

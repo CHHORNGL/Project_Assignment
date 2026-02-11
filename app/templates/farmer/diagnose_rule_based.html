@@ -1,5 +1,5 @@
 {% extends "layouts/farmer_shell.html" %}
-{% block title %}Full Rule-Based Inference{% endblock %}
+{% block title %}{{ t("full_rule_based") }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid d-flex justify-content-center">
@@ -7,17 +7,16 @@
         <div class="card-body">
 
             <h4 class="mb-2 text-success">
-                 Full Rule-Based Inference
+                 {{ t("full_rule_based") }}
             </h4>
 
             <p class="text-muted mb-4">
-                This guided interface uses only the rule-based expert system.
-                Select a crop, then confirm symptoms through the wizard.
+                {{ t("rule_based_guided_sub") }}
             </p>
 
             <div class="guided-steps">
-                <div class="guided-step active" data-step="1">1. Select Crop</div>
-                <div class="guided-step" data-step="2">2. Answer Questions</div>
+                <div class="guided-step active" data-step="1">{{ t("rule_based_step_select_crop") }}</div>
+                <div class="guided-step" data-step="2">{{ t("rule_based_step_answer_questions") }}</div>
             </div>
 
             <form method="POST" id="guided-diagnosis-form">
@@ -28,11 +27,11 @@
                 <section class="guided-panel" id="step-1">
                     <div class="form-group mb-3">
                         <label class="font-weight-bold">
-                            Crop
+                            {{ t("crop_label") }}
                         </label>
                         <select name="crop_id" id="crop-select" class="form-control" required>
                             <option value="" disabled selected>
-                                -- Select crop --
+                                {{ t("select_crop") }}
                             </option>
                             {% for crop in crops %}
                             <option value="{{ crop.id }}">
@@ -45,10 +44,10 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <a href="{{ url_for('farmer.dashboard') }}"
                            class="btn btn-outline-secondary">
-                            Back
+                            {{ t("back") }}
                         </a>
                         <button type="button" class="btn btn-success px-4" id="go-step-2" disabled>
-                            Next
+                            {{ t("next") }}
                         </button>
                     </div>
                 </section>
@@ -59,11 +58,11 @@
                 <section class="guided-panel d-none" id="step-2">
                     <div class="mb-3 d-flex justify-content-between align-items-center flex-wrap">
                         <div>
-                            <div class="font-weight-bold">Guided Questions</div>
-                            <div class="text-muted small">Answer Yes/No to refine diagnosis.</div>
+                            <div class="font-weight-bold">{{ t("guided_questions") }}</div>
+                            <div class="text-muted small">{{ t("answer_yes_no_refine_diagnosis") }}</div>
                         </div>
                         <div class="guided-counter">
-                            Confirmed: <span id="selected-count">0</span>
+                            {{ t("confirmed_label") }}: <span id="selected-count">0</span>
                         </div>
                     </div>
 
@@ -73,32 +72,32 @@
                                 <div class="progress-bar" id="question-progress" role="progressbar" style="width: 0%"></div>
                             </div>
                             <div class="text-muted small mt-2">
-                                Answered: <span id="answered-count">0</span>/<span id="total-count">0</span>
+                                {{ t("answered_label") }}: <span id="answered-count">0</span>/<span id="total-count">0</span>
                             </div>
                         </div>
-                        <div class="text-muted small mb-2">Does the crop show this symptom?</div>
-                        <div class="guided-question" id="question-text">Select a crop to begin.</div>
+                        <div class="text-muted small mb-2">{{ t("does_crop_show_symptom") }}</div>
+                        <div class="guided-question" id="question-text">{{ t("select_crop_to_begin") }}</div>
                         <div class="guided-actions mt-3">
-                            <button type="button" class="btn btn-outline-danger" id="answer-no" disabled>No</button>
-                            <button type="button" class="btn btn-success" id="answer-yes" disabled>Yes</button>
-                            <button type="button" class="btn btn-outline-primary" id="answer-skip" disabled>Skip</button>
+                            <button type="button" class="btn btn-outline-danger" id="answer-no" disabled>{{ t("no") }}</button>
+                            <button type="button" class="btn btn-success" id="answer-yes" disabled>{{ t("yes") }}</button>
+                            <button type="button" class="btn btn-outline-primary" id="answer-skip" disabled>{{ t("skip") }}</button>
                         </div>
                         <div class="guided-meta mt-3">
-                            <button type="button" class="btn btn-link p-0" id="undo-last" disabled>Undo last answer</button>
+                            <button type="button" class="btn btn-link p-0" id="undo-last" disabled>{{ t("undo_last_answer") }}</button>
                         </div>
                     </div>
 
                     <div class="guided-selected mt-4">
-                        <div class="font-weight-bold mb-2">Confirmed Symptoms</div>
-                        <div id="confirmed-list" class="confirmed-list text-muted small">None yet.</div>
+                        <div class="font-weight-bold mb-2">{{ t("confirmed_symptoms") }}</div>
+                        <div id="confirmed-list" class="confirmed-list text-muted small">{{ t("none_yet") }}</div>
                     </div>
 
                     <div class="d-flex justify-content-between align-items-center mt-4">
                         <button type="button" class="btn btn-outline-secondary" id="back-step-1">
-                            Back
+                            {{ t("back") }}
                         </button>
                         <button type="submit" class="btn btn-success px-4" id="submit-rule-based" disabled>
-                            Diagnose Now
+                            {{ t("diagnose_now") }}
                         </button>
                     </div>
                 </section>
@@ -112,6 +111,11 @@
 <script>
     const symptomsByCrop = {{ symptoms_by_crop|tojson }};
     const rulesByCrop = {{ rules_by_crop|tojson }};
+    const i18n = {
+        noneYet: {{ t("none_yet")|tojson }},
+        ruleBasedNoMoreQuestions: {{ t("rule_based_no_more_questions")|tojson }},
+        symptomName: {{ t("symptom_name")|tojson }}
+    };
 
     const cropSelect = document.getElementById("crop-select");
     const goStep2 = document.getElementById("go-step-2");
@@ -181,7 +185,7 @@
             lookup[s.id] = s.name;
         });
         if (!yesSet.size) {
-            confirmedList.textContent = "None yet.";
+            confirmedList.textContent = i18n.noneYet;
             return;
         }
         const names = Array.from(yesSet).map((id) => lookup[id]).filter(Boolean);
@@ -213,7 +217,7 @@
 
         if (!sorted.length) {
             currentSymptomId = null;
-            questionText.textContent = "No more guided questions. You can submit now.";
+            questionText.textContent = i18n.ruleBasedNoMoreQuestions;
             answerYes.disabled = true;
             answerNo.disabled = true;
             answerSkip.disabled = true;
@@ -221,7 +225,7 @@
         }
 
         currentSymptomId = sorted[0];
-        questionText.textContent = lookup[currentSymptomId] || "Symptom";
+        questionText.textContent = lookup[currentSymptomId] || i18n.symptomName;
         answerYes.disabled = false;
         answerNo.disabled = false;
         answerSkip.disabled = false;

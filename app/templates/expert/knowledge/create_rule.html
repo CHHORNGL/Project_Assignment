@@ -1,17 +1,17 @@
 {% extends "layouts/base.html" %}
-{% block title %}Add Rule{% endblock %}
+{% block title %}{{ t("create_rule_title") }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid" style="max-width:800px">
 
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h3 class="font-weight-bold text-success">
-            Create Diagnosis Rule
+            {{ t("create_diagnosis_rule") }}
         </h3>
 
         <a href="{{ url_for('expert.knowledge_dashboard') }}"
            class="btn btn-light btn-sm shadow-sm">
-            Back
+            {{ t("back") }}
         </a>
     </div>
 
@@ -20,7 +20,7 @@
             <form method="POST">
 
                 <div class="form-group">
-                    <label class="font-weight-bold">Rule Name</label>
+                    <label class="font-weight-bold">{{ t("rule_name") }}</label>
                     <input type="text"
                            name="name"
                            class="form-control"
@@ -29,23 +29,23 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="font-weight-bold">Disease</label>
+                    <label class="font-weight-bold">{{ t("disease_label") }}</label>
                     <select name="disease_id"
                             class="form-control"
                             required>
-                        <option value="">-- Select Disease --</option>
+                        <option value="">{{ t("select_disease") }}</option>
                         {% for d in diseases %}
                         <option value="{{ d.id }}">
                             {{ localize(d, "name") }}
                         </option>
                         {% else %}
-                        <option value="" disabled>No diseases found</option>
+                        <option value="" disabled>{{ t("no_diseases_found") }}</option>
                         {% endfor %}
                     </select>
                 </div>
 
                 <div class="form-group">
-                    <label class="font-weight-bold">Symptoms</label>
+                    <label class="font-weight-bold">{{ t("symptoms_label") }}</label>
                     <select name="symptoms"
                             class="form-control"
                             multiple
@@ -54,16 +54,16 @@
                         {% for s in symptoms %}
                         <option value="{{ s.id }}">{{ localize(s, "name") }}</option>
                         {% else %}
-                        <option value="" disabled>No symptoms found</option>
+                        <option value="" disabled>{{ t("no_symptoms_found") }}</option>
                         {% endfor %}
                     </select>
                     <small class="text-muted">
-                        Hold Ctrl (Windows) or Cmd (Mac) to select multiple symptoms.
+                        {{ t("hold_ctrl_select_multiple_symptoms") }}
                     </small>
                 </div>
 
                 <div class="form-group">
-                    <label class="font-weight-bold">Confidence (0-1)</label>
+                    <label class="font-weight-bold">{{ t("confidence_label") }}</label>
                     <input type="number"
                            name="confidence"
                            class="form-control"
@@ -75,11 +75,11 @@
 
                 <div class="text-right mt-4">
                     <button class="btn btn-success px-4">
-                        Save Rule
+                        {{ t("save_rule") }}
                     </button>
                     <a href="{{ url_for('expert.knowledge_dashboard') }}"
                        class="btn btn-secondary ml-2">
-                        Cancel
+                        {{ t("cancel") }}
                     </a>
                 </div>
 

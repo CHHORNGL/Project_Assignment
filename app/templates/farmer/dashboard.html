@@ -1,5 +1,8 @@
 {% extends "layouts/farmer_shell.html" %}
 {% block title %}{{ t("farmer_dashboard_title") }}{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/weather_intelligence.css', v=static_version) }}">
+{% endblock %}
 
 {% block content %}
 {% set total = diagnoses|length %}
@@ -60,6 +63,71 @@
                     <div class="metric-value">{{ rejected }}</div>
                 </div>
                 <div class="metric-icon"><i class="fas fa-times-circle"></i></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="weather-intel-card mb-4"
+         id="weather-intelligence-card"
+         data-weather-endpoint="{{ url_for('weather_intelligence.weather_summary') }}"
+         data-lang="{{ current_lang }}"
+         data-fallback-lat="11.5564"
+         data-fallback-lon="104.9282">
+        {% set wi_km = current_lang == "km" %}
+        <div class="wi-header">
+            <div>
+                <h5 class="wi-title mb-1">{{ "បញ្ញាអាកាសធាតុ" if wi_km else "Weather Intelligence" }}</h5>
+                <p class="wi-subtitle mb-0">{{ "វិភាគភ្លៀង កម្តៅ ព្យុះ និងខ្យល់ សម្រាប់ការសម្រេចចិត្តកសិកម្ម។" if wi_km else "Rain, heat, storm, and wind insights for agricultural decisions." }}</p>
+            </div>
+            <div class="wi-status" id="wi-status">{{ "កំពុងកំណត់ទីតាំង..." if wi_km else "Loading location..." }}</div>
+        </div>
+
+        <div class="wi-content">
+            <div class="wi-current wi-panel">
+                <div class="wi-current-main">
+                    <div class="wi-current-icon"><i id="wi-current-icon" class="fas fa-cloud-sun"></i></div>
+                    <div>
+                        <div class="wi-current-temp"><span id="wi-temp">--</span><small>C</small></div>
+                        <div class="wi-current-condition" id="wi-condition">{{ "កំពុងរង់ចាំការធ្វើបច្ចុប្បន្នភាពអាកាសធាតុ..." if wi_km else "Waiting for weather update..." }}</div>
+                    </div>
+                </div>
+                <div class="wi-current-metrics">
+                    <span>{{ "សំណើម" if wi_km else "Humidity" }} <strong id="wi-humidity">--%</strong></span>
+                    <span>{{ "ខ្យល់" if wi_km else "Wind" }} <strong id="wi-wind">-- km/h</strong></span>
+                    <span>{{ "ភ្លៀង" if wi_km else "Rain" }} <strong id="wi-rain">-- mm</strong></span>
+                </div>
+            </div>
+
+            <div class="wi-analytics wi-panel">
+                <h6 class="wi-panel-title">{{ "វិភាគកសិកម្ម" if wi_km else "Agricultural Analytics" }}</h6>
+                <div class="wi-analytics-grid">
+                    <div><span>{{ "ភ្លៀង 24 ម៉ោង" if wi_km else "Next 24h Rain" }}</span><strong id="wi-rain-24h">-- mm</strong></div>
+                    <div><span>{{ "ខ្យល់អតិបរមា 24 ម៉ោង" if wi_km else "Max Wind 24h" }}</span><strong id="wi-max-wind-24h">-- km/h</strong></div>
+                    <div><span>{{ "សីតុណ្ហភាពមធ្យម 24 ម៉ោង" if wi_km else "Avg Temp 24h" }}</span><strong id="wi-avg-temp-24h">-- C</strong></div>
+                    <div><span>{{ "បរិមាណភ្លៀងប្រចាំសប្តាហ៍" if wi_km else "Weekly Rain" }}</span><strong id="wi-rain-week">-- mm</strong></div>
+                </div>
+            </div>
+
+            <div class="wi-alerts wi-panel">
+                <h6 class="wi-panel-title">{{ "ការជូនដំណឹងឆ្លាតវៃ" if wi_km else "Smart Alerts" }}</h6>
+                <div id="wi-alert-list" class="wi-alert-list">
+                    <div class="wi-alert wi-alert-blue">
+                        <div class="wi-alert-title">{{ "ម៉ូឌុលអាកាសធាតុកំពុងចាប់ផ្តើម" if wi_km else "Weather module is starting" }}</div>
+                        <div class="wi-alert-msg">{{ "កំពុងទាញយកអាកាសធាតុតាមទីតាំងរបស់អ្នក។" if wi_km else "Fetching local conditions for your farm location." }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="wi-forecast wi-panel">
+                <h6 class="wi-panel-title">{{ "ព្យាករណ៍ 7 ថ្ងៃ" if wi_km else "7-Day Forecast" }}</h6>
+                <div id="wi-forecast-grid" class="wi-forecast-grid"></div>
+            </div>
+
+            <div class="wi-recommend wi-panel">
+                <h6 class="wi-panel-title">{{ "អនុសាសន៍សម្រាប់កសិករ" if wi_km else "Farmer Recommendations" }}</h6>
+                <ul id="wi-recommend-list" class="wi-recommend-list">
+                    <li>{{ "អនុសាសន៍នឹងបង្ហាញបន្ទាប់ពីទិន្នន័យអាកាសធាតុបានផ្ទុក។" if wi_km else "Recommendations will appear after weather data loads." }}</li>
+                </ul>
             </div>
         </div>
     </div>
@@ -195,4 +263,8 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/weather_intelligence.js', v=static_version) }}"></script>
 {% endblock %}

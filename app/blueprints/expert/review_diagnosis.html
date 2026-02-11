@@ -4,17 +4,17 @@
 {% block content %}
 <div class="container mt-4">
 
-    <h2 class="mb-4">🧑‍🔬 Review Diagnosis</h2>
+    <h2 class="mb-4"><i class="fas fa-user-md text-success mr-2" aria-hidden="true"></i>Review Diagnosis</h2>
 
     <!-- Diagnosis Info -->
     <div class="card shadow-sm mb-4">
         <div class="card-body">
             <p>
-                <strong>🌱 Crop:</strong>
+                <strong><i class="fas fa-seedling text-success mr-1" aria-hidden="true"></i>Crop:</strong>
                 {{ diagnosis.crop_name }}
             </p>
             <p>
-                <strong>🦠 Disease / Symptoms:</strong>
+                <strong><i class="fas fa-notes-medical text-success mr-1" aria-hidden="true"></i>Disease / Symptoms:</strong>
                 {{ diagnosis.disease_name }}
             </p>
             <p>
@@ -35,7 +35,7 @@
 
                 <div class="mb-3">
                     <label class="form-label fw-bold">
-                        📝 Expert Solution
+                        <i class="fas fa-clipboard-check text-success mr-1" aria-hidden="true"></i>Expert Solution
                     </label>
                     <textarea
                         name="solution"
@@ -48,12 +48,12 @@
                 <div class="d-flex gap-2">
                     <button type="submit"
                             class="btn btn-success">
-                        ✅ Approve Diagnosis
+                        <i class="fas fa-check-circle mr-1" aria-hidden="true"></i>Approve Diagnosis
                     </button>
 
                     <a href="{{ url_for('expert.dashboard') }}"
                        class="btn btn-secondary">
-                        ⬅ Back
+                        <i class="fas fa-arrow-left mr-1" aria-hidden="true"></i>Back
                     </a>
                 </div>
             </form>

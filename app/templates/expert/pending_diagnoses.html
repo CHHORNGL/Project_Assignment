@@ -7,31 +7,31 @@
     <div class="expert-hero">
         <div>
             <div class="expert-title">{{ t("pending_diagnoses_title") }}</div>
-            <div class="expert-sub">Cases awaiting expert review.</div>
+            <div class="expert-sub">{{ t("cases_waiting_review") }}</div>
         </div>
         <div class="expert-hero-actions">
-            <a class="btn btn-agro" href="{{ url_for('expert.dashboard') }}">Back to Dashboard</a>
+            <a class="btn btn-agro" href="{{ url_for('expert.dashboard') }}">{{ t("back") }} {{ t("dashboard") }}</a>
         </div>
     </div>
 
     <div class="expert-panel">
         <div class="expert-panel-header">
             <div>
-                <div class="expert-panel-title">Queue</div>
-                <div class="expert-panel-sub">Review and validate pending cases</div>
+                <div class="expert-panel-title">{{ t("pending_queue") }}</div>
+                <div class="expert-panel-sub">{{ t("cases_waiting_review") }}</div>
             </div>
-            <span class="expert-pill">{{ diagnoses|length }} pending</span>
+            <span class="expert-pill">{{ diagnoses|length }} {{ t("pending_count") }}</span>
         </div>
 
         <div class="table-responsive">
             <table class="table table-hover mb-0">
                 <thead>
                     <tr>
-                        <th>ID</th>
-                        <th>Crop</th>
-                        <th>Symptoms</th>
-                        <th>Date</th>
-                        <th class="text-right">Action</th>
+                        <th>{{ t("id_label") }}</th>
+                        <th>{{ t("crop_header") }}</th>
+                        <th>{{ t("symptoms_header") }}</th>
+                        <th>{{ t("date") }}</th>
+                        <th class="text-right">{{ t("action") }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -46,14 +46,14 @@
                         <td class="text-right">
                             <a href="{{ url_for('expert.review_diagnosis', diagnosis_id=d.id) }}"
                                class="btn btn-sm btn-agro-outline">
-                                Review
+                                {{ t("review") }}
                             </a>
                         </td>
                     </tr>
                     {% else %}
                     <tr>
                         <td colspan="5" class="text-center text-muted py-4">
-                            No pending diagnoses
+                            {{ t("no_pending_diagnoses") }}
                         </td>
                     </tr>
                     {% endfor %}

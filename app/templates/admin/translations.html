@@ -2,7 +2,7 @@
 {% block title %}{{ t("translations_title") }}{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
+<div class="container-fluid translations-page">
 
     <div class="d-flex align-items-center justify-content-between mb-4">
         <div>
@@ -524,8 +524,8 @@
 .translation-preview {
     padding: 12px 14px;
     border-radius: 12px;
-    border: 1px solid rgba(148, 163, 184, 0.25);
-    background: #f9fafb;
+    border: 1px solid var(--input-border);
+    background: var(--surface-soft);
 }
 .preview-title {
     font-weight: 600;
@@ -540,8 +540,9 @@
     gap: 6px;
 }
 .kh-key {
-    border: 1px solid rgba(148, 163, 184, 0.3);
-    background: #ffffff;
+    border: 1px solid var(--input-border);
+    background: var(--input-bg);
+    color: var(--text-main);
     border-radius: 8px;
     padding: 6px 4px;
     text-align: center;
@@ -549,33 +550,20 @@
     font-weight: 600;
 }
 .kh-key:hover {
-    background: #f3f4f6;
+    background: var(--surface-muted);
 }
 .translation-progress {
     padding: 12px 14px;
     border-radius: 12px;
-    border: 1px solid rgba(148, 163, 184, 0.25);
-    background: #ffffff;
+    border: 1px solid var(--input-border);
+    background: var(--card-bg);
     margin-bottom: 14px;
-}
-
-.dark-mode .translation-preview,
-.dark-mode .translation-progress {
-    background: #0f1623;
-    border-color: #1f2a37;
-    color: #e6eaf2;
 }
 
 .dark-mode .preview-sub,
 .dark-mode .preview-title,
 .dark-mode .translation-progress .small {
-    color: #e6eaf2 !important;
-}
-
-.dark-mode .kh-key {
-    background: #0f1623;
-    border-color: #1f2a37;
-    color: #e6eaf2;
+    color: var(--text-main) !important;
 }
 </style>
 

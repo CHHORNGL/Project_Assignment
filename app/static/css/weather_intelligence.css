@@ -1,0 +1,341 @@
+.weather-intel-card {
+    --wi-bg-1: #f5f7fb;
+    --wi-bg-2: #ebeff5;
+    --wi-ink: #1f2a37;
+    --wi-soft: #5a6777;
+    --wi-line: #d7dde6;
+    --wi-panel: #ffffff;
+    --wi-shadow: 0 14px 28px rgba(32, 45, 66, 0.08);
+    --wi-blue: #eaf1fb;
+    --wi-blue-border: #7da0cf;
+    --wi-green: #edf1f5;
+    --wi-green-border: #afbbc8;
+    --wi-orange: #fdf3e5;
+    --wi-orange-border: #d1a060;
+    --wi-red: #fceced;
+    --wi-red-border: #c98588;
+    --wi-alert-red-text: #6e2323;
+    --wi-alert-orange-text: #6f4a16;
+    --wi-alert-green-text: #354253;
+    --wi-alert-blue-text: #254a73;
+    --wi-metric-bg: #f6f8fc;
+    --wi-metric-line: #e1e6ee;
+    --wi-block-bg: #f7f9fc;
+    --wi-block-line: #e0e6ee;
+    --wi-icon-bg: #e8eef8;
+    --wi-icon-color: #3f6ea8;
+    --wi-forecast-bg: #f7f9fc;
+    --wi-forecast-line: #e0e6ee;
+    background: linear-gradient(160deg, var(--wi-bg-1), var(--wi-bg-2));
+    border: 1px solid var(--wi-line);
+    border-radius: 18px;
+    box-shadow: var(--wi-shadow);
+    padding: 18px;
+}
+
+.dark-mode .weather-intel-card {
+    --wi-bg-1: #171c24;
+    --wi-bg-2: #141922;
+    --wi-ink: #e8edf5;
+    --wi-soft: #b4c0d1;
+    --wi-line: #2f3744;
+    --wi-panel: #1d2430;
+    --wi-shadow: 0 12px 24px rgba(0, 0, 0, 0.34);
+    --wi-blue: #213147;
+    --wi-blue-border: #6f8caf;
+    --wi-green: #2a313b;
+    --wi-green-border: #5d6a7b;
+    --wi-orange: #473828;
+    --wi-orange-border: #c2965a;
+    --wi-red: #462a2d;
+    --wi-red-border: #bf7a82;
+    --wi-alert-red-text: #ffd6d6;
+    --wi-alert-orange-text: #f3d5ac;
+    --wi-alert-green-text: #e0e7f1;
+    --wi-alert-blue-text: #d2e3f8;
+    --wi-metric-bg: #232b37;
+    --wi-metric-line: #323d4d;
+    --wi-block-bg: #222a36;
+    --wi-block-line: #323c4b;
+    --wi-icon-bg: #29354a;
+    --wi-icon-color: #9ec0e8;
+    --wi-forecast-bg: #222a36;
+    --wi-forecast-line: #323c4b;
+}
+
+.wi-header {
+    align-items: center;
+    display: flex;
+    gap: 12px;
+    justify-content: space-between;
+    margin-bottom: 14px;
+}
+
+.wi-title {
+    color: var(--wi-ink);
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+}
+
+.wi-subtitle {
+    color: var(--wi-soft);
+    font-size: 0.86rem;
+}
+
+.wi-status {
+    background: var(--wi-panel);
+    border: 1px solid var(--wi-line);
+    border-radius: 999px;
+    color: var(--wi-soft);
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 6px 11px;
+    white-space: nowrap;
+}
+
+.wi-content {
+    display: grid;
+    gap: 12px;
+}
+
+.wi-panel {
+    background: var(--wi-panel);
+    border: 1px solid var(--wi-line);
+    border-radius: 14px;
+    padding: 14px;
+}
+
+.wi-panel-title {
+    color: var(--wi-ink);
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin: 0 0 10px;
+}
+
+.wi-current-main {
+    align-items: center;
+    display: flex;
+    gap: 12px;
+}
+
+.wi-current-icon {
+    align-items: center;
+    background: var(--wi-icon-bg);
+    border-radius: 12px;
+    color: var(--wi-icon-color);
+    display: inline-flex;
+    font-size: 1.5rem;
+    height: 48px;
+    justify-content: center;
+    width: 48px;
+}
+
+.wi-current-temp {
+    color: var(--wi-ink);
+    font-size: 1.9rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.wi-current-temp small {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-left: 4px;
+}
+
+.wi-current-condition {
+    color: var(--wi-soft);
+    font-size: 0.88rem;
+    margin-top: 4px;
+}
+
+.wi-current-metrics {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-top: 14px;
+}
+
+.wi-current-metrics span {
+    background: var(--wi-metric-bg);
+    border: 1px solid var(--wi-metric-line);
+    border-radius: 10px;
+    color: var(--wi-soft);
+    display: block;
+    font-size: 0.78rem;
+    padding: 8px;
+}
+
+.wi-current-metrics strong {
+    color: var(--wi-ink);
+    display: block;
+    font-size: 0.9rem;
+    margin-top: 3px;
+}
+
+.wi-analytics-grid {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.wi-analytics-grid div {
+    background: var(--wi-block-bg);
+    border: 1px solid var(--wi-block-line);
+    border-radius: 10px;
+    padding: 10px;
+}
+
+.wi-analytics-grid span {
+    color: var(--wi-soft);
+    display: block;
+    font-size: 0.76rem;
+}
+
+.wi-analytics-grid strong {
+    color: var(--wi-ink);
+    display: block;
+    font-size: 1rem;
+    margin-top: 3px;
+}
+
+.wi-alert-list {
+    display: grid;
+    gap: 8px;
+}
+
+.wi-alert {
+    border-left: 4px solid transparent;
+    border-radius: 10px;
+    padding: 10px 12px;
+}
+
+.wi-alert-title {
+    font-size: 0.92rem;
+    font-weight: 800;
+    line-height: 1.35;
+    margin-bottom: 4px;
+}
+
+.wi-alert-msg {
+    font-size: 0.86rem;
+    font-weight: 600;
+    line-height: 1.45;
+    opacity: 0.97;
+}
+
+.wi-alert-red {
+    background: var(--wi-red);
+    border-left-color: var(--wi-red-border);
+    color: var(--wi-alert-red-text);
+}
+
+.wi-alert-orange {
+    background: var(--wi-orange);
+    border-left-color: var(--wi-orange-border);
+    color: var(--wi-alert-orange-text);
+}
+
+.wi-alert-green {
+    background: var(--wi-green);
+    border-left-color: var(--wi-green-border);
+    color: var(--wi-alert-green-text);
+}
+
+.wi-alert-blue {
+    background: var(--wi-blue);
+    border-left-color: var(--wi-blue-border);
+    color: var(--wi-alert-blue-text);
+}
+
+.wi-forecast-grid {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+}
+
+.wi-forecast-day {
+    animation: wiSlideUp 0.35s ease forwards;
+    background: var(--wi-forecast-bg);
+    border: 1px solid var(--wi-forecast-line);
+    border-radius: 10px;
+    opacity: 0;
+    padding: 10px 9px;
+    text-align: center;
+}
+
+.wi-forecast-day i {
+    color: var(--wi-icon-color);
+    font-size: 1.05rem;
+    margin: 4px 0;
+}
+
+.wi-forecast-date {
+    color: var(--wi-soft);
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.wi-forecast-temp {
+    color: var(--wi-ink);
+    display: block;
+    font-size: 0.95rem;
+    font-weight: 800;
+    line-height: 1.35;
+}
+
+.wi-forecast-rain {
+    color: var(--wi-soft);
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.wi-recommend-list {
+    color: var(--wi-ink);
+    margin: 0;
+    padding-left: 1.2rem;
+}
+
+.wi-recommend-list li {
+    font-size: 0.9rem;
+    font-weight: 600;
+    line-height: 1.5;
+    margin-bottom: 8px;
+}
+
+.wi-recommend-list li::marker {
+    color: var(--wi-icon-color);
+}
+
+@keyframes wiSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (min-width: 992px) {
+    .wi-content {
+        gap: 14px;
+        grid-template-columns: 1.2fr 1fr;
+    }
+
+    .wi-analytics,
+    .wi-alerts,
+    .wi-recommend {
+        grid-column: 2;
+    }
+
+    .wi-forecast {
+        grid-column: 1 / span 2;
+    }
+}

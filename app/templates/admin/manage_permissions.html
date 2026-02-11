@@ -10,7 +10,7 @@
     <div class="d-flex align-items-center mb-4">
         <i class="fas fa-user-shield mr-2 text-success" style="font-size:20px;"></i>
         <h1 class="h4 mb-0 font-weight-bold">
-            Manage Permissions – {{ role.name | upper }}
+            {{ t("manage_permissions") }} – {{ role.name | upper }}
         </h1>
     </div>
 
@@ -89,7 +89,8 @@
     width: 18px;
     height: 18px;
     border-radius: 6px;
-    border: 2px solid #22c55e;
+    border: 2px solid var(--success);
+    background: transparent;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -99,14 +100,16 @@
 
 /* Checked state */
 .permission-checkbox:checked + .permission-box {
-    background-color: #22c55e;
+    background-color: var(--success);
+    border-color: var(--success);
 }
 
 .permission-checkbox:checked + .permission-box::after {
-    content: "✓";
-    color: white;
-    font-size: 12px;
-    font-weight: bold;
+    content: "\f00c";
+    color: var(--card-bg);
+    font-family: "Font Awesome 5 Free";
+    font-size: 10px;
+    font-weight: 900;
 }
 </style>
 

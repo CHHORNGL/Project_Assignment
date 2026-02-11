@@ -7,12 +7,12 @@
     <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h3 class="font-weight-bold text-gray-800">
-            ✏️ {{ t("edit_crop_title") }}
+            <i class="fas fa-edit text-success mr-2" aria-hidden="true"></i>{{ t("edit_crop_title") }}
         </h3>
 
         <a href="{{ url_for('admin.crops') }}"
            class="btn btn-light btn-sm shadow-sm">
-            ← Back
+            <i class="fas fa-arrow-left mr-1" aria-hidden="true"></i>{{ t("back") }}
         </a>
     </div>
 
@@ -49,7 +49,7 @@
                 <div class="mt-4">
                     <button type="submit"
                             class="btn btn-success">
-                        💾 {{ t("save_changes") }}
+                        <i class="fas fa-save mr-1" aria-hidden="true"></i>{{ t("save_changes") }}
                     </button>
 
                     <a href="{{ url_for('admin.crops') }}"
