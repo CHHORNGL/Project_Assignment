@@ -194,7 +194,7 @@
                 </span>
 
                 <img class="img-profile rounded-circle"
-                     src="{% if current_user.avatar_path %}{{ url_for('static', filename=current_user.avatar_path) }}{% else %}{{ url_for('static', filename='img/avatar.png') }}{% endif %}"
+                     src="{{ avatar_url(current_user) }}"
                      style="width:36px;height:36px;object-fit:cover;">
             </a>
 

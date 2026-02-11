@@ -74,6 +74,14 @@ class User(db.Model, UserMixin):
         db.String(255),
         nullable=True
     )
+    avatar_data = db.Column(
+        db.LargeBinary,
+        nullable=True
+    )
+    avatar_mimetype = db.Column(
+        db.String(50),
+        nullable=True
+    )
 
     # ===============================
     # PROFILE (NAME)

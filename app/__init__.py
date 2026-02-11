@@ -366,6 +366,25 @@ def create_app():
         }
 
     @app.context_processor
+    def inject_avatar_helper():
+        def avatar_url(user_obj=None):
+            target = user_obj
+            if target is None:
+                try:
+                    if current_user.is_authenticated:
+                        target = current_user
+                except Exception:
+                    target = None
+            if target is None:
+                return url_for("static", filename="img/avatar.png")
+            try:
+                return url_for("user.avatar", user_id=target.id)
+            except Exception:
+                return url_for("static", filename="img/avatar.png")
+
+        return {"avatar_url": avatar_url}
+
+    @app.context_processor
     def inject_notifications():
         if not current_user.is_authenticated:
             return {"notifications": [], "notifications_count": 0, "notifications_link": None}

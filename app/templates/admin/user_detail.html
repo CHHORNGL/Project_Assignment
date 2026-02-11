@@ -63,7 +63,7 @@
             <div class="admin-user-card-footer">
                 <div class="admin-user-avatar-wrap">
                     <img class="admin-user-avatar"
-                         src="{% if user.avatar_path %}{{ url_for('static', filename=user.avatar_path) }}{% else %}{{ url_for('static', filename='img/avatar.png') }}{% endif %}"
+                         src="{{ avatar_url(user) }}"
                          alt="{{ user.username }} avatar">
                 </div>
                 <span class="admin-user-status {% if user.is_active %}is-active{% else %}is-banned{% endif %}">

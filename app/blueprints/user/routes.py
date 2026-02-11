@@ -1,8 +1,8 @@
 # app/blueprints/user/routes.py
 
 import os
+from io import BytesIO
 from datetime import datetime
-from uuid import uuid4
 from urllib.parse import quote_plus
 
 from flask import (
@@ -13,11 +13,10 @@ from flask import (
     redirect,
     url_for,
     flash,
-    current_app,
-    abort
+    abort,
+    send_file
 )
 from flask_login import login_required, current_user
-from werkzeug.utils import secure_filename
 
 from app.extensions import db
 from app.models.user import User
@@ -27,7 +26,15 @@ from app.services.khmer_calendar import build_khmer_calendar_month
 from app.utils.i18n import set_current_language, get_current_language
 
 
-ALLOWED_AVATAR_EXTS = {".jpg", ".jpeg", ".png", ".gif", ".webp"}
+AVATAR_MIME_BY_EXT = {
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".png": "image/png",
+    ".gif": "image/gif",
+    ".webp": "image/webp",
+}
+ALLOWED_AVATAR_EXTS = set(AVATAR_MIME_BY_EXT)
+MAX_AVATAR_SIZE_BYTES = 2 * 1024 * 1024
 
 
 user_bp = Blueprint(
@@ -176,22 +183,18 @@ def profile():
                 flash("Invalid avatar file type.", "danger")
                 return redirect(url_for("user.profile"))
 
-            filename = secure_filename(f"avatar_{current_user.id}_{uuid4().hex}{ext}")
-            upload_dir = os.path.join(current_app.root_path, "static", "uploads", "avatars")
-            os.makedirs(upload_dir, exist_ok=True)
-            save_path = os.path.join(upload_dir, filename)
-            avatar_file.save(save_path)
+            avatar_bytes = avatar_file.read() or b""
+            if not avatar_bytes:
+                flash("Avatar file is empty.", "danger")
+                return redirect(url_for("user.profile"))
+            if len(avatar_bytes) > MAX_AVATAR_SIZE_BYTES:
+                flash("Avatar file is too large (max 2MB).", "danger")
+                return redirect(url_for("user.profile"))
 
-            # Remove old avatar if it exists
-            if current_user.avatar_path:
-                old_path = os.path.join(current_app.root_path, "static", current_user.avatar_path)
-                if os.path.isfile(old_path):
-                    try:
-                        os.remove(old_path)
-                    except OSError:
-                        pass
-
-            current_user.avatar_path = f"uploads/avatars/{filename}"
+            current_user.avatar_data = avatar_bytes
+            current_user.avatar_mimetype = AVATAR_MIME_BY_EXT.get(ext, "image/jpeg")
+            # Keep legacy path nullable for backward compatibility; DB is source of truth.
+            current_user.avatar_path = None
 
         if new_password or confirm_password:
             if not current_password:
@@ -229,6 +232,28 @@ def profile():
         member_card_url=member_card_url,
         member_card_qr_url=member_card_qr_url
     )
+
+
+@user_bp.route("/avatar/<int:user_id>")
+def avatar(user_id: int):
+    user = User.query.get_or_404(user_id)
+
+    avatar_data = getattr(user, "avatar_data", None)
+    if avatar_data:
+        response = send_file(
+            BytesIO(avatar_data),
+            mimetype=getattr(user, "avatar_mimetype", None) or "image/jpeg",
+            as_attachment=False,
+            max_age=0,
+            conditional=False,
+        )
+        response.headers["Cache-Control"] = "no-store, max-age=0"
+        return response
+
+    if user.avatar_path:
+        return redirect(url_for("static", filename=user.avatar_path))
+
+    return redirect(url_for("static", filename="img/avatar.png"))
 
 
 # ===============================
