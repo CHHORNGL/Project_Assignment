@@ -28,11 +28,19 @@
          aria-label="{{ t('ai_helper') }}">
 
         <div class="ai-helper-header">
-            <div class="ai-helper-title">{{ t("ai_helper") }}</div>
+            <div class="ai-helper-title-wrap">
+                <img class="ai-helper-title-logo"
+                     src="{{ url_for('static', filename='img/logo.jpg') }}"
+                     alt="Logo">
+                <div class="ai-helper-title">
+                    {% if current_lang == "km" %}
+                        សូមស្វាគមន៍, {{ current_user.full_name or current_user.username }}!
+                    {% else %}
+                        Welcome, {{ current_user.full_name or current_user.username }}!
+                    {% endif %}
+                </div>
+            </div>
             <div class="ai-helper-actions">
-                <button type="button" class="ai-helper-reset" aria-label="{{ t('reset') }}">
-                    <i class="fas fa-sync-alt" aria-hidden="true"></i>
-                </button>
                 <button type="button" class="ai-helper-close" aria-label="{{ t('close') }}">
                     <i class="fas fa-times" aria-hidden="true"></i>
                 </button>

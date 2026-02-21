@@ -1,10 +1,82 @@
 {% extends "layouts/farmer_shell.html" %}
-{% block title %}{{ t("diagnosis_detail") }}{% endblock %}
+{% block title %}Diagnosis Result{% endblock %}
 
 {% block content %}
 {% set disease_label = (diagnosis.disease.name_kh if current_lang == 'km' and diagnosis.disease and diagnosis.disease.name_kh else diagnosis.disease_name) %}
 {% set crop_label = localize(diagnosis.crop, "name", diagnosis.crop_name) %}
 {% set created_label = diagnosis.created_at.strftime("%b %d, %Y") if diagnosis.created_at else "" %}
+{% set evidence = diagnosis.diagnosis_evidence or {} %}
+{% set knowledge = evidence.get("knowledge", {}) if evidence else {} %}
+{% set ranked_candidates = evidence.get("ranked_candidates", []) if evidence else [] %}
+{% set confidence_percent = (diagnosis.confidence * 100)|round(1) if diagnosis.confidence is not none else None %}
+{% set confidence_label = (diagnosis.confidence_level or "insufficient")|replace("_", " ")|title %}
+{% set top_symptom_scores = symptom_breakdown if symptom_breakdown is defined else [] %}
+{% set knowledge_cause = diagnosis.disease.cause_explanation if diagnosis.disease and diagnosis.disease.cause_explanation else knowledge.get("cause_explanation") %}
+{% set cause_text = knowledge_cause or diagnosis.diagnosis_reason or "Cause explanation is not available yet. Please consult an expert for field confirmation." %}
+{% set treatment_source = diagnosis.solution or (diagnosis.disease.treatment_kh if current_lang == 'km' and diagnosis.disease and diagnosis.disease.treatment_kh else (diagnosis.disease.treatment if diagnosis.disease and diagnosis.disease.treatment else knowledge.get("treatment_steps"))) %}
+{% set prevention_source = diagnosis.prevention_recommendations or (diagnosis.disease.prevention_tips if diagnosis.disease and diagnosis.disease.prevention_tips else None) %}
+{% set treatment_steps = [] %}
+{% if treatment_source %}
+    {% for raw_line in treatment_source.replace('\r', '').split('\n') %}
+        {% set clean_line = raw_line.strip() %}
+        {% if clean_line %}
+            {% set normalized = clean_line.lstrip('-*0123456789. ').strip() %}
+            {% if normalized %}
+                {% set _ = treatment_steps.append(normalized) %}
+            {% else %}
+                {% set _ = treatment_steps.append(clean_line) %}
+            {% endif %}
+        {% endif %}
+    {% endfor %}
+{% endif %}
+{% if not treatment_steps and treatment_source %}
+    {% set _ = treatment_steps.append(treatment_source.strip()) %}
+{% endif %}
+{% set prevention_tips = [] %}
+{% if prevention_source %}
+    {% for raw_line in prevention_source.replace('\r', '').split('\n') %}
+        {% set clean_line = raw_line.strip() %}
+        {% if clean_line %}
+            {% set normalized = clean_line.lstrip('-*0123456789. ').strip() %}
+            {% if normalized %}
+                {% set _ = prevention_tips.append(normalized) %}
+            {% else %}
+                {% set _ = prevention_tips.append(clean_line) %}
+            {% endif %}
+        {% endif %}
+    {% endfor %}
+{% elif knowledge.get("prevention_tips") %}
+    {% for row in knowledge.get("prevention_tips") %}
+        {% if row %}
+            {% set _ = prevention_tips.append(row) %}
+        {% endif %}
+    {% endfor %}
+{% endif %}
+{% set knowledge_references = [] %}
+{% if diagnosis.disease and diagnosis.disease.reference_links %}
+    {% for line in diagnosis.disease.reference_links.replace('\r', '').split('\n') %}
+        {% if line.strip() %}
+            {% set _ = knowledge_references.append(line.strip()) %}
+        {% endif %}
+    {% endfor %}
+{% elif knowledge.get("references") %}
+    {% for line in knowledge.get("references") %}
+        {% if line %}
+            {% set _ = knowledge_references.append(line) %}
+        {% endif %}
+    {% endfor %}
+{% endif %}
+{% set knowledge_image_url = url_for('expert.disease_knowledge_image', disease_id=diagnosis.disease.id) if diagnosis.disease and diagnosis.disease.knowledge_image_data else None %}
+{% set confirmed_symptom_list = [] %}
+{% if diagnosis.symptoms %}
+    {% for raw_symptom in diagnosis.symptoms.split(',') %}
+        {% set clean_symptom = raw_symptom.strip() %}
+        {% if clean_symptom %}
+            {% set _ = confirmed_symptom_list.append(clean_symptom) %}
+        {% endif %}
+    {% endfor %}
+{% endif %}
+
 {% if diagnosis.status == "PENDING" %}
   {% set status_label = t("status_pending") %}
   {% set status_class = "badge-warning" %}
@@ -22,127 +94,282 @@
   {% set status_class = "badge-secondary" %}
 {% endif %}
 
-<div class="farmer-hero mb-4">
-    <div class="d-flex justify-content-between align-items-center flex-wrap">
-        <div>
-            <h4 class="mb-1 font-weight-bold text-success">{{ t("diagnosis_detail") }}</h4>
-            <div class="d-flex align-items-center flex-wrap">
-                <span class="badge {{ status_class }} mr-2">{{ status_label }}</span>
-                <span class="text-muted small">{{ t("diagnosis_information") }}</span>
-            </div>
-            <div class="result-chips mt-2">
-                <span class="result-chip"><strong>{{ t("crop_label") }}:</strong> {{ crop_label }}</span>
-                <span class="result-chip"><strong>{{ t("disease_label") }}:</strong> {{ disease_label or "Unknown" }}</span>
-                {% if created_label %}
-                <span class="result-chip"><strong>{{ t("date") }}:</strong> {{ created_label }}</span>
-                {% endif %}
-            </div>
-        </div>
-        <div class="mt-3 mt-md-0">
-            <a href="{{ url_for('farmer.diagnose') }}" class="btn btn-outline-success btn-sm">
-                {{ t("new_diagnosis") }}
-            </a>
-            <a href="{{ url_for('farmer.chat') }}" class="btn btn-success btn-sm ml-2">
-                {{ t("ask_expert") }}
-            </a>
-        </div>
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-lg-5 mb-3">
-        <div class="card shadow-sm h-100">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <span class="section-title">{{ t("farmer_symptoms") }}</span>
-                <span class="badge {{ status_class }}">{{ status_label }}</span>
-            </div>
-            <div class="card-body">
-                <div class="small text-muted">{{ t("crop_label") }}</div>
-                <div class="font-weight-bold mb-3">
-                    {{ crop_label }}
+<div class="diag-result-page mx-auto">
+    <div class="card shadow-sm diag-result-hero mb-4">
+        <div class="card-body diag-result-hero-body">
+            <div class="diag-result-hero-grid">
+                <div class="diag-result-summary mb-3 mb-lg-0">
+                    <div class="diag-result-label">Diagnosis result</div>
+                    <h2 class="diag-result-name mb-2">{{ disease_label or "Unknown diagnosis" }}</h2>
+                    <div class="diag-result-meta-row">
+                        <span class="badge diag-status-badge {{ status_class }}">{{ status_label }}</span>
+                        <span class="diag-result-meta">{{ crop_label }}</span>
+                        {% if created_label %}
+                        <span class="diag-result-meta">{{ created_label }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="result-chips">
+                        <span class="result-chip"><strong>Category:</strong> {{ (diagnosis.diagnosis_category or "other")|replace("_", " ")|title }}</span>
+                    </div>
+                    {% if confirmed_symptom_list %}
+                    <div class="diag-symptom-wrap">
+                        <div class="diag-symptom-title">Confirmed symptoms</div>
+                        <div class="result-chips symptom-chips">
+                            {% for symptom_name in confirmed_symptom_list[:8] %}
+                            <span class="result-chip symptom-chip">{{ symptom_name }}</span>
+                            {% endfor %}
+                            {% if confirmed_symptom_list|length > 8 %}
+                            <span class="result-chip symptom-chip">+{{ confirmed_symptom_list|length - 8 }} more</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
-                <div class="small text-muted">{{ t("symptoms_label") }}</div>
-                <div class="diag-item mt-2">{{ diagnosis.symptoms }}</div>
+                <div class="diag-result-actions">
+                    <a href="{{ url_for('farmer.diagnose_rule_based') }}" class="btn btn-success">
+                        <i class="fas fa-redo-alt mr-2"></i>Restart diagnosis
+                    </a>
+                    <a href="{{ url_for('farmer.chat') }}" class="btn btn-outline-success">
+                        <i class="fas fa-user-md mr-2"></i>Ask expert
+                    </a>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="col-lg-7 mb-3">
-        <div class="card shadow-sm mb-3">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <span class="section-title">System Diagnosis</span>
-                {% if diagnosis.confidence is not none %}
-                    <span class="badge badge-info">
-                        Confidence {{ (diagnosis.confidence * 100)|round(1) }}%
-                    </span>
-                {% endif %}
-            </div>
-            <div class="card-body">
-                {% if diagnosis.disease_name and diagnosis.disease_name != "Unknown" %}
-                    <div class="small text-muted">{{ t("disease_label") }}</div>
-                    <div class="font-weight-bold text-danger mb-2">{{ disease_label }}</div>
-                    <div class="small text-muted mb-0">
-                        This diagnosis was generated automatically using the rule-based expert system.
+    <div class="row">
+        <div class="col-lg-4 mb-3">
+            <div class="card shadow-sm diag-result-card h-100">
+                <div class="card-header">
+                    <span class="section-title">Confidence level</span>
+                </div>
+                <div class="card-body diag-confidence-panel">
+                    <div class="diag-confidence-top">
+                        <div class="diag-confidence-value">Current confidence</div>
+                        <span class="diag-tier-chip tier-{{ (diagnosis.confidence_level or 'insufficient')|replace('_', '-') }}">
+                            {{ confidence_label }}
+                        </span>
                     </div>
-                {% else %}
-                    <div class="diag-item">
-                        <div class="font-weight-bold mb-1">No confident match</div>
-                        <div class="small text-muted">
-                            No disease could be confidently detected based on the provided symptoms.
-                        </div>
-                    </div>
-                    {% if possible_diseases and possible_diseases|length > 0 %}
-                        <div class="mt-3">
-                            <div class="small text-muted mb-2">Possible diseases for this crop:</div>
-                            <div class="d-flex flex-wrap" style="gap:8px;">
-                                {% for d in possible_diseases %}
-                                    <span class="badge badge-info">
-                                        {{ d.name_kh if current_lang == 'km' and d.name_kh else d.name }}
-                                    </span>
-                                {% endfor %}
-                            </div>
-                        </div>
-                    {% endif %}
-                {% endif %}
-            </div>
-        </div>
-
-        <div class="card shadow-sm">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <span class="section-title">Expert Review</span>
-                <span class="badge {{ status_class }}">{{ status_label }}</span>
-            </div>
-            <div class="card-body">
-                {% if diagnosis.status == "APPROVED" %}
-                    {% if diagnosis.solution %}
-                        <div class="text-success font-weight-bold mb-2">{{ t("status_approved") }}</div>
-                        <div class="text-muted" style="white-space: pre-line;">{{ diagnosis.solution }}</div>
+                    {% if confidence_percent is not none %}
+                    <div class="diag-confidence-percent">{{ confidence_percent }}%</div>
                     {% else %}
-                        <div class="text-muted">Expert approved this diagnosis without additional notes.</div>
+                    <div class="diag-confidence-percent">N/A</div>
                     {% endif %}
-                {% elif diagnosis.status == "REJECTED" %}
-                    <div class="text-danger font-weight-bold mb-2">Rejected by expert</div>
-                    <div class="text-muted">
-                        This diagnosis was rejected. Please submit a new diagnosis or ask an expert directly.
+                    <div class="progress diag-confidence-progress">
+                        <div class="progress-bar" role="progressbar" style="width: {{ confidence_percent if confidence_percent is not none else 0 }}%;"></div>
                     </div>
-                {% elif diagnosis.status == "AUTO" %}
-                    <div class="text-muted">
-                        This is an automatic diagnosis. Ask an expert if you want human review.
+                    <div class="small text-muted mt-3">
+                        Higher confidence means the selected symptoms strongly match an expert rule.
                     </div>
-                {% else %}
-                    <div class="text-muted">Waiting for expert review...</div>
-                {% endif %}
+                    {% if top_symptom_scores %}
+                    <div class="diag-symptom-score-wrap">
+                        <div class="diag-symptom-score-title">Top symptom signals</div>
+                        <div class="diag-symptom-score-list">
+                            {% for item in top_symptom_scores[:5] %}
+                            {% set symptom_name = (item.get("name") if item is mapping else "") %}
+                            {% set symptom_percent = (item.get("percent", 0) if item is mapping else 0)|float %}
+                            <div class="diag-symptom-score-item">
+                                <div class="diag-symptom-score-head">
+                                    <span class="diag-symptom-score-name" title="{{ symptom_name }}">{{ symptom_name }}</span>
+                                    <span class="diag-symptom-score-value">{{ symptom_percent|round(1) }}%</span>
+                                </div>
+                                <div class="progress diag-symptom-score-progress">
+                                    <div class="progress-bar" role="progressbar" style="width: {{ 0 if symptom_percent < 0 else (100 if symptom_percent > 100 else symptom_percent) }}%;"></div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8 mb-3">
+            <div class="card shadow-sm diag-result-card h-100">
+                <div class="card-header">
+                    <span class="section-title">Cause explanation</span>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0 diag-body-text">{{ cause_text }}</p>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<div class="d-flex justify-content-end mt-2">
-    <a href="{{ url_for('farmer.diagnose') }}" class="btn btn-outline-success btn-sm">
-        <i class="fas fa-plus-circle mr-2"></i>{{ t("new_diagnosis") }}
-    </a>
-    <a href="{{ url_for('farmer.chat') }}" class="btn btn-success btn-sm ml-2">
-        <i class="fas fa-comments mr-2"></i>{{ t("ask_expert") }}
-    </a>
+    {% if ranked_candidates %}
+    <div class="card shadow-sm diag-result-card mb-3">
+        <div class="card-header">
+            <span class="section-title">Disease match ranking</span>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-sm mb-0 diag-ranking-table">
+                    <thead>
+                        <tr>
+                            <th style="min-width:56px;">Rank</th>
+                            <th>Disease</th>
+                            <th style="min-width:120px;">Match %</th>
+                            <th style="min-width:110px;">Tier</th>
+                            <th style="min-width:200px;">Care / treatment</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for candidate in ranked_candidates %}
+                        {% set matched_names = candidate.get("matched_symptoms", []) %}
+                        {% set tier_value = (candidate.get("confidence_tier", "insufficient") or "insufficient") %}
+                        {% set match_value = candidate.get("confidence_percent", 0)|float %}
+                        <tr class="diag-ranking-row">
+                            <td><span class="diag-rank-badge">#{{ loop.index }}</span></td>
+                            <td>
+                                <div class="font-weight-bold">{{ candidate.get("disease_name", "Unknown") }}</div>
+                                {% if matched_names %}
+                                <div class="small text-muted">
+                                    Matched: {{ matched_names[:4]|join(", ") }}{% if matched_names|length > 4 %} +{{ matched_names|length - 4 }} more{% endif %}
+                                </div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="diag-match-cell">
+                                    <strong>{{ match_value|round(1) }}%</strong>
+                                    <div class="progress diag-match-progress">
+                                        <div class="progress-bar" role="progressbar" style="width: {{ 0 if match_value < 0 else (100 if match_value > 100 else match_value) }}%;"></div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="diag-tier-chip tier-{{ tier_value|replace('_', '-') }}">
+                                    {{ tier_value|replace("_", " ")|title }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="small diag-care-text">
+                                    {{ candidate.get("treatment") or "Consult expert before major treatment." }}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="row">
+        <div class="col-lg-6 mb-3">
+            <div class="card shadow-sm diag-result-card h-100">
+                <div class="card-header">
+                    <span class="section-title">Treatment steps</span>
+                </div>
+                <div class="card-body">
+                    {% if treatment_steps %}
+                    <ol class="diag-result-list ordered mb-0">
+                        {% for step in treatment_steps %}
+                        <li>{{ step }}</li>
+                        {% endfor %}
+                    </ol>
+                    {% else %}
+                    <div class="diag-result-empty">
+                        No treatment steps are available yet. Ask an expert before applying major treatment.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 mb-3">
+            <div class="card shadow-sm diag-result-card h-100">
+                <div class="card-header">
+                    <span class="section-title">Prevention advice</span>
+                </div>
+                <div class="card-body">
+                    {% if prevention_tips %}
+                    <ul class="diag-result-list mb-0">
+                        {% for tip in prevention_tips %}
+                        <li>{{ tip }}</li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <div class="diag-result-empty">
+                        No prevention advice is configured yet. Continue monitoring and keep the field clean.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if knowledge_image_url or knowledge_references %}
+    <div class="card shadow-sm diag-result-card mb-3">
+        <div class="card-header">
+            <span class="section-title">References</span>
+        </div>
+        <div class="card-body">
+            {% if knowledge_image_url %}
+            <div class="mb-3">
+                <img src="{{ knowledge_image_url }}" alt="Diagnosis reference image" class="img-fluid rounded border diag-reference-image">
+            </div>
+            {% endif %}
+            {% if knowledge_references %}
+            <ul class="diag-result-list diag-reference-list mb-0">
+                {% for reference in knowledge_references %}
+                <li>
+                    {% if reference.startswith("http://") or reference.startswith("https://") %}
+                    <a href="{{ reference }}" target="_blank" rel="noopener noreferrer">{{ reference }}</a>
+                    {% else %}
+                    {{ reference }}
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="card shadow-sm diag-result-card mb-3">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span class="section-title">Feedback</span>
+            {% if diagnosis.feedback_rating %}
+            <span class="badge badge-success diag-feedback-badge">Submitted</span>
+            {% else %}
+            <span class="badge badge-warning diag-feedback-badge">Pending</span>
+            {% endif %}
+        </div>
+        <div class="card-body">
+            {% if diagnosis.feedback_rating %}
+            <div class="diag-feedback-summary">
+                <div class="small text-muted">Your rating</div>
+                <div class="font-weight-bold mb-2">{{ diagnosis.feedback_rating|replace("_", " ")|title }}</div>
+            </div>
+            {% if diagnosis.feedback_comment %}
+            <div class="small text-muted">Comment</div>
+            <div class="diag-body-text">{{ diagnosis.feedback_comment }}</div>
+            {% endif %}
+            {% else %}
+            <form method="POST" action="{{ url_for('farmer.diagnosis_feedback', diagnosis_id=diagnosis.id) }}" class="diag-feedback-form">
+                <div class="small text-muted mb-2">Was this diagnosis useful for your field decision?</div>
+                <div class="diag-feedback-buttons">
+                    <button type="submit" name="rating" value="helpful" class="btn btn-sm btn-success diag-feedback-btn">Helpful</button>
+                    <button type="submit" name="rating" value="not_helpful" class="btn btn-sm btn-outline-danger diag-feedback-btn">Not helpful</button>
+                </div>
+                <div class="form-group mt-3 mb-0">
+                    <label class="small text-muted">Optional comment</label>
+                    <textarea class="form-control form-control-sm diag-feedback-text" name="comment" rows="3" maxlength="1000" placeholder="Tell us what was missing or confusing"></textarea>
+                </div>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="diag-result-footer-actions">
+        <a href="{{ url_for('farmer.diagnose_rule_based') }}" class="btn btn-success">
+            <i class="fas fa-redo-alt mr-2"></i>Restart diagnosis
+        </a>
+        <a href="{{ url_for('farmer.dashboard') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-home mr-2"></i>Back to dashboard
+        </a>
+    </div>
 </div>
 {% endblock %}

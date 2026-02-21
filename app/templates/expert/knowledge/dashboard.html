@@ -21,6 +21,14 @@
                class="btn btn-sm btn-outline-secondary ml-2">
                 {{ t("mixed_agriculture") }}
             </a>
+            <a href="{{ url_for('expert.diseases') }}"
+               class="btn btn-sm btn-outline-success ml-2">
+                <i class="fas fa-notes-medical mr-1"></i>{{ t("diagnosis_knowledge") }}
+            </a>
+            <a href="{{ url_for('expert.question_builder_visual_editor') }}"
+               class="btn btn-sm btn-outline-info ml-2">
+                <i class="fas fa-project-diagram mr-1"></i>{{ t("question_builder") }}
+            </a>
         </div>
     </div>
 
@@ -57,7 +65,7 @@
                         <div class="stat-title">{{ t("diseases") }}</div>
                         <div class="stat-value text-warning">{{ disease_count }}</div>
                     </div>
-                    <i class="fas fa-virus fa-2x text-warning"></i>
+                    <i class="fas fa-notes-medical fa-2x text-warning"></i>
                 </div>
             </div>
         </div>
@@ -99,7 +107,7 @@
     <!-- {{ t("rules_engine") }} Table -->
     <div class="card shadow-sm mb-4">
         <div class="card-header d-flex justify-content-between">
-            <span class="font-weight-bold">Diagnosis {{ t("rules_engine") }}</span>
+            <span class="font-weight-bold">{{ t("diagnosis_rules_engine") }}</span>
             <span class="text-muted small">{{ t("total_count", count=rule_count) }}</span>
         </div>
 

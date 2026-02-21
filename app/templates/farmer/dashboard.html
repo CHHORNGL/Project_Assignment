@@ -2,6 +2,15 @@
 {% block title %}{{ t("farmer_dashboard_title") }}{% endblock %}
 {% block head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/weather_intelligence.css', v=static_version) }}">
+<script>
+(function () {
+    const welcomePrefix = {{ ("Welcome Back" if current_lang != "km" else "សូមស្វាគមន៍មកវិញ") | tojson }};
+    const displayName = {{ (current_user.full_name or current_user.username) | tojson }};
+    if (welcomePrefix && displayName) {
+        document.title = welcomePrefix + ", " + displayName + "! | AGRI SYSTEM";
+    }
+})();
+</script>
 {% endblock %}
 
 {% block content %}
@@ -18,8 +27,8 @@
                 <div class="text-muted small">{{ t("farmer_dashboard_sub") }}</div>
             </div>
             <div class="mt-3 mt-md-0 d-flex flex-wrap" style="gap:10px;">
-                <a href="{{ url_for('farmer.diagnose') }}" class="btn btn-success btn-sm">
-                    {{ t("new_diagnosis") }}
+                <a href="{{ url_for('farmer.diagnose_rule_based') }}" class="btn btn-success btn-sm">
+                    {{ t("full_rule_based") }}
                 </a>
                 <a href="{{ url_for('farmer.chat') }}" class="btn btn-outline-success btn-sm">
                     {{ t("ask_expert") }}
@@ -139,7 +148,7 @@
                 <a href="{{ url_for('farmer.diagnosis_history') }}" class="btn btn-sm btn-outline-success">
                     {{ t("see_all") }}
                 </a>
-                <a href="{{ url_for('farmer.diagnose') }}" class="btn btn-sm btn-success">
+                <a href="{{ url_for('farmer.diagnose_rule_based') }}" class="btn btn-sm btn-success">
                     {{ t("create_new") }}
                 </a>
             </div>
@@ -233,14 +242,6 @@
                 </div>
                 <div class="card-body">
                     <div class="action-grid">
-                        <a class="action-card" href="{{ url_for('farmer.diagnose') }}">
-                            <div class="action-icon"><i class="fas fa-notes-medical"></i></div>
-                            <div>
-                                <div class="action-title">{{ t("new_diagnosis") }}</div>
-                                <div class="action-sub">{{ t("diagnose_title") }}</div>
-                            </div>
-                            <i class="fas fa-arrow-right ml-auto text-muted"></i>
-                        </a>
                         <a class="action-card" href="{{ url_for('farmer.diagnose_rule_based') }}">
                             <div class="action-icon"><i class="fas fa-cogs"></i></div>
                             <div>
@@ -263,6 +264,102 @@
         </div>
     </div>
 </div>
+
+<div class="farmer-scan-fab">
+    <a href="{{ url_for('farmer.scan_crop', instant='1') }}"
+       class="farmer-scan-fab-toggle"
+       aria-label="{{ t('instant_scan_cta') }}"
+       title="{{ t('instant_scan_cta') }}">
+        <svg class="scan-glyph" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M7 4H5a1 1 0 0 0-1 1v2" />
+            <path d="M17 4h2a1 1 0 0 1 1 1v2" />
+            <path d="M20 17v2a1 1 0 0 1-1 1h-2" />
+            <path d="M4 17v2a1 1 0 0 0 1 1h2" />
+            <rect x="9" y="9" width="6" height="6" rx="1.5" />
+            <path d="M12 8v1" />
+            <path d="M12 15v1" />
+            <path d="M8 12h1" />
+            <path d="M15 12h1" />
+        </svg>
+    </a>
+    <div class="farmer-scan-fab-label">{{ t("instant_scan_cta") }}</div>
+</div>
+
+<style>
+.farmer-scan-fab {
+    position: fixed;
+    left: 50%;
+    bottom: 18px;
+    transform: translateX(-50%);
+    z-index: 1050;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.farmer-scan-fab-toggle {
+    width: 56px;
+    height: 56px;
+    text-decoration: none;
+    border: 0;
+    border-radius: 999px;
+    color: #f8fbff;
+    background: radial-gradient(circle at 28% 22%, #8ec7ff 0%, #4f83ff 46%, #2f57cf 100%);
+    box-shadow: 0 0 0 7px rgba(79, 131, 255, 0.12), 0 10px 26px rgba(47, 87, 207, 0.42);
+    font-size: 1.05rem;
+    display: grid;
+    place-items: center;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.farmer-scan-fab-toggle:hover {
+    color: #ffffff;
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 0 0 9px rgba(79, 131, 255, 0.14), 0 14px 34px rgba(47, 87, 207, 0.46);
+    text-decoration: none;
+}
+
+.scan-glyph {
+    width: 24px;
+    height: 24px;
+    fill: none;
+    stroke: #f8fbff;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0.98;
+}
+
+.farmer-scan-fab-label {
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: var(--text-main);
+    background: color-mix(in srgb, var(--card-bg) 82%, #4f83ff 18%);
+    border: 1px solid color-mix(in srgb, var(--border-light) 70%, #4f83ff 30%);
+}
+
+@media (max-width: 576px) {
+    .farmer-scan-fab {
+        bottom: 14px;
+    }
+    .farmer-scan-fab-toggle {
+        width: 50px;
+        height: 50px;
+        font-size: 0.98rem;
+    }
+    .scan-glyph {
+        width: 21px;
+        height: 21px;
+    }
+    .farmer-scan-fab-label {
+        font-size: 0.64rem;
+    }
+}
+</style>
 {% endblock %}
 
 {% block scripts %}

@@ -1,81 +1,264 @@
 {% extends "layouts/base.html" %}
 {% block title %}{{ t("roles_management_title") }}{% endblock %}
+{% set body_class = "admin-theme admin-roles-page" %}
 
 {% block content %}
-<div class="container-fluid">
+{% set core_role_names = core_role_names if core_role_names is defined else ["admin", "expert", "farmer"] %}
+{% set role_user_counts = role_user_counts if role_user_counts is defined else {} %}
+{% set stats = namespace(core=0, custom=0) %}
+{% for role in roles %}
+    {% if role.name|lower in core_role_names %}
+        {% set stats.core = stats.core + 1 %}
+    {% else %}
+        {% set stats.custom = stats.custom + 1 %}
+    {% endif %}
+{% endfor %}
 
-    <!-- ===============================
-         PAGE HEADING
-    =============================== -->
-    <div class="d-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0">
-            {{ t("roles_management_title") }}
-        </h1>
+<div class="admin-board admin-roles-board">
+    <div class="admin-hero admin-roles-hero">
+        <div>
+            <div class="admin-title">{{ t("roles_management_title") }}</div>
+            <div class="admin-sub">{{ t("roles_management_sub") }}</div>
+        </div>
+        <div class="admin-actions">
+            <a href="#create-role" class="btn btn-admin">
+                <i class="fas fa-plus-circle mr-2"></i>
+                {{ t("create") }} {{ t("role") }}
+            </a>
+        </div>
     </div>
 
-    <!-- ===============================
-         ROLES TABLE
-    =============================== -->
-    <div class="card shadow-sm mb-4">
-
-        <div class="card-header">
-            <h6 class="m-0 font-weight-bold text-primary">
-                {{ t("system_roles") }}
-            </h6>
+    <div class="row admin-roles-kpis">
+        <div class="col-xl-4 col-md-6 mb-3">
+            <div class="admin-kpi">
+                <div>
+                    <div class="admin-kpi-label">{{ t("total_roles_label") }}</div>
+                    <div class="admin-kpi-value">{{ roles|length }}</div>
+                </div>
+                <div class="admin-kpi-icon">
+                    <i class="fas fa-layer-group"></i>
+                </div>
+            </div>
         </div>
-
-        <div class="card-body">
-            <div class="table-responsive">
-
-                <table class="table table-hover align-middle" width="100%">
-                    <thead class="thead-light">
-                        <tr>
-                            <th style="width:30%">{{ t("role_name") }}</th>
-                            <th style="width:30%">{{ t("total_permissions") }}</th>
-                            <th style="width:40%">{{ t("actions") }}</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        {% for role in roles %}
-                        <tr>
-                            <!-- {{ t("role_name") }} -->
-                            <td class="font-weight-bold text-uppercase">
-                                {{ role.name }}
-                            </td>
-
-                            <!-- Permissions Count -->
-                            <td>
-                                <span class="badge badge-info">
-                                    {{ role.permissions|length }} {{ t("permissions_label") }}
-                                </span>
-                            </td>
-
-                            <!-- {{ t("actions") }} -->
-                            <td>
-                                <a href="{{ url_for('admin.manage_role_permissions', role_id=role.id) }}"
-                                   class="btn btn-success btn-sm d-inline-flex align-items-center gap-2">
-
-                                    <i class="fas fa-user-shield mr-2"></i>
-
-                                    <span>{{ t("manage_permissions") }}</span>
-                                </a>
-                            </td>
-                        </tr>
-                        {% else %}
-                        <tr>
-                            <td colspan="3" class="text-center text-muted py-4">
-                                {{ t("no_roles_found") }}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-
-                </table>
-
+        <div class="col-xl-4 col-md-6 mb-3">
+            <div class="admin-kpi">
+                <div>
+                    <div class="admin-kpi-label">{{ t("core_roles_label") }}</div>
+                    <div class="admin-kpi-value">{{ stats.core }}</div>
+                </div>
+                <div class="admin-kpi-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-4 col-md-6 mb-3">
+            <div class="admin-kpi">
+                <div>
+                    <div class="admin-kpi-label">{{ t("custom_roles_label") }}</div>
+                    <div class="admin-kpi-value">{{ stats.custom }}</div>
+                </div>
+                <div class="admin-kpi-icon">
+                    <i class="fas fa-user-cog"></i>
+                </div>
             </div>
         </div>
     </div>
 
+    <div class="admin-role-form-card mb-4" id="create-role">
+        <div class="admin-role-form-header">
+            <div class="admin-role-header">
+                <div class="admin-role-icon">
+                    <i class="fas fa-user-tag"></i>
+                </div>
+                <div>
+                    <div class="admin-role-title">{{ t("create_new_role") }}</div>
+                    <div class="admin-role-sub">{{ t("role_setup_sub") }}</div>
+                </div>
+            </div>
+            <div class="admin-role-chip">{{ t("role_setup_chip") }}</div>
+        </div>
+
+        <form method="POST"
+              action="{{ url_for('admin.create_role') }}"
+              class="admin-role-form-grid"
+              id="create-role-form">
+
+            <div class="admin-role-field admin-role-field-main">
+                <label class="admin-role-label" for="role-name-input">{{ t("role_name") }}</label>
+                <input id="role-name-input"
+                       name="role_name"
+                       class="form-control admin-role-input"
+                       placeholder="{{ t('role_name_input_placeholder') }}"
+                       maxlength="50"
+                       autocomplete="off"
+                       required>
+                <small class="admin-role-hint">
+                    {{ t("role_name_hint") }}
+                </small>
+            </div>
+
+            <div class="admin-role-field">
+                <label class="admin-role-label" for="role-name-preview">{{ t("normalized_key") }}</label>
+                <div id="role-name-preview" class="admin-role-preview is-empty">{{ t("role_preview_default") }}</div>
+            </div>
+
+            <div class="admin-role-action">
+                <button type="submit" class="btn btn-admin w-100">
+                    <i class="fas fa-save mr-2"></i>
+                    {{ t("save_role") }}
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="admin-panel admin-roles-panel">
+        <div class="admin-roles-panel-head">
+            <div class="admin-panel-title mb-0">{{ t("system_roles") }}</div>
+            <div class="admin-roles-panel-meta">{{ t("roles_count", count=roles|length) }}</div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table admin-roles-table mb-0">
+                <thead>
+                    <tr>
+                        <th style="width: 40%;">{{ t("role_name") }}</th>
+                        <th style="width: 20%;">{{ t("total_permissions") }}</th>
+                        <th class="text-right" style="width: 40%;">{{ t("actions") }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for role in roles %}
+                    {% set role_key = role.name|lower %}
+                    {% set is_core = role_key in core_role_names %}
+                    {% set assigned_users_count = role_user_counts.get(role.id, 0) %}
+                    {% set icon_name = "fa-user-tag" %}
+                    {% if role_key == "admin" %}
+                        {% set icon_name = "fa-user-shield" %}
+                    {% elif role_key == "expert" %}
+                        {% set icon_name = "fa-user-graduate" %}
+                    {% elif role_key == "farmer" %}
+                        {% set icon_name = "fa-seedling" %}
+                    {% endif %}
+                    <tr>
+                        <td>
+                            <div class="admin-role-cell">
+                                <span class="admin-role-cell-icon {% if is_core %}is-core{% else %}is-custom{% endif %}">
+                                    <i class="fas {{ icon_name }}"></i>
+                                </span>
+                                <div>
+                                    <div class="admin-role-cell-title">{{ role.name|upper }}</div>
+                                    <div class="admin-role-cell-sub">
+                                        {% if is_core %}{{ t("core_role") }}{% else %}{{ t("custom_role") }}{% endif %}
+                                        {% if assigned_users_count > 0 %} • {{ t("user_count", count=assigned_users_count) }}{% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="admin-roles-badge">
+                                {{ role.permissions|length }} {{ t("permissions_label") }}
+                            </span>
+                        </td>
+                        <td class="text-right">
+                            <div class="admin-role-actions">
+                                <a href="{{ url_for('admin.manage_role_permissions', role_id=role.id) }}"
+                                   class="btn btn-admin-outline btn-sm admin-role-manage-btn">
+                                    <i class="fas fa-user-shield mr-2"></i>
+                                    <span>{{ t("manage_permissions") }}</span>
+                                </a>
+
+                                {% if is_core %}
+                                <span class="admin-role-protected-pill" title="{{ t('protected_role_hint') }}">
+                                    <i class="fas fa-lock mr-1"></i>
+                                    {{ t("protected") }}
+                                </span>
+                                {% else %}
+                                <form method="POST"
+                                      action="{{ url_for('admin.delete_role', role_id=role.id) }}"
+                                      class="js-delete-role-form mb-0"
+                                      data-role-name="{{ role.name }}">
+                                    <button type="submit"
+                                            class="btn btn-outline-danger btn-sm admin-role-delete-btn"
+                                            {% if assigned_users_count > 0 %}disabled title="{{ t('remove_role_assignments_first') }}"{% endif %}>
+                                        <i class="fas fa-trash-alt mr-1"></i>
+                                        {{ t("delete") }}
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="3" class="text-center text-muted py-4">
+                            {{ t("no_roles_found") }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+    const form = document.getElementById("create-role-form");
+    const input = document.getElementById("role-name-input");
+    const preview = document.getElementById("role-name-preview");
+    const previewFallback = {{ t("role_preview_default")|tojson }};
+    const invalidRoleNameMessage = {{ t("valid_role_name_required")|tojson }};
+    const deleteRoleConfirmTemplate = {{ t("delete_role_confirm", role="__role__")|tojson }};
+    if (!form || !input || !preview) return;
+
+    const normalizeRole = (value) => {
+        return value
+            .toLowerCase()
+            .trim()
+            .replace(/[^a-z0-9]+/g, "_")
+            .replace(/_+/g, "_")
+            .replace(/^_+|_+$/g, "")
+            .slice(0, 50);
+    };
+
+    const refreshPreview = () => {
+        const normalized = normalizeRole(input.value);
+        preview.textContent = normalized || previewFallback;
+        preview.classList.toggle("is-empty", !normalized);
+    };
+
+    input.addEventListener("input", () => {
+        input.setCustomValidity("");
+        refreshPreview();
+    });
+
+    document.querySelectorAll(".js-delete-role-form").forEach((deleteForm) => {
+        deleteForm.addEventListener("submit", (event) => {
+            const roleName = (deleteForm.dataset.roleName || "").trim() || {{ t("role")|tojson }};
+            const confirmText = deleteRoleConfirmTemplate.replace("__role__", roleName);
+            const confirmed = window.confirm(confirmText);
+            if (!confirmed) {
+                event.preventDefault();
+            }
+        });
+    });
+
+    form.addEventListener("submit", (event) => {
+        const normalized = normalizeRole(input.value);
+        input.value = normalized;
+        refreshPreview();
+
+        if (!normalized) {
+            event.preventDefault();
+            input.setCustomValidity(invalidRoleNameMessage);
+            input.reportValidity();
+            input.focus();
+        }
+    });
+
+    refreshPreview();
+})();
+</script>
 {% endblock %}

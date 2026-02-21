@@ -12,7 +12,7 @@ from .extensions import db, login_manager, migrate, oauth
 from .config import Config
 from app.models.notification import Notification
 from app.services.notification_service import serialize_notification
-from app.utils.i18n import t, get_current_language
+from app.utils.i18n import t, get_current_language, normalize_display_text
 
 
 def create_app():
@@ -347,16 +347,16 @@ def create_app():
     def inject_language():
         def localize(obj, field, fallback=None):
             if obj is None:
-                return fallback or ""
+                return normalize_display_text(fallback or "", lang=get_current_language())
             lang = get_current_language()
             if lang == "km":
                 kh_value = getattr(obj, f"{field}_kh", None)
                 if kh_value:
-                    return kh_value
+                    return normalize_display_text(kh_value, lang=lang)
             value = getattr(obj, field, None)
             if value:
-                return value
-            return fallback or ""
+                return normalize_display_text(value, lang=lang)
+            return normalize_display_text(fallback or "", lang=lang)
 
         return {
             "t": t,
@@ -364,6 +364,9 @@ def create_app():
             "localize": localize,
             "static_version": _static_version(),
         }
+
+    # Auto-fix Khmer mojibake text in rendered template expressions.
+    app.jinja_env.finalize = normalize_display_text
 
     @app.context_processor
     def inject_avatar_helper():

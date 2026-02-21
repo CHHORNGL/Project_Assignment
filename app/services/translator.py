@@ -3,13 +3,19 @@
 import os
 from typing import Optional
 
-from openai import OpenAI
+try:
+    from openai import OpenAI
+except Exception:  # pragma: no cover - optional dependency for local/dev environments
+    OpenAI = None
 
 
 DEFAULT_TRANSLATE_MODEL = "gpt-4o-mini"
 
 
 def _get_client() -> Optional[OpenAI]:
+    if OpenAI is None:
+        return None
+
     api_key = os.getenv("OPENAI_API_KEY", "").strip()
     if not api_key:
         return None

@@ -1,306 +1,474 @@
 {% extends "layouts/farmer_shell.html" %}
-{% block title %}{{ t("full_rule_based") }}{% endblock %}
+{% block title %}{{ t("guided_diagnosis_title") }}{% endblock %}
 
 {% block content %}
-<div class="container-fluid d-flex justify-content-center">
-    <div class="card shadow-sm guided-card" style="max-width: 880px; width:100%;">
-        <div class="card-body">
-
-            <h4 class="mb-2 text-success">
-                 {{ t("full_rule_based") }}
-            </h4>
-
-            <p class="text-muted mb-4">
-                {{ t("rule_based_guided_sub") }}
-            </p>
-
-            <div class="guided-steps">
-                <div class="guided-step active" data-step="1">{{ t("rule_based_step_select_crop") }}</div>
-                <div class="guided-step" data-step="2">{{ t("rule_based_step_answer_questions") }}</div>
-            </div>
-
-            <form method="POST" id="guided-diagnosis-form">
-
-                <!-- ===============================
-                     STEP 1: CROP SELECTION
-                =============================== -->
-                <section class="guided-panel" id="step-1">
-                    <div class="form-group mb-3">
-                        <label class="font-weight-bold">
-                            {{ t("crop_label") }}
-                        </label>
-                        <select name="crop_id" id="crop-select" class="form-control" required>
-                            <option value="" disabled selected>
-                                {{ t("select_crop") }}
-                            </option>
-                            {% for crop in crops %}
-                            <option value="{{ crop.id }}">
-                                {{ localize(crop, "name") }}
-                            </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
-                    <div class="d-flex justify-content-between align-items-center">
-                        <a href="{{ url_for('farmer.dashboard') }}"
-                           class="btn btn-outline-secondary">
-                            {{ t("back") }}
-                        </a>
-                        <button type="button" class="btn btn-success px-4" id="go-step-2" disabled>
-                            {{ t("next") }}
-                        </button>
-                    </div>
-                </section>
-
-                <!-- ===============================
-                     STEP 2: SYMPTOMS SELECTION
-                =============================== -->
-                <section class="guided-panel d-none" id="step-2">
-                    <div class="mb-3 d-flex justify-content-between align-items-center flex-wrap">
-                        <div>
-                            <div class="font-weight-bold">{{ t("guided_questions") }}</div>
-                            <div class="text-muted small">{{ t("answer_yes_no_refine_diagnosis") }}</div>
-                        </div>
-                        <div class="guided-counter">
-                            {{ t("confirmed_label") }}: <span id="selected-count">0</span>
-                        </div>
-                    </div>
-
-                    <div class="guided-question-card">
-                        <div class="guided-progress mb-3">
-                            <div class="progress">
-                                <div class="progress-bar" id="question-progress" role="progressbar" style="width: 0%"></div>
-                            </div>
-                            <div class="text-muted small mt-2">
-                                {{ t("answered_label") }}: <span id="answered-count">0</span>/<span id="total-count">0</span>
-                            </div>
-                        </div>
-                        <div class="text-muted small mb-2">{{ t("does_crop_show_symptom") }}</div>
-                        <div class="guided-question" id="question-text">{{ t("select_crop_to_begin") }}</div>
-                        <div class="guided-actions mt-3">
-                            <button type="button" class="btn btn-outline-danger" id="answer-no" disabled>{{ t("no") }}</button>
-                            <button type="button" class="btn btn-success" id="answer-yes" disabled>{{ t("yes") }}</button>
-                            <button type="button" class="btn btn-outline-primary" id="answer-skip" disabled>{{ t("skip") }}</button>
-                        </div>
-                        <div class="guided-meta mt-3">
-                            <button type="button" class="btn btn-link p-0" id="undo-last" disabled>{{ t("undo_last_answer") }}</button>
-                        </div>
-                    </div>
-
-                    <div class="guided-selected mt-4">
-                        <div class="font-weight-bold mb-2">{{ t("confirmed_symptoms") }}</div>
-                        <div id="confirmed-list" class="confirmed-list text-muted small">{{ t("none_yet") }}</div>
-                    </div>
-
-                    <div class="d-flex justify-content-between align-items-center mt-4">
-                        <button type="button" class="btn btn-outline-secondary" id="back-step-1">
-                            {{ t("back") }}
-                        </button>
-                        <button type="submit" class="btn btn-success px-4" id="submit-rule-based" disabled>
-                            {{ t("diagnose_now") }}
-                        </button>
-                    </div>
-                </section>
-
-            </form>
-
+{% set is_scan_mode = scan_mode %}
+{% set is_instant_scan_mode = instant_scan_mode %}
+{% set first_domain = agri_domains[0] if agri_domains else None %}
+{% set fallback_symptoms = (symptoms_by_crop.get(0, []) if symptoms_by_crop else []) or (all_symptoms_list if all_symptoms_list is defined else []) %}
+{% set page_title = t("instant_scan_title") if is_instant_scan_mode else (t("scan_crop_mode_title") if is_scan_mode else t("guided_diagnosis_title")) %}
+{% set page_subtitle = t("instant_scan_sub") if is_instant_scan_mode else (t("scan_crop_mode_sub") if is_scan_mode else t("guided_diagnosis_sub")) %}
+{% set field_image_label = t("field_image_scan") if is_scan_mode else t("field_image") %}
+<div class="simple-diagnosis-page">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+        <div>
+            <h4 class="mb-1 font-weight-bold">{{ page_title }}</h4>
+            <p class="mb-0 text-muted">{{ page_subtitle }}</p>
         </div>
+        <a href="{{ url_for('farmer.dashboard') }}" class="btn btn-outline-secondary btn-sm mt-2 mt-md-0">
+            <i class="fas fa-arrow-left mr-1"></i>{{ t("back") }}
+        </a>
     </div>
+
+    <form id="simpleDiagnosisForm"
+          class="simple-diagnosis-card"
+          method="POST"
+          action="{{ url_for('farmer.diagnose_rule_based', scan='1' if is_scan_mode else None, instant='1' if is_instant_scan_mode else None) }}"
+          enctype="multipart/form-data">
+        <input type="hidden" name="scan_mode" value="{{ "1" if is_scan_mode else "0" }}">
+        <input type="hidden" name="instant_scan_mode" value="{{ "1" if is_instant_scan_mode else "0" }}">
+        <input type="hidden" name="diagnosis_category" id="simpleDiagnosisCategory" value="other">
+        <input type="hidden" name="slot_payload" value="{}">
+        <input type="hidden" name="visual_tags" value="[]">
+        <input type="hidden" name="clarification_payload" id="simpleClarificationPayload" value="[]">
+        <input type="hidden" name="clarification_count" id="simpleClarificationCount" value="0">
+
+        {% if not is_instant_scan_mode %}
+        <div class="form-row">
+            <div class="form-group col-md-6">
+                <label for="simpleDomainSelect" class="font-weight-semibold">{{ t("category") }}</label>
+                <select id="simpleDomainSelect" name="agri_domain" class="form-control">
+                    {% for domain in agri_domains %}
+                    <option value="{{ domain.id }}" {% if first_domain and domain.id == first_domain.id %}selected{% endif %}>
+                        {{ domain.label }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group col-md-6">
+                <label for="simpleSubcategorySelect" class="font-weight-semibold">{{ t("type") }}</label>
+                <select id="simpleSubcategorySelect" name="agri_subcategory" class="form-control">
+                    {% if first_domain and first_domain.subcategories %}
+                        {% for sub in first_domain.subcategories %}
+                        <option value="{{ sub.id }}">{{ sub.label }}</option>
+                        {% endfor %}
+                    {% else %}
+                        <option value="">{{ t('general') }}</option>
+                    {% endif %}
+                </select>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="form-group">
+            <label for="simpleCropSelect" class="font-weight-semibold">{{ t("crop_label") }}</label>
+            <select id="simpleCropSelect" name="crop_id" class="form-control" required>
+                <option value="">{{ t("select_crop") }}</option>
+                {% for crop in crops %}
+                {% set profile = crop_profiles.get(crop.id) %}
+                <option
+                    value="{{ crop.id }}"
+                    data-domain="{{ profile.domain_id if profile else 'crop' }}"
+                    data-subcategory="{{ profile.subcategory_id if profile else '' }}"
+                >
+                    {{ profile.name if profile else crop.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        {% if not is_instant_scan_mode %}
+            <div class="simple-symptom-panel">
+                <div class="simple-manual-panel">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between mb-2">
+                        <label class="mb-0 font-weight-bold">{{ t("select_symptoms_manual") }}</label>
+                        <input type="text"
+                               id="simpleManualSearch"
+                               class="form-control form-control-sm simple-manual-search"
+                               placeholder="{{ t('search_symptom') }}">
+                    </div>
+                    <div id="simpleManualStats" class="small text-muted mb-2">{{ t('selected_count', count=0) }}</div>
+                    <div id="simpleManualList" class="simple-symptom-grid">
+                        {% for symptom in fallback_symptoms %}
+                        <label class="simple-symptom-item" data-symptom-id="{{ symptom.id }}">
+                            <input type="checkbox" data-symptom-id="{{ symptom.id }}" value="{{ symptom.id }}">
+                            <span>{{ symptom.name }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                    <div id="simpleManualEmpty" class="small text-muted d-none">{{ t("no_symptoms_for_crop") }}</div>
+                    <div id="simpleManualSelectedSummary" class="small text-muted mt-2">{{ t("no_manual_selection_yet") }}</div>
+                </div>
+                <div id="simpleSelectedSymptomsInputs"></div>
+                <div id="simpleDeniedSymptomsInputs"></div>
+            </div>
+        {% else %}
+            <div id="simpleSelectedSymptomsInputs"></div>
+            <div id="simpleDeniedSymptomsInputs"></div>
+            <div id="simpleManualStats" class="d-none"></div>
+            <div id="simpleManualList" class="d-none"></div>
+            <div id="simpleManualEmpty" class="d-none"></div>
+            <div id="simpleManualSelectedSummary" class="d-none"></div>
+            <input type="hidden" id="simpleManualSearch" value="">
+        {% endif %}
+
+        {% if not is_instant_scan_mode %}
+        <div class="form-group mt-3">
+            <label for="simpleFreeTextInput" class="font-weight-semibold">{{ t("free_text_notes_label") }}</label>
+            <textarea id="simpleFreeTextInput"
+                      name="free_text_notes"
+                      class="form-control"
+                      rows="5"
+                      maxlength="1000"
+                      placeholder="{{ t('symptom_placeholder') }}"></textarea>
+        </div>
+        {% endif %}
+
+        <div class="form-group">
+            <label for="simpleFieldImageInput" class="font-weight-semibold">{{ field_image_label }}</label>
+            <input type="file"
+                   id="simpleFieldImageInput"
+                   name="field_image"
+                   class="form-control-file"
+                   accept="image/*"
+                   {% if is_scan_mode %}capture="environment"{% endif %}
+                   {% if is_scan_mode %}required{% endif %}>
+            {% if is_scan_mode %}
+            <div class="scan-camera-panel mt-3" id="simpleCameraPanel">
+                <div class="scan-camera-head">
+                    <div class="scan-camera-badge" aria-hidden="true">
+                        <svg class="scan-camera-glyph" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M7 4H5a1 1 0 0 0-1 1v2" />
+                            <path d="M17 4h2a1 1 0 0 1 1 1v2" />
+                            <path d="M20 17v2a1 1 0 0 1-1 1h-2" />
+                            <path d="M4 17v2a1 1 0 0 0 1 1h2" />
+                            <rect x="9" y="9" width="6" height="6" rx="1.5" />
+                            <path d="M12 8v1" />
+                            <path d="M12 15v1" />
+                            <path d="M8 12h1" />
+                            <path d="M15 12h1" />
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="scan-camera-title">{{ t("camera_live_label") }}</div>
+                        <div class="small text-muted">{{ t("camera_live_sub") }}</div>
+                    </div>
+                </div>
+                <div class="scan-camera-controls">
+                    <button type="button" id="simpleOpenCameraBtn" class="btn btn-primary btn-sm">
+                        <i class="fas fa-video mr-1"></i>{{ t("camera_open") }}
+                    </button>
+                    <button type="button" id="simpleStopCameraBtn" class="btn btn-outline-secondary btn-sm" disabled>
+                        <i class="fas fa-stop-circle mr-1"></i>{{ t("camera_stop") }}
+                    </button>
+                    <select id="simpleCameraSelect" class="form-control form-control-sm" aria-label="{{ t('camera_switch') }}"></select>
+                    <button type="button" id="simpleCaptureBtn" class="btn btn-success btn-sm" disabled>
+                        <i class="fas fa-camera mr-1"></i>{{ t("camera_capture") }}
+                    </button>
+                    <button type="button" id="simpleAnalyzeScanBtn" class="btn btn-info btn-sm" disabled>
+                        <i class="fas fa-search mr-1"></i>{{ t("analyze_scan") }}
+                    </button>
+                    <button type="button" id="simpleRetakeBtn" class="btn btn-outline-success btn-sm d-none">
+                        <i class="fas fa-redo mr-1"></i>{{ t("camera_retake") }}
+                    </button>
+                </div>
+                <div class="scan-camera-frame">
+                    <video id="simpleCameraVideo" autoplay playsinline muted class="d-none"></video>
+                    <img id="simpleCameraPreview" class="d-none" alt="{{ t('camera_live_label') }}">
+                    <div id="simpleCameraEmpty" class="scan-camera-empty">{{ t("camera_live_hint") }}</div>
+                    <div class="scan-camera-overlay" aria-hidden="true"></div>
+                </div>
+                <div id="simpleCameraStatus" class="small text-muted mt-2"></div>
+            </div>
+            {% endif %}
+            <small class="text-muted">{{ t("max_upload_size") }}</small>
+        </div>
+
+        <div id="simpleFormAlert" class="alert alert-danger d-none mb-3"></div>
+
+        <div class="d-flex justify-content-end">
+            <button type="submit" class="btn btn-success px-4">{{ t("diagnose_now") }}</button>
+        </div>
+    </form>
 </div>
 
+<style>
+.simple-diagnosis-page {
+    --diag-card-bg: var(--card-bg);
+    --diag-card-border: var(--border-light);
+    --diag-panel-bg-top: var(--surface-soft);
+    --diag-panel-bg-bottom: var(--surface-muted);
+    --diag-item-bg: var(--card-bg);
+    --diag-item-border: var(--input-border);
+    --diag-item-hover-bg: var(--table-row-hover);
+    --diag-item-hover-border: var(--input-focus-border);
+}
+
+.simple-diagnosis-page {
+    max-width: 980px;
+    margin: 0 auto;
+    padding-bottom: 2rem;
+    color: var(--text-main);
+}
+
+.simple-diagnosis-card {
+    border: 1px solid var(--diag-card-border);
+    border-radius: 14px;
+    background: var(--diag-card-bg);
+    color: var(--text-main);
+    padding: 1.15rem;
+    box-shadow: 0 8px 24px rgba(16, 24, 40, 0.04);
+}
+
+.simple-symptom-panel {
+    border: 1px solid var(--diag-card-border);
+    border-radius: 12px;
+    padding: 1rem;
+    background: linear-gradient(
+        180deg,
+        var(--diag-panel-bg-top) 0%,
+        var(--diag-panel-bg-bottom) 100%
+    );
+}
+
+.simple-manual-panel {
+    padding-top: 0.1rem;
+}
+
+.simple-manual-search {
+    width: 220px;
+}
+
+.simple-symptom-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.55rem;
+    max-height: 320px;
+    overflow-y: auto;
+    padding-right: 0.25rem;
+}
+
+.simple-symptom-item {
+    display: flex;
+    align-items: flex-start;
+    border: 1px solid var(--diag-item-border);
+    border-radius: 8px;
+    background: var(--diag-item-bg);
+    color: var(--text-main);
+    padding: 0.54rem 0.62rem;
+    margin: 0;
+    transition: border-color 0.15s ease-in-out, background 0.15s ease-in-out;
+}
+
+.simple-symptom-item:hover {
+    border-color: var(--diag-item-hover-border);
+    background: var(--diag-item-hover-bg);
+}
+
+.simple-symptom-item input {
+    accent-color: var(--primary);
+    margin-top: 0.2rem;
+    margin-right: 0.45rem;
+}
+
+.simple-symptom-item:has(input:checked) {
+    border-color: var(--input-focus-border);
+    background: var(--primary-soft);
+}
+
+.simple-diagnosis-card .form-control,
+.simple-diagnosis-card .custom-select,
+.simple-diagnosis-card .form-control-file,
+.simple-diagnosis-card .btn-outline-secondary {
+    color: var(--text-main);
+    border-color: var(--input-border);
+}
+
+.simple-diagnosis-card .btn-outline-secondary:hover {
+    background: var(--table-row-hover);
+    color: var(--text-main);
+}
+
+.simple-symptom-grid::-webkit-scrollbar {
+    width: 10px;
+}
+
+.simple-symptom-grid::-webkit-scrollbar-thumb {
+    background: var(--input-border);
+    border-radius: 8px;
+}
+
+.simple-symptom-grid::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.scan-camera-panel {
+    border: 1px solid var(--diag-card-border);
+    border-radius: 12px;
+    background: linear-gradient(180deg, var(--diag-panel-bg-top), var(--diag-panel-bg-bottom));
+    padding: 0.9rem;
+}
+
+.scan-camera-head {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.scan-camera-badge {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 20%, #84c5ff 0%, #4f83ff 46%, #2f57cf 100%);
+    color: #f8fbff;
+    display: grid;
+    place-items: center;
+    font-size: 1.15rem;
+    box-shadow: 0 10px 22px rgba(47, 87, 207, 0.28);
+}
+
+.scan-camera-glyph {
+    width: 24px;
+    height: 24px;
+    fill: none;
+    stroke: #f8fbff;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0.98;
+}
+
+.scan-camera-title {
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.scan-camera-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
+.scan-camera-controls .form-control {
+    width: 220px;
+}
+
+.scan-camera-frame {
+    margin-top: 0.75rem;
+    position: relative;
+    border: 1px solid var(--diag-item-border);
+    border-radius: 10px;
+    overflow: hidden;
+    background: color-mix(in srgb, var(--diag-panel-bg-bottom) 86%, #000);
+    min-height: 220px;
+}
+
+.scan-camera-frame video,
+.scan-camera-frame img {
+    width: 100%;
+    height: 320px;
+    object-fit: cover;
+    display: block;
+}
+
+.scan-camera-overlay {
+    position: absolute;
+    inset: 16px;
+    border: 2px dashed rgba(248, 251, 255, 0.46);
+    border-radius: 12px;
+    pointer-events: none;
+}
+
+.scan-camera-empty {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #dde7ff;
+    font-size: 0.92rem;
+    padding: 1rem;
+}
+
+.dark-mode .simple-diagnosis-card {
+    box-shadow: 0 12px 26px rgba(2, 8, 23, 0.32);
+}
+
+.dark-mode .simple-symptom-item:has(input:checked) {
+    background: rgba(91, 124, 250, 0.22);
+}
+
+.dark-mode .scan-camera-frame {
+    background: #091122;
+}
+
+.dark-mode .scan-camera-empty {
+    color: #c9dcff;
+}
+
+@media (max-width: 576px) {
+    .simple-manual-search {
+        width: 100%;
+        margin-top: 0.4rem;
+    }
+    .simple-symptom-grid {
+        grid-template-columns: 1fr;
+    }
+    .scan-camera-controls .form-control {
+        width: 100%;
+    }
+    .scan-camera-controls > * {
+        width: 100%;
+    }
+    .scan-camera-frame video,
+    .scan-camera-frame img {
+        height: 260px;
+    }
+}
+</style>
+
 <script>
-    const symptomsByCrop = {{ symptoms_by_crop|tojson }};
-    const rulesByCrop = {{ rules_by_crop|tojson }};
-    const i18n = {
-        noneYet: {{ t("none_yet")|tojson }},
-        ruleBasedNoMoreQuestions: {{ t("rule_based_no_more_questions")|tojson }},
-        symptomName: {{ t("symptom_name")|tojson }}
-    };
-
-    const cropSelect = document.getElementById("crop-select");
-    const goStep2 = document.getElementById("go-step-2");
-    const step1 = document.getElementById("step-1");
-    const step2 = document.getElementById("step-2");
-    const backStep1 = document.getElementById("back-step-1");
-    const questionText = document.getElementById("question-text");
-    const answerYes = document.getElementById("answer-yes");
-    const answerNo = document.getElementById("answer-no");
-    const answerSkip = document.getElementById("answer-skip");
-    const undoLast = document.getElementById("undo-last");
-    const selectedCount = document.getElementById("selected-count");
-    const confirmedList = document.getElementById("confirmed-list");
-    const submitButton = document.getElementById("submit-rule-based");
-    const answeredCount = document.getElementById("answered-count");
-    const totalCount = document.getElementById("total-count");
-    const questionProgress = document.getElementById("question-progress");
-
-    let currentCropId = null;
-    let currentSymptomId = null;
-    let yesSet = new Set();
-    let noSet = new Set();
-    let skipSet = new Set();
-    let history = [];
-
-    function setStep(step) {
-        if (step === 1) {
-            step1.classList.remove("d-none");
-            step2.classList.add("d-none");
-        } else {
-            step1.classList.add("d-none");
-            step2.classList.remove("d-none");
-        }
-        document.querySelectorAll(".guided-step").forEach((el) => {
-            el.classList.toggle("active", Number(el.dataset.step) === step);
-        });
+window.SIMPLE_DIAGNOSIS_DATA = {
+    agriDomains: {{ agri_domains|tojson }},
+    symptomsByCrop: {{ symptoms_by_crop|tojson }},
+    rulesByCrop: {{ rules_by_crop|tojson }},
+    domainDefaultDiagnosisCategory: {{ domain_default_diagnosis_category|tojson }},
+    scanSuggestionApi: {{ url_for('farmer.scan_symptom_suggestions_api')|tojson }},
+    initialCropId: {{ initial_crop_id | tojson }},
+    scanMode: {{ "true" if is_scan_mode else "false" }},
+    instantScanMode: {{ "true" if is_instant_scan_mode else "false" }},
+    labels: {
+        noSymptoms: "{{ t('no_symptoms_for_crop') }}",
+        invalidCrop: "{{ t('please_select_crop') }}",
+        invalidSymptoms: "{{ t('please_select_symptom') }}",
+        invalidImage: "{{ t('invalid_image_type') }}",
+        imageRequired: "{{ t('scan_image_required') }}",
+        cameraSelectLabel: "{{ t('camera_switch') }}",
+        cameraUnsupported: "{{ t('camera_not_supported') }}",
+        cameraSecureContext: "{{ t('camera_https_required') }}",
+        cameraPermissionDenied: "{{ t('camera_unavailable') }}",
+        cameraNoDevice: "{{ t('camera_unavailable') }}",
+        cameraReady: "{{ t('camera_live_hint') }}",
+        cameraCaptured: "{{ t('camera_success') }}",
+        cameraOpenFailed: "{{ t('camera_unavailable') }}",
+        scanAnalyzing: "{{ t('scan_analyzing') }}",
+        scanApplied: "{{ t('scan_suggestion_applied') }}",
+        scanNoSuggestion: "{{ t('scan_suggestion_none') }}",
+        scanApiUnavailable: "{{ t('scan_api_unavailable') }}",
+        scanApiFailed: "{{ t('scan_api_failed') }}",
+        scanAutoSubmitting: "{{ t('scan_auto_submitting') }}",
+        generalLabel: "{{ t('general') }}",
+        selectedLabel: "{{ t('selected_label') }}",
+        selectedCountTemplate: "{{ t('selected_count') }}",
+        selectedSummaryTemplate: "{{ t('selected_symptoms_summary') }}",
+        manualSummaryNone: "{{ t('no_manual_selection_yet') }}",
+        noSearchResult: "{{ t('no_symptoms_match') }}",
+        selectCropForManual: "{{ t('select_crop_to_load_symptoms') }}"
     }
-
-    function ensureHiddenInputs() {
-        document.querySelectorAll("input[name='symptoms']").forEach((el) => el.remove());
-        yesSet.forEach((id) => {
-            const input = document.createElement("input");
-            input.type = "hidden";
-            input.name = "symptoms";
-            input.value = String(id);
-            document.getElementById("guided-diagnosis-form").appendChild(input);
-        });
-    }
-
-    function updateSelectedCount() {
-        selectedCount.textContent = yesSet.size;
-        submitButton.disabled = yesSet.size === 0;
-    }
-
-    function updateProgress() {
-        const total = (symptomsByCrop[currentCropId] || []).length;
-        const answered = yesSet.size + noSet.size + skipSet.size;
-        totalCount.textContent = total;
-        answeredCount.textContent = answered;
-        const percent = total ? Math.min(100, Math.round((answered / total) * 100)) : 0;
-        questionProgress.style.width = `${percent}%`;
-    }
-
-    function updateConfirmedList() {
-        const lookup = {};
-        (symptomsByCrop[currentCropId] || []).forEach((s) => {
-            lookup[s.id] = s.name;
-        });
-        if (!yesSet.size) {
-            confirmedList.textContent = i18n.noneYet;
-            return;
-        }
-        const names = Array.from(yesSet).map((id) => lookup[id]).filter(Boolean);
-        confirmedList.textContent = names.join(", ");
-    }
-
-    function pickNextSymptom() {
-        const rules = rulesByCrop[currentCropId] || [];
-        const scores = {};
-        const lookup = {};
-        (symptomsByCrop[currentCropId] || []).forEach((s) => {
-            lookup[s.id] = s.name;
-        });
-
-        rules.forEach((rule) => {
-            const hasAllYes = Array.from(yesSet).every((id) => rule.includes(id));
-            const hasNo = rule.some((id) => noSet.has(id));
-            if (!hasAllYes || hasNo) return;
-            rule.forEach((id) => {
-                if (!yesSet.has(id) && !noSet.has(id) && !skipSet.has(id)) {
-                    scores[id] = (scores[id] || 0) + 1;
-                }
-            });
-        });
-
-        const sorted = Object.entries(scores)
-            .sort((a, b) => b[1] - a[1])
-            .map(([id]) => Number(id));
-
-        if (!sorted.length) {
-            currentSymptomId = null;
-            questionText.textContent = i18n.ruleBasedNoMoreQuestions;
-            answerYes.disabled = true;
-            answerNo.disabled = true;
-            answerSkip.disabled = true;
-            return;
-        }
-
-        currentSymptomId = sorted[0];
-        questionText.textContent = lookup[currentSymptomId] || i18n.symptomName;
-        answerYes.disabled = false;
-        answerNo.disabled = false;
-        answerSkip.disabled = false;
-    }
-
-    cropSelect.addEventListener("change", () => {
-        goStep2.disabled = !cropSelect.value;
-    });
-
-    goStep2.addEventListener("click", () => {
-        if (!cropSelect.value) return;
-        currentCropId = Number(cropSelect.value);
-        yesSet = new Set();
-        noSet = new Set();
-        skipSet = new Set();
-        history = [];
-        ensureHiddenInputs();
-        updateSelectedCount();
-        updateConfirmedList();
-        updateProgress();
-        pickNextSymptom();
-        undoLast.disabled = true;
-        setStep(2);
-    });
-
-    backStep1.addEventListener("click", () => setStep(1));
-
-    answerYes.addEventListener("click", () => {
-        if (!currentSymptomId) return;
-        yesSet.add(currentSymptomId);
-        history.push({ id: currentSymptomId, value: "yes" });
-        ensureHiddenInputs();
-        updateSelectedCount();
-        updateConfirmedList();
-        updateProgress();
-        undoLast.disabled = false;
-        pickNextSymptom();
-    });
-
-    answerNo.addEventListener("click", () => {
-        if (!currentSymptomId) return;
-        noSet.add(currentSymptomId);
-        history.push({ id: currentSymptomId, value: "no" });
-        undoLast.disabled = false;
-        updateProgress();
-        pickNextSymptom();
-    });
-
-    answerSkip.addEventListener("click", () => {
-        if (!currentSymptomId) return;
-        skipSet.add(currentSymptomId);
-        history.push({ id: currentSymptomId, value: "skip" });
-        undoLast.disabled = false;
-        updateProgress();
-        pickNextSymptom();
-    });
-
-    undoLast.addEventListener("click", () => {
-        const last = history.pop();
-        if (!last) return;
-        if (last.value === "yes") {
-            yesSet.delete(last.id);
-            ensureHiddenInputs();
-        } else {
-            if (last.value === "no") {
-                noSet.delete(last.id);
-            } else {
-                skipSet.delete(last.id);
-            }
-        }
-        updateSelectedCount();
-        updateConfirmedList();
-        updateProgress();
-        undoLast.disabled = history.length === 0;
-        pickNextSymptom();
-    });
+};
 </script>
+<script src="{{ url_for('static', filename='js/farmer_diagnosis_simple.js', v=static_version, m='manual-v3') }}"></script>
 {% endblock %}
+

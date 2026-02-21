@@ -25,6 +25,7 @@ from app.extensions import db, oauth
 from app.models.user import User
 from app.models.role import Role
 from app.forms.auth_forms import LoginForm, RegisterForm
+from app.services.theme_manager import resolve_active_runtime
 
 
 auth_bp = Blueprint(
@@ -67,6 +68,28 @@ def _safe_next_url(value: Optional[str]) -> Optional[str]:
     return None
 
 
+def _resolve_auth_theme_runtime(active_role: Optional[str]):
+    """
+    Auth pages are public, so we resolve runtime server-side instead of calling
+    the login-protected theme API from the browser.
+    """
+    # Dynamic Theme Manager UI currently controls the admin scope, and that
+    # theme is used as the global runtime across routes.
+    scope_candidates = ["admin"]
+    role_scope = "expert" if _normalize_login_role(active_role) == "expert" else "farmer"
+    if role_scope not in scope_candidates:
+        scope_candidates.append(role_scope)
+
+    for scope in scope_candidates:
+        try:
+            runtime = resolve_active_runtime(scope, use_cache=True)
+            if runtime:
+                return runtime
+        except Exception:
+            continue
+    return None
+
+
 # ==================================================
 # LOGIN
 # ==================================================
@@ -79,6 +102,7 @@ def login():
     form = LoginForm()
     active_role = _normalize_login_role(request.args.get("role"))
     next_url = _safe_next_url(request.args.get("next"))
+    auth_theme_runtime = _resolve_auth_theme_runtime(active_role)
 
     if form.validate_on_submit():
         identifier = (form.username.data or "").strip()
@@ -99,7 +123,8 @@ def login():
                 "auth/login.html",
                 form=form,
                 active_role=active_role,
-                next_url=next_url
+                next_url=next_url,
+                auth_theme_runtime=auth_theme_runtime,
             )
 
         # 🚫 BANNED USER CHECK
@@ -109,7 +134,8 @@ def login():
                 "auth/login.html",
                 form=form,
                 active_role=active_role,
-                next_url=next_url
+                next_url=next_url,
+                auth_theme_runtime=auth_theme_runtime,
             )
 
         # ✅ Role gate by form
@@ -119,7 +145,8 @@ def login():
                 "auth/login.html",
                 form=form,
                 active_role=active_role,
-                next_url=next_url
+                next_url=next_url,
+                auth_theme_runtime=auth_theme_runtime,
             )
 
         if active_role == "expert" and not (
@@ -130,7 +157,8 @@ def login():
                 "auth/login.html",
                 form=form,
                 active_role=active_role,
-                next_url=next_url
+                next_url=next_url,
+                auth_theme_runtime=auth_theme_runtime,
             )
 
         # ✅ Login success
@@ -144,7 +172,8 @@ def login():
         "auth/login.html",
         form=form,
         active_role=active_role,
-        next_url=next_url
+        next_url=next_url,
+        auth_theme_runtime=auth_theme_runtime,
     )
 
 
@@ -158,6 +187,7 @@ def register():
         return redirect(url_for("main.index"))
 
     form = RegisterForm()
+    auth_theme_runtime = _resolve_auth_theme_runtime("farmer")
 
     if form.validate_on_submit():
         # ❌ Username exists
@@ -165,7 +195,8 @@ def register():
             flash("Username already exists.", "danger")
             return render_template(
                 "auth/register.html",
-                form=form
+                form=form,
+                auth_theme_runtime=auth_theme_runtime,
             )
 
         email_value = (form.email.data or "").strip().lower()
@@ -173,7 +204,8 @@ def register():
             flash("Email already exists.", "danger")
             return render_template(
                 "auth/register.html",
-                form=form
+                form=form,
+                auth_theme_runtime=auth_theme_runtime,
             )
 
         # ✅ Create farmer user
@@ -200,7 +232,8 @@ def register():
 
     return render_template(
         "auth/register.html",
-        form=form
+        form=form,
+        auth_theme_runtime=auth_theme_runtime,
     )
 
 

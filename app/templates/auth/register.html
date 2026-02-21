@@ -3,7 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <title>{{ t("auth_register_title") }}</title>
+    <title>{{ t("auth_register_title") }} | AGRI SYSTEM</title>
+    <link rel="icon" type="image/jpeg" href="{{ url_for('static', filename='img/logo.jpg') }}">
+    <link rel="shortcut icon" type="image/jpeg" href="{{ url_for('static', filename='img/logo.jpg') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/logo.jpg') }}">
+    {% set runtime = auth_theme_runtime or {} %}
+    {% set profile = runtime.get("profile", {}) if runtime else {} %}
+    {% set tokens = profile.get("tokens", {}) if profile else {} %}
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,6 +19,22 @@
     <link href="{{ url_for('static', filename='css/auth.css', v=static_version) }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/notifications.css', v=static_version) }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/system_status.css', v=static_version) }}" rel="stylesheet">
+    <style>
+        :root {
+            --auth-accent: {{ (tokens.get("admin_accent") or tokens.get("primary") or "#22c55e")|e }};
+            --auth-accent-2: {{ (tokens.get("primary") or tokens.get("admin_accent") or "#16a34a")|e }};
+            --auth-panel-light-bg: {{ (tokens.get("admin_bg_light") or tokens.get("admin_bg") or "#f8fafc")|e }};
+            --auth-panel-light-card: {{ (tokens.get("admin_card_light") or tokens.get("admin_card") or "rgba(255, 255, 255, 0.92)")|e }};
+            --auth-panel-light-border: {{ (tokens.get("admin_border_light") or tokens.get("admin_border") or "rgba(15, 23, 42, 0.14)")|e }};
+            --auth-panel-light-text: {{ (tokens.get("admin_text_light") or tokens.get("admin_text") or "#0f172a")|e }};
+            --auth-panel-light-muted: {{ (tokens.get("admin_muted_light") or tokens.get("admin_muted") or "#475569")|e }};
+            --auth-panel-dark-bg: {{ (tokens.get("admin_bg_dark") or "#0b1116")|e }};
+            --auth-panel-dark-card: {{ (tokens.get("admin_card_dark") or "rgba(12, 16, 28, 0.88)")|e }};
+            --auth-panel-dark-border: {{ (tokens.get("admin_border_dark") or "rgba(148, 163, 184, 0.22)")|e }};
+            --auth-panel-dark-text: {{ (tokens.get("admin_text_dark") or "#e7edf5")|e }};
+            --auth-panel-dark-muted: {{ (tokens.get("admin_muted_dark") or "#9fb1a6")|e }};
+        }
+    </style>
 
     <script>
     (function () {
@@ -152,6 +174,13 @@
 
 <script src="{{ url_for('static', filename='js/toast.js') }}"></script>
 <script src="{{ url_for('static', filename='js/system_status.js', v=static_version) }}"></script>
+<script>
+window.AuthThemeMotionConfig = {{ {
+    "layers": tokens.get("admin_motion_layers") or "[]",
+    "legacy_url": tokens.get("admin_lottie_url") or ""
+}|tojson }};
+</script>
+<script src="{{ url_for('static', filename='js/auth_theme_motion.js', v=static_version) }}"></script>
 <script>
 (function () {
     const mq = window.matchMedia("(prefers-color-scheme: dark)");

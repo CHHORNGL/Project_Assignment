@@ -11,9 +11,10 @@
 (function () {
     const HEALTH_URL = "/healthz";
     const CLIENT_LOG_URL = "/client-logs";
-    const CHECK_TIMEOUT_MS = 2500;
+    const CHECK_TIMEOUT_MS = 5000;
     const ONLINE_PING_INTERVAL_MS = 30000;
     const STORAGE_LAST_URL = "last_good_url_v1";
+    const OFFLINE_CONFIRM_FAILURES = 2;
 
     const MAX_CLIENT_LOGS = 8;
     let clientLogCount = 0;
@@ -49,12 +50,18 @@
         }
     }
 
-    function getLastUrl() {
+    function isLikelyBrowserOnline() {
         try {
-            return localStorage.getItem(STORAGE_LAST_URL);
+            if (typeof navigator.onLine === "boolean") return navigator.onLine;
+            return true;
         } catch (e) {
-            return null;
+            return true;
         }
+    }
+
+    function isLocalhostHost() {
+        const host = String(window.location.hostname || "").toLowerCase();
+        return host === "localhost" || host === "127.0.0.1" || host === "[::1]";
     }
 
     async function pingHealthz() {
@@ -159,34 +166,66 @@
 
     let lastIsOffline = null;
     let isChecking = false;
+    let consecutiveFailures = 0;
 
     async function checkNow(opts) {
         const options = opts || {};
         const silent = !!options.silent;
+        const interactive = !!options.interactive;
         const el = ensureWidget();
         if (!el) return false;
 
-        if (isChecking) return !lastIsOffline;
+        if (isChecking) return lastIsOffline !== true;
         isChecking = true;
-        setWidgetState(el, "checking");
-        setRetryLoading(el, true);
+
+        const shouldShowChecking = interactive || !silent || lastIsOffline === true || !isLikelyBrowserOnline();
+        if (shouldShowChecking) {
+            setWidgetState(el, "checking");
+            setRetryLoading(el, true);
+        }
 
         const ok = await pingHealthz();
         isChecking = false;
-        setRetryLoading(el, false);
-
-        const isOffline = !ok;
-        setWidgetState(el, isOffline ? "offline" : "online");
-
-        if (lastIsOffline !== isOffline) {
-            if (!silent) {
-                safeToast(isOffline ? "You're offline. Some features may not work." : "Back online.", isOffline ? "warning" : "success");
-            }
-            lastIsOffline = isOffline;
+        if (shouldShowChecking) {
+            setRetryLoading(el, false);
         }
 
-        if (!isOffline) rememberLastUrl();
-        return ok;
+        if (ok) {
+            consecutiveFailures = 0;
+            setWidgetState(el, "online");
+
+            if (lastIsOffline !== false) {
+                if (!silent) safeToast("Back online.", "success");
+                lastIsOffline = false;
+            }
+
+            rememberLastUrl();
+            return true;
+        }
+
+        consecutiveFailures += 1;
+        const browserOnline = isLikelyBrowserOnline();
+        const confirmedOffline =
+            interactive ||
+            !silent ||
+            !browserOnline ||
+            lastIsOffline === true ||
+            consecutiveFailures >= OFFLINE_CONFIRM_FAILURES;
+
+        if (!confirmedOffline) {
+            if (lastIsOffline == null) {
+                lastIsOffline = false;
+                setWidgetState(el, "online");
+            }
+            return true;
+        }
+
+        setWidgetState(el, "offline");
+        if (lastIsOffline !== true) {
+            if (!silent) safeToast("You're offline. Some features may not work.", "warning");
+            lastIsOffline = true;
+        }
+        return false;
     }
 
     function bindRetry() {
@@ -198,15 +237,9 @@
         if (!btn) return;
 
         btn.addEventListener("click", async () => {
-            const ok = await checkNow({ silent: true });
+            const ok = await checkNow({ silent: false, interactive: true });
             if (ok) {
-                safeToast("Connection restored. Reloading...", "success");
-                const last = getLastUrl();
-                if (last && last !== window.location.href) {
-                    window.location.href = last;
-                } else {
-                    window.location.reload();
-                }
+                safeToast("Connection restored.", "success");
             } else {
                 safeToast("Still offline. Check your network and try again.", "warning");
             }
@@ -215,6 +248,13 @@
 
     function registerServiceWorker() {
         if (!("serviceWorker" in navigator)) return;
+        if (isLocalhostHost()) {
+            // Local development is prone to stale SW/offline fallback loops.
+            navigator.serviceWorker.getRegistrations().then((regs) => {
+                regs.forEach((reg) => reg.unregister().catch(() => {}));
+            }).catch(() => {});
+            return;
+        }
         // Register at root scope (served by Flask route /sw.js).
         navigator.serviceWorker.register("/sw.js").catch(() => {
             // Ignore: SW is an enhancement.
@@ -291,6 +331,7 @@
         // React quickly to OS events, but confirm with /healthz when coming back online.
         window.addEventListener("offline", () => {
             const el = ensureWidget();
+            consecutiveFailures = OFFLINE_CONFIRM_FAILURES;
             setWidgetState(el, "offline");
             lastIsOffline = true;
             safeToast("You're offline. Some features may not work.", "warning");
@@ -315,4 +356,3 @@
 
     boot();
 })();
-

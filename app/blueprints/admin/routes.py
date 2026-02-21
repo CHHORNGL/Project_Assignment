@@ -4,6 +4,7 @@ import os
 import csv
 import json
 import zipfile
+import re
 from datetime import datetime
 from io import StringIO, BytesIO
 
@@ -16,17 +17,21 @@ from flask import (
     request,
     Response,
     jsonify,
-    abort
+    abort,
+    current_app,
 )
 from flask_login import login_required, current_user
-from sqlalchemy import or_
+from sqlalchemy import or_, func
+from sqlalchemy.exc import IntegrityError
 
 from app.extensions import db
 from app.utils.decorators import permission_required
+from app.utils.i18n import t
 
 from app.models.user import User
 from app.models.role import Role
 from app.models.permission import Permission
+from app.models.associations import user_roles
 from app.models.audit_log import AuditLog
 from app.models.diagnosis import Diagnosis
 from app.models.chat_message import ChatMessage
@@ -35,14 +40,36 @@ from app.models.disease import Disease
 from app.models.symptom import Symptom
 from app.models.translation_backup import TranslationBackup
 from app.models.support_request import SupportRequest
+from app.models.theme import ThemeProfile, ThemeSchedule
 from app.services.translator import translate_to_khmer
 from app.services.notification_service import notify_user, _snippet
+from app.services.seasonal_theme import (
+    SeasonalThemeError,
+    build_seasonal_suggestions,
+    fetch_seasonal_events,
+)
+from app.services.theme_animation_uploader import (
+    ThemeAnimationUploadError,
+    upload_animation_asset,
+)
+from app.services.theme_manager import (
+    ThemeValidationError,
+    activate_profile,
+    build_manager_payload,
+    delete_profile,
+    delete_schedule,
+    resolve_active_runtime,
+    upsert_profile,
+    upsert_schedule,
+)
 
 admin_bp = Blueprint(
     "admin",
     __name__,
     url_prefix="/admin"
 )
+
+CORE_ROLE_NAMES = ("admin", "expert", "farmer")
 
 
 def _user_row(user):
@@ -92,6 +119,51 @@ def _zip_response(files, filename):
         headers={"Content-Disposition": f"attachment; filename={filename}"}
     )
 
+
+def _theme_json_error(message, status_code=400):
+    return jsonify({"ok": False, "error": str(message)}), status_code
+
+
+def _as_bool(value, default=False):
+    if value is None:
+        return bool(default)
+    text = str(value).strip().lower()
+    if text in {"1", "true", "yes", "on"}:
+        return True
+    if text in {"0", "false", "no", "off"}:
+        return False
+    return bool(default)
+
+
+def _delete_local_theme_animation_asset(raw_url: str) -> bool:
+    url = (raw_url or "").strip()
+    if not url:
+        return False
+    if "?" in url:
+        url = url.split("?", 1)[0]
+    if "#" in url:
+        url = url.split("#", 1)[0]
+
+    static_prefix = "/static/"
+    uploads_prefix = "/static/uploads/theme_animations/"
+    if not url.startswith(uploads_prefix):
+        return False
+    rel = url[len(static_prefix):].replace("/", os.sep)
+
+    static_root = os.path.abspath(current_app.static_folder)
+    allowed_root = os.path.abspath(os.path.join(static_root, "uploads", "theme_animations"))
+    target_path = os.path.abspath(os.path.join(static_root, rel))
+
+    if not target_path.startswith(allowed_root + os.sep):
+        return False
+    if not os.path.isfile(target_path):
+        return False
+    try:
+        os.remove(target_path)
+        return True
+    except OSError:
+        return False
+
 # ==================================================
 # ADMIN DASHBOARD  ✅ UPDATED
 # ==================================================
@@ -122,7 +194,567 @@ def dashboard():
 
 
 # ==================================================
-# 🌍 3D WORLD VIEW
+# ADMIN THEME MANAGER
+# ==================================================
+@admin_bp.route("/theme-manager")
+@login_required
+@permission_required("view_dashboard")
+def theme_manager():
+    default_provider = (current_app.config.get("THEME_EVENTS_PROVIDER") or "auto").strip().lower()
+    default_country = (current_app.config.get("THEME_EVENTS_DEFAULT_COUNTRY") or "KH").strip().upper()
+    animation_provider = (current_app.config.get("THEME_ANIMATION_CDN_PROVIDER") or "auto").strip().lower()
+    return render_template(
+        "admin/theme_manager.html",
+        seasonal_defaults={
+            "provider": default_provider if default_provider in {"auto", "calendarific", "nager"} else "auto",
+            "country": default_country if len(default_country) == 2 else "KH",
+            "year": datetime.utcnow().year,
+        },
+        animation_defaults={
+            "provider": animation_provider if animation_provider in {"auto", "cloudinary", "local"} else "auto",
+        },
+    )
+
+
+# ==================================================
+# ADMIN THEME MANAGER API
+# ==================================================
+@admin_bp.route("/api/theme-manager/bootstrap")
+@login_required
+@permission_required("view_dashboard")
+def theme_manager_bootstrap_api():
+    scope = request.args.get("scope", "admin")
+    try:
+        payload = build_manager_payload(scope)
+        return jsonify({"ok": True, "data": payload})
+    except ThemeValidationError as exc:
+        return _theme_json_error(exc.message, 400)
+    except Exception:
+        return _theme_json_error("Unable to load theme manager data.", 500)
+
+
+@admin_bp.route("/api/theme-manager/active")
+@login_required
+def theme_manager_active_api():
+    scope = request.args.get("scope", "admin")
+    try:
+        payload = resolve_active_runtime(scope)
+        etag = f'W/"theme-{payload.get("scope")}-{payload.get("revision")}"'
+        if request.headers.get("If-None-Match") == etag:
+            return ("", 304, {"ETag": etag, "Cache-Control": "private, max-age=30"})
+        response = jsonify({"ok": True, "data": payload})
+        response.headers["Cache-Control"] = "private, max-age=30"
+        response.headers["ETag"] = etag
+        return response
+    except ThemeValidationError as exc:
+        return _theme_json_error(exc.message, 400)
+    except Exception:
+        return _theme_json_error("Unable to load active theme runtime.", 500)
+
+
+@admin_bp.route("/api/theme-manager/profile", methods=["POST"])
+@login_required
+@permission_required("manage_roles")
+def theme_manager_upsert_profile_api():
+    if not request.is_json:
+        return _theme_json_error("JSON body is required.", 415)
+    data = request.get_json(silent=True) or {}
+    scope = data.get("scope", "admin")
+    try:
+        profile = upsert_profile(scope, data, actor_id=current_user.id)
+        db.session.add(
+            AuditLog(
+                user_id=current_user.id,
+                action="THEME_PROFILE_UPSERT",
+                target_user=f"{profile.scope}:{profile.slug}",
+                detail=f"id={profile.id}",
+            )
+        )
+        db.session.commit()
+        payload = build_manager_payload(scope)
+        return jsonify({"ok": True, "data": payload})
+    except ThemeValidationError as exc:
+        db.session.rollback()
+        return _theme_json_error(exc.message, 400)
+    except Exception:
+        db.session.rollback()
+        return _theme_json_error("Unable to save theme profile.", 500)
+
+
+@admin_bp.route("/api/theme-manager/animation-auto", methods=["POST"])
+@login_required
+@permission_required("manage_roles")
+def theme_manager_animation_auto_api():
+    scope = (request.form.get("scope") or "admin").strip().lower()
+    profile_id_raw = request.form.get("profile_id")
+    provider = request.form.get("provider") or current_app.config.get("THEME_ANIMATION_CDN_PROVIDER", "auto")
+    activate = _as_bool(request.form.get("activate"), default=True)
+    file_storage = request.files.get("animation_file")
+
+    try:
+        profile_id = int(profile_id_raw or 0)
+    except (TypeError, ValueError):
+        return _theme_json_error("profile_id is required.", 400)
+
+    profile = ThemeProfile.query.filter_by(id=profile_id, scope=scope).first()
+    if not profile:
+        return _theme_json_error("Theme profile not found.", 404)
+
+    try:
+        upload_result = upload_animation_asset(file_storage, provider=provider)
+        animation_url = upload_result["url"]
+
+        current_tokens = {}
+        try:
+            parsed = json.loads(profile.tokens_json or "{}")
+            if isinstance(parsed, dict):
+                current_tokens = parsed
+        except Exception:
+            current_tokens = {}
+        current_tokens["admin_lottie_url"] = animation_url
+
+        updated_profile = upsert_profile(
+            scope=scope,
+            payload={
+                "id": profile.id,
+                "scope": scope,
+                "slug": profile.slug,
+                "label": profile.label,
+                "description": profile.description or "",
+                "tokens": current_tokens,
+            },
+            actor_id=current_user.id,
+        )
+
+        activated_state = None
+        if activate:
+            activated_state = activate_profile(scope=scope, profile_id=updated_profile.id, actor_id=current_user.id)
+
+        db.session.add(
+            AuditLog(
+                user_id=current_user.id,
+                action="THEME_ANIMATION_AUTO",
+                target_user=f"{scope}:{updated_profile.slug}",
+                detail=(
+                    f"provider={upload_result.get('provider')} "
+                    f"activate={bool(activate)} size={upload_result.get('size_bytes')}"
+                ),
+            )
+        )
+        db.session.commit()
+
+        payload = build_manager_payload(scope)
+        return jsonify(
+            {
+                "ok": True,
+                "data": {
+                    "animation_url": animation_url,
+                    "provider": upload_result.get("provider"),
+                    "size_bytes": upload_result.get("size_bytes"),
+                    "activated": bool(activate),
+                    "active_profile_id": (
+                        activated_state.active_profile_id if activated_state else (payload.get("runtime_state") or {}).get("active_profile_id")
+                    ),
+                    "manager_payload": payload,
+                },
+            }
+        )
+    except (ThemeAnimationUploadError, ThemeValidationError) as exc:
+        db.session.rollback()
+        return _theme_json_error(str(exc), 400)
+    except Exception:
+        db.session.rollback()
+        return _theme_json_error("Unable to run animation auto system.", 500)
+
+
+@admin_bp.route("/api/theme-manager/animation-clear", methods=["POST"])
+@login_required
+@permission_required("manage_roles")
+def theme_manager_animation_clear_api():
+    if not request.is_json:
+        return _theme_json_error("JSON body is required.", 415)
+    data = request.get_json(silent=True) or {}
+    scope = (data.get("scope") or "admin").strip().lower()
+    delete_asset = _as_bool(data.get("delete_asset"), default=True)
+    activate = _as_bool(data.get("activate"), default=False)
+
+    try:
+        profile_id = int(data.get("profile_id") or 0)
+    except (TypeError, ValueError):
+        return _theme_json_error("profile_id is required.", 400)
+
+    profile = ThemeProfile.query.filter_by(id=profile_id, scope=scope).first()
+    if not profile:
+        return _theme_json_error("Theme profile not found.", 404)
+
+    try:
+        current_tokens = {}
+        try:
+            parsed = json.loads(profile.tokens_json or "{}")
+            if isinstance(parsed, dict):
+                current_tokens = parsed
+        except Exception:
+            current_tokens = {}
+
+        removed_url = str(current_tokens.get("admin_lottie_url") or "").strip()
+        removed_urls = [removed_url] if removed_url else []
+        try:
+            existing_layers = json.loads(str(current_tokens.get("admin_motion_layers") or "[]"))
+            if isinstance(existing_layers, list):
+                for item in existing_layers:
+                    if not isinstance(item, dict):
+                        continue
+                    layer_url = str(item.get("url") or "").strip()
+                    if layer_url:
+                        removed_urls.append(layer_url)
+        except Exception:
+            pass
+        current_tokens["admin_lottie_url"] = ""
+        current_tokens["admin_motion_layers"] = "[]"
+
+        updated_profile = upsert_profile(
+            scope=scope,
+            payload={
+                "id": profile.id,
+                "scope": scope,
+                "slug": profile.slug,
+                "label": profile.label,
+                "description": profile.description or "",
+                "tokens": current_tokens,
+            },
+            actor_id=current_user.id,
+        )
+
+        deleted_assets = 0
+        if delete_asset:
+            for candidate in sorted(set(removed_urls)):
+                if _delete_local_theme_animation_asset(candidate):
+                    deleted_assets += 1
+        activated_state = None
+        if activate:
+            activated_state = activate_profile(scope=scope, profile_id=updated_profile.id, actor_id=current_user.id)
+
+        db.session.add(
+            AuditLog(
+                user_id=current_user.id,
+                action="THEME_ANIMATION_CLEAR",
+                target_user=f"{scope}:{updated_profile.slug}",
+                detail=f"delete_asset={bool(delete_asset)} deleted_local_assets={int(deleted_assets)}",
+            )
+        )
+        db.session.commit()
+
+        payload = build_manager_payload(scope)
+        return jsonify(
+            {
+                "ok": True,
+                "data": {
+                    "removed_url": removed_url,
+                    "removed_count": len(sorted(set(removed_urls))),
+                    "deleted_asset": bool(deleted_assets > 0),
+                    "deleted_assets": int(deleted_assets),
+                    "activated": bool(activate),
+                    "active_profile_id": (
+                        activated_state.active_profile_id if activated_state else (payload.get("runtime_state") or {}).get("active_profile_id")
+                    ),
+                    "manager_payload": payload,
+                },
+            }
+        )
+    except ThemeValidationError as exc:
+        db.session.rollback()
+        return _theme_json_error(exc.message, 400)
+    except Exception:
+        db.session.rollback()
+        return _theme_json_error("Unable to clear animation.", 500)
+
+
+@admin_bp.route("/api/theme-manager/profile/<int:profile_id>", methods=["DELETE"])
+@login_required
+@permission_required("manage_roles")
+def theme_manager_delete_profile_api(profile_id):
+    scope = request.args.get("scope", "admin")
+    try:
+        profile = ThemeProfile.query.filter_by(id=profile_id).first()
+        if profile:
+            scope = profile.scope
+        delete_profile(scope, profile_id)
+        db.session.add(
+            AuditLog(
+                user_id=current_user.id,
+                action="THEME_PROFILE_DELETE",
+                target_user=f"{scope}:{profile_id}",
+            )
+        )
+        db.session.commit()
+        payload = build_manager_payload(scope)
+        return jsonify({"ok": True, "data": payload})
+    except ThemeValidationError as exc:
+        db.session.rollback()
+        return _theme_json_error(exc.message, 400)
+    except Exception:
+        db.session.rollback()
+        return _theme_json_error("Unable to delete theme profile.", 500)
+
+
+@admin_bp.route("/api/theme-manager/activate", methods=["POST"])
+@login_required
+@permission_required("manage_roles")
+def theme_manager_activate_api():
+    if not request.is_json:
+        return _theme_json_error("JSON body is required.", 415)
+    data = request.get_json(silent=True) or {}
+    scope = data.get("scope", "admin")
+    profile_id = data.get("profile_id")
+    if not profile_id:
+        return _theme_json_error("profile_id is required.", 400)
+    try:
+        state = activate_profile(
+            scope=scope,
+            profile_id=int(profile_id),
+            actor_id=current_user.id,
+            radius_mode=data.get("radius_mode"),
+            density_mode=data.get("density_mode"),
+            auto_schedule_enabled=data.get("auto_schedule_enabled"),
+            cache_ttl_seconds=data.get("cache_ttl_seconds"),
+        )
+        db.session.add(
+            AuditLog(
+                user_id=current_user.id,
+                action="THEME_PROFILE_ACTIVATE",
+                target_user=f"{state.scope}:{state.active_profile_id}",
+                detail=(
+                    f"radius={state.radius_mode} density={state.density_mode} "
+                    f"auto={state.auto_schedule_enabled}"
+                ),
+            )
+        )
+        db.session.commit()
+        payload = build_manager_payload(scope)
+        return jsonify({"ok": True, "data": payload})
+    except ThemeValidationError as exc:
+        db.session.rollback()
+        return _theme_json_error(exc.message, 400)
+    except Exception:
+        db.session.rollback()
+        return _theme_json_error("Unable to activate theme profile.", 500)
+
+
+@admin_bp.route("/api/theme-manager/schedule", methods=["POST"])
+@login_required
+@permission_required("manage_roles")
+def theme_manager_upsert_schedule_api():
+    if not request.is_json:
+        return _theme_json_error("JSON body is required.", 415)
+    data = request.get_json(silent=True) or {}
+    scope = data.get("scope", "admin")
+    try:
+        schedule = upsert_schedule(scope, data, actor_id=current_user.id)
+        db.session.add(
+            AuditLog(
+                user_id=current_user.id,
+                action="THEME_SCHEDULE_UPSERT",
+                target_user=f"{schedule.scope}:{schedule.id}",
+                detail=f"profile_id={schedule.profile_id} priority={schedule.priority}",
+            )
+        )
+        db.session.commit()
+        payload = build_manager_payload(scope)
+        return jsonify({"ok": True, "data": payload})
+    except ThemeValidationError as exc:
+        db.session.rollback()
+        return _theme_json_error(exc.message, 400)
+    except Exception:
+        db.session.rollback()
+        return _theme_json_error("Unable to save schedule.", 500)
+
+
+@admin_bp.route("/api/theme-manager/schedule/<int:schedule_id>", methods=["DELETE"])
+@login_required
+@permission_required("manage_roles")
+def theme_manager_delete_schedule_api(schedule_id):
+    scope = request.args.get("scope", "admin")
+    try:
+        schedule = ThemeSchedule.query.filter_by(id=schedule_id).first()
+        if schedule:
+            scope = schedule.scope
+        delete_schedule(scope, schedule_id, actor_id=current_user.id)
+        db.session.add(
+            AuditLog(
+                user_id=current_user.id,
+                action="THEME_SCHEDULE_DELETE",
+                target_user=f"{scope}:{schedule_id}",
+            )
+        )
+        db.session.commit()
+        payload = build_manager_payload(scope)
+        return jsonify({"ok": True, "data": payload})
+    except ThemeValidationError as exc:
+        db.session.rollback()
+        return _theme_json_error(exc.message, 400)
+    except Exception:
+        db.session.rollback()
+        return _theme_json_error("Unable to delete schedule.", 500)
+
+
+@admin_bp.route("/api/theme-manager/seasonal-events")
+@login_required
+@permission_required("view_dashboard")
+def theme_manager_seasonal_events_api():
+    scope = request.args.get("scope", "admin")
+    country = request.args.get("country") or current_app.config.get("THEME_EVENTS_DEFAULT_COUNTRY", "KH")
+    provider = request.args.get("provider") or current_app.config.get("THEME_EVENTS_PROVIDER", "auto")
+    year = request.args.get("year") or datetime.utcnow().year
+    days_before = request.args.get("days_before", 1)
+    days_after = request.args.get("days_after", 1)
+    try:
+        before = max(0, min(int(days_before), 14))
+        after = max(0, min(int(days_after), 30))
+        events = fetch_seasonal_events(
+            country=country,
+            year=year,
+            provider=provider,
+            api_key=current_app.config.get("CALENDARIFIC_API_KEY", ""),
+        )
+        profiles = ThemeProfile.query.filter_by(scope=scope).order_by(ThemeProfile.id.asc()).all()
+        suggestions = build_seasonal_suggestions(
+            events=events,
+            profile_rows=profiles,
+            days_before=before,
+            days_after=after,
+        )
+        return jsonify(
+            {
+                "ok": True,
+                "data": {
+                    "scope": scope,
+                    "country": str(country).strip().upper(),
+                    "provider": str(provider).strip().lower(),
+                    "year": int(year),
+                    "days_before": before,
+                    "days_after": after,
+                    "events": suggestions,
+                },
+            }
+        )
+    except (SeasonalThemeError, ValueError) as exc:
+        return _theme_json_error(str(exc), 400)
+    except Exception:
+        return _theme_json_error("Unable to load seasonal events.", 500)
+
+
+@admin_bp.route("/api/theme-manager/seasonal-apply", methods=["POST"])
+@login_required
+@permission_required("manage_roles")
+def theme_manager_seasonal_apply_api():
+    if not request.is_json:
+        return _theme_json_error("JSON body is required.", 415)
+
+    data = request.get_json(silent=True) or {}
+    scope = data.get("scope", "admin")
+    country = data.get("country") or current_app.config.get("THEME_EVENTS_DEFAULT_COUNTRY", "KH")
+    provider = data.get("provider") or current_app.config.get("THEME_EVENTS_PROVIDER", "auto")
+    year = data.get("year") or datetime.utcnow().year
+    days_before = data.get("days_before", 1)
+    days_after = data.get("days_after", 1)
+    timezone_name = (data.get("timezone") or "UTC").strip() or "UTC"
+    overwrite_existing = bool(data.get("overwrite_existing", True))
+    priority_base = data.get("priority_base", 120)
+
+    try:
+        before = max(0, min(int(days_before), 14))
+        after = max(0, min(int(days_after), 30))
+        base_priority = max(1, min(int(priority_base), 9000))
+
+        events = fetch_seasonal_events(
+            country=country,
+            year=year,
+            provider=provider,
+            api_key=current_app.config.get("CALENDARIFIC_API_KEY", ""),
+        )
+        profiles = ThemeProfile.query.filter_by(scope=scope).order_by(ThemeProfile.id.asc()).all()
+        suggestions = build_seasonal_suggestions(
+            events=events,
+            profile_rows=profiles,
+            days_before=before,
+            days_after=after,
+        )
+
+        created = 0
+        updated = 0
+        skipped = 0
+        for idx, item in enumerate(suggestions):
+            start_date = datetime.strptime(item["start_date"], "%Y-%m-%d").date()
+            schedule_name = f"Seasonal: {item['name']}"
+
+            existing = (
+                ThemeSchedule.query
+                .filter_by(scope=scope, name=schedule_name)
+                .filter(ThemeSchedule.start_date == start_date)
+                .first()
+            )
+            if existing and not overwrite_existing:
+                skipped += 1
+                continue
+
+            payload = {
+                "id": existing.id if existing else None,
+                "scope": scope,
+                "name": schedule_name,
+                "profile_id": int(item["profile_id"]),
+                "timezone": timezone_name,
+                "priority": max(1, min(base_priority + idx, 9999)),
+                "start_time": "00:00",
+                "end_time": "23:59",
+                "start_date": item["start_date"],
+                "end_date": item["end_date"],
+                "weekdays": [],
+                "is_enabled": True,
+            }
+            upsert_schedule(scope, payload, actor_id=current_user.id)
+            if existing:
+                updated += 1
+            else:
+                created += 1
+
+        db.session.add(
+            AuditLog(
+                user_id=current_user.id,
+                action="THEME_SEASONAL_APPLY",
+                target_user=f"{scope}:{country}:{year}",
+                detail=(
+                    f"provider={provider} created={created} "
+                    f"updated={updated} skipped={skipped}"
+                ),
+            )
+        )
+        db.session.commit()
+        payload = build_manager_payload(scope)
+        return jsonify(
+            {
+                "ok": True,
+                "data": {
+                    "manager_payload": payload,
+                    "summary": {
+                        "created": created,
+                        "updated": updated,
+                        "skipped": skipped,
+                        "total_candidates": len(suggestions),
+                    },
+                    "events": suggestions,
+                },
+            }
+        )
+    except (SeasonalThemeError, ThemeValidationError, ValueError) as exc:
+        db.session.rollback()
+        return _theme_json_error(str(exc), 400)
+    except Exception:
+        db.session.rollback()
+        return _theme_json_error("Unable to apply seasonal schedules.", 500)
+
+
+# ==================================================
+# 3D WORLD VIEW
 # ==================================================
 @admin_bp.route("/world")
 @login_required
@@ -1327,10 +1959,107 @@ def update_user_email(user_id):
 @login_required
 @permission_required("manage_roles")
 def roles():
+    roles_list = Role.query.order_by(func.lower(Role.name).asc()).all()
+    role_user_counts = dict(
+        db.session.query(
+            user_roles.c.role_id,
+            func.count(user_roles.c.user_id)
+        )
+        .group_by(user_roles.c.role_id)
+        .all()
+    )
+
     return render_template(
         "admin/roles.html",
-        roles=Role.query.all()
+        roles=roles_list,
+        core_role_names=CORE_ROLE_NAMES,
+        role_user_counts=role_user_counts,
     )
+
+
+# ==================================================
+# CREATE ROLE
+# ==================================================
+@admin_bp.route("/roles/create", methods=["POST"])
+@login_required
+@permission_required("manage_roles")
+def create_role():
+    raw_role_name = (request.form.get("role_name") or "").strip().lower()
+    normalized = re.sub(r"[^a-z0-9]+", "_", raw_role_name)
+    normalized = re.sub(r"_+", "_", normalized).strip("_")
+
+    if not normalized:
+        flash(t("role_name_required_msg"), "danger")
+        return redirect(url_for("admin.roles"))
+
+    if len(normalized) > 50:
+        flash(t("role_name_length_msg"), "danger")
+        return redirect(url_for("admin.roles"))
+
+    if (not normalized.isascii()) or (not all(ch.isalnum() or ch == "_" for ch in normalized)):
+        flash(t("role_name_invalid_msg"), "danger")
+        return redirect(url_for("admin.roles"))
+
+    existing_role = Role.query.filter(func.lower(Role.name) == normalized).first()
+    if existing_role:
+        flash(t("role_exists_msg"), "warning")
+        return redirect(url_for("admin.roles"))
+
+    db.session.add(Role(name=normalized))
+    db.session.add(
+        AuditLog(
+            user_id=current_user.id,
+            action="CREATE_ROLE",
+            target_user=normalized,
+        )
+    )
+
+    try:
+        db.session.commit()
+        flash(t("role_created_msg"), "success")
+    except IntegrityError:
+        db.session.rollback()
+        flash(t("role_create_failed_msg"), "danger")
+
+    return redirect(url_for("admin.roles"))
+
+
+# ==================================================
+# DELETE ROLE
+# ==================================================
+@admin_bp.route("/roles/<int:role_id>/delete", methods=["POST"])
+@login_required
+@permission_required("manage_roles")
+def delete_role(role_id):
+    role = Role.query.get_or_404(role_id)
+    role_name = (role.name or "").strip().lower()
+
+    if role_name in CORE_ROLE_NAMES:
+        flash(t("core_roles_cannot_delete_msg"), "danger")
+        return redirect(url_for("admin.roles"))
+
+    assigned_users_count = role.users.count()
+    if assigned_users_count > 0:
+        flash(t("role_in_use_delete_msg", role=role.name, count=assigned_users_count), "warning")
+        return redirect(url_for("admin.roles"))
+
+    try:
+        role_label = role.name
+        db.session.delete(role)
+        db.session.add(
+            AuditLog(
+                user_id=current_user.id,
+                action="DELETE_ROLE",
+                target_user=role_label,
+            )
+        )
+        db.session.commit()
+        flash(t("role_deleted_msg"), "success")
+    except Exception:
+        db.session.rollback()
+        flash(t("role_delete_failed_msg"), "danger")
+
+    return redirect(url_for("admin.roles"))
 
 
 # ==================================================
@@ -1484,3 +2213,5 @@ def resolve_support_request(req_id):
     if next_status not in {"open", "resolved", "all"}:
         next_status = "open"
     return redirect(url_for("admin.support_requests", status=next_status, q=next_q))
+
+

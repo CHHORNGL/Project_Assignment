@@ -1,5 +1,8 @@
 {% extends "layouts/base.html" %}
 {% block title %}{{ t("settings") }}{% endblock %}
+{% if current_user.has_role("admin") %}
+{% set body_class = "admin-theme admin-account-page" %}
+{% endif %}
 
 {% block content %}
 <div class="settings-shell">

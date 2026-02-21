@@ -1,6 +1,17 @@
 {% extends "layouts/base.html" %}
 {% block title %}{{ t("expert_dashboard_title") }}{% endblock %}
 {% set body_class = "agro-theme expert-simple" %}
+{% block head %}
+<script>
+(function () {
+    const welcomePrefix = {{ t("auth_welcome_back") | tojson }};
+    const displayName = {{ (current_user.full_name or current_user.username) | tojson }};
+    if (welcomePrefix && displayName) {
+        document.title = welcomePrefix + ", " + displayName + "!";
+    }
+})();
+</script>
+{% endblock %}
 
 {% block content %}
 <div class="agro-board expert-board">
@@ -238,11 +249,19 @@
                         </div>
                         <i class="fas fa-arrow-right"></i>
                     </a>
-                    <a class="expert-action-card" href="{{ url_for('expert.create_disease') }}">
-                        <div class="expert-action-icon"><i class="fas fa-seedling"></i></div>
+                    <a class="expert-action-card" href="{{ url_for('expert.diseases') }}">
+                        <div class="expert-action-icon"><i class="fas fa-notes-medical"></i></div>
                         <div>
-                            <div class="expert-action-title">{{ t("add_disease") }}</div>
-                            <div class="expert-action-sub">{{ t("expand_disease_library") }}</div>
+                            <div class="expert-action-title">{{ t("diagnosis_knowledge") }}</div>
+                            <div class="expert-action-sub">{{ t("diagnosis_knowledge_sub") }}</div>
+                        </div>
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                    <a class="expert-action-card" href="{{ url_for('expert.question_builder_visual_editor') }}">
+                        <div class="expert-action-icon"><i class="fas fa-project-diagram"></i></div>
+                        <div>
+                            <div class="expert-action-title">{{ t("question_builder") }}</div>
+                            <div class="expert-action-sub">{{ t("question_builder_sub") }}</div>
                         </div>
                         <i class="fas fa-arrow-right"></i>
                     </a>

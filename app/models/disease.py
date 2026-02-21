@@ -15,8 +15,17 @@ class Disease(db.Model):
     name_kh = db.Column(db.String(120))
     description = db.Column(db.Text)
     description_kh = db.Column(db.Text)
+    cause_explanation = db.Column(db.Text)
     treatment = db.Column(db.Text)
     treatment_kh = db.Column(db.Text)
+    prevention_tips = db.Column(db.Text)
+    agriculture_category = db.Column(db.String(80))
+    agriculture_sub_category = db.Column(db.String(120))
+    reference_scope = db.Column(db.String(50))
+    visual_input_notes = db.Column(db.Text)
+    reference_links = db.Column(db.Text)
+    knowledge_image_data = db.Column(db.LargeBinary)
+    knowledge_image_mimetype = db.Column(db.String(120))
     severity_level = db.Column(db.String(50))
 
     crop = db.relationship(

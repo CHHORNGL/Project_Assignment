@@ -35,7 +35,10 @@ body.auth-body {
     min-height: 100vh;
     min-height: 100svh;
     min-height: 100dvh;
-    font-family: "Source Sans 3", "Kantumruy Pro", "Noto Sans Khmer", sans-serif;
+    font-family: "Inter", "Kantumruy Pro", "Noto Sans Khmer", sans-serif;
+    font-size: 1rem;
+    line-height: 1.7;
+    font-weight: 500;
     color: var(--auth-ink);
     background-color: var(--auth-bg);
     background-image:
@@ -57,19 +60,89 @@ body.auth-body {
     -moz-osx-font-smoothing: grayscale;
 }
 
+html[lang^="km"] body.auth-body,
+html[lang^="km"] body.auth-body input,
+html[lang^="km"] body.auth-body button,
+html[lang^="km"] body.auth-body select,
+html[lang^="km"] body.auth-body textarea {
+    font-family: "Kantumruy Pro", "Noto Sans Khmer", "Inter", sans-serif;
+    line-height: 1.76;
+    letter-spacing: 0;
+}
+
 body.auth-body::before {
     content: "";
     position: fixed;
     inset: 0;
-    background: radial-gradient(900px 520px at 12% 10%, rgba(34, 197, 94, 0.18), transparent 60%);
+    background: radial-gradient(
+        900px 520px at 12% 10%,
+        color-mix(in srgb, var(--auth-accent) 18%, transparent),
+        transparent 60%
+    );
     opacity: 0.6;
     pointer-events: none;
+    z-index: 1;
+}
+
+#auth-theme-motion-bg {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 0;
+}
+
+.auth-theme-motion-item {
+    position: absolute;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    overflow: visible;
+    will-change: transform, opacity;
+}
+
+.auth-theme-motion-stage {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.auth-theme-motion-stage svg {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.auth-theme-motion-item.is-fallback::before,
+.auth-theme-motion-item.is-fallback::after {
+    content: "";
+    position: absolute;
+    pointer-events: none;
+}
+
+.auth-theme-motion-item.is-fallback::before {
+    inset: 6px;
+    border-radius: 999px;
+    border: 2px solid color-mix(in srgb, var(--auth-accent) 78%, transparent);
+    border-top-color: color-mix(in srgb, var(--auth-accent-2) 92%, transparent);
+    animation: authFallbackSpin 1.5s linear infinite;
+}
+
+.auth-theme-motion-item.is-fallback::after {
+    width: 8px;
+    height: 8px;
+    right: 8px;
+    bottom: 8px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--auth-accent) 88%, #ffffff 12%);
+    box-shadow: 0 0 10px color-mix(in srgb, var(--auth-accent) 65%, transparent);
+    animation: authFallbackPulse 1.3s ease-in-out infinite;
 }
 
 .auth-shell {
     width: min(1180px, 100%);
     position: relative;
-    z-index: 1;
+    z-index: 2;
 }
 
 .auth-card {
@@ -162,7 +235,7 @@ html.auth-panel-dark .auth-panel .auth-theme-btn:hover {
 
 .auth-theme-btn.is-active {
     opacity: 1;
-    background: rgba(34, 197, 94, 0.18);
+    background: color-mix(in srgb, var(--auth-accent) 18%, transparent);
 }
 
 .auth-theme-btn:focus {
@@ -241,16 +314,16 @@ html.auth-panel-dark .auth-panel .auth-theme-btn:hover {
     height: 10px;
     border-radius: 50%;
     background: var(--auth-accent);
-    box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.22);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--auth-accent) 22%, transparent);
 }
 
 .auth-panel {
     /* Auth form theme: default is Light (panel only; page background stays the same). */
-    --auth-bg: #f8fafc;
-    --auth-ink: #0f172a;
-    --auth-muted: #475569;
-    --auth-card: rgba(255, 255, 255, 0.92);
-    --auth-border: rgba(15, 23, 42, 0.14);
+    --auth-bg: var(--auth-panel-light-bg, #f8fafc);
+    --auth-ink: var(--auth-panel-light-text, #0f172a);
+    --auth-muted: var(--auth-panel-light-muted, #475569);
+    --auth-card: var(--auth-panel-light-card, rgba(255, 255, 255, 0.92));
+    --auth-border: var(--auth-panel-light-border, rgba(15, 23, 42, 0.14));
     --auth-shadow: 0 28px 70px rgba(2, 6, 23, 0.14);
 
     --auth-tabs-bg: rgba(255, 255, 255, 0.62);
@@ -277,11 +350,11 @@ html.auth-panel-dark .auth-panel .auth-theme-btn:hover {
 }
 
 html.auth-panel-dark .auth-panel {
-    --auth-bg: #0b1116;
-    --auth-ink: #e7edf5;
-    --auth-muted: #9fb1a6;
-    --auth-card: rgba(12, 16, 28, 0.88);
-    --auth-border: rgba(148, 163, 184, 0.22);
+    --auth-bg: var(--auth-panel-dark-bg, #0b1116);
+    --auth-ink: var(--auth-panel-dark-text, #e7edf5);
+    --auth-muted: var(--auth-panel-dark-muted, #9fb1a6);
+    --auth-card: var(--auth-panel-dark-card, rgba(12, 16, 28, 0.88));
+    --auth-border: var(--auth-panel-dark-border, rgba(148, 163, 184, 0.22));
     --auth-shadow: 0 28px 70px rgba(0, 0, 0, 0.55);
 
     --auth-tabs-bg: rgba(15, 23, 42, 0.65);
@@ -317,7 +390,7 @@ html.auth-panel-dark .auth-panel {
     text-align: center;
     padding: 8px 10px;
     border-radius: 10px;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     font-weight: 600;
     color: var(--auth-muted);
     text-decoration: none;
@@ -326,8 +399,8 @@ html.auth-panel-dark .auth-panel {
 }
 
 .auth-tab.is-active {
-    background: rgba(34, 197, 94, 0.22);
-    border: 1px solid rgba(34, 197, 94, 0.4);
+    background: color-mix(in srgb, var(--auth-accent) 22%, transparent);
+    border: 1px solid color-mix(in srgb, var(--auth-accent) 40%, transparent);
     color: var(--auth-tab-active-ink);
 }
 
@@ -338,7 +411,7 @@ html.auth-panel-dark .auth-panel {
 
 .auth-title {
     font-family: "Space Grotesk", "Kantumruy Pro", sans-serif;
-    font-size: 1.7rem;
+    font-size: 1.82rem;
     margin: 0;
     color: var(--auth-ink);
 }
@@ -365,7 +438,7 @@ html.auth-panel-dark .auth-panel {
 }
 
 .auth-form label {
-    font-size: 0.85rem;
+    font-size: 0.92rem;
     font-weight: 600;
     color: var(--auth-ink);
 }
@@ -382,7 +455,8 @@ html.auth-panel-dark .auth-panel {
     border: 1px solid var(--auth-input-border);
     background: var(--auth-input-bg);
     color: var(--auth-ink);
-    font-size: 1rem;
+    font-size: 1.02rem;
+    font-weight: 500;
     transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
@@ -393,7 +467,7 @@ html.auth-panel-dark .auth-panel {
 .auth-input:focus {
     outline: none;
     border-color: var(--auth-accent);
-    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.25);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--auth-accent) 25%, transparent);
     background: var(--auth-input-bg-focus);
 }
 
@@ -405,9 +479,9 @@ html.auth-panel-dark .auth-panel {
     background: linear-gradient(135deg, var(--auth-accent), var(--auth-accent-2));
     color: #0b1f12;
     font-weight: 700;
-    font-size: 1rem;
+    font-size: 1.02rem;
     cursor: pointer;
-    box-shadow: 0 16px 28px rgba(34, 197, 94, 0.25);
+    box-shadow: 0 16px 28px color-mix(in srgb, var(--auth-accent) 25%, transparent);
     transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -452,7 +526,7 @@ html.auth-panel-dark .auth-panel {
 
 .auth-oauth-btn:hover {
     text-decoration: none;
-    border-color: rgba(34, 197, 94, 0.5);
+    border-color: color-mix(in srgb, var(--auth-accent) 50%, transparent);
     transform: translateY(-1px);
     box-shadow: 0 18px 30px rgba(0, 0, 0, 0.35);
 }
@@ -509,7 +583,7 @@ html.auth-panel-dark .auth-panel {
 }
 
 .flash-success {
-    border-color: rgba(34, 197, 94, 0.4);
+    border-color: color-mix(in srgb, var(--auth-accent) 40%, transparent);
     color: #166534;
     background: rgba(236, 253, 245, 0.85);
 }
@@ -575,6 +649,17 @@ html.auth-panel-dark .auth-panel {
         max-width: 520px;
         margin: 0 auto;
     }
+}
+
+@keyframes authFallbackSpin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes authFallbackPulse {
+    0% { opacity: 0.42; transform: scale(0.9); }
+    50% { opacity: 1; transform: scale(1.06); }
+    100% { opacity: 0.42; transform: scale(0.9); }
 }
 
 @media (max-width: 640px) {

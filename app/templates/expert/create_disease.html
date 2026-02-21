@@ -1,145 +1,276 @@
 {% extends "layouts/base.html" %}
-{% set page_title = t("edit_disease") if edit_mode else t("add_disease") %}
+{% set page_title = t("edit_diagnosis_knowledge") if edit_mode else t("add_diagnosis_knowledge") %}
 {% set back_href = back_url if back_url is defined else url_for('expert.dashboard') %}
+{% set agriculture_categories = agriculture_categories if agriculture_categories is defined else [] %}
+{% set sub_category_map = sub_category_map if sub_category_map is defined else {} %}
+{% set reference_scopes = reference_scopes if reference_scopes is defined else [] %}
 {% block title %}{{ page_title }}{% endblock %}
 
 {% block content %}
-<div class="container-fluid" style="max-width:700px">
-
-    <!-- Header -->
+<div class="container-fluid" style="max-width:900px">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h3 class="font-weight-bold text-success mb-0">
             <i class="fas fa-notes-medical mr-2" aria-hidden="true"></i>{{ page_title }}
         </h3>
-
-        <a href="{{ back_href }}"
-           class="btn btn-light btn-sm shadow-sm">
+        <a href="{{ back_href }}" class="btn btn-light btn-sm shadow-sm">
             <i class="fas fa-arrow-left mr-1" aria-hidden="true"></i>{{ t("back") }}
         </a>
     </div>
 
-    <!-- Form Card -->
     <div class="card shadow-sm">
+        <div class="card-header font-weight-bold">{{ t("diagnosis_knowledge_manager") }}</div>
         <div class="card-body">
-
-            <form method="POST">
-
-                <!-- Crop -->
-                <div class="form-group">
-                    <label class="font-weight-bold">
-                        <i class="fas fa-seedling text-success mr-1" aria-hidden="true"></i>{{ t("crop_label") }}
-                    </label>
-                    <select name="crop_id"
-                            class="form-control"
-                            required>
-                        <option value="">{{ t("select_crop") }}</option>
-                        {% for crop in crops %}
-                        <option value="{{ crop.id }}" {% if disease and disease.crop_id == crop.id %}selected{% endif %}>
-                            {{ localize(crop, "name") }}
-                        </option>
-                        {% endfor %}
-                    </select>
+            <form method="POST" enctype="multipart/form-data">
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label class="font-weight-bold">
+                            <i class="fas fa-seedling text-success mr-1" aria-hidden="true"></i>{{ t("crop_label") }}
+                        </label>
+                        <select name="crop_id" class="form-control" required>
+                            <option value="">{{ t("select_crop") }}</option>
+                            {% for crop in crops %}
+                            <option value="{{ crop.id }}" {% if disease and disease.crop_id == crop.id %}selected{% endif %}>
+                                {{ localize(crop, "name") }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label class="font-weight-bold">{{ t("diagnosis_name") }}</label>
+                        <input type="text"
+                               name="name"
+                               class="form-control"
+                               placeholder="{{ t('disease_example_placeholder') }}"
+                               value="{{ disease.name if disease else '' }}"
+                               required>
+                    </div>
                 </div>
 
-                <!-- {{ t("disease_name") }} -->
-                <div class="form-group">
-                    <label class="font-weight-bold">
-                        {{ t("disease_name") }}
-                    </label>
-                    <input type="text"
-                           name="name"
-                           class="form-control"
-                           placeholder="{{ t("disease_example_placeholder") }}"
-                           value="{{ disease.name if disease else '' }}"
-                           required>
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label class="font-weight-bold">{{ t("disease_name_kh") }}</label>
+                        <input type="text"
+                               name="name_kh"
+                               class="form-control"
+                               value="{{ disease.name_kh if disease else '' }}">
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label class="font-weight-bold">{{ t("severity_level") }}</label>
+                        <select name="severity_level" class="form-control">
+                            <option value="Low" {% if disease and disease.severity_level == 'Low' %}selected{% endif %}>{{ t("severity_low") }}</option>
+                            <option value="Medium" {% if disease and disease.severity_level == 'Medium' %}selected{% endif %}>{{ t("severity_medium") }}</option>
+                            <option value="High" {% if disease and disease.severity_level == 'High' %}selected{% endif %}>{{ t("severity_high") }}</option>
+                            <option value="Critical" {% if disease and disease.severity_level == 'Critical' %}selected{% endif %}>{{ t("severity_critical") }}</option>
+                        </select>
+                    </div>
                 </div>
 
-                <!-- {{ t("disease_name") }} (Khmer) -->
-                <div class="form-group">
-                    <label class="font-weight-bold">
-                        {{ t("disease_name_kh") }}
-                    </label>
-                    <input type="text"
-                           name="name_kh"
-                           class="form-control"
-                           placeholder="ឧ. ជំងឺអាចម៍ដី"
-                           value="{{ disease.name_kh if disease else '' }}">
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label class="font-weight-bold">{{ t("agriculture_category") }}</label>
+                        <input type="text"
+                               name="agriculture_category"
+                               id="agriculture-category-input"
+                               class="form-control"
+                               list="agriculture-category-options"
+                               value="{{ disease.agriculture_category if disease else '' }}"
+                               placeholder="{{ t('agriculture_category_example') }}"
+                               required>
+                        <datalist id="agriculture-category-options">
+                            {% for option in agriculture_categories %}
+                            <option value="{{ option.label }}" data-id="{{ option.id }}"></option>
+                            {% endfor %}
+                        </datalist>
+                        <small class="text-muted">{{ t("agriculture_category_hint") }}</small>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label class="font-weight-bold">{{ t("sub_category") }}</label>
+                        <input type="text"
+                               name="agriculture_sub_category"
+                               id="agriculture-sub-category-input"
+                               class="form-control"
+                               list="agriculture-sub-category-options"
+                               value="{{ disease.agriculture_sub_category if disease else '' }}"
+                               placeholder="{{ t('sub_category_example') }}"
+                               required>
+                        <datalist id="agriculture-sub-category-options"></datalist>
+                        <small class="text-muted">{{ t("sub_category_hint") }}</small>
+                    </div>
                 </div>
 
-                <!-- Severity -->
-                <div class="form-group">
-                    <label class="font-weight-bold">
-                        {{ t("severity_level") }}
-                    </label>
-                    <select name="severity_level"
-                            class="form-control">
-                        <option value="Low" {% if disease and disease.severity_level == 'Low' %}selected{% endif %}>{{ t("severity_low") }}</option>
-                        <option value="Medium" {% if disease and disease.severity_level == 'Medium' %}selected{% endif %}>{{ t("severity_medium") }}</option>
-                        <option value="High" {% if disease and disease.severity_level == 'High' %}selected{% endif %}>{{ t("severity_high") }}</option>
-                        <option value="Critical" {% if disease and disease.severity_level == 'Critical' %}selected{% endif %}>{{ t("severity_critical") }}</option>
-                    </select>
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label class="font-weight-bold">{{ t("crop_reference_scope") }}</label>
+                        <select name="reference_scope" class="form-control" required>
+                            <option value="">{{ t("select_scope") }}</option>
+                            {% for scope in reference_scopes %}
+                            <option value="{{ scope.id }}"
+                                    {% if disease and disease.reference_scope == scope.id %}selected{% endif %}>
+                                {{ scope.label }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <small class="text-muted">{{ t("reference_scope_hint") }}</small>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label class="font-weight-bold">{{ t("visual_input_notes") }}</label>
+                        <textarea name="visual_input_notes"
+                                  class="form-control"
+                                  rows="2"
+                                  placeholder="{{ t('visual_input_notes_placeholder') }}">{{ disease.visual_input_notes if disease else '' }}</textarea>
+                        <small class="text-muted">{{ t("visual_input_notes_hint") }}</small>
+                    </div>
                 </div>
 
-                <!-- Description / Symptoms -->
                 <div class="form-group">
-                    <label class="font-weight-bold">
-                        {{ t("symptoms_description") }}
-                    </label>
+                    <label class="font-weight-bold">{{ t("cause_explanation") }}</label>
+                    <textarea name="cause_explanation"
+                              class="form-control"
+                              rows="4"
+                              placeholder="{{ t('cause_explanation_placeholder') }}"
+                              required>{{ disease.cause_explanation if disease else '' }}</textarea>
+                    <small class="text-muted">{{ t("cause_explanation_required_hint") }}</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="font-weight-bold">{{ t("symptoms_description") }}</label>
                     <textarea name="description"
                               class="form-control"
                               rows="3"
-                              placeholder="{{ t("description_placeholder") }}">{{ disease.description if disease else '' }}</textarea>
+                              placeholder="{{ t('description_placeholder') }}">{{ disease.description if disease else '' }}</textarea>
                 </div>
 
-                <!-- Description / Symptoms (Khmer) -->
                 <div class="form-group">
-                    <label class="font-weight-bold">
-                        {{ t("symptoms_description_kh") }}
-                    </label>
+                    <label class="font-weight-bold">{{ t("symptoms_description_kh") }}</label>
                     <textarea name="description_kh"
                               class="form-control"
-                              rows="3"
-                              placeholder="ពិពណ៌នាអំពីរោគសញ្ញា...">{{ disease.description_kh if disease else '' }}</textarea>
+                              rows="3">{{ disease.description_kh if disease else '' }}</textarea>
                 </div>
 
-                <!-- Solution -->
                 <div class="form-group">
-                    <label class="font-weight-bold">
-                        {{ t("treatment") }}
-                    </label>
+                    <label class="font-weight-bold">{{ t("step_by_step_treatment") }}</label>
                     <textarea name="treatment"
                               class="form-control"
-                              rows="3"
-                              placeholder="{{ t("treatment_placeholder") }}">{{ disease.treatment if disease else '' }}</textarea>
+                              rows="4"
+                              placeholder="{{ t('treatment_steps_placeholder') }}"
+                              required>{{ disease.treatment if disease else '' }}</textarea>
+                    <small class="text-muted">{{ t("treatment_required_hint") }}</small>
                 </div>
 
-                <!-- Solution (Khmer) -->
                 <div class="form-group">
-                    <label class="font-weight-bold">
-                        {{ t("treatment_kh") }}
-                    </label>
+                    <label class="font-weight-bold">{{ t("treatment_kh") }}</label>
                     <textarea name="treatment_kh"
                               class="form-control"
-                              rows="3"
-                              placeholder="វិធីព្យាបាល ឬការការពារ">{{ disease.treatment_kh if disease else '' }}</textarea>
+                              rows="3">{{ disease.treatment_kh if disease else '' }}</textarea>
                 </div>
 
-                <!-- Actions -->
+                <div class="form-group">
+                    <label class="font-weight-bold">{{ t("prevention_tips") }}</label>
+                    <textarea name="prevention_tips"
+                              class="form-control"
+                              rows="4"
+                              placeholder="{{ t('prevention_tips_placeholder') }}"
+                              required>{{ disease.prevention_tips if disease else '' }}</textarea>
+                    <small class="text-muted">{{ t("prevention_required_hint") }}</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="font-weight-bold">{{ t("references") }}</label>
+                    <textarea name="reference_links"
+                              class="form-control"
+                              rows="3"
+                              placeholder="{{ t('references_placeholder') }}">{{ disease.reference_links if disease else '' }}</textarea>
+                    <small class="text-muted">{{ t("reference_one_per_line_hint") }}</small>
+                </div>
+
+                <div class="card border mb-3">
+                    <div class="card-body">
+                        <div class="font-weight-bold mb-2">{{ t("reference_image") }}</div>
+                        {% if disease and disease.knowledge_image_data %}
+                        <div class="mb-3">
+                            <img src="{{ url_for('expert.disease_knowledge_image', disease_id=disease.id) }}"
+                                 alt="{{ t('diagnosis_knowledge_image_alt') }}"
+                                 class="img-fluid rounded border">
+                        </div>
+                        <div class="custom-control custom-checkbox mb-3">
+                            <input type="checkbox"
+                                   class="custom-control-input"
+                                   id="remove-knowledge-image"
+                                   name="remove_knowledge_image"
+                                   value="1">
+                            <label class="custom-control-label" for="remove-knowledge-image">{{ t("remove_existing_image") }}</label>
+                        </div>
+                        {% endif %}
+                        <div class="form-group mb-0">
+                            <label class="font-weight-bold">{{ t("upload_image") }}</label>
+                            <input type="file"
+                                   class="form-control-file"
+                                   name="knowledge_image_file"
+                                   accept=".jpg,.jpeg,.png,.gif,.webp">
+                            <small class="text-muted d-block mt-2">{{ t("knowledge_image_hint") }}</small>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="text-right mt-4">
                     <button class="btn btn-success px-4">
-                        <i class="fas fa-save mr-1" aria-hidden="true"></i>{{ t("update_disease") if edit_mode else t("save_disease") }}
+                        <i class="fas fa-save mr-1" aria-hidden="true"></i>{{ t("update_knowledge") if edit_mode else t("save_knowledge") }}
                     </button>
-
-                    <a href="{{ back_href }}"
-                       class="btn btn-secondary ml-2">
-                        {{ t("cancel") }}
-                    </a>
+                    <a href="{{ back_href }}" class="btn btn-secondary ml-2">{{ t("cancel") }}</a>
                 </div>
-
             </form>
-
         </div>
     </div>
-
 </div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+(function () {
+    const categoryInput = document.getElementById("agriculture-category-input");
+    const subCategoryInput = document.getElementById("agriculture-sub-category-input");
+    const subCategoryList = document.getElementById("agriculture-sub-category-options");
+    if (!categoryInput || !subCategoryInput || !subCategoryList) return;
+
+    const categories = {{ agriculture_categories|tojson }};
+    const subCategoryMap = {{ sub_category_map|tojson }};
+    const categoryLabelToId = {};
+
+    categories.forEach((item) => {
+        if (!item || !item.id || !item.label) return;
+        categoryLabelToId[(item.label || "").toLowerCase()] = item.id;
+    });
+
+    function getSubCategorySuggestions(categoryLabel) {
+        const key = (categoryLabel || "").trim().toLowerCase();
+        if (!key) return [];
+        const categoryId = categoryLabelToId[key];
+        if (categoryId && Array.isArray(subCategoryMap[categoryId])) {
+            return subCategoryMap[categoryId];
+        }
+        const values = Object.values(subCategoryMap || {});
+        for (let i = 0; i < values.length; i += 1) {
+            const rows = Array.isArray(values[i]) ? values[i] : [];
+            const match = rows.find((row) => String(row || "").toLowerCase() === key);
+            if (match) return rows;
+        }
+        return [];
+    }
+
+    function renderSubCategoryOptions() {
+        const suggestions = getSubCategorySuggestions(categoryInput.value);
+        subCategoryList.innerHTML = "";
+        suggestions.forEach((label) => {
+            const option = document.createElement("option");
+            option.value = label;
+            subCategoryList.appendChild(option);
+        });
+    }
+
+    categoryInput.addEventListener("input", renderSubCategoryOptions);
+    categoryInput.addEventListener("change", renderSubCategoryOptions);
+    renderSubCategoryOptions();
+})();
+</script>
 {% endblock %}

@@ -33,6 +33,11 @@ class Diagnosis(db.Model):
         nullable=False
     )
 
+    diagnosis_category = db.Column(
+        db.String(40),
+        nullable=True
+    )
+
     # ===============================
     # DISEASE INFO
     # ===============================
@@ -53,6 +58,11 @@ class Diagnosis(db.Model):
         nullable=True
     )
 
+    confidence_level = db.Column(
+        db.String(20),
+        nullable=True
+    )
+
     # ===============================
     # SYMPTOMS & SOLUTION
     # ===============================
@@ -61,7 +71,37 @@ class Diagnosis(db.Model):
         nullable=False
     )
 
+    selected_symptom_ids = db.Column(
+        db.JSON,
+        nullable=True
+    )
+
+    denied_symptom_ids = db.Column(
+        db.JSON,
+        nullable=True
+    )
+
+    clarification_answers = db.Column(
+        db.JSON,
+        nullable=True
+    )
+
+    diagnosis_reason = db.Column(
+        db.Text,
+        nullable=True
+    )
+
+    diagnosis_evidence = db.Column(
+        db.JSON,
+        nullable=True
+    )
+
     solution = db.Column(
+        db.Text,
+        nullable=True
+    )
+
+    prevention_recommendations = db.Column(
         db.Text,
         nullable=True
     )
@@ -95,6 +135,21 @@ class Diagnosis(db.Model):
         default=datetime.utcnow
     )
 
+    feedback_rating = db.Column(
+        db.String(20),
+        nullable=True
+    )
+
+    feedback_comment = db.Column(
+        db.Text,
+        nullable=True
+    )
+
+    feedback_submitted_at = db.Column(
+        db.DateTime,
+        nullable=True
+    )
+
     # ===============================
     # RELATIONSHIPS
     # ===============================
@@ -126,6 +181,11 @@ class Diagnosis(db.Model):
         """Reject diagnosis by expert"""
         self.expert_id = expert_id
         self.status = "REJECTED"
+
+    def submit_feedback(self, rating: str, comment: str | None = None):
+        self.feedback_rating = rating
+        self.feedback_comment = comment
+        self.feedback_submitted_at = datetime.utcnow()
 
     # ===============================
     # STATUS HELPERS

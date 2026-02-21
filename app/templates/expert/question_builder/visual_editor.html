@@ -1,0 +1,936 @@
+{% extends "layouts/base.html" %}
+{% block title %}{{ t("visual_rule_flow_editor_title") }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid qb-admin-page">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+        <div>
+            <h3 class="qb-title mb-1">
+                <i class="fas fa-project-diagram mr-2 text-success"></i>{{ t("visual_decision_tree_editor") }}
+            </h3>
+            <p class="text-muted mb-0">{{ t("visual_decision_tree_sub") }}</p>
+        </div>
+        <div class="mt-3 mt-md-0">
+            <a href="{{ url_for('expert.question_builder_dashboard') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left mr-1"></i>{{ t("back_to_builder") }}
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-3">
+        <div class="card-body">
+            <div class="form-row align-items-end">
+                <div class="col-md-4 mb-2">
+                    <label class="small font-weight-bold mb-1">{{ t("flow_scope") }}</label>
+                    <select id="flow-scope-select" class="form-control">
+                        {% for scope in scopes %}
+                        <option value="{{ scope.key }}" {% if scope.key == initial_scope_key %}selected{% endif %}>{{ scope.label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-8 mb-2 text-md-right">
+                    <button type="button" id="add-node-btn" class="btn btn-outline-success mr-2">
+                        <i class="fas fa-plus-circle mr-1"></i> {{ t("add_question_node") }}
+                    </button>
+                    <button type="button" id="validate-flow-btn" class="btn btn-outline-primary mr-2">
+                        <i class="fas fa-shield-alt mr-1"></i> {{ t("validate_flow") }}
+                    </button>
+                    <button type="button" id="save-flow-btn" class="btn btn-success">
+                        <i class="fas fa-save mr-1"></i> {{ t("save_flow") }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="qb-visual-layout">
+        <aside class="qb-visual-sidebar card shadow-sm">
+            <div class="card-header font-weight-bold"><i class="fas fa-chart-line mr-1"></i>{{ t("flow_status") }}</div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="small text-muted">{{ t("rule_nodes") }}</div>
+                    <div class="font-weight-bold" id="metric-nodes">0</div>
+                </div>
+                <div class="mb-3">
+                    <div class="small text-muted">{{ t("total_branches") }}</div>
+                    <div class="font-weight-bold" id="metric-branches">0</div>
+                </div>
+                <div class="mb-3">
+                    <div class="small text-muted">{{ t("root_node") }}</div>
+                    <div class="font-weight-bold" id="metric-root">{{ t("not_set") }}</div>
+                </div>
+                <hr>
+                <div class="small font-weight-bold mb-2">{{ t("validation") }}</div>
+                <div id="validation-output" class="small text-muted">{{ t("validation_help") }}</div>
+            </div>
+        </aside>
+
+        <section class="qb-visual-canvas-wrap card shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span class="font-weight-bold">{{ t("drag_drop_flow_canvas") }}</span>
+                <span class="small text-muted">{{ t("flow_canvas_hint") }}</span>
+            </div>
+            <div class="card-body p-0">
+                <div id="flow-canvas-scroll" class="qb-flow-scroll">
+                    <svg id="flow-links"></svg>
+                    <div id="flow-canvas" class="qb-flow-canvas"></div>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function initVisualFlowEditor() {
+    const flowDataByScope = {{ flow_data|tojson }};
+    const questionCategories = {{ question_categories|tojson }};
+    const answerEffects = {{ answer_effects|tojson }};
+    const conditionTypes = {{ condition_types|tojson }};
+    const diagnosisCategories = {{ diagnosis_categories|tojson }};
+    const symptoms = {{ symptoms|tojson }};
+    const i18n = {
+        atLeastOneNode: {{ t("at_least_one_question_node_required")|tojson }},
+        exactlyOneRoot: {{ t("exactly_one_root_required")|tojson }},
+        questionTextRequired: {{ t("question_text_required")|tojson }},
+        atLeastTwoBranches: {{ t("at_least_two_branches_required")|tojson }},
+        answerLabelRequired: {{ t("answer_label_required")|tojson }},
+        finalDiagnosisRequiredStop: {{ t("final_diagnosis_required_stop")|tojson }},
+        brokenNextPath: {{ t("broken_next_question_path")|tojson }},
+        ifElseMustIncludeBoth: {{ t("if_else_must_include_both")|tojson }},
+        onlyOneElse: {{ t("only_one_else_allowed")|tojson }},
+        cycleDetectedAt: {{ t("cycle_detected_at")|tojson }},
+        unreachableFromRoot: {{ t("node_unreachable")|tojson }},
+        validationFailed: {{ t("validation_failed")|tojson }},
+        unableValidationEndpoint: {{ t("unable_validation_endpoint")|tojson }},
+        localValidationPassed: {{ t("local_validation_passed")|tojson }},
+        flowValidationPassed: {{ t("flow_validation_passed")|tojson }},
+        flowValidationServerPassed: {{ t("flow_validation_server_passed")|tojson }},
+        flowSavedSuccessfully: {{ t("flow_saved_successfully")|tojson }},
+        saveFailed: {{ t("save_failed")|tojson }},
+        unableSaveFlow: {{ t("unable_save_flow")|tojson }},
+        scopeLoaded: {{ t("scope_loaded")|tojson }},
+        newDiagnosticQuestion: {{ t("new_diagnostic_question")|tojson }},
+        setFinalDiagnosis: {{ t("set_final_diagnosis")|tojson }},
+        finalDiagnosisRequired: {{ t("final_diagnosis_required")|tojson }},
+        remove: {{ t("remove")|tojson }},
+        clickableAnswer: {{ t("clickable_answer")|tojson }},
+        ifElse: {{ t("if_else")|tojson }},
+        mapping: {{ t("mapping")|tojson }},
+        symptom: {{ t("symptom_name")|tojson }},
+        diagnosisCategory: {{ t("diagnosis_category")|tojson }},
+        none: {{ t("none_label")|tojson }},
+        stopCondition: {{ t("stop_condition_final_diagnosis")|tojson }},
+        finalDiagnosisResult: {{ t("final_diagnosis_result")|tojson }},
+        nextQuestion: {{ t("next_question")|tojson }},
+        selectNextQuestion: {{ t("select_next_question")|tojson }},
+        question: {{ t("question_label")|tojson }},
+        ruleIdTracked: {{ t("rule_id_tracked")|tojson }},
+        deleteLabel: {{ t("delete")|tojson }},
+        category: {{ t("category")|tojson }},
+        rootNodeLabel: {{ t("root_node_label")|tojson }},
+        setAsRoot: {{ t("set_as_root")|tojson }},
+        description: {{ t("description_label")|tojson }},
+        activeNode: {{ t("active_node")|tojson }},
+        addBranch: {{ t("add_branch")|tojson }},
+        notSet: {{ t("not_set")|tojson }},
+        atLeastTwoAnswersRequired: {{ t("at_least_two_answers_required")|tojson }},
+        rootBadge: {{ t("root")|tojson }},
+        symptomsCategory: {{ t("qb_category_symptoms")|tojson }},
+        pestsCategory: {{ t("qb_category_pests")|tojson }},
+        diseasesCategory: {{ t("qb_category_diseases")|tojson }},
+        environmentCategory: {{ t("qb_category_environment")|tojson }},
+        effectNone: {{ t("qb_effect_none")|tojson }},
+        effectConfirmSymptom: {{ t("qb_effect_confirm_symptom")|tojson }},
+        effectDenySymptom: {{ t("qb_effect_deny_symptom")|tojson }},
+        effectSetCategory: {{ t("qb_effect_set_category")|tojson }},
+        condIf: {{ t("qb_condition_if")|tojson }},
+        condElse: {{ t("qb_condition_else")|tojson }},
+        condBranch: {{ t("qb_condition_branch")|tojson }},
+        diagFungal: {{ t("qb_diag_fungal")|tojson }},
+        diagBacterial: {{ t("qb_diag_bacterial")|tojson }},
+        diagViral: {{ t("qb_diag_viral")|tojson }},
+        diagPest: {{ t("qb_diag_pest")|tojson }},
+        diagNutrient: {{ t("qb_diag_nutrient")|tojson }},
+        diagEnvironment: {{ t("qb_diag_environment")|tojson }},
+        diagOther: {{ t("qb_diag_other")|tojson }},
+        yes: {{ t("yes")|tojson }},
+        no: {{ t("no")|tojson }},
+        newBranch: {{ t("new_branch")|tojson }},
+    };
+
+    const categoryLabelMap = {
+        symptoms: i18n.symptomsCategory,
+        pests: i18n.pestsCategory,
+        diseases: i18n.diseasesCategory,
+        environment: i18n.environmentCategory,
+    };
+    const effectLabelMap = {
+        none: i18n.effectNone,
+        confirm_symptom: i18n.effectConfirmSymptom,
+        deny_symptom: i18n.effectDenySymptom,
+        set_category: i18n.effectSetCategory,
+    };
+    const conditionLabelMap = {
+        if: i18n.condIf,
+        else: i18n.condElse,
+        branch: i18n.condBranch,
+    };
+    const diagnosisLabelMap = {
+        fungal: i18n.diagFungal,
+        bacterial: i18n.diagBacterial,
+        viral: i18n.diagViral,
+        pest: i18n.diagPest,
+        nutrient: i18n.diagNutrient,
+        environment: i18n.diagEnvironment,
+        other: i18n.diagOther,
+    };
+    const localizedQuestionCategories = questionCategories.map((item) => ({ ...item, label: categoryLabelMap[item.id] || item.label }));
+    const localizedAnswerEffects = answerEffects.map((item) => ({ ...item, label: effectLabelMap[item.id] || item.label }));
+    const localizedConditionTypes = conditionTypes.map((item) => ({ ...item, label: conditionLabelMap[item.id] || item.label }));
+    const localizedDiagnosisCategories = diagnosisCategories.map((item) => ({ ...item, label: diagnosisLabelMap[item.id] || item.label }));
+
+    const scopeSelect = document.getElementById("flow-scope-select");
+    const addNodeBtn = document.getElementById("add-node-btn");
+    const validateBtn = document.getElementById("validate-flow-btn");
+    const saveBtn = document.getElementById("save-flow-btn");
+
+    const metricNodes = document.getElementById("metric-nodes");
+    const metricBranches = document.getElementById("metric-branches");
+    const metricRoot = document.getElementById("metric-root");
+    const validationOutput = document.getElementById("validation-output");
+
+    const flowCanvasScroll = document.getElementById("flow-canvas-scroll");
+    const flowCanvas = document.getElementById("flow-canvas");
+    const flowLinks = document.getElementById("flow-links");
+
+    let activeScopeKey = scopeSelect.value;
+    let state = cloneFlow(flowDataByScope[activeScopeKey] || { scope_crop_id: null, nodes: [] });
+
+    const dragState = {
+        active: false,
+        nodeId: null,
+        startX: 0,
+        startY: 0,
+        originX: 0,
+        originY: 0,
+    };
+
+    function cloneFlow(payload) {
+        return JSON.parse(JSON.stringify(payload || { scope_crop_id: null, nodes: [] }));
+    }
+
+    function listNodes() {
+        return Array.isArray(state.nodes) ? state.nodes : [];
+    }
+
+    function findNode(nodeId) {
+        return listNodes().find((node) => String(node.id) === String(nodeId));
+    }
+
+    function ensureScopeShape() {
+        if (!Array.isArray(state.nodes)) {
+            state.nodes = [];
+        }
+    }
+
+    function normalizedRuleCode(node, index) {
+        if (node.rule_code) {
+            return node.rule_code;
+        }
+        if (node.db_id) {
+            return `RULE-${node.db_id}`;
+        }
+        return `RULE-TEMP-${index + 1}`;
+    }
+
+    function newNodeId() {
+        return `tmp-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
+    }
+
+    function defaultAnswer(label, conditionType) {
+        return {
+            id: null,
+            label,
+            sort_order: 0,
+            condition_type: conditionType || "branch",
+            next_node_id: null,
+            is_terminal: true,
+            effect_type: "none",
+            symptom_id: null,
+            category_value: null,
+            final_diagnosis: i18n.setFinalDiagnosis,
+            note: null,
+        };
+    }
+
+    function addNode() {
+        ensureScopeShape();
+        const nodes = listNodes();
+        const rootAlreadySet = nodes.some((node) => node.is_root);
+        const baseX = 80 + (nodes.length % 3) * 300;
+        const baseY = 80 + Math.floor(nodes.length / 3) * 260;
+
+        const node = {
+            id: newNodeId(),
+            db_id: null,
+            rule_code: null,
+            prompt: i18n.newDiagnosticQuestion,
+            category: "symptoms",
+            description: "",
+            is_root: !rootAlreadySet,
+            is_active: true,
+            canvas_x: baseX,
+            canvas_y: baseY,
+            answers: [
+                defaultAnswer(i18n.yes, "if"),
+                defaultAnswer(i18n.no, "else"),
+            ],
+        };
+
+        node.answers[0].sort_order = 0;
+        node.answers[1].sort_order = 1;
+
+        nodes.push(node);
+        render();
+    }
+
+    function removeNode(nodeId) {
+        const nextNodes = listNodes().filter((node) => String(node.id) !== String(nodeId));
+        state.nodes = nextNodes;
+
+        nextNodes.forEach((node) => {
+            node.answers.forEach((answer) => {
+                if (String(answer.next_node_id || "") === String(nodeId)) {
+                    answer.next_node_id = null;
+                    answer.is_terminal = true;
+                    if (!answer.final_diagnosis) {
+                        answer.final_diagnosis = i18n.finalDiagnosisRequired;
+                    }
+                }
+            });
+        });
+
+        if (!nextNodes.some((node) => node.is_root) && nextNodes.length) {
+            nextNodes[0].is_root = true;
+        }
+
+        render();
+    }
+
+    function addAnswer(nodeId) {
+        const node = findNode(nodeId);
+        if (!node) {
+            return;
+        }
+        const answer = defaultAnswer(i18n.newBranch, "branch");
+        answer.sort_order = node.answers.length;
+        node.answers.push(answer);
+        render();
+    }
+
+    function removeAnswer(nodeId, answerIndex) {
+        const node = findNode(nodeId);
+        if (!node) {
+            return;
+        }
+        if (node.answers.length <= 2) {
+            alert(i18n.atLeastTwoAnswersRequired);
+            return;
+        }
+        node.answers.splice(answerIndex, 1);
+        node.answers.forEach((answer, idx) => {
+            answer.sort_order = idx;
+        });
+        render();
+    }
+
+    function setRoot(nodeId) {
+        listNodes().forEach((node) => {
+            node.is_root = String(node.id) === String(nodeId);
+        });
+        render();
+    }
+
+    function escapeHtml(value) {
+        return String(value ?? "")
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#39;");
+    }
+
+    function selectOptionsHtml(items, selected, valueField, labelField, includeNoneLabel) {
+        let html = "";
+        if (includeNoneLabel) {
+            const selectedNone = !selected ? "selected" : "";
+            html += `<option value="" ${selectedNone}>${escapeHtml(includeNoneLabel)}</option>`;
+        }
+        html += items.map((item) => {
+            const value = item[valueField];
+            const label = item[labelField];
+            const isSelected = String(selected || "") === String(value) ? "selected" : "";
+            return `<option value="${escapeHtml(value)}" ${isSelected}>${escapeHtml(label)}</option>`;
+        }).join("");
+        return html;
+    }
+
+    function nodeOptionsHtml(currentNodeId, selectedNodeId) {
+        const rows = listNodes()
+            .filter((node) => String(node.id) !== String(currentNodeId))
+            .map((node, index) => {
+                const selected = String(node.id) === String(selectedNodeId) ? "selected" : "";
+                return `<option value="${escapeHtml(node.id)}" ${selected}>${escapeHtml(normalizedRuleCode(node, index))} - ${escapeHtml(node.prompt || i18n.question)}</option>`;
+            })
+            .join("");
+        return `<option value="">${escapeHtml(i18n.selectNextQuestion)}</option>${rows}`;
+    }
+
+    function renderNode(node, index) {
+        const nodeEl = document.createElement("div");
+        nodeEl.className = "qb-flow-node";
+        nodeEl.style.left = `${Number(node.canvas_x || 120)}px`;
+        nodeEl.style.top = `${Number(node.canvas_y || 120)}px`;
+        nodeEl.dataset.nodeId = node.id;
+
+        const ruleCode = normalizedRuleCode(node, index);
+        const rootBadge = node.is_root ? `<span class="badge badge-info ml-2">${escapeHtml(i18n.rootBadge)}</span>` : "";
+
+        const answersHtml = (node.answers || []).map((answer, answerIndex) => {
+            const branchRule = `${ruleCode}-B${answerIndex + 1}`;
+            const isTerminal = Boolean(answer.is_terminal);
+            const symptomValue = answer.symptom_id ? String(answer.symptom_id) : "";
+            const diagValue = answer.category_value || "";
+
+            return `
+                <div class="qb-answer-row" data-node-id="${escapeHtml(node.id)}" data-answer-index="${answerIndex}">
+                    <div class="qb-answer-row-head">
+                        <span class="small text-muted">${escapeHtml(branchRule)}</span>
+                        <button type="button" class="btn btn-sm btn-link text-danger p-0" data-action="remove-answer" data-node-id="${escapeHtml(node.id)}" data-answer-index="${answerIndex}">${escapeHtml(i18n.remove)}</button>
+                    </div>
+                    <input type="text" class="form-control form-control-sm mb-2" value="${escapeHtml(answer.label || "")}" data-field="answer-label" data-node-id="${escapeHtml(node.id)}" data-answer-index="${answerIndex}" placeholder="${escapeHtml(i18n.clickableAnswer)}">
+
+                    <div class="form-row">
+                        <div class="col-4 pr-1">
+                            <label class="small text-muted mb-1">${escapeHtml(i18n.ifElse)}</label>
+                            <select class="form-control form-control-sm" data-field="answer-condition" data-node-id="${escapeHtml(node.id)}" data-answer-index="${answerIndex}">
+                                ${selectOptionsHtml(localizedConditionTypes, answer.condition_type || "branch", "id", "label")}
+                            </select>
+                        </div>
+                        <div class="col-8 pl-1">
+                            <label class="small text-muted mb-1">${escapeHtml(i18n.mapping)}</label>
+                            <select class="form-control form-control-sm" data-field="answer-effect" data-node-id="${escapeHtml(node.id)}" data-answer-index="${answerIndex}">
+                                ${selectOptionsHtml(localizedAnswerEffects, answer.effect_type || "none", "id", "label")}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row mt-2">
+                        <div class="col-6 pr-1">
+                            <label class="small text-muted mb-1">${escapeHtml(i18n.symptom)}</label>
+                            <select class="form-control form-control-sm" data-field="answer-symptom" data-node-id="${escapeHtml(node.id)}" data-answer-index="${answerIndex}">
+                                ${selectOptionsHtml(symptoms, symptomValue, "id", "name", i18n.none)}
+                            </select>
+                        </div>
+                        <div class="col-6 pl-1">
+                            <label class="small text-muted mb-1">${escapeHtml(i18n.diagnosisCategory)}</label>
+                            <select class="form-control form-control-sm" data-field="answer-diag" data-node-id="${escapeHtml(node.id)}" data-answer-index="${answerIndex}">
+                                ${selectOptionsHtml(localizedDiagnosisCategories, diagValue, "id", "label", i18n.none)}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="custom-control custom-switch mt-2">
+                        <input type="checkbox" class="custom-control-input" id="stop-${escapeHtml(node.id)}-${answerIndex}" data-field="answer-terminal" data-node-id="${escapeHtml(node.id)}" data-answer-index="${answerIndex}" ${isTerminal ? "checked" : ""}>
+                        <label class="custom-control-label small" for="stop-${escapeHtml(node.id)}-${answerIndex}">${escapeHtml(i18n.stopCondition)}</label>
+                    </div>
+
+                    <div class="mt-2 ${isTerminal ? "" : "d-none"}" data-terminal-wrap="${escapeHtml(node.id)}-${answerIndex}">
+                        <input type="text" class="form-control form-control-sm" value="${escapeHtml(answer.final_diagnosis || "")}" data-field="answer-final-diagnosis" data-node-id="${escapeHtml(node.id)}" data-answer-index="${answerIndex}" placeholder="${escapeHtml(i18n.finalDiagnosisResult)}">
+                    </div>
+
+                    <div class="mt-2 ${isTerminal ? "d-none" : ""}" data-next-wrap="${escapeHtml(node.id)}-${answerIndex}">
+                        <label class="small text-muted mb-1">${escapeHtml(i18n.nextQuestion)}</label>
+                        <select class="form-control form-control-sm" data-field="answer-next" data-node-id="${escapeHtml(node.id)}" data-answer-index="${answerIndex}">
+                            ${nodeOptionsHtml(node.id, answer.next_node_id)}
+                        </select>
+                    </div>
+                </div>
+            `;
+        }).join("");
+
+        nodeEl.innerHTML = `
+            <div class="qb-node-header" data-drag-handle="true" data-node-id="${escapeHtml(node.id)}">
+                <div>
+                    <div class="qb-node-rule">${escapeHtml(ruleCode)}${rootBadge}</div>
+                    <div class="small text-muted">${escapeHtml(i18n.ruleIdTracked)}</div>
+                </div>
+                <button type="button" class="btn btn-sm btn-link text-danger p-0" data-action="remove-node" data-node-id="${escapeHtml(node.id)}">${escapeHtml(i18n.deleteLabel)}</button>
+            </div>
+            <div class="qb-node-body">
+                <div class="form-group mb-2">
+                    <label class="small text-muted mb-1">${escapeHtml(i18n.question)}</label>
+                    <input type="text" class="form-control form-control-sm" value="${escapeHtml(node.prompt || "")}" data-field="node-prompt" data-node-id="${escapeHtml(node.id)}">
+                </div>
+
+                <div class="form-row mb-2">
+                    <div class="col-6 pr-1">
+                        <label class="small text-muted mb-1">${escapeHtml(i18n.category)}</label>
+                        <select class="form-control form-control-sm" data-field="node-category" data-node-id="${escapeHtml(node.id)}">
+                            ${selectOptionsHtml(localizedQuestionCategories, node.category || "symptoms", "id", "label")}
+                        </select>
+                    </div>
+                    <div class="col-6 pl-1">
+                        <label class="small text-muted mb-1">${escapeHtml(i18n.rootNodeLabel)}</label>
+                        <button type="button" class="btn btn-sm btn-block ${node.is_root ? "btn-info" : "btn-outline-info"}" data-action="set-root" data-node-id="${escapeHtml(node.id)}">${node.is_root ? escapeHtml(i18n.rootNodeLabel) : escapeHtml(i18n.setAsRoot)}</button>
+                    </div>
+                </div>
+
+                <div class="form-group mb-2">
+                    <label class="small text-muted mb-1">${escapeHtml(i18n.description)}</label>
+                    <textarea class="form-control form-control-sm" rows="2" data-field="node-description" data-node-id="${escapeHtml(node.id)}">${escapeHtml(node.description || "")}</textarea>
+                </div>
+
+                <div class="custom-control custom-checkbox mb-2">
+                    <input type="checkbox" class="custom-control-input" id="active-${escapeHtml(node.id)}" data-field="node-active" data-node-id="${escapeHtml(node.id)}" ${node.is_active ? "checked" : ""}>
+                    <label class="custom-control-label small" for="active-${escapeHtml(node.id)}">${escapeHtml(i18n.activeNode)}</label>
+                </div>
+
+                <div class="qb-node-answers">${answersHtml}</div>
+                <button type="button" class="btn btn-sm btn-outline-success mt-2" data-action="add-answer" data-node-id="${escapeHtml(node.id)}">${escapeHtml(i18n.addBranch)}</button>
+            </div>
+        `;
+
+        return nodeEl;
+    }
+
+    function renderMetrics() {
+        const nodes = listNodes();
+        metricNodes.textContent = String(nodes.length);
+        metricBranches.textContent = String(nodes.reduce((count, node) => count + (node.answers || []).length, 0));
+        const root = nodes.find((node) => node.is_root);
+        metricRoot.textContent = root ? (root.rule_code || `RULE-${root.db_id || "TEMP"}`) : i18n.notSet;
+    }
+
+    function render() {
+        ensureScopeShape();
+        flowCanvas.innerHTML = "";
+        listNodes().forEach((node, index) => {
+            flowCanvas.appendChild(renderNode(node, index));
+        });
+        renderMetrics();
+        requestAnimationFrame(drawLinks);
+    }
+
+    function findNodeElement(nodeId) {
+        return flowCanvas.querySelector(`.qb-flow-node[data-node-id="${CSS.escape(String(nodeId))}"]`);
+    }
+
+    function drawLinks() {
+        const scrollRect = flowCanvasScroll.getBoundingClientRect();
+        const width = Math.max(flowCanvas.scrollWidth, flowCanvasScroll.clientWidth);
+        const height = Math.max(flowCanvas.scrollHeight, flowCanvasScroll.clientHeight);
+
+        flowLinks.setAttribute("width", String(width));
+        flowLinks.setAttribute("height", String(height));
+        flowLinks.setAttribute("viewBox", `0 0 ${width} ${height}`);
+        flowLinks.innerHTML = "";
+
+        listNodes().forEach((node) => {
+            (node.answers || []).forEach((answer, answerIndex) => {
+                if (answer.is_terminal || !answer.next_node_id) {
+                    return;
+                }
+
+                const sourceRow = flowCanvas.querySelector(`.qb-answer-row[data-node-id="${CSS.escape(String(node.id))}"][data-answer-index="${answerIndex}"]`);
+                const targetNode = findNodeElement(answer.next_node_id);
+                if (!sourceRow || !targetNode) {
+                    return;
+                }
+
+                const sourceRect = sourceRow.getBoundingClientRect();
+                const targetRect = targetNode.getBoundingClientRect();
+
+                const x1 = (sourceRect.right - scrollRect.left) + flowCanvasScroll.scrollLeft;
+                const y1 = (sourceRect.top + sourceRect.height / 2 - scrollRect.top) + flowCanvasScroll.scrollTop;
+                const x2 = (targetRect.left - scrollRect.left) + flowCanvasScroll.scrollLeft;
+                const y2 = (targetRect.top + 28 - scrollRect.top) + flowCanvasScroll.scrollTop;
+
+                const cx1 = x1 + 70;
+                const cx2 = x2 - 70;
+
+                const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                path.setAttribute("d", `M ${x1} ${y1} C ${cx1} ${y1}, ${cx2} ${y2}, ${x2} ${y2}`);
+                path.setAttribute("fill", "none");
+                path.setAttribute("stroke", "#0f8a6a");
+                path.setAttribute("stroke-width", "2");
+                path.setAttribute("stroke-linecap", "round");
+                flowLinks.appendChild(path);
+            });
+        });
+    }
+
+    function getPayloadForSubmit() {
+        return {
+            scope_crop_id: state.scope_crop_id || null,
+            nodes: listNodes(),
+        };
+    }
+
+    function validateLocalFlow() {
+        const nodes = listNodes();
+        const errors = [];
+
+        if (!nodes.length) {
+            errors.push(i18n.atLeastOneNode);
+            return errors;
+        }
+
+        const roots = nodes.filter((node) => node.is_root);
+        if (roots.length !== 1) {
+            errors.push(i18n.exactlyOneRoot);
+        }
+
+        const nodeMap = new Map(nodes.map((node) => [String(node.id), node]));
+
+        nodes.forEach((node) => {
+            if (!String(node.prompt || "").trim()) {
+                errors.push(`Node ${node.id}: ${i18n.questionTextRequired}`);
+            }
+            if (!Array.isArray(node.answers) || node.answers.length < 2) {
+                errors.push(`Node ${node.id}: ${i18n.atLeastTwoBranches}`);
+                return;
+            }
+
+            const conditionSet = new Set();
+            let elseCount = 0;
+
+            node.answers.forEach((answer, idx) => {
+                const label = String(answer.label || "").trim();
+                if (!label) {
+                    errors.push(`Node ${node.id}, #${idx + 1}: ${i18n.answerLabelRequired}`);
+                }
+
+                const conditionType = String(answer.condition_type || "branch").toLowerCase();
+                conditionSet.add(conditionType);
+                if (conditionType === "else") {
+                    elseCount += 1;
+                }
+
+                if (answer.is_terminal) {
+                    if (!String(answer.final_diagnosis || "").trim()) {
+                        errors.push(`Node ${node.id}, '${label || idx + 1}': ${i18n.finalDiagnosisRequiredStop}`);
+                    }
+                } else if (!answer.next_node_id || !nodeMap.has(String(answer.next_node_id))) {
+                    errors.push(`Node ${node.id}, '${label || idx + 1}': ${i18n.brokenNextPath}`);
+                }
+            });
+
+            if (conditionSet.has("if") || conditionSet.has("else")) {
+                if (!conditionSet.has("if") || !conditionSet.has("else")) {
+                    errors.push(`Node ${node.id}: ${i18n.ifElseMustIncludeBoth}`);
+                }
+                if (elseCount > 1) {
+                    errors.push(`Node ${node.id}: ${i18n.onlyOneElse}`);
+                }
+            }
+        });
+
+        if (errors.length) {
+            return errors;
+        }
+
+        const adjacency = new Map();
+        nodes.forEach((node) => {
+            const outgoing = [];
+            (node.answers || []).forEach((answer) => {
+                if (!answer.is_terminal && answer.next_node_id) {
+                    outgoing.push(String(answer.next_node_id));
+                }
+            });
+            adjacency.set(String(node.id), outgoing);
+        });
+
+        const reachable = new Set();
+        const visited = new Set();
+        const visiting = new Set();
+
+        function dfs(nodeId) {
+            if (visiting.has(nodeId)) {
+                errors.push(`${i18n.cycleDetectedAt} ${nodeId}.`);
+                return;
+            }
+            if (visited.has(nodeId)) {
+                return;
+            }
+            visiting.add(nodeId);
+            visited.add(nodeId);
+            reachable.add(nodeId);
+            (adjacency.get(nodeId) || []).forEach((nextId) => dfs(nextId));
+            visiting.delete(nodeId);
+        }
+
+        roots.forEach((root) => dfs(String(root.id)));
+        nodes.forEach((node) => {
+            if (!reachable.has(String(node.id))) {
+                errors.push(`${i18n.unreachableFromRoot}: ${node.id}.`);
+            }
+        });
+
+        return errors;
+    }
+
+    function showValidation(errors, successMessage) {
+        if (errors.length) {
+            validationOutput.innerHTML = `<ul class="mb-0 pl-3 text-danger">${errors.map((err) => `<li>${escapeHtml(err)}</li>`).join("")}</ul>`;
+            return;
+        }
+        validationOutput.innerHTML = `<div class="text-success">${escapeHtml(successMessage || i18n.flowValidationPassed)}</div>`;
+    }
+
+    async function runValidation(includeServer = true) {
+        const localErrors = validateLocalFlow();
+        if (localErrors.length) {
+            showValidation(localErrors);
+            return { ok: false, errors: localErrors };
+        }
+
+        if (!includeServer) {
+            showValidation([], i18n.localValidationPassed);
+            return { ok: true, errors: [] };
+        }
+
+        try {
+            const response = await fetch("{{ url_for('expert.question_builder_visual_validate') }}", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(getPayloadForSubmit()),
+            });
+            const data = await response.json();
+            if (!response.ok || !data.ok) {
+                const errors = Array.isArray(data.errors) ? data.errors : [i18n.validationFailed];
+                showValidation(errors);
+                return { ok: false, errors };
+            }
+            showValidation([], i18n.flowValidationServerPassed);
+            return { ok: true, errors: [] };
+        } catch (error) {
+            const errors = [i18n.unableValidationEndpoint];
+            showValidation(errors);
+            return { ok: false, errors };
+        }
+    }
+
+    async function saveFlow() {
+        const validation = await runValidation(true);
+        if (!validation.ok) {
+            return;
+        }
+
+        saveBtn.disabled = true;
+        try {
+            const response = await fetch("{{ url_for('expert.question_builder_visual_save') }}", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(getPayloadForSubmit()),
+            });
+            const data = await response.json();
+            if (!response.ok || !data.ok) {
+                const errors = Array.isArray(data.errors) ? data.errors : [i18n.saveFailed];
+                showValidation(errors);
+                return;
+            }
+
+            state = cloneFlow(data.payload || state);
+            flowDataByScope[activeScopeKey] = cloneFlow(state);
+            showValidation([], data.message || i18n.flowSavedSuccessfully);
+            render();
+        } catch (error) {
+            showValidation([i18n.unableSaveFlow]);
+        } finally {
+            saveBtn.disabled = false;
+        }
+    }
+
+    function handleCanvasInput(event) {
+        const target = event.target;
+        const nodeId = target.dataset.nodeId;
+        if (!nodeId) {
+            return;
+        }
+        const node = findNode(nodeId);
+        if (!node) {
+            return;
+        }
+
+        const field = target.dataset.field;
+        const answerIndex = Number(target.dataset.answerIndex || -1);
+        const answer = answerIndex >= 0 ? node.answers[answerIndex] : null;
+        const softFields = new Set([
+            "node-prompt",
+            "node-description",
+            "answer-label",
+            "answer-final-diagnosis",
+        ]);
+        let needsRender = true;
+
+        if (field === "node-prompt") {
+            node.prompt = target.value;
+            if (event.type === "input") {
+                needsRender = false;
+            }
+        } else if (field === "node-category") {
+            node.category = target.value;
+        } else if (field === "node-description") {
+            node.description = target.value;
+            if (event.type === "input") {
+                needsRender = false;
+            }
+        } else if (field === "node-active") {
+            node.is_active = Boolean(target.checked);
+        } else if (answer) {
+            if (field === "answer-label") {
+                answer.label = target.value;
+                if (event.type === "input") {
+                    needsRender = false;
+                }
+            } else if (field === "answer-condition") {
+                answer.condition_type = target.value;
+            } else if (field === "answer-effect") {
+                answer.effect_type = target.value;
+            } else if (field === "answer-symptom") {
+                answer.symptom_id = target.value ? Number(target.value) : null;
+            } else if (field === "answer-diag") {
+                answer.category_value = target.value || null;
+            } else if (field === "answer-next") {
+                answer.next_node_id = target.value || null;
+                answer.is_terminal = !answer.next_node_id;
+                if (answer.is_terminal && !answer.final_diagnosis) {
+                    answer.final_diagnosis = i18n.finalDiagnosisRequired;
+                }
+            } else if (field === "answer-terminal") {
+                answer.is_terminal = Boolean(target.checked);
+                if (answer.is_terminal) {
+                    answer.next_node_id = null;
+                    if (!answer.final_diagnosis) {
+                        answer.final_diagnosis = i18n.finalDiagnosisRequired;
+                    }
+                }
+            } else if (field === "answer-final-diagnosis") {
+                answer.final_diagnosis = target.value;
+                if (event.type === "input") {
+                    needsRender = false;
+                }
+            }
+        }
+
+        if (needsRender || !softFields.has(field)) {
+            render();
+        }
+    }
+
+    function handleCanvasClick(event) {
+        const actionEl = event.target.closest("[data-action]");
+        if (!actionEl) {
+            return;
+        }
+
+        const action = actionEl.dataset.action;
+        const nodeId = actionEl.dataset.nodeId;
+        const answerIndex = Number(actionEl.dataset.answerIndex || -1);
+
+        if (action === "remove-node") {
+            removeNode(nodeId);
+        } else if (action === "add-answer") {
+            addAnswer(nodeId);
+        } else if (action === "remove-answer") {
+            removeAnswer(nodeId, answerIndex);
+        } else if (action === "set-root") {
+            setRoot(nodeId);
+        }
+    }
+
+    function beginDrag(event) {
+        const handle = event.target.closest("[data-drag-handle='true']");
+        if (!handle) {
+            return;
+        }
+        const nodeId = handle.dataset.nodeId;
+        const node = findNode(nodeId);
+        if (!node) {
+            return;
+        }
+
+        dragState.active = true;
+        dragState.nodeId = nodeId;
+        dragState.startX = event.clientX;
+        dragState.startY = event.clientY;
+        dragState.originX = Number(node.canvas_x || 120);
+        dragState.originY = Number(node.canvas_y || 120);
+
+        document.body.classList.add("qb-dragging");
+        event.preventDefault();
+    }
+
+    function onDrag(event) {
+        if (!dragState.active) {
+            return;
+        }
+        const node = findNode(dragState.nodeId);
+        const nodeEl = findNodeElement(dragState.nodeId);
+        if (!node || !nodeEl) {
+            return;
+        }
+
+        const dx = event.clientX - dragState.startX;
+        const dy = event.clientY - dragState.startY;
+
+        node.canvas_x = Math.max(16, dragState.originX + dx);
+        node.canvas_y = Math.max(16, dragState.originY + dy);
+
+        nodeEl.style.left = `${node.canvas_x}px`;
+        nodeEl.style.top = `${node.canvas_y}px`;
+        drawLinks();
+    }
+
+    function endDrag() {
+        if (!dragState.active) {
+            return;
+        }
+        dragState.active = false;
+        dragState.nodeId = null;
+        document.body.classList.remove("qb-dragging");
+    }
+
+    function switchScope(scopeKey) {
+        activeScopeKey = scopeKey;
+        state = cloneFlow(flowDataByScope[activeScopeKey] || { scope_crop_id: null, nodes: [] });
+        showValidation([], i18n.scopeLoaded);
+        render();
+    }
+
+    scopeSelect.addEventListener("change", () => {
+        switchScope(scopeSelect.value);
+    });
+    addNodeBtn.addEventListener("click", addNode);
+    validateBtn.addEventListener("click", () => {
+        runValidation(true);
+    });
+    saveBtn.addEventListener("click", saveFlow);
+
+    flowCanvas.addEventListener("click", handleCanvasClick);
+    flowCanvas.addEventListener("input", handleCanvasInput);
+    flowCanvas.addEventListener("change", handleCanvasInput);
+    flowCanvas.addEventListener("mousedown", beginDrag);
+
+    document.addEventListener("mousemove", onDrag);
+    document.addEventListener("mouseup", endDrag);
+    flowCanvasScroll.addEventListener("scroll", () => requestAnimationFrame(drawLinks));
+    window.addEventListener("resize", () => requestAnimationFrame(drawLinks));
+
+    render();
+})();
+</script>
+{% endblock %}

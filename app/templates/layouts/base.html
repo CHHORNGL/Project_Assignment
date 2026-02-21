@@ -2,9 +2,12 @@
 <html lang="{{ current_lang }}">
 <head>
 <meta charset="UTF-8">
-<title>{% block title %}Agri Expert System{% endblock %}</title>
+<title>{% block title %}Dashboard{% endblock %} | AGRI SYSTEM</title>
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/jpeg" href="{{ url_for('static', filename='img/logo.jpg') }}">
+<link rel="shortcut icon" type="image/jpeg" href="{{ url_for('static', filename='img/logo.jpg') }}">
+<link rel="apple-touch-icon" href="{{ url_for('static', filename='img/logo.jpg') }}">
 
 <!-- ===============================
      GOOGLE FONTS
@@ -40,10 +43,33 @@
 :root {
     --font-en: "Inter", system-ui, sans-serif;
     --font-kh: "Kantumruy Pro", "Noto Sans Khmer", "Khmer OS", sans-serif;
+    --font-size-base: 1rem;
+    --line-height-base: 1.68;
 }
-* { font-family: var(--font-en), var(--font-kh); }
-body { font-size: .95rem; line-height: 1.6; }
-h1,h2,h3,h4,h5,h6 { font-weight: 600; }
+html {
+    font-size: 16px;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+}
+body,
+button,
+input,
+select,
+textarea {
+    font-family: var(--font-en), var(--font-kh);
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-base);
+}
+html[lang^="km"] body,
+html[lang^="km"] button,
+html[lang^="km"] input,
+html[lang^="km"] select,
+html[lang^="km"] textarea {
+    font-family: var(--font-kh), var(--font-en);
+    line-height: 1.74;
+    letter-spacing: 0;
+}
+h1,h2,h3,h4,h5,h6 { font-weight: 700; }
 .kh { font-family: var(--font-kh) !important; }
 </style>
 
@@ -79,9 +105,25 @@ h1,h2,h3,h4,h5,h6 { font-weight: 600; }
     }
 })();
 </script>
+{% if current_user.is_authenticated and request.endpoint == 'admin.dashboard' %}
+<script>
+(function () {
+    const welcomePrefix = {{ t("auth_welcome_back") | tojson }};
+    const displayName = {{ (current_user.full_name or current_user.username) | tojson }};
+    if (displayName) {
+        document.title = welcomePrefix + ", " + displayName + "! | AGRI SYSTEM";
+    }
+})();
+</script>
+{% endif %}
 </head>
 
-<body id="page-top" class="app-shell {{ body_class|default('') }}">
+{% set _raw_body_class = body_class|default('')|trim %}
+{% set _body_class = _raw_body_class %}
+{% if ('expert-simple' in _raw_body_class or 'farmer-dash-theme' in _raw_body_class) and ('admin-theme' not in _raw_body_class) %}
+    {% set _body_class = (_raw_body_class ~ ' admin-theme')|trim %}
+{% endif %}
+<body id="page-top" class="app-shell {{ _body_class }}">
 <div id="wrapper">
 
 {% include "partials/flash_notices.html" %}
@@ -140,6 +182,696 @@ document.querySelectorAll(".theme-option[data-theme]").forEach(btn => {
         } catch (e) {}
     });
 });
+</script>
+
+<script>
+(function () {
+    const body = document.body;
+    const path = window.location.pathname || "";
+    const isThemedRoute = !!body && (
+        body.classList.contains("admin-theme")
+        || body.classList.contains("expert-simple")
+        || body.classList.contains("farmer-dash-theme")
+        || path.startsWith("/admin")
+        || path.startsWith("/expert")
+        || path.startsWith("/farmer")
+    );
+    const root = document.documentElement;
+    const cacheKey = "global_admin_theme_runtime_cache_v2";
+    const defaultRuntime = {
+        scope: "admin",
+        revision: 0,
+        source: "default",
+        radius_mode: "soft",
+        density_mode: "comfortable",
+        next_refresh_seconds: 120,
+        profile: {
+            slug: "classic",
+            tokens: {
+                primary: "#4e73df",
+                primary_soft: "rgba(78, 115, 223, 0.14)",
+                admin_bg_light: "#f8f9fc",
+                admin_card_light: "#ffffff",
+                admin_border_light: "#e3e6f0",
+                admin_text_light: "#3a3b45",
+                admin_muted_light: "#858796",
+                admin_bg_dark: "#0f172a",
+                admin_card_dark: "#111827",
+                admin_border_dark: "#1f2937",
+                admin_text_dark: "#e2e8f0",
+                admin_muted_dark: "#94a3b8",
+                admin_accent: "#4e73df",
+                admin_accent_soft: "rgba(78, 115, 223, 0.14)",
+                admin_lottie_url: "",
+                admin_motion_layers: "[]",
+            },
+        },
+    };
+    const apiUrl = "{% if current_user.is_authenticated %}{{ url_for('admin.theme_manager_active_api') }}?scope=admin{% endif %}";
+    const state = {
+        timer: null,
+        payload: null,
+        etag: null,
+    };
+    const motionState = {
+        scriptPromise: null,
+        topbarRoot: null,
+        topbarOverlayRoot: null,
+        sidebarRoot: null,
+        viewportRoot: null,
+        scrollRoot: null,
+        instances: [],
+        signature: "",
+        lastLayers: [],
+        layoutKey: "",
+        resizeTimer: null,
+        bodyObserver: null,
+    };
+
+    function safeGet(key) {
+        try {
+            return localStorage.getItem(key);
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function safeSet(key, value) {
+        try {
+            localStorage.setItem(key, value);
+        } catch (e) {}
+    }
+
+    function safeRemove(key) {
+        try {
+            localStorage.removeItem(key);
+        } catch (e) {}
+    }
+
+    function cssVar(name, value) {
+        if (!value || typeof value !== "string") return;
+        root.style.setProperty(name, value);
+    }
+
+    function clamp(number, min, max) {
+        return Math.min(max, Math.max(min, number));
+    }
+
+    function toNumber(value, fallback) {
+        const number = Number(value);
+        return Number.isFinite(number) ? number : fallback;
+    }
+
+    function toBool(value, fallback = true) {
+        if (value === undefined || value === null) return !!fallback;
+        const text = String(value).trim().toLowerCase();
+        if (["1", "true", "yes", "on"].includes(text)) return true;
+        if (["0", "false", "no", "off"].includes(text)) return false;
+        return !!fallback;
+    }
+
+    function normalizeMotionLayer(raw, index = 1) {
+        if (!raw || typeof raw !== "object") return null;
+        const url = String(raw.url || "").trim();
+        if (!url) return null;
+        const placementRaw = String(raw.placement || "topbar").trim().toLowerCase();
+        const placement = ["topbar", "topbar_xy", "viewport", "sidebar", "auth_bg"].includes(placementRaw)
+            ? placementRaw
+            : "topbar";
+        const scrollModeRaw = String(raw.scroll_mode || raw.behavior || "fixed").trim().toLowerCase();
+        const scrollMode = placement === "viewport" && scrollModeRaw === "scroll"
+            ? "scroll"
+            : "fixed";
+        const maxSize = ["viewport", "sidebar", "auth_bg"].includes(placement) ? 960 : 320;
+        const idRaw = String(raw.id || `layer_${index}`).trim().toLowerCase();
+        const id = idRaw.replace(/[^a-z0-9_-]/g, "").slice(0, 40) || `layer_${index}`;
+        return {
+            id,
+            name: String(raw.name || `Layer ${index}`).trim().slice(0, 60) || `Layer ${index}`,
+            url,
+            placement,
+            scroll_mode: scrollMode,
+            x: clamp(toNumber(raw.x, 85), 0, 100),
+            y: clamp(toNumber(raw.y, 12), 0, 100),
+            size: Math.round(clamp(toNumber(raw.size, 32), 16, maxSize)),
+            scale: clamp(toNumber(raw.scale, 1), 0.3, 3),
+            opacity: clamp(toNumber(raw.opacity, 0.95), 0.1, 1),
+            z_index: Math.round(clamp(toNumber(raw.z_index, 30), 1, 200)),
+            enabled: toBool(raw.enabled, true),
+        };
+    }
+
+    function parseMotionLayers(rawLayers, legacyUrl) {
+        let parsed = [];
+        try {
+            const candidate = JSON.parse(String(rawLayers || "[]"));
+            if (Array.isArray(candidate)) {
+                parsed = candidate.map((item, idx) => normalizeMotionLayer(item, idx + 1)).filter(Boolean);
+            }
+        } catch (e) {
+            parsed = [];
+        }
+        const enabled = parsed.filter((item) => item.enabled);
+        if (enabled.length > 0) return enabled;
+
+        const legacy = String(legacyUrl || "").trim();
+        if (!legacy) return [];
+        const fallback = normalizeMotionLayer(
+            {
+                id: "legacy_motion",
+                name: "Legacy Motion",
+                url: legacy,
+                placement: "topbar",
+                scroll_mode: "fixed",
+                x: 85,
+                y: 12,
+                size: 32,
+                scale: 1,
+                opacity: 0.95,
+                z_index: 30,
+                enabled: true,
+            },
+            1
+        );
+        return fallback ? [fallback] : [];
+    }
+
+    function ensureMotionHosts() {
+        if (!isThemedRoute || !body) return null;
+        const topbar = document.querySelector(".topbar.app-topbar");
+        const rightNav = topbar ? topbar.querySelector(".navbar-nav.ml-auto") : null;
+        const sidebar = document.querySelector(".sidebar.app-sidebar, .app-sidebar.sidebar, .app-sidebar");
+
+        let topbarRoot = document.getElementById("admin-theme-motion-topbar");
+        if (topbar && !topbarRoot) {
+            topbarRoot = document.createElement("span");
+            topbarRoot.id = "admin-theme-motion-topbar";
+            topbarRoot.className = "admin-theme-motion-topbar";
+            topbarRoot.setAttribute("aria-hidden", "true");
+        }
+        if (topbar && topbarRoot) {
+            if (rightNav) {
+                if (topbarRoot.parentElement !== topbar || topbarRoot.nextElementSibling !== rightNav) {
+                    topbar.insertBefore(topbarRoot, rightNav);
+                }
+            } else if (!topbarRoot.parentElement) {
+                topbar.appendChild(topbarRoot);
+            }
+        }
+
+        let topbarOverlayRoot = document.getElementById("admin-theme-motion-topbar-overlay");
+        if (topbar && !topbarOverlayRoot) {
+            topbarOverlayRoot = document.createElement("div");
+            topbarOverlayRoot.id = "admin-theme-motion-topbar-overlay";
+            topbarOverlayRoot.className = "admin-theme-motion-topbar-overlay";
+            topbarOverlayRoot.setAttribute("aria-hidden", "true");
+        }
+        if (topbar && topbarOverlayRoot && topbarOverlayRoot.parentElement !== topbar) {
+            topbar.appendChild(topbarOverlayRoot);
+        }
+
+        let sidebarRoot = document.getElementById("admin-theme-motion-sidebar");
+        if (sidebar && !sidebarRoot) {
+            sidebarRoot = document.createElement("div");
+            sidebarRoot.id = "admin-theme-motion-sidebar";
+            sidebarRoot.className = "admin-theme-motion-sidebar";
+            sidebarRoot.setAttribute("aria-hidden", "true");
+        }
+        if (sidebar && sidebarRoot && sidebarRoot.parentElement !== sidebar) {
+            sidebar.prepend(sidebarRoot);
+        }
+
+        let viewportRoot = document.getElementById("admin-theme-motion-viewport");
+        if (!viewportRoot) {
+            viewportRoot = document.createElement("div");
+            viewportRoot.id = "admin-theme-motion-viewport";
+            viewportRoot.className = "admin-theme-motion-viewport";
+            viewportRoot.setAttribute("aria-hidden", "true");
+            body.appendChild(viewportRoot);
+        }
+
+        let scrollRoot = document.getElementById("admin-theme-motion-scroll");
+        if (!scrollRoot) {
+            scrollRoot = document.createElement("div");
+            scrollRoot.id = "admin-theme-motion-scroll";
+            scrollRoot.className = "admin-theme-motion-scroll";
+            scrollRoot.setAttribute("aria-hidden", "true");
+            body.appendChild(scrollRoot);
+        }
+
+        motionState.topbarRoot = topbarRoot;
+        motionState.topbarOverlayRoot = topbarOverlayRoot;
+        motionState.sidebarRoot = sidebarRoot;
+        motionState.viewportRoot = viewportRoot;
+        motionState.scrollRoot = scrollRoot;
+        return { topbarRoot, topbarOverlayRoot, sidebarRoot, viewportRoot, scrollRoot };
+    }
+
+    function destroyMotionInstances() {
+        motionState.instances.forEach((instance) => {
+            if (instance && typeof instance.destroy === "function") {
+                try {
+                    instance.destroy();
+                } catch (e) {}
+            }
+        });
+        motionState.instances = [];
+    }
+
+    function clearMotion(removeNode = false) {
+        destroyMotionInstances();
+        motionState.signature = "";
+        if (removeNode) {
+            motionState.lastLayers = [];
+            motionState.layoutKey = "";
+        }
+
+        const topbarRoot = motionState.topbarRoot || document.getElementById("admin-theme-motion-topbar");
+        const topbarOverlayRoot = motionState.topbarOverlayRoot || document.getElementById("admin-theme-motion-topbar-overlay");
+        const sidebarRoot = motionState.sidebarRoot || document.getElementById("admin-theme-motion-sidebar");
+        const viewportRoot = motionState.viewportRoot || document.getElementById("admin-theme-motion-viewport");
+        const scrollRoot = motionState.scrollRoot || document.getElementById("admin-theme-motion-scroll");
+
+        if (topbarRoot) {
+            if (removeNode) topbarRoot.remove();
+            else topbarRoot.innerHTML = "";
+        }
+        if (topbarOverlayRoot) {
+            if (removeNode) topbarOverlayRoot.remove();
+            else topbarOverlayRoot.innerHTML = "";
+        }
+        if (sidebarRoot) {
+            if (removeNode) sidebarRoot.remove();
+            else sidebarRoot.innerHTML = "";
+        }
+        if (viewportRoot) {
+            if (removeNode) viewportRoot.remove();
+            else viewportRoot.innerHTML = "";
+        }
+        if (scrollRoot) {
+            if (removeNode) scrollRoot.remove();
+            else scrollRoot.innerHTML = "";
+        }
+        motionState.topbarRoot = removeNode ? null : topbarRoot || null;
+        motionState.topbarOverlayRoot = removeNode ? null : topbarOverlayRoot || null;
+        motionState.sidebarRoot = removeNode ? null : sidebarRoot || null;
+        motionState.viewportRoot = removeNode ? null : viewportRoot || null;
+        motionState.scrollRoot = removeNode ? null : scrollRoot || null;
+    }
+
+    async function ensureLottieLibrary() {
+        if (window.lottie && typeof window.lottie.loadAnimation === "function") return true;
+        if (motionState.scriptPromise) return motionState.scriptPromise;
+        const scriptSources = [
+            "https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js",
+            "https://cdn.jsdelivr.net/npm/lottie-web@5.12.2/build/player/lottie.min.js",
+            "https://unpkg.com/lottie-web@5.12.2/build/player/lottie.min.js",
+        ];
+        const loadScript = (src, timeoutMs = 2500) => new Promise((resolve) => {
+            const script = document.createElement("script");
+            let settled = false;
+            const finish = (ok) => {
+                if (settled) return;
+                settled = true;
+                window.clearTimeout(timer);
+                script.onload = null;
+                script.onerror = null;
+                if (!ok && script.parentNode) {
+                    script.parentNode.removeChild(script);
+                }
+                resolve(ok);
+            };
+            const timer = window.setTimeout(() => finish(false), timeoutMs);
+            script.src = src;
+            script.async = true;
+            script.onload = () => finish(true);
+            script.onerror = () => finish(false);
+            document.head.appendChild(script);
+        });
+        motionState.scriptPromise = (async () => {
+            for (const src of scriptSources) {
+                const loaded = await loadScript(src);
+                if (loaded && window.lottie && typeof window.lottie.loadAnimation === "function") {
+                    return true;
+                }
+            }
+            return false;
+        })();
+        return motionState.scriptPromise;
+    }
+
+    function getMotionLayoutContext() {
+        const width = window.innerWidth || 1280;
+        const mobile = width < 768;
+        const tablet = width >= 768 && width < 1200;
+        const compactSidebar = !!(body && body.classList.contains("icon-nav"));
+        const bucket = mobile ? "mobile" : (tablet ? "tablet" : "desktop");
+        return {
+            width,
+            mobile,
+            tablet,
+            compactSidebar,
+            layoutKey: `${bucket}:${compactSidebar ? "compact" : "full"}`,
+        };
+    }
+
+    function adaptiveMotionScale(baseScale, placement, context) {
+        if (placement === "sidebar") {
+            // Keep sidebar layers stable; avoid responsive re-scaling that looks like dragging.
+            return clamp(baseScale, 0.3, 3);
+        }
+        let factor = 1;
+        if (context.mobile) factor *= 0.72;
+        else if (context.tablet) factor *= 0.86;
+        return clamp(baseScale * factor, 0.25, 3.5);
+    }
+
+    async function applyMotionLayers(layers) {
+        if (!isThemedRoute) {
+            clearMotion(true);
+            return;
+        }
+        const normalizedLayers = Array.isArray(layers) ? layers.filter((item) => item && item.url) : [];
+        const renderableLayers = normalizedLayers.filter((item) => item.placement !== "auth_bg");
+        motionState.lastLayers = renderableLayers;
+        if (!renderableLayers.length) {
+            clearMotion(true);
+            return;
+        }
+        const context = getMotionLayoutContext();
+        const hasAdaptiveLayers = renderableLayers.some((item) => item.placement !== "sidebar");
+        const signature = JSON.stringify({
+            layers: renderableLayers,
+            layout: hasAdaptiveLayers ? context.layoutKey : "static",
+        });
+        if (signature === motionState.signature) return;
+
+        const hosts = ensureMotionHosts();
+        if (!hosts) return;
+        clearMotion(false);
+        motionState.signature = signature;
+        motionState.layoutKey = context.layoutKey;
+
+        const ok = await ensureLottieLibrary();
+        const hasLottie = !!ok && !!window.lottie && typeof window.lottie.loadAnimation === "function";
+
+        renderableLayers.forEach((layer, index) => {
+            const item = document.createElement("span");
+            const placement = ["viewport", "topbar_xy", "sidebar"].includes(layer.placement)
+                ? layer.placement
+                : "topbar";
+            const maxSize = (placement === "viewport" || placement === "sidebar") ? 960 : 320;
+            const size = Math.round(clamp(toNumber(layer.size, 32), 16, maxSize));
+            const scale = adaptiveMotionScale(clamp(toNumber(layer.scale, 1), 0.3, 3), placement, context);
+            const opacity = clamp(toNumber(layer.opacity, 0.95), 0.1, 1);
+            const zIndex = Math.round(clamp(toNumber(layer.z_index, 30), 1, 200));
+            const scrollMode = placement === "viewport" && String(layer.scroll_mode || "").toLowerCase() === "scroll"
+                ? "scroll"
+                : "fixed";
+
+            item.className = (placement === "viewport" || placement === "sidebar")
+                ? "admin-theme-motion-item"
+                : "admin-theme-motion-chip";
+            item.dataset.motionId = String(layer.id || `layer_${index + 1}`);
+            item.title = String(layer.name || `Layer ${index + 1}`);
+            item.style.width = `${size}px`;
+            item.style.height = `${size}px`;
+            item.style.opacity = String(opacity);
+            item.style.zIndex = String(zIndex);
+
+            if (placement === "topbar_xy") {
+                const host = hosts.topbarOverlayRoot || hosts.topbarRoot;
+                if (!host) return;
+                const x = clamp(toNumber(layer.x, 85), 0, 100);
+                const y = clamp(toNumber(layer.y, 50), 0, 100);
+                item.classList.add("is-overlay");
+                item.style.left = `${x}%`;
+                item.style.top = `${y}%`;
+                item.style.transform = `translate(-50%, -50%) scale(${scale})`;
+                host.appendChild(item);
+            } else if (placement === "sidebar") {
+                const host = hosts.sidebarRoot;
+                if (!host) return;
+                const x = clamp(toNumber(layer.x, 52), 0, 100);
+                const y = clamp(toNumber(layer.y, 34), 0, 100);
+                item.classList.add("is-sidebar");
+                item.style.left = `${x}%`;
+                item.style.top = `${y}%`;
+                item.style.transform = `translate(-50%, -50%) scale(${scale})`;
+                host.appendChild(item);
+            } else if (placement === "viewport" && scrollMode === "scroll") {
+                const x = clamp(toNumber(layer.x, 85), 0, 100);
+                const y = clamp(toNumber(layer.y, 12), 0, 100);
+                item.style.left = `${window.scrollX + (window.innerWidth * x / 100)}px`;
+                item.style.top = `${window.scrollY + (window.innerHeight * y / 100)}px`;
+                item.style.transform = `translate(-50%, -50%) scale(${scale})`;
+                hosts.scrollRoot.appendChild(item);
+            } else if (placement === "viewport") {
+                const x = clamp(toNumber(layer.x, 85), 0, 100);
+                const y = clamp(toNumber(layer.y, 12), 0, 100);
+                item.style.left = `${x}%`;
+                item.style.top = `${y}%`;
+                item.style.transform = `translate(-50%, -50%) scale(${scale})`;
+                hosts.viewportRoot.appendChild(item);
+            } else {
+                if (!hosts.topbarRoot) return;
+                item.style.transform = `scale(${scale})`;
+                hosts.topbarRoot.appendChild(item);
+            }
+
+            const stage = document.createElement("span");
+            stage.className = "admin-theme-motion-stage";
+            item.appendChild(stage);
+
+            if (!hasLottie) {
+                item.classList.add("is-fallback");
+                return;
+            }
+
+            const instance = window.lottie.loadAnimation({
+                container: stage,
+                renderer: "svg",
+                loop: true,
+                autoplay: true,
+                path: String(layer.url || ""),
+                rendererSettings: { preserveAspectRatio: "xMidYMid slice" },
+            });
+            motionState.instances.push(instance);
+        });
+    }
+
+    function applyFromPayload(payload) {
+        const runtime = payload || defaultRuntime;
+        const profile = runtime.profile || {};
+        const tokens = profile.tokens || {};
+        const motionLayers = parseMotionLayers(tokens.admin_motion_layers || "[]", tokens.admin_lottie_url || "");
+
+        if (body) {
+            body.dataset.adminTheme = profile.slug || "classic";
+            body.dataset.adminRadius = runtime.radius_mode || "soft";
+            body.dataset.adminDensity = runtime.density_mode || "comfortable";
+            body.dataset.adminMotionUrl = motionLayers.length ? String(motionLayers[0].url || "") : "";
+            body.dataset.adminMotionCount = String(motionLayers.length);
+        }
+
+        cssVar("--primary", tokens.primary || defaultRuntime.profile.tokens.primary);
+        cssVar("--primary-soft", tokens.primary_soft || defaultRuntime.profile.tokens.primary_soft);
+        cssVar(
+            "--admin-bg-light",
+            tokens.admin_bg_light || tokens.admin_bg || defaultRuntime.profile.tokens.admin_bg_light
+        );
+        cssVar(
+            "--admin-card-light",
+            tokens.admin_card_light || tokens.admin_card || defaultRuntime.profile.tokens.admin_card_light
+        );
+        cssVar(
+            "--admin-border-light",
+            tokens.admin_border_light || tokens.admin_border || defaultRuntime.profile.tokens.admin_border_light
+        );
+        cssVar(
+            "--admin-text-light",
+            tokens.admin_text_light || tokens.admin_text || defaultRuntime.profile.tokens.admin_text_light
+        );
+        cssVar(
+            "--admin-muted-light",
+            tokens.admin_muted_light || tokens.admin_muted || defaultRuntime.profile.tokens.admin_muted_light
+        );
+        cssVar(
+            "--admin-bg-dark",
+            tokens.admin_bg_dark || defaultRuntime.profile.tokens.admin_bg_dark
+        );
+        cssVar(
+            "--admin-card-dark",
+            tokens.admin_card_dark || defaultRuntime.profile.tokens.admin_card_dark
+        );
+        cssVar(
+            "--admin-border-dark",
+            tokens.admin_border_dark || defaultRuntime.profile.tokens.admin_border_dark
+        );
+        cssVar(
+            "--admin-text-dark",
+            tokens.admin_text_dark || defaultRuntime.profile.tokens.admin_text_dark
+        );
+        cssVar(
+            "--admin-muted-dark",
+            tokens.admin_muted_dark || defaultRuntime.profile.tokens.admin_muted_dark
+        );
+        cssVar("--admin-accent", tokens.admin_accent || tokens.primary || defaultRuntime.profile.tokens.admin_accent);
+        cssVar("--admin-accent-soft", tokens.admin_accent_soft || tokens.primary_soft || defaultRuntime.profile.tokens.admin_accent_soft);
+        applyMotionLayers(motionLayers).catch(() => {});
+
+        state.payload = runtime;
+        return runtime;
+    }
+
+    function setRefreshTimer(seconds) {
+        if (state.timer) {
+            window.clearTimeout(state.timer);
+            state.timer = null;
+        }
+        const delayMs = Math.max(15, Math.min(Number(seconds || 120), 900)) * 1000;
+        state.timer = window.setTimeout(() => {
+            refresh(true).catch(() => {});
+        }, delayMs);
+    }
+
+    function parseCacheEntry() {
+        const raw = safeGet(cacheKey);
+        if (!raw) return null;
+        try {
+            const parsed = JSON.parse(raw);
+            if (!parsed || typeof parsed !== "object") return null;
+            if (!parsed.expiresAt || Date.now() > parsed.expiresAt) return null;
+            if (!parsed.payload || typeof parsed.payload !== "object") return null;
+            return parsed;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function saveCache(payload, etag) {
+        const data = payload || state.payload;
+        if (!data) return;
+        const expiresAt = Date.now() + Math.max(15, Math.min(Number(data.next_refresh_seconds || 120), 900)) * 1000;
+        const nextEtag = etag || state.etag || null;
+        safeSet(cacheKey, JSON.stringify({ expiresAt, payload: data, etag: nextEtag }));
+    }
+
+    function readCache() {
+        const entry = parseCacheEntry();
+        return entry ? entry.payload : null;
+    }
+
+    async function fetchRuntime() {
+        if (!apiUrl) return null;
+        const cachedEntry = parseCacheEntry();
+        const headers = { "Accept": "application/json" };
+        if (cachedEntry && cachedEntry.etag) {
+            headers["If-None-Match"] = cachedEntry.etag;
+        }
+        const response = await fetch(apiUrl, {
+            method: "GET",
+            headers,
+            credentials: "same-origin",
+        });
+        if (response.status === 304) {
+            const cached = readCache();
+            if (cached) return cached;
+            throw new Error("Theme runtime cache miss");
+        }
+        if (!response.ok) throw new Error("Theme runtime request failed");
+        const payload = await response.json().catch(() => null);
+        if (!payload || !payload.ok || !payload.data) throw new Error("Invalid theme runtime payload");
+        state.etag = response.headers.get("ETag") || null;
+        return payload.data;
+    }
+
+    async function refresh(force = false) {
+        if (!isThemedRoute) return defaultRuntime;
+
+        if (!force) {
+            const cached = readCache();
+            if (cached) {
+                const appliedCached = applyFromPayload(cached);
+                setRefreshTimer(appliedCached.next_refresh_seconds);
+            }
+        }
+
+        try {
+            const runtime = await fetchRuntime();
+            const applied = applyFromPayload(runtime);
+            saveCache(applied, state.etag);
+            setRefreshTimer(applied.next_refresh_seconds);
+            return applied;
+        } catch (error) {
+            const fallback = state.payload || readCache() || defaultRuntime;
+            const appliedFallback = applyFromPayload(fallback);
+            setRefreshTimer(appliedFallback.next_refresh_seconds || 180);
+            return appliedFallback;
+        }
+    }
+
+    window.AdminThemeRuntime = {
+        getCurrent() {
+            return state.payload ? JSON.parse(JSON.stringify(state.payload)) : null;
+        },
+        applyFromPayload(payload) {
+            const applied = applyFromPayload(payload);
+            saveCache(applied, state.etag);
+            setRefreshTimer(applied.next_refresh_seconds);
+            return applied;
+        },
+        refresh(force = true) {
+            return refresh(force);
+        },
+        clearCache() {
+            safeRemove(cacheKey);
+        },
+    };
+
+    // Keep multiple open tabs in sync when runtime cache is updated elsewhere.
+    window.addEventListener("storage", (event) => {
+        if (!isThemedRoute) return;
+        if (!event || event.key !== cacheKey || !event.newValue) return;
+        try {
+            const parsed = JSON.parse(event.newValue);
+            if (!parsed || typeof parsed !== "object") return;
+            if (!parsed.payload || typeof parsed.payload !== "object") return;
+            applyFromPayload(parsed.payload);
+            if (parsed.etag && typeof parsed.etag === "string") {
+                state.etag = parsed.etag;
+            }
+        } catch (e) {}
+    });
+
+    function requestMotionReflow() {
+        if (!isThemedRoute || !motionState.lastLayers.length) return;
+        const hasAdaptiveLayers = motionState.lastLayers.some((item) => item.placement !== "sidebar");
+        if (!hasAdaptiveLayers) return;
+        if (motionState.resizeTimer) {
+            window.clearTimeout(motionState.resizeTimer);
+        }
+        motionState.resizeTimer = window.setTimeout(() => {
+            applyMotionLayers(motionState.lastLayers).catch(() => {});
+        }, 120);
+    }
+
+    if (isThemedRoute) {
+        window.addEventListener("resize", requestMotionReflow);
+        window.addEventListener("orientationchange", requestMotionReflow);
+        if (body && "MutationObserver" in window && !motionState.bodyObserver) {
+            motionState.bodyObserver = new MutationObserver(() => requestMotionReflow());
+            motionState.bodyObserver.observe(body, {
+                attributes: true,
+                attributeFilter: ["class"],
+            });
+        }
+        refresh(false).catch(() => {});
+    } else {
+        clearMotion(true);
+        safeRemove(cacheKey);
+    }
+})();
 </script>
 
 <!-- ===============================
@@ -381,3 +1113,4 @@ document.querySelectorAll(".lang-option[data-lang]").forEach(btn => {
 
 </body>
 </html>
+

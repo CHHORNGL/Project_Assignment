@@ -13,3 +13,6 @@ from .mixed_agri_source import MixedAgriSource
 from .mixed_agri_fact import MixedAgriFact
 from .site_setting import SiteSetting
 from .translation_backup import TranslationBackup
+from .expert_question import ExpertQuestion
+from .expert_question_answer import ExpertQuestionAnswer
+from .theme import ThemeProfile, ThemeRuntimeState, ThemeSchedule

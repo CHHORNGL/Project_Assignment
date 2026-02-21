@@ -43,3 +43,19 @@ class Config:
         _int_env("WEATHER_STALE_TTL_SECONDS", 21600),
     )
     WEATHER_REQUEST_TIMEOUT_SECONDS = max(2.0, _float_env("WEATHER_REQUEST_TIMEOUT_SECONDS", 6.0))
+
+    # Dynamic theme manager seasonal automation.
+    THEME_EVENTS_PROVIDER = (os.getenv("THEME_EVENTS_PROVIDER", "auto") or "auto").strip().lower()
+    THEME_EVENTS_DEFAULT_COUNTRY = (
+        os.getenv("THEME_EVENTS_DEFAULT_COUNTRY", "KH") or "KH"
+    ).strip().upper()
+    CALENDARIFIC_API_KEY = (os.getenv("CALENDARIFIC_API_KEY", "") or "").strip()
+
+    # Theme animation auto-upload pipeline.
+    THEME_ANIMATION_CDN_PROVIDER = (
+        os.getenv("THEME_ANIMATION_CDN_PROVIDER", "auto") or "auto"
+    ).strip().lower()
+    THEME_ANIMATION_MAX_BYTES = max(64 * 1024, _int_env("THEME_ANIMATION_MAX_BYTES", 2 * 1024 * 1024))
+    CLOUDINARY_CLOUD_NAME = (os.getenv("CLOUDINARY_CLOUD_NAME", "") or "").strip()
+    CLOUDINARY_UPLOAD_PRESET = (os.getenv("CLOUDINARY_UPLOAD_PRESET", "") or "").strip()
+    CLOUDINARY_UPLOAD_FOLDER = (os.getenv("CLOUDINARY_UPLOAD_FOLDER", "agri-theme-animations") or "").strip()

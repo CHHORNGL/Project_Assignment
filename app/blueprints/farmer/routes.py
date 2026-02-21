@@ -7,6 +7,7 @@ from flask import (
     url_for,
     flash,
     request,
+    jsonify,
     current_app
 )
 import re
@@ -27,9 +28,87 @@ from app.models.symptom import Symptom
 from app.models.chat_message import ChatMessage
 from app.models.chat_session import ChatSession
 from app.services.rule_engine import diagnose as rule_diagnose
-from app.services.openai_assistant import generate_assistant_reply
+from app.services.openai_assistant import generate_assistant_reply, suggest_symptoms_from_image
 from app.services.notification_service import notify_role, _snippet
-from app.utils.i18n import t, get_current_language
+from app.utils.i18n import t, get_current_language, normalize_display_text
+
+
+DIAGNOSIS_CATEGORIES = [
+    {"id": "fungal", "label": "Fungal disease"},
+    {"id": "bacterial", "label": "Bacterial disease"},
+    {"id": "viral", "label": "Viral disease"},
+    {"id": "pest", "label": "Pest / insect"},
+    {"id": "nutrient", "label": "Nutrient deficiency"},
+    {"id": "environment", "label": "Environment / water stress"},
+    {"id": "other", "label": "Not sure"},
+]
+
+AGRI_QCM_DOMAINS = [
+    {
+        "id": "crop",
+        "label": "Crop Production",
+        "label_kh": "ដំណាំ",
+        "subcategories": [
+            {"id": "rice", "label": "Rice", "label_kh": "ស្រូវ"},
+            {"id": "vegetable", "label": "Vegetables", "label_kh": "បន្លែ"},
+            {"id": "fruit_tree", "label": "Fruit Trees", "label_kh": "ផ្លែឈើ"},
+            {"id": "maize", "label": "Maize / Corn", "label_kh": "ពោត"},
+            {"id": "root_tuber", "label": "Root & Tuber", "label_kh": "ដំណាំមើម"},
+            {"id": "legume", "label": "Legume / Pulse", "label_kh": "សណ្តែក"},
+            {"id": "spice", "label": "Spice Crops", "label_kh": "គ្រឿងទេស"},
+            {"id": "oilseed", "label": "Oilseed Crops", "label_kh": "ដំណាំប្រេង"},
+        ],
+    },
+]
+
+AGRI_QCM_DOMAINS = [
+    {
+        "id": "crop",
+        "label": "Crop Production",
+        "label_kh": "ការផលិតដំណាំ",
+        "subcategories": [
+            {"id": "rice", "label": "Rice", "label_kh": "អង្ករ"},
+            {"id": "vegetable", "label": "Vegetables", "label_kh": "បន្លែ"},
+            {"id": "fruit_tree", "label": "Fruit Trees", "label_kh": "ផ្លែឈើ"},
+            {"id": "maize", "label": "Maize / Corn", "label_kh": "សាលពង្រ"},
+            {"id": "root_tuber", "label": "Root & Tuber", "label_kh": "ឫស និងកំណាច"},
+            {"id": "legume", "label": "Legume / Pulse", "label_kh": "ដំណាំសណ្ដែក"},
+            {"id": "spice", "label": "Spice Crops", "label_kh": "គ្រឿង"},
+            {"id": "oilseed", "label": "Oilseed Crops", "label_kh": "ដំណាំគ្រាប់មុខ"},
+        ],
+    },
+]
+
+DOMAIN_DEFAULT_DIAGNOSIS_CATEGORY = {"crop": "other"}
+
+CROP_SUBCATEGORY_EXACT = {
+    "rice": "rice",
+    "paddy": "rice",
+    "corn": "maize",
+    "maize": "maize",
+    "potato": "root_tuber",
+    "cassava": "root_tuber",
+    "soybean": "legume",
+    "soy bean": "legume",
+    "sesame": "oilseed",
+    "banana": "fruit_tree",
+    "tomato": "vegetable",
+    "cucumber": "vegetable",
+    "chili pepper": "spice",
+    "chilli pepper": "spice",
+    "pepper": "spice",
+}
+
+CROP_SUBCATEGORY_KEYWORDS = [
+    ("rice", ["rice", "paddy"]),
+    ("maize", ["corn", "maize"]),
+    ("root_tuber", ["cassava", "potato", "sweet potato", "tuber", "root"]),
+    ("legume", ["soybean", "soy bean", "bean", "pea", "pulse"]),
+    ("oilseed", ["sesame", "sunflower", "canola", "oilseed"]),
+    ("spice", ["chili", "chilli", "pepper", "ginger", "turmeric", "spice"]),
+    ("fruit_tree", ["banana", "mango", "papaya", "citrus", "fruit"]),
+    ("vegetable", ["cucumber", "tomato", "eggplant", "cabbage", "onion", "carrot", "vegetable"]),
+]
 
 
 def _normalize_text(text: str) -> str:
@@ -50,9 +129,205 @@ def _localize_field(obj, field: str, fallback: str = "") -> str:
             return value
     value = getattr(obj, field, None)
     return value if value else fallback
-from app.utils.i18n import get_current_language
 
 
+def _infer_crop_subcategory(crop: Crop) -> str:
+    if not crop:
+        return ""
+
+    names = []
+    for raw in [getattr(crop, "name", None), getattr(crop, "name_kh", None)]:
+        normalized = _normalize_text(str(raw or ""))
+        if normalized:
+            names.append(normalized)
+
+    for normalized_name in names:
+        exact_match = CROP_SUBCATEGORY_EXACT.get(normalized_name)
+        if exact_match:
+            return exact_match
+
+    for normalized_name in names:
+        for subcategory_id, keywords in CROP_SUBCATEGORY_KEYWORDS:
+            if any(keyword in normalized_name for keyword in keywords):
+                return subcategory_id
+
+    return ""
+
+
+def _agri_domains_payload() -> list[dict]:
+    lang = get_current_language()
+    payload: list[dict] = []
+    for domain in AGRI_QCM_DOMAINS:
+        payload.append(
+            {
+                "id": domain.get("id"),
+                "label": normalize_display_text(domain.get("label", ""), lang=lang),
+                "label_kh": normalize_display_text(
+                    domain.get("label_kh") or domain.get("label", ""),
+                    lang=lang,
+                ),
+                "subcategories": [
+                    {
+                        "id": sub.get("id"),
+                        "label": normalize_display_text(sub.get("label", ""), lang=lang),
+                        "label_kh": normalize_display_text(
+                            sub.get("label_kh") or sub.get("label", ""), lang=lang
+                        ),
+                    }
+                    for sub in (domain.get("subcategories") or [])
+                ],
+            }
+        )
+    return payload
+
+
+def _safe_int_list(raw_values) -> list[int]:
+    values: list[int] = []
+    seen = set()
+    for raw in raw_values or []:
+        try:
+            value = int(raw)
+        except (TypeError, ValueError):
+            continue
+        if value <= 0 or value in seen:
+            continue
+        seen.add(value)
+        values.append(value)
+    return values
+
+
+def _symptom_candidates_for_crop(crop_id: int) -> list[dict]:
+    candidates: dict[int, dict] = {}
+
+    rules = (
+        Rule.query
+        .options(joinedload(Rule.symptoms), joinedload(Rule.disease))
+        .join(Rule.disease)
+        .filter(Disease.crop_id == crop_id)
+        .all()
+    )
+    for rule in rules:
+        for symptom in rule.symptoms or []:
+            if not symptom or not symptom.id or not symptom.name:
+                continue
+            if symptom.id in candidates:
+                continue
+            candidates[symptom.id] = {
+                "id": symptom.id,
+                "name": symptom.name,
+                "name_kh": getattr(symptom, "name_kh", None),
+            }
+
+    if not candidates:
+        all_symptoms = Symptom.query.order_by(Symptom.name.asc()).all()
+        for symptom in all_symptoms:
+            if not symptom or not symptom.id or not symptom.name:
+                continue
+            candidates[symptom.id] = {
+                "id": symptom.id,
+                "name": symptom.name,
+                "name_kh": getattr(symptom, "name_kh", None),
+            }
+
+    return sorted(candidates.values(), key=lambda item: str(item.get("name") or "").lower())
+
+
+def _split_csv_symptoms(raw_text: str | None) -> list[str]:
+    if not raw_text:
+        return []
+    rows: list[str] = []
+    seen = set()
+    for raw in str(raw_text).split(","):
+        cleaned = str(raw).strip()
+        key = _normalize_text(cleaned)
+        if not cleaned or not key or key in seen:
+            continue
+        seen.add(key)
+        rows.append(cleaned)
+    return rows
+
+
+def _build_symptom_breakdown(diagnosis: Diagnosis, limit: int = 5) -> list[dict]:
+    evidence = diagnosis.diagnosis_evidence if isinstance(diagnosis.diagnosis_evidence, dict) else {}
+
+    raw_scores = evidence.get("symptom_scores")
+    normalized: list[dict] = []
+    if isinstance(raw_scores, list):
+        for row in raw_scores:
+            if not isinstance(row, dict):
+                continue
+            name = str(row.get("name") or "").strip()
+            try:
+                percent = float(row.get("percent") or 0.0)
+            except (TypeError, ValueError):
+                percent = 0.0
+            if not name or percent <= 0:
+                continue
+            normalized.append({"name": name, "percent": round(max(0.0, min(100.0, percent)), 1)})
+        if normalized and len(normalized) >= max(1, min(4, limit)):
+            normalized.sort(key=lambda item: item["percent"], reverse=True)
+            return normalized[:max(1, limit)]
+
+    ranked_candidates = evidence.get("ranked_candidates")
+    if isinstance(ranked_candidates, list):
+        score_by_symptom = {}
+        for candidate in ranked_candidates:
+            if not isinstance(candidate, dict):
+                continue
+            try:
+                candidate_confidence = float(candidate.get("confidence") or 0.0)
+            except (TypeError, ValueError):
+                candidate_confidence = 0.0
+            matched = candidate.get("matched_symptoms")
+            if candidate_confidence <= 0 or not isinstance(matched, list):
+                continue
+
+            unique_matched = []
+            seen_local = set()
+            for raw_symptom in matched:
+                symptom_name = str(raw_symptom or "").strip()
+                symptom_key = _normalize_text(symptom_name)
+                if not symptom_name or not symptom_key or symptom_key in seen_local:
+                    continue
+                seen_local.add(symptom_key)
+                unique_matched.append((symptom_key, symptom_name))
+
+            if not unique_matched:
+                continue
+
+            per_symptom_weight = candidate_confidence / float(len(unique_matched))
+            for symptom_key, symptom_name in unique_matched:
+                bucket = score_by_symptom.setdefault(
+                    symptom_key,
+                    {"name": symptom_name, "score": 0.0},
+                )
+                bucket["score"] += per_symptom_weight
+
+        if score_by_symptom:
+            max_score = max(float(row["score"]) for row in score_by_symptom.values()) or 1.0
+            rows = []
+            for row in score_by_symptom.values():
+                rows.append(
+                    {
+                        "name": row["name"],
+                        "percent": round((float(row["score"]) / max_score) * 100.0, 1),
+                    }
+                )
+            rows.sort(key=lambda item: item["percent"], reverse=True)
+            if normalized:
+                existing_keys = {_normalize_text(row["name"]) for row in rows}
+                for row in normalized:
+                    key = _normalize_text(row["name"])
+                    if key and key not in existing_keys:
+                        rows.append({"name": row["name"], "percent": row["percent"]})
+            rows.sort(key=lambda item: item["percent"], reverse=True)
+            return rows[:max(1, limit)]
+
+    fallback_symptoms = _split_csv_symptoms(getattr(diagnosis, "symptoms", None))[:max(1, limit)]
+    if not fallback_symptoms:
+        return []
+    share = round(100.0 / float(len(fallback_symptoms)), 1)
+    return [{"name": row, "percent": share} for row in fallback_symptoms]
 # ===============================
 # FARMER BLUEPRINT
 # ===============================
@@ -72,6 +347,7 @@ def dashboard():
     """
     Show diagnoses submitted by this farmer only
     """
+    crops = Crop.query.order_by(Crop.name.asc()).all()
 
     diagnoses = (
         Diagnosis.query
@@ -96,7 +372,8 @@ def dashboard():
     return render_template(
         "farmer/dashboard.html",
         diagnoses=diagnoses,
-        ai_questions=ai_questions
+        ai_questions=ai_questions,
+        crops=crops
     )
 
 
@@ -168,12 +445,12 @@ def _process_diagnose_post():
     crop_id = request.form.get("crop_id")
     symptoms_text = request.form.get("symptoms")
     if not crop_id or not symptoms_text:
-        flash("??? Please select crop and enter symptoms", "danger")
+        flash(t("please_select_symptom"), "danger")
         return redirect(request.url)
 
     crop = Crop.query.get(crop_id)
     if not crop:
-        flash("??? Invalid crop selected", "danger")
+        flash(t("invalid_crop_selected"), "danger")
         return redirect(request.url)
 
     # ---------------------------------
@@ -203,7 +480,7 @@ def _process_diagnose_post():
     diagnosis = Diagnosis(
         farmer_id=current_user.id,
         crop_id=crop.id,
-        crop_name=crop.name,
+        crop_name=_localize_field(crop, "name", crop.name),
         disease_id=disease_id,
         disease_name=disease_name,
         symptoms=symptoms_text,
@@ -240,7 +517,7 @@ def _process_diagnose_post():
     except Exception:
         db.session.rollback()
 
-    flash("??? Diagnosis completed successfully", "success")
+    flash(t("diagnosis_completed"), "success")
 
     return redirect(
         url_for(
@@ -280,60 +557,195 @@ def diagnose():
     )
 
 
+@farmer_bp.route("/scan-crop", methods=["GET"])
+@farmer_required
+def scan_crop():
+    crop_id = (request.args.get("crop_id") or "").strip()
+    instant = "1" if (request.args.get("instant") or "").strip() == "1" else "0"
+    return redirect(url_for("farmer.diagnose_rule_based", scan="1", instant=instant, crop_id=crop_id))
+
+
+@farmer_bp.route("/api/scan/symptom-suggestions", methods=["POST"])
+@farmer_required
+def scan_symptom_suggestions_api():
+    crop_id_raw = (request.form.get("crop_id") or "").strip()
+    try:
+        crop_id = int(crop_id_raw)
+    except (TypeError, ValueError):
+        return jsonify({"ok": False, "error": t("please_select_crop")}), 400
+
+    crop = Crop.query.get(crop_id)
+    if not crop:
+        return jsonify({"ok": False, "error": t("invalid_crop_selected")}), 404
+
+    upload = request.files.get("field_image")
+    if not upload or not upload.filename:
+        return jsonify({"ok": False, "error": t("scan_image_required")}), 400
+
+    mimetype = (upload.mimetype or "").strip().lower()
+    if not mimetype.startswith("image/"):
+        return jsonify({"ok": False, "error": t("invalid_image_type")}), 400
+
+    image_bytes = upload.read() or b""
+    if not image_bytes:
+        return jsonify({"ok": False, "error": t("scan_image_required")}), 400
+    if len(image_bytes) > 5 * 1024 * 1024:
+        return jsonify({"ok": False, "error": t("max_upload_size")}), 413
+
+    symptom_candidates = _symptom_candidates_for_crop(crop_id)
+    if not symptom_candidates:
+        return jsonify(
+            {
+                "ok": True,
+                "suggestions": [],
+                "analysis": "",
+                "confidence": None,
+            }
+        )
+
+    result = suggest_symptoms_from_image(
+        image_bytes=image_bytes,
+        mime_type=mimetype,
+        crop_name=_localize_field(crop, "name", crop.name),
+        symptom_candidates=symptom_candidates,
+        max_suggestions=8,
+    )
+    if result is None:
+        return jsonify({"ok": False, "error": t("scan_api_unavailable")}), 503
+
+    current_lang = get_current_language()
+    suggestions = []
+    for row in result.get("matched_symptoms") or []:
+        if not isinstance(row, dict):
+            continue
+        symptom_id = row.get("id")
+        if not symptom_id:
+            continue
+        display_name = (
+            row.get("name_kh")
+            if current_lang == "km" and row.get("name_kh")
+            else row.get("name")
+        )
+        suggestions.append(
+            {
+                "id": symptom_id,
+                "name": normalize_display_text(str(display_name or row.get("name") or ""), lang=current_lang),
+            }
+        )
+
+    return jsonify(
+        {
+            "ok": True,
+            "suggestions": suggestions,
+            "analysis": str(result.get("notes") or "").strip(),
+            "confidence": result.get("confidence"),
+        }
+    )
+
+
 @farmer_bp.route("/diagnose/rule-based", methods=["GET", "POST"])
 @farmer_required
 def diagnose_rule_based():
     """
     Farmer submits crop + symptoms (fully rule-based inference form)
     """
+    scan_mode = request.args.get("scan", "").strip() == "1"
+    instant_scan_mode = request.args.get("instant", "").strip() == "1"
+    initial_crop_id = request.args.get("crop_id", "").strip() or ""
 
     if request.method == "POST":
-        crop_id = request.form.get("crop_id")
-        symptom_ids = request.form.getlist("symptoms")
+        scan_mode = request.form.get("scan_mode", "0") == "1"
+        instant_scan_mode = request.form.get("instant_scan_mode", "0") == "1"
+        crop_id = (request.form.get("crop_id") or "").strip()
+        diagnosis_category = (request.form.get("diagnosis_category") or "other").strip().lower() or "other"
+        symptom_ids = _safe_int_list(request.form.getlist("symptoms"))
 
         if not crop_id:
-            flash("Please select a crop.", "danger")
+            flash(t("please_select_crop"), "danger")
             return redirect(request.url)
 
         if not symptom_ids:
-            flash("Please select at least one symptom.", "danger")
+            flash(t("please_select_symptom"), "danger")
             return redirect(request.url)
 
         crop = Crop.query.get(crop_id)
         if not crop:
-            flash("Invalid crop selected.", "danger")
+            flash(t("invalid_crop_selected"), "danger")
             return redirect(request.url)
 
+        denied_symptom_ids = _safe_int_list(request.form.getlist("denied_symptoms"))
+        all_symptom_ids = symptom_ids + [sid for sid in denied_symptom_ids if sid not in symptom_ids]
         symptoms = (
             Symptom.query
-            .filter(Symptom.id.in_(symptom_ids))
+            .filter(Symptom.id.in_(all_symptom_ids))
             .order_by(Symptom.name.asc())
             .all()
         )
-        symptoms_text = ", ".join([s.name for s in symptoms])
-        symptoms_list = [s.name for s in symptoms]
+        symptom_lookup = {symptom.id: symptom for symptom in symptoms}
 
-        result = rule_diagnose(symptoms_list, crop_id=crop.id)
+        confirmed_symptoms = [symptom_lookup[sid] for sid in symptom_ids if sid in symptom_lookup]
+        denied_symptoms = [symptom_lookup[sid] for sid in denied_symptom_ids if sid in symptom_lookup]
+        if not confirmed_symptoms:
+            flash(t("invalid_symptom_selection"), "danger")
+            return redirect(request.url)
+
+        symptoms_text = ", ".join([s.name for s in confirmed_symptoms])
+        symptoms_list = [s.name for s in confirmed_symptoms]
+        denied_symptom_names = [s.name for s in denied_symptoms]
+
+        result = rule_diagnose(
+            symptoms_list,
+            crop_id=crop.id,
+            negative_symptoms_input=denied_symptom_names,
+            category=diagnosis_category,
+        )
 
         if result:
             rule = result["rule"]
             disease_name = rule.disease.name if rule.disease else "Unknown"
             confidence = result.get("confidence")
+            confidence_level = result.get("confidence_tier")
             disease_id = rule.disease.id if rule.disease else None
+            diagnosis_reason = result.get("reason")
+            diagnosis_evidence = result.get("evidence")
+            recommendations = result.get("recommendations") or {}
+            solution_text = recommendations.get("solution") or (rule.disease.treatment if rule.disease else None)
+            prevention_lines = recommendations.get("prevention") or []
+            prevention_text = "\n".join(f"- {line}" for line in prevention_lines)
         else:
             disease_name = "Unknown"
             confidence = None
+            confidence_level = "insufficient"
             disease_id = None
+            diagnosis_reason = (
+                "No strong rule match was found from the confirmed symptoms. "
+                "Collect more symptom evidence or request expert review."
+            )
+            diagnosis_evidence = {}
+            solution_text = "Request expert confirmation before applying major treatment."
+            prevention_text = (
+                "- Monitor crop condition daily.\n"
+                "- Isolate heavily affected plants when possible.\n"
+                "- Keep tools and field surfaces clean."
+            )
 
         diagnosis = Diagnosis(
             farmer_id=current_user.id,
             crop_id=crop.id,
-            crop_name=crop.name,
+            crop_name=_localize_field(crop, "name", crop.name),
             disease_id=disease_id,
             disease_name=disease_name,
+            diagnosis_category=diagnosis_category,
             symptoms=symptoms_text,
+            selected_symptom_ids=symptom_ids,
+            denied_symptom_ids=denied_symptom_ids,
             status="AUTO",
-            confidence=confidence
+            confidence=confidence,
+            confidence_level=confidence_level,
+            diagnosis_reason=diagnosis_reason,
+            diagnosis_evidence=diagnosis_evidence,
+            solution=solution_text,
+            prevention_recommendations=prevention_text
         )
 
         db.session.add(diagnosis)
@@ -365,8 +777,7 @@ def diagnose_rule_based():
         except Exception:
             db.session.rollback()
 
-        flash("Diagnosis completed successfully.", "success")
-
+        flash(t("diagnosis_completed"), "success")
         return redirect(
             url_for(
                 "farmer.diagnosis_result",
@@ -385,30 +796,54 @@ def diagnose_rule_based():
         .all()
     )
 
-    # Build guided data per crop
-    current_lang = get_current_language()
     rules = (
         Rule.query
         .options(joinedload(Rule.symptoms), joinedload(Rule.disease))
         .all()
     )
 
-    symptoms_by_crop = {}
+    current_lang = get_current_language()
+    crop_profiles = {}
     rules_by_crop = {}
+    symptoms_by_crop = {0: {}}
+
+    all_symptoms = Symptom.query.order_by(Symptom.name.asc()).all()
+    for symptom in all_symptoms:
+        raw_display_name = (
+            symptom.name_kh
+            if current_lang == "km" and getattr(symptom, "name_kh", None)
+            else symptom.name
+        )
+        display_name = normalize_display_text(raw_display_name, lang=current_lang)
+        if symptom.id and display_name:
+            symptoms_by_crop[0][symptom.id] = display_name
+
+    for crop in crops:
+        inferred_subcategory_id = _infer_crop_subcategory(crop)
+        crop_profiles[crop.id] = {
+            "id": crop.id,
+            "name": _localize_field(crop, "name", crop.name),
+            "domain_id": "crop",
+            "subcategory_id": inferred_subcategory_id,
+        }
 
     for rule in rules:
         if not rule.disease or not rule.disease.crop_id:
             continue
-        crop_id = rule.disease.crop_id
 
+        crop_id = rule.disease.crop_id
         rule_symptom_ids = []
-        for s in rule.symptoms:
-            if not s or not s.id or not s.name:
+        for symptom in rule.symptoms:
+            if not symptom or not symptom.id or not symptom.name:
                 continue
-            rule_symptom_ids.append(s.id)
+            rule_symptom_ids.append(symptom.id)
+            display_name = (
+                symptom.name_kh
+                if current_lang == "km" and getattr(symptom, "name_kh", None)
+                else symptom.name
+            )
             symptoms_by_crop.setdefault(crop_id, {})
-            display_name = s.name_kh if current_lang == "km" and getattr(s, "name_kh", None) else s.name
-            symptoms_by_crop[crop_id][s.id] = display_name
+            symptoms_by_crop[crop_id][symptom.id] = normalize_display_text(display_name, lang=current_lang)
 
         if rule_symptom_ids:
             rules_by_crop.setdefault(crop_id, [])
@@ -425,7 +860,17 @@ def diagnose_rule_based():
         crops=crops,
         diagnoses=diagnoses,
         symptoms_by_crop=symptoms_by_crop_list,
-        rules_by_crop=rules_by_crop
+        all_symptoms_list=symptoms_by_crop_list.get(0, []),
+        rules_by_crop=rules_by_crop,
+        crop_profiles=crop_profiles,
+        agri_domains=_agri_domains_payload(),
+        diagnosis_categories=DIAGNOSIS_CATEGORIES,
+        scan_mode=scan_mode,
+        instant_scan_mode=instant_scan_mode,
+        initial_crop_id=initial_crop_id,
+        domain_default_diagnosis_category=DOMAIN_DEFAULT_DIAGNOSIS_CATEGORY,
+        clarification_limits={},
+        decision_tree_limits={},
     )
 
 # ===============================
@@ -463,12 +908,40 @@ def diagnosis_result(diagnosis_id):
             .all()
         )
 
+    symptom_breakdown = _build_symptom_breakdown(diagnosis, limit=5)
+
     return render_template(
         "farmer/result.html",
         diagnosis=diagnosis,
         diagnoses=diagnoses,
-        possible_diseases=possible_diseases
+        possible_diseases=possible_diseases,
+        symptom_breakdown=symptom_breakdown,
     )
+
+
+@farmer_bp.route("/result/<int:diagnosis_id>/feedback", methods=["POST"])
+@farmer_required
+def diagnosis_feedback(diagnosis_id):
+    diagnosis = Diagnosis.query.get_or_404(diagnosis_id)
+
+    if diagnosis.farmer_id != current_user.id:
+        flash("Access denied.", "danger")
+        return redirect(url_for("farmer.dashboard"))
+
+    rating = (request.form.get("rating") or "").strip().lower()
+    if rating not in {"helpful", "not_helpful"}:
+        flash("Please select a valid feedback rating.", "danger")
+        return redirect(url_for("farmer.diagnosis_result", diagnosis_id=diagnosis.id))
+
+    comment = (request.form.get("comment") or "").strip()
+    if len(comment) > 1000:
+        comment = comment[:1000]
+
+    diagnosis.submit_feedback(rating=rating, comment=comment or None)
+    db.session.commit()
+
+    flash("Thank you for your feedback.", "success")
+    return redirect(url_for("farmer.diagnosis_result", diagnosis_id=diagnosis.id))
 
 
 # ===============================

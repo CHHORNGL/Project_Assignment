@@ -1,4 +1,7 @@
 {% extends "layouts/base.html" %}
+{% set agriculture_categories = agriculture_categories if agriculture_categories is defined else [] %}
+{% set sub_category_map = sub_category_map if sub_category_map is defined else {} %}
+{% set reference_scopes = reference_scopes if reference_scopes is defined else [] %}
 
 {% block title %}{{ t("expert_form") }}{% endblock %}
 
@@ -39,6 +42,49 @@
                     >
                 </div>
 
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label class="font-weight-semibold">Agriculture Category</label>
+                        <input
+                            type="text"
+                            id="form-agri-category"
+                            name="agriculture_category"
+                            class="form-control"
+                            list="form-agri-category-options"
+                            placeholder="e.g., Rice & Cereals"
+                            required
+                        >
+                        <datalist id="form-agri-category-options">
+                            {% for option in agriculture_categories %}
+                            <option value="{{ option.label }}"></option>
+                            {% endfor %}
+                        </datalist>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label class="font-weight-semibold">Sub-category</label>
+                        <input
+                            type="text"
+                            id="form-agri-sub-category"
+                            name="agriculture_sub_category"
+                            class="form-control"
+                            list="form-agri-sub-category-options"
+                            placeholder="e.g., Rice"
+                            required
+                        >
+                        <datalist id="form-agri-sub-category-options"></datalist>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="font-weight-semibold">Crop / Reference Scope</label>
+                    <select name="reference_scope" class="form-control" required>
+                        <option value="">Select scope</option>
+                        {% for scope in reference_scopes %}
+                        <option value="{{ scope.id }}">{{ scope.label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
                 <!-- {{ t("symptoms_label") }} -->
                 <div class="form-group">
                     <label class="font-weight-semibold">{{ t("symptoms_label") }}</label>
@@ -48,6 +94,16 @@
                         rows="4"
                         placeholder="{{ t("description_placeholder") }}"
                         required
+                    ></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="font-weight-semibold">Visual Input Notes</label>
+                    <textarea
+                        name="visual_input_notes"
+                        class="form-control"
+                        rows="2"
+                        placeholder="Describe visual cues and photo collection guidance."
                     ></textarea>
                 </div>
 
@@ -81,4 +137,40 @@
     </div>
 
 </div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+(function () {
+    const categoryInput = document.getElementById("form-agri-category");
+    const subCategoryList = document.getElementById("form-agri-sub-category-options");
+    if (!categoryInput || !subCategoryList) return;
+
+    const categories = {{ agriculture_categories|tojson }};
+    const subCategoryMap = {{ sub_category_map|tojson }};
+    const categoryLabelToId = {};
+
+    categories.forEach((item) => {
+        if (!item || !item.id || !item.label) return;
+        categoryLabelToId[String(item.label).toLowerCase()] = item.id;
+    });
+
+    function drawSubCategorySuggestions() {
+        const label = String(categoryInput.value || "").trim().toLowerCase();
+        const categoryId = categoryLabelToId[label];
+        const rows = categoryId ? (subCategoryMap[categoryId] || []) : [];
+        subCategoryList.innerHTML = "";
+        rows.forEach((name) => {
+            const option = document.createElement("option");
+            option.value = name;
+            subCategoryList.appendChild(option);
+        });
+    }
+
+    categoryInput.addEventListener("input", drawSubCategorySuggestions);
+    categoryInput.addEventListener("change", drawSubCategorySuggestions);
+    drawSubCategorySuggestions();
+})();
+</script>
 {% endblock %}

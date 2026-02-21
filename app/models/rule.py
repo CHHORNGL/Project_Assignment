@@ -1,6 +1,6 @@
 from app.extensions import db
 from app.models.associations import rule_symptoms
-from app.utils.i18n import get_current_language
+from app.utils.i18n import get_current_language, normalize_display_text
 
 
 class Rule(db.Model):
@@ -41,8 +41,8 @@ class Rule(db.Model):
     def symptom_names(self):
         lang = get_current_language()
         if lang == "km":
-            return [s.name_kh or s.name for s in self.symptoms]
-        return [s.name for s in self.symptoms]
+            return [normalize_display_text(s.name_kh or s.name, lang=lang) for s in self.symptoms]
+        return [normalize_display_text(s.name, lang=lang) for s in self.symptoms]
 
     def __repr__(self):
         return f"<Rule {self.name}>"

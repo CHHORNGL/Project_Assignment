@@ -1,0 +1,171 @@
+{% extends "layouts/base.html" %}
+{% block title %}{{ t("expert_question_builder") }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid qb-admin-page">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="qb-title mb-1">{{ t("expert_system_question_builder") }}</h3>
+            <p class="text-muted mb-0">{{ t("qb_dashboard_sub") }}</p>
+        </div>
+        <div class="mt-3 mt-md-0">
+            <a href="{{ url_for('expert.question_builder_visual_editor') }}" class="btn btn-outline-primary px-4 mr-2">
+                <i class="fas fa-project-diagram mr-1"></i> {{ t("visual_editor") }}
+            </a>
+            <a href="{{ url_for('expert.question_builder_create') }}" class="btn btn-success px-4">
+                <i class="fas fa-plus-circle mr-1"></i> {{ t("new_question") }}
+            </a>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="qb-stat-card">
+                <div class="qb-stat-label">{{ t("total_questions") }}</div>
+                <div class="qb-stat-value">{{ stats.total_questions }}</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="qb-stat-card">
+                <div class="qb-stat-label">{{ t("active_questions") }}</div>
+                <div class="qb-stat-value">{{ stats.active_questions }}</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="qb-stat-card">
+                <div class="qb-stat-label">{{ t("root_questions") }}</div>
+                <div class="qb-stat-value">{{ stats.root_questions }}</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="qb-stat-card">
+                <div class="qb-stat-label">{{ t("configured_answers") }}</div>
+                <div class="qb-stat-value">{{ stats.answer_count }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form method="GET" class="form-row align-items-end">
+                <div class="col-md-3 mb-2">
+                    <label class="small font-weight-bold mb-1">{{ t("crop_label") }}</label>
+                    <select class="form-control" name="crop_id">
+                        <option value="">{{ t("all_crops_global") }}</option>
+                        {% for crop in crops %}
+                        <option value="{{ crop.id }}" {% if filters.crop_id == crop.id %}selected{% endif %}>{{ localize(crop, "name") }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label class="small font-weight-bold mb-1">{{ t("category") }}</label>
+                    <select class="form-control" name="category">
+                        <option value="">{{ t("all_categories") }}</option>
+                        {% for category in question_categories %}
+                        <option value="{{ category.id }}" {% if filters.category == category.id %}selected{% endif %}>{{ t("qb_category_" ~ category.id) }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2 mb-2">
+                    <label class="small font-weight-bold mb-1">{{ t("status") }}</label>
+                    <select class="form-control" name="active">
+                        <option value="" {% if not filters.active %}selected{% endif %}>{{ t("all") }}</option>
+                        <option value="active" {% if filters.active == 'active' %}selected{% endif %}>{{ t("active") }}</option>
+                        <option value="inactive" {% if filters.active == 'inactive' %}selected{% endif %}>{{ t("inactive") }}</option>
+                    </select>
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label class="small font-weight-bold mb-1">{{ t("search") }}</label>
+                    <input class="form-control" type="text" name="q" value="{{ filters.q }}" placeholder="{{ t('question_text_placeholder') }}">
+                </div>
+                <div class="col-md-1 mb-2">
+                    <button class="btn btn-outline-primary btn-block" type="submit">{{ t("filter") }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span class="font-weight-bold">{{ t("decision_tree_questions") }}</span>
+            <span class="text-muted small">{{ t("questions_count", count=questions|length) }}</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="thead-light">
+                    <tr>
+                        <th style="min-width: 260px;">{{ t("question_label") }}</th>
+                        <th>{{ t("crop_label") }}</th>
+                        <th>{{ t("category") }}</th>
+                        <th>{{ t("answers_label") }}</th>
+                        <th>{{ t("status") }}</th>
+                        <th>{{ t("updated_label") }}</th>
+                        <th class="text-right" style="min-width: 220px;">{{ t("actions") }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for question in questions %}
+                    <tr>
+                        <td>
+                            <div class="font-weight-bold">{{ question.prompt }}</div>
+                            {% if question.description %}
+                            <div class="text-muted small mt-1">{{ question.description[:120] }}{% if question.description|length > 120 %}...{% endif %}</div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if question.crop %}
+                                {{ localize(question.crop, "name") }}
+                            {% else %}
+                                <span class="text-muted">{{ t("global") }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge badge-light text-uppercase">{{ t("qb_category_" ~ question.category) }}</span>
+                        </td>
+                        <td>
+                            <div class="small text-muted">{{ question.answers|length }} {{ t("options_count") }}</div>
+                            {% if question.answers %}
+                            <div class="small">
+                                {% for answer in question.answers[:2] %}
+                                    <div>{{ answer.label }}</div>
+                                {% endfor %}
+                                {% if question.answers|length > 2 %}
+                                <div class="text-muted">+{{ question.answers|length - 2 }} {{ t("more") }}</div>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div>
+                                {% if question.is_root %}
+                                <span class="badge badge-info">{{ t("root") }}</span>
+                                {% endif %}
+                                {% if question.is_active %}
+                                <span class="badge badge-success">{{ t("active") }}</span>
+                                {% else %}
+                                <span class="badge badge-secondary">{{ t("inactive") }}</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="small text-muted">{{ question.updated_at.strftime('%Y-%m-%d %H:%M') if question.updated_at else '-' }}</td>
+                        <td class="text-right">
+                            <a class="btn btn-sm btn-outline-primary" href="{{ url_for('expert.question_builder_preview', question_id=question.id) }}">{{ t("preview") }}</a>
+                            <a class="btn btn-sm btn-outline-success" href="{{ url_for('expert.question_builder_edit', question_id=question.id) }}">{{ t("edit") }}</a>
+                            <form method="POST" action="{{ url_for('expert.question_builder_delete', question_id=question.id) }}" class="d-inline" onsubmit="return confirm('{{ t('delete_question_confirm') }}');">
+                                <button class="btn btn-sm btn-outline-danger" type="submit">{{ t("delete") }}</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">
+                            {{ t("no_questions_found") }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

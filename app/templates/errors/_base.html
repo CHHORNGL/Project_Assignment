@@ -2,8 +2,11 @@
 <html lang="{{ current_lang }}">
 <head>
     <meta charset="UTF-8">
-    <title>{{ error_code }} - {{ error_title }}</title>
+    <title>{{ error_code }} - {{ error_title }} | AGRI SYSTEM</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <link rel="icon" type="image/jpeg" href="{{ url_for('static', filename='img/logo.jpg') }}">
+    <link rel="shortcut icon" type="image/jpeg" href="{{ url_for('static', filename='img/logo.jpg') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/logo.jpg') }}">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -62,4 +65,3 @@
     <script src="{{ url_for('static', filename='js/error_pages.js', v=static_version) }}"></script>
 </body>
 </html>
-

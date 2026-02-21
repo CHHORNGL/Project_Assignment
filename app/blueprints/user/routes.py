@@ -23,6 +23,7 @@ from app.models.user import User
 from app.models.notification import Notification
 from app.services.notification_service import serialize_notification
 from app.services.khmer_calendar import build_khmer_calendar_month
+from app.services.theme_manager import resolve_active_runtime
 from app.utils.i18n import set_current_language, get_current_language
 
 
@@ -270,11 +271,17 @@ def member_card(user_id: int):
         abort(404)
 
     role_names = ", ".join([role.name for role in member.roles])
+    try:
+        theme_runtime = resolve_active_runtime("admin", use_cache=True)
+    except Exception:
+        theme_runtime = None
+
     return render_template(
         "users/member_card.html",
         member=member,
         rep_label=rep_label,
-        role_names=role_names
+        role_names=role_names,
+        theme_runtime=theme_runtime,
     )
 
 

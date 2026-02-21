@@ -213,6 +213,7 @@
     (function () {
         const HEALTH_URL = "/healthz";
         const STORAGE_LAST_URL = "last_good_url_v1";
+        const PING_TIMEOUT_MS = 5000;
 
         const retryBtn = document.getElementById("retryBtn");
         const homeBtn = document.getElementById("homeBtn");
@@ -229,15 +230,18 @@
 
         function goLast() {
             const url = lastUrl();
-            if (url) window.location.href = url;
-            else window.location.href = "/";
+            if (url && !String(url).includes("/static/offline.html")) {
+                window.location.href = url;
+                return;
+            }
+            window.location.href = "/";
         }
 
         async function ping() {
             if (!window.fetch) return false;
             const controller = ("AbortController" in window) ? new AbortController() : null;
             let t = null;
-            if (controller) t = window.setTimeout(() => controller.abort(), 2500);
+            if (controller) t = window.setTimeout(() => controller.abort(), PING_TIMEOUT_MS);
             try {
                 const res = await fetch(HEALTH_URL, { method: "GET", cache: "no-store", credentials: "same-origin", signal: controller ? controller.signal : undefined });
                 return !!(res && res.ok);
@@ -269,12 +273,13 @@
         if (retryBtn) retryBtn.addEventListener("click", retry);
         if (homeBtn) homeBtn.addEventListener("click", goLast);
 
-        // Auto-retry every 6s so the page recovers without user action.
-        window.setInterval(() => retry().catch(() => {}), 6000);
+        // Retry once automatically when the browser reports connectivity is back.
+        window.addEventListener("online", () => {
+            retry().catch(() => {});
+        });
 
         setStatus("Waiting for connection...");
     })();
     </script>
 </body>
 </html>
-

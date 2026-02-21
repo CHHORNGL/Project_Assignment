@@ -2,8 +2,35 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Member Card</title>
+    <title>Member Card | AGRI SYSTEM</title>
+    <link rel="icon" type="image/jpeg" href="{{ url_for('static', filename='img/logo.jpg') }}">
+    <link rel="shortcut icon" type="image/jpeg" href="{{ url_for('static', filename='img/logo.jpg') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/logo.jpg') }}">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    {% set runtime = theme_runtime or {} %}
+    {% set profile = runtime.get("profile", {}) if runtime else {} %}
+    {% set tokens = profile.get("tokens", {}) if profile else {} %}
+
+    <script>
+    (function () {
+        const userTheme = "{{ current_user.theme if current_user.is_authenticated else 'system' }}";
+        const storedTheme = localStorage.getItem("theme");
+
+        function prefersDark() {
+            return window.matchMedia("(prefers-color-scheme: dark)").matches;
+        }
+
+        function applyTheme(theme) {
+            document.documentElement.classList.remove("dark-mode");
+            if (theme === "dark") document.documentElement.classList.add("dark-mode");
+            if (theme === "system" && prefersDark()) document.documentElement.classList.add("dark-mode");
+        }
+
+        if (userTheme && userTheme !== "system") applyTheme(userTheme);
+        else if (storedTheme) applyTheme(storedTheme);
+        else applyTheme("system");
+    })();
+    </script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,8 +38,31 @@
 
     <link href="{{ url_for('static', filename='sb-admin/vendor/fontawesome-free/css/all.min.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/style.css', v=static_version) }}" rel="stylesheet">
+    <style>
+        :root {
+            --primary: {{ (tokens.get("primary") or "#4e73df")|e }};
+            --primary-soft: {{ (tokens.get("primary_soft") or "rgba(78, 115, 223, 0.14)")|e }};
+            --admin-bg-light: {{ (tokens.get("admin_bg_light") or tokens.get("admin_bg") or "#f8f9fc")|e }};
+            --admin-card-light: {{ (tokens.get("admin_card_light") or tokens.get("admin_card") or "#ffffff")|e }};
+            --admin-border-light: {{ (tokens.get("admin_border_light") or tokens.get("admin_border") or "#e3e6f0")|e }};
+            --admin-text-light: {{ (tokens.get("admin_text_light") or tokens.get("admin_text") or "#3a3b45")|e }};
+            --admin-muted-light: {{ (tokens.get("admin_muted_light") or tokens.get("admin_muted") or "#858796")|e }};
+            --admin-bg-dark: {{ (tokens.get("admin_bg_dark") or "#0f172a")|e }};
+            --admin-card-dark: {{ (tokens.get("admin_card_dark") or "#111827")|e }};
+            --admin-border-dark: {{ (tokens.get("admin_border_dark") or "#1f2937")|e }};
+            --admin-text-dark: {{ (tokens.get("admin_text_dark") or "#e2e8f0")|e }};
+            --admin-muted-dark: {{ (tokens.get("admin_muted_dark") or "#94a3b8")|e }};
+            --admin-accent: {{ (tokens.get("admin_accent") or tokens.get("primary") or "#4e73df")|e }};
+            --admin-accent-soft: {{ (tokens.get("admin_accent_soft") or tokens.get("primary_soft") or "rgba(78, 115, 223, 0.14)")|e }};
+        }
+    </style>
 </head>
-<body class="member-card-page">
+<body
+    class="member-card-page admin-theme"
+    data-admin-theme="{{ profile.get('slug', 'classic') }}"
+    data-admin-radius="{{ runtime.get('radius_mode', 'soft') }}"
+    data-admin-density="{{ runtime.get('density_mode', 'comfortable') }}"
+>
     <div class="member-card">
         <div class="member-card-header">
             <div class="member-card-brand">
@@ -53,7 +103,7 @@
         </div>
 
         <div class="member-card-footer">
-            Agri Expert System — Official Representative
+            Agri Expert System - Official Representative
         </div>
     </div>
 </body>
