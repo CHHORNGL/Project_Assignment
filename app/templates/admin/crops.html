@@ -66,9 +66,16 @@
                                    data-name="{{ localize(crop, 'name') }}"
                                    form="bulk-crops-form">
                         </td>
-                        <td>{{ localize(crop, "name") }}</td>
+                        <td>
+                            <span style="font-size:1.3rem; margin-right:6px; vertical-align:middle;">{{ crop.emoji or "🌱" }}</span>
+                            <strong>{{ localize(crop, "name") }}</strong>
+                        </td>
                         <td>{{ localize(crop, "description", crop.description or "-") }}</td>
                         <td class="text-center">
+                            <a href="{{ url_for('admin_crop.edit', id=crop.id) }}"
+                               class="btn btn-sm btn-outline-primary mr-1">
+                                {{ t("edit") }}
+                            </a>
                             <a href="{{ url_for('admin_crop.delete', id=crop.id) }}"
                                class="btn btn-sm btn-danger"
                                onclick="return confirm('{{ t("confirm_delete_crop") }}')">

@@ -1,3 +1,8 @@
 {% extends "layouts/base.html" %}
-{% set body_class = "farmer-dash-theme" %}
+{% set body_class = "farmer-dash-theme farmer-no-sidebar" %}
 
+{% block sidebar %}{% endblock %}
+
+{% block secondary_nav %}
+{% include "layouts/farmer_navbar.html" %}
+{% endblock %}

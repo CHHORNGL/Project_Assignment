@@ -19,14 +19,14 @@
 {% set approved = diagnoses|selectattr("status", "equalto", "APPROVED")|list|length %}
 {% set rejected = diagnoses|selectattr("status", "equalto", "REJECTED")|list|length %}
 
-<div class="mx-auto" style="max-width: 1240px;">
+<div class="fd-wrap">
     <div class="farmer-hero mb-4">
         <div class="d-flex justify-content-between align-items-center flex-wrap">
             <div>
                 <h4 class="mb-1 font-weight-bold text-success">{{ t("farmer_dashboard_title") }}</h4>
                 <div class="text-muted small">{{ t("farmer_dashboard_sub") }}</div>
             </div>
-            <div class="mt-3 mt-md-0 d-flex flex-wrap" style="gap:10px;">
+            <div class="mt-3 mt-md-0 fd-btn-row">
                 <a href="{{ url_for('farmer.diagnose_rule_based') }}" class="btn btn-success btn-sm">
                     {{ t("full_rule_based") }}
                 </a>
@@ -75,6 +75,63 @@
             </div>
         </div>
     </div>
+
+    <!-- ── Quick-Start Crop Grid ── -->
+    {% if crops %}
+    <div class="qc-section mb-4">
+        <div class="qc-header">
+            <div>
+                <div class="qc-title">{{ "ជ្រើសរើសដំណាំ" if current_lang == "km" else "Start a Diagnosis" }}</div>
+                <div class="qc-sub">{{ "ចុចលើដំណាំរបស់អ្នកដើម្បីចាប់ផ្តើម" if current_lang == "km" else "Tap your crop to scan or check symptoms" }}</div>
+            </div>
+            <div class="qc-legend">
+                <span class="qc-leg-item"><span class="qc-leg-dot qc-dot-scan"></span>{{ "ស្កែន" if current_lang == "km" else "Scan" }}</span>
+                <span class="qc-leg-item"><span class="qc-leg-dot qc-dot-check"></span>{{ "ជ្រើសសញ្ញា" if current_lang == "km" else "Symptoms" }}</span>
+            </div>
+        </div>
+        <div class="qc-grid">
+            {% for crop in crops %}
+            {% set crop_name_lower = (crop.name or "")|lower %}
+            {% set is_rice = "rice" in crop_name_lower or "paddy" in crop_name_lower or "ស្រូវ" in (crop.name_kh or "") %}
+            {% set is_corn = "corn" in crop_name_lower or "maize" in crop_name_lower or "ពោត" in (crop.name_kh or "") %}
+            {% set is_cassava = "cassava" in crop_name_lower or "manioc" in crop_name_lower or "មើម" in (crop.name_kh or "") %}
+            {% set is_banana = "banana" in crop_name_lower or "ចេក" in (crop.name_kh or "") %}
+            {% set is_mango = "mango" in crop_name_lower or "មា" in (crop.name_kh or "") %}
+            {% set is_veg = "vegetable" in crop_name_lower or "tomato" in crop_name_lower or "cucumber" in crop_name_lower or "eggplant" in crop_name_lower or "បន្លែ" in (crop.name_kh or "") %}
+            {% set is_soy = "soy" in crop_name_lower or "bean" in crop_name_lower or "legume" in crop_name_lower %}
+            {% set is_pepper = "pepper" in crop_name_lower or "chili" in crop_name_lower or "chilli" in crop_name_lower %}
+            {% if is_rice %}{% set crop_emoji = "🌾" %}{% set qc_color = "qc-rice" %}
+            {% elif is_corn %}{% set crop_emoji = "🌽" %}{% set qc_color = "qc-corn" %}
+            {% elif is_cassava %}{% set crop_emoji = "🥔" %}{% set qc_color = "qc-root" %}
+            {% elif is_banana %}{% set crop_emoji = "🍌" %}{% set qc_color = "qc-banana" %}
+            {% elif is_mango %}{% set crop_emoji = "🥭" %}{% set qc_color = "qc-mango" %}
+            {% elif is_veg %}{% set crop_emoji = "🥦" %}{% set qc_color = "qc-veg" %}
+            {% elif is_soy %}{% set crop_emoji = "🫘" %}{% set qc_color = "qc-legume" %}
+            {% elif is_pepper %}{% set crop_emoji = "🌶️" %}{% set qc_color = "qc-spice" %}
+            {% else %}{% set crop_emoji = "🌿" %}{% set qc_color = "qc-default" %}{% endif %}
+            <div class="qc-crop-tile {{ qc_color }}">
+                <div class="qc-crop-emoji" aria-hidden="true">{{ crop_emoji }}</div>
+                <div class="qc-crop-name">
+                    {% if current_lang == "km" and crop.name_kh %}{{ crop.name_kh }}{% else %}{{ crop.name }}{% endif %}
+                </div>
+                <div class="qc-crop-actions">
+                    <a href="{{ url_for('farmer.scan_crop', crop_id=crop.id, instant='1') }}"
+                       class="qc-btn qc-btn-scan"
+                       title="{{ 'ស្កែន' if current_lang == 'km' else 'Scan crop' }}">
+                        <i class="fas fa-camera"></i>
+                    </a>
+                    <a href="{{ url_for('farmer.diagnose_rule_based') }}?crop_id={{ crop.id }}"
+                       class="qc-btn qc-btn-check"
+                       title="{{ 'ជ្រើសសញ្ញា' if current_lang == 'km' else 'Check symptoms' }}">
+                        <i class="fas fa-tasks"></i>
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    <!-- ── End Crop Grid ── -->
 
     <div class="weather-intel-card mb-4"
          id="weather-intelligence-card"
@@ -144,7 +201,7 @@
     <div class="card mb-4">
         <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
             <span class="section-title">{{ t("recent_diagnoses_title") }}</span>
-            <div class="mt-2 mt-md-0 d-flex flex-wrap" style="gap:10px;">
+            <div class="mt-2 mt-md-0 fd-btn-row">
                 <a href="{{ url_for('farmer.diagnosis_history') }}" class="btn btn-sm btn-outline-success">
                     {{ t("see_all") }}
                 </a>
@@ -202,7 +259,7 @@
             <div class="card h-100">
                 <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
                     <span class="section-title">{{ t("ask_expert_history") }}</span>
-                    <div class="mt-2 mt-md-0 d-flex flex-wrap" style="gap:10px;">
+                    <div class="mt-2 mt-md-0 fd-btn-row">
                         <a href="{{ url_for('farmer.ai_history') }}" class="btn btn-sm btn-outline-success">
                             {{ t("view_all") }}
                         </a>
@@ -270,96 +327,10 @@
        class="farmer-scan-fab-toggle"
        aria-label="{{ t('instant_scan_cta') }}"
        title="{{ t('instant_scan_cta') }}">
-        <svg class="scan-glyph" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M7 4H5a1 1 0 0 0-1 1v2" />
-            <path d="M17 4h2a1 1 0 0 1 1 1v2" />
-            <path d="M20 17v2a1 1 0 0 1-1 1h-2" />
-            <path d="M4 17v2a1 1 0 0 0 1 1h2" />
-            <rect x="9" y="9" width="6" height="6" rx="1.5" />
-            <path d="M12 8v1" />
-            <path d="M12 15v1" />
-            <path d="M8 12h1" />
-            <path d="M15 12h1" />
-        </svg>
+        <i class="fas fa-microscope scan-glyph" aria-hidden="true"></i>
     </a>
     <div class="farmer-scan-fab-label">{{ t("instant_scan_cta") }}</div>
 </div>
-
-<style>
-.farmer-scan-fab {
-    position: fixed;
-    left: 50%;
-    bottom: 18px;
-    transform: translateX(-50%);
-    z-index: 1050;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-}
-
-.farmer-scan-fab-toggle {
-    width: 56px;
-    height: 56px;
-    text-decoration: none;
-    border: 0;
-    border-radius: 999px;
-    color: #f8fbff;
-    background: radial-gradient(circle at 28% 22%, #8ec7ff 0%, #4f83ff 46%, #2f57cf 100%);
-    box-shadow: 0 0 0 7px rgba(79, 131, 255, 0.12), 0 10px 26px rgba(47, 87, 207, 0.42);
-    font-size: 1.05rem;
-    display: grid;
-    place-items: center;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.farmer-scan-fab-toggle:hover {
-    color: #ffffff;
-    transform: translateY(-2px) scale(1.02);
-    box-shadow: 0 0 0 9px rgba(79, 131, 255, 0.14), 0 14px 34px rgba(47, 87, 207, 0.46);
-    text-decoration: none;
-}
-
-.scan-glyph {
-    width: 24px;
-    height: 24px;
-    fill: none;
-    stroke: #f8fbff;
-    stroke-width: 1.7;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    opacity: 0.98;
-}
-
-.farmer-scan-fab-label {
-    padding: 3px 8px;
-    border-radius: 999px;
-    font-size: 0.68rem;
-    font-weight: 700;
-    letter-spacing: 0.02em;
-    color: var(--text-main);
-    background: color-mix(in srgb, var(--card-bg) 82%, #4f83ff 18%);
-    border: 1px solid color-mix(in srgb, var(--border-light) 70%, #4f83ff 30%);
-}
-
-@media (max-width: 576px) {
-    .farmer-scan-fab {
-        bottom: 14px;
-    }
-    .farmer-scan-fab-toggle {
-        width: 50px;
-        height: 50px;
-        font-size: 0.98rem;
-    }
-    .scan-glyph {
-        width: 21px;
-        height: 21px;
-    }
-    .farmer-scan-fab-label {
-        font-size: 0.64rem;
-    }
-}
-</style>
 {% endblock %}
 
 {% block scripts %}

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="{{ current_lang }}">
+<head>
+<meta charset="UTF-8">
+<title>{% block title %}{{ react_page_title or "Dashboard" }}{% endblock %} | AGRI SYSTEM</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/jpeg" href="{{ url_for('static', filename='img/logo.jpg') }}">
+<link rel="shortcut icon" type="image/jpeg" href="{{ url_for('static', filename='img/logo.jpg') }}">
+<link rel="apple-touch-icon" href="{{ url_for('static', filename='img/logo.jpg') }}">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;500;600;700&family=Noto+Sans+Khmer:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="{{ url_for('static', filename='sb-admin/vendor/fontawesome-free/css/all.min.css') }}" rel="stylesheet">
+<link href="{{ url_for('static', filename='css/modern.css', v=static_version) }}" rel="stylesheet">
+<link href="{{ url_for('static', filename='css/modern-components.css', v=static_version) }}" rel="stylesheet">
+<link href="{{ url_for('static', filename='css/style.css', v=static_version) }}" rel="stylesheet">
+<link href="{{ url_for('static', filename='css/notifications.css') }}" rel="stylesheet">
+<link href="{{ url_for('static', filename='css/system_status.css', v=static_version) }}" rel="stylesheet">
+{% if react_extra_css %}
+    {% for href in react_extra_css %}
+<link href="{{ href }}" rel="stylesheet">
+    {% endfor %}
+{% endif %}
+{% set _react_assets = react_bundle('src/main.jsx') %}
+{% for href in _react_assets.css %}
+<link href="{{ href }}" rel="stylesheet">
+{% endfor %}
+
+<style>
+:root {
+    --font-en: "Inter", system-ui, sans-serif;
+    --font-kh: "Kantumruy Pro", "Noto Sans Khmer", "Khmer OS", sans-serif;
+}
+html, body, #react-template-root { min-height: 100%; }
+body, button, input, select, textarea {
+    font-family: var(--font-en), var(--font-kh);
+}
+html[lang^="km"] body,
+html[lang^="km"] button,
+html[lang^="km"] input,
+html[lang^="km"] select,
+html[lang^="km"] textarea {
+    font-family: var(--font-kh), var(--font-en);
+}
+</style>
+
+{% block head %}{% endblock %}
+
+<script>
+(function () {
+    const userTheme = "{{ current_user.theme if current_user.is_authenticated else 'system' }}";
+    const storedTheme = localStorage.getItem("theme");
+
+    function prefersDark() {
+        return window.matchMedia("(prefers-color-scheme: dark)").matches;
+    }
+
+    function applyTheme(theme) {
+        document.documentElement.classList.remove("dark-mode");
+        if (theme === "dark") document.documentElement.classList.add("dark-mode");
+        if (theme === "system" && prefersDark()) document.documentElement.classList.add("dark-mode");
+    }
+
+    if (userTheme && userTheme !== "system") applyTheme(userTheme);
+    else if (storedTheme) applyTheme(storedTheme);
+    else applyTheme("system");
+
+    if (userTheme === "system" || storedTheme === "system") {
+        window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", function (event) {
+            document.documentElement.classList.toggle("dark-mode", event.matches);
+        });
+    }
+})();
+</script>
+</head>
+<body class="app-shell react-template-shell {{ react_body_class or body_class|default('') }}">
+{% include "partials/flash_notices.html" %}
+
+<script id="app-bootstrap" type="application/json">{{ bootstrap_payload | tojson }}</script>
+<script>
+window.__APP_BOOTSTRAP__ = {{ bootstrap_payload | tojson }};
+</script>
+
+<div id="react-template-root">
+{% block content %}
+<div class="surface-panel mx-4 mt-4 p-6 text-sm text-skin-muted">
+    {{ react_loading_message or "React page is loading..." }}
+</div>
+{% endblock %}
+</div>
+
+<script src="{{ url_for('static', filename='js/toast.js') }}"></script>
+<script src="{{ url_for('static', filename='js/system_status.js', v=static_version) }}"></script>
+{% for src in _react_assets.js %}
+<script type="module" src="{{ src }}"></script>
+{% endfor %}
+</body>
+</html>

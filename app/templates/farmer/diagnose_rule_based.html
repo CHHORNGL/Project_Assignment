@@ -4,471 +4,1197 @@
 {% block content %}
 {% set is_scan_mode = scan_mode %}
 {% set is_instant_scan_mode = instant_scan_mode %}
-{% set first_domain = agri_domains[0] if agri_domains else None %}
-{% set fallback_symptoms = (symptoms_by_crop.get(0, []) if symptoms_by_crop else []) or (all_symptoms_list if all_symptoms_list is defined else []) %}
-{% set page_title = t("instant_scan_title") if is_instant_scan_mode else (t("scan_crop_mode_title") if is_scan_mode else t("guided_diagnosis_title")) %}
-{% set page_subtitle = t("instant_scan_sub") if is_instant_scan_mode else (t("scan_crop_mode_sub") if is_scan_mode else t("guided_diagnosis_sub")) %}
-{% set field_image_label = t("field_image_scan") if is_scan_mode else t("field_image") %}
-<div class="simple-diagnosis-page">
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+
+<form id="simpleDiagnosisForm"
+      method="POST"
+      action="{{ url_for('farmer.diagnose_rule_based', scan='1' if is_scan_mode else None, instant='1' if is_instant_scan_mode else None) }}"
+      enctype="multipart/form-data"
+      class="diag-hidden-form">
+  <input type="hidden" name="scan_mode" value="{{ '1' if is_scan_mode else '0' }}">
+  <input type="hidden" name="instant_scan_mode" value="{{ '1' if is_instant_scan_mode else '0' }}">
+  <input type="hidden" name="diagnosis_category" id="simpleDiagnosisCategory" value="other">
+  <input type="hidden" name="slot_payload" value="{}">
+  <input type="hidden" name="visual_tags" value="[]">
+  <input type="hidden" name="clarification_payload" id="simpleClarificationPayload" value="[]">
+  <input type="hidden" name="clarification_count" id="simpleClarificationCount" value="0">
+  <input type="hidden" name="crop_subtype" id="simpleCropSubtype" value="">
+
+  {% if not is_instant_scan_mode %}
+  <select id="simpleDomainSelect" name="agri_domain">
+    {% for domain in agri_domains %}
+    <option value="{{ domain.id }}">{{ domain.label }}</option>
+    {% endfor %}
+  </select>
+  <select id="simpleSubcategorySelect" name="agri_subcategory">
+    <option value="">{{ t("general") }}</option>
+  </select>
+  {% endif %}
+
+  <select id="simpleCropSelect" name="crop_id">
+    <option value="">--</option>
+    {% for crop in crops %}
+    {% set profile = crop_profiles.get(crop.id) %}
+    <option value="{{ crop.id }}"
+            data-name-en="{{ crop.name }}"
+            data-name-kh="{{ crop.name_kh or '' }}"
+            data-display="{{ profile.name if profile else crop.name }}"
+            data-domain="{{ profile.domain_id if profile else 'crop' }}"
+            data-subcategory="{{ profile.subcategory_id if profile else '' }}"
+            data-emoji="{{ crop.emoji or '' }}">
+      {{ profile.name if profile else crop.name }}
+    </option>
+    {% endfor %}
+  </select>
+
+  <div id="simpleSelectedSymptomsInputs"></div>
+  <div id="simpleDeniedSymptomsInputs"></div>
+</form>
+
+<input type="file"
+       id="simpleFieldImageInput"
+       name="field_image"
+       accept="image/*"
+       form="simpleDiagnosisForm"
+       {% if is_scan_mode %}capture="environment"{% endif %}
+       class="diag-file-control">
+
+{% if is_scan_mode or is_instant_scan_mode %}
+<div class="diag-clean-page">
+  <div class="diag-hero">
+    <div class="diag-hero-main">
+      <span class="diag-hero-icon"><i class="fas fa-camera-retro" aria-hidden="true"></i></span>
+      <div>
+        <p class="diag-eyebrow">{{ t("guided_diagnosis_title") }}</p>
+        <h1>{{ t("instant_scan_title") if is_instant_scan_mode else t("scan_crop_mode_title") }}</h1>
+        <p>{{ t("instant_scan_sub") if is_instant_scan_mode else t("scan_crop_mode_sub") }}</p>
+      </div>
+    </div>
+    <a href="{{ url_for('farmer.dashboard') }}" class="diag-back-link">
+      <i class="fas fa-arrow-left" aria-hidden="true"></i>
+      {{ t("back") }}
+    </a>
+  </div>
+
+  <div class="diag-scan-grid">
+    <section class="diag-card">
+      <div class="diag-card-head">
+        <span class="diag-step-badge">1</span>
         <div>
-            <h4 class="mb-1 font-weight-bold">{{ page_title }}</h4>
-            <p class="mb-0 text-muted">{{ page_subtitle }}</p>
+          <h2>{{ t("crop_label") }}</h2>
+          <p>{{ t("select_crop_to_begin") }}</p>
         </div>
-        <a href="{{ url_for('farmer.dashboard') }}" class="btn btn-outline-secondary btn-sm mt-2 mt-md-0">
-            <i class="fas fa-arrow-left mr-1"></i>{{ t("back") }}
-        </a>
+      </div>
+      <div class="diag-select-shell">
+        <i class="fas fa-seedling" aria-hidden="true"></i>
+        <select id="scanCropMirror" class="diag-select" aria-label="{{ t('crop_label') }}">
+          <option value="">{{ t("select_crop") }}</option>
+          {% for crop in crops %}
+          {% set profile = crop_profiles.get(crop.id) %}
+          <option value="{{ crop.id }}">{{ crop.emoji ~ ' ' if crop.emoji else '' }}{{ profile.name if profile else crop.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div id="scanCropConfirm" class="scan-crop-confirm d-none">
+        <span class="scan-crop-confirm-dot"></span>
+        <span id="scanCropConfirmLabel"></span>
+      </div>
+    </section>
+
+    <section class="diag-card">
+      <div class="diag-card-head">
+        <span class="diag-step-badge diag-step-badge-blue">2</span>
+        <div>
+          <h2>{{ t("field_image_scan") if is_scan_mode else t("field_image") }}</h2>
+          <p>{{ t("crop_photo_sub") }}</p>
+        </div>
+      </div>
+
+      <label class="diag-dropzone" for="simpleFieldImageInput" id="hdDropZone">
+        <i class="fas fa-cloud-upload-alt" aria-hidden="true"></i>
+        <strong>{{ t("crop_photo_action") }}</strong>
+        <span>{{ t("diagnosis_image_format_hint") }} {{ t("max_upload_size") }}</span>
+      </label>
+
+      <div id="hdImagePreview" class="diag-file-preview d-none">
+        <img id="hdImageThumb" alt="{{ t('field_image') }}">
+        <div class="diag-file-meta">
+          <strong id="hdImageName"></strong>
+          <span id="hdImageSize"></span>
+        </div>
+        <button type="button" id="hdImageClear" class="diag-icon-btn" aria-label="{{ t('remove_image') }}">
+          <i class="fas fa-times" aria-hidden="true"></i>
+        </button>
+      </div>
+
+      {% if is_scan_mode %}
+      <div class="diag-camera-panel" id="simpleCameraPanel">
+        <div class="diag-camera-head">
+          <span class="diag-camera-icon"><i class="fas fa-video" aria-hidden="true"></i></span>
+          <div>
+            <h3>{{ t("camera_live_label") }}</h3>
+            <p>{{ t("camera_live_sub") }}</p>
+          </div>
+        </div>
+
+        <div class="diag-camera-controls">
+          <button type="button" id="simpleOpenCameraBtn" class="diag-btn diag-btn-primary">
+            <i class="fas fa-video" aria-hidden="true"></i>
+            {{ t("camera_open") }}
+          </button>
+          <button type="button" id="simpleStopCameraBtn" class="diag-btn diag-btn-muted" disabled>
+            <i class="fas fa-stop-circle" aria-hidden="true"></i>
+            {{ t("camera_stop") }}
+          </button>
+          <select id="simpleCameraSelect" class="diag-control" aria-label="{{ t('camera_switch') }}"></select>
+          <button type="button" id="simpleCaptureBtn" class="diag-btn diag-btn-success" disabled>
+            <i class="fas fa-camera" aria-hidden="true"></i>
+            {{ t("camera_capture") }}
+          </button>
+          <button type="button" id="simpleAnalyzeScanBtn" class="diag-btn diag-btn-muted" disabled>
+            <i class="fas fa-search" aria-hidden="true"></i>
+            {{ t("analyze_scan") }}
+          </button>
+          <button type="button" id="simpleRetakeBtn" class="diag-btn diag-btn-muted d-none">
+            <i class="fas fa-redo" aria-hidden="true"></i>
+            {{ t("camera_retake") }}
+          </button>
+        </div>
+
+        <div class="diag-camera-frame">
+          <video id="simpleCameraVideo" autoplay playsinline muted class="d-none"></video>
+          <img id="simpleCameraPreview" class="d-none" alt="">
+          <div id="simpleCameraEmpty" class="diag-camera-empty">{{ t("camera_live_hint") }}</div>
+        </div>
+        <div id="simpleCameraStatus" class="diag-status-line"></div>
+      </div>
+      {% endif %}
+    </section>
+  </div>
+
+  <div id="simpleFormAlert" class="diag-alert d-none" role="alert"></div>
+
+  <div class="diag-submit-bar" id="scanSubmitBar">
+    <div class="diag-submit-copy">
+      <span class="diag-submit-crop-em" id="hdSubmitIcon" aria-hidden="true">🌿</span>
+      <div>
+        <strong>{{ t("diagnose_now") }}</strong>
+        <p id="hdSubmitDesc">{{ t("qa_submit_no_crop") }}</p>
+      </div>
+    </div>
+    <button type="button" id="scanSubmitBtn" class="diag-btn diag-btn-success diag-btn-lg">
+      <i class="fas fa-search-plus" aria-hidden="true"></i>
+      {{ t("diagnose_now") }}
+    </button>
+  </div>
+</div>
+{% else %}
+<div class="diag-clean-page diag-wizard-page">
+  <div class="diag-hero">
+    <div class="diag-hero-main">
+      <span class="diag-hero-icon"><i class="fas fa-stethoscope" aria-hidden="true"></i></span>
+      <div>
+        <p class="diag-eyebrow">{{ t("rule_engine") }}</p>
+        <h1>{{ t("guided_diagnosis_title") }}</h1>
+        <p>{{ t("guided_diagnosis_sub") }}</p>
+      </div>
+    </div>
+    <a href="{{ url_for('farmer.dashboard') }}" class="diag-back-link">
+      <i class="fas fa-arrow-left" aria-hidden="true"></i>
+      {{ t("back") }}
+    </a>
+  </div>
+
+  <div class="diag-progress">
+    <div class="diag-progress-track">
+      <div class="diag-progress-fill" id="wizProgFill" style="width:0%"></div>
+    </div>
+    <div class="diag-progress-row">
+      <button type="button" id="wizBackBtn" class="diag-back-step" style="visibility:hidden">
+        <i class="fas fa-chevron-left" aria-hidden="true"></i>
+        {{ t("back") }}
+      </button>
+      <span id="wizStepLabel" class="diag-step-count"></span>
+    </div>
+  </div>
+
+  <section class="diag-card diag-wizard-card" id="wizCard">
+    <div class="wiz-screen" id="scrLoading">
+      <div class="diag-spinner" aria-label="{{ t('loading') }}"></div>
     </div>
 
-    <form id="simpleDiagnosisForm"
-          class="simple-diagnosis-card"
-          method="POST"
-          action="{{ url_for('farmer.diagnose_rule_based', scan='1' if is_scan_mode else None, instant='1' if is_instant_scan_mode else None) }}"
-          enctype="multipart/form-data">
-        <input type="hidden" name="scan_mode" value="{{ "1" if is_scan_mode else "0" }}">
-        <input type="hidden" name="instant_scan_mode" value="{{ "1" if is_instant_scan_mode else "0" }}">
-        <input type="hidden" name="diagnosis_category" id="simpleDiagnosisCategory" value="other">
-        <input type="hidden" name="slot_payload" value="{}">
-        <input type="hidden" name="visual_tags" value="[]">
-        <input type="hidden" name="clarification_payload" id="simpleClarificationPayload" value="[]">
-        <input type="hidden" name="clarification_count" id="simpleClarificationCount" value="0">
+    <div class="wiz-screen d-none" id="scrCrop">
+      <div class="diag-question-head">
+        <span class="diag-question-icon"><i class="fas fa-seedling" aria-hidden="true"></i></span>
+        <h2>{{ t("crop_label") }}</h2>
+        <p>{{ t("select_crop_to_begin") }}</p>
+      </div>
+      <div class="wiz-search-wrap">
+        <i class="fas fa-search" aria-hidden="true"></i>
+        <input type="text" id="cropSearchInput" class="wiz-search-input" placeholder="{{ t('search_crop') }}" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="wiz-crop-grid" id="cropGrid"></div>
+      <div id="cropNoMatch" class="diag-empty d-none">
+        <i class="fas fa-search" aria-hidden="true"></i>
+        <p>{{ t("no_symptoms_match") }}</p>
+      </div>
+    </div>
 
-        {% if not is_instant_scan_mode %}
-        <div class="form-row">
-            <div class="form-group col-md-6">
-                <label for="simpleDomainSelect" class="font-weight-semibold">{{ t("category") }}</label>
-                <select id="simpleDomainSelect" name="agri_domain" class="form-control">
-                    {% for domain in agri_domains %}
-                    <option value="{{ domain.id }}" {% if first_domain and domain.id == first_domain.id %}selected{% endif %}>
-                        {{ domain.label }}
-                    </option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="form-group col-md-6">
-                <label for="simpleSubcategorySelect" class="font-weight-semibold">{{ t("type") }}</label>
-                <select id="simpleSubcategorySelect" name="agri_subcategory" class="form-control">
-                    {% if first_domain and first_domain.subcategories %}
-                        {% for sub in first_domain.subcategories %}
-                        <option value="{{ sub.id }}">{{ sub.label }}</option>
-                        {% endfor %}
-                    {% else %}
-                        <option value="">{{ t('general') }}</option>
-                    {% endif %}
-                </select>
-            </div>
-        </div>
-        {% endif %}
+    <div class="wiz-screen d-none" id="scrSubtype">
+      <div class="diag-question-head">
+        <span class="diag-question-icon"><i class="fas fa-layer-group" aria-hidden="true"></i></span>
+        <h2>{{ t("diagnosis_rice_type") }}</h2>
+        <p>{{ t("diagnosis_rice_type_sub") }}</p>
+      </div>
+      <div class="wiz-opt-list" id="subtypeList"></div>
+    </div>
 
-        <div class="form-group">
-            <label for="simpleCropSelect" class="font-weight-semibold">{{ t("crop_label") }}</label>
-            <select id="simpleCropSelect" name="crop_id" class="form-control" required>
-                <option value="">{{ t("select_crop") }}</option>
-                {% for crop in crops %}
-                {% set profile = crop_profiles.get(crop.id) %}
-                <option
-                    value="{{ crop.id }}"
-                    data-domain="{{ profile.domain_id if profile else 'crop' }}"
-                    data-subcategory="{{ profile.subcategory_id if profile else '' }}"
-                >
-                    {{ profile.name if profile else crop.name }}
-                </option>
-                {% endfor %}
-            </select>
-        </div>
+    <div class="wiz-screen d-none" id="scrSymptom">
+      <div class="diag-sym-meta-row">
+        <span class="diag-sym-crop-tag" id="symCropTag"></span>
+        <span class="diag-sel-badge" id="symSelBadge" style="display:none"></span>
+      </div>
 
-        {% if not is_instant_scan_mode %}
-            <div class="simple-symptom-panel">
-                <div class="simple-manual-panel">
-                    <div class="d-flex flex-wrap align-items-center justify-content-between mb-2">
-                        <label class="mb-0 font-weight-bold">{{ t("select_symptoms_manual") }}</label>
-                        <input type="text"
-                               id="simpleManualSearch"
-                               class="form-control form-control-sm simple-manual-search"
-                               placeholder="{{ t('search_symptom') }}">
-                    </div>
-                    <div id="simpleManualStats" class="small text-muted mb-2">{{ t('selected_count', count=0) }}</div>
-                    <div id="simpleManualList" class="simple-symptom-grid">
-                        {% for symptom in fallback_symptoms %}
-                        <label class="simple-symptom-item" data-symptom-id="{{ symptom.id }}">
-                            <input type="checkbox" data-symptom-id="{{ symptom.id }}" value="{{ symptom.id }}">
-                            <span>{{ symptom.name }}</span>
-                        </label>
-                        {% endfor %}
-                    </div>
-                    <div id="simpleManualEmpty" class="small text-muted d-none">{{ t("no_symptoms_for_crop") }}</div>
-                    <div id="simpleManualSelectedSummary" class="small text-muted mt-2">{{ t("no_manual_selection_yet") }}</div>
-                </div>
-                <div id="simpleSelectedSymptomsInputs"></div>
-                <div id="simpleDeniedSymptomsInputs"></div>
-            </div>
-        {% else %}
-            <div id="simpleSelectedSymptomsInputs"></div>
-            <div id="simpleDeniedSymptomsInputs"></div>
-            <div id="simpleManualStats" class="d-none"></div>
-            <div id="simpleManualList" class="d-none"></div>
-            <div id="simpleManualEmpty" class="d-none"></div>
-            <div id="simpleManualSelectedSummary" class="d-none"></div>
-            <input type="hidden" id="simpleManualSearch" value="">
-        {% endif %}
+      <div class="diag-question-head">
+        <span class="diag-question-icon"><i class="fas fa-notes-medical" aria-hidden="true"></i></span>
+        <h2>{{ t("symptoms_label") }}</h2>
+        <p>{{ t("select_symptoms_manual") }}</p>
+      </div>
 
-        {% if not is_instant_scan_mode %}
-        <div class="form-group mt-3">
-            <label for="simpleFreeTextInput" class="font-weight-semibold">{{ t("free_text_notes_label") }}</label>
-            <textarea id="simpleFreeTextInput"
-                      name="free_text_notes"
-                      class="form-control"
-                      rows="5"
-                      maxlength="1000"
-                      placeholder="{{ t('symptom_placeholder') }}"></textarea>
-        </div>
-        {% endif %}
+      <div class="wiz-search-wrap">
+        <i class="fas fa-search" aria-hidden="true"></i>
+        <input type="text" id="symSearchInput" class="wiz-search-input" placeholder="{{ t('search_symptom') }}" autocomplete="off" spellcheck="false">
+        <button type="button" id="symClearAllBtn" class="wiz-search-clear-btn d-none">
+          {{ t("clear_selection") }}
+        </button>
+      </div>
 
-        <div class="form-group">
-            <label for="simpleFieldImageInput" class="font-weight-semibold">{{ field_image_label }}</label>
-            <input type="file"
-                   id="simpleFieldImageInput"
-                   name="field_image"
-                   class="form-control-file"
-                   accept="image/*"
-                   {% if is_scan_mode %}capture="environment"{% endif %}
-                   {% if is_scan_mode %}required{% endif %}>
-            {% if is_scan_mode %}
-            <div class="scan-camera-panel mt-3" id="simpleCameraPanel">
-                <div class="scan-camera-head">
-                    <div class="scan-camera-badge" aria-hidden="true">
-                        <svg class="scan-camera-glyph" viewBox="0 0 24 24" aria-hidden="true">
-                            <path d="M7 4H5a1 1 0 0 0-1 1v2" />
-                            <path d="M17 4h2a1 1 0 0 1 1 1v2" />
-                            <path d="M20 17v2a1 1 0 0 1-1 1h-2" />
-                            <path d="M4 17v2a1 1 0 0 0 1 1h2" />
-                            <rect x="9" y="9" width="6" height="6" rx="1.5" />
-                            <path d="M12 8v1" />
-                            <path d="M12 15v1" />
-                            <path d="M8 12h1" />
-                            <path d="M15 12h1" />
-                        </svg>
-                    </div>
-                    <div>
-                        <div class="scan-camera-title">{{ t("camera_live_label") }}</div>
-                        <div class="small text-muted">{{ t("camera_live_sub") }}</div>
-                    </div>
-                </div>
-                <div class="scan-camera-controls">
-                    <button type="button" id="simpleOpenCameraBtn" class="btn btn-primary btn-sm">
-                        <i class="fas fa-video mr-1"></i>{{ t("camera_open") }}
-                    </button>
-                    <button type="button" id="simpleStopCameraBtn" class="btn btn-outline-secondary btn-sm" disabled>
-                        <i class="fas fa-stop-circle mr-1"></i>{{ t("camera_stop") }}
-                    </button>
-                    <select id="simpleCameraSelect" class="form-control form-control-sm" aria-label="{{ t('camera_switch') }}"></select>
-                    <button type="button" id="simpleCaptureBtn" class="btn btn-success btn-sm" disabled>
-                        <i class="fas fa-camera mr-1"></i>{{ t("camera_capture") }}
-                    </button>
-                    <button type="button" id="simpleAnalyzeScanBtn" class="btn btn-info btn-sm" disabled>
-                        <i class="fas fa-search mr-1"></i>{{ t("analyze_scan") }}
-                    </button>
-                    <button type="button" id="simpleRetakeBtn" class="btn btn-outline-success btn-sm d-none">
-                        <i class="fas fa-redo mr-1"></i>{{ t("camera_retake") }}
-                    </button>
-                </div>
-                <div class="scan-camera-frame">
-                    <video id="simpleCameraVideo" autoplay playsinline muted class="d-none"></video>
-                    <img id="simpleCameraPreview" class="d-none" alt="{{ t('camera_live_label') }}">
-                    <div id="simpleCameraEmpty" class="scan-camera-empty">{{ t("camera_live_hint") }}</div>
-                    <div class="scan-camera-overlay" aria-hidden="true"></div>
-                </div>
-                <div id="simpleCameraStatus" class="small text-muted mt-2"></div>
-            </div>
-            {% endif %}
-            <small class="text-muted">{{ t("max_upload_size") }}</small>
-        </div>
+      <div class="wiz-chips-grid" id="symChipsGrid"></div>
 
-        <div id="simpleFormAlert" class="alert alert-danger d-none mb-3"></div>
+      <div id="symNoSearchMatch" class="diag-empty d-none">
+        <i class="fas fa-search" aria-hidden="true"></i>
+        <p>{{ t("no_symptoms_match") }}</p>
+      </div>
 
-        <div class="d-flex justify-content-end">
-            <button type="submit" class="btn btn-success px-4">{{ t("diagnose_now") }}</button>
-        </div>
-    </form>
+      <div id="symNoData" class="diag-empty d-none">
+        <i class="fas fa-seedling" aria-hidden="true"></i>
+        <p>{{ t("no_symptoms_for_crop") }}</p>
+      </div>
+
+      <div id="symSelectedSummary" class="sym-selected-summary" style="display:none"></div>
+
+      <div id="simpleFormAlert" class="diag-alert d-none" role="alert"></div>
+      <button type="button" id="btnDiagnose" class="diag-btn diag-btn-success diag-diagnose-btn" disabled>
+        <i class="fas fa-search-plus" aria-hidden="true"></i>
+        {{ t("diagnose_now") }}
+        <span id="btnDiagnoseCount" class="diag-diagnose-count d-none"></span>
+      </button>
+    </div>
+  </section>
 </div>
+{% endif %}
 
 <style>
-.simple-diagnosis-page {
-    --diag-card-bg: var(--card-bg);
-    --diag-card-border: var(--border-light);
-    --diag-panel-bg-top: var(--surface-soft);
-    --diag-panel-bg-bottom: var(--surface-muted);
-    --diag-item-bg: var(--card-bg);
-    --diag-item-border: var(--input-border);
-    --diag-item-hover-bg: var(--table-row-hover);
-    --diag-item-hover-border: var(--input-focus-border);
+.diag-hidden-form {
+  display: none;
 }
 
-.simple-diagnosis-page {
-    max-width: 980px;
-    margin: 0 auto;
-    padding-bottom: 2rem;
-    color: var(--text-main);
+.diag-file-control {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  overflow: hidden;
 }
 
-.simple-diagnosis-card {
-    border: 1px solid var(--diag-card-border);
-    border-radius: 14px;
-    background: var(--diag-card-bg);
-    color: var(--text-main);
-    padding: 1.15rem;
-    box-shadow: 0 8px 24px rgba(16, 24, 40, 0.04);
+.diag-clean-page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 0 3rem;
 }
 
-.simple-symptom-panel {
-    border: 1px solid var(--diag-card-border);
-    border-radius: 12px;
-    padding: 1rem;
-    background: linear-gradient(
-        180deg,
-        var(--diag-panel-bg-top) 0%,
-        var(--diag-panel-bg-bottom) 100%
-    );
+.diag-wizard-page {
+  max-width: 720px;
 }
 
-.simple-manual-panel {
-    padding-top: 0.1rem;
+.diag-hero,
+.diag-submit-bar,
+.diag-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-light);
+  border-radius: 16px;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.06);
 }
 
-.simple-manual-search {
-    width: 220px;
+.diag-hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
 }
 
-.simple-symptom-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 0.55rem;
-    max-height: 320px;
-    overflow-y: auto;
-    padding-right: 0.25rem;
+.diag-hero-main {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  min-width: 0;
 }
 
-.simple-symptom-item {
-    display: flex;
-    align-items: flex-start;
-    border: 1px solid var(--diag-item-border);
-    border-radius: 8px;
-    background: var(--diag-item-bg);
-    color: var(--text-main);
-    padding: 0.54rem 0.62rem;
-    margin: 0;
-    transition: border-color 0.15s ease-in-out, background 0.15s ease-in-out;
+.diag-hero-icon,
+.diag-question-icon,
+.diag-camera-icon,
+.diag-submit-copy span {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  background: rgba(28, 200, 138, 0.12);
+  color: var(--success, #1cc88a);
 }
 
-.simple-symptom-item:hover {
-    border-color: var(--diag-item-hover-border);
-    background: var(--diag-item-hover-bg);
+.diag-eyebrow {
+  margin: 0 0 0.2rem;
+  color: var(--success, #1cc88a);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
-.simple-symptom-item input {
-    accent-color: var(--primary);
-    margin-top: 0.2rem;
-    margin-right: 0.45rem;
+.diag-hero h1,
+.diag-card h2,
+.diag-camera-head h3,
+.diag-question-head h2 {
+  margin: 0;
+  color: var(--text-main);
 }
 
-.simple-symptom-item:has(input:checked) {
-    border-color: var(--input-focus-border);
-    background: var(--primary-soft);
+.diag-hero h1 {
+  font-size: 1.45rem;
+  line-height: 1.25;
 }
 
-.simple-diagnosis-card .form-control,
-.simple-diagnosis-card .custom-select,
-.simple-diagnosis-card .form-control-file,
-.simple-diagnosis-card .btn-outline-secondary {
-    color: var(--text-main);
-    border-color: var(--input-border);
+.diag-hero p,
+.diag-card p,
+.diag-camera-head p,
+.diag-question-head p,
+.diag-submit-copy p {
+  margin: 0;
+  color: var(--text-muted);
 }
 
-.simple-diagnosis-card .btn-outline-secondary:hover {
-    background: var(--table-row-hover);
-    color: var(--text-main);
+.diag-back-link,
+.diag-back-step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  border: 1px solid var(--border-light);
+  border-radius: 10px;
+  background: var(--card-bg);
+  color: var(--text-main);
+  font-weight: 700;
+  text-decoration: none;
+  padding: 0.58rem 0.85rem;
+  white-space: nowrap;
 }
 
-.simple-symptom-grid::-webkit-scrollbar {
-    width: 10px;
+.diag-back-step {
+  color: var(--text-muted);
 }
 
-.simple-symptom-grid::-webkit-scrollbar-thumb {
-    background: var(--input-border);
-    border-radius: 8px;
+.diag-scan-grid {
+  display: grid;
+  gap: 1rem;
 }
 
-.simple-symptom-grid::-webkit-scrollbar-track {
-    background: transparent;
+.diag-card {
+  padding: 1.1rem;
 }
 
-.scan-camera-panel {
-    border: 1px solid var(--diag-card-border);
-    border-radius: 12px;
-    background: linear-gradient(180deg, var(--diag-panel-bg-top), var(--diag-panel-bg-bottom));
-    padding: 0.9rem;
+.diag-card-head,
+.diag-camera-head,
+.diag-submit-copy {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
 }
 
-.scan-camera-head {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
+.diag-step-badge {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  background: var(--success, #1cc88a);
+  color: #fff;
+  font-weight: 800;
 }
 
-.scan-camera-badge {
-    width: 52px;
-    height: 52px;
-    border-radius: 50%;
-    background: radial-gradient(circle at 30% 20%, #84c5ff 0%, #4f83ff 46%, #2f57cf 100%);
-    color: #f8fbff;
-    display: grid;
-    place-items: center;
-    font-size: 1.15rem;
-    box-shadow: 0 10px 22px rgba(47, 87, 207, 0.28);
+.diag-step-badge-blue {
+  background: var(--primary, #4e73df);
 }
 
-.scan-camera-glyph {
-    width: 24px;
-    height: 24px;
-    fill: none;
-    stroke: #f8fbff;
-    stroke-width: 1.7;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    opacity: 0.98;
+.diag-select-shell {
+  position: relative;
+  margin-top: 1rem;
 }
 
-.scan-camera-title {
-    font-weight: 700;
-    color: var(--text-main);
+.diag-select-shell i {
+  position: absolute;
+  left: 0.9rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--success, #1cc88a);
+  pointer-events: none;
 }
 
-.scan-camera-controls {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-top: 0.75rem;
+.diag-select,
+.diag-control {
+  width: 100%;
+  border: 1px solid var(--input-border, var(--border-light));
+  border-radius: 10px;
+  background: var(--input-bg, var(--card-bg));
+  color: var(--text-main);
+  min-height: 46px;
+  padding: 0.7rem 0.9rem;
+  outline: none;
 }
 
-.scan-camera-controls .form-control {
-    width: 220px;
+.diag-select {
+  padding-left: 2.55rem;
 }
 
-.scan-camera-frame {
-    margin-top: 0.75rem;
-    position: relative;
-    border: 1px solid var(--diag-item-border);
-    border-radius: 10px;
-    overflow: hidden;
-    background: color-mix(in srgb, var(--diag-panel-bg-bottom) 86%, #000);
-    min-height: 220px;
+.diag-select:focus,
+.diag-control:focus {
+  border-color: var(--success, #1cc88a);
+  box-shadow: 0 0 0 4px rgba(28, 200, 138, 0.12);
 }
 
-.scan-camera-frame video,
-.scan-camera-frame img {
+.diag-dropzone {
+  display: grid;
+  place-items: center;
+  gap: 0.35rem;
+  min-height: 150px;
+  margin-top: 1rem;
+  border: 1.5px dashed var(--border-light);
+  border-radius: 14px;
+  background: var(--surface-soft, #f8fafc);
+  color: var(--text-main);
+  cursor: pointer;
+  text-align: center;
+  padding: 1rem;
+}
+
+.diag-dropzone i {
+  color: var(--success, #1cc88a);
+  font-size: 1.6rem;
+}
+
+.diag-dropzone span,
+.diag-status-line {
+  color: var(--text-muted);
+  font-size: 0.86rem;
+}
+
+.diag-file-preview {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin-top: 0.85rem;
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  background: var(--surface-soft, #f8fafc);
+  padding: 0.75rem;
+}
+
+.diag-file-preview img {
+  width: 78px;
+  height: 58px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.diag-file-meta {
+  min-width: 0;
+  flex: 1;
+}
+
+.diag-file-meta strong,
+.diag-file-meta span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.diag-file-meta span {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+.diag-icon-btn {
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 10px;
+  background: rgba(231, 74, 59, 0.12);
+  color: var(--danger, #e74a3b);
+}
+
+.diag-camera-panel {
+  margin-top: 1rem;
+  border: 1px solid var(--border-light);
+  border-radius: 14px;
+  background: var(--surface-soft, #f8fafc);
+  padding: 1rem;
+}
+
+.diag-camera-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 0.9rem;
+}
+
+.diag-camera-controls .diag-control {
+  max-width: 220px;
+}
+
+.diag-camera-frame {
+  position: relative;
+  min-height: 240px;
+  margin-top: 0.9rem;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #0f172a;
+}
+
+.diag-camera-frame video,
+.diag-camera-frame img {
+  width: 100%;
+  height: 300px;
+  display: block;
+  object-fit: cover;
+}
+
+.diag-camera-empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #cbd5e1;
+  text-align: center;
+  padding: 1rem;
+}
+
+.diag-alert {
+  margin: 1rem 0;
+  border: 1px solid rgba(231, 74, 59, 0.28);
+  border-radius: 12px;
+  background: rgba(231, 74, 59, 0.08);
+  color: #991b1b;
+  padding: 0.85rem 1rem;
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.diag-submit-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding: 1rem;
+  position: sticky;
+  bottom: 0.75rem;
+  z-index: 30;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.dark-mode .diag-submit-bar {
+  background: rgba(15, 23, 42, 0.88);
+  border-color: var(--border-light);
+}
+
+.diag-submit-crop-em {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  font-size: 1.45rem;
+  background: rgba(28, 200, 138, 0.12);
+  transition: font-size 0.2s ease;
+}
+
+.diag-submit-bar.has-crop .diag-submit-crop-em {
+  background: rgba(28, 200, 138, 0.18);
+}
+
+.scan-crop-confirm {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 0.65rem;
+  padding: 0.42rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(28, 200, 138, 0.12);
+  border: 1px solid rgba(28, 200, 138, 0.3);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #0d6e4f;
+  width: fit-content;
+}
+
+.dark-mode .scan-crop-confirm {
+  color: #6ee7b7;
+  background: rgba(28, 200, 138, 0.15);
+  border-color: rgba(28, 200, 138, 0.28);
+}
+
+.scan-crop-confirm-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--success, #1cc88a);
+  flex-shrink: 0;
+  animation: scanDotPulse 1.8s ease infinite;
+}
+
+@keyframes scanDotPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.55; transform: scale(0.75); }
+}
+
+.diag-card.crop-card-selected {
+  border-color: var(--success, #1cc88a);
+  box-shadow: 0 0 0 3px rgba(28, 200, 138, 0.15), 0 10px 26px rgba(15, 23, 42, 0.06);
+}
+
+.diag-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  min-height: 42px;
+  padding: 0.62rem 0.92rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.diag-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.diag-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.diag-btn-primary {
+  background: var(--primary, #4e73df);
+  color: #fff;
+}
+
+.diag-btn-success {
+  background: var(--success, #1cc88a);
+  color: #fff;
+}
+
+.diag-btn-muted {
+  background: var(--card-bg);
+  border-color: var(--border-light);
+  color: var(--text-main);
+}
+
+.diag-btn-lg {
+  min-width: 168px;
+}
+
+.diag-progress {
+  margin-bottom: 0.9rem;
+}
+
+.diag-progress-track {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--border-light);
+}
+
+.diag-progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--success, #1cc88a);
+  transition: width 0.25s ease;
+}
+
+.diag-progress-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.55rem;
+}
+
+.diag-step-count {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.diag-wizard-card {
+  min-height: 420px;
+}
+
+.wiz-screen {
+  width: 100%;
+  animation: diagScreenIn 0.18s ease;
+}
+
+@keyframes diagScreenIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.diag-spinner {
+  width: 42px;
+  height: 42px;
+  margin: 7rem auto;
+  border: 3px solid var(--border-light);
+  border-top-color: var(--success, #1cc88a);
+  border-radius: 999px;
+  animation: diagSpin 0.8s linear infinite;
+}
+
+@keyframes diagSpin {
+  to { transform: rotate(360deg); }
+}
+
+.diag-question-head {
+  text-align: center;
+  max-width: 560px;
+  margin: 0 auto 1.1rem;
+}
+
+.diag-question-icon {
+  margin: 0 auto 0.75rem;
+}
+
+.wiz-crop-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.wiz-crop-card,
+.wiz-opt-card,
+.sym-chip {
+  border: 1px solid var(--border-light);
+  background: var(--card-bg);
+  color: var(--text-main);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.wiz-crop-card {
+  min-height: 102px;
+  border-radius: 12px;
+  padding: 0.9rem 0.65rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  text-align: center;
+  font-weight: 800;
+}
+
+.wiz-crop-card:hover,
+.wiz-opt-card:hover,
+.sym-chip:hover {
+  border-color: rgba(28, 200, 138, 0.55);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
+}
+
+.wiz-crop-card.active,
+.wiz-opt-card.active,
+.sym-chip.sel {
+  border-color: var(--success, #1cc88a);
+  background: rgba(28, 200, 138, 0.12);
+}
+
+.wiz-crop-em {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: rgba(28, 200, 138, 0.1);
+  color: var(--success, #1cc88a);
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.wiz-crop-em-emoji {
+  font-size: 1.55rem;
+  background: transparent;
+  color: inherit;
+  line-height: 1;
+}
+
+.wiz-crop-name {
+  display: block;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  line-height: 1.35;
+}
+
+.wiz-opt-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.wiz-opt-card {
+  width: 100%;
+  border-radius: 12px;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  text-align: left;
+}
+
+.wiz-opt-em {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  background: rgba(78, 115, 223, 0.1);
+  color: var(--primary, #4e73df);
+}
+
+.wiz-opt-name {
+  display: block;
+  font-weight: 800;
+}
+
+.wiz-opt-name2,
+.wiz-opt-desc {
+  display: block;
+  color: var(--text-muted);
+  font-size: 0.86rem;
+}
+
+.diag-sym-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.diag-sym-crop-tag,
+.diag-sel-badge,
+.diag-diagnose-count {
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 800;
+  padding: 0.28rem 0.7rem;
+}
+
+.diag-sym-crop-tag {
+  background: rgba(78, 115, 223, 0.1);
+  color: var(--primary, #4e73df);
+}
+
+.diag-sel-badge,
+.diag-diagnose-count {
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
+}
+
+.diag-sel-badge {
+  background: var(--success, #1cc88a);
+}
+
+.wiz-search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.85rem;
+}
+
+.wiz-search-wrap > i {
+  position: absolute;
+  left: 0.9rem;
+  color: var(--text-muted);
+  pointer-events: none;
+  font-size: 0.85rem;
+}
+
+.wiz-search-input {
+  flex: 1;
+  border: 1px solid var(--input-border, var(--border-light));
+  border-radius: 10px;
+  background: var(--input-bg, var(--card-bg));
+  color: var(--text-main);
+  min-height: 42px;
+  padding: 0.6rem 0.9rem 0.6rem 2.3rem;
+  font-size: 0.92rem;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.wiz-search-input:focus {
+  border-color: var(--success, #1cc88a);
+  box-shadow: 0 0 0 3px rgba(28, 200, 138, 0.12);
+}
+
+.wiz-search-clear-btn {
+  flex-shrink: 0;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  background: var(--card-bg);
+  color: var(--danger, #e74a3b);
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.45rem 0.7rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.wiz-chips-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.65rem;
+  max-height: 380px;
+  overflow-y: auto;
+  padding-right: 0.2rem;
+  margin-bottom: 0.85rem;
+}
+
+.sym-chip {
+  border-radius: 12px;
+  padding: 0.9rem;
+  text-align: left;
+  min-height: 64px;
+}
+
+.sym-chip-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.sym-chip-check {
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  border: 1.5px solid var(--border-light);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  color: transparent;
+  background: var(--card-bg);
+  transition: all 0.15s ease;
+}
+
+.sym-chip.sel .sym-chip-check {
+  border-color: var(--success, #1cc88a);
+  background: var(--success, #1cc88a);
+  color: #fff;
+}
+
+.sym-chip-kh {
+  display: block;
+  font-weight: 700;
+  line-height: 1.4;
+  font-size: 0.92rem;
+}
+
+.sym-selected-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  padding: 0.75rem;
+  margin-bottom: 0.85rem;
+  border: 1px solid rgba(28, 200, 138, 0.28);
+  border-radius: 12px;
+  background: rgba(28, 200, 138, 0.06);
+}
+
+.sym-summary-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 999px;
+  background: var(--success, #1cc88a);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.28rem 0.6rem 0.28rem 0.75rem;
+  max-width: 200px;
+}
+
+.sym-summary-tag-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sym-tag-remove {
+  border: 0;
+  background: rgba(255, 255, 255, 0.28);
+  color: #fff;
+  border-radius: 999px;
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+}
+
+.diag-empty {
+  border: 1px dashed var(--border-light);
+  border-radius: 12px;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 2rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.diag-empty i {
+  display: block;
+  margin-bottom: 0.6rem;
+  color: var(--success, #1cc88a);
+}
+
+.diag-diagnose-btn {
+  width: 100%;
+  min-height: 52px;
+}
+
+.dark-mode .diag-hero,
+.dark-mode .diag-card,
+.dark-mode .wiz-crop-card,
+.dark-mode .wiz-opt-card,
+.dark-mode .sym-chip,
+.dark-mode .diag-back-link,
+.dark-mode .diag-back-step,
+.dark-mode .diag-btn-muted,
+.dark-mode .wiz-search-input,
+.dark-mode .wiz-search-clear-btn {
+  background: var(--card-bg);
+  border-color: var(--border-light);
+}
+
+.dark-mode .wiz-search-input {
+  color: var(--text-main);
+}
+
+.dark-mode .diag-alert {
+  color: #fecaca;
+}
+
+@media (max-width: 720px) {
+  .diag-hero,
+  .diag-submit-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .diag-back-link,
+  .diag-btn-lg {
     width: 100%;
-    height: 320px;
-    object-fit: cover;
-    display: block;
-}
+  }
 
-.scan-camera-overlay {
-    position: absolute;
-    inset: 16px;
-    border: 2px dashed rgba(248, 251, 255, 0.46);
-    border-radius: 12px;
-    pointer-events: none;
-}
+  .wiz-crop-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 
-.scan-camera-empty {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    color: #dde7ff;
-    font-size: 0.92rem;
-    padding: 1rem;
-}
+  .wiz-chips-grid {
+    grid-template-columns: 1fr;
+  }
 
-.dark-mode .simple-diagnosis-card {
-    box-shadow: 0 12px 26px rgba(2, 8, 23, 0.32);
-}
+  .diag-camera-controls .diag-control {
+    max-width: none;
+  }
 
-.dark-mode .simple-symptom-item:has(input:checked) {
-    background: rgba(91, 124, 250, 0.22);
-}
-
-.dark-mode .scan-camera-frame {
-    background: #091122;
-}
-
-.dark-mode .scan-camera-empty {
-    color: #c9dcff;
-}
-
-@media (max-width: 576px) {
-    .simple-manual-search {
-        width: 100%;
-        margin-top: 0.4rem;
-    }
-    .simple-symptom-grid {
-        grid-template-columns: 1fr;
-    }
-    .scan-camera-controls .form-control {
-        width: 100%;
-    }
-    .scan-camera-controls > * {
-        width: 100%;
-    }
-    .scan-camera-frame video,
-    .scan-camera-frame img {
-        height: 260px;
-    }
+  .diag-diagnose-btn {
+    position: sticky;
+    bottom: 1rem;
+    z-index: 10;
+    box-shadow: 0 6px 20px rgba(28, 200, 138, 0.38);
+  }
 }
 </style>
 
 <script>
 window.SIMPLE_DIAGNOSIS_DATA = {
-    agriDomains: {{ agri_domains|tojson }},
-    symptomsByCrop: {{ symptoms_by_crop|tojson }},
-    rulesByCrop: {{ rules_by_crop|tojson }},
-    domainDefaultDiagnosisCategory: {{ domain_default_diagnosis_category|tojson }},
-    scanSuggestionApi: {{ url_for('farmer.scan_symptom_suggestions_api')|tojson }},
-    initialCropId: {{ initial_crop_id | tojson }},
-    scanMode: {{ "true" if is_scan_mode else "false" }},
-    instantScanMode: {{ "true" if is_instant_scan_mode else "false" }},
-    labels: {
-        noSymptoms: "{{ t('no_symptoms_for_crop') }}",
-        invalidCrop: "{{ t('please_select_crop') }}",
-        invalidSymptoms: "{{ t('please_select_symptom') }}",
-        invalidImage: "{{ t('invalid_image_type') }}",
-        imageRequired: "{{ t('scan_image_required') }}",
-        cameraSelectLabel: "{{ t('camera_switch') }}",
-        cameraUnsupported: "{{ t('camera_not_supported') }}",
-        cameraSecureContext: "{{ t('camera_https_required') }}",
-        cameraPermissionDenied: "{{ t('camera_unavailable') }}",
-        cameraNoDevice: "{{ t('camera_unavailable') }}",
-        cameraReady: "{{ t('camera_live_hint') }}",
-        cameraCaptured: "{{ t('camera_success') }}",
-        cameraOpenFailed: "{{ t('camera_unavailable') }}",
-        scanAnalyzing: "{{ t('scan_analyzing') }}",
-        scanApplied: "{{ t('scan_suggestion_applied') }}",
-        scanNoSuggestion: "{{ t('scan_suggestion_none') }}",
-        scanApiUnavailable: "{{ t('scan_api_unavailable') }}",
-        scanApiFailed: "{{ t('scan_api_failed') }}",
-        scanAutoSubmitting: "{{ t('scan_auto_submitting') }}",
-        generalLabel: "{{ t('general') }}",
-        selectedLabel: "{{ t('selected_label') }}",
-        selectedCountTemplate: "{{ t('selected_count') }}",
-        selectedSummaryTemplate: "{{ t('selected_symptoms_summary') }}",
-        manualSummaryNone: "{{ t('no_manual_selection_yet') }}",
-        noSearchResult: "{{ t('no_symptoms_match') }}",
-        selectCropForManual: "{{ t('select_crop_to_load_symptoms') }}"
-    }
+  agriDomains: {{ agri_domains|tojson }},
+  symptomsByCrop: {{ symptoms_by_crop|tojson }},
+  rulesByCrop: {{ rules_by_crop|tojson }},
+  domainDefaultDiagnosisCategory: {{ domain_default_diagnosis_category|tojson }},
+  scanSuggestionApi: {{ url_for('farmer.scan_symptom_suggestions_api')|tojson }},
+  initialCropId: {{ initial_crop_id|tojson }},
+  scanMode: {{ "true" if is_scan_mode else "false" }},
+  instantScanMode: {{ "true" if is_instant_scan_mode else "false" }},
+  labels: {
+    noSymptoms: {{ t('no_symptoms_for_crop')|tojson }},
+    invalidCrop: {{ t('please_select_crop')|tojson }},
+    invalidSymptoms: {{ t('please_select_symptom')|tojson }},
+    invalidImage: {{ t('invalid_image_type')|tojson }},
+    imageRequired: {{ t('scan_image_required')|tojson }},
+    cameraSelectLabel: {{ t('camera_switch')|tojson }},
+    cameraUnsupported: {{ t('camera_not_supported')|tojson }},
+    cameraSecureContext: {{ t('camera_https_required')|tojson }},
+    cameraPermissionDenied: {{ t('camera_unavailable')|tojson }},
+    cameraNoDevice: {{ t('camera_unavailable')|tojson }},
+    cameraReady: {{ t('camera_live_hint')|tojson }},
+    cameraCaptured: {{ t('camera_success')|tojson }},
+    cameraOpenFailed: {{ t('camera_unavailable')|tojson }},
+    scanAnalyzing: {{ t('scan_analyzing')|tojson }},
+    scanApplied: {{ t('scan_suggestion_applied')|tojson }},
+    scanNoSuggestion: {{ t('scan_suggestion_none')|tojson }},
+    scanApiUnavailable: {{ t('scan_api_unavailable')|tojson }},
+    scanApiFailed: {{ t('scan_api_failed')|tojson }},
+    scanAutoSubmitting: {{ t('scan_auto_submitting')|tojson }},
+    qaSubmitNoCrop: {{ t('qa_submit_no_crop')|tojson }},
+    selectedLabel: {{ t('selected_label')|tojson }},
+    diagnoseNow: {{ t('diagnose_now')|tojson }},
+    analyzing: {{ t('analyzing')|tojson }},
+    paddyRice: {{ t('paddy_rice')|tojson }},
+    paddyRiceSecondary: {{ t('paddy_rice_secondary')|tojson }},
+    paddyRiceDesc: {{ t('paddy_rice_desc')|tojson }},
+    nurseryRice: {{ t('nursery_rice')|tojson }},
+    nurseryRiceSecondary: {{ t('nursery_rice_secondary')|tojson }},
+    nurseryRiceDesc: {{ t('nursery_rice_desc')|tojson }},
+    searchCrop: {{ t('search_crop')|tojson }},
+    searchSymptom: {{ t('search_symptom')|tojson }},
+    clearSelection: {{ t('clear_selection')|tojson }},
+    symptomsSelected: {{ t('symptoms_selected')|tojson }},
+    noSymptomsMatch: {{ t('no_symptoms_match')|tojson }}
+  }
 };
 </script>
-<script src="{{ url_for('static', filename='js/farmer_diagnosis_simple.js', v=static_version, m='manual-v3') }}"></script>
+<script src="{{ url_for('static', filename='js/farmer_diagnosis_simple.js', v=static_version, m='clean-ui-v2') }}"></script>
 {% endblock %}
-

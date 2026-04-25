@@ -11,4 +11,3 @@ expert_bp = Blueprint(
 
 from . import routes
 from . import knowledge
-from . import question_builder

@@ -95,6 +95,41 @@
 {% endif %}
 
 <div class="diag-result-page mx-auto">
+
+    <!-- ── Severity Traffic Light Banner ── -->
+    {% if diagnosis.confidence_level == "high" %}
+        {% set sev_cls = "sev-high" %}{% set sev_icon = "fas fa-check-circle" %}
+        {% set sev_label = "High Confidence Match" %}
+        {% set sev_note = "The selected symptoms strongly match a known disease rule. Treatment can be started with confidence." %}
+    {% elif diagnosis.confidence_level == "medium" %}
+        {% set sev_cls = "sev-medium" %}{% set sev_icon = "fas fa-exclamation-circle" %}
+        {% set sev_label = "Moderate Match — Monitor Closely" %}
+        {% set sev_note = "Symptoms partially match. Observe your crop for 1–2 days before applying treatment." %}
+    {% elif diagnosis.confidence_level in ["low", "insufficient"] %}
+        {% set sev_cls = "sev-low" %}{% set sev_icon = "fas fa-times-circle" %}
+        {% set sev_label = "Low Confidence — Expert Review Advised" %}
+        {% set sev_note = "Not enough symptoms matched. Request expert confirmation before any major treatment." %}
+    {% else %}
+        {% set sev_cls = "sev-unknown" %}{% set sev_icon = "fas fa-question-circle" %}
+        {% set sev_label = "Unknown Confidence" %}
+        {% set sev_note = "Confidence could not be determined. Consult an expert." %}
+    {% endif %}
+    <div class="diag-sev-banner {{ sev_cls }} mb-3">
+        <div class="diag-sev-light">
+            <div class="diag-sev-dot {{ sev_cls }}-dot"></div>
+        </div>
+        <div class="diag-sev-body">
+            <div class="diag-sev-label">
+                <i class="{{ sev_icon }} mr-1"></i>{{ sev_label }}
+            </div>
+            <div class="diag-sev-note">{{ sev_note }}</div>
+        </div>
+        {% if confidence_percent is not none %}
+        <div class="diag-sev-pct">{{ confidence_percent }}%</div>
+        {% endif %}
+    </div>
+    <!-- ── End Severity Banner ── -->
+
     <div class="card shadow-sm diag-result-hero mb-4">
         <div class="card-body diag-result-hero-body">
             <div class="diag-result-hero-grid">

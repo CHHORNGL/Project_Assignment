@@ -128,15 +128,17 @@ h1,h2,h3,h4,h5,h6 { font-weight: 700; }
 
 {% include "partials/flash_notices.html" %}
 
+{% block sidebar %}
 {% include "layouts/sidebar.html" %}
-
 <div class="mobile-sidebar-backdrop" id="mobile-sidebar-backdrop" aria-hidden="true"></div>
+{% endblock %}
 
 <div id="content-wrapper" class="d-flex flex-column">
 <div id="content">
 
 {% set page_title = self.title() %}
 {% include "layouts/topbar.html" %}
+{% block secondary_nav %}{% endblock %}
 
 <div class="container-fluid pt-3">
 {% block content %}{% endblock %}
@@ -161,27 +163,47 @@ h1,h2,h3,h4,h5,h6 { font-weight: 700; }
      THEME SWITCH HANDLER
 =============================== -->
 <script>
-document.querySelectorAll(".theme-option[data-theme]").forEach(btn => {
-    btn.addEventListener("click", async () => {
-        const theme = btn.dataset.theme;
+(function () {
+    const iconMap = { system: "fa-desktop", light: "fa-sun", dark: "fa-moon" };
 
-        document.documentElement.classList.remove("dark-mode");
-        if (theme === "dark") document.documentElement.classList.add("dark-mode");
-        if (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches) {
-            document.documentElement.classList.add("dark-mode");
+    function setActiveTheme(theme) {
+        document.querySelectorAll(".theme-switcher-btn[data-theme]").forEach(btn => {
+            btn.classList.toggle("is-active", btn.dataset.theme === theme);
+        });
+        const iconEl = document.getElementById("themeCurrentIconEl");
+        if (iconEl) {
+            iconEl.className = "fas " + (iconMap[theme] || "fa-adjust");
         }
+    }
 
-        localStorage.setItem("theme", theme);
+    const dbTheme = "{{ current_user.theme if current_user.is_authenticated else 'system' }}";
+    const storedTheme = localStorage.getItem("theme");
+    const currentTheme = (dbTheme && dbTheme !== "system") ? dbTheme : (storedTheme || "system");
+    setActiveTheme(currentTheme);
 
-        try {
-            await fetch("/users/theme", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ theme })
-            });
-        } catch (e) {}
+    document.querySelectorAll(".theme-option[data-theme]").forEach(btn => {
+        btn.addEventListener("click", async () => {
+            const theme = btn.dataset.theme;
+
+            document.documentElement.classList.remove("dark-mode");
+            if (theme === "dark") document.documentElement.classList.add("dark-mode");
+            if (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches) {
+                document.documentElement.classList.add("dark-mode");
+            }
+
+            localStorage.setItem("theme", theme);
+            setActiveTheme(theme);
+
+            try {
+                await fetch("/users/theme", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ theme })
+                });
+            } catch (e) {}
+        });
     });
-});
+})();
 </script>
 
 <script>
@@ -227,7 +249,7 @@ document.querySelectorAll(".theme-option[data-theme]").forEach(btn => {
             },
         },
     };
-    const apiUrl = "{% if current_user.is_authenticated %}{{ url_for('admin.theme_manager_active_api') }}?scope=admin{% endif %}";
+    const apiUrl = "";
     const state = {
         timer: null,
         payload: null,
@@ -878,19 +900,33 @@ document.querySelectorAll(".theme-option[data-theme]").forEach(btn => {
      LANGUAGE SWITCH HANDLER
 =============================== -->
 <script>
-document.querySelectorAll(".lang-option[data-lang]").forEach(btn => {
-    btn.addEventListener("click", async () => {
-        const language = btn.dataset.lang;
-        try {
-            await fetch("/users/language", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ language })
-            });
-        } catch (e) {}
-        window.location.reload();
+(function () {
+    const currentLang = (document.documentElement.lang || "en").toLowerCase().trim();
+    const triggerFlag = document.getElementById("langTriggerFlag");
+    const triggerCode = document.getElementById("langTriggerCode");
+
+    document.querySelectorAll(".lang-menu-item[data-lang]").forEach(btn => {
+        const isActive = btn.dataset.lang === currentLang;
+        btn.classList.toggle("is-active", isActive);
+
+        if (isActive) {
+            if (triggerFlag) triggerFlag.textContent = btn.dataset.flag || "🌐";
+            if (triggerCode) triggerCode.textContent = btn.dataset.code || currentLang.toUpperCase();
+        }
+
+        btn.addEventListener("click", async () => {
+            const language = btn.dataset.lang;
+            try {
+                await fetch("/users/language", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ language })
+                });
+            } catch (e) {}
+            window.location.reload();
+        });
     });
-});
+})();
 </script>
 
 <!-- ===============================

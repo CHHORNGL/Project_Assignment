@@ -111,6 +111,14 @@ CROP_SUBCATEGORY_KEYWORDS = [
 ]
 
 
+def _strip_khmer(text: str) -> str:
+    """Remove Khmer Unicode characters from a string (used to clean English-only fields)."""
+    if not text:
+        return ""
+    cleaned = re.sub(r"[\u1780-\u17ff\u19e0-\u19ff]+", "", text)
+    return re.sub(r"\s+", " ", cleaned).strip()
+
+
 def _normalize_text(text: str) -> str:
     if not text:
         return ""
@@ -809,14 +817,13 @@ def diagnose_rule_based():
 
     all_symptoms = Symptom.query.order_by(Symptom.name.asc()).all()
     for symptom in all_symptoms:
-        raw_display_name = (
-            symptom.name_kh
-            if current_lang == "km" and getattr(symptom, "name_kh", None)
-            else symptom.name
-        )
-        display_name = normalize_display_text(raw_display_name, lang=current_lang)
-        if symptom.id and display_name:
-            symptoms_by_crop[0][symptom.id] = display_name
+        if not symptom.id or not symptom.name:
+            continue
+        name_en = _strip_khmer(symptom.name or "")
+        name_kh = normalize_display_text(
+            getattr(symptom, "name_kh", None) or "", lang="km"
+        ) or ""
+        symptoms_by_crop[0][symptom.id] = {"name": name_en, "name_kh": name_kh}
 
     for crop in crops:
         inferred_subcategory_id = _infer_crop_subcategory(crop)
@@ -837,13 +844,12 @@ def diagnose_rule_based():
             if not symptom or not symptom.id or not symptom.name:
                 continue
             rule_symptom_ids.append(symptom.id)
-            display_name = (
-                symptom.name_kh
-                if current_lang == "km" and getattr(symptom, "name_kh", None)
-                else symptom.name
-            )
+            name_en = _strip_khmer(symptom.name or "")
+            name_kh = normalize_display_text(
+                getattr(symptom, "name_kh", None) or "", lang="km"
+            ) or ""
             symptoms_by_crop.setdefault(crop_id, {})
-            symptoms_by_crop[crop_id][symptom.id] = normalize_display_text(display_name, lang=current_lang)
+            symptoms_by_crop[crop_id][symptom.id] = {"name": name_en, "name_kh": name_kh}
 
         if rule_symptom_ids:
             rules_by_crop.setdefault(crop_id, [])
@@ -851,7 +857,10 @@ def diagnose_rule_based():
 
     symptoms_by_crop_list = {}
     for cid, symptom_map in symptoms_by_crop.items():
-        items = [{"id": sid, "name": name} for sid, name in symptom_map.items()]
+        items = [
+            {"id": sid, "name": v["name"], "name_kh": v["name_kh"]}
+            for sid, v in symptom_map.items()
+        ]
         items.sort(key=lambda x: x["name"].lower())
         symptoms_by_crop_list[cid] = items
 

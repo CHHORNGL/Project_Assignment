@@ -17,73 +17,258 @@
     </div>
 </div>
 
-<div class="card shadow-sm">
+<div class="card shadow-sm diag-hist-card">
     <div class="card-header">
-        <div class="d-flex justify-content-between align-items-center flex-wrap">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
             <span class="section-title">{{ t("recent_diagnoses_title") }}</span>
-            <div class="history-toolbar mt-2 mt-md-0">
-                <input type="search" class="form-control form-control-sm" id="history-search" placeholder="Search crop, disease, or symptoms">
-                <select class="form-control form-control-sm" id="history-status">
+            <div class="diag-hist-toolbar">
+                <div class="diag-hist-search-wrap">
+                    <i class="fas fa-search diag-hist-search-icon"></i>
+                    <input type="search" class="form-control form-control-sm diag-hist-search" id="history-search" placeholder="Search crop, disease…">
+                </div>
+                <select class="form-control form-control-sm diag-hist-filter" id="history-status">
                     <option value="">All statuses</option>
+                    <option value="AUTO">{{ t("status_auto") }}</option>
                     <option value="PENDING">{{ t("status_pending") }}</option>
                     <option value="APPROVED">{{ t("status_approved") }}</option>
                     <option value="REJECTED">{{ t("status_rejected") }}</option>
                 </select>
-                <span class="small text-muted ml-md-2" id="history-count"></span>
+                <span class="small text-muted diag-hist-count" id="history-count"></span>
             </div>
         </div>
     </div>
-    <div class="card-body">
+
+    <div class="card-body p-0">
         {% if diagnoses and diagnoses|length > 0 %}
-            <div class="diag-list">
-                {% for d in diagnoses %}
-                {% set disease_label = (d.disease.name_kh if current_lang == 'km' and d.disease and d.disease.name_kh else d.disease_name) %}
-                <a class="diag-item text-decoration-none text-reset"
-                   data-status="{{ d.status }}"
-                   data-search="{{ localize(d.crop, 'name', d.crop_name) }} {{ disease_label }} {{ d.symptoms }}"
-                   href="{{ url_for('farmer.diagnosis_result', diagnosis_id=d.id) }}">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div class="mr-3">
-                            <div class="font-weight-bold">{{ localize(d.crop, "name", d.crop_name) }}</div>
-                            <div class="small text-muted">{{ t("disease_label") }}: {{ disease_label }}</div>
-                            <div class="small text-muted">
-                                {{ t("symptoms_label") }}: {{ d.symptoms[:90] }}{% if d.symptoms|length > 90 %}...{% endif %}
-                            </div>
-                        </div>
-                        <div class="text-right">
-                            <div class="small text-muted">
-                                {{ d.created_at.strftime("%Y-%m-%d") if d.created_at else "" }}
-                            </div>
-                            {% if d.status == "PENDING" %}
-                                <span class="badge badge-warning">{{ t("status_pending") }}</span>
-                            {% elif d.status == "APPROVED" %}
-                                <span class="badge badge-success">{{ t("status_approved") }}</span>
-                            {% elif d.status == "REJECTED" %}
-                                <span class="badge badge-danger">{{ t("status_rejected") }}</span>
-                            {% else %}
-                                <span class="badge badge-secondary">{{ d.status }}</span>
-                            {% endif %}
-                        </div>
+        <div class="diag-hist-list">
+            {% for d in diagnoses %}
+            {% set disease_label = (d.disease.name_kh if current_lang == 'km' and d.disease and d.disease.name_kh else d.disease_name) %}
+            {% set crop_label = localize(d.crop, "name", d.crop_name) %}
+            {% set conf_pct = ((d.confidence * 100)|round(0)|int) if d.confidence is not none else None %}
+            <a class="diag-hist-item text-decoration-none text-reset diag-status-{{ d.status|lower }}"
+               data-status="{{ d.status }}"
+               data-search="{{ crop_label }} {{ disease_label }} {{ d.symptoms }}"
+               href="{{ url_for('farmer.diagnosis_result', diagnosis_id=d.id) }}">
+
+                <div class="diag-hist-icon-wrap">
+                    <div class="diag-hist-icon diag-hist-icon-{{ d.status|lower }}">
+                        {% if d.status == "APPROVED" %}<i class="fas fa-check-circle"></i>
+                        {% elif d.status == "REJECTED" %}<i class="fas fa-times-circle"></i>
+                        {% elif d.status == "PENDING" %}<i class="fas fa-clock"></i>
+                        {% else %}<i class="fas fa-seedling"></i>{% endif %}
                     </div>
-                </a>
-                {% endfor %}
-            </div>
-            <div class="text-center text-muted py-3 d-none" id="history-empty">
-                No matching diagnoses.
-            </div>
+                </div>
+
+                <div class="diag-hist-body">
+                    <div class="diag-hist-crop">{{ crop_label }}</div>
+                    <div class="diag-hist-disease">
+                        <i class="fas fa-virus mr-1"></i>{{ disease_label or "Unknown" }}
+                    </div>
+                    <div class="diag-hist-symptoms">{{ d.symptoms[:80] if d.symptoms else "—" }}{% if d.symptoms and d.symptoms|length > 80 %}…{% endif %}</div>
+                </div>
+
+                <div class="diag-hist-right">
+                    <div class="diag-hist-date">{{ d.created_at.strftime("%d %b %Y") if d.created_at else "" }}</div>
+                    {% if d.status == "PENDING" %}
+                        <span class="badge badge-warning diag-hist-badge">{{ t("status_pending") }}</span>
+                    {% elif d.status == "APPROVED" %}
+                        <span class="badge badge-success diag-hist-badge">{{ t("status_approved") }}</span>
+                    {% elif d.status == "REJECTED" %}
+                        <span class="badge badge-danger diag-hist-badge">{{ t("status_rejected") }}</span>
+                    {% elif d.status == "AUTO" %}
+                        <span class="badge badge-info diag-hist-badge">{{ t("status_auto") }}</span>
+                    {% else %}
+                        <span class="badge badge-secondary diag-hist-badge">{{ d.status }}</span>
+                    {% endif %}
+                    {% if conf_pct is not none %}
+                    <div class="diag-hist-conf">{{ conf_pct }}% match</div>
+                    {% endif %}
+                    <i class="fas fa-chevron-right diag-hist-chevron"></i>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        <div class="text-center text-muted py-3 d-none" id="history-empty">
+            No matching diagnoses.
+        </div>
         {% else %}
-            <div class="text-center text-muted py-4">
-                No diagnoses yet. Start by creating your first diagnosis.
-            </div>
+        <div class="diag-hist-empty">
+            <div class="diag-hist-empty-icon"><i class="fas fa-seedling"></i></div>
+            <div class="diag-hist-empty-title">No diagnoses yet</div>
+            <div class="diag-hist-empty-sub">Start by running your first crop diagnosis.</div>
+            <a href="{{ url_for('farmer.diagnose_rule_based') }}" class="btn btn-sm btn-success mt-3">
+                <i class="fas fa-plus mr-1"></i>New Diagnosis
+            </a>
+        </div>
         {% endif %}
     </div>
 </div>
+
+<style>
+.diag-hist-card {
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.diag-hist-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.diag-hist-search-wrap {
+    position: relative;
+}
+
+.diag-hist-search-icon {
+    position: absolute;
+    left: 9px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    pointer-events: none;
+}
+
+.diag-hist-search {
+    padding-left: 26px;
+    min-width: 200px;
+}
+
+.diag-hist-filter { min-width: 140px; }
+.diag-hist-count { white-space: nowrap; }
+
+.diag-hist-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.diag-hist-item {
+    display: grid;
+    grid-template-columns: 52px 1fr auto;
+    align-items: center;
+    gap: 0 14px;
+    padding: 13px 18px;
+    border-bottom: 1px solid var(--border-light);
+    border-left: 4px solid transparent;
+    transition: background 0.14s, border-color 0.14s;
+}
+.diag-hist-item:last-child { border-bottom: none; }
+.diag-hist-item:hover { background: var(--table-row-hover, #f8fafc); }
+
+.diag-hist-item.diag-status-approved { border-left-color: #22c55e; }
+.diag-hist-item.diag-status-pending  { border-left-color: #f59e0b; }
+.diag-hist-item.diag-status-rejected { border-left-color: #ef4444; }
+.diag-hist-item.diag-status-auto     { border-left-color: #0ea5e9; }
+
+.diag-hist-icon-wrap { display: flex; align-items: center; }
+
+.diag-hist-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: 1rem;
+    background: var(--primary-soft, rgba(16,185,129,0.12));
+    color: var(--primary, #10b981);
+    flex-shrink: 0;
+}
+.diag-hist-icon-approved { background: rgba(34,197,94,0.14); color: #16a34a; }
+.diag-hist-icon-rejected { background: rgba(239,68,68,0.12); color: #dc2626; }
+.diag-hist-icon-pending  { background: rgba(245,158,11,0.14); color: #d97706; }
+.diag-hist-icon-auto     { background: rgba(14,165,233,0.12); color: #0284c7; }
+
+.diag-hist-body { min-width: 0; }
+
+.diag-hist-crop {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--text-main);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 1px;
+}
+
+.diag-hist-disease {
+    font-size: 0.82rem;
+    color: var(--text-secondary, #374151);
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.diag-hist-symptoms {
+    font-size: 0.76rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.diag-hist-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 3px;
+    flex-shrink: 0;
+    min-width: 90px;
+}
+
+.diag-hist-date {
+    font-size: 0.74rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+    margin-bottom: 2px;
+}
+
+.diag-hist-badge { font-size: 0.72rem; }
+
+.diag-hist-conf {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--primary, #10b981);
+}
+
+.diag-hist-chevron {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    margin-top: 1px;
+}
+
+.diag-hist-empty {
+    text-align: center;
+    padding: 3.5rem 1rem;
+    color: var(--text-muted);
+}
+.diag-hist-empty-icon {
+    font-size: 2.4rem;
+    color: rgba(16,185,129,0.45);
+    margin-bottom: 0.8rem;
+}
+.diag-hist-empty-title {
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--text-main);
+    margin-bottom: 0.3rem;
+}
+.diag-hist-empty-sub { font-size: 0.88rem; }
+
+@media (max-width: 576px) {
+    .diag-hist-item { grid-template-columns: 42px 1fr; padding: 11px 14px; }
+    .diag-hist-right { display: none; }
+    .diag-hist-search { min-width: 140px; }
+}
+</style>
 
 <script>
 (function () {
     const input = document.getElementById("history-search");
     const status = document.getElementById("history-status");
-    const items = document.querySelectorAll(".diag-item[data-search]");
+    const items = document.querySelectorAll(".diag-hist-item[data-search]");
     const count = document.getElementById("history-count");
     const empty = document.getElementById("history-empty");
 

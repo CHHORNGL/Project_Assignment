@@ -124,16 +124,6 @@
         </a>
     </li>
 
-    <li class="nav-item">
-        <a class="nav-link {% if path.startswith('/admin/theme-manager') %}active{% endif %}"
-           href="{{ url_for('admin.theme_manager') }}"
-           data-tooltip="{{ t('dynamic_theme_manager') }}"
-           aria-label="{{ t('dynamic_theme_manager') }}">
-            <i class="menu-icon fas fa-palette"></i>
-            <span>{{ t("dynamic_theme_manager") }}</span>
-        </a>
-    </li>
-
     {% endif %}
 
     <!-- ===============================
@@ -197,7 +187,6 @@
 
     {% set knowledge_path = url_for('expert.knowledge_dashboard') %}
     {% set mixed_agri_path = url_for('expert.mixed_agri_dashboard') %}
-    {% set question_builder_path = url_for('expert.question_builder_visual_editor') %}
     <li class="nav-item">
         <a class="nav-link {% if path.startswith(knowledge_path) and not path.startswith(mixed_agri_path) %}active{% endif %}"
            href="{{ knowledge_path }}"
@@ -205,16 +194,6 @@
            aria-label="{{ t('knowledge_base') }}">
             <i class="menu-icon fas fa-book-open"></i>
             <span>{{ t("knowledge_base") }}</span>
-        </a>
-    </li>
-
-    <li class="nav-item">
-        <a class="nav-link {% if path.startswith('/expert/question-builder') %}active{% endif %}"
-           href="{{ question_builder_path }}"
-           data-tooltip="{{ t('question_builder') }}"
-           aria-label="{{ t('question_builder') }}">
-            <i class="menu-icon fas fa-project-diagram"></i>
-            <span>{{ t("question_builder") }}</span>
         </a>
     </li>
 

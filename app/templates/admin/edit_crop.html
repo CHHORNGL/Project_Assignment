@@ -2,43 +2,55 @@
 {% block title %}{{ t("edit_crop_title") }}{% endblock %}
 
 {% block content %}
-<div class="container-fluid col-md-6">
+<div class="container-fluid">
 
-    <h4 class="mb-4">
-        <i class="fas fa-edit text-success mr-2" aria-hidden="true"></i>{{ t("edit_crop_title") }}
-    </h4>
+    <h1 class="h4 mb-4 font-weight-bold">
+        {% if crop.emoji %}{{ crop.emoji }} {% endif %}{{ t("edit_crop_title") }}
+    </h1>
 
-    <form method="POST">
-        <div class="form-group">
-            <label>{{ t("crop_name") }}</label>
-            <input type="text" name="name"
-                   value="{{ crop.name }}"
-                   class="form-control" required>
+    <div class="card shadow col-md-7 p-0">
+        <div class="card-body">
+
+            <form method="POST">
+
+                <div class="form-group">
+                    <label>{{ t("crop_name") }}</label>
+                    <input type="text" name="name" value="{{ crop.name }}" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                    <label>{{ t("crop_name_kh") }}</label>
+                    <input type="text" name="name_kh" value="{{ crop.name_kh or '' }}" class="form-control">
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        Emoji
+                        <span class="text-muted small font-weight-normal ml-1">
+                            — shown as the crop icon in the diagnosis wizard
+                        </span>
+                    </label>
+                    {% set picker_emoji = crop.emoji or "" %}
+                    {% include "partials/crop_emoji_picker.html" %}
+                </div>
+
+                <div class="form-group">
+                    <label>{{ t("description_label") }}</label>
+                    <textarea name="description" class="form-control" rows="3">{{ crop.description or '' }}</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>{{ t("description_kh") }}</label>
+                    <textarea name="description_kh" class="form-control" rows="3">{{ crop.description_kh or '' }}</textarea>
+                </div>
+
+                <button class="btn btn-primary">{{ t("update") }}</button>
+                <a href="{{ url_for('admin_crop.index') }}" class="btn btn-secondary ml-2">{{ t("cancel") }}</a>
+
+            </form>
+
         </div>
-
-        <div class="form-group">
-            <label>{{ t("crop_name_kh") }}</label>
-            <input type="text" name="name_kh"
-                   value="{{ crop.name_kh or '' }}"
-                   class="form-control">
-        </div>
-
-        <div class="form-group">
-            <label>{{ t("description_label") }}</label>
-            <textarea name="description"
-                      class="form-control">{{ crop.description }}</textarea>
-        </div>
-
-        <div class="form-group">
-            <label>{{ t("description_kh") }}</label>
-            <textarea name="description_kh"
-                      class="form-control">{{ crop.description_kh or '' }}</textarea>
-        </div>
-
-        <button class="btn btn-primary">{{ t("update") }}</button>
-        <a href="{{ url_for('admin.crops') }}"
-           class="btn btn-secondary">{{ t("cancel") }}</a>
-    </form>
+    </div>
 
 </div>
 {% endblock %}

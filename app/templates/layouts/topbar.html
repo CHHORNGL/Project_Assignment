@@ -27,14 +27,19 @@
         <i class="fas fa-columns"></i>
     </button>
 
+    {% if request.blueprint == 'farmer' %}
     <div class="topbar-divider d-none d-md-block mx-2"></div>
 
     <!-- ===============================
-         PAGE TITLE
+         BRAND LOGO (farmer routes only)
     =============================== -->
-    <span class="d-none d-sm-inline-block topbar-title">
-        {{ page_title }}
-    </span>
+    <a class="topbar-brand" href="{{ url_for('main.index') }}">
+        <img src="{{ url_for('static', filename='img/logo.jpg') }}"
+             alt="Agri System"
+             class="topbar-brand-logo app-logo-circle">
+        <span class="topbar-brand-name">AGRI SYSTEM</span>
+    </a>
+    {% endif %}
 
     <!-- ===============================
          TOPBAR RIGHT
@@ -126,56 +131,85 @@
         <!-- ===============================
              LANGUAGE
         =============================== -->
-        <li class="nav-item dropdown mx-3">
+        <li class="nav-item dropdown no-arrow mx-1">
             <a class="nav-link dropdown-toggle d-flex align-items-center p-0"
                href="#"
                id="langDropdown"
                role="button"
-               data-toggle="dropdown">
-                <span class="icon-btn">
-                    <i class="fas fa-language"></i>
+               data-toggle="dropdown"
+               aria-haspopup="true"
+               aria-expanded="false"
+               aria-label="{{ t('language') }}">
+                <span class="lang-trigger icon-btn" id="langTrigger">
+                    <span class="lang-trigger-flag" id="langTriggerFlag">🌐</span>
+                    <span class="lang-trigger-code" id="langTriggerCode">EN</span>
                 </span>
             </a>
 
-            <div class="dropdown-menu dropdown-menu-right shadow">
-                <button class="dropdown-item lang-option d-flex justify-content-between"
-                        type="button" data-lang="en">
-                    <span>{{ t("english") }}</span>
+            <div class="dropdown-menu dropdown-menu-right lang-menu shadow-lg"
+                 aria-labelledby="langDropdown">
+
+                <div class="lang-menu-header">{{ t("language") }} / ភាសា</div>
+
+                <button class="lang-menu-item lang-option" type="button" data-lang="en"
+                        data-flag="🇺🇸" data-code="EN">
+                    <span class="lang-item-flag">🇺🇸</span>
+                    <span class="lang-item-body">
+                        <span class="lang-item-name">{{ t("english") }}</span>
+                        <span class="lang-item-native">English</span>
+                    </span>
+                    <span class="lang-item-check" aria-hidden="true">✓</span>
                 </button>
-                <button class="dropdown-item lang-option d-flex justify-content-between"
-                        type="button" data-lang="km">
-                    <span>{{ t("khmer") }}</span>
+
+                <button class="lang-menu-item lang-option" type="button" data-lang="km"
+                        data-flag="🇰🇭" data-code="KM">
+                    <span class="lang-item-flag">🇰🇭</span>
+                    <span class="lang-item-body">
+                        <span class="lang-item-name">{{ t("khmer") }}</span>
+                        <span class="lang-item-native">ខ្មែរ</span>
+                    </span>
+                    <span class="lang-item-check" aria-hidden="true">✓</span>
                 </button>
+
             </div>
         </li>
 
         <!-- ===============================
              THEME MODE
         =============================== -->
-        <li class="nav-item dropdown mx-3">
+        <li class="nav-item dropdown no-arrow mx-1">
             <a class="nav-link dropdown-toggle d-flex align-items-center p-0"
                href="#"
                id="themeDropdown"
                role="button"
-               data-toggle="dropdown">
-                <span class="icon-btn">
-                    <i class="fas fa-adjust"></i>
+               data-toggle="dropdown"
+               aria-haspopup="true"
+               aria-expanded="false">
+                <span class="icon-btn theme-trigger-btn" id="themeCurrentIcon">
+                    <i class="fas fa-adjust" id="themeCurrentIconEl"></i>
                 </span>
             </a>
 
-            <div class="dropdown-menu dropdown-menu-right shadow">
-                <button class="dropdown-item theme-option d-flex justify-content-between"
-                        type="button" data-theme="system">
-                    <span>{{ t("system") }}</span><span class="theme-check d-none">Selected</span>
-                </button>
-                <button class="dropdown-item theme-option d-flex justify-content-between"
-                        type="button" data-theme="light">
-                    <span>{{ t("light") }}</span><span class="theme-check d-none">Selected</span>
-                </button>
-                <button class="dropdown-item theme-option d-flex justify-content-between"
-                        type="button" data-theme="dark">
-                    <span>{{ t("dark") }}</span><span class="theme-check d-none">Selected</span>
-                </button>
+            <div class="dropdown-menu dropdown-menu-right theme-switcher-menu shadow-lg"
+                 aria-labelledby="themeDropdown">
+                <div class="theme-switcher-label">{{ t("theme") }}</div>
+                <div class="theme-switcher-grid">
+                    <button class="theme-switcher-btn theme-option" type="button" data-theme="system"
+                            data-icon="fa-desktop" title="{{ t('system') }}">
+                        <i class="fas fa-desktop"></i>
+                        <span>{{ t("system") }}</span>
+                    </button>
+                    <button class="theme-switcher-btn theme-option" type="button" data-theme="light"
+                            data-icon="fa-sun" title="{{ t('light') }}">
+                        <i class="fas fa-sun"></i>
+                        <span>{{ t("light") }}</span>
+                    </button>
+                    <button class="theme-switcher-btn theme-option" type="button" data-theme="dark"
+                            data-icon="fa-moon" title="{{ t('dark') }}">
+                        <i class="fas fa-moon"></i>
+                        <span>{{ t("dark") }}</span>
+                    </button>
+                </div>
             </div>
         </li>
 
@@ -198,22 +232,29 @@
                      style="width:36px;height:36px;object-fit:cover;">
             </a>
 
-            <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in">
-                <a class="dropdown-item d-flex align-items-center" href="{{ url_for('user.profile') }}">
-                    <i class="fas fa-user mr-2"></i>
+            <div class="dropdown-menu dropdown-menu-right user-dropdown-menu shadow-lg animated--grow-in"
+                 aria-labelledby="userDropdown">
+                <div class="user-dropdown-header">
+                    <img src="{{ avatar_url(current_user) }}"
+                         alt="{{ current_user.username }}"
+                         class="user-dropdown-avatar">
+                    <div class="user-dropdown-info">
+                        <div class="user-dropdown-name">{{ current_user.full_name or current_user.username }}</div>
+                        <div class="user-dropdown-role">{{ current_user.username }}</div>
+                    </div>
+                </div>
+                <div class="user-dropdown-divider"></div>
+                <a class="user-dropdown-item" href="{{ url_for('user.profile') }}">
+                    <span class="user-dropdown-icon"><i class="fas fa-user"></i></span>
                     {{ t("profile") }}
                 </a>
-
-                <a class="dropdown-item d-flex align-items-center" href="{{ url_for('user.settings') }}">
-                    <i class="fas fa-cog mr-2"></i>
+                <a class="user-dropdown-item" href="{{ url_for('user.settings') }}">
+                    <span class="user-dropdown-icon"><i class="fas fa-cog"></i></span>
                     {{ t("settings") }}
                 </a>
-
-                <div class="dropdown-divider"></div>
-
-                <a class="dropdown-item d-flex align-items-center text-danger"
-                   href="{{ url_for('auth.logout') }}">
-                    <i class="fas fa-sign-out-alt mr-2"></i>
+                <div class="user-dropdown-divider"></div>
+                <a class="user-dropdown-item is-danger" href="{{ url_for('auth.logout') }}">
+                    <span class="user-dropdown-icon"><i class="fas fa-sign-out-alt"></i></span>
                     {{ t("logout") }}
                 </a>
             </div>

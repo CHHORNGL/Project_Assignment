@@ -74,10 +74,6 @@
             <div class="farmer-chat-brand-sub">{{ t("agri_assistant") }}</div>
         </div>
 
-        <button type="button" class="farmer-chat-toggle" id="farmer-chat-toggle" aria-label="Toggle sidebar">
-            <i class="fas fa-columns"></i>
-        </button>
-
         <a href="{{ url_for('farmer.new_chat') }}" class="farmer-chat-new">
             <i class="fas fa-comment-medical mr-2"></i>
             <span>{{ t("new_chat") }}</span>
@@ -125,8 +121,8 @@
             <div class="farmer-user-menu is-collapsed">
                 <div class="farmer-user-actions">
                     <a href="{{ url_for('farmer.dashboard') }}" class="farmer-chat-footer-btn primary">
-                        <i class="fas fa-columns"></i>
-                        {{ t("dashboard") }}
+                        <i class="fas fa-home"></i>
+                        {{ t("home") }}
                     </a>
                     <a href="{{ url_for('user.profile') }}" class="farmer-chat-footer-btn">
                         <i class="fas fa-user-circle"></i>
@@ -140,33 +136,6 @@
                         <i class="fas fa-sign-out-alt"></i>
                         {{ t("logout") }}
                     </a>
-                </div>
-
-                <div class="farmer-user-section">
-                    <div class="farmer-chat-section">{{ t("language") }}</div>
-                    <div class="farmer-user-grid">
-                        <button type="button" class="farmer-chat-footer-btn lang-option" data-lang="en">
-                            {{ t("english") }}
-                        </button>
-                        <button type="button" class="farmer-chat-footer-btn lang-option" data-lang="km">
-                            {{ t("khmer") }}
-                        </button>
-                    </div>
-                </div>
-
-                <div class="farmer-user-section">
-                    <div class="farmer-chat-section">{{ t("theme") }}</div>
-                    <div class="farmer-user-grid">
-                        <button type="button" class="farmer-chat-footer-btn theme-option" data-theme="system">
-                            {{ t("system") }}
-                        </button>
-                        <button type="button" class="farmer-chat-footer-btn theme-option" data-theme="light">
-                            {{ t("light") }}
-                        </button>
-                        <button type="button" class="farmer-chat-footer-btn theme-option" data-theme="dark">
-                            {{ t("dark") }}
-                        </button>
-                    </div>
                 </div>
             </div>
         </div>
@@ -239,73 +208,6 @@
 })();
 </script>
 
-<script>
-document.querySelectorAll(".lang-option[data-lang]").forEach(btn => {
-    btn.addEventListener("click", async () => {
-        const language = btn.dataset.lang;
-        try {
-            await fetch("/users/language", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ language })
-            });
-        } catch (e) {}
-        window.location.reload();
-    });
-});
-</script>
-
-<script>
-document.querySelectorAll(".theme-option[data-theme]").forEach(btn => {
-    btn.addEventListener("click", async () => {
-        const theme = btn.dataset.theme;
-
-        document.documentElement.classList.remove("dark-mode");
-        if (theme === "dark") document.documentElement.classList.add("dark-mode");
-        if (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches) {
-            document.documentElement.classList.add("dark-mode");
-        }
-
-        localStorage.setItem("theme", theme);
-
-        try {
-            await fetch("/users/theme", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ theme })
-            });
-        } catch (e) {}
-    });
-});
-
-(function () {
-    const dbTheme = "{{ current_user.theme if current_user.is_authenticated else 'system' }}";
-    const storedTheme = localStorage.getItem("theme");
-    const activeTheme = (dbTheme && dbTheme !== "system") ? dbTheme : (storedTheme || "system");
-    document.querySelectorAll(".theme-option[data-theme]").forEach(btn => {
-        btn.classList.toggle("is-active", btn.dataset.theme === activeTheme);
-    });
-})();
-</script>
-
-<script>
-(function () {
-    const root = document.querySelector(".farmer-chat-shell");
-    const toggle = document.getElementById("farmer-chat-toggle");
-    const storageKey = "farmer_sidebar_collapsed";
-
-    if (!root || !toggle) return;
-
-    const isCollapsed = localStorage.getItem(storageKey) === "1";
-    root.classList.toggle("sidebar-collapsed", isCollapsed);
-
-    toggle.addEventListener("click", () => {
-        const next = !root.classList.contains("sidebar-collapsed");
-        root.classList.toggle("sidebar-collapsed", next);
-        localStorage.setItem(storageKey, next ? "1" : "0");
-    });
-})();
-</script>
 
 <script>
 (function () {

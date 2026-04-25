@@ -4,53 +4,46 @@
 {% block content %}
 <div class="container-fluid">
 
-    <h1 class="h4 mb-4 font-weight-bold">
-        <i class="fas fa-seedling mr-2 text-success"></i>
-        {{ t("add_new_crop") }}
-    </h1>
+    <h1 class="h4 mb-4 font-weight-bold">{{ t("add_new_crop") }}</h1>
 
-    <div class="card shadow col-md-6 p-0">
+    <div class="card shadow col-md-7 p-0">
         <div class="card-body">
 
             <form method="POST">
 
                 <div class="form-group">
                     <label>{{ t("crop_name") }}</label>
-                    <input type="text"
-                           name="name"
-                           class="form-control"
-                           required>
+                    <input type="text" name="name" class="form-control" required>
                 </div>
 
                 <div class="form-group">
                     <label>{{ t("crop_name_kh") }}</label>
-                    <input type="text"
-                           name="name_kh"
-                           class="form-control">
+                    <input type="text" name="name_kh" class="form-control">
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        Emoji
+                        <span class="text-muted small font-weight-normal ml-1">
+                            — shown as the crop icon in the diagnosis wizard
+                        </span>
+                    </label>
+                    {% set picker_emoji = "" %}
+                    {% include "partials/crop_emoji_picker.html" %}
                 </div>
 
                 <div class="form-group">
                     <label>{{ t("description_label") }}</label>
-                    <textarea name="description"
-                              class="form-control"
-                              rows="4"></textarea>
+                    <textarea name="description" class="form-control" rows="3"></textarea>
                 </div>
 
                 <div class="form-group">
                     <label>{{ t("description_kh") }}</label>
-                    <textarea name="description_kh"
-                              class="form-control"
-                              rows="4"></textarea>
+                    <textarea name="description_kh" class="form-control" rows="3"></textarea>
                 </div>
 
-                <button class="btn btn-success">
-                    {{ t("save") }}
-                </button>
-
-                <a href="{{ url_for('admin_crop.index') }}"
-                   class="btn btn-secondary ml-2">
-                    {{ t("cancel") }}
-                </a>
+                <button class="btn btn-success">{{ t("save") }}</button>
+                <a href="{{ url_for('admin_crop.index') }}" class="btn btn-secondary ml-2">{{ t("cancel") }}</a>
 
             </form>
 

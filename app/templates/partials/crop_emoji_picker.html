@@ -1,0 +1,429 @@
+{# ── Crop Emoji Picker ─────────────────────────────────────────────────���────
+   Usage:
+     {% set picker_emoji = crop.emoji or "" %}
+     {% include "partials/crop_emoji_picker.html" %}
+   The hidden input <input name="emoji" id="emojiInput"> is submitted with the form.
+   Default fallback emoji when none selected is 🌱.
+#}
+{% set _default_emoji = "🌱" %}
+{% set _current = picker_emoji if picker_emoji is defined else "" %}
+
+<div class="ep-wrap">
+
+  <!-- Preview + clear -->
+  <div class="ep-top-row">
+    <div class="ep-preview" id="emojiPreview" title="Selected emoji">
+      {{ _current or _default_emoji }}
+    </div>
+    <div class="ep-preview-info">
+      <span class="ep-preview-name" id="emojiName">
+        {% if _current %}Selected{% else %}No emoji selected{% endif %}
+      </span>
+      <button type="button" class="ep-clear-btn" id="emojiClear"
+              {% if not _current %}style="display:none"{% endif %}>
+        ✕ Clear
+      </button>
+    </div>
+    <input type="hidden" name="emoji" id="emojiInput" value="{{ _current }}">
+  </div>
+
+  <!-- Search -->
+  <div class="ep-search-row">
+    <span class="ep-search-icon">🔍</span>
+    <input type="text" class="ep-search" id="emojiSearch"
+           placeholder="Search emoji… e.g. rice, tomato, leaf"
+           autocomplete="off" spellcheck="false">
+    <button type="button" class="ep-search-clear" id="emojiSearchClear" style="display:none">✕</button>
+  </div>
+
+  <!-- Category tabs -->
+  <div class="ep-tabs" id="emojiTabs">
+    <button type="button" class="ep-tab active" data-cat="all">All</button>
+    <button type="button" class="ep-tab" data-cat="grains">🌾 Grains</button>
+    <button type="button" class="ep-tab" data-cat="vegetables">🥦 Veg</button>
+    <button type="button" class="ep-tab" data-cat="fruits">🍎 Fruits</button>
+    <button type="button" class="ep-tab" data-cat="legumes">🫘 Legumes</button>
+    <button type="button" class="ep-tab" data-cat="plants">🌿 Plants</button>
+    <button type="button" class="ep-tab" data-cat="other">🚜 Other</button>
+  </div>
+
+  <!-- Grid -->
+  <div class="ep-grid-wrap">
+    <div class="ep-grid" id="emojiGrid"></div>
+    <div class="ep-empty d-none" id="emojiEmpty">No emoji found for "<span id="emojiEmptyQ"></span>"</div>
+  </div>
+
+</div>
+
+<style>
+.ep-wrap {
+  border: 1px solid #e3e6f0;
+  border-radius: 14px;
+  background: #f8f9fc;
+  padding: 0.85rem;
+  margin-top: 0.4rem;
+}
+.ep-top-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+.ep-preview {
+  width: 56px;
+  height: 56px;
+  border: 2px solid #e3e6f0;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  font-size: 2rem;
+  background: #fff;
+  flex-shrink: 0;
+  user-select: none;
+  transition: border-color 0.15s;
+}
+.ep-preview.has-emoji {
+  border-color: #1cc88a;
+  box-shadow: 0 0 0 3px rgba(28,200,138,0.15);
+}
+.ep-preview-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.ep-preview-name {
+  font-size: 0.82rem;
+  color: #858796;
+  font-weight: 600;
+}
+.ep-clear-btn {
+  border: 1px solid #e3e6f0;
+  border-radius: 6px;
+  background: #fff;
+  color: #e74a3b;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.2rem 0.55rem;
+  cursor: pointer;
+  align-self: flex-start;
+}
+.ep-search-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.6rem;
+}
+.ep-search-icon {
+  position: absolute;
+  left: 0.65rem;
+  font-size: 0.85rem;
+  pointer-events: none;
+  opacity: 0.6;
+}
+.ep-search {
+  width: 100%;
+  border: 1px solid #e3e6f0;
+  border-radius: 9px;
+  background: #fff;
+  padding: 0.48rem 2rem 0.48rem 2.2rem;
+  font-size: 0.88rem;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.ep-search:focus {
+  border-color: #1cc88a;
+  box-shadow: 0 0 0 3px rgba(28,200,138,0.12);
+}
+.ep-search-clear {
+  position: absolute;
+  right: 0.55rem;
+  border: 0;
+  background: transparent;
+  color: #858796;
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 0.2rem 0.3rem;
+}
+.ep-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 0.6rem;
+}
+.ep-tab {
+  border: 1px solid #e3e6f0;
+  border-radius: 7px;
+  background: #fff;
+  color: #3a3b45;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.28rem 0.62rem;
+  cursor: pointer;
+  transition: all 0.12s;
+  white-space: nowrap;
+}
+.ep-tab:hover {
+  border-color: #1cc88a;
+  background: rgba(28,200,138,0.06);
+}
+.ep-tab.active {
+  border-color: #1cc88a;
+  background: #1cc88a;
+  color: #fff;
+}
+.ep-grid-wrap {
+  max-height: 220px;
+  overflow-y: auto;
+  border: 1px solid #e3e6f0;
+  border-radius: 10px;
+  background: #fff;
+  padding: 0.5rem;
+}
+.ep-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+  gap: 4px;
+}
+.ep-btn {
+  width: 40px;
+  height: 40px;
+  border: 1.5px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  font-size: 1.3rem;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: border-color 0.1s, background 0.1s;
+  position: relative;
+}
+.ep-btn:hover {
+  border-color: #1cc88a;
+  background: rgba(28,200,138,0.08);
+}
+.ep-btn.selected {
+  border-color: #1cc88a;
+  background: rgba(28,200,138,0.18);
+  box-shadow: 0 0 0 2px rgba(28,200,138,0.3);
+}
+.ep-empty {
+  text-align: center;
+  color: #858796;
+  font-size: 0.85rem;
+  padding: 1.5rem 0.5rem;
+}
+/* Tooltip via title attribute is sufficient; for nicer hover label: */
+.ep-btn[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1e293b;
+  color: #fff;
+  font-size: 0.7rem;
+  white-space: nowrap;
+  padding: 3px 7px;
+  border-radius: 5px;
+  pointer-events: none;
+  z-index: 99;
+}
+</style>
+
+<script>
+(function () {
+  const EMOJI_DATA = [
+    /* ── Grains & Staples ── */
+    { e:"🌾", n:"Rice / Wheat",           k:["rice","wheat","grain","paddy","cereal","oat","barley","harvest","sheaf","jasmine rice"],    c:"grains" },
+    { e:"🌽", n:"Corn / Maize",            k:["corn","maize","popcorn","sweetcorn","cob"],                                                 c:"grains" },
+    { e:"🍞", n:"Bread / Flour",           k:["bread","flour","wheat","bake","grain","loaf"],                                             c:"grains" },
+    { e:"🍚", n:"Cooked Rice",             k:["rice","cooked","steamed","bowl","grain"],                                                   c:"grains" },
+    { e:"🍙", n:"Rice Ball",               k:["rice","ball","grain"],                                                                      c:"grains" },
+    { e:"🍘", n:"Rice Cracker",            k:["rice","cracker","grain"],                                                                   c:"grains" },
+    { e:"🥣", n:"Cereal / Porridge",       k:["cereal","porridge","oat","grain","bowl"],                                                   c:"grains" },
+    /* ── Vegetables ── */
+    { e:"🍅", n:"Tomato",                  k:["tomato","red","cherry tomato","nightshade","veggie","tomatoes"],                            c:"vegetables" },
+    { e:"🥕", n:"Carrot",                  k:["carrot","root","orange","veggie"],                                                          c:"vegetables" },
+    { e:"🥔", n:"Potato",                  k:["potato","spud","tuber","root","starch"],                                                    c:"vegetables" },
+    { e:"🍠", n:"Sweet Potato / Cassava",  k:["sweet potato","yam","cassava","manioc","tapioca","tuber","root","starch","taro root"],      c:"vegetables" },
+    { e:"🧅", n:"Onion / Shallot",         k:["onion","shallot","bulb","allium","spring onion","scallion"],                               c:"vegetables" },
+    { e:"🧄", n:"Garlic / Ginger",         k:["garlic","ginger","galangal","bulb","allium","spice","rhizome","turmeric","lemongrass"],     c:"vegetables" },
+    { e:"🥦", n:"Broccoli / Cabbage",      k:["broccoli","cabbage","cauliflower","brassica","kale","veggie","chinese cabbage"],            c:"vegetables" },
+    { e:"🥬", n:"Leafy Greens",            k:["lettuce","bokchoy","spinach","kale","chard","leaf","salad","morning glory","water spinach"], c:"vegetables" },
+    { e:"🥒", n:"Cucumber / Zucchini",     k:["cucumber","zucchini","gourd","green","pickle","bitter melon","bitter gourd"],               c:"vegetables" },
+    { e:"🍆", n:"Eggplant / Brinjal",      k:["eggplant","brinjal","aubergine","purple","thai eggplant"],                                 c:"vegetables" },
+    { e:"🫑", n:"Bell Pepper",             k:["pepper","capsicum","bell pepper","sweet pepper","paprika"],                                 c:"vegetables" },
+    { e:"🌶️",  n:"Chili Pepper",           k:["chili","pepper","hot","spicy","red","cayenne","bird chili","thai chili"],                  c:"vegetables" },
+    { e:"🎃", n:"Pumpkin / Squash",        k:["pumpkin","squash","gourd","orange","cucurbit","winter melon","wax gourd"],                  c:"vegetables" },
+    { e:"🥑", n:"Avocado",                 k:["avocado","green","creamy","butter fruit"],                                                  c:"vegetables" },
+    { e:"🧆", n:"Chickpea / Taro",         k:["chickpea","garbanzo","taro","colocasia","root","round","purple"],                           c:"vegetables" },
+    { e:"🥗", n:"Salad / Mixed Greens",    k:["salad","greens","lettuce","leaf","mixed","herb"],                                           c:"vegetables" },
+    { e:"🫚", n:"Palm Oil / Cooking Oil",  k:["oil","palm oil","sunflower oil","cooking","vegetable oil"],                                 c:"vegetables" },
+    /* ── Fruits ── */
+    { e:"🍎", n:"Apple (Red)",             k:["apple","red","fruit","orchard"],                                                            c:"fruits" },
+    { e:"🍏", n:"Apple (Green)",           k:["apple","green","granny","fruit"],                                                           c:"fruits" },
+    { e:"🍊", n:"Orange / Pomelo",         k:["orange","tangerine","mandarin","pomelo","citrus","clementine","grapefruit"],                c:"fruits" },
+    { e:"🍋", n:"Lemon / Citrus",          k:["lemon","citrus","yellow","sour","lime","kaffir lime"],                                      c:"fruits" },
+    { e:"🍋‍🟩", n:"Lime",                  k:["lime","citrus","green","sour","kaffir"],                                                   c:"fruits" },
+    { e:"🍇", n:"Grape",                   k:["grape","vine","purple","raisin","berry"],                                                   c:"fruits" },
+    { e:"🍓", n:"Strawberry",              k:["strawberry","red","berry","fruit"],                                                         c:"fruits" },
+    { e:"🫐", n:"Blueberry / Longan",      k:["blueberry","longan","lychee","rambutan","berry","blue","tropical","round"],                 c:"fruits" },
+    { e:"🍒", n:"Cherry / Longan",         k:["cherry","longan","lychee","rambutan","red","fruit","stone fruit","tropical"],               c:"fruits" },
+    { e:"🍑", n:"Peach / Nectarine",       k:["peach","nectarine","fruit","fuzzy"],                                                        c:"fruits" },
+    { e:"🍐", n:"Pear / Guava",            k:["pear","guava","green","yellow","fruit","tropical"],                                         c:"fruits" },
+    { e:"🍌", n:"Banana / Plantain",       k:["banana","yellow","tropical","plantain","cooking banana"],                                   c:"fruits" },
+    { e:"🍍", n:"Pineapple",               k:["pineapple","tropical","ananas","fruit"],                                                    c:"fruits" },
+    { e:"🥭", n:"Mango / Papaya",          k:["mango","papaya","tropical","orange","stone fruit","star fruit","starfruit","carambola"],    c:"fruits" },
+    { e:"🍈", n:"Melon / Durian",          k:["melon","cantaloupe","honeydew","durian","jackfruit","fruit","tropical","green","spiky"],     c:"fruits" },
+    { e:"🍉", n:"Watermelon",              k:["watermelon","melon","red","summer","tropical"],                                             c:"fruits" },
+    { e:"🥝", n:"Kiwi / Dragon Fruit",     k:["kiwi","kiwifruit","dragon fruit","pitaya","green","red","tropical"],                        c:"fruits" },
+    { e:"🥥", n:"Coconut",                 k:["coconut","tropical","palm","drupe"],                                                        c:"fruits" },
+    { e:"🫒", n:"Olive",                   k:["olive","oil","mediterranean","tree","green","black"],                                        c:"fruits" },
+    { e:"🍵", n:"Tea / Green Tea",         k:["tea","green tea","herb","drink","crop","oolong"],                                           c:"fruits" },
+    { e:"☕", n:"Coffee",                  k:["coffee","bean","arabica","robusta","drink","crop"],                                         c:"fruits" },
+    { e:"🧋", n:"Taro / Boba Drink",       k:["taro","boba","drink","tropical","root"],                                                    c:"fruits" },
+    /* ── Legumes & Seeds ── */
+    { e:"🫘", n:"Bean / Soybean / Mung",   k:["bean","soybean","soy","mung bean","mung","legume","pod","kidney","black bean","edamame"],   c:"legumes" },
+    { e:"🥜", n:"Peanut / Cashew",         k:["peanut","groundnut","cashew","nut","legume","arachis"],                                     c:"legumes" },
+    { e:"🫛", n:"Pea Pod / Green Bean",    k:["pea","edamame","pod","legume","green","snap","long bean","string bean","green bean"],       c:"legumes" },
+    { e:"🌼", n:"Sesame / Flower Seed",    k:["sesame","flower","seed","oilseed","til","flaxseed"],                                        c:"legumes" },
+    { e:"🌰", n:"Chestnut / Walnut",       k:["chestnut","walnut","nut","seed","tree nut","macadamia"],                                    c:"legumes" },
+    /* ── Plants & Trees ── */
+    { e:"🌱", n:"Seedling / Sprout",       k:["seedling","sprout","young","plant","grow","start","germinate"],                             c:"plants" },
+    { e:"🌿", n:"Herb / Lemongrass",       k:["herb","leaf","plant","green","spice","mint","basil","lemongrass","turmeric","coriander","parsley","dill"], c:"plants" },
+    { e:"🍃", n:"Leaves",                  k:["leaf","leaves","green","plant","foliage","mulberry","moringa"],                             c:"plants" },
+    { e:"🪴", n:"Potted Plant / Nursery",  k:["plant","pot","indoor","houseplant","nursery","sapling"],                                    c:"plants" },
+    { e:"🌲", n:"Pine / Timber Tree",      k:["tree","pine","fir","conifer","forest","timber","eucalyptus","acacia"],                     c:"plants" },
+    { e:"🌳", n:"Fruit / Rubber Tree",     k:["tree","oak","maple","orchard","fruit tree","shade","rubber","rubber tree","jackfruit","durian tree","teak"], c:"plants" },
+    { e:"🌴", n:"Palm Tree",               k:["palm","coconut","oil palm","tropical","tree","date","areca","betel"],                       c:"plants" },
+    { e:"🌵", n:"Cactus / Dragon Fruit",   k:["cactus","succulent","desert","spiny","dragon fruit","pitaya"],                              c:"plants" },
+    { e:"🎋", n:"Bamboo / Sugarcane",      k:["bamboo","sugarcane","sugar cane","stalk","shoot","asian","grass","sugar"],                  c:"plants" },
+    { e:"🎍", n:"Bamboo Decoration",       k:["pine","bamboo","decoration","japanese","plant"],                                            c:"plants" },
+    { e:"🌸", n:"Blossom / Flower",        k:["flower","blossom","pink","spring","cherry blossom","jasmine"],                              c:"plants" },
+    { e:"🌺", n:"Hibiscus / Tropical Flower", k:["hibiscus","flower","tropical","red","roselle"],                                          c:"plants" },
+    { e:"🌻", n:"Sunflower",               k:["sunflower","flower","yellow","seed","oil","oilseed"],                                       c:"plants" },
+    { e:"🌷", n:"Tulip / Orchid",          k:["tulip","orchid","flower","pink","bulb","cut flower"],                                       c:"plants" },
+    { e:"🍀", n:"Clover / Cover Crop",     k:["clover","lucky","green","leaf","pasture","cover crop"],                                     c:"plants" },
+    { e:"🪸", n:"Algae / Seaweed",         k:["algae","seaweed","aquatic","marine","coral","spirulina"],                                   c:"plants" },
+    { e:"🌾", n:"Sugarcane / Grass",       k:["sugarcane","grass","reed","vetiver","bamboo grass"],                                        c:"plants" },
+    /* ── Other / Farm ── */
+    { e:"🍄", n:"Mushroom",               k:["mushroom","fungi","fungus","shiitake","oyster","king oyster","button"],                     c:"other" },
+    { e:"🚜", n:"Tractor",                k:["tractor","farm","agriculture","machine","vehicle"],                                         c:"other" },
+    { e:"🐄", n:"Cow / Dairy",            k:["cow","cattle","dairy","beef","livestock"],                                                  c:"other" },
+    { e:"🐓", n:"Chicken / Poultry",      k:["chicken","poultry","rooster","hen","egg"],                                                  c:"other" },
+    { e:"🐖", n:"Pig",                    k:["pig","pork","swine","hog","livestock"],                                                     c:"other" },
+    { e:"🐑", n:"Sheep / Wool",           k:["sheep","lamb","wool","livestock","mutton"],                                                  c:"other" },
+    { e:"🐐", n:"Goat",                   k:["goat","livestock","dairy","caprine"],                                                        c:"other" },
+    { e:"🐟", n:"Fish / Aquaculture",     k:["fish","aquaculture","pond","freshwater","tilapia","catfish","carp"],                         c:"other" },
+    { e:"🦐", n:"Shrimp / Prawn",         k:["shrimp","prawn","seafood","aquaculture","crustacean"],                                       c:"other" },
+    { e:"🦀", n:"Crab",                   k:["crab","seafood","aquaculture","crustacean"],                                                 c:"other" },
+    { e:"🦑", n:"Squid / Octopus",        k:["squid","octopus","seafood","cephalopod"],                                                    c:"other" },
+    { e:"🥚", n:"Egg",                    k:["egg","chicken","poultry","hatchery","duck egg"],                                             c:"other" },
+    { e:"🍯", n:"Honey / Beeswax",        k:["honey","bee","beeswax","sweet","apiculture"],                                                c:"other" },
+    { e:"💧", n:"Water / Irrigation",     k:["water","irrigation","rain","drop","moisture"],                                               c:"other" },
+    { e:"🌧️",  n:"Rain / Monsoon",        k:["rain","weather","water","cloud","monsoon","rainfall"],                                      c:"other" },
+    { e:"☀️",  n:"Sunlight",              k:["sun","sunshine","light","weather","solar"],                                                  c:"other" },
+    { e:"🌍", n:"Soil / Earth",           k:["earth","soil","ground","world","land","compost"],                                            c:"other" },
+    { e:"🧪", n:"Chemical / Pesticide",   k:["chemical","pesticide","fertilizer","treatment","lab","herbicide","fungicide"],               c:"other" },
+    { e:"🌡️",  n:"Temperature",           k:["temperature","thermometer","heat","cold","climate"],                                         c:"other" },
+    { e:"🫙", n:"Preserved / Fermented",  k:["jar","preserve","pickle","ferment","store","processed"],                                     c:"other" },
+  ];
+
+  const grid       = document.getElementById("emojiGrid");
+  const search     = document.getElementById("emojiSearch");
+  const searchClear= document.getElementById("emojiSearchClear");
+  const tabs       = document.getElementById("emojiTabs");
+  const empty      = document.getElementById("emojiEmpty");
+  const emptyQ     = document.getElementById("emojiEmptyQ");
+  const preview    = document.getElementById("emojiPreview");
+  const previewName= document.getElementById("emojiName");
+  const input      = document.getElementById("emojiInput");
+  const clearBtn   = document.getElementById("emojiClear");
+  const DEFAULT    = "🌱";
+
+  let activeCat = "all";
+  let activeQuery = "";
+
+  function render() {
+    const q = activeQuery.toLowerCase().trim();
+    const filtered = EMOJI_DATA.filter(d => {
+      const catOk = activeCat === "all" || d.c === activeCat;
+      if (!catOk) return false;
+      if (!q) return true;
+      return d.e === q
+        || d.n.toLowerCase().includes(q)
+        || d.k.some(kw => kw.includes(q));
+    });
+
+    // deduplicate by emoji character
+    const seen = new Set();
+    const unique = filtered.filter(d => { if (seen.has(d.e)) return false; seen.add(d.e); return true; });
+
+    grid.innerHTML = "";
+    unique.forEach(d => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "ep-btn" + (input.value === d.e ? " selected" : "");
+      btn.textContent = d.e;
+      btn.title = d.n;
+      btn.addEventListener("click", () => select(d.e, d.n));
+      grid.appendChild(btn);
+    });
+
+    const hasResults = unique.length > 0;
+    grid.style.display = hasResults ? "" : "none";
+    empty.classList.toggle("d-none", hasResults);
+    if (!hasResults) emptyQ.textContent = q;
+  }
+
+  function select(em, name) {
+    input.value = em;
+    preview.textContent = em;
+    preview.classList.add("has-emoji");
+    previewName.textContent = name || em;
+    clearBtn.style.display = "";
+    render(); // re-render to show selected state
+  }
+
+  // Init preview state
+  if (input.value) {
+    preview.classList.add("has-emoji");
+    const match = EMOJI_DATA.find(d => d.e === input.value);
+    if (match) previewName.textContent = match.n;
+  }
+
+  clearBtn.addEventListener("click", () => {
+    input.value = "";
+    preview.textContent = DEFAULT;
+    preview.classList.remove("has-emoji");
+    previewName.textContent = "No emoji selected";
+    clearBtn.style.display = "none";
+    render();
+  });
+
+  search.addEventListener("input", () => {
+    activeQuery = search.value;
+    searchClear.style.display = search.value ? "" : "none";
+    render();
+  });
+
+  searchClear.addEventListener("click", () => {
+    search.value = "";
+    activeQuery = "";
+    searchClear.style.display = "none";
+    search.focus();
+    render();
+  });
+
+  tabs.addEventListener("click", e => {
+    const tab = e.target.closest(".ep-tab");
+    if (!tab) return;
+    activeCat = tab.dataset.cat;
+    tabs.querySelectorAll(".ep-tab").forEach(t => t.classList.remove("active"));
+    tab.classList.add("active");
+    render();
+  });
+
+  render();
+})();
+</script>

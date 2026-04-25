@@ -6,6 +6,7 @@ class Crop(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False, unique=True)
     name_kh = db.Column(db.String(120))
+    emoji = db.Column(db.String(8))
     description = db.Column(db.Text)
     description_kh = db.Column(db.Text)
 

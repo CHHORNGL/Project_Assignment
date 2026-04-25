@@ -26,6 +26,7 @@ def create():
     if request.method == "POST":
         name = request.form.get("name")
         name_kh = request.form.get("name_kh")
+        emoji = (request.form.get("emoji") or "").strip()[:8] or None
         description = request.form.get("description")
         description_kh = request.form.get("description_kh")
 
@@ -36,6 +37,7 @@ def create():
         crop = Crop(
             name=name,
             name_kh=name_kh,
+            emoji=emoji,
             description=description,
             description_kh=description_kh
         )
@@ -46,6 +48,27 @@ def create():
         return redirect(url_for("admin_crop.index"))
 
     return render_template("admin/create_crop.html")
+
+
+@admin_crop_bp.route("/<int:id>/edit", methods=["GET", "POST"])
+@login_required
+@permission_required("manage_crops")
+def edit(id):
+    crop = Crop.query.get_or_404(id)
+    if request.method == "POST":
+        name = request.form.get("name", "").strip()
+        if not name:
+            flash("Crop name is required.", "danger")
+            return redirect(request.url)
+        crop.name = name
+        crop.name_kh = request.form.get("name_kh", "").strip() or None
+        crop.emoji = (request.form.get("emoji") or "").strip()[:8] or None
+        crop.description = request.form.get("description", "").strip() or None
+        crop.description_kh = request.form.get("description_kh", "").strip() or None
+        db.session.commit()
+        flash("Crop updated successfully.", "success")
+        return redirect(url_for("admin_crop.index"))
+    return render_template("admin/edit_crop.html", crop=crop)
 
 
 @admin_crop_bp.route("/<int:id>/delete")
