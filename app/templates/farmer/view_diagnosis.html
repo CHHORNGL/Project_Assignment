@@ -62,7 +62,7 @@
 
         <div class="card shadow-sm mt-3">
             <div class="card-header">
-                <span class="section-title">Expert Review</span>
+                <span class="section-title">{{ t("expert_review") }}</span>
             </div>
             <div class="card-body">
                 {% if diagnosis.status == "APPROVED" %}
@@ -70,17 +70,17 @@
                         <div class="text-success font-weight-bold mb-2">{{ t("status_approved") }}</div>
                         <div class="text-muted" style="white-space: pre-line;">{{ diagnosis.solution }}</div>
                     {% else %}
-                        <div class="text-muted">Expert approved this diagnosis without additional notes.</div>
+                        <div class="text-muted">{{ t("approved_no_notes") }}</div>
                     {% endif %}
                 {% elif diagnosis.status == "REJECTED" %}
                     <div class="text-danger font-weight-bold mb-2">{{ t("status_rejected") }}</div>
                     <div class="text-muted">
-                        This diagnosis was rejected by the expert. Please submit a new diagnosis or ask an expert directly.
+                        {{ t("rejected_by_expert") }}
                     </div>
                 {% elif diagnosis.status == "AUTO" %}
-                    <div class="text-muted">This is an automatic diagnosis. Ask an expert if you want human review.</div>
+                    <div class="text-muted">{{ t("auto_diagnosis_ask_human") }}</div>
                 {% else %}
-                    <div class="text-muted">Waiting for expert review...</div>
+                    <div class="text-muted">{{ t("waiting_expert_review") }}</div>
                 {% endif %}
             </div>
         </div>

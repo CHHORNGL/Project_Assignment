@@ -7,7 +7,7 @@ from sqlalchemy.orm import joinedload
 
 from app.models.disease import Disease
 from app.models.rule import Rule
-from app.utils.i18n import normalize_display_text
+from app.utils.i18n import normalize_display_text, get_current_language
 
 
 CATEGORY_KEYWORDS = {
@@ -144,10 +144,17 @@ def _symptom_entry(symptom) -> Optional[dict]:
             aliases.append(cleaned)
     if not aliases:
         return None
-    display_name = normalize_display_text(
-        (getattr(symptom, "name", None) or getattr(symptom, "name_kh", None) or aliases[0]).strip(),
-        lang="km",
-    )
+
+    lang = get_current_language()
+    display_name = ""
+    if lang == "km":
+        display_name = getattr(symptom, "name_kh", None)
+    if not display_name:
+        display_name = getattr(symptom, "name", None)
+    if not display_name:
+        display_name = aliases[0]
+
+    display_name = normalize_display_text(display_name.strip(), lang=lang)
     return {
         "canonical": aliases[0],
         "aliases": aliases,

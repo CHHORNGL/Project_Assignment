@@ -5,6 +5,7 @@
 @layer base {
   #diagnosis-wizard-root {
     min-height: 100%;
+    @apply text-slate-700 dark:text-slate-300;
   }
 
   #diagnosis-wizard-root button:disabled,
@@ -17,11 +18,11 @@
 
 @layer components {
   .diag-shell {
-    @apply relative overflow-hidden rounded-[32px] border border-slate-200/80 bg-slate-50 p-4 shadow-panel md:p-6;
+    @apply relative overflow-hidden rounded-[32px] border border-slate-200/80 bg-slate-50 p-4 shadow-panel md:p-6 dark:border-slate-800/60 dark:bg-slate-900/20;
   }
 
   .diag-panel {
-    @apply rounded-[28px] border border-slate-200 bg-white shadow-panel;
+    @apply rounded-[28px] border border-slate-200 bg-white shadow-panel dark:border-slate-800/80 dark:bg-slate-900;
   }
 
   .diag-step-card {
@@ -29,42 +30,42 @@
   }
 
   .diag-choice-card {
-    @apply relative flex h-full w-full flex-col rounded-2xl border border-slate-200 bg-white p-4 text-left transition-all duration-200 hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/30;
+    @apply relative flex h-full w-full flex-col rounded-2xl border border-slate-200 bg-white p-4 text-left transition-all duration-200 hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/30 dark:border-slate-800/80 dark:bg-slate-900/50 dark:hover:border-emerald-500/50 dark:focus:ring-emerald-500/20;
   }
 
   .diag-choice-card-selected {
-    @apply border-emerald-500 bg-emerald-50 shadow-lg shadow-emerald-100/80;
+    @apply border-emerald-500 bg-emerald-50 shadow-lg shadow-emerald-100/80 dark:border-emerald-500 dark:bg-emerald-950/20 dark:shadow-emerald-950/40;
   }
 
   .diag-symptom-card {
-    @apply relative flex h-full w-full flex-col rounded-2xl border border-slate-200 bg-white p-4 text-left transition-all duration-200 hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-500/30;
+    @apply relative flex h-full w-full flex-col rounded-2xl border border-slate-200 bg-white p-4 text-left transition-all duration-200 hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-500/30 dark:border-slate-800/80 dark:bg-slate-900/50 dark:hover:border-emerald-500/50 dark:focus:ring-emerald-500/20;
   }
 
   .diag-symptom-card-selected {
-    @apply border-emerald-500 bg-emerald-50 shadow-md shadow-emerald-100/80;
+    @apply border-emerald-500 bg-emerald-50 shadow-md shadow-emerald-100/80 dark:border-emerald-500 dark:bg-emerald-950/20 dark:shadow-emerald-950/40;
   }
 
   .diag-chip {
-    @apply inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700;
+    @apply inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 dark:border-emerald-900/30 dark:bg-emerald-950/40 dark:text-emerald-400;
   }
 
   .diag-input {
-    @apply w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10;
+    @apply w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition-all duration-200 placeholder:text-slate-400 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:placeholder:text-slate-600 dark:focus:border-emerald-500 dark:focus:ring-emerald-500/5;
   }
 
   .diag-upload-input {
-    @apply block w-full rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-600 file:mr-4 file:rounded-xl file:border-0 file:bg-emerald-600 file:px-4 file:py-2.5 file:font-semibold file:text-white transition-all duration-200 hover:border-emerald-300 hover:bg-emerald-50/60 hover:file:bg-emerald-700;
+    @apply block w-full rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-600 file:mr-4 file:rounded-xl file:border-0 file:bg-emerald-600 file:px-4 file:py-2.5 file:font-semibold file:text-white transition-all duration-200 hover:border-emerald-300 hover:bg-emerald-50/60 hover:file:bg-emerald-700 dark:border-slate-800 dark:bg-slate-900/30 dark:text-slate-400 dark:hover:border-emerald-500/40 dark:hover:bg-emerald-950/10;
   }
 
   .diag-secondary-button {
-    @apply inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition-all duration-200 hover:border-slate-400 hover:bg-slate-100;
+    @apply inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition-all duration-200 hover:border-slate-400 hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300 dark:hover:border-slate-700 dark:hover:bg-slate-900;
   }
 
   .diag-primary-button {
-    @apply inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 hover:bg-emerald-700;
+    @apply inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-700;
   }
 
   .diag-ghost-button {
-    @apply inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold text-slate-600 transition-all duration-200 hover:bg-slate-100 hover:text-slate-900;
+    @apply inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold text-slate-600 transition-all duration-200 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-slate-200;
   }
 }

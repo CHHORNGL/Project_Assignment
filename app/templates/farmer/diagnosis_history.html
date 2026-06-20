@@ -1,5 +1,5 @@
 {% extends "layouts/farmer_shell.html" %}
-{% block title %}All Diagnoses{% endblock %}
+{% block title %}{{ t("diagnoses_label") }}{% endblock %}
 
 {% block content %}
 <div class="farmer-hero mb-4">
@@ -24,10 +24,10 @@
             <div class="diag-hist-toolbar">
                 <div class="diag-hist-search-wrap">
                     <i class="fas fa-search diag-hist-search-icon"></i>
-                    <input type="search" class="form-control form-control-sm diag-hist-search" id="history-search" placeholder="Search crop, disease…">
+                    <input type="search" class="form-control form-control-sm diag-hist-search" id="history-search" placeholder="{{ t('search_crop_disease_placeholder') }}">
                 </div>
                 <select class="form-control form-control-sm diag-hist-filter" id="history-status">
-                    <option value="">All statuses</option>
+                    <option value="">{{ t("all_statuses") }}</option>
                     <option value="AUTO">{{ t("status_auto") }}</option>
                     <option value="PENDING">{{ t("status_pending") }}</option>
                     <option value="APPROVED">{{ t("status_approved") }}</option>
@@ -81,7 +81,7 @@
                         <span class="badge badge-secondary diag-hist-badge">{{ d.status }}</span>
                     {% endif %}
                     {% if conf_pct is not none %}
-                    <div class="diag-hist-conf">{{ conf_pct }}% match</div>
+                    <div class="diag-hist-conf">{{ t("percent_match", percent=conf_pct) }}</div>
                     {% endif %}
                     <i class="fas fa-chevron-right diag-hist-chevron"></i>
                 </div>
@@ -89,15 +89,15 @@
             {% endfor %}
         </div>
         <div class="text-center text-muted py-3 d-none" id="history-empty">
-            No matching diagnoses.
+            {{ t("no_matching_diagnoses") }}
         </div>
         {% else %}
         <div class="diag-hist-empty">
             <div class="diag-hist-empty-icon"><i class="fas fa-seedling"></i></div>
-            <div class="diag-hist-empty-title">No diagnoses yet</div>
-            <div class="diag-hist-empty-sub">Start by running your first crop diagnosis.</div>
+            <div class="diag-hist-empty-title">{{ t("no_diagnoses_yet") }}</div>
+            <div class="diag-hist-empty-sub">{{ t("start_first_diagnosis") }}</div>
             <a href="{{ url_for('farmer.diagnose_rule_based') }}" class="btn btn-sm btn-success mt-3">
-                <i class="fas fa-plus mr-1"></i>New Diagnosis
+                <i class="fas fa-plus mr-1"></i>{{ t("new_diagnosis") }}
             </a>
         </div>
         {% endif %}

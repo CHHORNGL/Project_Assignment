@@ -55,9 +55,10 @@ function getSymptomsForCrop(cropId, symptomsByCrop) {
   source.forEach((item) => {
     const id = String(item?.id || "").trim();
     const name = String(item?.name || "").trim();
+    const name_kh = String(item?.name_kh || "").trim();
     if (!id || !name || seen.has(id)) return;
     seen.add(id);
-    rows.push({ id, name });
+    rows.push({ id, name, name_kh });
   });
 
   return rows.sort((left, right) => left.name.localeCompare(right.name));
@@ -70,7 +71,8 @@ function doesCropMatchContext(crop, domainId, subcategoryId) {
   return matchDomain && matchSubcategory;
 }
 
-function CropCard({ crop, selected, onSelect, subtitle }) {
+function CropCard({ crop, selected, onSelect, subtitle, isKhmer, selectedText, chooseCropText, generalText }) {
+  const cropName = isKhmer && crop.name_kh ? crop.name_kh : crop.name;
   return (
     <button
       type="button"
@@ -80,26 +82,26 @@ function CropCard({ crop, selected, onSelect, subtitle }) {
     >
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="font-display text-lg font-bold text-slate-900">{crop.name}</p>
-          <p className="mt-1 text-sm text-slate-500">{subtitle}</p>
+          <p className="font-display text-lg font-bold text-slate-900 dark:text-white">{cropName}</p>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{subtitle}</p>
         </div>
         <div
           className={cn(
             "flex h-10 w-10 items-center justify-center rounded-2xl border text-sm transition-all duration-200",
             selected
               ? "border-emerald-600 bg-emerald-600 text-white"
-              : "border-slate-200 bg-slate-50 text-slate-400",
+              : "border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-slate-400 dark:text-slate-500",
           )}
         >
           <i className={`fas ${selected ? "fa-check" : "fa-seedling"}`} aria-hidden="true" />
         </div>
       </div>
       <div className="mt-5 flex items-center justify-between">
-        <span className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
-          {titleFromSlug(crop.subcategoryId, "General")}
+        <span className="inline-flex rounded-full bg-slate-100 dark:bg-slate-800/80 px-3 py-1 text-xs font-semibold text-slate-600 dark:text-slate-400">
+          {titleFromSlug(crop.subcategoryId, generalText)}
         </span>
-        <span className="text-xs font-semibold text-emerald-700">
-          {selected ? "Selected" : "Choose crop"}
+        <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+          {selected ? selectedText : chooseCropText}
         </span>
       </div>
     </button>
@@ -116,15 +118,15 @@ function ContextCard({ label, description, selected, onSelect }) {
     >
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-base font-semibold text-slate-900">{label}</p>
-          <p className="mt-1 text-sm text-slate-500">{description}</p>
+          <p className="text-base font-semibold text-slate-900 dark:text-white">{label}</p>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{description}</p>
         </div>
         <div
           className={cn(
             "flex h-9 w-9 items-center justify-center rounded-xl border text-sm transition-all duration-200",
             selected
               ? "border-emerald-600 bg-emerald-600 text-white"
-              : "border-slate-200 bg-slate-50 text-slate-400",
+              : "border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-slate-400 dark:text-slate-500",
           )}
         >
           <i className={`fas ${selected ? "fa-check" : "fa-leaf"}`} aria-hidden="true" />
@@ -134,18 +136,18 @@ function ContextCard({ label, description, selected, onSelect }) {
   );
 }
 
-function ReviewList({ title, items, emptyText, icon }) {
+function ReviewList({ title, items, emptyText, icon, reviewText }) {
   return (
-    <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
+    <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 p-5">
       <div className="flex items-center gap-3">
-        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700">
+        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400">
           <i className={`fas ${icon}`} aria-hidden="true" />
         </div>
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
-            Review
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">
+            {reviewText}
           </p>
-          <h3 className="font-display text-lg font-bold text-slate-900">{title}</h3>
+          <h3 className="font-display text-lg font-bold text-slate-900 dark:text-white">{title}</h3>
         </div>
       </div>
       {items.length ? (
@@ -157,7 +159,7 @@ function ReviewList({ title, items, emptyText, icon }) {
           ))}
         </div>
       ) : (
-        <p className="mt-4 text-sm text-slate-500">{emptyText}</p>
+        <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">{emptyText}</p>
       )}
     </div>
   );
@@ -215,23 +217,23 @@ export default function DiagnosisWizardPage({ bootstrap }) {
   const steps = [
     {
       id: "crop",
-      label: "Select Crop Type",
-      description: "Choose the crop you want to diagnose.",
+      label: label("stepCropLabel", "Select Crop Type"),
+      description: label("stepCropDesc", "Choose the crop you want to diagnose."),
     },
     {
       id: "context",
-      label: "Select Category / Growth Stage",
-      description: "Refine the diagnosis context before symptoms are shown.",
+      label: label("stepContextLabel", "Select Category / Growth Stage"),
+      description: label("stepContextDesc", "Refine the diagnosis context before symptoms are shown."),
     },
     {
       id: "symptoms",
-      label: "Select Symptoms",
-      description: "Pick only the symptoms that match what you observe.",
+      label: label("stepSymptomsLabel", "Select Symptoms"),
+      description: label("stepSymptomsDesc", "Pick only the symptoms that match what you observe."),
     },
     {
       id: "review",
-      label: "Review + Submit",
-      description: "Review the case, add notes or an image, and submit.",
+      label: label("stepReviewLabel", "Review + Submit"),
+      description: label("stepReviewDesc", "Review the case, add notes or an image, and submit."),
     },
   ];
 
@@ -254,15 +256,23 @@ export default function DiagnosisWizardPage({ bootstrap }) {
   const allVisibleSymptoms = currentSymptoms.filter((symptom) => {
     const keyword = normalizeText(deferredSymptomSearch);
     if (!keyword) return true;
-    return normalizeText(symptom.name).includes(keyword);
+    const name = isKhmer && symptom.name_kh ? symptom.name_kh : symptom.name;
+    return normalizeText(name).includes(keyword);
   });
-  const currentSymptomLookup = new Map(currentSymptoms.map((item) => [String(item.id), item.name]));
+  const currentSymptomLookup = new Map(
+    currentSymptoms.map((item) => [String(item.id), isKhmer && item.name_kh ? item.name_kh : item.name])
+  );
   const fallbackSymptomLookup = new Map(
-    getSymptomsForCrop(0, symptomsByCrop).map((item) => [String(item.id), item.name]),
+    getSymptomsForCrop(0, symptomsByCrop).map((item) => [
+      String(item.id),
+      isKhmer && item.name_kh ? item.name_kh : item.name,
+    ])
   );
 
   const selectedCrop = crops.find((item) => String(item.id) === String(selectedCropId)) || null;
-  const selectedCropLabel = selectedCrop?.name || label("selectCrop", "Select crop");
+  const selectedCropLabel = selectedCrop
+    ? (isKhmer && selectedCrop.name_kh ? selectedCrop.name_kh : selectedCrop.name)
+    : label("selectCrop", "Select crop");
   const selectedTypeLabel = selectedSubcategoryId
     ? pickLabel(
       subcategories.find((item) => String(item.id) === String(selectedSubcategoryId)),
@@ -725,40 +735,40 @@ export default function DiagnosisWizardPage({ bootstrap }) {
   return (
     <div className={cn("mx-auto max-w-7xl font-body", isKhmer && "font-khmer")}>
       <div className="diag-shell">
-        <div className="pointer-events-none absolute -left-16 top-8 h-40 w-40 rounded-full bg-emerald-200/60 blur-3xl" />
-        <div className="pointer-events-none absolute right-0 top-0 h-56 w-56 rounded-full bg-lime-100/80 blur-3xl" />
+        <div className="pointer-events-none absolute -left-16 top-8 h-40 w-40 rounded-full bg-emerald-200/60 dark:bg-emerald-950/30 dark:bg-emerald-950/30 blur-3xl" />
+        <div className="pointer-events-none absolute right-0 top-0 h-56 w-56 rounded-full bg-lime-100/80 dark:bg-lime-950/20 dark:bg-lime-950/20 blur-3xl" />
 
         <div className="diag-panel relative overflow-hidden bg-gradient-to-br from-emerald-600 via-emerald-600 to-green-700 px-5 py-6 text-white md:px-7 md:py-7">
           <div className="absolute inset-y-0 right-0 hidden w-1/3 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.25),_transparent_60%)] md:block" />
           <div className="relative flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <div className="max-w-3xl">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="rounded-full border border-white/25 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em]">
-                  AI-Powered Expert System
+                <span className="rounded-full border border-white/25 bg-white dark:bg-slate-950/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em]">
+                  {label("aiPoweredSystem", "AI-Powered Expert System")}
                 </span>
                 {scanMode ? (
-                  <span className="rounded-full border border-white/25 bg-white/10 px-3 py-1 text-xs font-semibold">
-                    {instantScanMode ? "Instant scan mode" : "Scan-assisted mode"}
+                  <span className="rounded-full border border-white/25 bg-white dark:bg-slate-950/10 px-3 py-1 text-xs font-semibold">
+                    {instantScanMode ? label("instantScanModeLabel", "Instant scan mode") : label("scanAssistedModeLabel", "Scan-assisted mode")}
                   </span>
                 ) : null}
               </div>
               <h1 className="mt-4 font-display text-3xl font-bold leading-tight md:text-4xl">
-                {bootstrap.pageTitle || "Guided crop diagnosis"}
+                {bootstrap.pageTitle || label("pageTitle", "Guided crop diagnosis")}
               </h1>
               <p className="mt-3 max-w-2xl text-sm leading-7 text-emerald-50/90 md:text-base">
-                {bootstrap.pageSubtitle || "Move step by step through crop selection, context, symptoms, and review for a cleaner expert system workflow."}
+                {bootstrap.pageSubtitle || label("guidedDiagnosisDescFallback", "Move step by step through crop selection, context, symptoms, and review for a cleaner expert system workflow.")}
               </p>
             </div>
 
             <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
-              <a href={bootstrap.dashboardUrl} className="diag-secondary-button border-white/20 bg-white/10 text-white hover:border-white/35 hover:bg-white/15 hover:text-white">
+              <a href={bootstrap.dashboardUrl} className="diag-secondary-button border-white/20 bg-white dark:bg-slate-950/10 text-white hover:border-white/35 hover:bg-white dark:bg-slate-950/15 hover:text-white">
                 <i className="fas fa-arrow-left" aria-hidden="true" />
                 {label("back", "Back")}
               </a>
               {bootstrap.chatUrl ? (
-                <a href={bootstrap.chatUrl} className="diag-secondary-button border-white/20 bg-white text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800">
+                <a href={bootstrap.chatUrl} className="diag-secondary-button border-white/20 bg-white dark:bg-slate-950 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:bg-emerald-950/20 hover:text-emerald-800">
                   <i className="fas fa-user-md" aria-hidden="true" />
-                  Ask Expert
+                  {label("askExpert", "Ask Expert")}
                 </a>
               ) : null}
             </div>
@@ -787,14 +797,24 @@ export default function DiagnosisWizardPage({ bootstrap }) {
             <input key={symptomId} type="hidden" name="symptoms" value={symptomId} />
           ))}
 
-          <Stepper steps={steps} currentStep={currentStep} />
+          <Stepper
+            steps={steps}
+            currentStep={currentStep}
+            title={label("guidedDiagnosis", "Guided Diagnosis")}
+            stepProgressText={formatTemplate(
+              label("stepProgress", "Step {current} of {total}"),
+              { current: currentStep, total: steps.length },
+              "Step {current} of {total}",
+            )}
+            hint={label("completeEachStep", "Complete each step to continue")}
+          />
 
           {formError ? (
-            <div className="diag-panel border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700 md:px-6">
+            <div className="diag-panel border-red-200 dark:border-red-900/40 bg-red-50 dark:bg-red-950/20 px-5 py-4 text-sm text-red-700 dark:text-red-400 md:px-6">
               <div className="flex items-start gap-3">
-                <i className="fas fa-exclamation-circle mt-0.5 text-red-500" aria-hidden="true" />
+                <i className="fas fa-exclamation-circle mt-0.5 text-red-500 dark:text-red-400" aria-hidden="true" />
                 <div>
-                  <p className="font-semibold">We need one quick fix before continuing.</p>
+                  <p className="font-semibold">{label("formErrorTitle", "We need one quick fix before continuing.")}</p>
                   <p className="mt-1">{formError}</p>
                 </div>
               </div>
@@ -803,33 +823,33 @@ export default function DiagnosisWizardPage({ bootstrap }) {
 
           {currentStep === 1 ? (
             <StepCard
-              eyebrow="Step 1"
-              title="Select Crop Type"
-              description="Pick the crop you want the expert system to evaluate. Crop cards replace the long select field and keep the flow focused."
+              eyebrow={label("step1", "Step 1")}
+              title={label("stepCropLabel", "Select Crop Type")}
+              description={label("stepCropDesc", "Pick the crop you want the expert system to evaluate. Crop cards replace the long select field and keep the flow focused.")}
               aside={
-                <div className="rounded-3xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-                  <div className="font-semibold">Current context</div>
-                  <div className="mt-1">{selectedSubcategoryId ? selectedTypeLabel : "All crop groups"}</div>
+                <div className="rounded-3xl border border-emerald-100 dark:border-emerald-950/40 bg-emerald-50 dark:bg-emerald-950/20 px-4 py-3 text-sm text-emerald-700 dark:text-emerald-400">
+                  <div className="font-semibold">{label("currentContext", "Current context")}</div>
+                  <div className="mt-1">{selectedSubcategoryId ? selectedTypeLabel : label("allCropGroups", "All crop groups")}</div>
                 </div>
               }
             >
               <div className="space-y-5">
                 <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
-                  <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
-                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
-                      Selection
+                  <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">
+                      {label("selection", "Selection")}
                     </p>
                     <div className="mt-3 flex flex-wrap gap-2">
-                      <span className="diag-chip">{selectedCrop ? selectedCrop.name : "No crop selected yet"}</span>
-                      <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700">
+                      <span className="diag-chip">{selectedCrop ? (isKhmer && selectedCrop.name_kh ? selectedCrop.name_kh : selectedCrop.name) : label("noCropSelectedYet", "No crop selected yet")}</span>
+                      <span className="inline-flex items-center rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 py-1 text-xs font-semibold text-slate-700 dark:text-slate-300">
                         {selectedTypeLabel}
                       </span>
                     </div>
                   </div>
 
-                  <div className="rounded-3xl border border-slate-200 bg-white p-4">
-                    <label htmlFor="crop-search" className="text-sm font-semibold text-slate-900">
-                      Search crops
+                  <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4">
+                    <label htmlFor="crop-search" className="text-sm font-semibold text-slate-900 dark:text-white">
+                      {label("searchCrops", "Search crops")}
                     </label>
                     <input
                       id="crop-search"
@@ -837,10 +857,10 @@ export default function DiagnosisWizardPage({ bootstrap }) {
                       value={cropSearch}
                       onChange={(event) => setCropSearch(event.target.value)}
                       className="diag-input mt-3"
-                      placeholder="Search by crop name"
+                      placeholder={label("searchByCropName", "Search by crop name")}
                     />
-                    <p className="mt-3 text-xs leading-6 text-slate-500">
-                      Showing crops that match the current category filter.
+                    <p className="mt-3 text-xs leading-6 text-slate-500 dark:text-slate-400">
+                      {label("showingMatchingCrops", "Showing crops that match the current category filter.")}
                     </p>
                   </div>
                 </div>
@@ -852,10 +872,14 @@ export default function DiagnosisWizardPage({ bootstrap }) {
                         key={crop.id}
                         crop={crop}
                         selected={String(crop.id) === String(selectedCropId)}
+                        isKhmer={isKhmer}
+                        selectedText={label("selectedText", "Selected")}
+                        chooseCropText={label("chooseCropText", "Choose crop")}
+                        generalText={label("general", "General")}
                         subtitle={pickLabel(
                           subcategories.find((item) => String(item.id) === String(crop.subcategoryId)),
                           isKhmer,
-                          titleFromSlug(crop.subcategoryId, "General crop"),
+                          titleFromSlug(crop.subcategoryId, label("generalCrop", "General crop")),
                         )}
                         onSelect={() => {
                           setSelectedCropId(String(crop.id));
@@ -865,15 +889,15 @@ export default function DiagnosisWizardPage({ bootstrap }) {
                     ))}
                   </div>
                 ) : (
-                  <div className="rounded-3xl border border-dashed border-slate-300 bg-white px-5 py-8 text-center">
-                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
+                  <div className="rounded-3xl border border-dashed border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-5 py-8 text-center">
+                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 dark:bg-slate-800/80 text-slate-400 dark:text-slate-500">
                       <i className="fas fa-seedling text-xl" aria-hidden="true" />
                     </div>
-                    <h3 className="mt-4 font-display text-xl font-bold text-slate-900">
-                      No crops match this filter
+                    <h3 className="mt-4 font-display text-xl font-bold text-slate-900 dark:text-white">
+                      {label("noCropsMatch", "No crops match this filter")}
                     </h3>
-                    <p className="mx-auto mt-2 max-w-xl text-sm leading-7 text-slate-500">
-                      Adjust the category in Step 2 or clear your crop search to see more options.
+                    <p className="mx-auto mt-2 max-w-xl text-sm leading-7 text-slate-500 dark:text-slate-400">
+                      {label("noCropsMatchDesc", "Adjust the category in Step 2 or clear your crop search to see more options.")}
                     </p>
                   </div>
                 )}
@@ -883,31 +907,31 @@ export default function DiagnosisWizardPage({ bootstrap }) {
 
           {currentStep === 2 ? (
             <StepCard
-              eyebrow="Step 2"
-              title="Select Category / Growth Stage"
-              description="Keep the diagnosis context aligned before symptoms are shown. This step filters the crop list and keeps the symptom set relevant."
+              eyrow={label("step2", "Step 2")}
+              title={label("stepContextLabel", "Select Category / Growth Stage")}
+              description={label("stepContextDesc", "Keep the diagnosis context aligned before symptoms are shown. This step filters the crop list and keeps the symptom set relevant.")}
               aside={
-                <div className="rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-                  <div className="font-semibold text-slate-900">Selected crop</div>
+                <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 px-4 py-3 text-sm text-slate-600 dark:text-slate-400">
+                  <div className="font-semibold text-slate-900 dark:text-white">{label("selectedCrop", "Selected crop")}</div>
                   <div className="mt-1">{selectedCropLabel}</div>
                 </div>
               }
             >
               <div className="space-y-6">
                 <div>
-                  <h3 className="text-base font-semibold text-slate-900">
+                  <h3 className="text-base font-semibold text-slate-900 dark:text-white">
                     {label("category", "Category")}
                   </h3>
-                  <p className="mt-1 text-sm text-slate-500">
-                    Choose the broader diagnosis category available in the current data model.
+                  <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                    {label("categoryDesc", "Used to keep crop and diagnosis context aligned.")}
                   </p>
 
                   <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                     {(agriDomains.length ? agriDomains : [{ id: "", label: label("general", "General") }]).map((domain) => (
                       <ContextCard
                         key={domain.id || "general-domain"}
-                        label={pickLabel(domain, isKhmer, "General")}
-                        description="Used to keep crop and diagnosis context aligned."
+                        label={pickLabel(domain, isKhmer, label("general", "General"))}
+                        description={label("categoryDesc", "Used to keep crop and diagnosis context aligned.")}
                         selected={String(domain.id || "") === String(selectedDomainId || "")}
                         onSelect={() => {
                           setSelectedDomainId(String(domain.id || ""));
@@ -919,15 +943,15 @@ export default function DiagnosisWizardPage({ bootstrap }) {
                 </div>
 
                 <div>
-                  <h3 className="text-base font-semibold text-slate-900">{label("type", "Type")}</h3>
-                  <p className="mt-1 text-sm text-slate-500">
-                    Choose the crop group or stage context that best matches this case.
+                  <h3 className="text-base font-semibold text-slate-900 dark:text-white">{label("type", "Type")}</h3>
+                  <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                    {label("subcategoryDesc", "Filters crop options and keeps symptoms targeted.")}
                   </p>
 
                   <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                     <ContextCard
                       label={label("general", "General")}
-                      description="Keep the crop list open across all available groups."
+                      description={label("generalTypeDesc", "Keep the crop list open across all available groups.")}
                       selected={!selectedSubcategoryId}
                       onSelect={() => {
                         setSelectedSubcategoryId("");
@@ -937,8 +961,8 @@ export default function DiagnosisWizardPage({ bootstrap }) {
                     {subcategories.map((subcategory) => (
                       <ContextCard
                         key={subcategory.id}
-                        label={pickLabel(subcategory, isKhmer, titleFromSlug(subcategory.id))}
-                        description="Filters crop options and keeps symptoms targeted."
+                        label={pickLabel(subcategory, isKhmer, titleFromSlug(subcategory.id, label("general", "General")))}
+                        description={label("subcategoryDesc", "Filters crop options and keeps symptoms targeted.")}
                         selected={String(subcategory.id || "") === String(selectedSubcategoryId || "")}
                         onSelect={() => {
                           setSelectedSubcategoryId(String(subcategory.id || ""));
@@ -950,15 +974,15 @@ export default function DiagnosisWizardPage({ bootstrap }) {
                 </div>
 
                 {contextNotice ? (
-                  <div className="rounded-3xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-800">
+                  <div className="rounded-3xl border border-amber-200 dark:border-amber-900/40 bg-amber-50 dark:bg-amber-950/20 px-5 py-4 text-sm text-amber-800 dark:text-amber-400">
                     <div className="flex items-start gap-3">
-                      <i className="fas fa-info-circle mt-0.5 text-amber-500" aria-hidden="true" />
+                      <i className="fas fa-info-circle mt-0.5 text-amber-500 dark:text-amber-400" aria-hidden="true" />
                       <p>{contextNotice}</p>
                     </div>
                   </div>
                 ) : (
-                  <div className="rounded-3xl border border-slate-200 bg-slate-50 px-5 py-4 text-sm text-slate-600">
-                    Symptoms in the next step will be based on the selected crop and the context confirmed here.
+                  <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 px-5 py-4 text-sm text-slate-600 dark:text-slate-400">
+                    {label("contextStepHint", "Symptoms in the next step will be based on the selected crop and the context confirmed here.")}
                   </div>
                 )}
               </div>
@@ -967,11 +991,11 @@ export default function DiagnosisWizardPage({ bootstrap }) {
 
           {currentStep === 3 ? (
             <StepCard
-              eyebrow="Step 3"
-              title="Select Symptoms"
-              description="Choose the symptoms you actually see in the field. Each symptom behaves like a selectable card for faster expert-system input."
+              eyebrow={label("step3", "Step 3")}
+              title={label("stepSymptomsLabel", "Select Symptoms")}
+              description={label("stepSymptomsDesc", "Choose the symptoms you actually see in the field. Each symptom behaves like a selectable card for faster expert-system input.")}
               aside={
-                <div className="rounded-3xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                <div className="rounded-3xl border border-emerald-100 bg-emerald-50 dark:bg-emerald-950/20 px-4 py-3 text-sm text-emerald-700 dark:text-emerald-400">
                   <div className="font-semibold">
                     {formatTemplate(
                       label("selectedCount", "{count} selected"),
@@ -985,8 +1009,8 @@ export default function DiagnosisWizardPage({ bootstrap }) {
             >
               <div className="space-y-5">
                 <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
-                  <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
-                    <label htmlFor="symptom-search" className="text-sm font-semibold text-slate-900">
+                  <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 p-4">
+                    <label htmlFor="symptom-search" className="text-sm font-semibold text-slate-900 dark:text-white">
                       {label("searchSymptom", "Search symptom")}
                     </label>
                     <input
@@ -995,15 +1019,15 @@ export default function DiagnosisWizardPage({ bootstrap }) {
                       value={symptomSearch}
                       onChange={(event) => setSymptomSearch(event.target.value)}
                       className="diag-input mt-3"
-                      placeholder="Search relevant symptoms"
+                      placeholder={label("searchSymptom", "Search symptom")}
                     />
                   </div>
 
-                  <div className="rounded-3xl border border-slate-200 bg-white p-4">
-                    <p className="text-sm font-semibold text-slate-900">Selected summary</p>
-                    <p className="mt-2 text-sm leading-7 text-slate-500">
+                  <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4">
+                    <p className="text-sm font-semibold text-slate-900 dark:text-white">{label("selectedSummary", "Selected summary")}</p>
+                    <p className="mt-2 text-sm leading-7 text-slate-500 dark:text-slate-400">
                       {selectedSymptomNames.length
-                        ? selectedSymptomNames.slice(0, 5).join(", ")
+                         ? selectedSymptomNames.slice(0, 5).join(", ")
                         : label("noManualSelectionYet", "No symptoms selected yet.")}
                     </p>
                   </div>
@@ -1017,23 +1041,26 @@ export default function DiagnosisWizardPage({ bootstrap }) {
                         symptom={symptom}
                         selected={selectedSymptoms.includes(String(symptom.id))}
                         onToggle={() => toggleSymptom(symptom.id)}
+                        isKhmer={isKhmer}
+                        selectedText={label("symptomSelectedHint", "Included in the diagnosis review.")}
+                        unselectedText={label("symptomUnselectedHint", "Click to include this observed symptom.")}
                       />
                     ))}
                   </div>
                 ) : (
-                  <div className="rounded-3xl border border-dashed border-slate-300 bg-white px-5 py-10 text-center">
-                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
+                  <div className="rounded-3xl border border-dashed border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-5 py-10 text-center">
+                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 dark:bg-slate-800/80 text-slate-400 dark:text-slate-500">
                       <i className="fas fa-stethoscope text-xl" aria-hidden="true" />
                     </div>
-                    <h3 className="mt-4 font-display text-xl font-bold text-slate-900">
+                    <h3 className="mt-4 font-display text-xl font-bold text-slate-900 dark:text-white">
                       {currentSymptoms.length
                         ? label("noSymptomsMatch", "No symptoms match your search.")
                         : label("noSymptoms", "No symptoms are available for this crop.")}
                     </h3>
-                    <p className="mx-auto mt-2 max-w-xl text-sm leading-7 text-slate-500">
+                    <p className="mx-auto mt-2 max-w-xl text-sm leading-7 text-slate-500 dark:text-slate-400">
                       {currentSymptoms.length
-                        ? "Try a different keyword or clear the search field."
-                        : "Go back and choose another crop or category to load a different symptom set."}
+                        ? label("noSymptomsMatchDesc", "Try a different keyword or clear the search field.")
+                        : label("noSymptomsDesc", "Go back and choose another crop or category to load a different symptom set.")}
                     </p>
                   </div>
                 )}
@@ -1044,47 +1071,49 @@ export default function DiagnosisWizardPage({ bootstrap }) {
           {currentStep === 4 ? (
             <div className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(360px,0.9fr)]">
               <StepCard
-                eyebrow="Step 4"
-                title="Review + Submit"
-                description="Review the diagnosis context, confirm the symptoms, and send the case for rule-based analysis."
+                eyebrow={label("step4", "Step 4")}
+                title={label("stepReviewLabel", "Review + Submit")}
+                description={label("stepReviewDesc", "Review the diagnosis context, confirm the symptoms, and send the case for rule-based analysis.")}
               >
                 <div className="space-y-5">
                   <ReviewList
-                    title="Selection"
+                    title={label("selection", "Selection")}
                     icon="fa-seedling"
-                    emptyText="Complete the earlier steps to review the crop context here."
+                    emptyText={label("reviewSelectionEmpty", "Complete the earlier steps to review the crop context here.")}
+                    reviewText={label("review", "Review")}
                     items={[
-                      selectedCrop ? `Crop: ${selectedCrop.name}` : "",
+                      selectedCrop ? `${label("cropColon", "Crop:")} ${isKhmer && selectedCrop.name_kh ? selectedCrop.name_kh : selectedCrop.name}` : "",
                       selectedDomainId
-                        ? `${label("category", "Category")}: ${pickLabel(currentDomain, isKhmer, "General")}`
+                        ? `${label("category", "Category")}: ${pickLabel(currentDomain, isKhmer, label("general", "General"))}`
                         : "",
                       `${label("type", "Type")}: ${selectedTypeLabel}`,
                     ].filter(Boolean)}
                   />
 
                   <ReviewList
-                    title="Symptoms"
+                    title={label("stepSymptomsLabel", "Symptoms")}
                     icon="fa-notes-medical"
-                    emptyText="Selected symptoms will appear here before submission."
+                    emptyText={label("reviewSymptomsEmpty", "Selected symptoms will appear here before submission.")}
+                    reviewText={label("review", "Review")}
                     items={selectedSymptomNames}
                   />
 
-                  <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
+                  <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 p-5">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400">
                         <i className="fas fa-robot" aria-hidden="true" />
                       </div>
                       <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
-                          Diagnosis mode
+                        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">
+                          {label("diagnosisMode", "Diagnosis mode")}
                         </p>
-                        <h3 className="font-display text-lg font-bold text-slate-900">
-                          Rule-based expert analysis
+                        <h3 className="font-display text-lg font-bold text-slate-900 dark:text-white">
+                          {label("ruleBasedAnalysis", "Rule-based expert analysis")}
                         </h3>
                       </div>
                     </div>
-                    <p className="mt-4 text-sm leading-7 text-slate-600">
-                      The form will submit the same crop, symptom, notes, and image fields already used by the current backend logic. Only the frontend experience has changed.
+                    <p className="mt-4 text-sm leading-7 text-slate-600 dark:text-slate-400">
+                      {label("reviewModeDesc", "The form will submit the same crop, symptom, notes, and image fields already used by the current backend logic. Only the frontend experience has changed.")}
                     </p>
                   </div>
                 </div>
@@ -1092,9 +1121,9 @@ export default function DiagnosisWizardPage({ bootstrap }) {
 
               <div className="space-y-6">
                 <StepCard
-                  eyebrow="Additional Notes"
+                  eyebrow={label("freeTextNotes", "Additional Notes")}
                   title={label("freeTextNotes", "Additional Notes")}
-                  description="Optional notes can give extra field context without changing the rule engine."
+                  description={label("freeTextNotesDesc", "Optional notes can give extra field context without changing the rule engine.")}
                 >
                   <textarea
                     name="free_text_notes"
@@ -1103,16 +1132,16 @@ export default function DiagnosisWizardPage({ bootstrap }) {
                     rows={6}
                     maxLength={1000}
                     className="diag-input min-h-40 resize-none"
-                    placeholder="Add growth stage, weather conditions, irrigation issues, or anything unusual you noticed in the field."
+                    placeholder={label("freeTextNotesPlaceholder", "Add growth stage, weather conditions, irrigation issues, or anything unusual you noticed in the field.")}
                   />
                 </StepCard>
 
                 <StepCard
-                  eyebrow="Image Upload"
+                  eyebrow={label("imageUpload", "Image Upload")}
                   title={bootstrap.fieldImageLabel || label("fieldImage", "Field image")}
                   description={scanMode
-                    ? "Upload or capture a field image. Scan mode can suggest symptoms automatically."
-                    : "Upload an optional field image to keep the diagnosis record complete."}
+                    ? label("imageUploadScanDesc", "Upload or capture a field image. Scan mode can suggest symptoms automatically.")
+                    : label("imageUploadManualDesc", "Upload an optional field image to keep the diagnosis record complete.")}
                 >
                   <div className="space-y-4">
                     <input
@@ -1127,12 +1156,12 @@ export default function DiagnosisWizardPage({ bootstrap }) {
                       className="diag-upload-input"
                     />
 
-                    <p className="text-xs leading-6 text-slate-500">
+                    <p className="text-xs leading-6 text-slate-500 dark:text-slate-400">
                       {label("maxUploadSize", "Upload a clear image for the best result.")}
                     </p>
 
                     {fieldImagePreview ? (
-                      <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white">
+                      <div className="overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
                         <img
                           src={fieldImagePreview}
                           alt="Field preview"
@@ -1140,7 +1169,7 @@ export default function DiagnosisWizardPage({ bootstrap }) {
                         />
                       </div>
                     ) : (
-                      <div className="rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-5 py-6 text-sm text-slate-500">
+                      <div className="rounded-3xl border border-dashed border-slate-300 dark:border-slate-700 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/40 dark:bg-slate-900/40 px-5 py-6 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500 dark:text-slate-400 dark:text-slate-500 dark:text-slate-500 dark:text-slate-400 dark:text-slate-500">
                         {scanMode
                           ? "No field image added yet. You can upload a file or use the live camera tools below."
                           : "No image added yet. This section is optional for manual diagnosis."}
@@ -1151,7 +1180,7 @@ export default function DiagnosisWizardPage({ bootstrap }) {
                       {fieldImage ? (
                         <button type="button" onClick={clearFieldImage} className="diag-secondary-button">
                           <i className="fas fa-times" aria-hidden="true" />
-                          Remove image
+                          {label("removeImage", "Remove image")}
                         </button>
                       ) : null}
 
@@ -1159,7 +1188,7 @@ export default function DiagnosisWizardPage({ bootstrap }) {
                         <button
                           type="button"
                           onClick={() => analyzeScanImage()}
-                          className="diag-secondary-button border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                          className="diag-secondary-button border-emerald-200 dark:border-emerald-900/40 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:bg-emerald-950/20"
                           disabled={scanAnalyzing}
                         >
                           <i
@@ -1174,17 +1203,17 @@ export default function DiagnosisWizardPage({ bootstrap }) {
                     </div>
 
                     {scanMode ? (
-                      <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
+                      <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 p-5">
                         <div className="flex flex-col gap-4">
                           <div>
-                            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
-                              Live Camera
+                            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">
+                              {label("liveCamera", "Live Camera")}
                             </p>
-                            <h3 className="mt-2 font-display text-lg font-bold text-slate-900">
-                              Capture from device camera
+                            <h3 className="mt-2 font-display text-lg font-bold text-slate-900 dark:text-white">
+                              {label("captureFromDeviceCamera", "Capture from device camera")}
                             </h3>
-                            <p className="mt-2 text-sm leading-7 text-slate-500">
-                              Open the camera, capture a field image, then let the scan helper suggest symptoms.
+                            <p className="mt-2 text-sm leading-7 text-slate-500 dark:text-slate-400">
+                              {label("liveCameraDesc", "Open the camera, capture a field image, then let the scan helper suggest symptoms.")}
                             </p>
                           </div>
 
@@ -1200,7 +1229,7 @@ export default function DiagnosisWizardPage({ bootstrap }) {
                             <button
                               type="button"
                               onClick={captureFromLiveCamera}
-                              className="diag-secondary-button border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                              className="diag-secondary-button border-emerald-200 dark:border-emerald-900/40 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:bg-emerald-950/20"
                               disabled={!cameraOpen}
                             >
                               <i className="fas fa-camera" aria-hidden="true" />
@@ -1228,7 +1257,7 @@ export default function DiagnosisWizardPage({ bootstrap }) {
                             </select>
                           ) : null}
 
-                          <div className="overflow-hidden rounded-3xl border border-slate-200 bg-slate-900">
+                          <div className="overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-800 bg-slate-900">
                             {cameraOpen ? (
                               <video
                                 ref={videoRef}
@@ -1247,7 +1276,7 @@ export default function DiagnosisWizardPage({ bootstrap }) {
                           </div>
 
                           {cameraStatus ? (
-                            <p className="text-sm text-slate-600">{cameraStatus}</p>
+                            <p className="text-sm text-slate-600 dark:text-slate-400">{cameraStatus}</p>
                           ) : null}
                         </div>
                       </div>
@@ -1260,10 +1289,10 @@ export default function DiagnosisWizardPage({ bootstrap }) {
 
           <div className="diag-panel px-5 py-4 md:px-6">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="text-sm text-slate-500">
+              <div className="text-sm text-slate-500 dark:text-slate-400">
                 {currentStep < 4
-                  ? "Progress is saved in the current form state until you submit."
-                  : "Submitting will use the existing diagnosis endpoint and rule engine unchanged."}
+                  ? label("progressSavedHint", "Progress is saved in the current form state until you submit.")
+                  : label("submitEndpointHint", "Submitting will use the existing diagnosis endpoint and rule engine unchanged.")}
               </div>
 
               <div className="flex flex-wrap gap-3">
@@ -1279,7 +1308,7 @@ export default function DiagnosisWizardPage({ bootstrap }) {
 
                 {currentStep < 4 ? (
                   <button type="button" onClick={goNext} className="diag-primary-button" disabled={submitting}>
-                    Next
+                    {label("next", "Next")}
                     <i className="fas fa-arrow-right" aria-hidden="true" />
                   </button>
                 ) : (
@@ -1288,7 +1317,7 @@ export default function DiagnosisWizardPage({ bootstrap }) {
                       className={`fas ${submitting ? "fa-circle-notch animate-spin" : "fa-stethoscope"}`}
                       aria-hidden="true"
                     />
-                    {submitting ? "Analyzing..." : label("diagnoseNow", "Diagnose now")}
+                    {submitting ? label("analyzing", "Analyzing...") : label("diagnoseNow", "Diagnose now")}
                   </button>
                 )}
               </div>

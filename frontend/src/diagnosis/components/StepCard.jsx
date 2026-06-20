@@ -11,15 +11,15 @@ export default function StepCard({
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="max-w-2xl">
           {eyebrow ? (
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700 dark:text-emerald-400">
               {eyebrow}
             </p>
           ) : null}
-          <h2 className="mt-2 font-display text-2xl font-bold text-slate-900 md:text-[2rem]">
+          <h2 className="mt-2 font-display text-2xl font-bold text-slate-900 dark:text-white md:text-[2rem]">
             {title}
           </h2>
           {description ? (
-            <p className="mt-2 text-sm leading-7 text-slate-600 md:text-base">
+            <p className="mt-2 text-sm leading-7 text-slate-600 dark:text-slate-400 dark:text-slate-500 md:text-base">
               {description}
             </p>
           ) : null}
@@ -29,7 +29,7 @@ export default function StepCard({
 
       <div className="mt-6">{children}</div>
 
-      {footer ? <div className="mt-6 border-t border-slate-100 pt-5">{footer}</div> : null}
+      {footer ? <div className="mt-6 border-t border-slate-100 dark:border-slate-900 pt-5">{footer}</div> : null}
     </section>
   );
 }

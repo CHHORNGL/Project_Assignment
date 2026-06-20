@@ -61,23 +61,7 @@ AGRI_QCM_DOMAINS = [
     },
 ]
 
-AGRI_QCM_DOMAINS = [
-    {
-        "id": "crop",
-        "label": "Crop Production",
-        "label_kh": "ការផលិតដំណាំ",
-        "subcategories": [
-            {"id": "rice", "label": "Rice", "label_kh": "អង្ករ"},
-            {"id": "vegetable", "label": "Vegetables", "label_kh": "បន្លែ"},
-            {"id": "fruit_tree", "label": "Fruit Trees", "label_kh": "ផ្លែឈើ"},
-            {"id": "maize", "label": "Maize / Corn", "label_kh": "សាលពង្រ"},
-            {"id": "root_tuber", "label": "Root & Tuber", "label_kh": "ឫស និងកំណាច"},
-            {"id": "legume", "label": "Legume / Pulse", "label_kh": "ដំណាំសណ្ដែក"},
-            {"id": "spice", "label": "Spice Crops", "label_kh": "គ្រឿង"},
-            {"id": "oilseed", "label": "Oilseed Crops", "label_kh": "ដំណាំគ្រាប់មុខ"},
-        ],
-    },
-]
+
 
 DOMAIN_DEFAULT_DIAGNOSIS_CATEGORY = {"crop": "other"}
 
@@ -258,6 +242,11 @@ def _split_csv_symptoms(raw_text: str | None) -> list[str]:
 def _build_symptom_breakdown(diagnosis: Diagnosis, limit: int = 5) -> list[dict]:
     evidence = diagnosis.diagnosis_evidence if isinstance(diagnosis.diagnosis_evidence, dict) else {}
 
+    symptom_lookup = {}
+    if get_current_language() == "km":
+        symptoms_db = Symptom.query.all()
+        symptom_lookup = {s.name.lower().strip(): s.name_kh for s in symptoms_db if s.name and s.name_kh}
+
     raw_scores = evidence.get("symptom_scores")
     normalized: list[dict] = []
     if isinstance(raw_scores, list):
@@ -271,7 +260,9 @@ def _build_symptom_breakdown(diagnosis: Diagnosis, limit: int = 5) -> list[dict]
                 percent = 0.0
             if not name or percent <= 0:
                 continue
-            normalized.append({"name": name, "percent": round(max(0.0, min(100.0, percent)), 1)})
+            name_lower = name.lower().strip()
+            display_name = symptom_lookup.get(name_lower, name) if get_current_language() == "km" else name
+            normalized.append({"name": display_name, "percent": round(max(0.0, min(100.0, percent)), 1)})
         if normalized and len(normalized) >= max(1, min(4, limit)):
             normalized.sort(key=lambda item: item["percent"], reverse=True)
             return normalized[:max(1, limit)]
@@ -305,9 +296,11 @@ def _build_symptom_breakdown(diagnosis: Diagnosis, limit: int = 5) -> list[dict]
 
             per_symptom_weight = candidate_confidence / float(len(unique_matched))
             for symptom_key, symptom_name in unique_matched:
+                symptom_name_lower = symptom_name.lower().strip()
+                display_name = symptom_lookup.get(symptom_name_lower, symptom_name) if get_current_language() == "km" else symptom_name
                 bucket = score_by_symptom.setdefault(
                     symptom_key,
-                    {"name": symptom_name, "score": 0.0},
+                    {"name": display_name, "score": 0.0},
                 )
                 bucket["score"] += per_symptom_weight
 
@@ -335,7 +328,12 @@ def _build_symptom_breakdown(diagnosis: Diagnosis, limit: int = 5) -> list[dict]
     if not fallback_symptoms:
         return []
     share = round(100.0 / float(len(fallback_symptoms)), 1)
-    return [{"name": row, "percent": share} for row in fallback_symptoms]
+    res = []
+    for row in fallback_symptoms:
+        row_lower = row.lower().strip()
+        display_name = symptom_lookup.get(row_lower, row) if get_current_language() == "km" else row
+        res.append({"name": display_name, "percent": share})
+    return res
 # ===============================
 # FARMER BLUEPRINT
 # ===============================
@@ -858,28 +856,144 @@ def diagnose_rule_based():
     symptoms_by_crop_list = {}
     for cid, symptom_map in symptoms_by_crop.items():
         items = [
-            {"id": sid, "name": v["name"], "name_kh": v["name_kh"]}
+            {"id": str(sid), "name": v["name"], "name_kh": v["name_kh"]}
             for sid, v in symptom_map.items()
         ]
         items.sort(key=lambda x: x["name"].lower())
-        symptoms_by_crop_list[cid] = items
+        symptoms_by_crop_list[str(cid)] = items
+
+    from flask_wtf.csrf import generate_csrf
+    bootstrap_data = {
+        "postUrl": url_for("farmer.diagnose_rule_based"),
+        "dashboardUrl": url_for("farmer.dashboard"),
+        "chatUrl": url_for("farmer.chat"),
+        "currentLang": current_lang,
+        "scanMode": scan_mode,
+        "instantScanMode": instant_scan_mode,
+        "initialCropId": str(initial_crop_id),
+        "scanSuggestionApi": url_for("farmer.scan_symptom_suggestions_api"),
+        "csrfToken": generate_csrf(),
+        "crops": [
+            {
+                "id": str(c.id),
+                "name": c.name,
+                "name_kh": c.name_kh or "",
+                "emoji": c.emoji or "",
+                "domainId": crop_profiles.get(c.id, {}).get("domain_id", "crop"),
+                "subcategoryId": crop_profiles.get(c.id, {}).get("subcategory_id", "")
+            }
+            for c in crops
+        ],
+        "agriDomains": _agri_domains_payload(),
+        "symptomsByCrop": symptoms_by_crop_list,
+        "domainDefaultDiagnosisCategory": DOMAIN_DEFAULT_DIAGNOSIS_CATEGORY,
+        "labels": {
+            "selectCrop": t("select_crop"),
+            "general": t("general"),
+            "cameraSecureContext": t("camera_https_required"),
+            "cameraUnsupported": t("camera_not_supported"),
+            "cameraReady": t("camera_live_hint"),
+            "cameraUnavailable": t("camera_unavailable"),
+            "cameraCaptured": t("camera_success"),
+            "pleaseSelectCrop": t("please_select_crop"),
+            "invalidImageType": t("invalid_image_type"),
+            "scanAnalyzing": t("scan_analyzing") if t("scan_analyzing") else "Analyzing...",
+            "scanApiFailed": t("scan_api_failed") if t("scan_api_failed") else "Unable to analyze the scan image.",
+            "scanSuggestionApplied": t("scan_suggestion_applied") if t("scan_suggestion_applied") else "Applied {count} symptom suggestions from the scan.",
+            "scanSuggestionNone": t("scan_suggestion_none") if t("scan_suggestion_none") else "No confident symptom suggestions were found.",
+            "scanAutoSubmitting": t("scan_auto_submitting") if t("scan_auto_submitting") else "Submitting the diagnosis automatically...",
+            "pleaseSelectSymptom": t("please_select_symptom"),
+            "scanImageRequired": t("crop_photo_sub"),
+            "back": t("back"),
+            "category": t("category"),
+            "type": t("type"),
+            "selectedCount": t("selected_count") if t("selected_count") else "{count} selected",
+            "searchSymptom": t("search_symptom") if t("search_symptom") else "Search symptom",
+            "noManualSelectionYet": t("no_manual_selection_yet") if t("no_manual_selection_yet") else "No symptoms selected yet.",
+            "noSymptomsMatch": t("no_symptoms_match"),
+            "noSymptoms": t("no_symptoms") if t("no_symptoms") else "No symptoms are available for this crop.",
+            "freeTextNotes": t("symptom_text_label"),
+            "fieldImage": t("field_image"),
+            "maxUploadSize": t("max_upload_size"),
+            "analyzeScan": t("analyze_scan") if t("analyze_scan") else "Analyze scan",
+            "cameraOpen": t("camera_open"),
+            "cameraStop": t("camera_stop"),
+            "cameraCapture": t("camera_capture"),
+            "cameraSwitch": t("camera_switch"),
+            "diagnoseNow": t("diagnose_now"),
+            "pageTitle": t("guided_diagnosis_title"),
+            "pageSubtitle": t("guided_diagnosis_sub"),
+            "stepCropLabel": t("select_crop") if t("select_crop") else "Select Crop",
+            "stepCropDesc": t("select_crop_to_begin") if t("select_crop_to_begin") else "Select crop to begin",
+            "stepContextLabel": t("diagnosis_information") if t("diagnosis_information") else "Context",
+            "stepContextDesc": t("guided_diagnosis_sub") if t("guided_diagnosis_sub") else "Select diagnosis context",
+            "stepSymptomsLabel": t("symptoms_label") if t("symptoms_label") else "Symptoms",
+            "stepSymptomsDesc": t("symptom_picker_sub") if t("symptom_picker_sub") else "Choose symptoms",
+            "stepReviewLabel": t("review") if t("review") else "Review",
+            "stepReviewDesc": t("describe_issue") if t("describe_issue") else "Add notes and submit",
+            "selectedText": t("selected"),
+            "chooseCropText": t("choose_crop"),
+            "guidedDiagnosis": t("guided_diagnosis"),
+            "completeEachStep": t("complete_each_step"),
+            "stepProgress": t("step_progress"),
+            "symptomSelectedHint": t("symptom_selected_hint"),
+            "symptomUnselectedHint": t("symptom_unselected_hint"),
+            "cropClearedNotice": t("crop_cleared_notice"),
+            "aiPoweredSystem": t("ai_powered_system"),
+            "instantScanModeLabel": t("instant_scan_mode"),
+            "scanAssistedModeLabel": t("scan_assisted_mode"),
+            "guidedDiagnosisDescFallback": t("guided_diagnosis_desc_fallback"),
+            "askExpert": t("ask_expert"),
+            "formErrorTitle": t("form_error_title"),
+            "step1": t("step1"),
+            "step2": t("step2"),
+            "step3": t("step3"),
+            "step4": t("step4"),
+            "currentContext": t("current_context"),
+            "allCropGroups": t("all_crop_groups"),
+            "selection": t("selection"),
+            "noCropSelectedYet": t("no_crop_selected_yet"),
+            "searchCrops": t("search_crops"),
+            "searchByCropName": t("search_by_crop_name"),
+            "showingMatchingCrops": t("showing_matching_crops"),
+            "generalCrop": t("general_crop"),
+            "noCropsMatch": t("no_crops_match"),
+            "noCropsMatchDesc": t("no_crops_match_desc"),
+            "selectedCrop": t("selected_crop"),
+            "categoryDesc": t("category_desc"),
+            "generalTypeDesc": t("general_type_desc"),
+            "subcategoryDesc": t("subcategory_desc"),
+            "contextStepHint": t("context_step_hint"),
+            "selectedSummary": t("selected_summary"),
+            "noSymptomsMatchDesc": t("no_symptoms_match_desc"),
+            "noSymptomsDesc": t("no_symptoms_desc"),
+            "reviewSelectionEmpty": t("review_selection_empty"),
+            "cropColon": t("crop_colon"),
+            "reviewSymptomsEmpty": t("review_symptoms_empty"),
+            "diagnosisMode": t("diagnosis_mode"),
+            "ruleBasedAnalysis": t("rule_based_analysis"),
+            "reviewModeDesc": t("review_mode_desc"),
+            "freeTextNotesDesc": t("free_text_notes_desc"),
+            "freeTextNotesPlaceholder": t("free_text_notes_placeholder"),
+            "imageUpload": t("image_upload"),
+            "imageUploadScanDesc": t("image_upload_scan_desc"),
+            "imageUploadManualDesc": t("image_upload_manual_desc"),
+            "fieldPreviewAlt": t("field_preview_alt"),
+            "noFieldImageScan": t("no_field_image_scan"),
+            "noFieldImageManual": t("no_field_image_manual"),
+            "removeImage": t("remove_image"),
+            "liveCamera": t("live_camera"),
+            "captureFromDeviceCamera": t("capture_from_device_camera"),
+            "liveCameraDesc": t("live_camera_desc"),
+            "progressSavedHint": t("progress_saved_hint"),
+            "submitEndpointHint": t("submit_endpoint_hint"),
+            "analyzing": t("analyzing")
+        }
+    }
 
     return render_template(
         "farmer/diagnose_rule_based.html",
-        crops=crops,
-        diagnoses=diagnoses,
-        symptoms_by_crop=symptoms_by_crop_list,
-        all_symptoms_list=symptoms_by_crop_list.get(0, []),
-        rules_by_crop=rules_by_crop,
-        crop_profiles=crop_profiles,
-        agri_domains=_agri_domains_payload(),
-        diagnosis_categories=DIAGNOSIS_CATEGORIES,
-        scan_mode=scan_mode,
-        instant_scan_mode=instant_scan_mode,
-        initial_crop_id=initial_crop_id,
-        domain_default_diagnosis_category=DOMAIN_DEFAULT_DIAGNOSIS_CATEGORY,
-        clarification_limits={},
-        decision_tree_limits={},
+        bootstrap_data=bootstrap_data
     )
 
 # ===============================
@@ -919,12 +1033,18 @@ def diagnosis_result(diagnosis_id):
 
     symptom_breakdown = _build_symptom_breakdown(diagnosis, limit=5)
 
+    symptom_translations = {}
+    if get_current_language() == "km":
+        s_list = Symptom.query.all()
+        symptom_translations = {s.name.lower().strip(): s.name_kh for s in s_list if s.name and s.name_kh}
+
     return render_template(
         "farmer/result.html",
         diagnosis=diagnosis,
         diagnoses=diagnoses,
         possible_diseases=possible_diseases,
         symptom_breakdown=symptom_breakdown,
+        symptom_translations=symptom_translations,
     )
 
 

@@ -1,8 +1,8 @@
 {% extends "layouts/farmer_shell.html" %}
-{% block title %}Diagnosis Result{% endblock %}
+{% block title %}{{ t("diagnosis_result") }}{% endblock %}
 
 {% block content %}
-{% set disease_label = (diagnosis.disease.name_kh if current_lang == 'km' and diagnosis.disease and diagnosis.disease.name_kh else diagnosis.disease_name) %}
+{% set disease_label = (diagnosis.disease.name_kh if current_lang == 'km' and diagnosis.disease and diagnosis.disease.name_kh else (t("Unknown") if diagnosis.disease_name == "Unknown" or not diagnosis.disease else diagnosis.disease_name)) %}
 {% set crop_label = localize(diagnosis.crop, "name", diagnosis.crop_name) %}
 {% set created_label = diagnosis.created_at.strftime("%b %d, %Y") if diagnosis.created_at else "" %}
 {% set evidence = diagnosis.diagnosis_evidence or {} %}
@@ -12,9 +12,9 @@
 {% set confidence_label = (diagnosis.confidence_level or "insufficient")|replace("_", " ")|title %}
 {% set top_symptom_scores = symptom_breakdown if symptom_breakdown is defined else [] %}
 {% set knowledge_cause = diagnosis.disease.cause_explanation if diagnosis.disease and diagnosis.disease.cause_explanation else knowledge.get("cause_explanation") %}
-{% set cause_text = knowledge_cause or diagnosis.diagnosis_reason or "Cause explanation is not available yet. Please consult an expert for field confirmation." %}
-{% set treatment_source = diagnosis.solution or (diagnosis.disease.treatment_kh if current_lang == 'km' and diagnosis.disease and diagnosis.disease.treatment_kh else (diagnosis.disease.treatment if diagnosis.disease and diagnosis.disease.treatment else knowledge.get("treatment_steps"))) %}
-{% set prevention_source = diagnosis.prevention_recommendations or (diagnosis.disease.prevention_tips if diagnosis.disease and diagnosis.disease.prevention_tips else None) %}
+{% set cause_text = (t("no_rule_match_reason") if not diagnosis.disease else (knowledge_cause or diagnosis.diagnosis_reason or t("cause_explanation_empty"))) %}
+{% set treatment_source = (t("unknown_disease_solution") if not diagnosis.disease else (diagnosis.solution or (diagnosis.disease.treatment_kh if current_lang == 'km' and diagnosis.disease and diagnosis.disease.treatment_kh else (diagnosis.disease.treatment if diagnosis.disease and diagnosis.disease.treatment else knowledge.get("treatment_steps"))))) %}
+{% set prevention_source = (t("unknown_disease_prevention") if not diagnosis.disease else (diagnosis.prevention_recommendations or (diagnosis.disease.prevention_tips if diagnosis.disease and diagnosis.disease.prevention_tips else None))) %}
 {% set treatment_steps = [] %}
 {% if treatment_source %}
     {% for raw_line in treatment_source.replace('\r', '').split('\n') %}
@@ -22,15 +22,15 @@
         {% if clean_line %}
             {% set normalized = clean_line.lstrip('-*0123456789. ').strip() %}
             {% if normalized %}
-                {% set _ = treatment_steps.append(normalized) %}
+                {% set _ = treatment_steps.append(t(normalized)) %}
             {% else %}
-                {% set _ = treatment_steps.append(clean_line) %}
+                {% set _ = treatment_steps.append(t(clean_line)) %}
             {% endif %}
         {% endif %}
     {% endfor %}
 {% endif %}
 {% if not treatment_steps and treatment_source %}
-    {% set _ = treatment_steps.append(treatment_source.strip()) %}
+    {% set _ = treatment_steps.append(t(treatment_source.strip())) %}
 {% endif %}
 {% set prevention_tips = [] %}
 {% if prevention_source %}
@@ -39,16 +39,16 @@
         {% if clean_line %}
             {% set normalized = clean_line.lstrip('-*0123456789. ').strip() %}
             {% if normalized %}
-                {% set _ = prevention_tips.append(normalized) %}
+                {% set _ = prevention_tips.append(t(normalized)) %}
             {% else %}
-                {% set _ = prevention_tips.append(clean_line) %}
+                {% set _ = prevention_tips.append(t(clean_line)) %}
             {% endif %}
         {% endif %}
     {% endfor %}
 {% elif knowledge.get("prevention_tips") %}
     {% for row in knowledge.get("prevention_tips") %}
         {% if row %}
-            {% set _ = prevention_tips.append(row) %}
+            {% set _ = prevention_tips.append(t(row)) %}
         {% endif %}
     {% endfor %}
 {% endif %}
@@ -72,7 +72,13 @@
     {% for raw_symptom in diagnosis.symptoms.split(',') %}
         {% set clean_symptom = raw_symptom.strip() %}
         {% if clean_symptom %}
-            {% set _ = confirmed_symptom_list.append(clean_symptom) %}
+            {% set clean_lower = clean_symptom.lower() %}
+            {% if current_lang == 'km' and symptom_translations and clean_lower in symptom_translations %}
+                {% set display_name = symptom_translations[clean_lower] %}
+            {% else %}
+                {% set display_name = clean_symptom %}
+            {% endif %}
+            {% set _ = confirmed_symptom_list.append(display_name) %}
         {% endif %}
     {% endfor %}
 {% endif %}
@@ -99,20 +105,20 @@
     <!-- ── Severity Traffic Light Banner ── -->
     {% if diagnosis.confidence_level == "high" %}
         {% set sev_cls = "sev-high" %}{% set sev_icon = "fas fa-check-circle" %}
-        {% set sev_label = "High Confidence Match" %}
-        {% set sev_note = "The selected symptoms strongly match a known disease rule. Treatment can be started with confidence." %}
+        {% set sev_label = t("high_confidence_match") %}
+        {% set sev_note = t("high_confidence_note") %}
     {% elif diagnosis.confidence_level == "medium" %}
         {% set sev_cls = "sev-medium" %}{% set sev_icon = "fas fa-exclamation-circle" %}
-        {% set sev_label = "Moderate Match — Monitor Closely" %}
-        {% set sev_note = "Symptoms partially match. Observe your crop for 1–2 days before applying treatment." %}
+        {% set sev_label = t("medium_confidence_match") %}
+        {% set sev_note = t("medium_confidence_note") %}
     {% elif diagnosis.confidence_level in ["low", "insufficient"] %}
         {% set sev_cls = "sev-low" %}{% set sev_icon = "fas fa-times-circle" %}
-        {% set sev_label = "Low Confidence — Expert Review Advised" %}
-        {% set sev_note = "Not enough symptoms matched. Request expert confirmation before any major treatment." %}
+        {% set sev_label = t("low_confidence_match") %}
+        {% set sev_note = t("low_confidence_note") %}
     {% else %}
         {% set sev_cls = "sev-unknown" %}{% set sev_icon = "fas fa-question-circle" %}
-        {% set sev_label = "Unknown Confidence" %}
-        {% set sev_note = "Confidence could not be determined. Consult an expert." %}
+        {% set sev_label = t("unknown_confidence_match") %}
+        {% set sev_note = t("unknown_confidence_note") %}
     {% endif %}
     <div class="diag-sev-banner {{ sev_cls }} mb-3">
         <div class="diag-sev-light">
@@ -134,8 +140,8 @@
         <div class="card-body diag-result-hero-body">
             <div class="diag-result-hero-grid">
                 <div class="diag-result-summary mb-3 mb-lg-0">
-                    <div class="diag-result-label">Diagnosis result</div>
-                    <h2 class="diag-result-name mb-2">{{ disease_label or "Unknown diagnosis" }}</h2>
+                    <div class="diag-result-label">{{ t("diagnosis_result_header") }}</div>
+                    <h2 class="diag-result-name mb-2">{{ disease_label or t("unknown_diagnosis") }}</h2>
                     <div class="diag-result-meta-row">
                         <span class="badge diag-status-badge {{ status_class }}">{{ status_label }}</span>
                         <span class="diag-result-meta">{{ crop_label }}</span>
@@ -144,17 +150,17 @@
                         {% endif %}
                     </div>
                     <div class="result-chips">
-                        <span class="result-chip"><strong>Category:</strong> {{ (diagnosis.diagnosis_category or "other")|replace("_", " ")|title }}</span>
+                        <span class="result-chip"><strong>{{ t("category") }}:</strong> {{ t(diagnosis.diagnosis_category or "other") }}</span>
                     </div>
                     {% if confirmed_symptom_list %}
                     <div class="diag-symptom-wrap">
-                        <div class="diag-symptom-title">Confirmed symptoms</div>
+                        <div class="diag-symptom-title">{{ t("confirmed_symptoms") }}</div>
                         <div class="result-chips symptom-chips">
                             {% for symptom_name in confirmed_symptom_list[:8] %}
                             <span class="result-chip symptom-chip">{{ symptom_name }}</span>
                             {% endfor %}
                             {% if confirmed_symptom_list|length > 8 %}
-                            <span class="result-chip symptom-chip">+{{ confirmed_symptom_list|length - 8 }} more</span>
+                            <span class="result-chip symptom-chip">+{{ confirmed_symptom_list|length - 8 }} {{ t("more") }}</span>
                             {% endif %}
                         </div>
                     </div>
@@ -162,10 +168,10 @@
                 </div>
                 <div class="diag-result-actions">
                     <a href="{{ url_for('farmer.diagnose_rule_based') }}" class="btn btn-success">
-                        <i class="fas fa-redo-alt mr-2"></i>Restart diagnosis
+                        <i class="fas fa-redo-alt mr-2"></i>{{ t("restart_diagnosis") }}
                     </a>
                     <a href="{{ url_for('farmer.chat') }}" class="btn btn-outline-success">
-                        <i class="fas fa-user-md mr-2"></i>Ask expert
+                        <i class="fas fa-user-md mr-2"></i>{{ t("ask_expert") }}
                     </a>
                 </div>
             </div>
@@ -176,11 +182,11 @@
         <div class="col-lg-4 mb-3">
             <div class="card shadow-sm diag-result-card h-100">
                 <div class="card-header">
-                    <span class="section-title">Confidence level</span>
+                    <span class="section-title">{{ t("confidence_level_header") }}</span>
                 </div>
                 <div class="card-body diag-confidence-panel">
                     <div class="diag-confidence-top">
-                        <div class="diag-confidence-value">Current confidence</div>
+                        <div class="diag-confidence-value">{{ t("current_confidence") }}</div>
                         <span class="diag-tier-chip tier-{{ (diagnosis.confidence_level or 'insufficient')|replace('_', '-') }}">
                             {{ confidence_label }}
                         </span>
@@ -194,11 +200,11 @@
                         <div class="progress-bar" role="progressbar" style="width: {{ confidence_percent if confidence_percent is not none else 0 }}%;"></div>
                     </div>
                     <div class="small text-muted mt-3">
-                        Higher confidence means the selected symptoms strongly match an expert rule.
+                        {{ t("higher_confidence_description") }}
                     </div>
                     {% if top_symptom_scores %}
                     <div class="diag-symptom-score-wrap">
-                        <div class="diag-symptom-score-title">Top symptom signals</div>
+                        <div class="diag-symptom-score-title">{{ t("top_symptom_signals") }}</div>
                         <div class="diag-symptom-score-list">
                             {% for item in top_symptom_scores[:5] %}
                             {% set symptom_name = (item.get("name") if item is mapping else "") %}
@@ -223,10 +229,10 @@
         <div class="col-lg-8 mb-3">
             <div class="card shadow-sm diag-result-card h-100">
                 <div class="card-header">
-                    <span class="section-title">Cause explanation</span>
+                    <span class="section-title">{{ t("cause_explanation") }}</span>
                 </div>
                 <div class="card-body">
-                    <p class="mb-0 diag-body-text">{{ cause_text }}</p>
+                    <p class="mb-0 diag-body-text">{{ t(cause_text) }}</p>
                 </div>
             </div>
         </div>
@@ -235,18 +241,18 @@
     {% if ranked_candidates %}
     <div class="card shadow-sm diag-result-card mb-3">
         <div class="card-header">
-            <span class="section-title">Disease match ranking</span>
+            <span class="section-title">{{ t("disease_match_ranking") }}</span>
         </div>
         <div class="card-body">
             <div class="table-responsive">
                 <table class="table table-sm mb-0 diag-ranking-table">
                     <thead>
                         <tr>
-                            <th style="min-width:56px;">Rank</th>
-                            <th>Disease</th>
-                            <th style="min-width:120px;">Match %</th>
-                            <th style="min-width:110px;">Tier</th>
-                            <th style="min-width:200px;">Care / treatment</th>
+                            <th style="min-width:56px;">{{ t("rank") }}</th>
+                            <th>{{ t("disease") }}</th>
+                            <th style="min-width:120px;">{{ t("match_pct") }}</th>
+                            <th style="min-width:110px;">{{ t("tier") }}</th>
+                            <th style="min-width:200px;">{{ t("care_treatment") }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -257,10 +263,26 @@
                         <tr class="diag-ranking-row">
                             <td><span class="diag-rank-badge">#{{ loop.index }}</span></td>
                             <td>
-                                <div class="font-weight-bold">{{ candidate.get("disease_name", "Unknown") }}</div>
+                                {% set candidate_disease = None %}
+                                {% for d in possible_diseases %}
+                                    {% if d.id == candidate.get("disease_id") %}
+                                        {% set candidate_disease = d %}
+                                    {% endif %}
+                                {% endfor %}
+                                {% set candidate_disease_name = (candidate_disease.name_kh if current_lang == 'km' and candidate_disease and candidate_disease.name_kh else (t("Unknown") if candidate.get("disease_name") == "Unknown" else candidate.get("disease_name", "Unknown"))) %}
+                                <div class="font-weight-bold">{{ candidate_disease_name }}</div>
                                 {% if matched_names %}
                                 <div class="small text-muted">
-                                    Matched: {{ matched_names[:4]|join(", ") }}{% if matched_names|length > 4 %} +{{ matched_names|length - 4 }} more{% endif %}
+                                    {% set display_matched = [] %}
+                                    {% for name in matched_names %}
+                                        {% set name_lower = name.lower().strip() %}
+                                        {% if current_lang == 'km' and symptom_translations and name_lower in symptom_translations %}
+                                            {% set _ = display_matched.append(symptom_translations[name_lower]) %}
+                                        {% else %}
+                                            {% set _ = display_matched.append(name) %}
+                                        {% endif %}
+                                    {% endfor %}
+                                    {{ t("matched") if t("matched") else "Matched" }}: {{ display_matched[:4]|join(", ") }}{% if display_matched|length > 4 %} +{{ display_matched|length - 4 }} {{ t("more") }}{% endif %}
                                 </div>
                                 {% endif %}
                             </td>
@@ -279,7 +301,8 @@
                             </td>
                             <td>
                                 <div class="small diag-care-text">
-                                    {{ candidate.get("treatment") or "Consult expert before major treatment." }}
+                                    {% set candidate_treatment = (candidate_disease.treatment_kh if current_lang == 'km' and candidate_disease and candidate_disease.treatment_kh else (t(candidate.get("treatment") or "Consult expert before major treatment."))) %}
+                                    {{ candidate_treatment }}
                                 </div>
                             </td>
                         </tr>
@@ -295,7 +318,7 @@
         <div class="col-lg-6 mb-3">
             <div class="card shadow-sm diag-result-card h-100">
                 <div class="card-header">
-                    <span class="section-title">Treatment steps</span>
+                    <span class="section-title">{{ t("treatment_steps") }}</span>
                 </div>
                 <div class="card-body">
                     {% if treatment_steps %}
@@ -306,7 +329,7 @@
                     </ol>
                     {% else %}
                     <div class="diag-result-empty">
-                        No treatment steps are available yet. Ask an expert before applying major treatment.
+                        {{ t("treatment_empty") }}
                     </div>
                     {% endif %}
                 </div>
@@ -316,7 +339,7 @@
         <div class="col-lg-6 mb-3">
             <div class="card shadow-sm diag-result-card h-100">
                 <div class="card-header">
-                    <span class="section-title">Prevention advice</span>
+                    <span class="section-title">{{ t("prevention_advice") }}</span>
                 </div>
                 <div class="card-body">
                     {% if prevention_tips %}
@@ -327,7 +350,7 @@
                     </ul>
                     {% else %}
                     <div class="diag-result-empty">
-                        No prevention advice is configured yet. Continue monitoring and keep the field clean.
+                        {{ t("prevention_empty") }}
                     </div>
                     {% endif %}
                 </div>
@@ -338,12 +361,12 @@
     {% if knowledge_image_url or knowledge_references %}
     <div class="card shadow-sm diag-result-card mb-3">
         <div class="card-header">
-            <span class="section-title">References</span>
+            <span class="section-title">{{ t("references") }}</span>
         </div>
         <div class="card-body">
             {% if knowledge_image_url %}
             <div class="mb-3">
-                <img src="{{ knowledge_image_url }}" alt="Diagnosis reference image" class="img-fluid rounded border diag-reference-image">
+                <img src="{{ knowledge_image_url }}" alt="{{ t("reference_image_alt") }}" class="img-fluid rounded border diag-reference-image">
             </div>
             {% endif %}
             {% if knowledge_references %}
@@ -365,33 +388,33 @@
 
     <div class="card shadow-sm diag-result-card mb-3">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <span class="section-title">Feedback</span>
+            <span class="section-title">{{ t("feedback") }}</span>
             {% if diagnosis.feedback_rating %}
-            <span class="badge badge-success diag-feedback-badge">Submitted</span>
+            <span class="badge badge-success diag-feedback-badge">{{ t("submitted") }}</span>
             {% else %}
-            <span class="badge badge-warning diag-feedback-badge">Pending</span>
+            <span class="badge badge-warning diag-feedback-badge">{{ t("pending") }}</span>
             {% endif %}
         </div>
         <div class="card-body">
             {% if diagnosis.feedback_rating %}
             <div class="diag-feedback-summary">
-                <div class="small text-muted">Your rating</div>
+                <div class="small text-muted">{{ t("your_rating") }}</div>
                 <div class="font-weight-bold mb-2">{{ diagnosis.feedback_rating|replace("_", " ")|title }}</div>
             </div>
             {% if diagnosis.feedback_comment %}
-            <div class="small text-muted">Comment</div>
+            <div class="small text-muted">{{ t("comment") }}</div>
             <div class="diag-body-text">{{ diagnosis.feedback_comment }}</div>
             {% endif %}
             {% else %}
             <form method="POST" action="{{ url_for('farmer.diagnosis_feedback', diagnosis_id=diagnosis.id) }}" class="diag-feedback-form">
-                <div class="small text-muted mb-2">Was this diagnosis useful for your field decision?</div>
+                <div class="small text-muted mb-2">{{ t("feedback_question") }}</div>
                 <div class="diag-feedback-buttons">
-                    <button type="submit" name="rating" value="helpful" class="btn btn-sm btn-success diag-feedback-btn">Helpful</button>
-                    <button type="submit" name="rating" value="not_helpful" class="btn btn-sm btn-outline-danger diag-feedback-btn">Not helpful</button>
+                    <button type="submit" name="rating" value="helpful" class="btn btn-sm btn-success diag-feedback-btn">{{ t("helpful") }}</button>
+                    <button type="submit" name="rating" value="not_helpful" class="btn btn-sm btn-outline-danger diag-feedback-btn">{{ t("not_helpful") }}</button>
                 </div>
                 <div class="form-group mt-3 mb-0">
-                    <label class="small text-muted">Optional comment</label>
-                    <textarea class="form-control form-control-sm diag-feedback-text" name="comment" rows="3" maxlength="1000" placeholder="Tell us what was missing or confusing"></textarea>
+                    <label class="small text-muted">{{ t("optional_comment") }}</label>
+                    <textarea class="form-control form-control-sm diag-feedback-text" name="comment" rows="3" maxlength="1000" placeholder="{{ t("feedback_placeholder") }}"></textarea>
                 </div>
             </form>
             {% endif %}
@@ -400,10 +423,10 @@
 
     <div class="diag-result-footer-actions">
         <a href="{{ url_for('farmer.diagnose_rule_based') }}" class="btn btn-success">
-            <i class="fas fa-redo-alt mr-2"></i>Restart diagnosis
+            <i class="fas fa-redo-alt mr-2"></i>{{ t("restart_diagnosis") }}
         </a>
         <a href="{{ url_for('farmer.dashboard') }}" class="btn btn-outline-secondary">
-            <i class="fas fa-home mr-2"></i>Back to dashboard
+            <i class="fas fa-home mr-2"></i>{{ t("back_to_dashboard") }}
         </a>
     </div>
 </div>
