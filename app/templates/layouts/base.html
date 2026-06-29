@@ -23,6 +23,18 @@
      FONT AWESOME
 =============================== -->
 <link href="{{ url_for('static', filename='sb-admin/vendor/fontawesome-free/css/all.min.css') }}" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/6.6.6/css/flag-icons.min.css">
+<style>
+.fi.rounded-circle {
+    border-radius: 50% !important;
+    width: 18px !important;
+    height: 18px !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    display: inline-block;
+    line-height: 1;
+    vertical-align: middle;
+}
+</style>
 
 <!-- ===============================
      SB ADMIN
@@ -41,8 +53,8 @@
 =============================== -->
 <style>
 :root {
-    --font-en: "Inter", system-ui, sans-serif;
-    --font-kh: "Kantumruy Pro", "Noto Sans Khmer", "Khmer OS", sans-serif;
+    --font-en: "Inter", "Kantumruy Pro", "Noto Sans Khmer", "Khmer OS", system-ui, sans-serif;
+    --font-kh: "Kantumruy Pro", "Noto Sans Khmer", "Khmer OS", "Inter", system-ui, sans-serif;
     --font-size-base: 1rem;
     --line-height-base: 1.68;
 }
@@ -67,7 +79,9 @@ html[lang^="km"] select,
 html[lang^="km"] textarea {
     font-family: var(--font-kh), var(--font-en);
     line-height: 1.74;
-    letter-spacing: 0;
+}
+html[lang^="km"] * {
+    letter-spacing: 0 !important;
 }
 h1,h2,h3,h4,h5,h6 { font-weight: 700; }
 .kh { font-family: var(--font-kh) !important; }
@@ -910,7 +924,9 @@ h1,h2,h3,h4,h5,h6 { font-weight: 700; }
         btn.classList.toggle("is-active", isActive);
 
         if (isActive) {
-            if (triggerFlag) triggerFlag.textContent = btn.dataset.flag || "🌐";
+            if (triggerFlag) {
+                triggerFlag.className = `fi fi-${btn.dataset.flag} mr-1 rounded-circle`;
+            }
             if (triggerCode) triggerCode.textContent = btn.dataset.code || currentLang.toUpperCase();
         }
 

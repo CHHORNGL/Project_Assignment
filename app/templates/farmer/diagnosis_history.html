@@ -9,9 +9,9 @@
             <div class="text-muted small">{{ t("recent_diagnoses_title") }}</div>
         </div>
         <div class="mt-3 mt-md-0">
-            <a href="{{ url_for('farmer.diagnose_rule_based') }}"
+            <a href="{{ url_for('farmer.diagnose') }}"
                class="btn btn-sm btn-success">
-                <i class="fas fa-plus mr-1"></i>{{ t("full_rule_based") }}
+                <i class="fas fa-plus mr-1"></i>{{ t("new_diagnosis") }}
             </a>
         </div>
     </div>
@@ -96,7 +96,7 @@
             <div class="diag-hist-empty-icon"><i class="fas fa-seedling"></i></div>
             <div class="diag-hist-empty-title">{{ t("no_diagnoses_yet") }}</div>
             <div class="diag-hist-empty-sub">{{ t("start_first_diagnosis") }}</div>
-            <a href="{{ url_for('farmer.diagnose_rule_based') }}" class="btn btn-sm btn-success mt-3">
+            <a href="{{ url_for('farmer.diagnose') }}" class="btn btn-sm btn-success mt-3">
                 <i class="fas fa-plus mr-1"></i>{{ t("new_diagnosis") }}
             </a>
         </div>

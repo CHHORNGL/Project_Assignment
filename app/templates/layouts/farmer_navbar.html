@@ -2,33 +2,33 @@
 <nav class="farmer-topnav" aria-label="Farmer navigation">
     <a href="{{ url_for('farmer.dashboard') }}"
        class="{% if path == url_for('farmer.dashboard') %}active{% endif %}">
-        <i class="fas fa-home"></i>
+        <i class="far fa-compass"></i>
         <span>{{ t("home") }}</span>
     </a>
 
-    {% set rule_based_url = url_for('farmer.diagnose_rule_based') %}
-    <a href="{{ rule_based_url }}"
-       class="{% if path.startswith(rule_based_url) %}active{% endif %}">
-        <i class="fas fa-cogs"></i>
-        <span>{{ t("full_rule_based") }}</span>
+    {% set diagnose_url = url_for('farmer.diagnose') %}
+    <a href="{{ diagnose_url }}"
+       class="{% if path.startswith(diagnose_url) %}active{% endif %}">
+        <i class="fas fa-stethoscope"></i>
+        <span>{{ t("new_diagnosis") }}</span>
     </a>
 
     <a href="{{ url_for('farmer.diagnosis_history') }}"
        class="{% if path.startswith('/farmer/diagnoses') or path.startswith('/farmer/result') %}active{% endif %}">
-        <i class="fas fa-clipboard-list"></i>
+        <i class="far fa-file-alt"></i>
         <span>{{ t("diagnoses_label") }}</span>
     </a>
 
     {% set rule_history_url = url_for('farmer.rule_inference_history') %}
     <a href="{{ rule_history_url }}"
        class="{% if path.startswith(rule_history_url) %}active{% endif %}">
-        <i class="fas fa-history"></i>
+        <i class="far fa-clock"></i>
         <span>{{ t("rule_history") }}</span>
     </a>
 
     <a href="{{ url_for('farmer.chat') }}"
        class="{% if path.startswith('/farmer/chat') or path.startswith('/farmer/history/ai') %}active{% endif %}">
-        <i class="fas fa-comment-dots"></i>
+        <i class="far fa-comments"></i>
         <span>{{ t("ask_expert") }}</span>
     </a>
 </nav>

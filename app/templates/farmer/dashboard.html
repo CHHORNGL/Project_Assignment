@@ -27,8 +27,8 @@
                 <div class="text-muted small">{{ t("farmer_dashboard_sub") }}</div>
             </div>
             <div class="mt-3 mt-md-0 fd-btn-row">
-                <a href="{{ url_for('farmer.diagnose_rule_based') }}" class="btn btn-success btn-sm">
-                    {{ t("full_rule_based") }}
+                <a href="{{ url_for('farmer.diagnose') }}" class="btn btn-success btn-sm">
+                    {{ t("new_diagnosis") }}
                 </a>
                 <a href="{{ url_for('farmer.chat') }}" class="btn btn-outline-success btn-sm">
                     {{ t("ask_expert") }}
@@ -84,10 +84,6 @@
                 <div class="qc-title">{{ t("start_a_diagnosis") }}</div>
                 <div class="qc-sub">{{ t("tap_your_crop") }}</div>
             </div>
-            <div class="qc-legend">
-                <span class="qc-leg-item"><span class="qc-leg-dot qc-dot-scan"></span>{{ t("scan") }}</span>
-                <span class="qc-leg-item"><span class="qc-leg-dot qc-dot-check"></span>{{ t("symptoms") }}</span>
-            </div>
         </div>
         <div class="qc-grid">
             {% for crop in crops %}
@@ -115,15 +111,10 @@
                     {% if current_lang == "km" and crop.name_kh %}{{ crop.name_kh }}{% else %}{{ crop.name }}{% endif %}
                 </div>
                 <div class="qc-crop-actions">
-                    <a href="{{ url_for('farmer.scan_crop', crop_id=crop.id, instant='1') }}"
-                       class="qc-btn qc-btn-scan"
-                       title="{{ 'ស្កែន' if current_lang == 'km' else 'Scan crop' }}">
-                        <i class="fas fa-camera"></i>
-                    </a>
-                    <a href="{{ url_for('farmer.diagnose_rule_based') }}?crop_id={{ crop.id }}"
+                    <a href="{{ url_for('farmer.diagnose') }}?crop_id={{ crop.id }}"
                        class="qc-btn qc-btn-check"
-                       title="{{ 'ជ្រើសសញ្ញា' if current_lang == 'km' else 'Check symptoms' }}">
-                        <i class="fas fa-tasks"></i>
+                       title="{{ 'រោគវិនិច្ឆ័យ' if current_lang == 'km' else 'Diagnose' }}">
+                        <i class="fas fa-stethoscope"></i>
                     </a>
                 </div>
             </div>
@@ -205,7 +196,7 @@
                 <a href="{{ url_for('farmer.diagnosis_history') }}" class="btn btn-sm btn-outline-success">
                     {{ t("see_all") }}
                 </a>
-                <a href="{{ url_for('farmer.diagnose_rule_based') }}" class="btn btn-sm btn-success">
+                <a href="{{ url_for('farmer.diagnose') }}" class="btn btn-sm btn-success">
                     {{ t("create_new") }}
                 </a>
             </div>
@@ -299,11 +290,11 @@
                 </div>
                 <div class="card-body">
                     <div class="action-grid">
-                        <a class="action-card" href="{{ url_for('farmer.diagnose_rule_based') }}">
-                            <div class="action-icon"><i class="fas fa-cogs"></i></div>
+                        <a class="action-card" href="{{ url_for('farmer.diagnose') }}">
+                            <div class="action-icon"><i class="fas fa-stethoscope"></i></div>
                             <div>
-                                <div class="action-title">{{ t("full_rule_based") }}</div>
-                                <div class="action-sub">{{ t("rule_inference") }}</div>
+                                <div class="action-title">{{ t("new_diagnosis") }}</div>
+                                <div class="action-sub">{{ t("diagnose_sub") }}</div>
                             </div>
                             <i class="fas fa-arrow-right ml-auto text-muted"></i>
                         </a>
@@ -322,15 +313,7 @@
     </div>
 </div>
 
-<div class="farmer-scan-fab">
-    <a href="{{ url_for('farmer.scan_crop', instant='1') }}"
-       class="farmer-scan-fab-toggle"
-       aria-label="{{ t('instant_scan_cta') }}"
-       title="{{ t('instant_scan_cta') }}">
-        <i class="fas fa-microscope scan-glyph" aria-hidden="true"></i>
-    </a>
-    <div class="farmer-scan-fab-label">{{ t("instant_scan_cta") }}</div>
-</div>
+
 {% endblock %}
 
 {% block scripts %}

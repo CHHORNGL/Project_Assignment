@@ -2,6 +2,179 @@
 {% block title %}Diagnose Crop{% endblock %}
 
 {% block content %}
+{% set is_km = (current_lang == 'km') %}
+
+<style>
+.wizard-progress {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+    padding: 0;
+    margin: 0 0 30px 0;
+}
+.wizard-progress::before {
+    content: '';
+    position: absolute;
+    top: 20px;
+    left: 10px;
+    right: 10px;
+    height: 3px;
+    background: #e2e8f0;
+    z-index: 1;
+}
+.wizard-step {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.step-num {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #fff;
+    border: 3px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    color: #64748b;
+    transition: all 0.3s ease;
+}
+.step-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #64748b;
+    margin-top: 6px;
+    transition: all 0.3s ease;
+}
+.wizard-step.active .step-num {
+    border-color: #10b981;
+    background: #10b981;
+    color: #fff;
+    box-shadow: 0 0 0 4px rgba(16,185,129,0.15);
+}
+.wizard-step.active .step-label {
+    color: #10b981;
+    font-weight: 700;
+}
+.wizard-step.completed .step-num {
+    border-color: #10b981;
+    background: #fff;
+    color: #10b981;
+}
+.wizard-step.completed .step-label {
+    color: #10b981;
+}
+
+.wizard-panel {
+    display: none;
+}
+.wizard-panel.active {
+    display: block;
+    animation: fadeIn 0.3s ease-in-out;
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.crop-select-card {
+    transition: all 0.2s;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    background: var(--card-bg, #fff);
+}
+.crop-select-card:hover {
+    border-color: #10b981;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(16,185,129,0.1);
+}
+.crop-select-card.selected {
+    border-color: #10b981 !important;
+    background: rgba(16, 185, 129, 0.05);
+}
+
+.symptom-checkbox-card {
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    background: var(--card-bg, #fff);
+}
+.symptom-checkbox-card:hover {
+    border-color: #10b981;
+    transform: translateY(-1px);
+}
+.symptom-checkbox-card.selected {
+    border-color: #10b981 !important;
+    background: rgba(16, 185, 129, 0.05);
+}
+.symptom-checkbox-card input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #10b981;
+    cursor: pointer;
+}
+
+/* =========================================
+   DARK MODE STYLES FOR WIZARD
+========================================= */
+.dark-mode .crop-select-card,
+.dark-mode .symptom-checkbox-card {
+    border-color: #244636;
+    background: #11221b;
+}
+
+.dark-mode .crop-select-card:hover,
+.dark-mode .symptom-checkbox-card:hover {
+    border-color: #10b981;
+}
+
+.dark-mode .crop-select-card.selected,
+.dark-mode .symptom-checkbox-card.selected {
+    border-color: #10b981 !important;
+    background: rgba(16, 185, 129, 0.1) !important;
+}
+
+.dark-mode .step-num {
+    background: #11221b;
+    border-color: #244636;
+    color: #a5c6b9;
+}
+
+.dark-mode .step-label {
+    color: #a5c6b9;
+}
+
+.dark-mode .wizard-step.active .step-num {
+    background: #10b981;
+    border-color: #10b981;
+    color: #fff;
+}
+
+.dark-mode .wizard-step.active .step-label {
+    color: #10b981;
+}
+
+.dark-mode .wizard-step.completed .step-num {
+    border-color: #10b981;
+    background: #11221b;
+    color: #10b981;
+}
+
+.dark-mode .wizard-step.completed .step-label {
+    color: #10b981;
+}
+
+.dark-mode .wizard-progress::before {
+    background: #244636;
+}
+</style>
+
 <div class="farmer-hero mb-4">
     <div class="d-flex justify-content-between align-items-center flex-wrap">
         <div>
@@ -17,186 +190,410 @@
 </div>
 
 <div class="mx-auto" style="max-width: 860px;">
-    <div class="card shadow-sm">
-        <div class="card-body form-scroll">
-            <form method="POST" enctype="multipart/form-data">
+    <!-- Step Progress Bar -->
+    <div class="wizard-progress mb-4">
+        <div class="wizard-step active" data-step="1">
+            <span class="step-num">1</span>
+            <span class="step-label">{% if is_km %}ដំណាំ{% else %}Crop{% endif %}</span>
+        </div>
+        <div class="wizard-step" data-step="2">
+            <span class="step-num">2</span>
+            <span class="step-label">{% if is_km %}សញ្ញាលើស្លឹក{% else %}Leaves{% endif %}</span>
+        </div>
+        <div class="wizard-step" data-step="3">
+            <span class="step-num">3</span>
+            <span class="step-label">{% if is_km %}សញ្ញាលើដើម{% else %}Stems{% endif %}</span>
+        </div>
+        <div class="wizard-step" data-step="4">
+            <span class="step-num">4</span>
+            <span class="step-label">{% if is_km %}ផ្កា ផ្លែ និងគ្រាប់{% else %}Fruit/Grain{% endif %}</span>
+        </div>
+        <div class="wizard-step" data-step="5">
+            <span class="step-num">5</span>
+            <span class="step-label">{% if is_km %}សង្ខេបព័ត៌មាន{% else %}Summary & Roots{% endif %}</span>
+        </div>
+    </div>
+
+    <!-- Wizard Form Card -->
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-4">
+            <form id="diagnosis-wizard-form" method="POST">
+                <!-- Hidden inputs to interact with the backend -->
+                <input type="hidden" name="crop_id" id="hidden-crop-id" value="{% if selected_crop_id %}{{ selected_crop_id }}{% endif %}">
+                <textarea name="symptoms" id="hidden-symptoms" style="display:none;"></textarea>
 
                 <!-- ===============================
-                     CROP SELECTION
+                     STEP 1: CROP SELECT
                 =============================== -->
-                <div class="farmer-section">
-                    <div class="farmer-section-title">{{ t("crop_label") }}</div>
-                    <div class="farmer-section-sub">{{ t("crop_placeholder") }}</div>
-                    <div class="form-group mb-3">
-                    <label class="font-weight-bold">
-                        <i class="fas fa-seedling label-icon"></i>{{ t("crop_label") }}
-                    </label>
-                    <select name="crop_id" class="form-control" required>
-                        <option value="" disabled selected>
-                            {{ t("crop_placeholder") }}
-                        </option>
+                <div class="wizard-panel active" data-step="1">
+                    <h5 class="font-weight-bold text-success mb-3">
+                        🌱 {% if is_km %}ជំហានទី ១៖ ជ្រើសរើសដំណាំ{% else %}Step 1: Choose Affected Crop{% endif %}
+                    </h5>
+                    <p class="text-muted small mb-4">
+                        {% if is_km %}សូមជ្រើសរើសប្រភេទដំណាំដែលកំពុងមានបញ្ហាពីបញ្ជីខាងក្រោម។{% else %}Select the crop you are currently inspecting from the list below.{% endif %}
+                    </p>
+
+                    <div class="row row-cols-2 row-cols-md-4 g-3 crop-visual-select">
                         {% for crop in crops %}
-                        <option value="{{ crop.id }}">
-                            {{ localize(crop, "name") }}
-                        </option>
+                        <!-- Determine Crop emoji -->
+                        {% set crop_name_lower = (crop.name or "")|lower %}
+                        {% set is_rice = "rice" in crop_name_lower or "paddy" in crop_name_lower or "ស្រូវ" in (crop.name_kh or "") %}
+                        {% set is_corn = "corn" in crop_name_lower or "maize" in crop_name_lower or "ពោត" in (crop.name_kh or "") %}
+                        {% set is_cassava = "cassava" in crop_name_lower or "manioc" in crop_name_lower or "មើម" in (crop.name_kh or "") %}
+                        {% set is_banana = "banana" in crop_name_lower or "ចេក" in (crop.name_kh or "") %}
+                        {% set is_mango = "mango" in crop_name_lower or "មា" in (crop.name_kh or "") %}
+                        {% set is_veg = "vegetable" in crop_name_lower or "tomato" in crop_name_lower or "cucumber" in crop_name_lower or "eggplant" in crop_name_lower or "បន្លែ" in (crop.name_kh or "") %}
+                        {% set is_soy = "soy" in crop_name_lower or "bean" in crop_name_lower or "legume" in crop_name_lower %}
+                        {% set is_pepper = "pepper" in crop_name_lower or "chili" in crop_name_lower or "chilli" in crop_name_lower %}
+                        {% if is_rice %}{% set crop_emoji = "🌾" %}
+                        {% elif is_corn %}{% set crop_emoji = "🌽" %}
+                        {% elif is_cassava %}{% set crop_emoji = "🥔" %}
+                        {% elif is_banana %}{% set crop_emoji = "🍌" %}
+                        {% elif is_mango %}{% set crop_emoji = "🥭" %}
+                        {% elif is_veg %}{% set crop_emoji = "🥦" %}
+                        {% elif is_soy %}{% set crop_emoji = "🫘" %}
+                        {% elif is_pepper %}{% set crop_emoji = "🌶️" %}
+                        {% else %}{% set crop_emoji = "🌿" %}{% endif %}
+
+                        <div class="col mb-3">
+                            <div class="crop-select-card text-center p-3 h-100 border rounded {% if selected_crop_id and crop.id == selected_crop_id %}selected border-success{% endif %}"
+                                 data-crop-id="{{ crop.id }}"
+                                 style="cursor: pointer; transition: transform 0.15s ease, border-color 0.15s ease;">
+                                <div style="font-size: 2.5rem; line-height: 1;">{{ crop_emoji }}</div>
+                                <div class="font-weight-bold mt-2" style="font-size: 0.9rem;">
+                                    {% if current_lang == "km" and crop.name_kh %}{{ crop.name_kh }}{% else %}{{ crop.name }}{% endif %}
+                                </div>
+                            </div>
+                        </div>
                         {% endfor %}
-                    </select>
-                </div>
-                </div>
-
-                <!-- ===============================
-                     IMAGE-BASED SYMPTOM PICKER
-                =============================== -->
-                <div class="farmer-section">
-                    <div class="farmer-section-title">{{ t("symptom_picker_title") }}</div>
-                    <div class="farmer-section-sub">{{ t("symptom_picker_sub") }}</div>
-                    <div class="form-group mb-4">
-                    <label class="font-weight-bold">
-                        <i class="far fa-images label-icon"></i>{{ t("symptom_picker_title") }}
-                    </label>
-                    <div class="small text-muted mb-3">
-                        {{ t("symptom_picker_sub") }}
-                    </div>
-                    <div class="symptom-picker" id="symptom-picker">
-                        <div class="symptom-card" data-symptoms-en="brown spots on leaves, gray spots on leaves" data-symptoms-km="ស្លឹកមានចំណុចត្នោត, ស្លឹកមានចំណុចប្រផេះ">
-                            <img src="{{ url_for('static', filename='img/symptoms/leaf-spots.svg') }}" alt="Leaf spots">
-                            <div class="symptom-card-title">{{ t("symptom_spots_title") }}</div>
-                            <div class="symptom-card-sub">{{ t("symptom_spots_desc") }}</div>
-                        </div>
-                        <div class="symptom-card" data-symptoms-en="yellowing leaves, pale leaves" data-symptoms-km="ស្លឹកលឿង, ស្លឹកស្លេក">
-                            <img src="{{ url_for('static', filename='img/symptoms/leaf-yellow.svg') }}" alt="Yellow leaf">
-                            <div class="symptom-card-title">{{ t("symptom_yellow_title") }}</div>
-                            <div class="symptom-card-sub">{{ t("symptom_yellow_desc") }}</div>
-                        </div>
-                        <div class="symptom-card" data-symptoms-en="holes in leaves, chewed leaf edges" data-symptoms-km="ស្លឹកមានរន្ធ, ជ្រុងស្លឹកខូច">
-                            <img src="{{ url_for('static', filename='img/symptoms/leaf-damaged.svg') }}" alt="Damaged leaf">
-                            <div class="symptom-card-title">{{ t("symptom_damage_title") }}</div>
-                            <div class="symptom-card-sub">{{ t("symptom_damage_desc") }}</div>
-                        </div>
-                        <div class="symptom-card" data-symptoms-en="wilting leaves, drooping leaves" data-symptoms-km="ស្លឹករោយ, ស្លឹកទម្លាក់">
-                            <img src="{{ url_for('static', filename='img/symptoms/leaf-wilt.svg') }}" alt="Wilting leaf">
-                            <div class="symptom-card-title">{{ t("symptom_wilt_title") }}</div>
-                            <div class="symptom-card-sub">{{ t("symptom_wilt_desc") }}</div>
-                        </div>
-                        <div class="symptom-card" data-symptoms-en="leaf curl, curled edges" data-symptoms-km="ស្លឹករមួល, ជ្រុងស្លឹករមួល">
-                            <img src="{{ url_for('static', filename='img/symptoms/leaf-curl.svg') }}" alt="Leaf curl">
-                            <div class="symptom-card-title">{{ t("symptom_curl_title") }}</div>
-                            <div class="symptom-card-sub">{{ t("symptom_curl_desc") }}</div>
-                        </div>
-                        <div class="symptom-card" data-symptoms-en="white mold, powdery patches" data-symptoms-km="ពពួកស, ពពួកសជាបន្ទះ">
-                            <img src="{{ url_for('static', filename='img/symptoms/leaf-mold.svg') }}" alt="White mold">
-                            <div class="symptom-card-title">{{ t("symptom_mold_title") }}</div>
-                            <div class="symptom-card-sub">{{ t("symptom_mold_desc") }}</div>
-                        </div>
-                        <div class="symptom-card" data-symptoms-en="black leaf edges, burnt leaf tips" data-symptoms-km="ជ្រុងស្លឹកខ្មៅ, ចុងស្លឹកខ្មៅ">
-                            <img src="{{ url_for('static', filename='img/symptoms/leaf-edges.svg') }}" alt="Black leaf edges">
-                            <div class="symptom-card-title">{{ t("symptom_edges_title") }}</div>
-                            <div class="symptom-card-sub">{{ t("symptom_edges_desc") }}</div>
-                        </div>
-                        <div class="symptom-card" data-symptoms-en="stem rot, soft brown stem base" data-symptoms-km="ក្បាលដើមរលួយ, ក្បាលដើមទន់ត្នោត">
-                            <img src="{{ url_for('static', filename='img/symptoms/stem-rot.svg') }}" alt="Stem rot">
-                            <div class="symptom-card-title">{{ t("symptom_stem_rot_title") }}</div>
-                            <div class="symptom-card-sub">{{ t("symptom_stem_rot_desc") }}</div>
-                        </div>
-                        <div class="symptom-card" data-symptoms-en="webbing on leaves, tiny insects" data-symptoms-km="សសៃលើស្លឹក, សត្វល្អិតតូចៗ">
-                            <img src="{{ url_for('static', filename='img/symptoms/leaf-webbing.svg') }}" alt="Insect webbing">
-                            <div class="symptom-card-title">{{ t("symptom_webbing_title") }}</div>
-                            <div class="symptom-card-sub">{{ t("symptom_webbing_desc") }}</div>
-                        </div>
-                    </div>
-                </div>
-                </div>
-
-                <!-- ===============================
-                     SYMPTOMS INPUT
-                =============================== -->
-                <div class="farmer-section">
-                    <div class="farmer-section-title">{{ t("symptom_text_label") }}</div>
-                    <div class="farmer-section-sub">{{ t("symptom_tip_1") }}</div>
-                    <div class="form-group mb-4">
-                    <label class="font-weight-bold">
-                        <i class="fas fa-notes-medical label-icon"></i>{{ t("symptom_text_label") }}
-                    </label>
-                    <textarea
-                        name="symptoms"
-                        class="form-control"
-                        rows="4"
-                        placeholder="{{ t('symptom_placeholder') }}"
-                        required></textarea>
-
-                    <small class="form-text text-muted">
-                        • {{ t("symptom_tip_1") }}<br>
-                        • {{ t("symptom_tip_2") }}
-                    </small>
                     </div>
                 </div>
 
                 <!-- ===============================
-                     SUBMIT
+                     STEP 2: LEAF SYMPTOMS
                 =============================== -->
-                <div class="farmer-actions d-flex justify-content-between align-items-center">
-                    <a href="{{ url_for('farmer.dashboard') }}"
-                       class="btn btn-outline-secondary">
-                        <i class="fas fa-arrow-left btn-icon"></i>{{ t("back") }}
-                    </a>
+                <div class="wizard-panel" data-step="2">
+                    <h5 class="font-weight-bold text-success mb-3">
+                        🍃 {% if is_km %}ជំហានទី ២៖ រោគសញ្ញាលើស្លឹក{% else %}Step 2: Leaf Symptoms{% endif %}
+                    </h5>
+                    <p class="text-muted small mb-4">
+                        {% if is_km %}តើមានរោគសញ្ញាអ្វីខ្លះនៅលើស្លឹកដំណាំ? សូមជ្រើសរើសសញ្ញាខាងក្រោម។{% else %}What symptoms do you observe on the leaves of the plant? Select from below.{% endif %}
+                    </p>
+                    <div class="symptoms-list-container row" id="step-2-symptoms">
+                        <!-- Dynamically filled by JS -->
+                    </div>
+                </div>
 
-                    <button type="submit" class="btn btn-success px-4">
-                        <i class="fas fa-stethoscope btn-icon"></i>{{ t("diagnose_now") }}
+                <!-- ===============================
+                     STEP 3: STEM SYMPTOMS
+                =============================== -->
+                <div class="wizard-panel" data-step="3">
+                    <h5 class="font-weight-bold text-success mb-3">
+                        🪵 {% if is_km %}ជំហានទី ៣៖ រោគសញ្ញាលើដើម ឬមែក{% else %}Step 3: Stem & Sheath Symptoms{% endif %}
+                    </h5>
+                    <p class="text-muted small mb-4">
+                        {% if is_km %}តើមានរោគសញ្ញាអ្វីខ្លះនៅលើដើម ស្រទប ឬមែកដំណាំ?{% else %}What symptoms do you observe on the stems, sheath, or branches?{% endif %}
+                    </p>
+                    <div class="symptoms-list-container row" id="step-3-symptoms">
+                        <!-- Dynamically filled by JS -->
+                    </div>
+                </div>
+
+                <!-- ===============================
+                     STEP 4: FRUIT/GRAIN SYMPTOMS
+                =============================== -->
+                <div class="wizard-panel" data-step="4">
+                    <h5 class="font-weight-bold text-success mb-3">
+                        🍒 {% if is_km %}ជំហានទី ៤៖ រោគសញ្ញាលើផ្កា ផ្លែ ឬគ្រាប់{% else %}Step 4: Fruit, Grain & Flower Symptoms{% endif %}
+                    </h5>
+                    <p class="text-muted small mb-4">
+                        {% if is_km %}តើមានរោគសញ្ញាអ្វីខ្លះនៅលើផ្កា ផ្លែ កួរ ឬគ្រាប់ដំណាំ?{% else %}What symptoms do you observe on the fruit, grains, panicles, or flowers?{% endif %}
+                    </p>
+                    <div class="symptoms-list-container row" id="step-4-symptoms">
+                        <!-- Dynamically filled by JS -->
+                    </div>
+                </div>
+
+                <!-- ===============================
+                     STEP 5: SUMMARY & OTHER SYMPTOMS
+                =============================== -->
+                <div class="wizard-panel" data-step="5">
+                    <h5 class="font-weight-bold text-success mb-3">
+                        📋 {% if is_km %}ជំហានទី ៥៖ សង្ខេបព័ត៌មាន និងសញ្ញាផ្សេងៗ{% else %}Step 5: Summary & Roots/Pest Problems{% endif %}
+                    </h5>
+                    <p class="text-muted small mb-4">
+                        {% if is_km %}សូមពិនិត្យមើលសញ្ញាដែលបានជ្រើសរើស។ អ្នកក៏អាចបញ្ជាក់ពីបញ្ហាឫស ឬសត្វល្អិតខាងក្រោមផងដែរ។{% else %}Confirm the selected symptoms below. You can also specify any root or insect pest issues here.{% endif %}
+                    </p>
+
+                    <div class="mb-4">
+                        <label class="font-weight-bold mb-2">
+                            🔍 {% if is_km %}รោគសញ្ញាផ្សេងៗ (ឫស, សត្វល្អិត...){% else %}Other Symptoms (Roots, Pests, etc.){% endif %}
+                        </label>
+                        <div class="symptoms-list-container row mb-4" id="step-5-symptoms">
+                            <!-- Dynamically filled by JS -->
+                        </div>
+                    </div>
+
+                    <div class="card bg-light border-0 rounded p-3 mb-4">
+                        <h6 class="font-weight-bold text-success mb-2">
+                            📝 {% if is_km %}សង្ខេបរោគសញ្ញាដែលបានជ្រើសរើស{% else %}Selected Symptoms Summary{% endif %}
+                        </h6>
+                        <div id="wizard-summary-text" class="text-muted small">
+                            {% if is_km %}មិនទាន់មានការជ្រើសរើសរោគសញ្ញានៅឡើយទេ។{% else %}No symptoms selected yet.{% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Custom input text area if they want to add anything else -->
+                    <div class="form-group mb-3">
+                        <label class="font-weight-bold">
+                            ✍️ {% if is_km %}កំណត់ចំណាំបន្ថែម ឬរៀបរាប់ផ្ទាល់ខ្លួន{% else %}Additional Notes / Personal Description{% endif %}
+                        </label>
+                        <textarea id="additional-notes" class="form-control" rows="3" placeholder="{% if is_km %}រៀបរាប់បន្ថែមពីស្ថានភាពដំណាំ ឬសញ្ញាដែលសង្កេតឃើញ...{% else %}Describe any other symptoms or context here...{% endif %}"></textarea>
+                    </div>
+                </div>
+
+                <!-- Footer Navigation -->
+                <hr class="my-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <button type="button" class="btn btn-outline-secondary" id="wizard-prev-btn" style="display: none;">
+                        <i class="fas fa-arrow-left mr-1"></i>{{ t("back") }}
                     </button>
+                    <div class="ms-auto">
+                        <button type="button" class="btn btn-success px-4" id="wizard-next-btn">
+                            {% if is_km %}បន្ទាប់{% else %}Next{% endif %}<i class="fas fa-arrow-right ml-1"></i>
+                        </button>
+                        <button type="submit" class="btn btn-success px-4" id="wizard-submit-btn" style="display: none;">
+                            <i class="fas fa-stethoscope mr-1"></i>{{ t("diagnose_now") }}
+                        </button>
+                    </div>
                 </div>
-
             </form>
-
         </div>
     </div>
 </div>
+
 {% endblock %}
 
 {% block scripts %}
 <script>
 (function () {
-    const picker = document.getElementById("symptom-picker");
-    const textarea = document.querySelector("textarea[name='symptoms']");
-
-    if (!picker || !textarea) return;
-
-    const lang = "{{ current_lang }}";
-    if (textarea) {
-        textarea.dataset.lang = textarea.dataset.lang || lang;
-    }
-    const getText = (card) => {
-        if (lang === "km") return card.dataset.symptomsKm || "";
-        return card.dataset.symptomsEn || "";
+    const cropsData = {
+        {% for crop_id, symptoms in crop_symptoms.items() %}
+            "{{ crop_id }}": [
+                {% for s in symptoms %}
+                    {
+                        "id": {{ s.id }},
+                        "name": "{{ s.name|escape }}",
+                        "name_kh": "{{ (s.name_kh or s.name)|escape }}"
+                    }{% if not loop.last %},{% endif %}
+                {% endfor %}
+            ]{% if not loop.last %},{% endif %}
+        {% endfor %}
     };
 
-    function parseCurrent() {
-        return textarea.value
-            .split(",")
-            .map((t) => t.trim())
-            .filter(Boolean);
+    const isKm = {{ 'true' if is_km else 'false' }};
+    let currentStep = 1;
+    let selectedCropId = document.getElementById("hidden-crop-id").value;
+    const selectedSymptoms = new Set();
+
+    // Elements
+    const prevBtn = document.getElementById("wizard-prev-btn");
+    const nextBtn = document.getElementById("wizard-next-btn");
+    const submitBtn = document.getElementById("wizard-submit-btn");
+
+    function getSymptomCategory(name, nameKh) {
+        const n = (name || '').toLowerCase();
+        const kh = nameKh || '';
+        
+        // Leaf category
+        if (n.includes('leaf') || n.includes('leaves') || n.includes('spot') || n.includes('yellow') || 
+            n.includes('chlorosis') || n.includes('rust') || n.includes('streak') || n.includes('blast') || 
+            n.includes('blight') || n.includes('curl') || n.includes('mildew') || kh.includes('ស្លឹក')) {
+            return 2;
+        }
+        
+        // Stem category
+        if (n.includes('stem') || n.includes('stalk') || n.includes('sheath') || n.includes('canker') || 
+            n.includes('rot') || kh.includes('ដើម') || kh.includes('ស្រទប')) {
+            return 3;
+        }
+        
+        // Fruit/Grain/Flower category
+        if (n.includes('fruit') || n.includes('grain') || n.includes('pod') || n.includes('flower') || 
+            n.includes('seed') || n.includes('panicle') || n.includes('ear') || kh.includes('ផ្លែ') || 
+            kh.includes('ផ្កា') || kh.includes('គ្រាប់') || kh.includes('កួរ') || kh.includes('ផ្លែផ្កា')) {
+            return 4;
+        }
+        
+        // Root/General/Pests/Other category
+        return 5;
     }
 
-    if (picker && textarea) {
-        picker.querySelectorAll(".symptom-card").forEach((card) => {
+    function renderSymptomsForCrop(cropId) {
+        // Clear containers
+        for (let i = 2; i <= 5; i++) {
+            document.getElementById(`step-${i}-symptoms`).innerHTML = "";
+        }
+
+        const symptoms = cropsData[cropId] || [];
+        if (!symptoms.length) {
+            for (let i = 2; i <= 5; i++) {
+                document.getElementById(`step-${i}-symptoms`).innerHTML = `
+                    <div class="col-12 py-3 text-center text-muted small">
+                        ${isKm ? "មិនមានទិន្នន័យរោគសញ្ញាទេ" : "No symptom data available."}
+                    </div>
+                `;
+            }
+            return;
+        }
+
+        symptoms.forEach(s => {
+            const cat = getSymptomCategory(s.name, s.name_kh);
+            const container = document.getElementById(`step-${cat}-symptoms`);
+
+            const isChecked = selectedSymptoms.has(s.name);
+            const html = `
+                <div class="col-md-6 mb-3">
+                    <div class="symptom-checkbox-card p-3 border rounded h-100 d-flex align-items-center ${isChecked ? 'selected border-success' : ''}" 
+                         data-symptom-name="${s.name}" 
+                         style="cursor: pointer;">
+                        <input class="mr-3" type="checkbox" value="${s.id}" ${isChecked ? 'checked' : ''} style="pointer-events: none;">
+                        <span class="font-weight-bold" style="font-size: 0.9rem; pointer-events: none;">
+                            ${isKm ? s.name_kh : s.name}
+                        </span>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', html);
+        });
+
+        // Add placeholders if empty
+        for (let i = 2; i <= 5; i++) {
+            const container = document.getElementById(`step-${i}-symptoms`);
+            if (!container.children.length) {
+                container.innerHTML = `
+                    <div class="col-12 py-4 text-center text-muted small">
+                        ✨ ${isKm ? 'មិនមានរោគសញ្ញាជាក់លាក់សម្រាប់ផ្នែកនេះទេ' : 'No specific symptoms for this part. Click Next to proceed.'}
+                    </div>
+                `;
+            }
+        }
+
+        // Bind click events on new symptom cards
+        document.querySelectorAll(".symptom-checkbox-card").forEach(card => {
             card.addEventListener("click", () => {
-                if (textarea.dataset.lang !== lang) {
-                    textarea.value = "";
-                    textarea.dataset.lang = lang;
-                }
+                const name = card.dataset.symptomName;
+                const checkbox = card.querySelector("input[type='checkbox']");
+
                 card.classList.toggle("selected");
-                const current = new Set(parseCurrent());
-                const phrases = getText(card)
-                    .split(",")
-                    .map((t) => t.trim())
-                    .filter(Boolean);
-                if (card.classList.contains("selected")) {
-                    phrases.forEach((p) => current.add(p));
+                card.classList.toggle("border-success");
+                
+                if (checkbox.checked) {
+                    checkbox.checked = false;
+                    selectedSymptoms.delete(name);
                 } else {
-                    phrases.forEach((p) => current.delete(p));
+                    checkbox.checked = true;
+                    selectedSymptoms.add(name);
                 }
-                textarea.value = Array.from(current).join(", ");
+                updateSummary();
             });
         });
+    }
+
+    function updateSummary() {
+        const textElement = document.getElementById("wizard-summary-text");
+        const list = Array.from(selectedSymptoms);
+        const additional = document.getElementById("additional-notes").value.trim();
+
+        const combinedList = [...list];
+        if (additional) {
+            combinedList.push(additional);
+        }
+
+        document.getElementById("hidden-symptoms").value = combinedList.join(", ");
+
+        if (list.length === 0) {
+            textElement.textContent = isKm ? "មិនទាន់មានការជ្រើសរើសរោគសញ្ញានៅឡើយទេ។" : "No symptoms selected yet.";
+        } else {
+            textElement.textContent = list.join(", ");
+        }
+    }
+
+    function updateStepUI() {
+        // Panels
+        document.querySelectorAll(".wizard-panel").forEach(panel => {
+            panel.classList.remove("active");
+            if (parseInt(panel.dataset.step) === currentStep) {
+                panel.classList.add("active");
+            }
+        });
+
+        // Progress bar
+        document.querySelectorAll(".wizard-step").forEach(step => {
+            const stepNum = parseInt(step.dataset.step);
+            step.classList.remove("active", "completed");
+            if (stepNum === currentStep) {
+                step.classList.add("active");
+            } else if (stepNum < currentStep) {
+                step.classList.add("completed");
+            }
+        });
+
+        // Navigation buttons
+        if (currentStep === 1) {
+            prevBtn.style.display = "none";
+            nextBtn.style.display = "inline-block";
+            submitBtn.style.display = "none";
+        } else if (currentStep === 5) {
+            prevBtn.style.display = "inline-block";
+            nextBtn.style.display = "none";
+            submitBtn.style.display = "inline-block";
+        } else {
+            prevBtn.style.display = "inline-block";
+            nextBtn.style.display = "inline-block";
+            submitBtn.style.display = "none";
+        }
+    }
+
+    // Step 1: Crop Select Cards Event
+    document.querySelectorAll(".crop-select-card").forEach(card => {
+        card.addEventListener("click", () => {
+            document.querySelectorAll(".crop-select-card").forEach(c => c.classList.remove("selected", "border-success"));
+            card.classList.add("selected", "border-success");
+            
+            selectedCropId = card.dataset.cropId;
+            document.getElementById("hidden-crop-id").value = selectedCropId;
+            
+            selectedSymptoms.clear();
+            renderSymptomsForCrop(selectedCropId);
+            updateSummary();
+        });
+    });
+
+    // Navigation events
+    nextBtn.addEventListener("click", () => {
+        if (currentStep === 1 && !selectedCropId) {
+            alert(isKm ? "សូមជ្រើសរើសដំណាំជាមុនសិន!" : "Please select a crop first!");
+            return;
+        }
+        if (currentStep < 5) {
+            currentStep++;
+            updateStepUI();
+        }
+    });
+
+    prevBtn.addEventListener("click", () => {
+        if (currentStep > 1) {
+            currentStep--;
+            updateStepUI();
+        }
+    });
+
+    document.getElementById("additional-notes").addEventListener("input", updateSummary);
+
+    // Initial pre-load of crop if selected
+    if (selectedCropId) {
+        renderSymptomsForCrop(selectedCropId);
     }
 })();
 </script>

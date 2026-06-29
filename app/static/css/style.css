@@ -565,61 +565,63 @@ input:focus {
    THEME SWITCHER (professional segmented)
 ========================================= */
 .theme-switcher-menu {
-    padding: 14px;
-    min-width: 210px;
-    border-radius: 16px !important;
+    padding: 6px;
+    min-width: 140px;
+    border-radius: 12px !important;
     border: 1px solid var(--border-light) !important;
     margin-top: 8px;
 }
 
 .theme-switcher-label {
-    font-size: 0.68rem;
-    font-weight: 700;
-    letter-spacing: 0.1em;
+    font-size: 0.6rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: var(--text-muted, #64748b);
-    margin-bottom: 10px;
-    padding: 0 2px;
+    color: var(--text-muted);
+    padding: 4px 8px 6px;
+    border-bottom: 1px solid var(--border-light);
+    margin-bottom: 4px;
 }
 
 .theme-switcher-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
 }
 
 .theme-switcher-btn {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: 5px;
-    padding: 10px 6px;
-    border-radius: 10px;
-    border: 1px solid var(--border-light, #e2e8f0);
+    flex-direction: row;
+    gap: 8px;
+    padding: 7px 10px;
+    border-radius: 8px;
+    border: 1px solid transparent;
     background: transparent;
-    color: var(--text-muted, #64748b);
-    font-size: 0.73rem;
-    font-weight: 600;
+    color: var(--text-main);
+    font-size: 0.82rem;
+    font-weight: 700;
     cursor: pointer;
-    transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
+    transition: background 0.13s, border-color 0.13s;
     width: 100%;
 }
 
 .theme-switcher-btn i {
-    font-size: 1rem;
+    font-size: 0.95rem;
+    width: 16px;
+    text-align: center;
 }
 
 .theme-switcher-btn:hover {
-    background: var(--primary-soft, rgba(78,115,223,0.1));
-    border-color: var(--primary, #4e73df);
+    background: var(--surface-soft, #f8fafc);
     color: var(--primary, #4e73df);
 }
 
 .theme-switcher-btn.is-active {
-    background: var(--primary, #4e73df);
-    border-color: var(--primary, #4e73df);
-    color: #ffffff;
-    box-shadow: 0 4px 14px rgba(78, 115, 223, 0.35);
+    background: rgba(78, 115, 223, 0.09);
+    border-color: rgba(78, 115, 223, 0.3);
+    color: var(--primary, #4e73df);
+    box-shadow: none;
 }
 
 .dark-mode .theme-switcher-menu {
@@ -628,21 +630,19 @@ input:focus {
 }
 
 .dark-mode .theme-switcher-btn {
-    border-color: var(--admin-border-dark, #1f2937);
-    color: var(--admin-muted-dark, #94a3b8);
+    color: var(--text-main);
 }
 
 .dark-mode .theme-switcher-btn:hover {
-    background: rgba(78, 115, 223, 0.15);
-    border-color: var(--primary, #4e73df);
-    color: var(--primary, #4e73df);
+    background: rgba(255, 255, 255, 0.05);
+    color: #6ee7b7;
 }
 
 .dark-mode .theme-switcher-btn.is-active {
-    background: var(--primary, #4e73df);
-    border-color: var(--primary, #4e73df);
-    color: #ffffff;
-    box-shadow: 0 4px 16px rgba(78, 115, 223, 0.45);
+    background: rgba(110, 231, 183, 0.12);
+    border-color: rgba(110, 231, 183, 0.3);
+    color: #6ee7b7;
+    box-shadow: none;
 }
 
 /* Desktop icon-only sidebar toggle (topbar) */
@@ -7909,28 +7909,30 @@ body.dark-mode.admin-theme[data-admin-theme="lunar_festival"],
 
 /* ── Language dropdown menu ── */
 .lang-menu {
-    padding: 8px;
-    min-width: 230px;
-    border-radius: 16px !important;
+    padding: 6px;
+    min-width: 140px;
+    border-radius: 12px !important;
     border: 1px solid var(--border-light) !important;
     margin-top: 8px;
 }
 .lang-menu-header {
-    font-size: 0.65rem;
+    font-size: 0.6rem;
     font-weight: 800;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--text-muted);
-    padding: 4px 8px 10px;
+    padding: 4px 8px 6px;
+    border-bottom: 1px solid var(--border-light);
+    margin-bottom: 4px;
 }
 .lang-menu-item {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
     width: 100%;
-    padding: 10px 12px;
+    padding: 7px 10px;
     border: 1px solid transparent;
-    border-radius: 10px;
+    border-radius: 8px;
     background: transparent;
     cursor: pointer;
     text-align: left;
@@ -9446,18 +9448,48 @@ body.admin-theme .settings-theme-option input[type="radio"] {
     margin-bottom: 12px;
 }
 
-.farmer-dash-theme .diag-result-meta,
+.farmer-dash-theme .diag-result-meta {
+    border-radius: 999px;
+    padding: 5px 11px;
+    font-size: 0.79rem;
+    font-weight: 600;
+    border: 1px solid var(--diag-border);
+    background: var(--diag-surface-soft);
+    color: var(--diag-text);
+}
+
 .farmer-dash-theme .diag-status-badge {
     border-radius: 999px;
     padding: 5px 11px;
     font-size: 0.79rem;
     font-weight: 600;
-    border: 1px solid rgba(120, 141, 132, 0.34);
-    background: rgba(246, 250, 248, 0.92);
+    box-shadow: none;
+    border: 1px solid transparent;
 }
 
-.farmer-dash-theme .diag-status-badge {
-    box-shadow: none;
+.farmer-dash-theme .diag-status-badge.badge-success {
+    background-color: #10b981 !important;
+    color: #ffffff !important;
+}
+
+.farmer-dash-theme .diag-status-badge.badge-warning {
+    background-color: #f59e0b !important;
+    color: #1f2937 !important;
+}
+
+.farmer-dash-theme .diag-status-badge.badge-danger {
+    background-color: #ef4444 !important;
+    color: #ffffff !important;
+}
+
+.farmer-dash-theme .diag-status-badge.badge-info {
+    background-color: #3b82f6 !important;
+    color: #ffffff !important;
+}
+
+.farmer-dash-theme .diag-status-badge.badge-secondary {
+    background-color: #6b7280 !important;
+    color: #ffffff !important;
 }
 
 .farmer-dash-theme .result-chips {
@@ -9471,7 +9503,7 @@ body.admin-theme .settings-theme-option input[type="radio"] {
     align-items: center;
     gap: 6px;
     font-size: 0.79rem;
-    color: #1b4f3f;
+    color: var(--diag-text);
     background: var(--diag-accent-soft);
     border: 1px solid rgba(15, 138, 106, 0.24);
     border-radius: 999px;
@@ -9791,7 +9823,7 @@ body.admin-theme .settings-theme-option input[type="radio"] {
 }
 
 .farmer-dash-theme .diag-care-text {
-    color: var(--diag-muted);
+    color: var(--diag-text);
     line-height: 1.52;
 }
 
@@ -9920,11 +9952,54 @@ body.admin-theme .settings-theme-option input[type="radio"] {
     color: #86efac;
 }
 
+.dark-mode .farmer-dash-theme .diag-result-hero {
+    background:
+        radial-gradient(560px 240px at 10% -20%, rgba(52, 211, 153, 0.15) 0%, rgba(52, 211, 153, 0) 72%),
+        linear-gradient(180deg, rgba(16, 42, 33, 0.96) 0%, var(--diag-surface) 72%) !important;
+}
+
+.dark-mode .farmer-dash-theme .diag-tier-chip.tier-high {
+    color: #a7f3d0 !important;
+    background: rgba(16, 185, 129, 0.28) !important;
+    border-color: rgba(16, 185, 129, 0.45) !important;
+}
+
+.dark-mode .farmer-dash-theme .diag-tier-chip.tier-medium {
+    color: #fef08a !important;
+    background: rgba(245, 158, 11, 0.26) !important;
+    border-color: rgba(245, 158, 11, 0.42) !important;
+}
+
+.dark-mode .farmer-dash-theme .diag-tier-chip.tier-low,
+.dark-mode .farmer-dash-theme .diag-tier-chip.tier-insufficient {
+    color: #fca5a5 !important;
+    background: rgba(239, 68, 68, 0.22) !important;
+    border-color: rgba(239, 68, 68, 0.38) !important;
+}
+
 .dark-mode .farmer-dash-theme .diag-result-meta,
 .dark-mode .farmer-dash-theme .diag-status-badge {
     background: rgba(15, 35, 28, 0.85);
     border-color: rgba(90, 132, 116, 0.45);
     color: #d8efe5;
+}
+
+.dark-mode .farmer-dash-theme .result-chip,
+.dark-mode .farmer-dash-theme .symptom-chip {
+    color: #e6f6ef !important;
+    background: rgba(52, 211, 153, 0.18) !important;
+    border-color: rgba(52, 211, 153, 0.35) !important;
+}
+
+.dark-mode .farmer-dash-theme .diag-result-actions .btn-outline-success {
+    background: rgba(52, 211, 153, 0.06) !important;
+    border-color: #34d399 !important;
+    color: #34d399 !important;
+}
+
+.dark-mode .farmer-dash-theme .diag-result-actions .btn-outline-success:hover {
+    background: rgba(52, 211, 153, 0.16) !important;
+    color: #34d399 !important;
 }
 
 .dark-mode .farmer-dash-theme .diag-result-card .card-header {
@@ -10064,8 +10139,11 @@ body.admin-theme .settings-theme-option input[type="radio"] {
 
 /* Dark mode */
 .dark-mode .farmer-dash-theme .sev-high   { background: rgba(22,163,74,0.18); color: #86efac; }
+.dark-mode .farmer-dash-theme .sev-high .diag-sev-pct { color: #4ade80 !important; }
 .dark-mode .farmer-dash-theme .sev-medium { background: rgba(245,158,11,0.16); color: #fde68a; }
+.dark-mode .farmer-dash-theme .sev-medium .diag-sev-pct { color: #fbbf24 !important; }
 .dark-mode .farmer-dash-theme .sev-low    { background: rgba(239,68,68,0.15); color: #fca5a5; }
+.dark-mode .farmer-dash-theme .sev-low .diag-sev-pct { color: #f87171 !important; }
 .dark-mode .farmer-dash-theme .sev-unknown{ background: rgba(100,116,139,0.18); color: #cbd5e1; }
 
 @media (max-width: 480px) {

@@ -21,6 +21,7 @@ from flask_login import login_required, current_user
 from app.extensions import db
 from app.models.user import User
 from app.models.notification import Notification
+from app.models.passkey import UserPasskey
 from app.services.notification_service import serialize_notification
 from app.services.khmer_calendar import build_khmer_calendar_month
 from app.services.theme_manager import resolve_active_runtime
@@ -216,8 +217,6 @@ def profile():
         flash("Profile updated successfully.", "success")
         return redirect(url_for("user.profile"))
 
-    if current_user.has_role("farmer"):
-        return render_template("farmer/profile.html")
     rep_label = _representative_label(current_user)
     member_card_url = None
     member_card_qr_url = None
@@ -227,11 +226,17 @@ def profile():
             "https://api.qrserver.com/v1/create-qr-code/?size=160x160&data="
             + quote_plus(member_card_url)
         )
+    if current_user.has_role("admin") or current_user.has_role("expert"):
+        layout_shell = "layouts/base.html"
+    else:
+        layout_shell = "layouts/farmer_shell.html"
+
     return render_template(
-        "users/profile.html",
+        "farmer/profile.html",
         rep_label=rep_label,
         member_card_url=member_card_url,
-        member_card_qr_url=member_card_qr_url
+        member_card_qr_url=member_card_qr_url,
+        layout_shell=layout_shell
     )
 
 
@@ -297,13 +302,25 @@ def settings():
             flash("Invalid theme option.", "danger")
             return redirect(url_for("user.settings"))
         current_user.theme = theme
+        
+        # 🔒 Save Two-Factor Verification Toggle
+        two_factor_enabled = (request.form.get("two_factor_enabled") == "y")
+        current_user.two_factor_enabled = two_factor_enabled
+
         db.session.commit()
         flash("Settings saved.", "success")
         return redirect(url_for("user.settings"))
 
-    if current_user.has_role("farmer"):
-        return render_template("farmer/settings.html", current_lang=get_current_language())
-    return render_template("users/settings.html", current_lang=get_current_language())
+    if current_user.has_role("admin") or current_user.has_role("expert"):
+        layout_shell = "layouts/base.html"
+    else:
+        layout_shell = "layouts/farmer_shell.html"
+
+    return render_template(
+        "farmer/settings.html",
+        current_lang=get_current_language(),
+        layout_shell=layout_shell
+    )
 
 
 # ===============================
@@ -403,3 +420,31 @@ def khmer_calendar():
         "month": month,
         "days": days
     })
+
+
+# ==========================================
+# PASSKEYS MANAGEMENT ENDPOINTS 🔑
+# ==========================================
+@user_bp.route("/passkeys", methods=["GET"])
+@login_required
+def list_passkeys():
+    passkeys = current_user.passkeys.all()
+    return jsonify({
+        "passkeys": [
+            {
+                "id": p.id,
+                "name": p.name or "Unnamed Passkey",
+                "created_at": p.created_at.strftime('%Y-%m-%d %H:%M:%S')
+            }
+            for p in passkeys
+        ]
+    })
+
+
+@user_bp.route("/passkeys/<int:passkey_id>", methods=["DELETE"])
+@login_required
+def delete_passkey(passkey_id: int):
+    passkey = UserPasskey.query.filter_by(id=passkey_id, user_id=current_user.id).first_or_404()
+    db.session.delete(passkey)
+    db.session.commit()
+    return jsonify({"status": "ok"})

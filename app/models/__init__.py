@@ -16,3 +16,4 @@ from .translation_backup import TranslationBackup
 from .expert_question import ExpertQuestion
 from .expert_question_answer import ExpertQuestionAnswer
 from .theme import ThemeProfile, ThemeRuntimeState, ThemeSchedule
+from .passkey import UserPasskey

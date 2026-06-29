@@ -31,8 +31,8 @@
 
 <style>
 :root {
-    --font-en: "Inter", system-ui, sans-serif;
-    --font-kh: "Kantumruy Pro", "Noto Sans Khmer", "Khmer OS", sans-serif;
+    --font-en: "Inter", "Kantumruy Pro", "Noto Sans Khmer", "Khmer OS", system-ui, sans-serif;
+    --font-kh: "Kantumruy Pro", "Noto Sans Khmer", "Khmer OS", "Inter", system-ui, sans-serif;
 }
 html, body, #react-template-root { min-height: 100%; }
 body, button, input, select, textarea {
@@ -44,6 +44,9 @@ html[lang^="km"] input,
 html[lang^="km"] select,
 html[lang^="km"] textarea {
     font-family: var(--font-kh), var(--font-en);
+}
+html[lang^="km"] * {
+    letter-spacing: 0 !important;
 }
 </style>
 

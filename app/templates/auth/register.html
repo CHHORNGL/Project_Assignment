@@ -115,9 +115,9 @@
                 {{ form.hidden_tag() }}
 
                 <div class="auth-field">
-                    {{ form.username.label }}
-                    {{ form.username(class="auth-input", placeholder=t("auth_username_placeholder")) }}
-                    {% for error in form.username.errors %}
+                    {{ form.email.label }}
+                    {{ form.email(class="auth-input", placeholder="example@gmail.com") }}
+                    {% for error in form.email.errors %}
                         <div class="auth-errors">{{ error }}</div>
                     {% endfor %}
                 </div>
@@ -126,14 +126,6 @@
                     {{ form.full_name.label }}
                     {{ form.full_name(class="auth-input", placeholder=t("enter_full_name")) }}
                     {% for error in form.full_name.errors %}
-                        <div class="auth-errors">{{ error }}</div>
-                    {% endfor %}
-                </div>
-
-                <div class="auth-field">
-                    {{ form.email.label }}
-                    {{ form.email(class="auth-input", placeholder=t("auth_email_optional_placeholder")) }}
-                    {% for error in form.email.errors %}
                         <div class="auth-errors">{{ error }}</div>
                     {% endfor %}
                 </div>
@@ -160,13 +152,16 @@
             </form>
 
             <div class="auth-divider auth-stagger delay-4">{{ t("auth_continue_with") }}</div>
-            <a class="auth-oauth-btn auth-stagger delay-5" href="{{ url_for('auth.google_login') }}">
-                <span class="auth-oauth-icon">G</span>
-                {{ t("auth_google") }}
-            </a>
+            <div class="auth-oauth-container auth-stagger delay-5" style="margin-top: 1rem; margin-bottom: 1.5rem;">
+                <a class="auth-oauth-btn d-flex align-items-center justify-content-center" href="{{ url_for('auth.google_login') }}">
+                    <i class="fab fa-google mr-2" style="color: #ea4335; font-size: 1.15rem;"></i>
+                    {{ t("auth_google") or "Register with Google" }}
+                </a>
+            </div>
 
             <div class="auth-foot auth-stagger delay-6">
-                {{ t("auth_terms") }}
+                {{ t("auth_already_have") }}
+                <a href="{{ url_for('auth.login', role='farmer') }}">{{ t("auth_log_in") }}</a>
             </div>
         </div>
     </section>

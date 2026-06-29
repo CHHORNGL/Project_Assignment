@@ -167,7 +167,7 @@
                     {% endif %}
                 </div>
                 <div class="diag-result-actions">
-                    <a href="{{ url_for('farmer.diagnose_rule_based') }}" class="btn btn-success">
+                    <a href="{{ url_for('farmer.diagnose') }}" class="btn btn-success">
                         <i class="fas fa-redo-alt mr-2"></i>{{ t("restart_diagnosis") }}
                     </a>
                     <a href="{{ url_for('farmer.chat') }}" class="btn btn-outline-success">
@@ -422,7 +422,7 @@
     </div>
 
     <div class="diag-result-footer-actions">
-        <a href="{{ url_for('farmer.diagnose_rule_based') }}" class="btn btn-success">
+        <a href="{{ url_for('farmer.diagnose') }}" class="btn btn-success">
             <i class="fas fa-redo-alt mr-2"></i>{{ t("restart_diagnosis") }}
         </a>
         <a href="{{ url_for('farmer.dashboard') }}" class="btn btn-outline-secondary">

@@ -68,6 +68,28 @@ class User(db.Model, UserMixin):
     )
 
     # ===============================
+    # TWO-STEP VERIFICATION & EMAIL VERIFY
+    # ===============================
+    is_verified = db.Column(
+        db.Boolean,
+        default=True,
+        nullable=False
+    )
+    two_factor_enabled = db.Column(
+        db.Boolean,
+        default=False,
+        nullable=False
+    )
+    two_factor_code = db.Column(
+        db.String(6),
+        nullable=True
+    )
+    two_factor_expiry = db.Column(
+        db.DateTime,
+        nullable=True
+    )
+
+    # ===============================
     # PROFILE (AVATAR)
     # ===============================
     avatar_path = db.Column(

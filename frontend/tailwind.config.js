@@ -15,8 +15,8 @@ export default {
         panel: "0 18px 45px -24px rgba(15, 23, 42, 0.22)",
       },
       fontFamily: {
-        body: ["Inter", "system-ui", "sans-serif"],
-        display: ["Manrope", "Inter", "system-ui", "sans-serif"],
+        body: ["Inter", "Kantumruy Pro", "Noto Sans Khmer", "system-ui", "sans-serif"],
+        display: ["Manrope", "Inter", "Kantumruy Pro", "Noto Sans Khmer", "system-ui", "sans-serif"],
         khmer: ["Kantumruy Pro", "Noto Sans Khmer", "sans-serif"],
       },
     },

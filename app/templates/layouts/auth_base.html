@@ -17,6 +17,12 @@
     <link href="{{ url_for('static', filename='css/notifications.css', v=static_version) }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/system_status.css', v=static_version) }}" rel="stylesheet">
 
+    <style>
+        html[lang^="km"] * {
+            letter-spacing: 0 !important;
+        }
+    </style>
+
     {% block head %}{% endblock %}
 
     <script>

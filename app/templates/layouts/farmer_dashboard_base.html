@@ -26,7 +26,9 @@
         html[lang^="km"] body {
             font-family: "Kantumruy Pro", "Noto Sans Khmer", "Inter", "Manrope", sans-serif;
             line-height: 1.74;
-            letter-spacing: 0;
+        }
+        html[lang^="km"] * {
+            letter-spacing: 0 !important;
         }
     </style>
 
@@ -82,17 +84,17 @@
                    aria-current="{% if path == url_for('farmer.dashboard') %}page{% else %}false{% endif %}"
                    data-tooltip="{{ t('dashboard') }}"
                    aria-label="{{ t('dashboard') }}">
-                    <span class="nav-icon"><i class="fas fa-home"></i></span>
+                    <span class="nav-icon"><i class="far fa-compass"></i></span>
                     <span class="nav-label">{{ t("dashboard") }}</span>
                     <span class="nav-chevron"><i class="fas fa-chevron-right"></i></span>
                 </a>
-                <a class="farmer-nav-link {% if path == url_for('farmer.diagnose_rule_based') %}active{% endif %}"
-                   href="{{ url_for('farmer.diagnose_rule_based') }}"
-                   aria-current="{% if path == url_for('farmer.diagnose_rule_based') %}page{% else %}false{% endif %}"
-                   data-tooltip="{{ t('full_rule_based') }}"
-                   aria-label="{{ t('full_rule_based') }}">
-                    <span class="nav-icon"><i class="fas fa-cogs"></i></span>
-                    <span class="nav-label">{{ t("full_rule_based") }}</span>
+                <a class="farmer-nav-link {% if path == url_for('farmer.diagnose') %}active{% endif %}"
+                   href="{{ url_for('farmer.diagnose') }}"
+                   aria-current="{% if path == url_for('farmer.diagnose') %}page{% else %}false{% endif %}"
+                   data-tooltip="{{ t('new_diagnosis') }}"
+                   aria-label="{{ t('new_diagnosis') }}">
+                    <span class="nav-icon"><i class="fas fa-stethoscope"></i></span>
+                    <span class="nav-label">{{ t("new_diagnosis") }}</span>
                     <span class="nav-chevron"><i class="fas fa-chevron-right"></i></span>
                 </a>
                 <a class="farmer-nav-link sub-link {% if path == url_for('farmer.rule_inference_history') %}active{% endif %}"
@@ -100,7 +102,7 @@
                    aria-current="{% if path == url_for('farmer.rule_inference_history') %}page{% else %}false{% endif %}"
                    data-tooltip="{{ t('rule_history') }}"
                    aria-label="{{ t('rule_history') }}">
-                    <span class="nav-icon"><i class="fas fa-history"></i></span>
+                    <span class="nav-icon"><i class="far fa-clock"></i></span>
                     <span class="nav-label">{{ t("rule_history") }}</span>
                     <span class="nav-chevron"><i class="fas fa-chevron-right"></i></span>
                 </a>
@@ -109,7 +111,7 @@
                    aria-current="{% if path.startswith('/farmer/chat') %}page{% else %}false{% endif %}"
                    data-tooltip="{{ t('ask_expert') }}"
                    aria-label="{{ t('ask_expert') }}">
-                    <span class="nav-icon"><i class="fas fa-comments"></i></span>
+                    <span class="nav-icon"><i class="far fa-comments"></i></span>
                     <span class="nav-label">{{ t("ask_expert") }}</span>
                     <span class="nav-chevron"><i class="fas fa-chevron-right"></i></span>
                 </a>
@@ -175,13 +177,15 @@
                         </a>
                     </div>
 
-                    <div class="farmer-user-section">
+                     <div class="farmer-user-section">
                         <div class="farmer-dash-section-title">{{ t("language") }}</div>
                         <div class="farmer-user-grid">
-                            <button type="button" class="farmer-dash-footer-btn lang-option" data-lang="en">
+                            <button type="button" class="farmer-dash-footer-btn lang-option d-flex align-items-center justify-content-center" data-lang="en">
+                                <span class="fi fi-us mr-2 rounded-circle"></span>
                                 {{ t("english") }}
                             </button>
-                            <button type="button" class="farmer-dash-footer-btn lang-option" data-lang="km">
+                            <button type="button" class="farmer-dash-footer-btn lang-option d-flex align-items-center justify-content-center" data-lang="km">
+                                <span class="fi fi-kh mr-2 rounded-circle"></span>
                                 {{ t("khmer") }}
                             </button>
                         </div>

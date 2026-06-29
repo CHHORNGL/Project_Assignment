@@ -1,19 +1,26 @@
 <!-- Sidebar -->
 {% set path = request.path %}
 {% set home_url = url_for('main.index') %}
+{% set active_side = "farmer" %}
 {% if current_user.is_authenticated %}
     {% if path.startswith('/admin') and current_user.has_role("admin") %}
         {% set home_url = url_for('admin.dashboard') %}
+        {% set active_side = "admin" %}
     {% elif path.startswith('/expert') and current_user.has_role("expert") %}
         {% set home_url = url_for('expert.dashboard') %}
+        {% set active_side = "expert" %}
     {% elif path.startswith('/farmer') and current_user.has_role("farmer") %}
         {% set home_url = url_for('farmer.dashboard') %}
+        {% set active_side = "farmer" %}
     {% elif current_user.has_role("admin") %}
         {% set home_url = url_for('admin.dashboard') %}
+        {% set active_side = "admin" %}
     {% elif current_user.has_role("expert") %}
         {% set home_url = url_for('expert.dashboard') %}
+        {% set active_side = "expert" %}
     {% elif current_user.has_role("farmer") %}
         {% set home_url = url_for('farmer.dashboard') %}
+        {% set active_side = "farmer" %}
     {% endif %}
 {% endif %}
 <ul class="navbar-nav sidebar accordion app-sidebar"
@@ -38,7 +45,7 @@
     <!-- ===============================
          ADMIN SECTION
     =============================== -->
-    {% if current_user.is_authenticated and current_user.has_role("admin") %}
+    {% if current_user.is_authenticated and active_side == "admin" %}
 
     <div class="sidebar-heading mt-3">
         {{ t("admin") }}
@@ -129,7 +136,7 @@
     <!-- ===============================
          EXPERT SECTION
     =============================== -->
-    {% if current_user.is_authenticated and current_user.has_role("expert") %}
+    {% if current_user.is_authenticated and active_side == "expert" %}
 
     <div class="sidebar-heading mt-4">
         {{ t("expert_panel") }}
@@ -212,7 +219,7 @@
     <!-- ===============================
          FARMER SECTION
     =============================== -->
-    {% if current_user.is_authenticated and current_user.has_role("farmer") %}
+    {% if current_user.is_authenticated and active_side == "farmer" %}
 
     <div class="sidebar-heading mt-4">
         {{ t("farmer") }}
@@ -223,19 +230,19 @@
            href="{{ url_for('farmer.dashboard') }}"
            data-tooltip="{{ t('dashboard') }}"
            aria-label="{{ t('dashboard') }}">
-            <i class="menu-icon fas fa-home"></i>
+            <i class="menu-icon far fa-compass"></i>
             <span>{{ t("dashboard") }}</span>
         </a>
     </li>
 
-    {% set rule_based_url = url_for('farmer.diagnose_rule_based') %}
+    {% set diagnose_url = url_for('farmer.diagnose') %}
     <li class="nav-item">
-        <a class="nav-link {% if path.startswith(rule_based_url) %}active{% endif %}"
-           href="{{ rule_based_url }}"
-           data-tooltip="{{ t('full_rule_based') }}"
-           aria-label="{{ t('full_rule_based') }}">
-            <i class="menu-icon fas fa-cogs"></i>
-            <span>{{ t("full_rule_based") }}</span>
+        <a class="nav-link {% if path.startswith(diagnose_url) %}active{% endif %}"
+           href="{{ diagnose_url }}"
+           data-tooltip="{{ t('new_diagnosis') }}"
+           aria-label="{{ t('new_diagnosis') }}">
+            <i class="menu-icon fas fa-stethoscope"></i>
+            <span>{{ t("new_diagnosis") }}</span>
         </a>
     </li>
 
@@ -244,7 +251,7 @@
            href="{{ url_for('farmer.diagnosis_history') }}"
            data-tooltip="{{ t('diagnoses_label') }}"
            aria-label="{{ t('diagnoses_label') }}">
-            <i class="menu-icon fas fa-clipboard-list"></i>
+            <i class="menu-icon far fa-file-alt"></i>
             <span>{{ t("diagnoses_label") }}</span>
         </a>
     </li>
@@ -255,7 +262,7 @@
            href="{{ rule_history_url }}"
            data-tooltip="{{ t('rule_history') }}"
            aria-label="{{ t('rule_history') }}">
-            <i class="menu-icon fas fa-history"></i>
+            <i class="menu-icon far fa-clock"></i>
             <span>{{ t("rule_history") }}</span>
         </a>
     </li>
@@ -265,7 +272,7 @@
            href="{{ url_for('farmer.chat') }}"
            data-tooltip="{{ t('ask_expert') }}"
            aria-label="{{ t('ask_expert') }}">
-            <i class="menu-icon fas fa-comment-dots"></i>
+            <i class="menu-icon far fa-comments"></i>
             <span>{{ t("ask_expert") }}</span>
         </a>
     </li>

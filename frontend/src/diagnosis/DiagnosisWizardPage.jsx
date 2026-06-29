@@ -71,6 +71,79 @@ function doesCropMatchContext(crop, domainId, subcategoryId) {
   return matchDomain && matchSubcategory;
 }
 
+function groupSymptoms(symptoms) {
+  const categories = [
+    {
+      id: "leaf",
+      name_en: "Leaf Symptoms",
+      name_kh: "រោគសញ្ញាលើស្លឹក",
+      description_en: "Spots, yellowing, powdery coating, or holes on leaves.",
+      description_kh: "ស្នាមអុច លឿង ម្សៅស ឬប្រហោងនៅលើស្លឹក។",
+      keywords: ["leaf", "leaves", "foliage", "spot", "mildew", "rust", "ស្លឹក", "អុច"],
+      symptoms: []
+    },
+    {
+      id: "stem",
+      name_en: "Stem & Branch Symptoms",
+      name_kh: "រោគសញ្ញាលើដើម និងមែក",
+      description_en: "Cankers, oozing, cracks, or rot on the stalks or stems.",
+      description_kh: "ស្នាមដំបៅ ហៀរជ័រ ប្រេះ ឬរលួយនៅលើដើម ឬទង។",
+      keywords: ["stem", "stalk", "branch", "twig", "trunk", "bark", "ដើម", "មែក", "សំបក"],
+      symptoms: []
+    },
+    {
+      id: "fruit_flower",
+      name_en: "Fruit & Flower Symptoms",
+      name_kh: "រោគសញ្ញាលើផ្លែ និងផ្កា",
+      description_en: "Deformation, rot, spots, or drop of fruits, flowers, or pods.",
+      description_kh: "វៀចវេរ រលួយ អុចៗ ឬជ្រុះផ្លែ ផ្កា ឬផ្លែខ្ចី។",
+      keywords: ["fruit", "flower", "pod", "blossom", "seed", "bloom", "grain", "ផ្លែ", "ផ្កា", "គ្រាប់"],
+      symptoms: []
+    },
+    {
+      id: "root_vigor",
+      name_en: "Root & Plant Vigor",
+      name_kh: "ឫស និងការលូតលាស់ទូទៅ",
+      description_en: "Stunted growth, wilting, root rot, or overall plant decline.",
+      description_kh: "ការលូតលាស់យឺត ស្រពោន រលួយឫស ឬខូចខាតរុក្ខជាតិទាំងមូល។",
+      keywords: ["root", "soil", "wilt", "stunt", "growth", "die", "ឫស", "ដី", "ស្រពោន", "ក្រិន", "លូតលាស់"],
+      symptoms: []
+    }
+  ];
+
+  const categorizedIds = new Set();
+
+  symptoms.forEach(s => {
+    const name = (s.name || "").toLowerCase();
+    const nameKh = (s.name_kh || "").toLowerCase();
+
+    let matched = false;
+    for (const cat of categories) {
+      if (cat.keywords.some(kw => name.includes(kw) || nameKh.includes(kw))) {
+        cat.symptoms.push(s);
+        categorizedIds.add(s.id);
+        matched = true;
+        break;
+      }
+    }
+  });
+
+  const otherSymptoms = symptoms.filter(s => !categorizedIds.has(s.id));
+  if (otherSymptoms.length > 0) {
+    categories.push({
+      id: "other",
+      name_en: "Other Signs",
+      name_kh: "សញ្ញាផ្សេងៗទៀត",
+      description_en: "Other specific observations or pest sightings.",
+      description_kh: "ការសង្កេតជាក់លាក់ផ្សេងទៀត ឬវត្តមានសត្វល្អិតចង្រៃ។",
+      keywords: [],
+      symptoms: otherSymptoms
+    });
+  }
+
+  return categories.filter(cat => cat.symptoms.length > 0);
+}
+
 function CropCard({ crop, selected, onSelect, subtitle, isKhmer, selectedText, chooseCropText, generalText }) {
   const cropName = isKhmer && crop.name_kh ? crop.name_kh : crop.name;
   return (
@@ -144,7 +217,7 @@ function ReviewList({ title, items, emptyText, icon, reviewText }) {
           <i className={`fas ${icon}`} aria-hidden="true" />
         </div>
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">
+          <p className="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
             {reviewText}
           </p>
           <h3 className="font-display text-lg font-bold text-slate-900 dark:text-white">{title}</h3>
@@ -183,7 +256,7 @@ export default function DiagnosisWizardPage({ bootstrap }) {
   const instantScanMode = Boolean(bootstrap?.instantScanMode);
   const scanSuggestionApi = String(bootstrap?.scanSuggestionApi || "").trim();
 
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState(scanMode ? 4 : 1);
   const [selectedDomainId, setSelectedDomainId] = useState(
     String(initialCrop?.domainId || agriDomains?.[0]?.id || ""),
   );
@@ -201,10 +274,20 @@ export default function DiagnosisWizardPage({ bootstrap }) {
   const [contextNotice, setContextNotice] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [scanAnalyzing, setScanAnalyzing] = useState(false);
+  const [scanResult, setScanResult] = useState(null); // { count, notes, confidence }
+  const [isDragOver, setIsDragOver] = useState(false);
   const [cameraDevices, setCameraDevices] = useState([]);
   const [activeCameraDeviceId, setActiveCameraDeviceId] = useState("");
   const [cameraOpen, setCameraOpen] = useState(false);
   const [cameraStatus, setCameraStatus] = useState("");
+
+  const [questionnaireActive, setQuestionnaireActive] = useState(true);
+  const [currentCategoryIndex, setCurrentCategoryIndex] = useState(0);
+  const [categoryAnswers, setCategoryAnswers] = useState({});
+  const [liveSuspects, setLiveSuspects] = useState([]);
+  const [liveBestMatch, setLiveBestMatch] = useState(null);
+  const [evaluatingLive, setEvaluatingLive] = useState(false);
+  const [deniedSymptoms, setDeniedSymptoms] = useState([]);
 
   const deferredCropSearch = useDeferredValue(cropSearch);
   const deferredSymptomSearch = useDeferredValue(symptomSearch);
@@ -476,6 +559,39 @@ export default function DiagnosisWizardPage({ bootstrap }) {
     setFormError("");
   }
 
+  function handleCategoryAnswer(catId, answer) {
+    const activeCategories = groupSymptoms(currentSymptoms);
+    const category = activeCategories.find((c) => c.id === catId);
+    if (!category) return;
+
+    const catSymptomIds = category.symptoms.map((s) => String(s.id));
+
+    setCategoryAnswers((prev) => ({ ...prev, [catId]: answer }));
+
+    if (answer === "no") {
+      setDeniedSymptoms((prev) => {
+        const next = prev.filter((id) => !catSymptomIds.includes(String(id)));
+        return [...next, ...catSymptomIds];
+      });
+      setSelectedSymptoms((prev) => prev.filter((id) => !catSymptomIds.includes(String(id))));
+    } else if (answer === "yes") {
+      setDeniedSymptoms((prev) => prev.filter((id) => !catSymptomIds.includes(String(id))));
+    } else {
+      setDeniedSymptoms((prev) => prev.filter((id) => !catSymptomIds.includes(String(id))));
+      setSelectedSymptoms((prev) => prev.filter((id) => !catSymptomIds.includes(String(id))));
+    }
+  }
+
+  function handleSymptomCheckboxToggle(symptomId) {
+    const idStr = String(symptomId);
+    setSelectedSymptoms((prev) => {
+      if (prev.includes(idStr)) {
+        return prev.filter((id) => id !== idStr);
+      }
+      return [...prev, idStr];
+    });
+  }
+
   function applySuggestedSymptoms(ids) {
     const availableIds = new Set(currentSymptoms.map((item) => String(item.id)));
     if (!availableIds.size) return 0;
@@ -516,6 +632,7 @@ export default function DiagnosisWizardPage({ bootstrap }) {
 
     setScanAnalyzing(true);
     setCameraStatus(label("scanAnalyzing", "Analyzing image with the expert system..."));
+    setScanResult(null);
     setFormError("");
 
     try {
@@ -546,8 +663,10 @@ export default function DiagnosisWizardPage({ bootstrap }) {
             "Applied {count} symptom suggestions from the scan.",
           ),
         );
+        setScanResult({ count: added, notes: data.analysis || "", confidence: data.confidence || null });
       } else {
         setCameraStatus(label("scanSuggestionNone", "No confident symptom suggestions were found."));
+        setScanResult({ count: 0, notes: data.analysis || "", confidence: data.confidence || null });
       }
 
       if (instantScanMode && suggestedIds.length && formRef.current) {
@@ -571,6 +690,7 @@ export default function DiagnosisWizardPage({ bootstrap }) {
     const nextFile = event.target.files && event.target.files.length ? event.target.files[0] : null;
     setFieldImage(nextFile || null);
     setFormError("");
+    setScanResult(null);
 
     if (nextFile) {
       setCameraStatus(label("cameraCaptured", "Image added to this diagnosis."));
@@ -579,6 +699,20 @@ export default function DiagnosisWizardPage({ bootstrap }) {
       }
     } else {
       setCameraStatus("");
+    }
+  }
+
+  function handleDropZone(event) {
+    event.preventDefault();
+    setIsDragOver(false);
+    const file = event.dataTransfer?.files?.[0];
+    if (!file || !file.type.startsWith("image/")) return;
+    setFieldImageFile(file);
+    setFormError("");
+    setScanResult(null);
+    setCameraStatus(label("cameraCaptured", "Image added to this diagnosis."));
+    if (scanMode && selectedCropId && scanSuggestionApi) {
+      analyzeScanImage(file);
     }
   }
 
@@ -623,7 +757,7 @@ export default function DiagnosisWizardPage({ bootstrap }) {
       return;
     }
 
-    if (!selectedSymptoms.length) {
+    if (!selectedSymptoms.length && !scanMode) {
       event.preventDefault();
       setErrorAndStay(label("pleaseSelectSymptom", "Select at least one symptom to continue."), 3);
       return;
@@ -648,6 +782,11 @@ export default function DiagnosisWizardPage({ bootstrap }) {
   useEffect(() => {
     if (!selectedCropId) {
       setSelectedSymptoms([]);
+      setCurrentCategoryIndex(0);
+      setCategoryAnswers({});
+      setDeniedSymptoms([]);
+      setLiveSuspects([]);
+      setLiveBestMatch(null);
       return;
     }
 
@@ -663,6 +802,11 @@ export default function DiagnosisWizardPage({ bootstrap }) {
     }
 
     setContextNotice("");
+    setCurrentCategoryIndex(0);
+    setCategoryAnswers({});
+    setDeniedSymptoms([]);
+    setLiveSuspects([]);
+    setLiveBestMatch(null);
   }, [selectedCropId]);
 
   useEffect(() => {
@@ -711,11 +855,54 @@ export default function DiagnosisWizardPage({ bootstrap }) {
   }, []);
 
   useEffect(() => {
-    if (instantScanMode && currentStep === 4 && !fieldImage && hasSecureCameraContext() && hasLiveCameraSupport()) {
+    // In scan mode, auto-open camera when on step 4 and no image yet
+    if (scanMode && currentStep === 4 && !fieldImage && hasSecureCameraContext() && hasLiveCameraSupport()) {
       openLiveCamera(activeCameraDeviceId);
     }
-  }, [instantScanMode, currentStep]);
+  }, [scanMode, currentStep]);
+  const lastLiveEvalRef = useRef(null);
 
+  const triggerLiveEvaluation = async (currentPos, currentNeg) => {
+    if (!selectedCropId) return;
+
+    const cacheKey = JSON.stringify({ pos: currentPos, neg: currentNeg });
+    if (lastLiveEvalRef.current === cacheKey) return;
+    lastLiveEvalRef.current = cacheKey;
+
+    setEvaluatingLive(true);
+    try {
+      const response = await fetch("/api/diagnose/live-evaluation", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Requested-With": "XMLHttpRequest",
+          "X-CSRFToken": bootstrap?.csrfToken || "",
+        },
+        body: JSON.stringify({
+          crop_id: selectedCropId,
+          symptoms: currentPos,
+          denied_symptoms: currentNeg,
+          category: selectedDomainId,
+        }),
+      });
+
+      const data = await response.json();
+      if (data && data.ok) {
+        setLiveSuspects(data.suspects || []);
+        setLiveBestMatch(data.best || null);
+      }
+    } catch (e) {
+      console.error("Live evaluation failed:", e);
+    } finally {
+      setEvaluatingLive(false);
+    }
+  };
+
+  useEffect(() => {
+    if (currentStep === 3) {
+      triggerLiveEvaluation(selectedSymptoms, deniedSymptoms);
+    }
+  }, [selectedSymptoms, deniedSymptoms, currentStep]);
   useEffect(() => {
     function handleVisibilityChange() {
       if (document.hidden) {
@@ -735,38 +922,34 @@ export default function DiagnosisWizardPage({ bootstrap }) {
   return (
     <div className={cn("mx-auto max-w-7xl font-body", isKhmer && "font-khmer")}>
       <div className="diag-shell">
-        <div className="pointer-events-none absolute -left-16 top-8 h-40 w-40 rounded-full bg-emerald-200/60 dark:bg-emerald-950/30 dark:bg-emerald-950/30 blur-3xl" />
-        <div className="pointer-events-none absolute right-0 top-0 h-56 w-56 rounded-full bg-lime-100/80 dark:bg-lime-950/20 dark:bg-lime-950/20 blur-3xl" />
-
-        <div className="diag-panel relative overflow-hidden bg-gradient-to-br from-emerald-600 via-emerald-600 to-green-700 px-5 py-6 text-white md:px-7 md:py-7">
-          <div className="absolute inset-y-0 right-0 hidden w-1/3 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.25),_transparent_60%)] md:block" />
+        <div className="diag-panel relative overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-5 py-6 md:px-7 md:py-7">
           <div className="relative flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <div className="max-w-3xl">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="rounded-full border border-white/25 bg-white dark:bg-slate-950/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em]">
+                <span className="rounded-full border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 px-3 py-1 text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
                   {label("aiPoweredSystem", "AI-Powered Expert System")}
                 </span>
                 {scanMode ? (
-                  <span className="rounded-full border border-white/25 bg-white dark:bg-slate-950/10 px-3 py-1 text-xs font-semibold">
+                  <span className="rounded-full border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 px-3 py-1 text-xs font-semibold text-slate-600 dark:text-slate-400">
                     {instantScanMode ? label("instantScanModeLabel", "Instant scan mode") : label("scanAssistedModeLabel", "Scan-assisted mode")}
                   </span>
                 ) : null}
               </div>
-              <h1 className="mt-4 font-display text-3xl font-bold leading-tight md:text-4xl">
+              <h1 className="mt-4 font-display text-3xl font-bold leading-tight md:text-4xl text-slate-900 dark:text-white">
                 {bootstrap.pageTitle || label("pageTitle", "Guided crop diagnosis")}
               </h1>
-              <p className="mt-3 max-w-2xl text-sm leading-7 text-emerald-50/90 md:text-base">
+              <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-500 dark:text-slate-400 md:text-base">
                 {bootstrap.pageSubtitle || label("guidedDiagnosisDescFallback", "Move step by step through crop selection, context, symptoms, and review for a cleaner expert system workflow.")}
               </p>
             </div>
 
             <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
-              <a href={bootstrap.dashboardUrl} className="diag-secondary-button border-white/20 bg-white dark:bg-slate-950/10 text-white hover:border-white/35 hover:bg-white dark:bg-slate-950/15 hover:text-white">
+              <a href={bootstrap.dashboardUrl} className="diag-secondary-button border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900">
                 <i className="fas fa-arrow-left" aria-hidden="true" />
                 {label("back", "Back")}
               </a>
               {bootstrap.chatUrl ? (
-                <a href={bootstrap.chatUrl} className="diag-secondary-button border-white/20 bg-white dark:bg-slate-950 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:bg-emerald-950/20 hover:text-emerald-800">
+                <a href={bootstrap.chatUrl} className="diag-secondary-button border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900">
                   <i className="fas fa-user-md" aria-hidden="true" />
                   {label("askExpert", "Ask Expert")}
                 </a>
@@ -795,6 +978,9 @@ export default function DiagnosisWizardPage({ bootstrap }) {
           <input type="hidden" name="clarification_count" value="0" />
           {selectedSymptoms.map((symptomId) => (
             <input key={symptomId} type="hidden" name="symptoms" value={symptomId} />
+          ))}
+          {deniedSymptoms.map((symptomId) => (
+            <input key={symptomId} type="hidden" name="denied_symptoms" value={symptomId} />
           ))}
 
           <Stepper
@@ -836,7 +1022,7 @@ export default function DiagnosisWizardPage({ bootstrap }) {
               <div className="space-y-5">
                 <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
                   <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 p-4">
-                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">
+                    <p className="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
                       {label("selection", "Selection")}
                     </p>
                     <div className="mt-3 flex flex-wrap gap-2">
@@ -990,82 +1176,379 @@ export default function DiagnosisWizardPage({ bootstrap }) {
           ) : null}
 
           {currentStep === 3 ? (
-            <StepCard
-              eyebrow={label("step3", "Step 3")}
-              title={label("stepSymptomsLabel", "Select Symptoms")}
-              description={label("stepSymptomsDesc", "Choose the symptoms you actually see in the field. Each symptom behaves like a selectable card for faster expert-system input.")}
-              aside={
-                <div className="rounded-3xl border border-emerald-100 bg-emerald-50 dark:bg-emerald-950/20 px-4 py-3 text-sm text-emerald-700 dark:text-emerald-400">
-                  <div className="font-semibold">
-                    {formatTemplate(
-                      label("selectedCount", "{count} selected"),
-                      { count: selectedSymptoms.length },
-                      "{count} selected",
-                    )}
-                  </div>
-                  <div className="mt-1">{selectedCropLabel}</div>
-                </div>
-              }
-            >
-              <div className="space-y-5">
-                <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
-                  <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 p-4">
-                    <label htmlFor="symptom-search" className="text-sm font-semibold text-slate-900 dark:text-white">
-                      {label("searchSymptom", "Search symptom")}
-                    </label>
-                    <input
-                      id="symptom-search"
-                      type="text"
-                      value={symptomSearch}
-                      onChange={(event) => setSymptomSearch(event.target.value)}
-                      className="diag-input mt-3"
-                      placeholder={label("searchSymptom", "Search symptom")}
-                    />
-                  </div>
+            <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+              {/* Questionnaire / Checklist Panel */}
+              <div className="space-y-6">
+                {questionnaireActive ? (
+                  /* Guided Questionnaire Mode */
+                  (() => {
+                    const activeCategories = groupSymptoms(currentSymptoms);
+                    const currentCat = activeCategories[currentCategoryIndex];
+                    
+                    if (!currentCat) {
+                      return (
+                        <StepCard
+                          eyebrow={label("step3", "Step 3")}
+                          title={isKhmer ? "ការវិនិច្ឆ័យរហ័ស" : "Questionnaire Completed"}
+                          description={isKhmer ? "អ្នកបានឆ្លើយសំណួរទាំងអស់រួចហើយ។ សូមបន្តទៅជំហានបន្ទាប់។" : "You have answered all general questions. Review your selection or proceed to Step 4."}
+                        >
+                          <div className="text-center py-6">
+                            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400">
+                              <i className="fas fa-check-double text-xl" />
+                            </div>
+                            <h3 className="mt-4 font-bold text-slate-900 dark:text-white">
+                              {isKhmer ? "រួចរាល់ហើយ!" : "Ready to Review!"}
+                            </h3>
+                            <button
+                              type="button"
+                              onClick={() => setQuestionnaireActive(false)}
+                              className="diag-secondary-button mt-4"
+                            >
+                              {isKhmer ? "មើលបញ្ជីសញ្ញាទាំងអស់" : "Switch to Full Checklist"}
+                            </button>
+                          </div>
+                        </StepCard>
+                      );
+                    }
 
-                  <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4">
-                    <p className="text-sm font-semibold text-slate-900 dark:text-white">{label("selectedSummary", "Selected summary")}</p>
-                    <p className="mt-2 text-sm leading-7 text-slate-500 dark:text-slate-400">
-                      {selectedSymptomNames.length
-                         ? selectedSymptomNames.slice(0, 5).join(", ")
-                        : label("noManualSelectionYet", "No symptoms selected yet.")}
+                    const catAnswer = categoryAnswers[currentCat.id] || "";
+                    const categorySymptoms = currentCat.symptoms;
+                    
+                    return (
+                      <StepCard
+                        eyebrow={label("step3", "Step 3")}
+                        title={isKhmer ? currentCat.name_kh : currentCat.name_en}
+                        description={isKhmer ? currentCat.description_kh : currentCat.description_en}
+                        aside={
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setQuestionnaireActive(false)}
+                              className="diag-secondary-button border-slate-200 dark:border-slate-800 text-xs px-3 py-1.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-900"
+                            >
+                              <i className="fas fa-list text-xs mr-1" />
+                              {isKhmer ? "មើលបញ្ជី" : "Checklist Mode"}
+                            </button>
+                          </div>
+                        }
+                      >
+                        <div className="space-y-6">
+                          {/* Screening Question */}
+                          <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 p-5">
+                            <h3 className="text-base font-bold text-slate-900 dark:text-white mb-4">
+                              {isKhmer 
+                                ? `តើអ្នកសង្កេតឃើញមាន រោគសញ្ញាណាមួយនៅលើ ${currentCat.name_kh} ដែរឬទេ?` 
+                                : `Do you observe any symptoms on the ${currentCat.name_en}?`}
+                            </h3>
+                            
+                            <div className="grid gap-3 grid-cols-3">
+                              {/* YES option */}
+                              <button
+                                type="button"
+                                onClick={() => handleCategoryAnswer(currentCat.id, "yes")}
+                                className={cn(
+                                  "flex flex-col items-center justify-center p-4 rounded-2xl border text-sm font-semibold transition-all duration-200",
+                                  catAnswer === "yes"
+                                    ? "border-emerald-500 bg-emerald-50 text-emerald-800 dark:bg-emerald-950/20 dark:text-emerald-400"
+                                    : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 text-slate-600 dark:text-slate-400 hover:bg-slate-50"
+                                )}
+                              >
+                                <i className="fas fa-check-circle text-xl mb-2" />
+                                {isKhmer ? "បាទ/ចាស (មាន)" : "Yes"}
+                              </button>
+                              
+                              {/* NO option */}
+                              <button
+                                type="button"
+                                onClick={() => handleCategoryAnswer(currentCat.id, "no")}
+                                className={cn(
+                                  "flex flex-col items-center justify-center p-4 rounded-2xl border text-sm font-semibold transition-all duration-200",
+                                  catAnswer === "no"
+                                    ? "border-red-500 bg-red-50 text-red-800 dark:bg-red-950/20 dark:text-red-400"
+                                    : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 text-slate-600 dark:text-slate-400 hover:bg-slate-50"
+                                )}
+                              >
+                                <i className="fas fa-times-circle text-xl mb-2" />
+                                {isKhmer ? "ទេ (គ្មាន)" : "No"}
+                              </button>
+                              
+                              {/* UNSURE option */}
+                              <button
+                                type="button"
+                                onClick={() => handleCategoryAnswer(currentCat.id, "unsure")}
+                                className={cn(
+                                  "flex flex-col items-center justify-center p-4 rounded-2xl border text-sm font-semibold transition-all duration-200",
+                                  catAnswer === "unsure"
+                                    ? "border-amber-500 bg-amber-50 text-amber-800 dark:bg-amber-950/20 dark:text-amber-400"
+                                    : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 text-slate-600 dark:text-slate-400 hover:bg-slate-50"
+                                )}
+                              >
+                                <i className="fas fa-question-circle text-xl mb-2" />
+                                {isKhmer ? "មិនច្បាស់" : "Unsure"}
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Specific Checked Symptoms */}
+                          {catAnswer === "yes" && (
+                            <div className="space-y-4">
+                              <p className="text-sm font-semibold text-slate-600 dark:text-slate-400">
+                                {isKhmer ? "ជ្រើសរើសរោគសញ្ញាជាក់លាក់ដែលអ្នកមើលឃើញ៖" : "Select all specific signs you see:"}
+                              </p>
+                              <div className="grid gap-4 md:grid-cols-2">
+                                {categorySymptoms.map((symptom) => {
+                                  const isSelected = selectedSymptoms.includes(String(symptom.id));
+                                  return (
+                                    <button
+                                      key={symptom.id}
+                                      type="button"
+                                      onClick={() => handleSymptomCheckboxToggle(symptom.id)}
+                                      className={cn(
+                                        "flex items-start gap-3 rounded-2xl border p-4 text-left transition-all duration-200",
+                                        isSelected
+                                          ? "border-emerald-500 bg-emerald-50/50 dark:border-emerald-600 dark:bg-emerald-950/20"
+                                          : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/40"
+                                      )}
+                                    >
+                                      <div
+                                        className={cn(
+                                          "flex h-5 w-5 shrink-0 items-center justify-center rounded border mt-0.5",
+                                          isSelected
+                                            ? "border-emerald-600 bg-emerald-600 text-white"
+                                            : "border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950"
+                                        )}
+                                      >
+                                        {isSelected && <i className="fas fa-check text-[10px]" />}
+                                      </div>
+                                      <div>
+                                        <p className="text-sm font-bold text-slate-900 dark:text-white">
+                                          {isKhmer && symptom.name_kh ? symptom.name_kh : symptom.name}
+                                        </p>
+                                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                                          {isKhmer ? "ចុចដើម្បីជ្រើសរើសសញ្ញានេះ" : "Click to select this sign"}
+                                        </p>
+                                      </div>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Questionnaire Navigation Footer */}
+                          <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-900 pt-4 mt-6">
+                            <button
+                              type="button"
+                              onClick={() => setCurrentCategoryIndex(prev => Math.max(0, prev - 1))}
+                              className="diag-secondary-button"
+                              disabled={currentCategoryIndex === 0}
+                            >
+                              <i className="fas fa-chevron-left" />
+                              {isKhmer ? "ត្រឡប់ក្រោយ" : "Prev Question"}
+                            </button>
+                            
+                            <div className="text-xs text-slate-500 dark:text-slate-400 font-semibold">
+                              {isKhmer 
+                                ? `សំណួរទី ${currentCategoryIndex + 1} នៃ ${activeCategories.length}`
+                                : `Question ${currentCategoryIndex + 1} of ${activeCategories.length}`}
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (currentCategoryIndex < activeCategories.length - 1) {
+                                  setCurrentCategoryIndex(prev => prev + 1);
+                                } else {
+                                  goNext();
+                                }
+                              }}
+                              className="diag-primary-button"
+                              disabled={!catAnswer}
+                            >
+                              {currentCategoryIndex < activeCategories.length - 1 
+                                ? (isKhmer ? "សំណួរបន្ទាប់" : "Next Question")
+                                : (isKhmer ? "បញ្ចប់ការឆ្លើយ" : "Finish & Review")}
+                              <i className="fas fa-chevron-right" />
+                            </button>
+                          </div>
+                        </div>
+                      </StepCard>
+                    );
+                  })()
+                ) : (
+                  /* Classic Checklist Mode fallback */
+                  <StepCard
+                    eyebrow={label("step3", "Step 3")}
+                    title={label("stepSymptomsLabel", "Select Symptoms")}
+                    description={label("stepSymptomsDesc", "Choose the symptoms you actually see in the field. Each symptom behaves like a selectable card for faster expert-system input.")}
+                    aside={
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setQuestionnaireActive(true)}
+                          className="diag-primary-button border border-transparent text-xs px-3 py-1.5 rounded-xl"
+                        >
+                          <i className="fas fa-question-circle text-xs mr-1" />
+                          {isKhmer ? "ប្តូរទៅរបៀបសំណួរ" : "Guided Mode"}
+                        </button>
+                      </div>
+                    }
+                  >
+                    <div className="space-y-5">
+                      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
+                        <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 p-4">
+                          <label htmlFor="symptom-search" className="text-sm font-semibold text-slate-900 dark:text-white">
+                            {label("searchSymptom", "Search symptom")}
+                          </label>
+                          <input
+                            id="symptom-search"
+                            type="text"
+                            value={symptomSearch}
+                            onChange={(event) => setSymptomSearch(event.target.value)}
+                            className="diag-input mt-3"
+                            placeholder={label("searchSymptom", "Search symptom")}
+                          />
+                        </div>
+
+                        <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4">
+                          <p className="text-sm font-semibold text-slate-900 dark:text-white">{label("selectedSummary", "Selected summary")}</p>
+                          <p className="mt-2 text-sm leading-7 text-slate-500 dark:text-slate-400">
+                            {selectedSymptomNames.length
+                               ? selectedSymptomNames.slice(0, 5).join(", ")
+                              : label("noManualSelectionYet", "No symptoms selected yet.")}
+                          </p>
+                        </div>
+                      </div>
+
+                      {allVisibleSymptoms.length ? (
+                        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                          {allVisibleSymptoms.map((symptom) => (
+                            <SymptomCard
+                              key={symptom.id}
+                              symptom={symptom}
+                              selected={selectedSymptoms.includes(String(symptom.id))}
+                              onToggle={() => toggleSymptom(symptom.id)}
+                              isKhmer={isKhmer}
+                              selectedText={label("symptomSelectedHint", "Included in the diagnosis review.")}
+                              unselectedText={label("symptomUnselectedHint", "Click to include this observed symptom.")}
+                            />
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="rounded-3xl border border-dashed border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-5 py-10 text-center">
+                          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 dark:bg-slate-800/80 text-slate-400 dark:text-slate-500">
+                            <i className="fas fa-stethoscope text-xl" aria-hidden="true" />
+                          </div>
+                          <h3 className="mt-4 font-display text-xl font-bold text-slate-900 dark:text-white">
+                            {currentSymptoms.length
+                              ? label("noSymptomsMatch", "No symptoms match your search.")
+                              : label("noSymptoms", "No symptoms are available for this crop.")}
+                          </h3>
+                          <p className="mx-auto mt-2 max-w-xl text-sm leading-7 text-slate-500 dark:text-slate-400">
+                            {currentSymptoms.length
+                              ? label("noSymptomsMatchDesc", "Try a different keyword or clear the search field.")
+                              : label("noSymptomsDesc", "Go back and choose another crop or category to load a different symptom set.")}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </StepCard>
+                )}
+              </div>
+
+              {/* Live Suspects Feedback Panel */}
+              <div className="rounded-[28px] border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 h-fit shadow-panel">
+                <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 mb-4">
+                  <div>
+                    <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                      {isKhmer ? "ការវិនិច្ឆ័យផ្ទាល់" : "Live suspects analysis"}
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                      {isKhmer ? "ធ្វើបច្ចុប្បន្នភាពតាមចម្លើយរបស់អ្នក" : "Real-time updates based on answers"}
                     </p>
                   </div>
+                  {evaluatingLive ? (
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400">
+                      <i className="fas fa-spinner animate-spin text-sm" />
+                    </div>
+                  ) : (
+                    <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                  )}
                 </div>
 
-                {allVisibleSymptoms.length ? (
-                  <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                    {allVisibleSymptoms.map((symptom) => (
-                      <SymptomCard
-                        key={symptom.id}
-                        symptom={symptom}
-                        selected={selectedSymptoms.includes(String(symptom.id))}
-                        onToggle={() => toggleSymptom(symptom.id)}
-                        isKhmer={isKhmer}
-                        selectedText={label("symptomSelectedHint", "Included in the diagnosis review.")}
-                        unselectedText={label("symptomUnselectedHint", "Click to include this observed symptom.")}
-                      />
-                    ))}
+                {liveSuspects.length > 0 ? (
+                  <div className="space-y-4">
+                    {/* Non-intrusive Suspicion summary */}
+                    {liveBestMatch && (
+                      <div className="rounded-2xl bg-emerald-50 dark:bg-emerald-950/15 border border-emerald-100 dark:border-emerald-900/30 p-3.5 text-xs text-emerald-800 dark:text-emerald-400">
+                        <p className="font-bold flex items-center gap-1.5 mb-1 text-sm">
+                          <i className="fas fa-info-circle text-emerald-600 dark:text-emerald-400" />
+                          {isKhmer ? "ការសន្និដ្ឋានបណ្តោះអាសន្ន" : "Top Suspected Disease"}
+                        </p>
+                        <p className="leading-5">
+                          {isKhmer 
+                            ? `យោងតាមចម្លើយរបស់អ្នក ប្រព័ន្ធសង្ស័យខ្ពស់លើជំងឺ៖ ${liveBestMatch.disease_name} (ភាពប្រាកដប្រជា ${liveBestMatch.confidence_percent}%)`
+                            : `Based on current signals, the system strongly suspects: ${liveBestMatch.disease_name} (${liveBestMatch.confidence_percent}% confidence).`}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Suspect List */}
+                    <div className="space-y-3">
+                      {liveSuspects.slice(0, 3).map((suspect, idx) => {
+                        const barColor = suspect.confidence_tier === "high" ? "bg-emerald-500" : suspect.confidence_tier === "medium" ? "bg-amber-500" : "bg-yellow-400";
+                        return (
+                          <div key={idx} className="rounded-2xl border border-slate-100 dark:border-slate-800/80 p-3 text-xs space-y-2">
+                            <div className="flex items-start justify-between gap-2">
+                              <div>
+                                <p className="font-bold text-slate-900 dark:text-white text-sm">
+                                  {suspect.disease_name}
+                                </p>
+                              </div>
+                              <span className="font-bold text-slate-800 dark:text-slate-200">
+                                {suspect.confidence_percent}%
+                              </span>
+                            </div>
+
+                            {/* Progress bar */}
+                            <div className="h-1.5 w-full rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                              <div
+                                className={cn("h-1.5 rounded-full transition-all duration-300", barColor)}
+                                style={{ width: `${suspect.confidence_percent}%` }}
+                              />
+                            </div>
+
+                            <div className="text-[11px] text-slate-500 dark:text-slate-400 space-y-1">
+                              {suspect.matched_symptoms?.length > 0 && (
+                                <p className="line-clamp-2">
+                                  <strong className="text-slate-700 dark:text-slate-300">{isKhmer ? "ត្រូវគ្នា៖" : "Matches:"} </strong> 
+                                  {suspect.matched_symptoms.join(", ")}
+                                </p>
+                              )}
+                              {suspect.missing_symptoms?.length > 0 && (
+                                <p className="line-clamp-2">
+                                  <strong className="text-slate-700 dark:text-slate-300">{isKhmer ? "មិនទាន់ឃើញ៖" : "Unconfirmed:"} </strong>
+                                  {suspect.missing_symptoms.join(", ")}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 ) : (
-                  <div className="rounded-3xl border border-dashed border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-5 py-10 text-center">
-                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 dark:bg-slate-800/80 text-slate-400 dark:text-slate-500">
-                      <i className="fas fa-stethoscope text-xl" aria-hidden="true" />
-                    </div>
-                    <h3 className="mt-4 font-display text-xl font-bold text-slate-900 dark:text-white">
-                      {currentSymptoms.length
-                        ? label("noSymptomsMatch", "No symptoms match your search.")
-                        : label("noSymptoms", "No symptoms are available for this crop.")}
-                    </h3>
-                    <p className="mx-auto mt-2 max-w-xl text-sm leading-7 text-slate-500 dark:text-slate-400">
-                      {currentSymptoms.length
-                        ? label("noSymptomsMatchDesc", "Try a different keyword or clear the search field.")
-                        : label("noSymptomsDesc", "Go back and choose another crop or category to load a different symptom set.")}
+                  <div className="py-8 text-center text-slate-400 dark:text-slate-500 text-xs">
+                    <i className="fas fa-microscope text-2xl mb-3 text-slate-300 dark:text-slate-700 animate-pulse" />
+                    <p className="leading-5 px-4">
+                      {isKhmer 
+                        ? "កំពុងរង់ចាំការឆ្លើយតប... ការឆ្លើយតបរបស់អ្នកនឹងបង្ហាញលទ្ធផលវិនិច្ឆ័យនៅទីនេះភ្លាមៗ។"
+                        : "Waiting for symptoms... Answering 'Yes' or 'No' will show suspect rules and probabilities here."}
                     </p>
                   </div>
                 )}
               </div>
-            </StepCard>
+            </div>
           ) : null}
 
           {currentStep === 4 ? (
@@ -1104,7 +1587,7 @@ export default function DiagnosisWizardPage({ bootstrap }) {
                         <i className="fas fa-robot" aria-hidden="true" />
                       </div>
                       <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">
+                        <p className="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
                           {label("diagnosisMode", "Diagnosis mode")}
                         </p>
                         <h3 className="font-display text-lg font-bold text-slate-900 dark:text-white">
@@ -1144,6 +1627,29 @@ export default function DiagnosisWizardPage({ bootstrap }) {
                     : label("imageUploadManualDesc", "Upload an optional field image to keep the diagnosis record complete.")}
                 >
                   <div className="space-y-4">
+                    {/* No-crop warning — shown when scan mode but no crop chosen yet */}
+                    {scanMode && !selectedCropId && (
+                      <div className="flex items-start gap-3 rounded-2xl border border-amber-200 dark:border-amber-900/40 bg-amber-50 dark:bg-amber-950/20 px-4 py-3 text-sm">
+                        <i className="fas fa-exclamation-triangle mt-0.5 flex-shrink-0 text-amber-500" />
+                        <div className="flex-1">
+                          <p className="font-semibold text-amber-800 dark:text-amber-400">
+                            {isKhmer ? "សូមជ្រើសរើសដំណាំមុន" : "Select a crop first"}
+                          </p>
+                          <p className="mt-1 text-xs text-amber-700 dark:text-amber-500">
+                            {isKhmer ? "AI ត្រូវការដឹងពីប្រភេទដំណាំ ដើម្បីស្វែងរកសញ្ញាជំងឺបានត្រឹមត្រូវ" : "The AI needs to know your crop type to detect diseases accurately."}
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => { setFormError(""); setCurrentStep(1); }}
+                            className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-amber-700 dark:text-amber-400 underline underline-offset-2 hover:no-underline"
+                          >
+                            <i className="fas fa-arrow-left" />
+                            {isKhmer ? "ជ្រើសរើសដំណាំ" : "Go select a crop"}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                    {/* Hidden real file input */}
                     <input
                       ref={fileInputRef}
                       type="file"
@@ -1153,99 +1659,251 @@ export default function DiagnosisWizardPage({ bootstrap }) {
                       capture={scanMode ? "environment" : undefined}
                       required={scanMode}
                       onChange={handleFileInputChange}
-                      className="diag-upload-input"
+                      className="hidden"
                     />
 
-                    <p className="text-xs leading-6 text-slate-500 dark:text-slate-400">
-                      {label("maxUploadSize", "Upload a clear image for the best result.")}
-                    </p>
+                    {/* Drop Zone / Preview Area */}
+                    <div
+                      className={cn(
+                        "relative overflow-hidden rounded-3xl border-2 border-dashed transition-all duration-300 cursor-pointer",
+                        isDragOver
+                          ? "border-emerald-400 bg-emerald-50 dark:bg-emerald-950/20 scale-[1.01]"
+                          : fieldImagePreview
+                          ? "border-slate-200 dark:border-slate-800 bg-transparent"
+                          : "border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/40 hover:border-emerald-400 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/10",
+                      )}
+                      onClick={() => fileInputRef.current?.click()}
+                      onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
+                      onDragLeave={() => setIsDragOver(false)}
+                      onDrop={handleDropZone}
+                      role="button"
+                      aria-label="Upload image"
+                    >
+                      {fieldImagePreview ? (
+                        <>
+                          <img
+                            src={fieldImagePreview}
+                            alt="Field preview"
+                            style={{
+                              display: "block",
+                              width: "100%",
+                              objectFit: "cover",
+                              maxHeight: "60vw",
+                              minHeight: "180px",
+                            }}
+                          />
+                          {/* Scanning overlay */}
+                          {scanAnalyzing && (
+                            <div className="absolute inset-0 bg-slate-900/60 flex flex-col items-center justify-center gap-4" onClick={(e) => e.stopPropagation()}>
+                              {/* Scan corners */}
+                              <div className="absolute top-4 left-4 w-8 h-8 border-t-2 border-l-2 border-emerald-400 rounded-tl-lg" />
+                              <div className="absolute top-4 right-4 w-8 h-8 border-t-2 border-r-2 border-emerald-400 rounded-tr-lg" />
+                              <div className="absolute bottom-4 left-4 w-8 h-8 border-b-2 border-l-2 border-emerald-400 rounded-bl-lg" />
+                              <div className="absolute bottom-4 right-4 w-8 h-8 border-b-2 border-r-2 border-emerald-400 rounded-br-lg" />
+                              {/* Sweep line */}
+                              <div
+                                style={{
+                                  position: "absolute",
+                                  left: 0,
+                                  right: 0,
+                                  height: "2px",
+                                  background: "linear-gradient(90deg, transparent, #10b981, transparent)",
+                                  animation: "scanSweep 1.8s ease-in-out infinite",
+                                  boxShadow: "0 0 12px 4px rgba(16,185,129,0.5)",
+                                }}
+                              />
+                              <div className="flex flex-col items-center gap-2 z-10">
+                                <div className="h-12 w-12 rounded-full bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center">
+                                  <i className="fas fa-search text-emerald-400 text-lg animate-pulse" />
+                                </div>
+                                <span className="text-white text-sm font-semibold">{isKhmer ? "កំពុងវិភាគ..." : "AI Scanning..."}</span>
+                                <span className="text-emerald-400 text-xs">{isKhmer ? "ប្រព័ន្ធកំពុងស្វែងរកសញ្ញារោគ" : "Detecting crop symptoms"}</span>
+                              </div>
+                            </div>
+                          )}
+                          {/* Remove button overlay */}
+                          {!scanAnalyzing && (
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); clearFieldImage(); setScanResult(null); }}
+                              className="absolute top-3 right-3 h-8 w-8 rounded-full bg-slate-900/70 text-white hover:bg-red-600 transition-colors flex items-center justify-center text-xs"
+                              title="Remove image"
+                            >
+                              <i className="fas fa-times" />
+                            </button>
+                          )}
+                        </>
+                      ) : (
+                        <div className="flex flex-col items-center justify-center gap-3 px-6 py-12 text-center transition-all">
+                          <div className={cn(
+                            "h-16 w-16 rounded-2xl flex items-center justify-center transition-all duration-300",
+                            isDragOver
+                              ? "bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600"
+                              : "bg-slate-100 dark:bg-slate-800/80 text-slate-400 dark:text-slate-500",
+                          )}>
+                            <i className={cn("text-2xl fas", isDragOver ? "fa-cloud-upload-alt" : scanMode ? "fa-camera" : "fa-image")} />
+                          </div>
+                          <div>
+                            <p className="font-semibold text-slate-900 dark:text-white text-sm">
+                              {isDragOver
+                                ? (isKhmer ? "ទម្លាក់រូបភាពនៅទីនេះ" : "Drop image here")
+                                : (isKhmer ? "ចុច ឬ អូស​ Ảnh ​ដើម្បីបញ្ចូល" : "Click or drag & drop an image")}
+                            </p>
+                            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                              {isKhmer ? "PNG, JPG, WEBP · អតិបរមា 5MB" : "PNG, JPG, WEBP · Max 5 MB"}
+                            </p>
+                          </div>
+                          {scanMode && (
+                            <div className="mt-1 flex items-center gap-2 rounded-full border border-emerald-200 dark:border-emerald-900/40 bg-emerald-50 dark:bg-emerald-950/20 px-3 py-1.5 text-xs text-emerald-700 dark:text-emerald-400 font-semibold">
+                              <i className="fas fa-magic" />
+                              {isKhmer ? "AI នឹងស្វែងរកសញ្ញាជំងឺដោយស្វ័យប្រវត្តិ" : "AI will auto-detect symptoms"}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
 
-                    {fieldImagePreview ? (
-                      <div className="overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
-                        <img
-                          src={fieldImagePreview}
-                          alt="Field preview"
-                          className="h-64 w-full object-cover"
-                        />
-                      </div>
-                    ) : (
-                      <div className="rounded-3xl border border-dashed border-slate-300 dark:border-slate-700 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/40 dark:bg-slate-900/40 px-5 py-6 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500 dark:text-slate-400 dark:text-slate-500 dark:text-slate-500 dark:text-slate-400 dark:text-slate-500">
-                        {scanMode
-                          ? "No field image added yet. You can upload a file or use the live camera tools below."
-                          : "No image added yet. This section is optional for manual diagnosis."}
+                    {/* Scan result toast */}
+                    {scanResult !== null && !scanAnalyzing && (
+                      <div className={cn(
+                        "flex items-start gap-3 rounded-2xl border px-4 py-3 text-sm transition-all",
+                        scanResult.count > 0
+                          ? "border-emerald-200 dark:border-emerald-900/40 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-800 dark:text-emerald-400"
+                          : "border-amber-200 dark:border-amber-900/40 bg-amber-50 dark:bg-amber-950/20 text-amber-800 dark:text-amber-400",
+                      )}>
+                        <i className={cn(
+                          "fas mt-0.5 flex-shrink-0",
+                          scanResult.count > 0 ? "fa-check-circle text-emerald-600" : "fa-exclamation-triangle text-amber-500",
+                        )} />
+                        <div className="space-y-1">
+                          <p className="font-semibold">
+                            {scanResult.count > 0
+                              ? (isKhmer ? `AI រកឃើញ ${scanResult.count} សញ្ញារោគ` : `AI detected ${scanResult.count} symptom${scanResult.count > 1 ? "s" : ""} — applied automatically`)
+                              : (isKhmer ? "AI មិនរកឃើញសញ្ញារោគច្បាស់លាស់" : "No confident symptoms detected — please select manually")}
+                          </p>
+                          {scanResult.notes ? (
+                            <p className="text-xs opacity-80">{scanResult.notes}</p>
+                          ) : null}
+                          {scanResult.confidence ? (
+                            <span className="inline-flex items-center gap-1 text-xs font-medium">
+                              <i className="fas fa-signal" />
+                              {isKhmer ? `ភាពប្រាកដ: ${scanResult.confidence}` : `Confidence: ${scanResult.confidence}`}
+                            </span>
+                          ) : null}
+                        </div>
                       </div>
                     )}
 
+                    {/* Action buttons */}
                     <div className="flex flex-wrap gap-3">
-                      {fieldImage ? (
-                        <button type="button" onClick={clearFieldImage} className="diag-secondary-button">
-                          <i className="fas fa-times" aria-hidden="true" />
-                          {label("removeImage", "Remove image")}
-                        </button>
-                      ) : null}
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="diag-secondary-button"
+                      >
+                        <i className="fas fa-upload" aria-hidden="true" />
+                        {isKhmer ? "ជ្រើសរើស​ Ảnh" : "Choose image"}
+                      </button>
 
-                      {scanMode && fieldImage ? (
+                      {scanMode && fieldImage && !scanAnalyzing ? (
                         <button
                           type="button"
                           onClick={() => analyzeScanImage()}
                           className="diag-secondary-button border-emerald-200 dark:border-emerald-900/40 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:bg-emerald-950/20"
-                          disabled={scanAnalyzing}
                         >
-                          <i
-                            className={`fas ${scanAnalyzing ? "fa-circle-notch animate-spin" : "fa-search"}`}
-                            aria-hidden="true"
-                          />
-                          {scanAnalyzing
-                            ? label("scanAnalyzing", "Analyzing...")
-                            : label("analyzeScan", "Analyze scan")}
+                          <i className="fas fa-sync-alt" aria-hidden="true" />
+                          {isKhmer ? "ស្កែននូបភាពម្ដងទៀត" : "Re-scan image"}
                         </button>
+                      ) : null}
+
+                      {scanAnalyzing ? (
+                        <span className="diag-secondary-button border-emerald-200 dark:border-emerald-900/40 text-emerald-700 dark:text-emerald-400 cursor-not-allowed opacity-70">
+                          <i className="fas fa-circle-notch animate-spin" />
+                          {isKhmer ? "កំពុងវិភាគ..." : "Analyzing..."}
+                        </span>
                       ) : null}
                     </div>
 
+                    {/* Live Camera Section (scan mode only) */}
                     {scanMode ? (
-                      <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 p-5">
-                        <div className="flex flex-col gap-4">
-                          <div>
-                            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">
+                      <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 overflow-hidden">
+                        {/* Camera header */}
+                        <div className="flex items-center gap-3 border-b border-slate-200 dark:border-slate-800 px-5 py-4">
+                          <div className="h-9 w-9 rounded-xl bg-slate-900 dark:bg-slate-800 flex items-center justify-center text-white flex-shrink-0">
+                            <i className="fas fa-camera text-sm" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
                               {label("liveCamera", "Live Camera")}
                             </p>
-                            <h3 className="mt-2 font-display text-lg font-bold text-slate-900 dark:text-white">
+                            <h3 className="font-display text-base font-bold text-slate-900 dark:text-white">
                               {label("captureFromDeviceCamera", "Capture from device camera")}
                             </h3>
-                            <p className="mt-2 text-sm leading-7 text-slate-500 dark:text-slate-400">
-                              {label("liveCameraDesc", "Open the camera, capture a field image, then let the scan helper suggest symptoms.")}
-                            </p>
                           </div>
-
-                          <div className="flex flex-wrap gap-3">
-                            <button type="button" onClick={() => openLiveCamera(activeCameraDeviceId)} className="diag-primary-button">
-                              <i className="fas fa-video" aria-hidden="true" />
-                              {label("cameraOpen", "Open camera")}
-                            </button>
-                            <button type="button" onClick={stopLiveCamera} className="diag-secondary-button">
-                              <i className="fas fa-stop-circle" aria-hidden="true" />
-                              {label("cameraStop", "Stop camera")}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={captureFromLiveCamera}
-                              className="diag-secondary-button border-emerald-200 dark:border-emerald-900/40 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:bg-emerald-950/20"
-                              disabled={!cameraOpen}
-                            >
-                              <i className="fas fa-camera" aria-hidden="true" />
-                              {label("cameraCapture", "Capture")}
-                            </button>
+                          {/* Camera status pill */}
+                          <div className={cn(
+                            "flex-shrink-0 flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold",
+                            cameraOpen
+                              ? "bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400"
+                              : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400",
+                          )}>
+                            <div className={cn(
+                              "h-1.5 w-1.5 rounded-full",
+                              cameraOpen ? "bg-emerald-500 animate-pulse" : "bg-slate-400",
+                            )} />
+                            {cameraOpen ? (isKhmer ? "រស់" : "Live") : (isKhmer ? "បិទ" : "Off")}
                           </div>
+                        </div>
 
+                        {/* Video viewport — aspect-ratio keeps it visible on all screen sizes */}
+                        <div className="relative bg-slate-900 w-full" style={{ aspectRatio: "16/9" }}>
+                          {cameraOpen ? (
+                            <video
+                              ref={videoRef}
+                              autoPlay
+                              muted
+                              playsInline
+                              style={{
+                                display: "block",
+                                width: "100%",
+                                height: "100%",
+                                objectFit: "cover",
+                                position: "absolute",
+                                inset: 0,
+                              }}
+                            />
+                          ) : (
+                            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-6 text-center">
+                              <div className="h-14 w-14 rounded-2xl bg-slate-800 flex items-center justify-center text-slate-500">
+                                <i className="fas fa-video-slash text-xl" />
+                              </div>
+                              <p className="text-sm text-slate-400">
+                                {hasSecureCameraContext()
+                                  ? label("cameraReady", "Open the camera to capture a live field image.")
+                                  : label("cameraSecureContext", "Camera access requires HTTPS or localhost.")}
+                              </p>
+                            </div>
+                          )}
+                          {/* Viewfinder corners when camera is open */}
+                          {cameraOpen && (
+                            <>
+                              <div className="absolute top-3 left-3 w-6 h-6 border-t-2 border-l-2 border-emerald-400/70 rounded-tl" />
+                              <div className="absolute top-3 right-3 w-6 h-6 border-t-2 border-r-2 border-emerald-400/70 rounded-tr" />
+                              <div className="absolute bottom-3 left-3 w-6 h-6 border-b-2 border-l-2 border-emerald-400/70 rounded-bl" />
+                              <div className="absolute bottom-3 right-3 w-6 h-6 border-b-2 border-r-2 border-emerald-400/70 rounded-br" />
+                            </>
+                          )}
+                        </div>
+
+                        {/* Camera controls */}
+                        <div className="p-4 space-y-3">
                           {cameraDevices.length > 1 ? (
                             <select
                               value={activeCameraDeviceId}
                               onChange={(event) => {
                                 const nextDeviceId = event.target.value;
                                 setActiveCameraDeviceId(nextDeviceId);
-                                if (cameraOpen) {
-                                  openLiveCamera(nextDeviceId);
-                                }
+                                if (cameraOpen) openLiveCamera(nextDeviceId);
                               }}
                               className="diag-input"
                             >
@@ -1257,26 +1915,43 @@ export default function DiagnosisWizardPage({ bootstrap }) {
                             </select>
                           ) : null}
 
-                          <div className="overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-800 bg-slate-900">
-                            {cameraOpen ? (
-                              <video
-                                ref={videoRef}
-                                autoPlay
-                                muted
-                                playsInline
-                                className="h-64 w-full object-cover"
-                              />
+                          <div className="flex flex-wrap gap-2">
+                            {!cameraOpen ? (
+                              <button type="button" onClick={() => openLiveCamera(activeCameraDeviceId)} className="diag-primary-button flex-1">
+                                <i className="fas fa-video" aria-hidden="true" />
+                                {label("cameraOpen", "Open camera")}
+                              </button>
                             ) : (
-                              <div className="flex h-64 items-center justify-center px-6 text-center text-sm text-slate-300">
-                                {hasSecureCameraContext()
-                                  ? label("cameraReady", "Open the camera to capture a live field image.")
-                                  : label("cameraSecureContext", "Camera access requires HTTPS or localhost.")}
-                              </div>
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={captureFromLiveCamera}
+                                  className="diag-primary-button flex-1"
+                                >
+                                  <i className="fas fa-camera" aria-hidden="true" />
+                                  {label("cameraCapture", "Capture")}
+                                </button>
+                                <button type="button" onClick={stopLiveCamera} className="diag-secondary-button">
+                                  <i className="fas fa-stop-circle" aria-hidden="true" />
+                                  {label("cameraStop", "Stop")}
+                                </button>
+                              </>
                             )}
                           </div>
 
                           {cameraStatus ? (
-                            <p className="text-sm text-slate-600 dark:text-slate-400">{cameraStatus}</p>
+                            <div className={cn(
+                              "flex items-center gap-2 rounded-2xl px-3 py-2.5 text-xs font-medium",
+                              scanResult?.count > 0
+                                ? "bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400"
+                                : "bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400",
+                            )}>
+                              <i className={cn(
+                                "fas flex-shrink-0",
+                                scanAnalyzing ? "fa-circle-notch animate-spin" : scanResult?.count > 0 ? "fa-check-circle" : "fa-info-circle",
+                              )} />
+                              {cameraStatus}
+                            </div>
                           ) : null}
                         </div>
                       </div>

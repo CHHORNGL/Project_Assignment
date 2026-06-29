@@ -12,7 +12,7 @@ export default function Stepper({ steps, currentStep, title, stepProgressText, h
       <div className="border-b border-slate-100 dark:border-slate-900 bg-white dark:bg-slate-950/90 px-5 py-4 md:px-6">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700 dark:text-emerald-400">
+            <p className="text-xs font-semibold uppercase text-emerald-700 dark:text-emerald-400">
               {title}
             </p>
             <p className="mt-1 font-display text-lg font-bold text-slate-900 dark:text-white">

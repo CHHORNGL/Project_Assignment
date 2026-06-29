@@ -11,7 +11,7 @@ export default function StepCard({
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="max-w-2xl">
           {eyebrow ? (
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700 dark:text-emerald-400">
+            <p className="text-xs font-semibold uppercase text-emerald-700 dark:text-emerald-400">
               {eyebrow}
             </p>
           ) : null}

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>Verification | AGRI SYSTEM</title>
+    <link rel="icon" type="image/jpeg" href="{{ url_for('static', filename='img/logo.jpg') }}">
+    <link rel="shortcut icon" type="image/jpeg" href="{{ url_for('static', filename='img/logo.jpg') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/logo.jpg') }}">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;500;600;700&family=Noto+Sans+Khmer:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <link href="{{ url_for('static', filename='sb-admin/vendor/fontawesome-free/css/all.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/auth.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/notifications.css') }}" rel="stylesheet">
+    <style>
+        :root {
+            --auth-accent: #22c55e;
+            --auth-accent-2: #16a34a;
+            --auth-panel-light-bg: #f8fafc;
+            --auth-panel-light-card: rgba(255, 255, 255, 0.92);
+            --auth-panel-light-border: rgba(15, 23, 42, 0.14);
+            --auth-panel-light-text: #0f172a;
+            --auth-panel-light-muted: #475569;
+            --auth-panel-dark-bg: #0b1116;
+            --auth-panel-dark-card: rgba(12, 16, 28, 0.88);
+            --auth-panel-dark-border: rgba(148, 163, 184, 0.22);
+            --auth-panel-dark-text: #e7edf5;
+            --auth-panel-dark-muted: #9fb1a6;
+        }
+        .code-input-field {
+            letter-spacing: 0.5em;
+            text-align: center;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+    </style>
+    <script>
+    (function () {
+        const storedTheme = localStorage.getItem("theme");
+        const mq = window.matchMedia("(prefers-color-scheme: dark)");
+        function applyTheme(theme) {
+            document.documentElement.classList.toggle(
+                "auth-panel-dark",
+                theme === "dark" || (theme === "system" && mq.matches)
+            );
+        }
+        if (storedTheme === "light" || storedTheme === "dark" || storedTheme === "system") {
+            applyTheme(storedTheme);
+        } else {
+            applyTheme("light");
+        }
+    })();
+    </script>
+</head>
+<body class="auth-body">
+
+{% include "partials/flash_notices.html" %}
+
+<main class="auth-shell">
+    <section class="auth-card">
+        <div class="auth-visual">
+            <div class="auth-visual-top">
+                <div class="auth-brand">
+                    <span class="auth-brand-mark">Agri System</span>
+                    <span class="auth-brand-sub">Verification</span>
+                </div>
+            </div>
+            <div class="auth-visual-content">
+                <h1 class="auth-visual-title">Secure Verification</h1>
+                <p>We take the security of your agricultural data seriously. Please verify your account to proceed.</p>
+            </div>
+        </div>
+
+        <div class="auth-panel">
+            <div class="auth-panel-head auth-stagger delay-1" style="margin-top: 2rem;">
+                <h2 class="auth-title">
+                    {% if purpose == 'register' %}
+                        Activate Account
+                    {% else %}
+                        Two-Step Verification
+                    {% endif %}
+                </h2>
+                <p class="auth-subtitle">
+                    Enter the 6-digit code sent to <strong class="text-success">{{ email }}</strong>.
+                </p>
+            </div>
+
+            <form method="POST" action="{{ url_for('auth.verify_code') }}" class="auth-form auth-stagger delay-2">
+                <div class="auth-field">
+                    <label for="code" class="font-weight-bold">Verification Code</label>
+                    <input type="text" id="code" name="code" class="auth-input code-input-field" 
+                           placeholder="000000" required maxlength="6" pattern="[0-9]{6}" autocomplete="one-time-code">
+                </div>
+
+                <button type="submit" class="auth-button mt-4">
+                    Verify & Authenticate
+                </button>
+            </form>
+
+            <form method="POST" action="{{ url_for('auth.resend_code') }}" class="auth-stagger delay-3 text-center mt-3">
+                <button type="submit" class="btn btn-link text-success font-weight-bold" style="background: none; border: none; text-decoration: underline; cursor: pointer;">
+                    Resend Code
+                </button>
+            </form>
+
+            <div class="auth-foot auth-stagger delay-4 mt-4 text-center">
+                <a href="{{ url_for('auth.logout') }}" class="text-muted small">
+                    <i class="fas fa-arrow-left mr-1"></i> Back to Login
+                </a>
+            </div>
+        </div>
+    </section>
+</main>
+
+<script src="{{ url_for('static', filename='js/toast.js') }}"></script>
+</body>
+</html>

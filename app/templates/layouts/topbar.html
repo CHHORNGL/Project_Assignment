@@ -141,7 +141,7 @@
                aria-expanded="false"
                aria-label="{{ t('language') }}">
                 <span class="lang-trigger icon-btn" id="langTrigger">
-                    <span class="lang-trigger-flag" id="langTriggerFlag">🌐</span>
+                    <span class="fi fi-us mr-1 rounded-circle" id="langTriggerFlag"></span>
                     <span class="lang-trigger-code" id="langTriggerCode">EN</span>
                 </span>
             </a>
@@ -149,26 +149,18 @@
             <div class="dropdown-menu dropdown-menu-right lang-menu shadow-lg"
                  aria-labelledby="langDropdown">
 
-                <div class="lang-menu-header">{{ t("language") }} / ភាសា</div>
+                <div class="lang-menu-header">{% if current_lang == 'km' %}ភាសា{% else %}Language{% endif %}</div>
 
-                <button class="lang-menu-item lang-option" type="button" data-lang="en"
-                        data-flag="🇺🇸" data-code="EN">
-                    <span class="lang-item-flag">🇺🇸</span>
-                    <span class="lang-item-body">
-                        <span class="lang-item-name">{{ t("english") }}</span>
-                        <span class="lang-item-native">English</span>
-                    </span>
-                    <span class="lang-item-check" aria-hidden="true">✓</span>
+                <button class="lang-menu-item lang-option d-flex align-items-center" type="button" data-lang="en"
+                        data-flag="us" data-code="EN">
+                    <span class="fi fi-us mr-2 rounded-circle"></span>
+                    <span class="lang-item-name font-weight-bold" style="font-size: 0.82rem;">English</span>
                 </button>
 
-                <button class="lang-menu-item lang-option" type="button" data-lang="km"
-                        data-flag="🇰🇭" data-code="KM">
-                    <span class="lang-item-flag">🇰🇭</span>
-                    <span class="lang-item-body">
-                        <span class="lang-item-name">{{ t("khmer") }}</span>
-                        <span class="lang-item-native">ខ្មែរ</span>
-                    </span>
-                    <span class="lang-item-check" aria-hidden="true">✓</span>
+                <button class="lang-menu-item lang-option d-flex align-items-center" type="button" data-lang="km"
+                        data-flag="kh" data-code="KM">
+                    <span class="fi fi-kh mr-2 rounded-circle"></span>
+                    <span class="lang-item-name font-weight-bold" style="font-size: 0.82rem;">ខ្មែរ</span>
                 </button>
 
             </div>
@@ -192,21 +184,21 @@
 
             <div class="dropdown-menu dropdown-menu-right theme-switcher-menu shadow-lg"
                  aria-labelledby="themeDropdown">
-                <div class="theme-switcher-label">{{ t("theme") }}</div>
+                <div class="theme-switcher-label">{% if current_lang == 'km' %}រចនាប័ទ្ម{% else %}Theme{% endif %}</div>
                 <div class="theme-switcher-grid">
                     <button class="theme-switcher-btn theme-option" type="button" data-theme="system"
                             data-icon="fa-desktop" title="{{ t('system') }}">
-                        <i class="fas fa-desktop"></i>
+                        <i class="far fa-desktop"></i>
                         <span>{{ t("system") }}</span>
                     </button>
                     <button class="theme-switcher-btn theme-option" type="button" data-theme="light"
                             data-icon="fa-sun" title="{{ t('light') }}">
-                        <i class="fas fa-sun"></i>
+                        <i class="far fa-sun"></i>
                         <span>{{ t("light") }}</span>
                     </button>
                     <button class="theme-switcher-btn theme-option" type="button" data-theme="dark"
                             data-icon="fa-moon" title="{{ t('dark') }}">
-                        <i class="fas fa-moon"></i>
+                        <i class="far fa-moon"></i>
                         <span>{{ t("dark") }}</span>
                     </button>
                 </div>

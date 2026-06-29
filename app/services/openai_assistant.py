@@ -4,7 +4,6 @@ import base64
 import json
 import os
 import re
-from functools import lru_cache
 from typing import Optional, Tuple
 
 try:
@@ -19,7 +18,7 @@ from app.models.rule import Rule
 from app.utils.i18n import get_current_language, normalize_display_text
 
 
-DEFAULT_MODEL = "gpt-4o-mini"
+DEFAULT_MODEL = "llama-3.3-70b-versatile"
 
 
 def _normalize(text: str) -> str:
@@ -31,15 +30,24 @@ def _normalize(text: str) -> str:
     return text.strip()
 
 
-@lru_cache(maxsize=1)
-def _get_client() -> Optional[OpenAI]:
+_cached_client: Optional["OpenAI"] = None
+_cached_client_key: str = ""
+
+
+def _get_client() -> Optional["OpenAI"]:
+    global _cached_client, _cached_client_key
     if OpenAI is None:
         return None
 
     api_key = os.getenv("OPENAI_API_KEY", "").strip()
     if not api_key:
         return None
-    return OpenAI(api_key=api_key)
+    base_url = os.getenv("OPENAI_BASE_URL", "").strip() or None
+    cache_key = f"{api_key}|{base_url or ''}"
+    if _cached_client is None or _cached_client_key != cache_key:
+        _cached_client = OpenAI(api_key=api_key, base_url=base_url)
+        _cached_client_key = cache_key
+    return _cached_client
 
 
 def _match_crop(message: str) -> Optional[Crop]:
@@ -183,7 +191,7 @@ def suggest_symptoms_from_image(
             ],
             response_format={"type": "json_object"},
             temperature=0.1,
-            max_tokens=400,
+            max_tokens=600,
         )
     except Exception:
         try:
@@ -200,7 +208,7 @@ def suggest_symptoms_from_image(
                     },
                 ],
                 temperature=0.1,
-                max_tokens=400,
+                max_tokens=600,
             )
         except Exception:
             return None
@@ -337,8 +345,8 @@ def _build_kb_context(message: str) -> Tuple[str, Optional[Crop]]:
 
 def generate_assistant_reply(user_message: str) -> Optional[str]:
     """
-    Use OpenAI to generate a response based on the DB knowledge base.
-    Returns None if OpenAI is not configured or fails.
+    Use AI to generate a smart agricultural expert response based on the DB knowledge base.
+    Returns None if AI is not configured or fails.
     """
     client = _get_client()
     if not client:
@@ -349,18 +357,36 @@ def generate_assistant_reply(user_message: str) -> Optional[str]:
     lang = get_current_language()
 
     system_prompt = (
-        "You are an agricultural expert assistant. "
-        "Answer ONLY using the provided knowledge base context. "
-        "If the answer is not in the context, say you don't have it yet "
-        "and ask a clarifying question."
+        "You are an expert agricultural advisor specializing in Southeast Asian and Cambodian farming. "
+        "Your role is to help farmers diagnose crop diseases, understand symptoms, plan treatments, "
+        "and adopt best agricultural practices. \n\n"
+        "EXPERTISE AREAS:\n"
+        "- Rice, maize, vegetables, fruit trees, cassava, soybean and other crops grown in Cambodia/SE Asia\n"
+        "- Fungal, bacterial, viral diseases and pest identification\n"
+        "- Organic and chemical treatment recommendations with dosage guidance\n"
+        "- Soil health, irrigation, fertilization, and crop rotation\n"
+        "- Weather-related stress, nutrient deficiencies, and prevention strategies\n"
+        "- Integrated Pest Management (IPM) and sustainable farming\n\n"
+        "INSTRUCTIONS:\n"
+        "1. Use the provided knowledge base context as primary reference for disease info.\n"
+        "2. Supplement with your own deep agricultural expertise when needed.\n"
+        "3. Give specific, actionable advice with clear steps.\n"
+        "4. Mention disease causes, symptoms to watch for, and both short-term treatment and long-term prevention.\n"
+        "5. If treatment involves chemicals, mention safe usage and alternatives.\n"
+        "6. Be empathetic and encouraging toward farmers.\n"
+        "7. If you are unsure, say so clearly and recommend consulting a local agricultural extension officer.\n"
+        "8. Keep answers structured: use numbered steps or bullet points when listing actions."
     )
     if lang == "km":
-        system_prompt += " Respond in Khmer."
+        system_prompt += (
+            "\n\nIMPORTANT: Always respond entirely in Khmer language (ភាសាខ្មែរ). "
+            "Use clear, simple Khmer that farmers can easily understand."
+        )
 
     user_prompt = (
-        f"User message:\n{user_message}\n\n"
-        f"Knowledge base context:\n{context}\n\n"
-        "Respond in a friendly, concise way."
+        f"Farmer's question:\n{user_message}\n\n"
+        f"Relevant knowledge base (diseases/symptoms in our system):\n{context}\n\n"
+        "Please provide a detailed, practical, and helpful agricultural expert response."
     )
 
     try:
@@ -370,8 +396,8 @@ def generate_assistant_reply(user_message: str) -> Optional[str]:
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
             ],
-            temperature=0.2,
-            max_tokens=300,
+            temperature=0.3,
+            max_tokens=2000,
         )
     except Exception:
         return None

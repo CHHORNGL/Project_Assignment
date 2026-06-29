@@ -14,9 +14,9 @@ from wtforms.validators import (
 # ===============================
 class LoginForm(FlaskForm):
     username = StringField(
-        "Username or Email",
+        "Gmail / Email",
         validators=[
-            DataRequired(message="Username is required"),
+            DataRequired(message="Email is required"),
             Length(min=3, max=80)
         ]
     )
@@ -36,11 +36,12 @@ class LoginForm(FlaskForm):
 # REGISTER FORM (FARMER)
 # ===============================
 class RegisterForm(FlaskForm):
-    username = StringField(
-        "Username",
+    email = StringField(
+        "Gmail / Email",
         validators=[
-            DataRequired(message="Username is required"),
-            Length(min=3, max=80)
+            DataRequired(message="Email is required"),
+            Email(message="Enter a valid email address"),
+            Length(max=120)
         ]
     )
 
@@ -49,14 +50,6 @@ class RegisterForm(FlaskForm):
         validators=[
             Optional(),
             Length(max=120)
-        ]
-    )
-
-    email = StringField(
-        "Email (optional)",
-        validators=[
-            Optional(),
-            Email(message="Enter a valid email address")
         ]
     )
 

@@ -126,7 +126,7 @@
 
                 <div class="auth-field">
                     {{ form.username.label }}
-                    {{ form.username(class="auth-input", placeholder=t("auth_username_email_placeholder")) }}
+                    {{ form.username(class="auth-input", placeholder="example@gmail.com") }}
                 </div>
 
                 <div class="auth-field">
@@ -139,16 +139,24 @@
                 </button>
             </form>
 
-            {% if active_role == 'farmer' %}
-                <div class="auth-divider auth-stagger delay-5">{{ t("auth_continue_with") }}</div>
-                <a class="auth-oauth-btn auth-stagger delay-6" href="{{ url_for('auth.google_login') }}">
-                    <span class="auth-oauth-icon">G</span>
-                    {{ t("auth_google") }}
-                </a>
+            <div class="auth-divider auth-stagger delay-5">Or</div>
+            <div class="auth-oauth-container auth-stagger delay-6" style="margin-top: 0.5rem; margin-bottom: 1rem; display: flex; flex-direction: column; gap: 8px; width: 100%;">
+                <button type="button" id="btn-login-passkey" class="auth-oauth-btn d-flex align-items-center justify-content-center" style="width: 100%; border: 1px solid rgba(0,0,0,0.08); background: #ffffff; color: #334155; font-weight: 600; cursor: pointer; border-radius: 12px; height: 48px;">
+                    <i class="fas fa-fingerprint mr-2" style="color: #10b981; font-size: 1.15rem;"></i>
+                    Sign in with Passkey
+                </button>
+                {% if active_role == 'farmer' %}
+                    <a class="auth-oauth-btn d-flex align-items-center justify-content-center" href="{{ url_for('auth.google_login') }}" style="border-radius: 12px; height: 48px;">
+                        <i class="fab fa-google mr-2" style="color: #ea4335; font-size: 1.15rem;"></i>
+                        {{ t("auth_google") or "Sign in with Google" }}
+                    </a>
+                {% endif %}
+            </div>
 
+            {% if active_role == 'farmer' %}
                 <div class="auth-foot auth-stagger delay-6">
-                    {{ t("auth_farmer") }}
-                    <a href="{{ url_for('auth.register') }}">{{ t("auth_create_farmer") }}</a>
+                    {% if current_lang == 'km' %}មិនទាន់មានគណនីមែនទេ?{% else %}Don't have an account yet?{% endif %}
+                    <a href="{{ url_for('auth.register') }}">{% if current_lang == 'km' %}ចុះឈ្មោះជាកសិករ{% else %}Register as Farmer{% endif %}</a>
                 </div>
             {% endif %}
         </div>
@@ -199,6 +207,95 @@ window.AuthThemeMotionConfig = {{ {
             applyTheme(theme);
             setActive(theme);
         });
+    });
+})();
+</script>
+
+<script>
+(function() {
+    function base64urlToBytes(base64url) {
+        const base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
+        const pad = base64.length % 4;
+        const padded = pad ? base64 + '='.repeat(4 - pad) : base64;
+        const binary = atob(padded);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) {
+            bytes[i] = binary.charCodeAt(i);
+        }
+        return bytes;
+    }
+
+    function bytesToBase64url(bytes) {
+        const uint8 = new Uint8Array(bytes);
+        let binary = '';
+        for (let i = 0; i < uint8.byteLength; i++) {
+            binary += String.fromCharCode(uint8[i]);
+        }
+        const base64 = btoa(binary);
+        return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+    }
+
+    function prepareAuthenticationOptions(options) {
+        options.challenge = base64urlToBytes(options.challenge);
+        if (options.allowCredentials) {
+            options.allowCredentials = options.allowCredentials.map(cred => ({
+                ...cred,
+                id: base64urlToBytes(cred.id)
+            }));
+        }
+        return options;
+    }
+
+    const btn = document.getElementById("btn-login-passkey");
+    if (!btn) return;
+
+    btn.addEventListener("click", async () => {
+        if (window.location.hostname === "127.0.0.1") {
+            window.location.hostname = "localhost";
+            return;
+        }
+        try {
+            // 1. Fetch options
+            const optionsResp = await fetch("{{ url_for('auth.passkey_login_options') }}");
+            if (!optionsResp.ok) throw new Error("Failed to get passkey login options.");
+            const options = await optionsResp.json();
+
+            // 2. Browser request
+            const credential = await navigator.credentials.get({
+                publicKey: prepareAuthenticationOptions(options)
+            });
+
+            // 3. Serialize and send to verify
+            const payload = {
+                id: credential.id,
+                rawId: bytesToBase64url(credential.rawId),
+                type: credential.type,
+                response: {
+                    clientDataJSON: bytesToBase64url(credential.response.clientDataJSON),
+                    authenticatorData: bytesToBase64url(credential.response.authenticatorData),
+                    signature: bytesToBase64url(credential.response.signature),
+                    userHandle: credential.response.userHandle ? bytesToBase64url(credential.response.userHandle) : null
+                }
+            };
+
+            const verifyResp = await fetch("{{ url_for('auth.passkey_login_verify') }}", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            const verifyResult = await verifyResp.json();
+            if (verifyResult.status === "ok") {
+                window.location.href = "{{ url_for('main.index') }}";
+            } else {
+                alert(verifyResult.message || "Login failed.");
+            }
+        } catch (err) {
+            console.error(err);
+            if (err.name !== "NotAllowedError") {
+                alert("Passkey login error: " + err.message);
+            }
+        }
     });
 })();
 </script>

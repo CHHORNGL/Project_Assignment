@@ -1,7 +1,6 @@
 # app/services/project_assistant.py
 
 import os
-from functools import lru_cache
 from typing import Optional
 
 from app.utils.i18n import get_current_language
@@ -12,7 +11,7 @@ except Exception:  # pragma: no cover - optional dependency
     OpenAI = None  # type: ignore
 
 
-DEFAULT_MODEL = "gpt-4o-mini"
+DEFAULT_MODEL = "llama-3.3-70b-versatile"
 
 PROJECT_CONTEXT = """You are helping users of the Integrated Agricultural Expert System web app.
 
@@ -70,14 +69,23 @@ def _system_only_reply(lang: str) -> str:
     )
 
 
-@lru_cache(maxsize=1)
+_pa_cached_client = None
+_pa_cached_client_key: str = ""
+
+
 def _get_client() -> Optional[OpenAI]:
+    global _pa_cached_client, _pa_cached_client_key
     if OpenAI is None:
         return None
     api_key = os.getenv("OPENAI_API_KEY", "").strip()
     if not api_key:
         return None
-    return OpenAI(api_key=api_key)
+    base_url = os.getenv("OPENAI_BASE_URL", "").strip() or None
+    cache_key = f"{api_key}|{base_url or ''}"
+    if _pa_cached_client is None or _pa_cached_client_key != cache_key:
+        _pa_cached_client = OpenAI(api_key=api_key, base_url=base_url)
+        _pa_cached_client_key = cache_key
+    return _pa_cached_client
 
 
 def _fallback_reply(user_message: str, *, user_role: str, page: str, lang: str) -> str:
@@ -186,7 +194,7 @@ def generate_project_reply(user_message: str, *, user_role: str, page: str = "")
                 {"role": "user", "content": user_prompt},
             ],
             temperature=0.2,
-            max_tokens=300,
+            max_tokens=1000,
         )
     except Exception:
         return _fallback_reply(user_message, user_role=user_role, page=page, lang=lang)

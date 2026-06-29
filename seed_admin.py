@@ -45,20 +45,30 @@ with app.app_context():
             print(f"🔗 Permission '{perm_code}' assigned to admin role")
 
     # ===============================
-    # CREATE ADMIN USER
+    # CREATE/UPDATE ADMIN USER
     # ===============================
-    admin_user = User.query.filter_by(username="admin").first()
+    admin_user = User.query.filter(
+        (User.username == "admin") | (User.email == "iks214262@gmail.com")
+    ).first()
 
     if not admin_user:
-        admin_user = User(username="admin")
-        admin_user.set_password("admin123")  # ✅ CORRECT WAY
+        admin_user = User(username="admin", email="iks214262@gmail.com", is_verified=True)
+        admin_user.set_password("12345678")
         admin_user.roles.append(admin_role)
-
         db.session.add(admin_user)
         db.session.commit()
-
         print("🎉 Admin user created successfully")
-        print("👉 Username: admin")
-        print("👉 Password: admin123")
+        print("👉 Email: iks214262@gmail.com")
+        print("👉 Password: 12345678")
     else:
-        print("ℹ️ Admin user already exists")
+        # If user exists, ensure they are admin, active, verified, and update credentials
+        admin_user.email = "iks214262@gmail.com"
+        admin_user.is_verified = True
+        admin_user.is_active = True
+        admin_user.set_password("12345678")
+        if admin_role not in admin_user.roles:
+            admin_user.roles.append(admin_role)
+        db.session.commit()
+        print("🎉 Admin user updated successfully")
+        print("👉 Email: iks214262@gmail.com")
+        print("👉 Password: 12345678")

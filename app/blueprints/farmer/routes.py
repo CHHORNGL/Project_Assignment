@@ -545,7 +545,14 @@ def diagnose():
     if result:
         return result
 
+    crop_id_raw = request.args.get("crop_id")
+    try:
+        selected_crop_id = int(crop_id_raw) if crop_id_raw else None
+    except (TypeError, ValueError):
+        selected_crop_id = None
+
     crops = Crop.query.order_by(Crop.name.asc()).all()
+    crop_symptoms = {c.id: _symptom_candidates_for_crop(c.id) for c in crops}
 
     # Sidebar: recent diagnoses
     diagnoses = (
@@ -559,94 +566,66 @@ def diagnose():
     return render_template(
         "farmer/diagnose.html",
         crops=crops,
-        diagnoses=diagnoses
+        crop_symptoms=crop_symptoms,
+        diagnoses=diagnoses,
+        selected_crop_id=selected_crop_id
     )
 
 
-@farmer_bp.route("/scan-crop", methods=["GET"])
-@farmer_required
-def scan_crop():
-    crop_id = (request.args.get("crop_id") or "").strip()
-    instant = "1" if (request.args.get("instant") or "").strip() == "1" else "0"
-    return redirect(url_for("farmer.diagnose_rule_based", scan="1", instant=instant, crop_id=crop_id))
 
 
-@farmer_bp.route("/api/scan/symptom-suggestions", methods=["POST"])
+
+
+@farmer_bp.route("/api/diagnose/live-evaluation", methods=["POST"])
 @farmer_required
-def scan_symptom_suggestions_api():
-    crop_id_raw = (request.form.get("crop_id") or "").strip()
+def api_diagnose_live_evaluation():
+    data = request.get_json() or {}
+    crop_id_raw = data.get("crop_id")
+    symptoms = data.get("symptoms", [])
+    denied_symptoms = data.get("denied_symptoms", [])
+    category = data.get("category", "")
+
     try:
-        crop_id = int(crop_id_raw)
+        crop_id = int(crop_id_raw) if crop_id_raw else None
     except (TypeError, ValueError):
-        return jsonify({"ok": False, "error": t("please_select_crop")}), 400
+        crop_id = None
 
-    crop = Crop.query.get(crop_id)
-    if not crop:
-        return jsonify({"ok": False, "error": t("invalid_crop_selected")}), 404
+    pos_ids = _safe_int_list(symptoms)
+    neg_ids = _safe_int_list(denied_symptoms)
 
-    upload = request.files.get("field_image")
-    if not upload or not upload.filename:
-        return jsonify({"ok": False, "error": t("scan_image_required")}), 400
+    all_ids = pos_ids + [sid for sid in neg_ids if sid not in pos_ids]
+    symptom_names_map = {}
+    if all_ids:
+        symptom_rows = Symptom.query.filter(Symptom.id.in_(all_ids)).all()
+        symptom_names_map = {s.id: s.name for s in symptom_rows}
 
-    mimetype = (upload.mimetype or "").strip().lower()
-    if not mimetype.startswith("image/"):
-        return jsonify({"ok": False, "error": t("invalid_image_type")}), 400
+    pos_names = [symptom_names_map[sid] for sid in pos_ids if sid in symptom_names_map]
+    neg_names = [symptom_names_map[sid] for sid in neg_ids if sid in symptom_names_map]
 
-    image_bytes = upload.read() or b""
-    if not image_bytes:
-        return jsonify({"ok": False, "error": t("scan_image_required")}), 400
-    if len(image_bytes) > 5 * 1024 * 1024:
-        return jsonify({"ok": False, "error": t("max_upload_size")}), 413
-
-    symptom_candidates = _symptom_candidates_for_crop(crop_id)
-    if not symptom_candidates:
-        return jsonify(
-            {
-                "ok": True,
-                "suggestions": [],
-                "analysis": "",
-                "confidence": None,
-            }
-        )
-
-    result = suggest_symptoms_from_image(
-        image_bytes=image_bytes,
-        mime_type=mimetype,
-        crop_name=_localize_field(crop, "name", crop.name),
-        symptom_candidates=symptom_candidates,
-        max_suggestions=8,
+    result = rule_diagnose(
+        pos_names,
+        crop_id=crop_id,
+        negative_symptoms_input=neg_names,
+        category=category,
     )
-    if result is None:
-        return jsonify({"ok": False, "error": t("scan_api_unavailable")}), 503
 
-    current_lang = get_current_language()
-    suggestions = []
-    for row in result.get("matched_symptoms") or []:
-        if not isinstance(row, dict):
-            continue
-        symptom_id = row.get("id")
-        if not symptom_id:
-            continue
-        display_name = (
-            row.get("name_kh")
-            if current_lang == "km" and row.get("name_kh")
-            else row.get("name")
-        )
-        suggestions.append(
-            {
-                "id": symptom_id,
-                "name": normalize_display_text(str(display_name or row.get("name") or ""), lang=current_lang),
-            }
-        )
-
-    return jsonify(
-        {
+    if result:
+        candidates = result.get("ranked_candidates") or []
+        return jsonify({
             "ok": True,
-            "suggestions": suggestions,
-            "analysis": str(result.get("notes") or "").strip(),
-            "confidence": result.get("confidence"),
-        }
-    )
+            "suspects": candidates,
+            "best": {
+                "disease_name": result.get("disease_name"),
+                "confidence_percent": result.get("confidence_percent"),
+                "confidence_tier": result.get("confidence_tier")
+            }
+        })
+    else:
+        return jsonify({
+            "ok": True,
+            "suspects": [],
+            "best": None
+        })
 
 
 @farmer_bp.route("/diagnose/rule-based", methods=["GET", "POST"])
@@ -868,10 +847,6 @@ def diagnose_rule_based():
         "dashboardUrl": url_for("farmer.dashboard"),
         "chatUrl": url_for("farmer.chat"),
         "currentLang": current_lang,
-        "scanMode": scan_mode,
-        "instantScanMode": instant_scan_mode,
-        "initialCropId": str(initial_crop_id),
-        "scanSuggestionApi": url_for("farmer.scan_symptom_suggestions_api"),
         "csrfToken": generate_csrf(),
         "crops": [
             {
@@ -897,13 +872,6 @@ def diagnose_rule_based():
             "cameraCaptured": t("camera_success"),
             "pleaseSelectCrop": t("please_select_crop"),
             "invalidImageType": t("invalid_image_type"),
-            "scanAnalyzing": t("scan_analyzing") if t("scan_analyzing") else "Analyzing...",
-            "scanApiFailed": t("scan_api_failed") if t("scan_api_failed") else "Unable to analyze the scan image.",
-            "scanSuggestionApplied": t("scan_suggestion_applied") if t("scan_suggestion_applied") else "Applied {count} symptom suggestions from the scan.",
-            "scanSuggestionNone": t("scan_suggestion_none") if t("scan_suggestion_none") else "No confident symptom suggestions were found.",
-            "scanAutoSubmitting": t("scan_auto_submitting") if t("scan_auto_submitting") else "Submitting the diagnosis automatically...",
-            "pleaseSelectSymptom": t("please_select_symptom"),
-            "scanImageRequired": t("crop_photo_sub"),
             "back": t("back"),
             "category": t("category"),
             "type": t("type"),
@@ -940,9 +908,6 @@ def diagnose_rule_based():
             "symptomUnselectedHint": t("symptom_unselected_hint"),
             "cropClearedNotice": t("crop_cleared_notice"),
             "aiPoweredSystem": t("ai_powered_system"),
-            "instantScanModeLabel": t("instant_scan_mode"),
-            "scanAssistedModeLabel": t("scan_assisted_mode"),
-            "guidedDiagnosisDescFallback": t("guided_diagnosis_desc_fallback"),
             "askExpert": t("ask_expert"),
             "formErrorTitle": t("form_error_title"),
             "step1": t("step1"),

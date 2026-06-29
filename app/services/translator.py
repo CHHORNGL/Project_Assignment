@@ -19,7 +19,8 @@ def _get_client() -> Optional[OpenAI]:
     api_key = os.getenv("OPENAI_API_KEY", "").strip()
     if not api_key:
         return None
-    return OpenAI(api_key=api_key)
+    base_url = os.getenv("OPENAI_BASE_URL", "").strip() or None
+    return OpenAI(api_key=api_key, base_url=base_url)
 
 
 def translate_to_khmer(text: str) -> Optional[str]:
