@@ -42,6 +42,13 @@ auth_bp = Blueprint(
 )
 
 
+@auth_bp.before_request
+def redirect_127_to_localhost():
+    if "127.0.0.1" in request.host:
+        new_url = request.url.replace("127.0.0.1", "localhost", 1)
+        return redirect(new_url)
+
+
 def _get_google_client():
     return oauth.create_client("google")
 
@@ -323,9 +330,10 @@ def register():
 # LOGOUT
 # ==================================================
 @auth_bp.route("/logout")
-@login_required
 def logout():
     logout_user()
+    session.pop("verify_user_id", None)
+    session.pop("verify_purpose", None)
     flash("Logged out successfully.", "info")
     return redirect(url_for("auth.login", role="farmer"))
 
@@ -485,6 +493,21 @@ def google_callback():
         return redirect(url_for("auth.login", role="farmer"))
 
     db.session.commit()
+
+    # 🔐 Two-Step Verification Check (for all users, including OAuth connections)
+    if user.two_factor_enabled:
+        code = "".join(random.choices(string.digits, k=6))
+        user.two_factor_code = code
+        user.two_factor_expiry = datetime.datetime.utcnow() + datetime.timedelta(minutes=10)
+        db.session.commit()
+
+        _send_verification_email(user.email, code)
+
+        session["verify_user_id"] = user.id
+        session["verify_purpose"] = "login"
+        flash("Two-step verification code has been sent to your Gmail/Email address.", "info")
+        return redirect(url_for("auth.verify_code"))
+
     login_user(user)
     flash("Welcome back!", "success")
     return redirect(url_for("main.index"))

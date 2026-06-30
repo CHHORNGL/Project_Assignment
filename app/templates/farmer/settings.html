@@ -802,7 +802,8 @@
     if (registerBtn) {
         registerBtn.addEventListener("click", async () => {
             if (window.location.hostname === "127.0.0.1") {
-                alert("Passkeys require accessing the site via http://localhost:5000 instead of http://127.0.0.1:5000. Redirecting you now...");
+                const port = window.location.port ? ":" + window.location.port : "";
+                alert(`Passkeys require accessing the site via http://localhost${port} instead of http://127.0.0.1${port}. Redirecting you now...`);
                 window.location.hostname = "localhost";
                 return;
             }

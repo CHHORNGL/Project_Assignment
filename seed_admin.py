@@ -47,22 +47,32 @@ with app.app_context():
     # ===============================
     # CREATE/UPDATE ADMIN USER
     # ===============================
-    admin_user = User.query.filter(
-        (User.username == "admin") | (User.email == "iks214262@gmail.com")
-    ).first()
+    admin_user = User.query.filter_by(email="iks214262@gmail.com").first()
+    if not admin_user:
+        admin_user = User.query.filter_by(username="admin").first()
+
+    email_taken = User.query.filter_by(email="iks214262@gmail.com").first()
+
+    target_email = "iks214262@gmail.com"
+    if email_taken and admin_user and admin_user.id != email_taken.id:
+        if not admin_user.email:
+            target_email = "admin@agrisystem.com"
+        else:
+            target_email = admin_user.email
 
     if not admin_user:
-        admin_user = User(username="admin", email="iks214262@gmail.com", is_verified=True)
+        final_email = "admin@agrisystem.com" if email_taken else "iks214262@gmail.com"
+        admin_user = User(username="admin", email=final_email, is_verified=True)
         admin_user.set_password("12345678")
         admin_user.roles.append(admin_role)
         db.session.add(admin_user)
         db.session.commit()
         print("🎉 Admin user created successfully")
-        print("👉 Email: iks214262@gmail.com")
+        print(f"👉 Email: {final_email}")
         print("👉 Password: 12345678")
     else:
-        # If user exists, ensure they are admin, active, verified, and update credentials
-        admin_user.email = "iks214262@gmail.com"
+        if not admin_user.email or admin_user.email != target_email:
+            admin_user.email = target_email
         admin_user.is_verified = True
         admin_user.is_active = True
         admin_user.set_password("12345678")
@@ -70,5 +80,5 @@ with app.app_context():
             admin_user.roles.append(admin_role)
         db.session.commit()
         print("🎉 Admin user updated successfully")
-        print("👉 Email: iks214262@gmail.com")
+        print(f"👉 Email: {admin_user.email}")
         print("👉 Password: 12345678")
