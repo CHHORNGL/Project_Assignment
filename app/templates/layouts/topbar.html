@@ -216,7 +216,7 @@
                data-toggle="dropdown">
 
                 <span class="mr-2 d-none d-lg-inline text-muted small">
-                    {{ current_user.username }}
+                    {{ current_user.full_name or current_user.username }}
                 </span>
 
                 <img class="img-profile rounded-circle"

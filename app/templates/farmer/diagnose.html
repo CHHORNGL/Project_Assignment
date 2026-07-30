@@ -5,6 +5,14 @@
 {% set is_km = (current_lang == 'km') %}
 
 <style>
+.input-group:focus-within {
+    border-color: #10b981 !important;
+    box-shadow: 0 0 0 0.2rem rgba(16, 185, 129, 0.15) !important;
+}
+.focus-none:focus {
+    box-shadow: none !important;
+    outline: none !important;
+}
 .wizard-progress {
     display: flex;
     justify-content: space-between;
@@ -233,6 +241,15 @@
                         {% if is_km %}សូមជ្រើសរើសប្រភេទដំណាំដែលកំពុងមានបញ្ហាពីបញ្ជីខាងក្រោម។{% else %}Select the crop you are currently inspecting from the list below.{% endif %}
                     </p>
 
+                    <div class="input-group mb-4 shadow-sm" style="border-radius: 12px; overflow: hidden; border: 1px solid #ced4da; transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text bg-white border-0 text-muted" style="border-radius: 12px 0 0 12px;">
+                                <i class="fas fa-search"></i>
+                            </span>
+                        </div>
+                        <input type="text" id="crop-search-input" class="form-control border-0 pl-0 focus-none" placeholder="{% if is_km %}ស្វែងរកដំណាំ...{% else %}Search crops...{% endif %}" style="border-radius: 0 12px 12px 0; height: 46px; font-size: 0.95rem;">
+                    </div>
+
                     <div class="row row-cols-2 row-cols-md-4 g-3 crop-visual-select">
                         {% for crop in crops %}
                         <!-- Determine Crop emoji -->
@@ -279,6 +296,14 @@
                     <p class="text-muted small mb-4">
                         {% if is_km %}តើមានរោគសញ្ញាអ្វីខ្លះនៅលើស្លឹកដំណាំ? សូមជ្រើសរើសសញ្ញាខាងក្រោម។{% else %}What symptoms do you observe on the leaves of the plant? Select from below.{% endif %}
                     </p>
+                    <div class="input-group input-group-sm mb-3 shadow-sm" style="border-radius: 8px; overflow: hidden; border: 1px solid #ced4da; transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text bg-white border-0 text-muted" style="border-radius: 8px 0 0 8px;">
+                                <i class="fas fa-search"></i>
+                            </span>
+                        </div>
+                        <input type="text" id="symptom-search-2" class="form-control border-0 pl-0 focus-none symptom-search-input" placeholder="{% if is_km %}ស្វែងរករោគសញ្ញាស្លឹក...{% else %}Search leaf symptoms...{% endif %}" style="border-radius: 0 8px 8px 0; height: 38px;">
+                    </div>
                     <div class="symptoms-list-container row" id="step-2-symptoms">
                         <!-- Dynamically filled by JS -->
                     </div>
@@ -294,6 +319,14 @@
                     <p class="text-muted small mb-4">
                         {% if is_km %}តើមានរោគសញ្ញាអ្វីខ្លះនៅលើដើម ស្រទប ឬមែកដំណាំ?{% else %}What symptoms do you observe on the stems, sheath, or branches?{% endif %}
                     </p>
+                    <div class="input-group input-group-sm mb-3 shadow-sm" style="border-radius: 8px; overflow: hidden; border: 1px solid #ced4da; transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text bg-white border-0 text-muted" style="border-radius: 8px 0 0 8px;">
+                                <i class="fas fa-search"></i>
+                            </span>
+                        </div>
+                        <input type="text" id="symptom-search-3" class="form-control border-0 pl-0 focus-none symptom-search-input" placeholder="{% if is_km %}ស្វែងរករោគសញ្ញាដើម/មែក...{% else %}Search stem symptoms...{% endif %}" style="border-radius: 0 8px 8px 0; height: 38px;">
+                    </div>
                     <div class="symptoms-list-container row" id="step-3-symptoms">
                         <!-- Dynamically filled by JS -->
                     </div>
@@ -309,6 +342,14 @@
                     <p class="text-muted small mb-4">
                         {% if is_km %}តើមានរោគសញ្ញាអ្វីខ្លះនៅលើផ្កា ផ្លែ កួរ ឬគ្រាប់ដំណាំ?{% else %}What symptoms do you observe on the fruit, grains, panicles, or flowers?{% endif %}
                     </p>
+                    <div class="input-group input-group-sm mb-3 shadow-sm" style="border-radius: 8px; overflow: hidden; border: 1px solid #ced4da; transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text bg-white border-0 text-muted" style="border-radius: 8px 0 0 8px;">
+                                <i class="fas fa-search"></i>
+                            </span>
+                        </div>
+                        <input type="text" id="symptom-search-4" class="form-control border-0 pl-0 focus-none symptom-search-input" placeholder="{% if is_km %}ស្វែងរករោគសញ្ញាផ្លែ/ផ្កា...{% else %}Search fruit/flower symptoms...{% endif %}" style="border-radius: 0 8px 8px 0; height: 38px;">
+                    </div>
                     <div class="symptoms-list-container row" id="step-4-symptoms">
                         <!-- Dynamically filled by JS -->
                     </div>
@@ -329,6 +370,14 @@
                         <label class="font-weight-bold mb-2">
                             🔍 {% if is_km %}รោគសញ្ញាផ្សេងៗ (ឫស, សត្វល្អិត...){% else %}Other Symptoms (Roots, Pests, etc.){% endif %}
                         </label>
+                        <div class="input-group input-group-sm mb-3 shadow-sm" style="border-radius: 8px; overflow: hidden; border: 1px solid #ced4da; transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text bg-white border-0 text-muted" style="border-radius: 8px 0 0 8px;">
+                                    <i class="fas fa-search"></i>
+                                </span>
+                            </div>
+                            <input type="text" id="symptom-search-5" class="form-control border-0 pl-0 focus-none symptom-search-input" placeholder="{% if is_km %}ស្វែងរករោគសញ្ញាផ្សេងៗ...{% else %}Search other symptoms...{% endif %}" style="border-radius: 0 8px 8px 0; height: 38px;">
+                        </div>
                         <div class="symptoms-list-container row mb-4" id="step-5-symptoms">
                             <!-- Dynamically filled by JS -->
                         </div>
@@ -430,9 +479,11 @@
     }
 
     function renderSymptomsForCrop(cropId) {
-        // Clear containers
+        // Clear containers and search inputs
         for (let i = 2; i <= 5; i++) {
             document.getElementById(`step-${i}-symptoms`).innerHTML = "";
+            const input = document.getElementById(`symptom-search-${i}`);
+            if (input) input.value = "";
         }
 
         const symptoms = cropsData[cropId] || [];
@@ -590,6 +641,46 @@
     });
 
     document.getElementById("additional-notes").addEventListener("input", updateSummary);
+
+    // Crop Search Filtering
+    const cropSearchInput = document.getElementById("crop-search-input");
+    if (cropSearchInput) {
+        cropSearchInput.addEventListener("input", (e) => {
+            const val = e.target.value.toLowerCase().trim();
+            document.querySelectorAll(".crop-select-card").forEach(card => {
+                const name = card.textContent.toLowerCase();
+                if (!val || name.includes(val)) {
+                    card.closest(".col").style.setProperty("display", "block", "important");
+                } else {
+                    card.closest(".col").style.setProperty("display", "none", "important");
+                }
+            });
+        });
+    }
+
+    // Symptom Search Filtering
+    function filterSymptoms(stepNum, query) {
+        const val = query.toLowerCase().trim();
+        const container = document.getElementById(`step-${stepNum}-symptoms`);
+        container.querySelectorAll(".symptom-checkbox-card").forEach(card => {
+            const text = card.textContent.toLowerCase();
+            if (!val || text.includes(val)) {
+                card.closest(".col-md-6").style.setProperty("display", "block", "important");
+            } else {
+                card.closest(".col-md-6").style.setProperty("display", "none", "important");
+            }
+        });
+    }
+
+    // Bind event listeners to symptom search bars
+    for (let i = 2; i <= 5; i++) {
+        const input = document.getElementById(`symptom-search-${i}`);
+        if (input) {
+            input.addEventListener("input", (e) => {
+                filterSymptoms(i, e.target.value);
+            });
+        }
+    }
 
     // Initial pre-load of crop if selected
     if (selectedCropId) {

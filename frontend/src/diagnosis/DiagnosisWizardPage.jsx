@@ -328,19 +328,23 @@ export default function DiagnosisWizardPage({ bootstrap }) {
     : [];
 
   const filteredCrops = crops
-    .filter((crop) => doesCropMatchContext(crop, selectedDomainId, selectedSubcategoryId))
     .filter((crop) => {
       const keyword = normalizeText(deferredCropSearch);
-      if (!keyword) return true;
-      return normalizeText(crop.name).includes(keyword);
+      if (keyword) {
+        const matchesEn = normalizeText(crop.name).includes(keyword);
+        const matchesKh = crop.name_kh ? normalizeText(crop.name_kh).includes(keyword) : false;
+        return matchesEn || matchesKh;
+      }
+      return doesCropMatchContext(crop, selectedDomainId, selectedSubcategoryId);
     });
 
   const currentSymptoms = getSymptomsForCrop(selectedCropId, symptomsByCrop);
   const allVisibleSymptoms = currentSymptoms.filter((symptom) => {
     const keyword = normalizeText(deferredSymptomSearch);
     if (!keyword) return true;
-    const name = isKhmer && symptom.name_kh ? symptom.name_kh : symptom.name;
-    return normalizeText(name).includes(keyword);
+    const matchesEn = normalizeText(symptom.name).includes(keyword);
+    const matchesKh = symptom.name_kh ? normalizeText(symptom.name_kh).includes(keyword) : false;
+    return matchesEn || matchesKh;
   });
   const currentSymptomLookup = new Map(
     currentSymptoms.map((item) => [String(item.id), isKhmer && item.name_kh ? item.name_kh : item.name])
@@ -1020,34 +1024,31 @@ export default function DiagnosisWizardPage({ bootstrap }) {
               }
             >
               <div className="space-y-5">
-                <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
-                  <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 p-4">
-                    <p className="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
-                      {label("selection", "Selection")}
-                    </p>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      <span className="diag-chip">{selectedCrop ? (isKhmer && selectedCrop.name_kh ? selectedCrop.name_kh : selectedCrop.name) : label("noCropSelectedYet", "No crop selected yet")}</span>
-                      <span className="inline-flex items-center rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 py-1 text-xs font-semibold text-slate-700 dark:text-slate-300">
-                        {selectedTypeLabel}
-                      </span>
+                {/* Search Bar Container */}
+                <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-5">
+                  <label htmlFor="crop-search" className="text-sm font-bold text-slate-900 dark:text-white">
+                    {label("searchCrops", "Search crops")}
+                  </label>
+                  <div className="relative mt-3">
+                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
+                      <i className="fas fa-search" aria-hidden="true" />
                     </div>
-                  </div>
-
-                  <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4">
-                    <label htmlFor="crop-search" className="text-sm font-semibold text-slate-900 dark:text-white">
-                      {label("searchCrops", "Search crops")}
-                    </label>
                     <input
                       id="crop-search"
                       type="text"
                       value={cropSearch}
                       onChange={(event) => setCropSearch(event.target.value)}
-                      className="diag-input mt-3"
+                      className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 py-3 pl-11 pr-4 text-slate-900 dark:text-white placeholder-slate-400 focus:border-emerald-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all duration-200 text-sm"
                       placeholder={label("searchByCropName", "Search by crop name")}
                     />
-                    <p className="mt-3 text-xs leading-6 text-slate-500 dark:text-slate-400">
-                      {label("showingMatchingCrops", "Showing crops that match the current category filter.")}
-                    </p>
+                  </div>
+                  <div className="mt-3 flex items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-400">
+                    <p>{label("showingMatchingCrops", "Showing crops.")}</p>
+                    {selectedCrop && (
+                      <p>
+                        {label("selection", "Selection")}: <span className="font-bold text-emerald-600 dark:text-emerald-400">{isKhmer && selectedCrop.name_kh ? selectedCrop.name_kh : selectedCrop.name}</span>
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -1093,7 +1094,7 @@ export default function DiagnosisWizardPage({ bootstrap }) {
 
           {currentStep === 2 ? (
             <StepCard
-              eyrow={label("step2", "Step 2")}
+              eyebrow={label("step2", "Step 2")}
               title={label("stepContextLabel", "Select Category / Growth Stage")}
               description={label("stepContextDesc", "Keep the diagnosis context aligned before symptoms are shown. This step filters the crop list and keeps the symptom set relevant.")}
               aside={

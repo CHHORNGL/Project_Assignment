@@ -387,7 +387,7 @@
                              src="{{ avatar_url(current_user) }}"
                              alt="{{ t("profile_avatar") }}">
                     {% else %}
-                        {{ current_user.username[:1]|upper }}
+                        {{ (current_user.full_name or current_user.username)[:1]|upper }}
                     {% endif %}
                 </div>
                 <div class="avatar-upload-badge">

@@ -540,6 +540,8 @@ def diagnose():
     Farmer submits crop + symptoms
     System uses Rule Engine to auto-diagnose
     """
+    if request.method == "GET":
+        return redirect(url_for("farmer.diagnose_rule_based", **request.args))
 
     result = _process_diagnose_post()
     if result:

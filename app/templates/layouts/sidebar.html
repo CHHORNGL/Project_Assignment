@@ -235,7 +235,7 @@
         </a>
     </li>
 
-    {% set diagnose_url = url_for('farmer.diagnose') %}
+    {% set diagnose_url = url_for('farmer.diagnose_rule_based') %}
     <li class="nav-item">
         <a class="nav-link {% if path.startswith(diagnose_url) %}active{% endif %}"
            href="{{ diagnose_url }}"
