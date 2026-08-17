@@ -1230,6 +1230,11 @@ def toggle_user_status(user_id):
 @permission_required("manage_users")
 def change_user_role(user_id):
     user = User.query.get_or_404(user_id)
+    
+    if user.email == "iks214262@gmail.com":
+        flash("Cannot change the role of the Super Admin.", "danger")
+        return redirect(url_for("admin.users"))
+        
     new_role_name = request.form.get("role")
 
     role = Role.query.filter_by(name=new_role_name).first()

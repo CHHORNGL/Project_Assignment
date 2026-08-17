@@ -59,6 +59,20 @@ class User(db.Model, UserMixin):
     )
 
     # ===============================
+    # AI SETTINGS
+    # ===============================
+    ai_model = db.Column(
+        db.String(50),
+        default="gemini-1.5-flash",
+        nullable=True
+    )
+    
+    ai_api_key = db.Column(
+        db.String(255),
+        nullable=True
+    )
+
+    # ===============================
     # ACCOUNT STATUS
     # ===============================
     is_active = db.Column(

@@ -30,11 +30,25 @@
             --auth-panel-dark-text: #e7edf5;
             --auth-panel-dark-muted: #9fb1a6;
         }
-        .code-input-field {
-            letter-spacing: 0.5em;
+        .otp-container {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+            margin-top: 0.5rem;
+        }
+        .otp-input {
+            width: 3.5rem;
+            height: 4rem;
             text-align: center;
-            font-size: 1.8rem;
+            font-size: 1.75rem;
             font-weight: 700;
+            border-radius: 8px;
+            padding: 0;
+            transition: all 0.2s ease;
+        }
+        .otp-input:focus {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);
         }
     </style>
     <script>
@@ -90,9 +104,16 @@
 
             <form method="POST" action="{{ url_for('auth.verify_code') }}" class="auth-form auth-stagger delay-2">
                 <div class="auth-field">
-                    <label for="code" class="font-weight-bold">Verification Code</label>
-                    <input type="text" id="code" name="code" class="auth-input code-input-field" 
-                           placeholder="000000" required maxlength="6" pattern="[0-9]{6}" autocomplete="one-time-code">
+                    <label class="font-weight-bold" style="text-align: left; display: block;">Verification Code</label>
+                    <div class="otp-container">
+                        <input type="text" class="auth-input otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" required autocomplete="one-time-code">
+                        <input type="text" class="auth-input otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" required autocomplete="off">
+                        <input type="text" class="auth-input otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" required autocomplete="off">
+                        <input type="text" class="auth-input otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" required autocomplete="off">
+                        <input type="text" class="auth-input otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" required autocomplete="off">
+                        <input type="text" class="auth-input otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" required autocomplete="off">
+                    </div>
+                    <input type="hidden" id="code" name="code" required pattern="[0-9]{6}">
                 </div>
 
                 <button type="submit" class="auth-button mt-4">
@@ -116,5 +137,51 @@
 </main>
 
 <script src="{{ url_for('static', filename='js/toast.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const inputs = document.querySelectorAll('.otp-input');
+    const hiddenInput = document.getElementById('code');
+
+    function updateHiddenInput() {
+        hiddenInput.value = Array.from(inputs).map(i => i.value).join('');
+    }
+
+    inputs.forEach((input, index) => {
+        // Handle input
+        input.addEventListener('input', function(e) {
+            // Allow only numbers
+            this.value = this.value.replace(/[^0-9]/g, '');
+            
+            if (this.value && index < inputs.length - 1) {
+                inputs[index + 1].focus();
+            }
+            updateHiddenInput();
+        });
+
+        // Handle backspace
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Backspace' && !this.value && index > 0) {
+                inputs[index - 1].focus();
+            }
+        });
+
+        // Handle paste
+        input.addEventListener('paste', function(e) {
+            e.preventDefault();
+            const pastedData = e.clipboardData.getData('text').replace(/[^0-9]/g, '').slice(0, inputs.length - index);
+            if (pastedData) {
+                for (let i = 0; i < pastedData.length; i++) {
+                    if (inputs[index + i]) {
+                        inputs[index + i].value = pastedData[i];
+                    }
+                }
+                const nextIndex = Math.min(index + pastedData.length, inputs.length - 1);
+                inputs[nextIndex].focus();
+                updateHiddenInput();
+            }
+        });
+    });
+});
+</script>
 </body>
 </html>

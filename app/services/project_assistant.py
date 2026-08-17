@@ -6,10 +6,17 @@ from typing import Optional
 from app.utils.i18n import get_current_language
 
 try:
-    from openai import OpenAI  # type: ignore
-except Exception:  # pragma: no cover - optional dependency
-    OpenAI = None  # type: ignore
+    from google import genai
+    from google.genai import types
+except Exception:
+    genai = None
+    types = None
+try:
+    from openai import OpenAI
+except Exception:
+    OpenAI = None
 
+from flask_login import current_user
 
 DEFAULT_MODEL = "llama-3.3-70b-versatile"
 
@@ -69,12 +76,11 @@ def _system_only_reply(lang: str) -> str:
     )
 
 
-_pa_cached_client = None
-_pa_cached_client_key: str = ""
+_pa_cached_openai_client = None
+_pa_cached_openai_key = ""
 
-
-def _get_client() -> Optional[OpenAI]:
-    global _pa_cached_client, _pa_cached_client_key
+def _get_openai_client():
+    global _pa_cached_openai_client, _pa_cached_openai_key
     if OpenAI is None:
         return None
     api_key = os.getenv("OPENAI_API_KEY", "").strip()
@@ -82,10 +88,23 @@ def _get_client() -> Optional[OpenAI]:
         return None
     base_url = os.getenv("OPENAI_BASE_URL", "").strip() or None
     cache_key = f"{api_key}|{base_url or ''}"
-    if _pa_cached_client is None or _pa_cached_client_key != cache_key:
-        _pa_cached_client = OpenAI(api_key=api_key, base_url=base_url)
-        _pa_cached_client_key = cache_key
-    return _pa_cached_client
+    if _pa_cached_openai_client is None or _pa_cached_openai_key != cache_key:
+        _pa_cached_openai_client = OpenAI(api_key=api_key, base_url=base_url)
+        _pa_cached_openai_key = cache_key
+    return _pa_cached_openai_client
+
+def _get_client():
+    if genai and current_user and current_user.is_authenticated and getattr(current_user, 'ai_api_key', None):
+        return genai.Client(api_key=current_user.ai_api_key)
+    api_key = os.getenv("GEMINI_API_KEY", "").strip()
+    if api_key and genai:
+        return genai.Client(api_key=api_key)
+    return None
+
+def _get_model_name():
+    if current_user and current_user.is_authenticated and getattr(current_user, 'ai_model', None):
+        return current_user.ai_model
+    return os.getenv("GEMINI_MODEL", "gemini-1.5-flash").strip()
 
 
 def _fallback_reply(user_message: str, *, user_role: str, page: str, lang: str) -> str:
@@ -154,19 +173,11 @@ def _fallback_reply(user_message: str, *, user_role: str, page: str, lang: str) 
 
 
 def generate_project_reply(user_message: str, *, user_role: str, page: str = "") -> Optional[str]:
-    client = _get_client()
     lang = get_current_language()
     if _looks_like_agri_query(user_message) and not _looks_like_system_query(user_message):
         return _system_only_reply(lang)
-    if not client:
-        # App should keep working even without OpenAI installed/configured.
-        return _fallback_reply(user_message, user_role=user_role, page=page, lang=lang)
 
-    model = (
-        os.getenv("OPENAI_HELPER_MODEL", "").strip()
-        or os.getenv("OPENAI_MODEL", "").strip()
-        or DEFAULT_MODEL
-    )
+    model_name = _get_model_name()
     system_prompt = (
         "You are a helpful AI assistant for this web application. "
         "Answer questions about how to use the system, navigation, features, and basic troubleshooting. "
@@ -187,20 +198,35 @@ def generate_project_reply(user_message: str, *, user_role: str, page: str = "")
     )
 
     try:
-        response = client.chat.completions.create(
-            model=model,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt},
-            ],
-            temperature=0.2,
-            max_tokens=1000,
-        )
+        if model_name == "original-ai":
+            client = _get_openai_client()
+            if not client:
+                return _fallback_reply(user_message, user_role=user_role, page=page, lang=lang)
+            model = os.getenv("OPENAI_HELPER_MODEL", "").strip() or os.getenv("OPENAI_MODEL", DEFAULT_MODEL).strip() or DEFAULT_MODEL
+            response = client.chat.completions.create(
+                model=model,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
+                ],
+                temperature=0.2,
+                max_tokens=1000,
+            )
+            content = response.choices[0].message.content if response.choices and response.choices[0].message else None
+        else:
+            client = _get_client()
+            if not client:
+                return _fallback_reply(user_message, user_role=user_role, page=page, lang=lang)
+            response = client.models.generate_content(
+                model=model_name,
+                contents=[system_prompt, user_prompt],
+                config=types.GenerateContentConfig(
+                    temperature=0.2,
+                    max_output_tokens=1000
+                )
+            )
+            content = response.text if response else None
     except Exception:
         return _fallback_reply(user_message, user_role=user_role, page=page, lang=lang)
 
-    if not response or not response.choices:
-        return _fallback_reply(user_message, user_role=user_role, page=page, lang=lang)
-
-    content = response.choices[0].message.content if response.choices[0].message else None
     return content.strip() if content else _fallback_reply(user_message, user_role=user_role, page=page, lang=lang)

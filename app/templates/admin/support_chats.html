@@ -1,0 +1,491 @@
+{% extends "layouts/base.html" %}
+{% block title %}Live Support Chats{% endblock %}
+
+{% block content %}
+<style>
+/* Telegram-like CSS */
+.tg-container {
+    height: calc(100vh - 120px);
+    display: flex;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    margin-top: -10px;
+}
+.tg-sidebar {
+    width: 350px;
+    background: #ffffff;
+    border-right: 1px solid #e0e0e0;
+    display: flex;
+    flex-direction: column;
+}
+.tg-sidebar-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid #e0e0e0;
+    background: #fdfdfd;
+    font-weight: 600;
+    color: #333;
+    display: flex;
+    align-items: center;
+}
+.tg-sidebar-header .icon {
+    color: #3390ec;
+    margin-right: 10px;
+    font-size: 1.2rem;
+}
+.tg-user-list {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 8px 0;
+}
+.tg-user-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+.tg-user-item:hover {
+    background: #f4f4f5;
+}
+.tg-user-item.active {
+    background: #3390ec;
+    color: #ffffff;
+}
+.tg-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 600;
+    font-size: 1.2rem;
+    margin-right: 14px;
+    background: linear-gradient(135deg, #34b7f1, #2a82e4);
+    flex-shrink: 0;
+}
+.tg-user-item.active .tg-avatar {
+    border: 2px solid #ffffff;
+}
+.tg-user-info {
+    flex-grow: 1;
+    overflow: hidden;
+}
+.tg-user-name {
+    font-weight: 600;
+    font-size: 1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 2px;
+}
+.tg-user-item:not(.active) .tg-user-name {
+    color: #000000;
+}
+.tg-user-sub {
+    font-size: 0.85rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.tg-user-item:not(.active) .tg-user-sub {
+    color: #707579;
+}
+.tg-user-item.active .tg-user-sub {
+    color: rgba(255, 255, 255, 0.8);
+}
+.tg-chat-area {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    background: #e4e9f0; /* Soft background */
+    position: relative;
+}
+/* Telegram chat pattern */
+.tg-chat-area::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image: url('data:image/svg+xml;utf8,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><g fill="%23d3d9e0" fill-opacity="0.4" fill-rule="evenodd"><circle cx="20" cy="20" r="2"/><circle cx="70" cy="70" r="2"/></g></svg>');
+    opacity: 0.6;
+    pointer-events: none;
+    z-index: 0;
+}
+.tg-chat-header {
+    height: 64px;
+    background: #ffffff;
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid #e0e0e0;
+    z-index: 10;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+}
+.tg-chat-header-info {
+    display: flex;
+    flex-direction: column;
+}
+.tg-chat-header-name {
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: #000000;
+}
+.tg-chat-header-status {
+    font-size: 0.85rem;
+    color: #3390ec;
+}
+.tg-chat-body {
+    flex-grow: 1;
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 10;
+}
+.tg-empty-state {
+    margin: auto;
+    background: rgba(0, 0, 0, 0.15);
+    color: #ffffff;
+    padding: 6px 14px;
+    border-radius: 16px;
+    font-size: 0.9rem;
+}
+.tg-bubble {
+    max-width: 65%;
+    padding: 8px 12px;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    line-height: 1.4;
+    position: relative;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    word-wrap: break-word;
+}
+.tg-bubble-in {
+    align-self: flex-start;
+    background: #ffffff;
+    color: #000000;
+    border-bottom-left-radius: 4px;
+}
+.tg-bubble-out {
+    align-self: flex-end;
+    background: #eeffde;
+    color: #000000;
+    border-bottom-right-radius: 4px;
+}
+.tg-time {
+    font-size: 0.7rem;
+    float: right;
+    margin-top: 4px;
+    margin-left: 12px;
+    color: #68aa5e; /* For green bubble */
+}
+.tg-bubble-in .tg-time {
+    color: #a1aab3;
+}
+.tg-input-area {
+    background: #ffffff;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    z-index: 10;
+}
+.tg-input-wrapper {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    background: #f4f4f5;
+    border-radius: 24px;
+    padding: 6px 16px;
+}
+.tg-input {
+    flex-grow: 1;
+    border: none;
+    background: transparent;
+    outline: none;
+    padding: 8px 0;
+    font-size: 1rem;
+    color: #000;
+}
+.tg-send-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: none;
+    background: #3390ec;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 12px;
+    cursor: pointer;
+    transition: transform 0.1s, background 0.15s;
+    font-size: 1.2rem;
+}
+.tg-send-btn:hover:not(:disabled) {
+    background: #2b7bc9;
+}
+.tg-send-btn:disabled {
+    background: #a9ccee;
+    cursor: not-allowed;
+}
+.tg-send-btn:active:not(:disabled) {
+    transform: scale(0.95);
+}
+</style>
+
+<div class="tg-container">
+    <!-- Sidebar -->
+    <div class="tg-sidebar">
+        <div class="tg-sidebar-header">
+            <i class="fas fa-bars icon"></i> Farmers
+        </div>
+        <div class="tg-user-list">
+            {% for u in chat_users %}
+            <div class="tg-user-item chat-user-item" data-id="{{ u.id }}" data-name="{{ u.full_name or u.username }}">
+                <div class="tg-avatar">{{ (u.full_name or u.username)[:1]|upper }}</div>
+                <div class="tg-user-info">
+                    <div class="tg-user-name">{{ u.full_name or u.username }}</div>
+                    <div class="tg-user-sub">@{{ u.username }}</div>
+                </div>
+            </div>
+            {% else %}
+            <div class="text-center text-muted p-4 small">No active chats.</div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- Chat Area -->
+    <div class="tg-chat-area">
+        <div class="tg-chat-header">
+            <div class="tg-chat-header-info">
+                <div class="tg-chat-header-name" id="chat-title">Select a chat</div>
+                <div class="tg-chat-header-status" id="chat-status">waiting</div>
+            </div>
+        </div>
+        <div class="tg-chat-body" id="chat-body">
+            <div class="tg-empty-state">Select a user to start messaging</div>
+        </div>
+        <div class="tg-input-area">
+            <div class="d-flex align-items-center mr-3" style="gap: 16px; color: #707579; font-size: 1.2rem;">
+                <i class="fas fa-image" style="cursor: pointer;" id="support-chat-img-btn" title="Send Image"></i>
+                <i class="fas fa-microphone" style="cursor: pointer;" id="support-chat-mic-btn" title="Send Audio"></i>
+                <i class="fas fa-map-marker-alt" style="cursor: pointer;" id="support-chat-loc-btn" title="Send Location"></i>
+                <input type="file" id="support-chat-file" accept="image/*" style="display:none;">
+                <input type="file" id="support-chat-audio" accept="audio/*;capture=microphone" style="display:none;">
+            </div>
+            <div class="tg-input-wrapper">
+                <input type="text" id="chat-input" class="tg-input" placeholder="Message..." disabled>
+            </div>
+            <button id="chat-send" class="tg-send-btn" disabled>
+                <i class="fas fa-paper-plane" style="margin-right:2px; margin-top:2px;"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    let currentFarmerId = null;
+    let lastCount = 0;
+    const chatBody = document.getElementById("chat-body");
+    const chatInput = document.getElementById("chat-input");
+    const chatSend = document.getElementById("chat-send");
+    const chatTitle = document.getElementById("chat-title");
+    const chatStatus = document.getElementById("chat-status");
+    const imgBtn = document.getElementById("support-chat-img-btn");
+    const micBtn = document.getElementById("support-chat-mic-btn");
+    const locBtn = document.getElementById("support-chat-loc-btn");
+    const fileInput = document.getElementById("support-chat-file");
+    const audioInput = document.getElementById("support-chat-audio");
+
+    function formatTime(dateString) {
+        const d = new Date(dateString.replace(' ', 'T') + 'Z');
+        let hours = d.getHours();
+        let mins = d.getMinutes();
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12;
+        hours = hours ? hours : 12; 
+        mins = mins < 10 ? '0' + mins : mins;
+        return hours + ':' + mins + ' ' + ampm;
+    }
+
+    function fetchMessages() {
+        if (!currentFarmerId) return;
+        fetch(`/admin/support_chat/${currentFarmerId}/messages`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.length > lastCount) {
+                    if (lastCount === 0) chatBody.innerHTML = '';
+                    
+                    const newMessages = data.slice(lastCount);
+                    newMessages.forEach(msg => {
+                        const isMe = msg.sender_id === {{ current_user.id }};
+                        const div = document.createElement("div");
+                        div.className = "tg-bubble " + (isMe ? "tg-bubble-out" : "tg-bubble-in");
+                        
+                        let contentHTML = msg.message ? `<span>${msg.message}</span>` : '';
+                        if (msg.attachment_url) {
+                            if (msg.attachment_type === 'image') {
+                                contentHTML += `<br><img src="${msg.attachment_url}" style="max-width:100%; max-height:200px; border-radius:8px; margin-top:4px;">`;
+                            } else if (msg.attachment_type === 'audio') {
+                                contentHTML += `<br><audio controls src="${msg.attachment_url}" style="max-width:100%; height:32px; margin-top:4px;"></audio>`;
+                            } else if (msg.attachment_type === 'location') {
+                                contentHTML += `<br><div style="margin-top:4px;"><i class="fas fa-map-marker-alt"></i> <a href="https://maps.google.com/?q=${msg.attachment_url}" target="_blank" style="color:inherit;text-decoration:underline;">View on Map</a></div>`;
+                            }
+                        }
+                        
+                        const timeSpan = document.createElement("span");
+                        timeSpan.className = "tg-time";
+                        timeSpan.textContent = formatTime(msg.created_at);
+                        
+                        div.innerHTML = contentHTML;
+                        div.appendChild(timeSpan);
+                        chatBody.appendChild(div);
+                    });
+                    chatBody.scrollTop = chatBody.scrollHeight;
+                    lastCount = data.length;
+                }
+            }).catch(() => {});
+    }
+
+    function sendPayload(payload) {
+        if (!currentFarmerId) return;
+        fetch(`/admin/support_chat/${currentFarmerId}/send`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        }).then(() => {
+            fetchMessages();
+            chatInput.focus();
+        });
+    }
+
+    function sendMessage() {
+        const text = chatInput.value.trim();
+        if (!text || !currentFarmerId) return;
+        chatInput.value = '';
+        sendPayload({ message: text });
+    }
+
+    function uploadFile(file, type) {
+        const formData = new FormData();
+        formData.append('file', file);
+        fetch('/admin/support_chat/upload', {
+            method: 'POST',
+            body: formData
+        }).then(res => res.json()).then(data => {
+            if(data.url) {
+                sendPayload({ message: '', attachment_url: data.url, attachment_type: type });
+            }
+        });
+    }
+
+    chatSend.addEventListener("click", sendMessage);
+    chatInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") sendMessage();
+    });
+
+    function checkFarmerSelected() {
+        if (!currentFarmerId) {
+            alert("Please select a farmer from the list first to send attachments.");
+            return false;
+        }
+        return true;
+    }
+
+    imgBtn.addEventListener("click", () => { if(checkFarmerSelected()) fileInput.click(); });
+    
+    let mediaRecorder;
+    let audioChunks = [];
+    let isRecording = false;
+
+    micBtn.addEventListener("click", async () => {
+        if (!checkFarmerSelected()) return;
+        
+        if (!isRecording) {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                mediaRecorder.start();
+                isRecording = true;
+                
+                micBtn.classList.remove("fa-microphone");
+                micBtn.classList.add("fa-stop-circle");
+                micBtn.style.color = "red";
+                
+                mediaRecorder.addEventListener("dataavailable", event => {
+                    audioChunks.push(event.data);
+                });
+                
+                mediaRecorder.addEventListener("stop", () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    audioChunks = [];
+                    
+                    const formData = new FormData();
+                    formData.append('file', audioBlob, 'voice.webm');
+                    
+                    fetch('/admin/support_chat/upload', {
+                        method: 'POST',
+                        body: formData
+                    }).then(res => res.json()).then(data => {
+                        if(data.url) {
+                            sendPayload({ message: '', attachment_url: data.url, attachment_type: 'audio' });
+                        }
+                    });
+                });
+            } catch (err) {
+                alert("Microphone access denied or not available.");
+            }
+        } else {
+            mediaRecorder.stop();
+            isRecording = false;
+            micBtn.classList.remove("fa-stop-circle");
+            micBtn.classList.add("fa-microphone");
+            micBtn.style.color = "";
+            mediaRecorder.stream.getTracks().forEach(track => track.stop());
+        }
+    });
+    
+    fileInput.addEventListener("change", (e) => {
+        if (e.target.files.length) uploadFile(e.target.files[0], 'image');
+        e.target.value = '';
+    });
+    
+    locBtn.addEventListener("click", () => {
+        if (checkFarmerSelected() && navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    const loc = `${pos.coords.latitude},${pos.coords.longitude}`;
+                    sendPayload({ message: 'Shared Location', attachment_url: loc, attachment_type: 'location' });
+                }, 
+                (err) => {
+                    alert("Could not get location: " + err.message);
+                },
+                { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+            );
+        }
+    });
+
+    document.querySelectorAll(".chat-user-item").forEach(item => {
+        item.addEventListener("click", () => {
+            document.querySelectorAll(".chat-user-item").forEach(i => i.classList.remove("active"));
+            item.classList.add("active");
+            currentFarmerId = item.dataset.id;
+            chatTitle.textContent = item.dataset.name;
+            chatStatus.textContent = "online";
+            chatInput.disabled = false;
+            chatSend.disabled = false;
+            lastCount = 0;
+            chatBody.innerHTML = '';
+            fetchMessages();
+        });
+    });
+
+    setInterval(fetchMessages, 2500);
+});
+</script>
+{% endblock %}

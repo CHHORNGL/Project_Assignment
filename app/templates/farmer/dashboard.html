@@ -76,53 +76,7 @@
         </div>
     </div>
 
-    <!-- ── Quick-Start Crop Grid ── -->
-    {% if crops %}
-    <div class="qc-section mb-4">
-        <div class="qc-header">
-            <div>
-                <div class="qc-title">{{ t("start_a_diagnosis") }}</div>
-                <div class="qc-sub">{{ t("tap_your_crop") }}</div>
-            </div>
-        </div>
-        <div class="qc-grid">
-            {% for crop in crops %}
-            {% set crop_name_lower = (crop.name or "")|lower %}
-            {% set is_rice = "rice" in crop_name_lower or "paddy" in crop_name_lower or "ស្រូវ" in (crop.name_kh or "") %}
-            {% set is_corn = "corn" in crop_name_lower or "maize" in crop_name_lower or "ពោត" in (crop.name_kh or "") %}
-            {% set is_cassava = "cassava" in crop_name_lower or "manioc" in crop_name_lower or "មើម" in (crop.name_kh or "") %}
-            {% set is_banana = "banana" in crop_name_lower or "ចេក" in (crop.name_kh or "") %}
-            {% set is_mango = "mango" in crop_name_lower or "មា" in (crop.name_kh or "") %}
-            {% set is_veg = "vegetable" in crop_name_lower or "tomato" in crop_name_lower or "cucumber" in crop_name_lower or "eggplant" in crop_name_lower or "បន្លែ" in (crop.name_kh or "") %}
-            {% set is_soy = "soy" in crop_name_lower or "bean" in crop_name_lower or "legume" in crop_name_lower %}
-            {% set is_pepper = "pepper" in crop_name_lower or "chili" in crop_name_lower or "chilli" in crop_name_lower %}
-            {% if is_rice %}{% set crop_emoji = "🌾" %}{% set qc_color = "qc-rice" %}
-            {% elif is_corn %}{% set crop_emoji = "🌽" %}{% set qc_color = "qc-corn" %}
-            {% elif is_cassava %}{% set crop_emoji = "🥔" %}{% set qc_color = "qc-root" %}
-            {% elif is_banana %}{% set crop_emoji = "🍌" %}{% set qc_color = "qc-banana" %}
-            {% elif is_mango %}{% set crop_emoji = "🥭" %}{% set qc_color = "qc-mango" %}
-            {% elif is_veg %}{% set crop_emoji = "🥦" %}{% set qc_color = "qc-veg" %}
-            {% elif is_soy %}{% set crop_emoji = "🫘" %}{% set qc_color = "qc-legume" %}
-            {% elif is_pepper %}{% set crop_emoji = "🌶️" %}{% set qc_color = "qc-spice" %}
-            {% else %}{% set crop_emoji = "🌿" %}{% set qc_color = "qc-default" %}{% endif %}
-            <div class="qc-crop-tile {{ qc_color }}">
-                <div class="qc-crop-emoji" aria-hidden="true">{{ crop_emoji }}</div>
-                <div class="qc-crop-name">
-                    {% if current_lang == "km" and crop.name_kh %}{{ crop.name_kh }}{% else %}{{ crop.name }}{% endif %}
-                </div>
-                <div class="qc-crop-actions">
-                    <a href="{{ url_for('farmer.diagnose_rule_based') }}?crop_id={{ crop.id }}"
-                       class="qc-btn qc-btn-check"
-                       title="{{ 'រោគវិនិច្ឆ័យ' if current_lang == 'km' else 'Diagnose' }}">
-                        <i class="fas fa-stethoscope"></i>
-                    </a>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-    {% endif %}
-    <!-- ── End Crop Grid ── -->
+
 
     <div class="weather-intel-card mb-4"
          id="weather-intelligence-card"

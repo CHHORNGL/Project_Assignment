@@ -3,701 +3,409 @@
 
 {% block content %}
 <style>
-/* Deep Clean & Compact Settings Styles */
-.premium-settings-card {
-    background: #ffffff;
-    border-radius: 16px;
-    border: 1px solid #e2e8f0;
-    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.02);
-    margin-bottom: 2rem;
-}
-.dark-mode .premium-settings-card {
-    background: #0b1116;
-    border-color: rgba(148, 163, 184, 0.1);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+/* 📱 iOS/Mobile App Style Settings */
+.settings-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 0 16px 80px 16px; /* padding-bottom for sticky button */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
-.settings-header-section {
-    padding: 20px 24px;
-    border-bottom: 1px solid #f1f5f9;
-}
-.dark-mode .settings-header-section {
-    border-bottom-color: rgba(148, 163, 184, 0.08);
-}
-
-.settings-body-section {
-    padding: 24px;
-}
-
-/* Stepper Header (Step-by-step) */
-.settings-stepper {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: #f8fafc;
-    border-radius: 12px;
-    padding: 10px 16px;
-    margin-bottom: 1.5rem;
-    border: 1px solid #e2e8f0;
-}
-.dark-mode .settings-stepper {
-    background: #12181f;
-    border-color: rgba(148, 163, 184, 0.08);
-}
-.step-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    opacity: 0.6;
-    transition: all 0.2s ease;
-}
-.step-item.active {
-    opacity: 1;
-}
-.step-item.completed {
-    opacity: 0.8;
-}
-.step-num {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: #cbd5e1;
-    color: #ffffff;
-    font-size: 0.72rem;
-    font-weight: 700;
-    display: grid;
-    place-items: center;
-    transition: all 0.2s ease;
-}
-.dark-mode .step-num {
-    background: #334155;
-}
-.step-item.active .step-num {
-    background: #10b981;
-}
-.step-item.completed .step-num {
-    background: #059669;
-}
-.step-text {
-    font-size: 0.8rem;
+.settings-section-title {
+    font-size: 0.85rem;
     font-weight: 600;
-    color: #475569;
-}
-.dark-mode .step-text {
-    color: #cbd5e1;
-}
-.step-item.active .step-text {
-    color: #10b981;
-}
-
-/* Connective line in stepper */
-.step-connector {
-    flex: 1;
-    height: 1px;
-    background: #e2e8f0;
-    margin: 0 12px;
-}
-.dark-mode .step-connector {
-    background: rgba(148, 163, 184, 0.1);
-}
-
-/* Small Title & Label elements */
-.clean-label {
-    font-size: 0.82rem;
-    font-weight: 700;
-    color: #334155;
-    margin-bottom: 4px;
-}
-.dark-mode .clean-label {
-    color: #cbd5e1;
-}
-.clean-desc {
-    font-size: 0.76rem;
     color: #64748b;
-    line-height: 1.4;
-    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 24px 0 8px 16px;
 }
-.dark-mode .clean-desc {
+.dark-mode .settings-section-title {
     color: #94a3b8;
 }
 
-/* Minimal Grid for Cards */
-.clean-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 12px;
-    margin-bottom: 1.25rem;
-}
-
-/* Small Cards for Theme Options */
-.clean-card-label {
-    position: relative;
-    cursor: pointer;
-    margin: 0;
-}
-.clean-card-label input[type="radio"] {
-    position: absolute;
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-.clean-card-content {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px 14px;
-    border-radius: 10px;
-    border: 1px solid #cbd5e1;
+.settings-card {
     background: #ffffff;
-    transition: all 0.15s ease;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e2e8f0;
 }
-.dark-mode .clean-card-content {
-    border-color: rgba(148, 163, 184, 0.15);
-    background: #12181f;
-}
-.clean-card-content:hover {
-    border-color: #94a3b8;
-}
-.dark-mode .clean-card-content:hover {
-    border-color: #475569;
-}
-.clean-card-label input[type="radio"]:checked + .clean-card-content {
-    border-color: #10b981;
-    background: rgba(16, 185, 129, 0.02);
-}
-.dark-mode .clean-card-label input[type="radio"]:checked + .clean-card-content {
-    background: rgba(16, 185, 129, 0.05);
+.dark-mode .settings-card {
+    background: #1c2431;
+    border-color: rgba(148, 163, 184, 0.1);
+    box-shadow: none;
 }
 
-.clean-card-icon {
-    font-size: 0.95rem;
-    color: #64748b;
-}
-.clean-card-label input[type="radio"]:checked + .clean-card-content .clean-card-icon {
-    color: #10b981;
-}
-.clean-card-title {
-    font-weight: 600;
-    font-size: 0.8rem;
-    color: #475569;
-}
-.dark-mode .clean-card-title {
-    color: #cbd5e1;
-}
-.clean-card-label input[type="radio"]:checked + .clean-card-content .clean-card-title {
-    color: #10b981;
-}
-
-/* Small Language Selector Cards */
-.lang-clean-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 12px;
-    margin-bottom: 1.25rem;
-}
-.lang-clean-card {
-    border: 1px solid #cbd5e1;
-    background: #ffffff;
-    border-radius: 10px;
-    padding: 12px 14px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    cursor: pointer;
-    transition: all 0.15s ease;
-    width: 100%;
-}
-.dark-mode .lang-clean-card {
-    border-color: rgba(148, 163, 184, 0.15);
-    background: #12181f;
-}
-.lang-clean-card:hover {
-    border-color: #94a3b8;
-}
-.lang-clean-card.active {
-    border-color: #10b981;
-    background: rgba(16, 185, 129, 0.02);
-}
-.dark-mode .lang-clean-card.active {
-    background: rgba(16, 185, 129, 0.05);
-}
-.lang-clean-label {
-    font-weight: 600;
-    font-size: 0.8rem;
-    color: #475569;
-}
-.dark-mode .lang-clean-label {
-    color: #cbd5e1;
-}
-.lang-clean-card.active .lang-clean-label {
-    color: #10b981;
-}
-
-/* Compact Security Card */
-.security-clean-panel {
+.settings-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: #ffffff;
-    border: 1px solid #cbd5e1;
-    border-radius: 12px;
-    padding: 14px 16px;
-    margin-bottom: 1.25rem;
+    padding: 16px;
+    border-bottom: 1px solid #f1f5f9;
 }
-.dark-mode .security-clean-panel {
-    background: #12181f;
-    border-color: rgba(148, 163, 184, 0.15);
+.settings-row:last-child {
+    border-bottom: none;
 }
-.security-clean-left {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-.security-clean-icon {
-    font-size: 0.95rem;
-    color: #10b981;
-    width: 24px;
-    height: 24px;
-    border-radius: 6px;
-    background: rgba(16, 185, 129, 0.08);
-    display: grid;
-    place-items: center;
-}
-.security-clean-title {
-    font-weight: 600;
-    font-size: 0.8rem;
-    color: #334155;
-}
-.dark-mode .security-clean-title {
-    color: #cbd5e1;
+.dark-mode .settings-row {
+    border-bottom-color: rgba(148, 163, 184, 0.08);
 }
 
-/* Toggle switch size compact */
-.switch-control {
+.settings-row-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.settings-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: grid;
+    place-items: center;
+    color: #ffffff;
+    font-size: 0.9rem;
+}
+.icon-theme { background: #f59e0b; }
+.icon-lang { background: #3b82f6; }
+.icon-sec { background: #10b981; }
+.icon-ai { background: #8b5cf6; }
+.icon-key { background: #64748b; }
+
+.settings-label {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #1e293b;
+}
+.dark-mode .settings-label {
+    color: #f1f5f9;
+}
+.settings-sublabel {
+    font-size: 0.75rem;
+    color: #64748b;
+    margin-top: 2px;
+}
+.dark-mode .settings-sublabel {
+    color: #94a3b8;
+}
+
+/* Radio Cards inside Rows */
+.radio-group {
+    display: flex;
+    gap: 8px;
+}
+.radio-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 12px;
+    border-radius: 20px;
+    background: #f1f5f9;
+    color: #475569;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+}
+.dark-mode .radio-btn {
+    background: #334155;
+    color: #cbd5e1;
+}
+.radio-btn input[type="radio"] {
+    display: none;
+}
+.radio-btn input[type="radio"]:checked + span {
+    color: #10b981;
+}
+.radio-btn:has(input[type="radio"]:checked) {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: #10b981;
+    color: #10b981;
+}
+
+/* iOS Toggle Switch */
+.ios-switch {
     position: relative;
     display: inline-block;
-    width: 44px;
-    height: 24px;
-    margin-bottom: 0;
+    width: 50px;
+    height: 30px;
 }
-.switch-control input {
+.ios-switch input {
     opacity: 0;
     width: 0;
     height: 0;
 }
-.switch-slider {
+.ios-slider {
     position: absolute;
     cursor: pointer;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: #cbd5e1;
+    background-color: #e2e8f0;
     transition: .3s;
-    border-radius: 24px;
+    border-radius: 30px;
 }
-.dark-mode .switch-slider {
+.dark-mode .ios-slider {
     background-color: #334155;
 }
-.switch-slider:before {
+.ios-slider:before {
     position: absolute;
     content: "";
-    height: 18px;
-    width: 18px;
-    left: 3px;
-    bottom: 3px;
+    height: 26px;
+    width: 26px;
+    left: 2px;
+    bottom: 2px;
     background-color: white;
     transition: .3s;
     border-radius: 50%;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
-.switch-control input:checked + .switch-slider {
+input:checked + .ios-slider {
     background-color: #10b981;
 }
-.switch-control input:checked + .switch-slider:before {
+input:checked + .ios-slider:before {
     transform: translateX(20px);
 }
 
-/* Signed in session visual */
-.session-clean-box {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: #f8fafc;
-    border-radius: 12px;
-    padding: 12px 16px;
-    border: 1px solid #e2e8f0;
-}
-.dark-mode .session-clean-box {
-    background: #12181f;
-    border-color: rgba(148, 163, 184, 0.08);
-}
-.session-clean-user {
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: #475569;
-}
-.dark-mode .session-clean-user {
-    color: #cbd5e1;
-}
-
-/* Wizard Button Controls */
-.wizard-controls-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-top: 1px solid #f1f5f9;
-    padding-top: 18px;
-    margin-top: 20px;
-}
-.dark-mode .wizard-controls-row {
-    border-top-color: rgba(148, 163, 184, 0.08);
-}
-.wiz-btn-prev {
-    background: transparent;
-    border: 1px solid #cbd5e1;
-    color: #475569;
-    font-size: 0.8rem;
-    font-weight: 600;
-    padding: 8px 16px;
-    border-radius: 8px;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    transition: all 0.15s ease;
-    cursor: pointer;
-}
-.dark-mode .wiz-btn-prev {
-    border-color: rgba(148, 163, 184, 0.2);
-    color: #cbd5e1;
-}
-.wiz-btn-prev:hover {
-    background: #f1f5f9;
-}
-.dark-mode .wiz-btn-prev:hover {
-    background: #1e293b;
-}
-
-.wiz-btn-next {
-    background: #10b981;
+/* Controls */
+.settings-select {
     border: none;
-    color: #ffffff;
-    font-size: 0.8rem;
-    font-weight: 600;
-    padding: 8px 16px;
-    border-radius: 8px;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    transition: all 0.15s ease;
+    background: transparent;
+    color: #64748b;
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-align: right;
+    outline: none;
     cursor: pointer;
-    margin-left: auto;
+    direction: rtl; /* align arrow right */
 }
-.wiz-btn-next:hover {
+.dark-mode .settings-select {
+    color: #94a3b8;
+}
+.settings-input {
+    border: none;
+    background: transparent;
+    color: #64748b;
+    font-size: 0.9rem;
+    text-align: right;
+    outline: none;
+    width: 100%;
+}
+.settings-input::placeholder {
+    color: #cbd5e1;
+}
+
+/* Sticky Save Button */
+.settings-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid #e2e8f0;
+    z-index: 100;
+    display: flex;
+    justify-content: center;
+}
+.dark-mode .settings-footer {
+    background: rgba(15, 23, 42, 0.9);
+    border-top-color: #1e293b;
+}
+.btn-save {
+    background: #10b981;
+    color: white;
+    font-size: 1rem;
+    font-weight: 600;
+    padding: 14px 24px;
+    border-radius: 24px;
+    border: none;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+.btn-save:hover {
+    transform: translateY(-2px);
     background: #059669;
 }
 
-.wiz-btn-submit {
-    background: linear-gradient(135deg, #10b981, #059669);
+/* Delete passkey button */
+.btn-text-danger {
+    color: #ef4444;
+    background: none;
     border: none;
-    color: #ffffff;
-    font-size: 0.8rem;
-    font-weight: 700;
-    padding: 9px 18px;
-    border-radius: 8px;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    transition: all 0.15s ease;
+    font-size: 0.85rem;
     cursor: pointer;
-    margin-left: auto;
-    box-shadow: 0 4px 10px rgba(16, 185, 129, 0.15);
+    padding: 4px 8px;
 }
-.wiz-btn-submit:hover {
-    background: linear-gradient(135deg, #059669, #047857);
-    transform: translateY(-1px);
+.btn-text-danger:hover {
+    text-decoration: underline;
 }
 </style>
 
-<div class="farmer-hero mb-4">
-    <div class="d-flex justify-content-between align-items-center flex-wrap">
-        <div>
-            <h4 class="mb-1 font-weight-bold text-success" style="font-size: 1.15rem;">{{ t("settings") }}</h4>
-            <div class="text-muted small" style="font-size: 0.78rem;">{{ t("personalize_experience") }}</div>
-        </div>
-        <div class="mt-3 mt-md-0">
-            <a class="btn btn-sm btn-outline-success px-2.5 py-1.5" href="{{ url_for('user.profile') }}" style="font-size: 0.78rem; border-radius: 8px;">
-                <i class="fas fa-user-circle mr-1"></i>
-                {{ t("profile") }}
-            </a>
-        </div>
+<div class="settings-container">
+    <div class="d-flex justify-content-between align-items-center mb-4 mt-2">
+        <h4 class="mb-0 font-weight-bold text-dark dark-mode-text-white">{{ t("settings") }}</h4>
+        <a class="btn btn-sm btn-light rounded-pill px-3 shadow-sm" href="{{ url_for('user.profile') }}">
+            <i class="fas fa-user-circle mr-1"></i> {{ t("profile") }}
+        </a>
     </div>
-</div>
 
-<div class="settings-shell farmer-settings container px-0" style="max-width: 650px;">
-    <div class="premium-settings-card">
-        
-        <!-- Minimal Header -->
-        <div class="settings-header-section d-flex align-items-center justify-content-between">
-            <div class="d-flex align-items-center gap-2">
-                <i class="fas fa-sliders-h text-success" style="font-size: 0.95rem;"></i>
-                <span class="font-weight-bold text-dark dark-mode-text-white" style="font-size: 0.9rem;">{{ t("settings") }}</span>
+    <form method="POST">
+        <!-- APPEARANCE -->
+        <div class="settings-section-title">{{ t("appearance") }}</div>
+        <div class="settings-card">
+            <div class="settings-row">
+                <div class="settings-row-left">
+                    <div class="settings-icon icon-theme"><i class="fas fa-palette"></i></div>
+                    <div class="settings-label">{{ t("theme") }}</div>
+                </div>
+                <div class="radio-group">
+                    <label class="radio-btn">
+                        <input type="radio" name="theme" value="light" {% if current_user.theme == 'light' %}checked{% endif %}>
+                        <span><i class="fas fa-sun mr-1"></i> {{ t("light") }}</span>
+                    </label>
+                    <label class="radio-btn">
+                        <input type="radio" name="theme" value="dark" {% if current_user.theme == 'dark' %}checked{% endif %}>
+                        <span><i class="fas fa-moon mr-1"></i> {{ t("dark") }}</span>
+                    </label>
+                    <label class="radio-btn">
+                        <input type="radio" name="theme" value="system" {% if current_user.theme == 'system' %}checked{% endif %}>
+                        <span><i class="fas fa-desktop mr-1"></i> {{ t("system") }}</span>
+                    </label>
+                </div>
             </div>
-            <span class="text-muted small" style="font-size: 0.72rem;">{{ t("personalize_experience") }}</span>
+            <div class="settings-row" style="cursor: pointer;" id="langRowEn">
+                <div class="settings-row-left">
+                    <div class="settings-icon icon-lang"><i class="fas fa-language"></i></div>
+                    <div class="settings-label">{{ t("english") }}</div>
+                </div>
+                <div>
+                    {% if current_lang == 'en' %}
+                        <i class="fas fa-check text-success"></i>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="settings-row" style="cursor: pointer;" id="langRowKm">
+                <div class="settings-row-left">
+                    <div class="settings-icon icon-lang"><i class="fas fa-language"></i></div>
+                    <div class="settings-label">{{ t("khmer") }}</div>
+                </div>
+                <div>
+                    {% if current_lang == 'km' %}
+                        <i class="fas fa-check text-success"></i>
+                    {% endif %}
+                </div>
+            </div>
         </div>
 
-        <div class="settings-body-section">
+        <!-- SECURITY -->
+        <div class="settings-section-title">
+            {% if current_lang == 'km' %}សុវត្ថិភាព{% else %}Security{% endif %}
+        </div>
+        <div class="settings-card">
+            <div class="settings-row">
+                <div class="settings-row-left">
+                    <div class="settings-icon icon-sec"><i class="fas fa-shield-alt"></i></div>
+                    <div>
+                        <div class="settings-label">
+                            {% if current_lang == 'km' %}ការផ្ទៀងផ្ទាត់ ២ ជំហាន{% else %}Two-Step Verification{% endif %}
+                        </div>
+                        <div class="settings-sublabel">Require code when logging in</div>
+                    </div>
+                </div>
+                <label class="ios-switch">
+                    <input type="checkbox" name="two_factor_enabled" value="y" {% if current_user.two_factor_enabled %}checked{% endif %}>
+                    <span class="ios-slider"></span>
+                </label>
+            </div>
             
-            <!-- Step-by-Step Navigation Stepper -->
-            <div class="settings-stepper">
-                <div class="step-item active" data-step="1">
-                    <span class="step-num">1</span>
-                    <span class="step-text" style="font-size: 0.75rem;">{{ t("appearance") }}</span>
+            <div class="settings-row" id="btn-register-passkey" style="cursor: pointer;">
+                <div class="settings-row-left">
+                    <div class="settings-icon icon-key"><i class="fas fa-fingerprint"></i></div>
+                    <div>
+                        <div class="settings-label text-primary">Register New Passkey</div>
+                        <div class="settings-sublabel">Sign in with FaceID/TouchID</div>
+                    </div>
                 </div>
-                <div class="step-connector"></div>
-                <div class="step-item" data-step="2">
-                    <span class="step-num">2</span>
-                    <span class="step-text" style="font-size: 0.75rem;">{{ t("language") }}</span>
-                </div>
-                <div class="step-connector"></div>
-                <div class="step-item" data-step="3">
-                    <span class="step-num">3</span>
-                    <span class="step-text" style="font-size: 0.75rem;">
-                        {% if current_lang == 'km' %}សុវត្ថិភាព{% else %}Security{% endif %}
-                    </span>
+                <i class="fas fa-plus text-primary"></i>
+            </div>
+        </div>
+
+        <!-- PASSKEYS LIST -->
+        <div id="passkeys-list-container">
+            <!-- Dynamically populated via JS -->
+        </div>
+
+        {% if current_user.has_role('farmer') %}
+        <!-- AI SETTINGS -->
+        <div class="settings-section-title">AI Engine</div>
+        <div class="settings-card">
+            <div class="settings-row">
+                <div class="settings-row-left" style="width: 100%;">
+                    <div class="settings-icon icon-ai"><i class="fas fa-brain"></i></div>
+                    <div style="flex: 1; display: flex; align-items: center; justify-content: space-between;">
+                        <div class="settings-label">Model</div>
+                        <select name="ai_model" class="settings-select" id="aiModelSelect">
+                            <option value="original-ai" {% if current_user.ai_model == 'original-ai' or not current_user.ai_model %}selected{% endif %}>Original AI (OpenAI / Groq)</option>
+                            <option value="gemini-1.5-flash" {% if current_user.ai_model == 'gemini-1.5-flash' %}selected{% endif %}>Gemini 1.5 Flash</option>
+                            <option value="gemini-1.5-pro" {% if current_user.ai_model == 'gemini-1.5-pro' %}selected{% endif %}>Gemini 1.5 Pro</option>
+                            <option value="gemini-1.0-pro" {% if current_user.ai_model == 'gemini-1.0-pro' %}selected{% endif %}>Gemini 1.0 Pro</option>
+                        </select>
+                    </div>
                 </div>
             </div>
-
-            <form method="POST">
-                <!-- STEP 1: APPEARANCE -->
-                <div class="settings-step-content" data-step="1">
-                    <h6 class="clean-label">{{ t("appearance") }}</h6>
-                    <p class="clean-desc">{{ t("appearance_sub") }}</p>
-
-                    <div class="clean-grid">
-                        <label class="clean-card-label">
-                            <input type="radio" name="theme" value="light" {% if current_user.theme == 'light' %}checked{% endif %}>
-                            <div class="clean-card-content">
-                                <span class="clean-card-icon" style="color: #eab308;"><i class="fas fa-sun"></i></span>
-                                <span class="clean-card-title">{{ t("light") }}</span>
-                            </div>
-                        </label>
-
-                        <label class="clean-card-label">
-                            <input type="radio" name="theme" value="dark" {% if current_user.theme == 'dark' %}checked{% endif %}>
-                            <div class="clean-card-content">
-                                <span class="clean-card-icon" style="color: #6366f1;"><i class="fas fa-moon"></i></span>
-                                <span class="clean-card-title">{{ t("dark") }}</span>
-                            </div>
-                        </label>
-
-                        <label class="clean-card-label">
-                            <input type="radio" name="theme" value="system" {% if current_user.theme == 'system' %}checked{% endif %}>
-                            <div class="clean-card-content">
-                                <span class="clean-card-icon" style="color: #64748b;"><i class="fas fa-desktop"></i></span>
-                                <span class="clean-card-title">{{ t("system") }}</span>
-                            </div>
-                        </label>
+            <div class="settings-row" id="geminiApiKeyRow">
+                <div class="settings-row-left" style="width: 100%;">
+                    <div style="flex: 1; display: flex; flex-direction: column;">
+                        <div class="settings-label" style="font-size: 0.85rem; color: #64748b; margin-bottom: 4px;">Gemini API Key (Required)</div>
+                        <input type="password" name="ai_api_key" class="settings-input" style="text-align: left;" placeholder="Paste API Key here..." value="{{ current_user.ai_api_key or '' }}">
                     </div>
                 </div>
-
-                <!-- STEP 2: LANGUAGE -->
-                <div class="settings-step-content" data-step="2" style="display: none;">
-                    <h6 class="clean-label">{{ t("language") }}</h6>
-                    <p class="clean-desc">
-                        {{ t("language") }}: {{ t("english") }} / {{ t("khmer") }}
-                    </p>
-
-                    <div class="lang-clean-grid">
-                        <button type="button" class="lang-clean-card lang-option {% if current_lang == 'en' %}active{% endif %}" data-lang="en">
-                            <span class="fi fi-us rounded-circle" style="width: 18px; height: 18px; display: inline-block;"></span>
-                            <span class="lang-clean-label">{{ t("english") }}</span>
-                        </button>
-                        <button type="button" class="lang-clean-card lang-option {% if current_lang == 'km' %}active{% endif %}" data-lang="km">
-                            <span class="fi fi-kh rounded-circle" style="width: 18px; height: 18px; display: inline-block;"></span>
-                            <span class="lang-clean-label">{{ t("khmer") }}</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- STEP 3: SECURITY & SUBMIT -->
-                <div class="settings-step-content" data-step="3" style="display: none;">
-                    <h6 class="clean-label">
-                        {% if current_lang == 'km' %}សុវត្ថិភាពគណនី{% else %}Account Security{% endif %}
-                    </h6>
-                    <p class="clean-desc">
-                        {% if current_lang == 'km' %}បើកដំណើរការផ្ទៀងផ្ទាត់ ២ ជំហាន (2FA) ពេលចូលគណនី{% else %}Enable Two-step verification (2FA) when logging in.{% endif %}
-                    </p>
-                    
-                    <div class="security-clean-panel">
-                        <div class="security-clean-left">
-                            <span class="security-clean-icon"><i class="fas fa-lock"></i></span>
-                            <span class="security-clean-title">
-                                {% if current_lang == 'km' %}ការផ្ទៀងផ្ទាត់ ២ ជំហាន{% else %}Two-Step Verification{% endif %}
-                            </span>
-                        </div>
-                        <div>
-                            <label class="switch-control">
-                                <input type="checkbox" id="twoFactorEnabled" name="two_factor_enabled" value="y" {% if current_user.two_factor_enabled %}checked{% endif %}>
-                                <span class="switch-slider"></span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <h6 class="clean-label">Passkeys</h6>
-                    <p class="clean-description" style="font-size: 0.75rem; color: #64748b; margin-top: -6px; margin-bottom: 12px; line-height: 1.4;">
-                        Use passwordless credentials (biometrics or hardware security keys) to sign in securely.
-                    </p>
-                    
-                    <div id="passkeys-list-container" class="mb-3" style="display: flex; flex-direction: column; gap: 8px;">
-                        <!-- Dynamically loaded passkeys -->
-                    </div>
-
-                    <div class="security-clean-panel" style="margin-top: 8px; margin-bottom: 20px;">
-                        <div class="security-clean-left">
-                            <span class="security-clean-icon"><i class="fas fa-fingerprint"></i></span>
-                            <span class="security-clean-title" style="font-size: 0.85rem; font-weight: 600;">Register New Passkey</span>
-                        </div>
-                        <div>
-                            <button type="button" id="btn-register-passkey" class="btn btn-sm btn-outline-success" style="border-radius: 8px; font-weight: 600; font-size: 0.72rem; padding: 6px 12px;">
-                                <i class="fas fa-plus mr-1"></i> Register
-                            </button>
-                        </div>
-                    </div>
-
-                    <h6 class="clean-label">{{ t("account") }}</h6>
-                    <div class="session-clean-box">
-                        <span class="session-clean-user">
-                            {{ t("signed_in_as") }} <strong>{{ current_user.username }}</strong>
-                        </span>
-                        <span class="badge badge-success px-2 py-1" style="border-radius: 4px; font-size: 0.65rem; font-weight: 700;">ONLINE</span>
-                    </div>
-                </div>
-
-                <!-- Step wizard controls row -->
-                <div class="wizard-controls-row">
-                    <button type="button" class="wiz-btn-prev" id="prev-step-btn" style="display: none;">
-                        <i class="fas fa-chevron-left"></i>
-                        <span>{% if current_lang == 'km' %}ថយក្រោយ{% else %}Back{% endif %}</span>
-                    </button>
-                    
-                    <button type="button" class="wiz-btn-next" id="next-step-btn">
-                        <span>{% if current_lang == 'km' %}បន្ទាប់{% else %}Next{% endif %}</span>
-                        <i class="fas fa-chevron-right"></i>
-                    </button>
-                    
-                    <button type="submit" class="wiz-btn-submit" id="submit-settings-btn" style="display: none;">
-                        <i class="fas fa-check-circle"></i>
-                        <span>{{ t("save_settings") }}</span>
-                    </button>
-                </div>
-            </form>
+            </div>
         </div>
-    </div>
+        {% endif %}
+
+        <!-- FOOTER / SAVE BUTTON -->
+        <div class="settings-footer">
+            <button type="submit" class="btn-save">
+                <i class="fas fa-check-circle mr-1"></i> {{ t("save_settings") }}
+            </button>
+        </div>
+    </form>
 </div>
 
+<!-- ========================= -->
+<!-- JAVASCRIPT -->
+<!-- ========================= -->
 <script>
 (() => {
-    const steps = document.querySelectorAll('.settings-step-content');
-    const stepHeaders = document.querySelectorAll('.step-item');
-    const prevBtn = document.getElementById('prev-step-btn');
-    const nextBtn = document.getElementById('next-step-btn');
-    const submitBtn = document.getElementById('submit-settings-btn');
-    
-    // Load saved step from sessionStorage if exists
-    let currentStep = parseInt(sessionStorage.getItem('farmer_settings_step')) || 1;
+    // 1. Language Options Handlers
+    document.getElementById("langRowEn").addEventListener("click", async () => {
+        await setLanguage("en");
+    });
+    document.getElementById("langRowKm").addEventListener("click", async () => {
+        await setLanguage("km");
+    });
 
-    function updateSteps() {
-        // Save current step to sessionStorage
-        sessionStorage.setItem('farmer_settings_step', currentStep);
-
-        steps.forEach(step => {
-            step.style.display = 'none';
-            if (parseInt(step.dataset.step) === currentStep) {
-                step.style.display = 'block';
-            }
-        });
-        
-        stepHeaders.forEach(header => {
-            header.classList.remove('active', 'completed');
-            const hStep = parseInt(header.dataset.step);
-            if (hStep === currentStep) {
-                header.classList.add('active');
-            } else if (hStep < currentStep) {
-                header.classList.add('completed');
-            }
-        });
-        
-        // Prev Button
-        if (currentStep === 1) {
-            prevBtn.style.display = 'none';
-        } else {
-            prevBtn.style.display = 'inline-flex';
-        }
-        
-        // Next / Submit Button
-        if (currentStep === 3) {
-            nextBtn.style.display = 'none';
-            submitBtn.style.display = 'inline-flex';
-        } else {
-            nextBtn.style.display = 'inline-flex';
-            submitBtn.style.display = 'none';
+    async function setLanguage(lang) {
+        try {
+            const res = await fetch("/users/language", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ language: lang })
+            });
+            if (res.ok) window.location.reload();
+        } catch (err) {
+            console.error(err);
         }
     }
 
-    prevBtn.addEventListener('click', () => {
-        if (currentStep > 1) {
-            currentStep--;
-            updateSteps();
-        }
-    });
-
-    nextBtn.addEventListener('click', () => {
-        if (currentStep < 3) {
-            currentStep++;
-            updateSteps();
-        }
-    });
-
-    stepHeaders.forEach(header => {
-        header.addEventListener('click', () => {
-            currentStep = parseInt(header.dataset.step);
-            updateSteps();
-        });
-    });
-
-    // Custom click listener for language option cards
-    document.querySelectorAll(".lang-option[data-lang]").forEach(btn => {
-        btn.addEventListener("click", async (e) => {
-            e.preventDefault();
-            const language = btn.dataset.lang;
-            try {
-                const res = await fetch("/users/language", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ language })
-                });
-                if (res.ok) {
-                    window.location.reload();
-                }
-            } catch (err) {
-                console.error(err);
-            }
-        });
-    });
-
-    // Clear step on form submit to reset for next visit
-    const form = document.querySelector('form');
-    if (form) {
-        form.addEventListener('submit', () => {
-            sessionStorage.removeItem('farmer_settings_step');
-        });
-    }
-
-    // ==========================================
-    // PASSKEY WEBAUTHN FUNCTIONALITY
-    // ==========================================
+    // 2. Passkey WebAuthn Functionality
     function base64urlToBytes(base64url) {
         const base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
         const pad = base64.length % 4;
@@ -732,6 +440,15 @@
         return options;
     }
 
+    function escapeHtml(text) {
+        return (text || "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
     async function loadPasskeysList() {
         const container = document.getElementById("passkeys-list-container");
         if (!container) return;
@@ -742,30 +459,29 @@
             const data = await res.json();
             
             if (!data.passkeys || data.passkeys.length === 0) {
-                container.innerHTML = `
-                    <div class="text-muted text-center py-2" style="font-size: 0.8rem; border: 1px dashed rgba(0,0,0,0.06); border-radius: 8px;">
-                        No passkeys registered.
-                    </div>
-                `;
+                container.innerHTML = "";
                 return;
             }
             
-            container.innerHTML = data.passkeys.map(key => `
-                <div class="security-clean-panel" style="margin-bottom: 0;">
-                    <div class="security-clean-left">
-                        <span class="security-clean-icon" style="color: #64748b; background: rgba(100, 116, 139, 0.08);"><i class="fas fa-key"></i></span>
+            let html = '<div class="settings-section-title">Registered Passkeys</div><div class="settings-card">';
+            
+            html += data.passkeys.map(key => `
+                <div class="settings-row">
+                    <div class="settings-row-left">
+                        <div class="settings-icon" style="background: transparent; color: #64748b; font-size: 1.2rem;"><i class="fas fa-key"></i></div>
                         <div>
-                            <div class="font-weight-bold text-dark dark-mode-text-white" style="font-size: 0.82rem;">${escapeHtml(key.name)}</div>
-                            <div class="text-muted" style="font-size: 0.68rem; margin-top: 1px;">Added on ${key.created_at}</div>
+                            <div class="settings-label">${escapeHtml(key.name)}</div>
+                            <div class="settings-sublabel">Added ${key.created_at}</div>
                         </div>
                     </div>
-                    <div>
-                        <button type="button" class="btn btn-sm btn-link text-danger btn-delete-passkey p-0" data-id="${key.id}" style="font-size: 0.75rem; text-decoration: none;">
-                            <i class="fas fa-trash-alt"></i> Delete
-                        </button>
-                    </div>
+                    <button type="button" class="btn-text-danger btn-delete-passkey" data-id="${key.id}">
+                        Delete
+                    </button>
                 </div>
             `).join("");
+            
+            html += '</div>';
+            container.innerHTML = html;
             
             // Add delete event listeners
             container.querySelectorAll(".btn-delete-passkey").forEach(btn => {
@@ -789,15 +505,6 @@
         }
     }
 
-    function escapeHtml(text) {
-        return (text || "")
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;");
-    }
-
     const registerBtn = document.getElementById("btn-register-passkey");
     if (registerBtn) {
         registerBtn.addEventListener("click", async () => {
@@ -812,17 +519,14 @@
             const name = passkeyName.trim() || "My Passkey";
             
             try {
-                // 1. Get options
                 const optionsResp = await fetch("{{ url_for('auth.passkey_register_options') }}");
                 if (!optionsResp.ok) throw new Error("Failed to load registration options.");
                 const options = await optionsResp.json();
                 
-                // 2. Create credential
                 const credential = await navigator.credentials.create({
                     publicKey: prepareRegistrationOptions(options)
                 });
                 
-                // 3. Serialize and verify
                 const payload = {
                     id: credential.id,
                     rawId: bytesToBase64url(credential.rawId),
@@ -860,8 +564,26 @@
     // Load initial list
     loadPasskeysList();
 
-    // Initial load
-    updateSteps();
+    // 3. AI Model Selection Handler
+    const aiModelSelect = document.getElementById("aiModelSelect");
+    const geminiApiKeyRow = document.getElementById("geminiApiKeyRow");
+    
+    if (aiModelSelect && geminiApiKeyRow) {
+        function toggleGeminiKeyRow() {
+            if (aiModelSelect.value === 'original-ai') {
+                geminiApiKeyRow.style.display = 'none';
+            } else {
+                geminiApiKeyRow.style.display = 'flex';
+            }
+        }
+        
+        // Initial state
+        toggleGeminiKeyRow();
+        
+        // On change
+        aiModelSelect.addEventListener("change", toggleGeminiKeyRow);
+    }
+
 })();
 </script>
 {% endblock %}

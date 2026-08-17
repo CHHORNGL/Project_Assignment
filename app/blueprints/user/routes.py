@@ -25,7 +25,9 @@ from app.models.passkey import UserPasskey
 from app.services.notification_service import serialize_notification
 from app.services.khmer_calendar import build_khmer_calendar_month
 from app.services.theme_manager import resolve_active_runtime
+from app.services.translator import translate_to_khmer, translate_audio_to_khmer
 from app.utils.i18n import set_current_language, get_current_language
+import tempfile
 
 
 AVATAR_MIME_BY_EXT = {
@@ -306,6 +308,23 @@ def settings():
         # 🔒 Save Two-Factor Verification Toggle
         two_factor_enabled = (request.form.get("two_factor_enabled") == "y")
         current_user.two_factor_enabled = two_factor_enabled
+        
+        # 🤖 AI Settings
+        ai_model = request.form.get("ai_model")
+        ai_api_key = request.form.get("ai_api_key")
+        
+        if ai_model in ["original-ai", "gemini-1.5-flash", "gemini-1.5-pro", "gemini-1.0-pro"]:
+            new_key = ai_api_key.strip() if ai_api_key is not None else (current_user.ai_api_key or "")
+            
+            # Enforce API key requirement for Gemini models
+            if ai_model != "original-ai" and current_user.has_role("farmer") and not new_key:
+                flash("Gemini API Key is required when using a Gemini model.", "danger")
+                return redirect(url_for("user.settings"))
+                
+            current_user.ai_model = ai_model
+            
+        if ai_api_key is not None:
+            current_user.ai_api_key = ai_api_key.strip()
 
         db.session.commit()
         flash("Settings saved.", "success")
@@ -448,3 +467,47 @@ def delete_passkey(passkey_id: int):
     db.session.delete(passkey)
     db.session.commit()
     return jsonify({"status": "ok"})
+
+
+# ==========================================
+# AI TRANSLATION API
+# ==========================================
+@user_bp.route("/translate/text", methods=["POST"])
+@login_required
+def api_translate_text():
+    data = request.get_json(silent=True) or {}
+    text = data.get("text", "").strip()
+    if not text:
+        return jsonify({"error": "No text provided"}), 400
+        
+    translation = translate_to_khmer(text)
+    if translation:
+        return jsonify({"ok": True, "translation": translation})
+    return jsonify({"error": "Translation failed"}), 500
+
+@user_bp.route("/translate/audio", methods=["POST"])
+@login_required
+def api_translate_audio():
+    if "audio" not in request.files:
+        return jsonify({"error": "No audio file provided"}), 400
+        
+    file = request.files["audio"]
+    if file.filename == "":
+        return jsonify({"error": "Empty file"}), 400
+        
+    ext = os.path.splitext(file.filename)[1].lower()
+    if ext not in [".mp3", ".wav", ".m4a", ".ogg", ".flac", ".webm"]:
+        return jsonify({"error": "Unsupported audio format"}), 400
+        
+    with tempfile.NamedTemporaryFile(suffix=ext, delete=False) as temp_file:
+        file.save(temp_file.name)
+        temp_path = temp_file.name
+        
+    try:
+        translation = translate_audio_to_khmer(temp_path)
+        if translation:
+            return jsonify({"ok": True, "translation": translation})
+        return jsonify({"error": "Translation failed"}), 500
+    finally:
+        if os.path.exists(temp_path):
+            os.remove(temp_path)

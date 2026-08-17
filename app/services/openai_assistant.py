@@ -7,9 +7,17 @@ import re
 from typing import Optional, Tuple
 
 try:
+    from google import genai
+    from google.genai import types
+except Exception:
+    genai = None
+    types = None
+try:
     from openai import OpenAI
-except Exception:  # pragma: no cover - optional dependency for local/dev environments
+except Exception:
     OpenAI = None
+
+from flask_login import current_user
 from sqlalchemy.orm import joinedload
 
 from app.models.crop import Crop
@@ -30,24 +38,45 @@ def _normalize(text: str) -> str:
     return text.strip()
 
 
-_cached_client: Optional["OpenAI"] = None
-_cached_client_key: str = ""
+_cached_openai_client = None
+_cached_openai_key = ""
 
-
-def _get_client() -> Optional["OpenAI"]:
-    global _cached_client, _cached_client_key
+def _get_openai_client():
+    global _cached_openai_client, _cached_openai_key
     if OpenAI is None:
         return None
-
     api_key = os.getenv("OPENAI_API_KEY", "").strip()
     if not api_key:
         return None
     base_url = os.getenv("OPENAI_BASE_URL", "").strip() or None
     cache_key = f"{api_key}|{base_url or ''}"
-    if _cached_client is None or _cached_client_key != cache_key:
-        _cached_client = OpenAI(api_key=api_key, base_url=base_url)
-        _cached_client_key = cache_key
-    return _cached_client
+    if _cached_openai_client is None or _cached_openai_key != cache_key:
+        _cached_openai_client = OpenAI(api_key=api_key, base_url=base_url)
+        _cached_openai_key = cache_key
+    return _cached_openai_client
+
+def _get_client():
+    if not genai:
+        return None
+        
+    if current_user and current_user.is_authenticated:
+        user_key = getattr(current_user, 'ai_api_key', None)
+        if user_key:
+            return genai.Client(api_key=user_key)
+        
+        # If user is a farmer and didn't provide a key, deny fallback to env
+        if getattr(current_user, 'role', None) == 'farmer':
+            return None
+
+    api_key = os.getenv("GEMINI_API_KEY", "").strip()
+    if api_key:
+        return genai.Client(api_key=api_key)
+    return None
+
+def _get_model_name():
+    if current_user and current_user.is_authenticated and getattr(current_user, 'ai_model', None):
+        return current_user.ai_model
+    return os.getenv("GEMINI_MODEL", "gemini-1.5-flash").strip()
 
 
 def _match_crop(message: str) -> Optional[Crop]:
@@ -153,14 +182,7 @@ def suggest_symptoms_from_image(
         candidate_lines.append(f"- {line}")
     candidates_text = "\n".join(candidate_lines)
 
-    image_data_url = (
-        "data:"
-        + (mime_type or "image/jpeg")
-        + ";base64,"
-        + base64.b64encode(image_bytes).decode("utf-8")
-    )
-
-    model = os.getenv("OPENAI_VISION_MODEL", "").strip() or os.getenv("OPENAI_MODEL", DEFAULT_MODEL).strip() or DEFAULT_MODEL
+    model_name = _get_model_name()
     system_prompt = (
         "You are an agricultural vision assistant. "
         "From the image, choose only symptoms that are directly visible. "
@@ -176,24 +198,12 @@ def suggest_symptoms_from_image(
         f"Candidate symptoms:\n{candidates_text}"
     )
 
-    try:
-        response = client.chat.completions.create(
-            model=model,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": user_prompt},
-                        {"type": "image_url", "image_url": {"url": image_data_url}},
-                    ],
-                },
-            ],
-            response_format={"type": "json_object"},
-            temperature=0.1,
-            max_tokens=600,
-        )
-    except Exception:
+    if model_name == "original-ai":
+        client = _get_openai_client()
+        if not client:
+            return {"matched_symptoms": [], "notes": ""}
+        model = os.getenv("OPENAI_VISION_MODEL", "").strip() or os.getenv("OPENAI_MODEL", DEFAULT_MODEL).strip() or DEFAULT_MODEL
+        image_data_url = "data:" + (mime_type or "image/jpeg") + ";base64," + base64.b64encode(image_bytes).decode("utf-8")
         try:
             response = client.chat.completions.create(
                 model=model,
@@ -207,16 +217,49 @@ def suggest_symptoms_from_image(
                         ],
                     },
                 ],
+                response_format={"type": "json_object"},
                 temperature=0.1,
                 max_tokens=600,
             )
+            raw_content = response.choices[0].message.content if response.choices and response.choices[0].message else ""
+        except Exception:
+            try:
+                response = client.chat.completions.create(
+                    model=model,
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {
+                            "role": "user",
+                            "content": [
+                                {"type": "text", "text": user_prompt},
+                                {"type": "image_url", "image_url": {"url": image_data_url}},
+                            ],
+                        },
+                    ],
+                    temperature=0.1,
+                    max_tokens=600,
+                )
+                raw_content = response.choices[0].message.content if response.choices and response.choices[0].message else ""
+            except Exception:
+                return None
+    else:
+        client = _get_client()
+        if not client:
+            return {"matched_symptoms": [], "notes": ""}
+        try:
+            image_part = types.Part.from_bytes(data=image_bytes, mime_type=mime_type or "image/jpeg")
+            response = client.models.generate_content(
+                model=model_name,
+                contents=[system_prompt, user_prompt, image_part],
+                config=types.GenerateContentConfig(
+                    temperature=0.1,
+                    max_output_tokens=600,
+                    response_mime_type="application/json"
+                )
+            )
+            raw_content = response.text if response else ""
         except Exception:
             return None
-
-    if not response or not response.choices:
-        return None
-
-    raw_content = response.choices[0].message.content if response.choices[0].message else ""
     payload = _extract_json_object(raw_content or "")
     if payload is None:
         payload = {"matched_symptoms": [], "notes": str(raw_content or "").strip()}
@@ -348,62 +391,53 @@ def generate_assistant_reply(user_message: str) -> Optional[str]:
     Use AI to generate a smart agricultural expert response based on the DB knowledge base.
     Returns None if AI is not configured or fails.
     """
-    client = _get_client()
-    if not client:
-        return None
-
-    model = os.getenv("OPENAI_MODEL", DEFAULT_MODEL).strip() or DEFAULT_MODEL
-    context, crop = _build_kb_context(user_message)
+    kb_context, crop = _build_kb_context(user_message)
+    
     lang = get_current_language()
-
+    lang_name = "Khmer" if lang == "km" else "English"
+    
     system_prompt = (
-        "You are an expert agricultural advisor specializing in Southeast Asian and Cambodian farming. "
-        "Your role is to help farmers diagnose crop diseases, understand symptoms, plan treatments, "
-        "and adopt best agricultural practices. \n\n"
-        "EXPERTISE AREAS:\n"
-        "- Rice, maize, vegetables, fruit trees, cassava, soybean and other crops grown in Cambodia/SE Asia\n"
-        "- Fungal, bacterial, viral diseases and pest identification\n"
-        "- Organic and chemical treatment recommendations with dosage guidance\n"
-        "- Soil health, irrigation, fertilization, and crop rotation\n"
-        "- Weather-related stress, nutrient deficiencies, and prevention strategies\n"
-        "- Integrated Pest Management (IPM) and sustainable farming\n\n"
-        "INSTRUCTIONS:\n"
-        "1. Use the provided knowledge base context as primary reference for disease info.\n"
-        "2. Supplement with your own deep agricultural expertise when needed.\n"
-        "3. Give specific, actionable advice with clear steps.\n"
-        "4. Mention disease causes, symptoms to watch for, and both short-term treatment and long-term prevention.\n"
-        "5. If treatment involves chemicals, mention safe usage and alternatives.\n"
-        "6. Be empathetic and encouraging toward farmers.\n"
-        "7. If you are unsure, say so clearly and recommend consulting a local agricultural extension officer.\n"
-        "8. Keep answers structured: use numbered steps or bullet points when listing actions."
+        f"You are a helpful agricultural expert assistant. Respond in {lang_name}. "
+        f"Use the following knowledge base context to answer the user's question accurately.\n\n"
+        f"Context:\n{kb_context}"
     )
-    if lang == "km":
-        system_prompt += (
-            "\n\nIMPORTANT: Always respond entirely in Khmer language (ភាសាខ្មែរ). "
-            "Use clear, simple Khmer that farmers can easily understand."
-        )
-
-    user_prompt = (
-        f"Farmer's question:\n{user_message}\n\n"
-        f"Relevant knowledge base (diseases/symptoms in our system):\n{context}\n\n"
-        "Please provide a detailed, practical, and helpful agricultural expert response."
-    )
-
-    try:
-        response = client.chat.completions.create(
-            model=model,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt},
-            ],
-            temperature=0.3,
-            max_tokens=2000,
-        )
-    except Exception:
-        return None
-
-    if not response or not response.choices:
-        return None
-
-    content = response.choices[0].message.content if response.choices[0].message else None
-    return content.strip() if content else None
+    user_prompt = user_message
+    
+    model_name = _get_model_name()
+    
+    if model_name == "original-ai":
+        client = _get_openai_client()
+        if not client:
+            return None
+        model = os.getenv("OPENAI_MODEL", DEFAULT_MODEL).strip() or DEFAULT_MODEL
+        try:
+            response = client.chat.completions.create(
+                model=model,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
+                ],
+                temperature=0.3,
+                max_tokens=600,
+            )
+            content = response.choices[0].message.content if response.choices and response.choices[0].message else ""
+            return content.strip() if content else None
+        except Exception:
+            return None
+    else:
+        client = _get_client()
+        if not client:
+            return None
+        try:
+            response = client.models.generate_content(
+                model=model_name,
+                contents=[system_prompt, user_prompt],
+                config=types.GenerateContentConfig(
+                    temperature=0.3,
+                    max_output_tokens=600,
+                )
+            )
+            content = response.text if response else ""
+            return content.strip() if content else None
+        except Exception:
+            return None

@@ -4068,28 +4068,30 @@ body.farmer-no-sidebar .topbar-divider:first-of-type {
 }
 
 .ai-helper-fab {
-    width: 50px;
-    height: 50px;
-    border-radius: 14px;
-    border: 1px solid rgba(15, 138, 106, 0.35);
-    background: linear-gradient(135deg, rgba(15, 138, 106, 0.9), rgba(11, 108, 82, 0.9));
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: none;
+    background: linear-gradient(135deg, #10b981, #059669);
     color: #ffffff;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 14px 28px rgba(15, 138, 106, 0.25);
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35), inset 0 2px 4px rgba(255, 255, 255, 0.2);
     cursor: grab;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
     touch-action: none;
+    font-size: 1.4rem;
 }
 
 .ai-helper-fab:active {
     cursor: grabbing;
+    transform: scale(0.95);
 }
 
 .ai-helper-fab:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 20px 36px rgba(15, 138, 106, 0.28);
+    transform: scale(1.08);
+    box-shadow: 0 10px 25px rgba(16, 185, 129, 0.45);
 }
 
 .ai-helper-panel {

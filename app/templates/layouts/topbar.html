@@ -27,7 +27,7 @@
         <i class="fas fa-columns"></i>
     </button>
 
-    {% if request.blueprint == 'farmer' %}
+    {% if request.blueprint in ['farmer', 'user'] %}
     <div class="topbar-divider d-none d-md-block mx-2"></div>
 
     <!-- ===============================
@@ -124,6 +124,249 @@
                 {% endif %}
             </div>
         </li>
+
+        <!-- ===============================
+             LIVE CHAT
+        =============================== -->
+        {% if current_user.has_role('farmer') %}
+        <li class="nav-item dropdown no-arrow mx-1">
+            <a class="nav-link dropdown-toggle p-0"
+               href="#"
+               id="supportDropdown"
+               role="button"
+               data-toggle="dropdown"
+               aria-haspopup="true"
+               aria-expanded="false"
+               title="Live Support">
+
+                <span class="notification-wrapper">
+                    <span class="icon-btn notification-btn">
+                        <i class="fas fa-comment-dots"></i>
+                    </span>
+                </span>
+            </a>
+            <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in p-0"
+                 aria-labelledby="supportDropdown" style="width: 320px; border-radius: 12px; overflow: hidden; z-index: 1050;">
+                <div class="bg-success text-white p-3 font-weight-bold d-flex align-items-center">
+                    <i class="fas fa-headset mr-2"></i> {{ t('admin_support_chat') | default('Admin Support') }}
+                </div>
+                <div id="support-chat-body" class="p-3" style="height: 300px; overflow-y: auto; background: #f8f9fc; display: flex; flex-direction: column; gap: 8px;">
+                    <!-- Messages will appear here -->
+                </div>
+                <div class="p-2 bg-white border-top">
+                    <div class="d-flex align-items-center mb-2" style="gap: 12px; color: #858796; padding-left: 8px;">
+                        <i class="fas fa-image" style="cursor: pointer;" id="support-chat-img-btn" title="Send Image"></i>
+                        <i class="fas fa-microphone" style="cursor: pointer;" id="support-chat-mic-btn" title="Send Audio"></i>
+                        <i class="fas fa-map-marker-alt" style="cursor: pointer;" id="support-chat-loc-btn" title="Send Location"></i>
+                        <input type="file" id="support-chat-file" accept="image/*" style="display:none;">
+                        <input type="file" id="support-chat-audio" accept="audio/*;capture=microphone" style="display:none;">
+                    </div>
+                    <div class="input-group">
+                        <input type="text" id="support-chat-input" class="form-control" placeholder="Type a message..." style="border-radius: 20px 0 0 20px;">
+                        <div class="input-group-append">
+                            <button id="support-chat-send" class="btn btn-success" type="button" style="border-radius: 0 20px 20px 0;">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </li>
+        <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const chatBody = document.getElementById("support-chat-body");
+            const chatInput = document.getElementById("support-chat-input");
+            const chatSend = document.getElementById("support-chat-send");
+            const imgBtn = document.getElementById("support-chat-img-btn");
+            const micBtn = document.getElementById("support-chat-mic-btn");
+            const locBtn = document.getElementById("support-chat-loc-btn");
+            const fileInput = document.getElementById("support-chat-file");
+            const audioInput = document.getElementById("support-chat-audio");
+            
+            let keepChatOpen = false;
+            const chatMenu = document.querySelector('.dropdown-menu[aria-labelledby="supportDropdown"]');
+            if (chatMenu) {
+                chatMenu.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                });
+                
+                $(chatMenu).parent().on('hide.bs.dropdown', function (e) {
+                    if (keepChatOpen) {
+                        e.preventDefault();
+                    }
+                });
+            }
+
+            if(!chatBody) return;
+            let lastMsgCount = 0;
+
+            function fetchMessages() {
+                fetch('/farmer/support_chat/messages')
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.length > lastMsgCount) {
+                            chatBody.innerHTML = '';
+                            data.forEach(msg => {
+                                const isMe = msg.sender_id === {{ current_user.id }};
+                                const div = document.createElement("div");
+                                div.style.padding = "8px 12px";
+                                div.style.borderRadius = "12px";
+                                div.style.maxWidth = "80%";
+                                div.style.fontSize = "0.85rem";
+                                div.style.wordWrap = "break-word";
+                                
+                                if (isMe) {
+                                    div.style.alignSelf = "flex-end";
+                                    div.style.background = "#1cc88a";
+                                    div.style.color = "white";
+                                    div.style.borderBottomRightRadius = "0";
+                                } else {
+                                    div.style.alignSelf = "flex-start";
+                                    div.style.background = "#e3e6f0";
+                                    div.style.color = "#3a3b45";
+                                    div.style.borderBottomLeftRadius = "0";
+                                }
+                                
+                                let contentHTML = msg.message ? `<div>${msg.message}</div>` : '';
+                                if (msg.attachment_url) {
+                                    if (msg.attachment_type === 'image') {
+                                        contentHTML += `<img src="${msg.attachment_url}" style="max-width:100%; border-radius:8px; margin-top:4px;">`;
+                                    } else if (msg.attachment_type === 'audio') {
+                                        contentHTML += `<audio controls src="${msg.attachment_url}" style="max-width:100%; height:32px; margin-top:4px;"></audio>`;
+                                    } else if (msg.attachment_type === 'location') {
+                                        contentHTML += `<div style="margin-top:4px;"><i class="fas fa-map-marker-alt"></i> <a href="https://maps.google.com/?q=${msg.attachment_url}" target="_blank" style="color:inherit;text-decoration:underline;">View on Map</a></div>`;
+                                    }
+                                }
+                                div.innerHTML = contentHTML;
+                                chatBody.appendChild(div);
+                            });
+                            chatBody.scrollTop = chatBody.scrollHeight;
+                            lastMsgCount = data.length;
+                        }
+                    }).catch(() => {});
+            }
+
+            function sendPayload(payload) {
+                fetch('/farmer/support_chat/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                }).then(() => fetchMessages());
+            }
+
+            function sendMessage() {
+                const text = chatInput.value.trim();
+                if (!text) return;
+                chatInput.value = '';
+                sendPayload({ message: text });
+            }
+
+            function uploadFile(file, type) {
+                const formData = new FormData();
+                formData.append('file', file);
+                fetch('/farmer/support_chat/upload', {
+                    method: 'POST',
+                    body: formData
+                }).then(res => res.json()).then(data => {
+                    if(data.url) {
+                        sendPayload({ message: '', attachment_url: data.url, attachment_type: type });
+                    }
+                });
+            }
+
+            chatSend.addEventListener("click", sendMessage);
+            chatInput.addEventListener("keypress", (e) => {
+                if (e.key === "Enter") sendMessage();
+            });
+            
+            imgBtn.addEventListener("click", () => { keepChatOpen = true; fileInput.click(); setTimeout(()=>keepChatOpen=false, 2000); });
+            
+            let mediaRecorder;
+            let audioChunks = [];
+            let isRecording = false;
+
+            micBtn.addEventListener("click", async () => {
+                keepChatOpen = true; 
+                setTimeout(()=>keepChatOpen=false, 2000);
+                
+                if (!isRecording) {
+                    try {
+                        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                        mediaRecorder = new MediaRecorder(stream);
+                        mediaRecorder.start();
+                        isRecording = true;
+                        
+                        micBtn.classList.remove("fa-microphone");
+                        micBtn.classList.add("fa-stop-circle");
+                        micBtn.style.color = "red";
+                        
+                        mediaRecorder.addEventListener("dataavailable", event => {
+                            audioChunks.push(event.data);
+                        });
+                        
+                        mediaRecorder.addEventListener("stop", () => {
+                            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                            audioChunks = [];
+                            
+                            const formData = new FormData();
+                            formData.append('file', audioBlob, 'voice.webm');
+                            
+                            fetch('/farmer/support_chat/upload', {
+                                method: 'POST',
+                                body: formData
+                            }).then(res => res.json()).then(data => {
+                                if(data.url) {
+                                    sendPayload({ message: '', attachment_url: data.url, attachment_type: 'audio' });
+                                }
+                            });
+                        });
+                    } catch (err) {
+                        alert("Microphone access denied or not available.");
+                    }
+                } else {
+                    mediaRecorder.stop();
+                    isRecording = false;
+                    micBtn.classList.remove("fa-stop-circle");
+                    micBtn.classList.add("fa-microphone");
+                    micBtn.style.color = "";
+                    mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                }
+            });
+            
+            fileInput.addEventListener("change", (e) => {
+                if (e.target.files.length) uploadFile(e.target.files[0], 'image');
+                e.target.value = '';
+            });
+            
+            locBtn.addEventListener("click", () => {
+                keepChatOpen = true; 
+                setTimeout(()=>keepChatOpen=false, 2000);
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        (pos) => {
+                            const loc = `${pos.coords.latitude},${pos.coords.longitude}`;
+                            sendPayload({ message: 'Shared Location', attachment_url: loc, attachment_type: 'location' });
+                        },
+                        (err) => {
+                            alert("Could not get location: " + err.message);
+                        },
+                        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+                    );
+                }
+            });
+
+            document.getElementById("supportDropdown").addEventListener("click", () => {
+                fetchMessages();
+            });
+            setInterval(() => {
+                const menu = document.querySelector('.dropdown-menu[aria-labelledby="supportDropdown"]');
+                if (menu && menu.classList.contains("show")) {
+                    fetchMessages();
+                }
+            }, 3000);
+        });
+        </script>
+        {% endif %}
 
         <!-- Divider -->
         <div class="topbar-divider d-none d-sm-block"></div>
