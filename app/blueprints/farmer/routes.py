@@ -540,9 +540,9 @@ def diagnose():
     Farmer submits crop + symptoms
     System uses Rule Engine to auto-diagnose
     """
+    # Redirect removed to use the cleaner, native native Diagnose UI instead of React wizard
     if request.method == "GET":
-        return redirect(url_for("farmer.diagnose_rule_based", **request.args))
-
+        pass
     result = _process_diagnose_post()
     if result:
         return result

@@ -19,16 +19,68 @@ import time
 
 DEFAULT_TRANSLATE_MODEL = "gpt-4o-mini"
 
+_cached_openai_client = None
+_cached_openai_key = None
 
-def _get_client() -> Optional[OpenAI]:
+class MultiKeyOpenAIChatCompletions:
+    def __init__(self, clients):
+        self.clients = clients
+    def create(self, **kwargs):
+        last_exception = None
+        for client in self.clients:
+            try:
+                return client.chat.completions.create(**kwargs)
+            except Exception as e:
+                last_exception = e
+                print(f"API key failed, falling back to next: {e}")
+        if last_exception:
+            raise last_exception
+        return None
+
+class MultiKeyOpenAIChat:
+    def __init__(self, clients):
+        self.completions = MultiKeyOpenAIChatCompletions(clients)
+
+class MultiKeyOpenAI:
+    def __init__(self, clients):
+        self.chat = MultiKeyOpenAIChat(clients)
+
+def _get_client() -> Optional[MultiKeyOpenAI]:
+    global _cached_openai_client, _cached_openai_key
     if OpenAI is None:
         return None
 
-    api_key = os.getenv("OPENAI_API_KEY", "").strip()
-    if not api_key:
+    from app.models.site_setting import SiteSetting
+    keys_list = []
+    base_url = None
+    try:
+        db_groq = SiteSetting.query.get("API_KEY_GROQ")
+        db_openai = SiteSetting.query.get("API_KEY_OPENAI")
+        if db_groq and db_groq.value.strip():
+            keys_list = [k.strip() for k in db_groq.value.split(",") if k.strip()]
+            base_url = "https://api.groq.com/openai/v1"
+        elif db_openai and db_openai.value.strip():
+            keys_list = [k.strip() for k in db_openai.value.split(",") if k.strip()]
+            base_url = None
+    except Exception:
+        pass
+
+    if not keys_list:
+        env_key = os.getenv("OPENAI_API_KEY", "").strip()
+        if env_key:
+            keys_list = [env_key]
+        base_url = os.getenv("OPENAI_BASE_URL", "").strip() or None
+
+    if not keys_list:
         return None
-    base_url = os.getenv("OPENAI_BASE_URL", "").strip() or None
-    return OpenAI(api_key=api_key, base_url=base_url)
+
+    cache_key = f"{','.join(keys_list)}|{base_url or ''}"
+    if _cached_openai_client is None or _cached_openai_key != cache_key:
+        clients = [OpenAI(api_key=k, base_url=base_url) for k in keys_list]
+        _cached_openai_client = MultiKeyOpenAI(clients)
+        _cached_openai_key = cache_key
+        
+    return _cached_openai_client
 
 
 def translate_to_khmer(text: str) -> Optional[str]:
@@ -36,8 +88,11 @@ def translate_to_khmer(text: str) -> Optional[str]:
         # Check if user has Gemini API Key configured in their settings
         model_name = getattr(current_user, 'ai_model', 'original-ai') if current_user.is_authenticated else 'original-ai'
         if model_name != "original-ai" and current_user and current_user.is_authenticated and getattr(current_user, 'ai_api_key', None) and genai:
-            client = genai.Client(api_key=current_user.ai_api_key)
-            prompt = (
+            keys = [k.strip() for k in current_user.ai_api_key.split(',') if k.strip()]
+            if keys:
+                import random
+                client = genai.Client(api_key=random.choice(keys))
+                prompt = (
                 "Translate the user's text into Khmer. "
                 "Preserve technical terms and crop/disease names if they are already Khmer. "
                 "Return only the translated text.\\n\\n"
@@ -83,7 +138,11 @@ def translate_audio_to_khmer(file_path: str) -> Optional[str]:
     try:
         model_name = getattr(current_user, 'ai_model', 'original-ai') if current_user.is_authenticated else 'original-ai'
         if model_name != "original-ai" and current_user and current_user.is_authenticated and getattr(current_user, 'ai_api_key', None) and genai:
-            client = genai.Client(api_key=current_user.ai_api_key)
+            keys = [k.strip() for k in current_user.ai_api_key.split(',') if k.strip()]
+            if not keys:
+                return None
+            import random
+            client = genai.Client(api_key=random.choice(keys))
             
             # gemini-1.0-pro does not support audio well, fallback to 1.5-flash
             if model_name == "gemini-1.0-pro":

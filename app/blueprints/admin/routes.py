@@ -33,6 +33,8 @@ from app.models.role import Role
 from app.models.permission import Permission
 from app.models.associations import user_roles
 from app.models.audit_log import AuditLog
+from app.models.support_request import SupportRequest
+from app.models.site_setting import SiteSetting
 from app.models.diagnosis import Diagnosis
 from app.models.chat_message import ChatMessage
 from app.models.crop import Crop
@@ -822,7 +824,65 @@ def translations_ai():
     translated = translate_to_khmer(text)
     if not translated:
         return jsonify({"ok": False, "error": "Translation service unavailable"}), 503
-    return jsonify({"ok": True, "translation": translated})
+    return jsonify({"success": True, "translation": translated})
+
+
+@admin_bp.route("/settings", methods=["GET", "POST"])
+@login_required
+@permission_required("manage_roles")
+def settings():
+    if request.method == "POST":
+        openai_keys = [k.strip() for k in request.form.getlist("openai_key[]") if k.strip()]
+        groq_keys = [k.strip() for k in request.form.getlist("groq_key[]") if k.strip()]
+        gemini_keys = [k.strip() for k in request.form.getlist("gemini_key[]") if k.strip()]
+        openai_model = request.form.get("openai_model", "").strip()
+
+        # Fallback to standard input if lists are empty (e.g. JS failed)
+        if not openai_keys:
+            if request.form.get("openai_key", "").strip():
+                openai_keys = [request.form.get("openai_key", "").strip()]
+        if not groq_keys:
+            if request.form.get("groq_key", "").strip():
+                groq_keys = [request.form.get("groq_key", "").strip()]
+        if not gemini_keys:
+            if request.form.get("gemini_key", "").strip():
+                gemini_keys = [request.form.get("gemini_key", "").strip()]
+
+        # Helper to update or create
+        def update_setting(k, v):
+            setting = SiteSetting.query.get(k)
+            if setting:
+                setting.value = v
+            else:
+                setting = SiteSetting(key=k, value=v)
+                db.session.add(setting)
+
+        if openai_keys or "openai_key[]" in request.form or "openai_key" in request.form:
+            update_setting("API_KEY_OPENAI", ",".join(openai_keys))
+        if groq_keys or "groq_key[]" in request.form or "groq_key" in request.form:
+            update_setting("API_KEY_GROQ", ",".join(groq_keys))
+        if gemini_keys or "gemini_key[]" in request.form or "gemini_key" in request.form:
+            update_setting("API_KEY_GEMINI", ",".join(gemini_keys))
+        if openai_model or "openai_model" in request.form:
+            update_setting("OPENAI_MODEL", openai_model)
+
+        db.session.commit()
+        flash("System settings updated successfully.", "success")
+        return redirect(url_for("admin.settings"))
+
+    # GET
+    openai_setting = SiteSetting.query.get("API_KEY_OPENAI")
+    groq_setting = SiteSetting.query.get("API_KEY_GROQ")
+    gemini_setting = SiteSetting.query.get("API_KEY_GEMINI")
+    model_setting = SiteSetting.query.get("OPENAI_MODEL")
+
+    return render_template(
+        "admin/settings.html",
+        openai_key=openai_setting.value if openai_setting else "",
+        groq_key=groq_setting.value if groq_setting else "",
+        gemini_key=gemini_setting.value if gemini_setting else "",
+        openai_model=model_setting.value if model_setting else "",
+    )
 
 
 @admin_bp.route("/translations/backups", methods=["GET"])

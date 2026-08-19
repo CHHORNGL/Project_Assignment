@@ -1,0 +1,5 @@
+package com.agrisystem.agri_system_app
+
+import io.flutter.embedding.android.FlutterActivity
+
+class MainActivity : FlutterActivity()

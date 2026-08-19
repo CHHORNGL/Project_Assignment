@@ -6,7 +6,7 @@
         <span>{{ t("home") }}</span>
     </a>
 
-    {% set diagnose_url = url_for('farmer.diagnose_rule_based') %}
+    {% set diagnose_url = url_for('farmer.diagnose') %}
     <a href="{{ diagnose_url }}"
        class="{% if path.startswith(diagnose_url) %}active{% endif %}">
         <i class="fas fa-stethoscope"></i>

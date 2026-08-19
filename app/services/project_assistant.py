@@ -20,6 +20,18 @@ from flask_login import current_user
 
 DEFAULT_MODEL = "llama-3.3-70b-versatile"
 
+
+def _get_openai_model():
+    from app.models.site_setting import SiteSetting
+    try:
+        db_model = SiteSetting.query.get("OPENAI_MODEL")
+        if db_model and db_model.value.strip():
+            return db_model.value.strip()
+    except Exception:
+        pass
+    return os.getenv("OPENAI_MODEL", DEFAULT_MODEL).strip() or DEFAULT_MODEL
+
+
 PROJECT_CONTEXT = """You are helping users of the Integrated Agricultural Expert System web app.
 
 Product overview:
@@ -79,26 +91,88 @@ def _system_only_reply(lang: str) -> str:
 _pa_cached_openai_client = None
 _pa_cached_openai_key = ""
 
+class MultiKeyOpenAIChatCompletions:
+    def __init__(self, clients):
+        self.clients = clients
+    def create(self, **kwargs):
+        last_exception = None
+        for client in self.clients:
+            try:
+                return client.chat.completions.create(**kwargs)
+            except Exception as e:
+                last_exception = e
+                print(f"API key failed, falling back to next: {e}")
+        if last_exception:
+            raise last_exception
+        return None
+
+class MultiKeyOpenAIChat:
+    def __init__(self, clients):
+        self.completions = MultiKeyOpenAIChatCompletions(clients)
+
+class MultiKeyOpenAI:
+    def __init__(self, clients):
+        self.chat = MultiKeyOpenAIChat(clients)
+
 def _get_openai_client():
     global _pa_cached_openai_client, _pa_cached_openai_key
     if OpenAI is None:
         return None
-    api_key = os.getenv("OPENAI_API_KEY", "").strip()
-    if not api_key:
+
+    from app.models.site_setting import SiteSetting
+    keys_list = []
+    base_url = None
+    try:
+        db_groq = SiteSetting.query.get("API_KEY_GROQ")
+        db_openai = SiteSetting.query.get("API_KEY_OPENAI")
+        if db_groq and db_groq.value.strip():
+            keys_list = [k.strip() for k in db_groq.value.split(",") if k.strip()]
+            base_url = "https://api.groq.com/openai/v1"
+        elif db_openai and db_openai.value.strip():
+            keys_list = [k.strip() for k in db_openai.value.split(",") if k.strip()]
+            base_url = None
+    except Exception:
+        pass
+
+    if not keys_list:
+        env_key = os.getenv("OPENAI_API_KEY", "").strip()
+        if env_key:
+            keys_list = [env_key]
+        base_url = os.getenv("OPENAI_BASE_URL", "").strip() or None
+
+    if not keys_list:
         return None
-    base_url = os.getenv("OPENAI_BASE_URL", "").strip() or None
-    cache_key = f"{api_key}|{base_url or ''}"
+
+    cache_key = f"{','.join(keys_list)}|{base_url or ''}"
     if _pa_cached_openai_client is None or _pa_cached_openai_key != cache_key:
-        _pa_cached_openai_client = OpenAI(api_key=api_key, base_url=base_url)
+        clients = [OpenAI(api_key=k, base_url=base_url) for k in keys_list]
+        _pa_cached_openai_client = MultiKeyOpenAI(clients)
         _pa_cached_openai_key = cache_key
     return _pa_cached_openai_client
 
 def _get_client():
     if genai and current_user and current_user.is_authenticated and getattr(current_user, 'ai_api_key', None):
-        return genai.Client(api_key=current_user.ai_api_key)
-    api_key = os.getenv("GEMINI_API_KEY", "").strip()
-    if api_key and genai:
-        return genai.Client(api_key=api_key)
+        keys = [k.strip() for k in current_user.ai_api_key.split(',') if k.strip()]
+        if keys:
+            import random
+            return genai.Client(api_key=random.choice(keys))
+    
+    api_key = ""
+    if genai:
+        from app.models.site_setting import SiteSetting
+        try:
+            db_gemini = SiteSetting.query.get("API_KEY_GEMINI")
+            if db_gemini and db_gemini.value.strip():
+                api_key = db_gemini.value.strip()
+        except Exception:
+            pass
+
+        if not api_key:
+            api_key = os.getenv("GEMINI_API_KEY", "").strip()
+            
+        if api_key:
+            return genai.Client(api_key=api_key)
+
     return None
 
 def _get_model_name():
@@ -202,7 +276,7 @@ def generate_project_reply(user_message: str, *, user_role: str, page: str = "")
             client = _get_openai_client()
             if not client:
                 return _fallback_reply(user_message, user_role=user_role, page=page, lang=lang)
-            model = os.getenv("OPENAI_HELPER_MODEL", "").strip() or os.getenv("OPENAI_MODEL", DEFAULT_MODEL).strip() or DEFAULT_MODEL
+            model = os.getenv("OPENAI_HELPER_MODEL", "").strip() or _get_openai_model()
             response = client.chat.completions.create(
                 model=model,
                 messages=[

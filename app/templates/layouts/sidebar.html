@@ -141,6 +141,16 @@
         </a>
     </li>
 
+    <li class="nav-item mt-2">
+        <a class="nav-link {% if path.startswith('/admin/settings') %}active{% endif %}"
+           href="{{ url_for('admin.settings') }}"
+           data-tooltip="System Settings"
+           aria-label="System Settings">
+            <i class="menu-icon fas fa-cogs"></i>
+            <span>System Settings</span>
+        </a>
+    </li>
+
     {% endif %}
 
     <!-- ===============================
@@ -245,7 +255,7 @@
         </a>
     </li>
 
-    {% set diagnose_url = url_for('farmer.diagnose_rule_based') %}
+    {% set diagnose_url = url_for('farmer.diagnose') %}
     <li class="nav-item">
         <a class="nav-link {% if path.startswith(diagnose_url) %}active{% endif %}"
            href="{{ diagnose_url }}"

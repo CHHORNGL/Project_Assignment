@@ -111,17 +111,18 @@ def create_app():
         )
 
     # ===============================
-    # REGISTER BLUEPRINTS
+    # BLUEPRINT REGISTRATION
     # ===============================
-    from app.blueprints.main.routes import main_bp
-    from app.blueprints.auth.routes import auth_bp
-    from app.blueprints.admin.routes import admin_bp
-    from app.blueprints.admin.crop_routes import admin_crop_bp
-    from app.blueprints.assistant.routes import assistant_bp
-    from app.blueprints.expert.routes import expert_bp
-    from app.blueprints.farmer.routes import farmer_bp
-    from app.blueprints.weather_intelligence.routes import weather_intelligence_bp
-    from app.blueprints.user.routes import user_bp
+    from .blueprints.main.routes import main_bp
+    from .blueprints.auth.routes import auth_bp
+    from .blueprints.admin.routes import admin_bp
+    from .blueprints.admin.crop_routes import admin_crop_bp
+    from .blueprints.assistant.routes import assistant_bp
+    from .blueprints.expert.routes import expert_bp
+    from .blueprints.farmer.routes import farmer_bp
+    from .blueprints.weather_intelligence.routes import weather_intelligence_bp
+    from .blueprints.user.routes import user_bp
+    from .blueprints.api.routes import api_bp
 
     # Main & Auth
     app.register_blueprint(main_bp)     # /
@@ -135,6 +136,7 @@ def create_app():
     app.register_blueprint(farmer_bp)   # /farmer/...
     app.register_blueprint(weather_intelligence_bp)  # /weather-intelligence/...
     app.register_blueprint(user_bp)     # /user/...
+    app.register_blueprint(api_bp)      # /api/...
 
     # ===============================
     # ERROR HANDLERS

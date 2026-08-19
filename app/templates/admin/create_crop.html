@@ -2,53 +2,212 @@
 {% block title %}{{ t("create_crop_title") }}{% endblock %}
 
 {% block content %}
+<style>
+    .crop-form-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .crop-form-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--admin-border, #e2e8f0);
+    }
+    
+    .crop-form-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--admin-text, #1e293b);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .crop-form-card {
+        background: var(--admin-card, #ffffff);
+        border: 1px solid var(--admin-border, #e2e8f0);
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 24px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+    }
+    
+    .crop-form-section {
+        padding: 24px;
+        border-bottom: 1px solid var(--admin-border, #e2e8f0);
+    }
+    .crop-form-section:last-child {
+        border-bottom: none;
+    }
+    
+    .section-title {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--admin-text, #1e293b);
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .section-title i {
+        color: var(--admin-accent, #10b981);
+    }
+    
+    .form-group-modern {
+        margin-bottom: 20px;
+    }
+    .form-group-modern:last-child {
+        margin-bottom: 0;
+    }
+    
+    .form-label-modern {
+        display: block;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #475569;
+        margin-bottom: 8px;
+    }
+    
+    .form-control-modern {
+        width: 100%;
+        padding: 10px 14px;
+        font-size: 0.95rem;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        background: #f8fafc;
+        color: #1e293b;
+        transition: all 0.2s ease;
+    }
+    .form-control-modern:focus {
+        background: #ffffff;
+        border-color: var(--admin-accent, #10b981);
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+        outline: none;
+    }
+    
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        padding: 20px 24px;
+        background: #f8fafc;
+        border-top: 1px solid var(--admin-border, #e2e8f0);
+    }
+    
+    .btn-modern {
+        padding: 10px 20px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .btn-modern-primary {
+        background: var(--admin-accent, #10b981);
+        color: white;
+    }
+    .btn-modern-primary:hover {
+        background: #059669;
+        transform: translateY(-1px);
+    }
+    .btn-modern-secondary {
+        background: #e2e8f0;
+        color: #475569;
+    }
+    .btn-modern-secondary:hover {
+        background: #cbd5e1;
+    }
+
+    @media (max-width: 768px) {
+        .crop-form-section {
+            padding: 16px;
+        }
+        .form-actions {
+            padding: 16px;
+        }
+        .crop-form-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+        }
+    }
+</style>
+
 <div class="container-fluid">
-
-    <h1 class="h4 mb-4 font-weight-bold">{{ t("add_new_crop") }}</h1>
-
-    <div class="card shadow col-md-7 p-0">
-        <div class="card-body">
-
-            <form method="POST">
-
-                <div class="form-group">
-                    <label>{{ t("crop_name") }}</label>
-                    <input type="text" name="name" class="form-control" required>
-                </div>
-
-                <div class="form-group">
-                    <label>{{ t("crop_name_kh") }}</label>
-                    <input type="text" name="name_kh" class="form-control">
-                </div>
-
-                <div class="form-group">
-                    <label>
-                        Emoji
-                        <span class="text-muted small font-weight-normal ml-1">
-                            — shown as the crop icon in the diagnosis wizard
-                        </span>
-                    </label>
-                    {% set picker_emoji = "" %}
-                    {% include "partials/crop_emoji_picker.html" %}
-                </div>
-
-                <div class="form-group">
-                    <label>{{ t("description_label") }}</label>
-                    <textarea name="description" class="form-control" rows="3"></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label>{{ t("description_kh") }}</label>
-                    <textarea name="description_kh" class="form-control" rows="3"></textarea>
-                </div>
-
-                <button class="btn btn-success">{{ t("save") }}</button>
-                <a href="{{ url_for('admin_crop.index') }}" class="btn btn-secondary ml-2">{{ t("cancel") }}</a>
-
-            </form>
-
+    <div class="crop-form-container">
+        <div class="crop-form-header">
+            <h1 class="crop-form-title">
+                <i class="fas fa-seedling text-success"></i>
+                {{ t("add_new_crop") }}
+            </h1>
+            <a href="{{ url_for('admin_crop.index') }}" class="btn btn-sm btn-outline-secondary rounded-pill shadow-sm">
+                <i class="fas fa-arrow-left mr-1"></i> {{ t("back") }}
+            </a>
         </div>
-    </div>
 
+        <form method="POST">
+            <div class="crop-form-card">
+                
+                <!-- General Info -->
+                <div class="crop-form-section">
+                    <div class="section-title"><i class="fas fa-info-circle"></i> General Information</div>
+                    <div class="row">
+                        <div class="col-md-6 form-group-modern">
+                            <label class="form-label-modern">{{ t("crop_name") }} <span class="text-danger">*</span></label>
+                            <input type="text" name="name" class="form-control-modern" placeholder="e.g. Tomato" required>
+                        </div>
+                        <div class="col-md-6 form-group-modern">
+                            <label class="form-label-modern">{{ t("crop_name_kh") }}</label>
+                            <input type="text" name="name_kh" class="form-control-modern" placeholder="e.g. ប៉េងប៉ោះ">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Visual Identity -->
+                <div class="crop-form-section">
+                    <div class="section-title"><i class="fas fa-smile"></i> Visual Identity</div>
+                    <div class="form-group-modern mb-0">
+                        <label class="form-label-modern">
+                            Crop Emoji
+                            <span class="text-muted font-weight-normal ml-1">
+                                (Appears in the diagnosis wizard and admin views)
+                            </span>
+                        </label>
+                        {% set picker_emoji = "" %}
+                        {% include "partials/crop_emoji_picker.html" %}
+                    </div>
+                </div>
+
+                <!-- Description -->
+                <div class="crop-form-section">
+                    <div class="section-title"><i class="fas fa-align-left"></i> Description Details</div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">{{ t("description_label") }}</label>
+                        <textarea name="description" class="form-control-modern" rows="3" placeholder="Brief description of the crop..."></textarea>
+                    </div>
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">{{ t("description_kh") }}</label>
+                        <textarea name="description_kh" class="form-control-modern" rows="3" placeholder="ការពិពណ៌នាអំពីដំណាំ..."></textarea>
+                    </div>
+                </div>
+                
+                <!-- Actions -->
+                <div class="form-actions">
+                    <a href="{{ url_for('admin_crop.index') }}" class="btn-modern btn-modern-secondary">{{ t("cancel") }}</a>
+                    <button type="submit" class="btn-modern btn-modern-primary">
+                        <i class="fas fa-check"></i> {{ t("save") }}
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
 </div>
 {% endblock %}

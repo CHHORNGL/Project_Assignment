@@ -150,7 +150,11 @@ def profile():
     if request.method == "POST":
         username = request.form.get("username", "").strip()
         full_name = request.form.get("full_name", "").strip()
-        email_value = request.form.get("email", "").strip().lower()
+        
+        # Check if the fields were actually submitted (prevent mobile app avatar upload from wiping them)
+        has_email = "email" in request.form
+        email_value = request.form.get("email", "").strip().lower() if has_email else None
+        
         current_password = request.form.get("current_password", "")
         new_password = request.form.get("new_password", "")
         confirm_password = request.form.get("confirm_password", "")
@@ -163,18 +167,19 @@ def profile():
                 return redirect(url_for("user.profile"))
             current_user.username = username
 
-        if email_value and email_value != (current_user.email or ""):
-            existing_email = (
-                User.query
-                .filter(User.email == email_value, User.id != current_user.id)
-                .first()
-            )
-            if existing_email:
-                flash("Email already exists.", "danger")
-                return redirect(url_for("user.profile"))
-            current_user.email = email_value
-        elif not email_value:
-            current_user.email = None
+        if has_email:
+            if email_value and email_value != (current_user.email or ""):
+                existing_email = (
+                    User.query
+                    .filter(User.email == email_value, User.id != current_user.id)
+                    .first()
+                )
+                if existing_email:
+                    flash("Email already exists.", "danger")
+                    return redirect(url_for("user.profile"))
+                current_user.email = email_value
+            elif not email_value:
+                current_user.email = None
 
         if full_name:
             current_user.full_name = full_name

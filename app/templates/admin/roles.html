@@ -21,10 +21,10 @@
             <div class="admin-sub">{{ t("roles_management_sub") }}</div>
         </div>
         <div class="admin-actions">
-            <a href="#create-role" class="btn btn-admin">
+            <button type="button" class="btn btn-admin" data-toggle="modal" data-target="#createRoleModal">
                 <i class="fas fa-plus-circle mr-2"></i>
                 {{ t("create") }} {{ t("role") }}
-            </a>
+            </button>
         </div>
     </div>
 
@@ -64,51 +64,59 @@
         </div>
     </div>
 
-    <div class="admin-role-form-card mb-4" id="create-role">
-        <div class="admin-role-form-header">
-            <div class="admin-role-header">
-                <div class="admin-role-icon">
-                    <i class="fas fa-user-tag"></i>
+    <!-- Create Role Modal -->
+    <div class="modal fade" id="createRoleModal" tabindex="-1" role="dialog" aria-labelledby="createRoleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content admin-modal-content" style="border: none; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+                <div class="modal-header border-0 pb-0 pt-4 px-4">
+                    <div class="d-flex align-items-center">
+                        <div class="admin-role-icon mr-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; border-radius: 12px; background: var(--admin-accent-soft); color: var(--admin-accent); font-size: 1.25rem;">
+                            <i class="fas fa-user-tag"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title mb-1" id="createRoleModalLabel" style="font-weight: 700; color: var(--admin-text);">{{ t("create_new_role") }}</h5>
+                            <div class="text-muted" style="font-size: 0.85rem;">{{ t("role_setup_sub") }}</div>
+                        </div>
+                    </div>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="padding: 1rem;">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
                 </div>
-                <div>
-                    <div class="admin-role-title">{{ t("create_new_role") }}</div>
-                    <div class="admin-role-sub">{{ t("role_setup_sub") }}</div>
-                </div>
+                
+                <form method="POST" action="{{ url_for('admin.create_role') }}" id="create-role-form">
+                    <div class="modal-body p-4">
+                        <div class="form-group mb-4">
+                            <label class="font-weight-bold" for="role-name-input" style="color: var(--admin-text); font-size: 0.9rem;">{{ t("role_name") }}</label>
+                            <input id="role-name-input"
+                                   name="role_name"
+                                   class="form-control form-control-lg"
+                                   placeholder="{{ t('role_name_input_placeholder') }}"
+                                   maxlength="50"
+                                   autocomplete="off"
+                                   required
+                                   style="border-radius: 8px; font-size: 1rem; border-color: var(--admin-border); background-color: var(--admin-bg);">
+                            <small class="form-text text-muted mt-2">
+                                <i class="fas fa-info-circle mr-1"></i> {{ t("role_name_hint") }}
+                            </small>
+                        </div>
+
+                        <div class="form-group mb-2">
+                            <label class="font-weight-bold" for="role-name-preview" style="color: var(--admin-text); font-size: 0.9rem;">{{ t("normalized_key") }}</label>
+                            <div id="role-name-preview" class="admin-role-preview is-empty p-3 rounded" style="background-color: var(--admin-bg-dark, #f8f9fa); color: var(--admin-text); font-family: monospace; font-size: 0.95rem; border: 1px solid var(--admin-border); letter-spacing: 1px;">
+                                {{ t("role_preview_default") }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 p-4 pt-0">
+                        <button type="button" class="btn btn-light" data-dismiss="modal" style="border-radius: 8px; font-weight: 600; padding: 0.6rem 1.25rem;">{{ t("cancel", default="Cancel") }}</button>
+                        <button type="submit" class="btn btn-admin" style="border-radius: 8px; font-weight: 600; padding: 0.6rem 1.25rem;">
+                            <i class="fas fa-plus mr-2"></i>
+                            {{ t("create") }}
+                        </button>
+                    </div>
+                </form>
             </div>
-            <div class="admin-role-chip">{{ t("role_setup_chip") }}</div>
         </div>
-
-        <form method="POST"
-              action="{{ url_for('admin.create_role') }}"
-              class="admin-role-form-grid"
-              id="create-role-form">
-
-            <div class="admin-role-field admin-role-field-main">
-                <label class="admin-role-label" for="role-name-input">{{ t("role_name") }}</label>
-                <input id="role-name-input"
-                       name="role_name"
-                       class="form-control admin-role-input"
-                       placeholder="{{ t('role_name_input_placeholder') }}"
-                       maxlength="50"
-                       autocomplete="off"
-                       required>
-                <small class="admin-role-hint">
-                    {{ t("role_name_hint") }}
-                </small>
-            </div>
-
-            <div class="admin-role-field">
-                <label class="admin-role-label" for="role-name-preview">{{ t("normalized_key") }}</label>
-                <div id="role-name-preview" class="admin-role-preview is-empty">{{ t("role_preview_default") }}</div>
-            </div>
-
-            <div class="admin-role-action">
-                <button type="submit" class="btn btn-admin w-100">
-                    <i class="fas fa-save mr-2"></i>
-                    {{ t("save_role") }}
-                </button>
-            </div>
-        </form>
     </div>
 
     <div class="admin-panel admin-roles-panel">
@@ -205,6 +213,12 @@
 {% block scripts %}
 <script>
 (function () {
+    // Fix modal backdrop z-index issues by moving it directly to the body
+    const modal = document.getElementById("createRoleModal");
+    if (modal) {
+        document.body.appendChild(modal);
+    }
+
     const form = document.getElementById("create-role-form");
     const input = document.getElementById("role-name-input");
     const preview = document.getElementById("role-name-preview");

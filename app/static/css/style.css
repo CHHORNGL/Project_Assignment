@@ -697,7 +697,7 @@ input:focus {
 /* Mobile off-canvas sidebar */
 @media (max-width: 767.98px) {
     .app-sidebar {
-        position: fixed;
+        position: fixed !important;
         top: var(--topbar-height);
         left: 0;
         height: calc(100vh - var(--topbar-height));
@@ -709,6 +709,21 @@ input:focus {
         -webkit-overflow-scrolling: touch;
         border-right: 1px solid var(--border-light);
         box-shadow: 18px 0 40px rgba(2, 6, 23, 0.35);
+        margin-left: 0 !important;
+    }
+    
+    #wrapper {
+        display: flex !important;
+        flex-direction: column !important;
+        width: 100% !important;
+        overflow-x: hidden !important;
+    }
+
+    #content-wrapper {
+        margin-left: 0 !important;
+        padding-left: 0 !important;
+        width: 100vw !important;
+        max-width: 100% !important;
     }
 
     .app-sidebar.toggled {
@@ -11286,4 +11301,15 @@ body.qb-dragging * {
     .admin-roles-page .admin-roles-table td {
         white-space: nowrap;
     }
+}
+
+/* =========================================
+   MODAL Z-INDEX FIX
+   (Ensure modals appear above topbar/sidebar)
+========================================= */
+.modal-backdrop {
+    z-index: 1400 !important;
+}
+.modal {
+    z-index: 1410 !important;
 }

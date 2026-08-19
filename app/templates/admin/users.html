@@ -12,110 +12,101 @@
             <div class="admin-sub">{{ t("admin_control_sub") }}</div>
         </div>
         <div class="admin-actions">
-            <a href="{{ url_for('admin.users') }}#create-user"
-               class="btn btn-admin">
+            <button type="button" class="btn btn-admin" data-toggle="modal" data-target="#createUserModal">
                 <i class="fas fa-user-plus mr-2"></i>
                 {{ t("create_user") }}
-            </a>
+            </button>
         </div>
     </div>
 
     <!-- ===============================
          CREATE USER FORM
     =============================== -->
-    <div class="admin-user-form-card mb-4" id="create-user">
-        <div class="admin-user-form-header">
-            <div class="admin-user-header">
-                <div class="admin-user-icon">
-                    <i class="fas fa-user-plus"></i>
+    <!-- Create User Modal -->
+    <div class="modal fade" id="createUserModal" tabindex="-1" role="dialog" aria-labelledby="createUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content admin-modal-content" style="border: none; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+                <div class="modal-header border-0 pb-0 pt-4 px-4">
+                    <div class="d-flex align-items-center">
+                        <div class="admin-user-icon mr-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; border-radius: 12px; background: var(--admin-accent-soft); color: var(--admin-accent); font-size: 1.25rem;">
+                            <i class="fas fa-user-plus"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title mb-1" id="createUserModalLabel" style="font-weight: 700; color: var(--admin-text);">{{ t("create_new_user") }}</h5>
+                            <div class="text-muted" style="font-size: 0.85rem;">{{ t("assign_role_help") }}</div>
+                        </div>
+                    </div>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="padding: 1rem;">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
                 </div>
-                <div>
-                    <div class="admin-user-title">{{ t("create_new_user") }}</div>
-                    <div class="admin-user-sub">{{ t("assign_role_help") }}</div>
-                </div>
+                
+                <form method="POST" action="{{ url_for('admin.create_user') }}" id="create-user-form">
+                    <div class="modal-body p-4">
+                        <div class="form-group mb-3">
+                            <label class="font-weight-bold" style="color: var(--admin-text); font-size: 0.9rem;">{{ t("username") }}</label>
+                            <input name="username" class="form-control form-control-lg" placeholder="{{ t('username') }}" required style="border-radius: 8px; font-size: 1rem; border-color: var(--admin-border); background-color: var(--admin-bg);">
+                        </div>
+                        <div class="form-group mb-3">
+                            <label class="font-weight-bold" style="color: var(--admin-text); font-size: 0.9rem;">{{ t("full_name") }}</label>
+                            <input name="full_name" class="form-control form-control-lg" placeholder="{{ t('enter_full_name') }}" style="border-radius: 8px; font-size: 1rem; border-color: var(--admin-border); background-color: var(--admin-bg);">
+                        </div>
+                        <div class="form-group mb-3">
+                            <label class="font-weight-bold" style="color: var(--admin-text); font-size: 0.9rem;">{{ t("email") }}</label>
+                            <input name="email" type="email" class="form-control form-control-lg" placeholder="{{ t('email_optional') }}" style="border-radius: 8px; font-size: 1rem; border-color: var(--admin-border); background-color: var(--admin-bg);">
+                        </div>
+                        <div class="form-group mb-3">
+                            <label class="font-weight-bold" style="color: var(--admin-text); font-size: 0.9rem;">{{ t("password") }}</label>
+                            <input name="password" type="password" class="form-control form-control-lg" placeholder="{{ t('password') }}" required style="border-radius: 8px; font-size: 1rem; border-color: var(--admin-border); background-color: var(--admin-bg);">
+                        </div>
+                        <div class="form-group mb-2">
+                            <label class="font-weight-bold" style="color: var(--admin-text); font-size: 0.9rem;">{{ t("role") }}</label>
+                            <select name="role" class="custom-select custom-select-lg" required style="border-radius: 8px; font-size: 1rem; border-color: var(--admin-border); background-color: var(--admin-bg);">
+                                <option value="">{{ t("role_placeholder") }}</option>
+                                {% for r in roles %}
+                                <option value="{{ r.name }}">{{ r.name|capitalize }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 p-4 pt-0">
+                        <button type="button" class="btn btn-light" data-dismiss="modal" style="border-radius: 8px; font-weight: 600; padding: 0.6rem 1.25rem;">{{ t("cancel", default="Cancel") }}</button>
+                        <button type="submit" class="btn btn-admin" style="border-radius: 8px; font-weight: 600; padding: 0.6rem 1.25rem;">
+                            <i class="fas fa-plus mr-2"></i>
+                            {{ t("create") }}
+                        </button>
+                    </div>
+                </form>
             </div>
-            <div class="admin-user-chip">{{ t("users") }}</div>
         </div>
-
-        <form method="POST"
-              action="{{ url_for('admin.create_user') }}"
-              class="admin-user-form-grid">
-
-            <div class="admin-user-field">
-                <label class="admin-user-label">{{ t("username") }}</label>
-                <input name="username"
-                       class="form-control"
-                       placeholder="{{ t("username") }}"
-                       required>
-            </div>
-
-            <div class="admin-user-field">
-                <label class="admin-user-label">{{ t("full_name") }}</label>
-                <input name="full_name"
-                       class="form-control"
-                       placeholder="{{ t("enter_full_name") }}">
-            </div>
-
-            <div class="admin-user-field">
-                <label class="admin-user-label">{{ t("email") }}</label>
-                <input name="email"
-                       type="email"
-                       class="form-control"
-                       placeholder="{{ t("email_optional") }}">
-            </div>
-
-            <div class="admin-user-field">
-                <label class="admin-user-label">{{ t("password") }}</label>
-                <input name="password"
-                       type="password"
-                       class="form-control"
-                       placeholder="{{ t("password") }}"
-                       required>
-            </div>
-
-            <div class="admin-user-field">
-                <label class="admin-user-label">{{ t("role") }}</label>
-                <select name="role" class="custom-select" required>
-                    <option value="">{{ t("role_placeholder") }}</option>
-                    {% for r in roles %}
-                    <option value="{{ r.name }}">
-                        {{ r.name|capitalize }}
-                    </option>
-                    {% endfor %}
-                </select>
-            </div>
-
-            <div class="admin-user-field admin-user-action">
-                <button class="btn btn-admin w-100">
-                    <i class="fas fa-plus-circle mr-2"></i>
-                    {{ t("create") }}
-                </button>
-            </div>
-
-        </form>
     </div>
 
     <!-- ===============================
          ALL USERS (CARD GRID)
     =============================== -->
     <div class="admin-panel admin-users-panel">
-        <div class="admin-users-panel-head">
-            <div class="admin-panel-title">{{ t("all_users") }}</div>
-            <form method="GET" class="admin-users-search">
-                <input type="text"
-                       name="q"
-                       value="{{ q }}"
-                       class="form-control form-control-sm"
-                       placeholder="{{ t("search_users_placeholder") }}">
-                <button class="btn btn-sm btn-admin-outline">{{ t("search") }}</button>
+        <div class="admin-users-panel-head d-flex justify-content-between align-items-center mb-4">
+            <div class="admin-panel-title mb-0" style="font-size: 1.25rem; font-weight: 700; color: var(--admin-text);">
+                <i class="fas fa-users mr-2" style="color: var(--admin-accent);"></i>{{ t("all_users") }}
+            </div>
+            <form method="GET" class="admin-users-search form-inline m-0">
+                <div class="input-group input-group-sm shadow-sm" style="border-radius: 8px; overflow: hidden; border: 1px solid var(--admin-border); min-width: 250px;">
+                    <input type="text" name="q" value="{{ q }}" class="form-control border-0" placeholder="{{ t('search_users_placeholder') }}" style="box-shadow: none; background-color: var(--admin-bg);">
+                    <div class="input-group-append">
+                        <button class="btn border-0 text-muted" type="submit" style="background-color: var(--admin-bg-dark, #f8f9fa); border-left: 1px solid var(--admin-border) !important;">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
                 {% if q %}
-                <a href="{{ url_for('admin.users') }}"
-                   class="btn btn-sm btn-outline-secondary">{{ t("clear") }}</a>
+                <a href="{{ url_for('admin.users') }}" class="btn btn-sm shadow-sm ml-2 d-flex align-items-center justify-content-center" style="border-radius: 8px; border: 1px solid var(--admin-border); background-color: var(--admin-bg); color: var(--admin-muted); width: 31px; height: 31px;" title="{{ t('clear') }}">
+                    <i class="fas fa-times"></i>
+                </a>
                 {% endif %}
             </form>
         </div>
 
-        <div class="admin-users-panel-tools">
+        <div class="admin-users-panel-tools mb-4 p-3 shadow-sm" style="background-color: var(--admin-card); border-radius: 12px; border: 1px solid var(--admin-border);">
             <form id="bulk-users-form"
                   method="POST"
                   action="{{ url_for('admin.users_bulk') }}"
@@ -123,36 +114,39 @@
                   data-query="{{ q|default('') }}">
                 <input type="hidden" name="scope" value="selected" id="users-scope">
                 <input type="hidden" name="q" value="{{ q }}">
-                <div class="admin-users-toolbar">
-                    <div class="admin-users-toolbar-group">
-                        <select name="action" class="custom-select custom-select-sm">
-                            <option value="">{{ t("bulk_action") }}</option>
-                            <option value="ban">{{ t("ban_selected") }}</option>
-                            <option value="unban">{{ t("unban_selected") }}</option>
-                            <option value="export_csv">{{ t("export_selected_csv") }}</option>
-                            <option value="export_json">{{ t("export_selected_json") }}</option>
-                        </select>
-                        <button class="btn btn-sm btn-outline-danger">{{ t("apply") }}</button>
+                
+                <div class="d-flex justify-content-between align-items-center flex-wrap">
+                    <div class="d-flex align-items-center mb-2 mb-md-0">
+                        <div class="input-group input-group-sm mr-4 shadow-sm" style="border-radius: 6px; overflow: hidden; border: 1px solid var(--admin-border);">
+                            <select name="action" class="custom-select border-0" style="box-shadow: none; background-color: var(--admin-bg);">
+                                <option value="">{{ t("bulk_action") }}</option>
+                                <option value="ban">{{ t("ban_selected") }}</option>
+                                <option value="unban">{{ t("unban_selected") }}</option>
+                                <option value="export_csv">{{ t("export_selected_csv") }}</option>
+                                <option value="export_json">{{ t("export_selected_json") }}</option>
+                            </select>
+                            <div class="input-group-append">
+                                <button class="btn btn-danger border-0 px-3" style="font-weight: 600; font-size: 0.8rem;">{{ t("apply") }}</button>
+                            </div>
+                        </div>
+                        
+                        <div class="custom-control custom-checkbox mr-3 mt-1">
+                            <input type="checkbox" class="custom-control-input" id="select-all-users">
+                            <label class="custom-control-label font-weight-bold" for="select-all-users" style="padding-top: 2px; font-size: 0.85rem; color: var(--admin-text);">{{ t("select_all") }}</label>
+                        </div>
+                        <div class="custom-control custom-checkbox mt-1">
+                            <input type="checkbox" class="custom-control-input" id="apply-all-users">
+                            <label class="custom-control-label font-weight-bold" for="apply-all-users" style="padding-top: 2px; font-size: 0.85rem; color: var(--admin-text);">{{ t("apply_all_results", count=users|length) }}</label>
+                        </div>
                     </div>
-                    <div class="admin-users-toolbar-group">
-                        <a href="{{ url_for('admin.users_export', format='csv', q=q) }}"
-                           class="btn btn-sm btn-outline-secondary">
-                            {{ t("export_csv") }}
+
+                    <div class="d-flex align-items-center">
+                        <a href="{{ url_for('admin.users_export', format='csv', q=q) }}" class="btn btn-sm shadow-sm mr-2" style="border-radius: 6px; border: 1px solid var(--admin-border); background-color: var(--admin-bg); color: var(--admin-text); font-weight: 600;">
+                            <i class="fas fa-file-csv text-success mr-1"></i> CSV
                         </a>
-                        <a href="{{ url_for('admin.users_export', format='json', q=q) }}"
-                           class="btn btn-sm btn-outline-secondary">
-                            {{ t("export_json") }}
+                        <a href="{{ url_for('admin.users_export', format='json', q=q) }}" class="btn btn-sm shadow-sm" style="border-radius: 6px; border: 1px solid var(--admin-border); background-color: var(--admin-bg); color: var(--admin-text); font-weight: 600;">
+                            <i class="fas fa-file-code text-warning mr-1"></i> JSON
                         </a>
-                        <label class="form-check admin-users-check-all">
-                            <input class="form-check-input" type="checkbox" id="apply-all-users">
-                            <span class="form-check-label small text-muted">
-                                {{ t("apply_all_results", count=users|length) }}
-                            </span>
-                        </label>
-                        <label class="form-check admin-users-check-all">
-                            <input class="form-check-input" type="checkbox" id="select-all-users">
-                            <span class="form-check-label small text-muted">{{ t("select_all") }}</span>
-                        </label>
                     </div>
                 </div>
             </form>
@@ -243,6 +237,12 @@
 <script src="{{ url_for('static', filename='js/bulk_confirm.js') }}"></script>
 <script>
 (function () {
+    // Fix modal backdrop z-index issues by moving it directly to the body
+    const modal = document.getElementById("createUserModal");
+    if (modal) {
+        document.body.appendChild(modal);
+    }
+
     new window.BulkConfirmController({
         formId: "bulk-users-form",
         scopeFieldId: "users-scope",
