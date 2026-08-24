@@ -5,6 +5,8 @@
 
 {% block title %}{{ t("expert_form") }}{% endblock %}
 
+{% set body_class = "admin-theme" %}
+
 {% block content %}
 <div class="container-fluid" style="max-width: 800px">
 
@@ -13,8 +15,8 @@
         {{ t("expert_knowledge_input") }}
     </h3>
 
-    <div class="card shadow-sm">
-        <div class="card-body form-scroll">
+    <div class="admin-panel">
+        <div class=" form-scroll">
 
             <form method="POST">
 
@@ -121,7 +123,7 @@
 
                 <!-- Actions -->
                 <div class="text-right">
-                    <button class="btn btn-success">
+                    <button class="btn btn-admin">
                         <i class="fas fa-save mr-2"></i>{{ t("save_knowledge") }}
                     </button>
 

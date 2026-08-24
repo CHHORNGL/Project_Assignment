@@ -176,6 +176,9 @@ class User(db.Model, UserMixin):
     def has_role(self, role_name: str) -> bool:
         return any(role.name == role_name for role in self.roles)
 
+    def has_route_access(self, route_type: str) -> bool:
+        return any(getattr(role, "route_type", "farmer") == route_type for role in self.roles)
+
     # ===============================
     # PERMISSION CHECK
     # ===============================

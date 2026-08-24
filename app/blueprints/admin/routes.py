@@ -25,7 +25,7 @@ from sqlalchemy import or_, func
 from sqlalchemy.exc import IntegrityError
 
 from app.extensions import db
-from app.utils.decorators import permission_required
+from app.utils.decorators import permission_required, admin_required
 from app.utils.i18n import t
 
 from app.models.user import User
@@ -112,8 +112,7 @@ def _zip_response(files, filename):
 # ADMIN DASHBOARD
 # ==================================================
 @admin_bp.route("/dashboard")
-@login_required
-@permission_required("view_dashboard")
+@admin_required
 def dashboard():
     total_users = User.query.count()
     total_diagnoses = Diagnosis.query.count()
@@ -135,8 +134,7 @@ def dashboard():
 # 3D WORLD VIEW
 # ==================================================
 @admin_bp.route("/world")
-@login_required
-@permission_required("view_dashboard")
+@admin_required
 def world():
     scan_points = []
     cesium_token = os.getenv("CESIUM_TOKEN", "")
@@ -1446,7 +1444,13 @@ def create_role():
         flash(t("role_exists_msg"), "warning")
         return redirect(url_for("admin.roles"))
 
-    db.session.add(Role(name=normalized))
+    base_route = request.form.get("route_type") or "farmer"
+    if base_route not in ["admin", "expert", "farmer"]:
+        base_route = "farmer"
+
+    new_role = Role(name=normalized, route_type=base_route)
+    db.session.add(new_role)
+
     db.session.add(
         AuditLog(
             user_id=current_user.id,

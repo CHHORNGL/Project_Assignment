@@ -166,6 +166,15 @@
                     </div>
                     {% endif %}
                 </div>
+                
+                {% if diagnosis.image_paths %}
+                <div class="diag-result-image ml-lg-4 mb-3 mb-lg-0" style="flex-shrink: 0; text-align: center; display: flex; flex-wrap: wrap; gap: 10px; max-width: 300px; justify-content: flex-end;">
+                    {% for path in diagnosis.image_paths %}
+                    <img src="{{ url_for('static', filename=path) }}" alt="Farmer Upload" style="max-width: 140px; max-height: 140px; border-radius: 12px; object-fit: cover; border: 2px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
                 <div class="diag-result-actions">
                     <a href="{{ url_for('farmer.diagnose') }}" class="btn btn-success">
                         <i class="fas fa-redo-alt mr-2"></i>{{ t("restart_diagnosis") }}

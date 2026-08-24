@@ -11,17 +11,17 @@ def index():
     if not current_user.is_authenticated:
         return redirect(url_for("auth.login"))
 
-    # 👑 Admin → Admin dashboard
-    if current_user.has_role("admin"):
+    # 👑 Admin / Has Admin Access
+    if current_user.has_role("admin") or any(r.route_type == "admin" for r in current_user.roles):
         return redirect(url_for("admin.dashboard"))
 
-    # 🧑‍🔬 Expert → Expert main form/dashboard
-    if current_user.has_role("expert"):
+    # 🧑‍🔬 Expert / Has Expert Access
+    if current_user.has_role("expert") or any(r.route_type == "expert" for r in current_user.roles):
         return redirect(url_for("expert.dashboard"))
 
-    # 🌾 Farmer → Farmer dashboard
-    if current_user.has_role("farmer"):
+    # 🌾 Farmer / Has Farmer Access
+    if current_user.has_role("farmer") or any(r.route_type == "farmer" for r in current_user.roles):
         return redirect(url_for("farmer.dashboard"))
 
-    # ❓ Fallback (safety – avoid infinite loop)
+    # ❓ Fallback (safety)
     return redirect(url_for("auth.logout"))

@@ -1,6 +1,8 @@
 {% extends "layouts/base.html" %}
 {% block title %}{{ t("review_diagnosis") }}{% endblock %}
 
+{% set body_class = "admin-theme" %}
+
 {% block content %}
 <h3 class="mb-4">{{ t("review_diagnosis") }}</h3>
 
@@ -8,14 +10,24 @@
 
     <!-- Diagnosis Info -->
     <div class="col-md-6">
-        <div class="card shadow mb-4">
-            <div class="card-header">
+        <div class="admin-panel mb-4">
+            <div class="admin-panel-title">
                 <strong>{{ t("diagnosis_information") }}</strong>
             </div>
-            <div class="card-body">
+            <div class="">
 
                 <p><strong>{{ t("crop_label") }}:</strong> {{ localize(diagnosis.crop, "name", diagnosis.crop_name) }}</p>
                 <p><strong>{{ t("symptoms_label") }}:</strong><br>{{ diagnosis.symptoms }}</p>
+                
+                {% if diagnosis.image_paths %}
+                <p><strong>{% if current_lang == 'km' %}រូបភាពភ្ជាប់{% else %}Attached Images{% endif %}:</strong></p>
+                <div class="d-flex flex-wrap mb-3" style="gap: 10px;">
+                    {% for path in diagnosis.image_paths %}
+                    <img src="{{ url_for('static', filename=path) }}" alt="Farmer Upload" class="img-thumbnail" style="max-width: 150px; max-height: 150px; object-fit: cover;">
+                    {% endfor %}
+                </div>
+                {% endif %}
+
                 {% set disease_label = (diagnosis.disease.name_kh if current_lang == 'km' and diagnosis.disease and diagnosis.disease.name_kh else diagnosis.disease_name) %}
                 <p><strong>{{ t("auto_disease") }}:</strong> {{ disease_label }}</p>
 
@@ -32,11 +44,11 @@
 
     <!-- Expert Action -->
     <div class="col-md-6">
-        <div class="card shadow mb-4">
-            <div class="card-header">
+        <div class="admin-panel mb-4">
+            <div class="admin-panel-title">
                 <strong>{{ t("expert_decision") }}</strong>
             </div>
-            <div class="card-body">
+            <div class="">
 
                 <!-- APPROVE -->
                 <form method="POST">
@@ -51,7 +63,7 @@
                                   required></textarea>
                     </div>
 
-                    <button class="btn btn-success d-inline-flex align-items-center">
+                    <button class="btn btn-admin d-inline-flex align-items-center">
                         <i class="fas fa-check-circle mr-2"></i>
                         {{ t("approve_diagnosis") }}
                     </button>

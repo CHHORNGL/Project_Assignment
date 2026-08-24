@@ -1,70 +1,70 @@
 {% extends "layouts/base.html" %}
 {% block title %}{{ t("support_hub_title") }}{% endblock %}
-{% set body_class = "agro-theme expert-simple" %}
+{% set body_class = "admin-theme" %}
 
 {% block content %}
-<div class="agro-board expert-board">
-    <div class="expert-hero">
+<div class="admin-board expert-board">
+    <div class="admin-hero">
         <div>
-            <div class="expert-title">{{ t("support_hub_title") }}</div>
-            <div class="expert-sub">{{ t("support_hub_sub") }}</div>
+            <div class="admin-title">{{ t("support_hub_title") }}</div>
+            <div class="admin-sub">{{ t("support_hub_sub") }}</div>
         </div>
-        <div class="expert-hero-actions">
-            <a class="btn btn-agro" href="{{ url_for('expert.farmer_chats') }}">{{ t("open_chats") }}</a>
-            <a class="btn btn-agro-outline" href="{{ url_for('expert.pending_diagnoses') }}">{{ t("pending_diagnoses_title") }}</a>
+        <div class="admin-hero-actions">
+            <a class="btn btn-admin" href="{{ url_for('expert.farmer_chats') }}">{{ t("open_chats") }}</a>
+            <a class="btn btn-admin-outline" href="{{ url_for('expert.pending_diagnoses') }}">{{ t("pending_diagnoses_title") }}</a>
         </div>
     </div>
 
     <div class="row mb-4">
         <div class="col-md-3 mb-3">
-            <div class="expert-metric">
+            <div class="admin-kpi">
                 <div>
-                    <div class="expert-metric-label">{{ t("rule_sessions") }}</div>
-                    <div class="expert-metric-value">{{ total_rule_sessions }}</div>
-                    <div class="expert-metric-sub">{{ t("rule_sessions_sub") }}</div>
+                    <div class="admin-kpi-label">{{ t("rule_sessions") }}</div>
+                    <div class="admin-kpi-value">{{ total_rule_sessions }}</div>
+                    <div class="admin-kpi-sub">{{ t("rule_sessions_sub") }}</div>
                 </div>
-                <div class="expert-metric-icon"><i class="fas fa-comments"></i></div>
+                <div class="admin-kpi-icon"><i class="fas fa-comments"></i></div>
             </div>
         </div>
         <div class="col-md-3 mb-3">
-            <div class="expert-metric">
+            <div class="admin-kpi">
                 <div>
-                    <div class="expert-metric-label">{{ t("rule_messages") }}</div>
-                    <div class="expert-metric-value">{{ total_rule_messages }}</div>
-                    <div class="expert-metric-sub">{{ t("rule_messages_sub") }}</div>
+                    <div class="admin-kpi-label">{{ t("rule_messages") }}</div>
+                    <div class="admin-kpi-value">{{ total_rule_messages }}</div>
+                    <div class="admin-kpi-sub">{{ t("rule_messages_sub") }}</div>
                 </div>
-                <div class="expert-metric-icon"><i class="fas fa-comment-dots"></i></div>
+                <div class="admin-kpi-icon"><i class="fas fa-comment-dots"></i></div>
             </div>
         </div>
         <div class="col-md-3 mb-3">
-            <div class="expert-metric">
+            <div class="admin-kpi">
                 <div>
-                    <div class="expert-metric-label">{{ t("farmers") }}</div>
-                    <div class="expert-metric-value">{{ rule_unique_farmers }}</div>
-                    <div class="expert-metric-sub">{{ t("farmers_sub") }}</div>
+                    <div class="admin-kpi-label">{{ t("farmers") }}</div>
+                    <div class="admin-kpi-value">{{ rule_unique_farmers }}</div>
+                    <div class="admin-kpi-sub">{{ t("farmers_sub") }}</div>
                 </div>
-                <div class="expert-metric-icon"><i class="fas fa-users"></i></div>
+                <div class="admin-kpi-icon"><i class="fas fa-users"></i></div>
             </div>
         </div>
         <div class="col-md-3 mb-3">
-            <div class="expert-metric">
+            <div class="admin-kpi">
                 <div>
-                    <div class="expert-metric-label">{{ t("last_24h") }}</div>
-                    <div class="expert-metric-value">{{ last_24h_rule_messages }}</div>
-                    <div class="expert-metric-sub">{{ t("rule_messages_short") }}</div>
+                    <div class="admin-kpi-label">{{ t("last_24h") }}</div>
+                    <div class="admin-kpi-value">{{ last_24h_rule_messages }}</div>
+                    <div class="admin-kpi-sub">{{ t("rule_messages_short") }}</div>
                 </div>
-                <div class="expert-metric-icon"><i class="fas fa-clock"></i></div>
+                <div class="admin-kpi-icon"><i class="fas fa-clock"></i></div>
             </div>
         </div>
     </div>
 
     <div class="row mb-4">
         <div class="col-lg-6 mb-3">
-            <div class="expert-panel">
-                <div class="expert-panel-header">
+            <div class="admin-panel">
+                <div class="admin-panel-header">
                     <div>
-                        <div class="expert-panel-title">{{ t("farmer_chats_title") }}</div>
-                        <div class="expert-panel-sub">{{ t("farmer_chats_sub") }}</div>
+                        <div class="admin-panel-title">{{ t("farmer_chats_title") }}</div>
+                        <div class="admin-panel-sub">{{ t("farmer_chats_sub") }}</div>
                     </div>
                 </div>
                 <div class="expert-actions-grid">
@@ -89,11 +89,11 @@
         </div>
 
         <div class="col-lg-6 mb-3">
-            <div class="expert-panel">
-                <div class="expert-panel-header">
+            <div class="admin-panel">
+                <div class="admin-panel-header">
                     <div>
-                        <div class="expert-panel-title">{{ t("rule_cases_title") }}</div>
-                        <div class="expert-panel-sub">{{ t("rule_cases_sub") }}</div>
+                        <div class="admin-panel-title">{{ t("rule_cases_title") }}</div>
+                        <div class="admin-panel-sub">{{ t("rule_cases_sub") }}</div>
                     </div>
                 </div>
                 <div class="expert-actions-grid">
@@ -118,14 +118,14 @@
         </div>
     </div>
 
-    <div class="expert-panel">
-        <div class="expert-panel-header">
+    <div class="admin-panel">
+        <div class="admin-panel-header">
             <div>
-                <div class="expert-panel-title">{{ t("rule_cases_title") }}</div>
-                <div class="expert-panel-sub">{{ t("rule_cases_filter_sub") }}</div>
+                <div class="admin-panel-title">{{ t("rule_cases_title") }}</div>
+                <div class="admin-panel-sub">{{ t("rule_cases_filter_sub") }}</div>
             </div>
         </div>
-        <div class="card-body pt-3">
+        <div class=" pt-3">
             <form class="form-row mb-3" method="GET">
                 <div class="col-md-3 mb-2">
                     <label class="small text-muted">{{ t("crop_label") }}</label>
@@ -158,7 +158,7 @@
                            value="{{ filter_date_to or '' }}">
                 </div>
                 <div class="col-12 d-flex mt-2">
-                    <button class="btn btn-agro-outline btn-sm mr-2" type="submit">{{ t("apply_filters") }}</button>
+                    <button class="btn btn-admin-outline btn-sm mr-2" type="submit">{{ t("apply_filters") }}</button>
                     <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('expert.support_hub') }}">{{ t("reset") }}</a>
                 </div>
             </form>
@@ -175,7 +175,7 @@
                 <div class="expert-queue-meta">
                     <span class="expert-queue-date">{{ d.created_at.strftime("%b %d") }}</span>
                     <a href="{{ url_for('expert.review_diagnosis', diagnosis_id=d.id) }}"
-                       class="btn btn-sm btn-agro-outline">
+                       class="btn btn-sm btn-admin-outline">
                         {{ t("review") }}
                     </a>
                 </div>
@@ -186,14 +186,14 @@
         </div>
     </div>
 
-    <div class="expert-panel mt-4">
-        <div class="expert-panel-header">
+    <div class="admin-panel mt-4">
+        <div class="admin-panel-header">
             <div>
-                <div class="expert-panel-title">{{ t("rule_chat_messages") }}</div>
-                <div class="expert-panel-sub">{{ t("rule_chat_messages_sub") }}</div>
+                <div class="admin-panel-title">{{ t("rule_chat_messages") }}</div>
+                <div class="admin-panel-sub">{{ t("rule_chat_messages_sub") }}</div>
             </div>
         </div>
-        <div class="card-body pt-3">
+        <div class=" pt-3">
             <form class="form-row mb-3" method="GET">
                 <div class="col-md-3 mb-2">
                     <label class="small text-muted">{{ t("farmer_label") }}</label>
@@ -223,7 +223,7 @@
                            value="{{ chat_date_to or '' }}">
                 </div>
                 <div class="col-12 d-flex mt-2">
-                    <button class="btn btn-agro-outline btn-sm mr-2" type="submit">{{ t("apply_filters") }}</button>
+                    <button class="btn btn-admin-outline btn-sm mr-2" type="submit">{{ t("apply_filters") }}</button>
                     <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('expert.support_hub') }}">{{ t("reset") }}</a>
                 </div>
             </form>

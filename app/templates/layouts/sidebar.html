@@ -3,22 +3,22 @@
 {% set home_url = url_for('main.index') %}
 {% set active_side = "farmer" %}
 {% if current_user.is_authenticated %}
-    {% if path.startswith('/admin') and current_user.has_role("admin") %}
+    {% if path.startswith('/admin') and (current_user.has_role("admin") or current_user.has_route_access("admin")) %}
         {% set home_url = url_for('admin.dashboard') %}
         {% set active_side = "admin" %}
-    {% elif path.startswith('/expert') and current_user.has_role("expert") %}
+    {% elif path.startswith('/expert') and (current_user.has_role("expert") or current_user.has_route_access("expert")) %}
         {% set home_url = url_for('expert.dashboard') %}
         {% set active_side = "expert" %}
-    {% elif path.startswith('/farmer') and current_user.has_role("farmer") %}
+    {% elif path.startswith('/farmer') and (current_user.has_role("farmer") or current_user.has_route_access("farmer")) %}
         {% set home_url = url_for('farmer.dashboard') %}
         {% set active_side = "farmer" %}
-    {% elif current_user.has_role("admin") %}
+    {% elif current_user.has_role("admin") or current_user.has_route_access("admin") %}
         {% set home_url = url_for('admin.dashboard') %}
         {% set active_side = "admin" %}
-    {% elif current_user.has_role("expert") %}
+    {% elif current_user.has_role("expert") or current_user.has_route_access("expert") %}
         {% set home_url = url_for('expert.dashboard') %}
         {% set active_side = "expert" %}
-    {% elif current_user.has_role("farmer") %}
+    {% elif current_user.has_role("farmer") or current_user.has_route_access("farmer") %}
         {% set home_url = url_for('farmer.dashboard') %}
         {% set active_side = "farmer" %}
     {% endif %}
@@ -61,16 +61,19 @@
         </a>
     </li>
 
+    {% if current_user.has_role('admin') or current_user.has_permission('manage_users') %}
     <li class="nav-item">
         <a class="nav-link {% if path.startswith('/admin/users') %}active{% endif %}"
            href="{{ url_for('admin.users') }}"
-           data-tooltip="{{ t('users') }}"
-           aria-label="{{ t('users') }}">
+           data-tooltip="{{ t('manage_users') }}"
+           aria-label="{{ t('manage_users') }}">
             <i class="menu-icon fas fa-users"></i>
-            <span>{{ t("users") }}</span>
+            <span>{{ t("manage_users") }}</span>
         </a>
     </li>
+    {% endif %}
 
+    {% if current_user.has_role('admin') or current_user.has_permission('manage_roles') %}
     <li class="nav-item">
         <a class="nav-link {% if path.startswith('/admin/roles') %}active{% endif %}"
            href="{{ url_for('admin.roles') }}"
@@ -80,7 +83,9 @@
             <span>{{ t("roles_permissions") }}</span>
         </a>
     </li>
+    {% endif %}
 
+    {% if current_user.has_role('admin') or current_user.has_permission('view_dashboard') %}
     <li class="nav-item">
         <a class="nav-link {% if path.startswith('/admin/audit-logs') %}active{% endif %}"
            href="{{ url_for('admin.audit_logs') }}"
@@ -110,7 +115,9 @@
             <span>Live Support Chats</span>
         </a>
     </li>
+    {% endif %}
 
+    {% if current_user.has_role('admin') or current_user.has_permission('manage_crops') %}
     <li class="nav-item">
         <a class="nav-link {% if path.startswith('/admin/crops') %}active{% endif %}"
            href="{{ url_for('admin_crop.index') }}"
@@ -120,7 +127,9 @@
             <span>{{ t("crops") }}</span>
         </a>
     </li>
+    {% endif %}
 
+    {% if current_user.has_role('admin') or current_user.has_permission('manage_crops') %}
     <li class="nav-item">
         <a class="nav-link {% if path.startswith('/admin/translations') %}active{% endif %}"
            href="{{ url_for('admin.translations') }}"
@@ -130,6 +139,7 @@
             <span>{{ t("translations") }}</span>
         </a>
     </li>
+    {% endif %}
 
     <li class="nav-item">
         <a class="nav-link {% if path.startswith('/admin/world') %}active{% endif %}"
@@ -141,6 +151,7 @@
         </a>
     </li>
 
+    {% if current_user.has_role('admin') %}
     <li class="nav-item mt-2">
         <a class="nav-link {% if path.startswith('/admin/settings') %}active{% endif %}"
            href="{{ url_for('admin.settings') }}"
@@ -150,6 +161,7 @@
             <span>System Settings</span>
         </a>
     </li>
+    {% endif %}
 
     {% endif %}
 

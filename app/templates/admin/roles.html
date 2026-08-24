@@ -85,19 +85,26 @@
                 
                 <form method="POST" action="{{ url_for('admin.create_role') }}" id="create-role-form">
                     <div class="modal-body p-4">
-                        <div class="form-group mb-4">
-                            <label class="font-weight-bold" for="role-name-input" style="color: var(--admin-text); font-size: 0.9rem;">{{ t("role_name") }}</label>
-                            <input id="role-name-input"
+                        <div class="form-group mb-3">
+                            <label class="font-weight-bold" style="color: var(--admin-text); font-size: 0.9rem;">{{ t("role_name") }}</label>
+                            <input type="text"
                                    name="role_name"
+                                   id="role-name-input"
                                    class="form-control form-control-lg"
-                                   placeholder="{{ t('role_name_input_placeholder') }}"
-                                   maxlength="50"
-                                   autocomplete="off"
+                                   placeholder="e.g. editor, moderator"
                                    required
                                    style="border-radius: 8px; font-size: 1rem; border-color: var(--admin-border); background-color: var(--admin-bg);">
-                            <small class="form-text text-muted mt-2">
-                                <i class="fas fa-info-circle mr-1"></i> {{ t("role_name_hint") }}
-                            </small>
+                            <small class="form-text text-muted mt-2">{{ t("role_name_help") }}</small>
+                        </div>
+                        
+                        <div class="form-group mb-4">
+                            <label class="font-weight-bold" style="color: var(--admin-text); font-size: 0.9rem;">Route Assignment</label>
+                            <select name="route_type" class="custom-select custom-select-lg" style="border-radius: 8px; font-size: 1rem; border-color: var(--admin-border); background-color: var(--admin-bg);">
+                                <option value="farmer">Farmer Routes (Default)</option>
+                                <option value="admin">Admin Routes (Dashboard, Users, etc)</option>
+                                <option value="expert">Expert Routes (Diagnosis, etc)</option>
+                            </select>
+                            <small class="form-text text-muted mt-2">Choose which portal this role logs into. Permissions can be customized later.</small>
                         </div>
 
                         <div class="form-group mb-2">
@@ -154,7 +161,12 @@
                                     <i class="fas {{ icon_name }}"></i>
                                 </span>
                                 <div>
-                                    <div class="admin-role-cell-title">{{ role.name|upper }}</div>
+                                    <div class="admin-role-cell-title">
+                                        {{ role.name|upper }}
+                                        <span class="badge badge-secondary ml-2" style="font-size: 0.7rem;">
+                                            {{ role.route_type|capitalize }} Route
+                                        </span>
+                                    </div>
                                     <div class="admin-role-cell-sub">
                                         {% if is_core %}{{ t("core_role") }}{% else %}{{ t("custom_role") }}{% endif %}
                                         {% if assigned_users_count > 0 %} • {{ t("user_count", count=assigned_users_count) }}{% endif %}

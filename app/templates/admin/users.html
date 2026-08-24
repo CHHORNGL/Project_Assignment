@@ -152,69 +152,178 @@
             </form>
         </div>
 
-        <div class="admin-users-grid">
+        <style>
+            .admin-users-list {
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+            }
+            .admin-user-row {
+                display: flex;
+                align-items: center;
+                background: var(--admin-card);
+                border: 1px solid var(--admin-border);
+                border-radius: 12px;
+                padding: 12px 20px;
+                transition: all 0.2s ease;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            }
+            .admin-user-row:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 12px rgba(0,0,0,0.05);
+                border-color: var(--admin-accent);
+            }
+            .admin-user-row-checkbox {
+                margin-right: 20px;
+            }
+            .admin-user-row-checkbox input {
+                width: 18px;
+                height: 18px;
+                cursor: pointer;
+            }
+            .admin-user-row-avatar {
+                width: 44px;
+                height: 44px;
+                border-radius: 10px;
+                object-fit: cover;
+                margin-right: 16px;
+                border: 1px solid var(--admin-border);
+            }
+            .admin-user-row-info {
+                flex: 2;
+                display: flex;
+                flex-direction: column;
+                min-width: 0;
+            }
+            .admin-user-row-name {
+                font-weight: 700;
+                color: var(--admin-text);
+                font-size: 1.05rem;
+                margin-bottom: 2px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            .admin-user-row-email {
+                font-size: 0.85rem;
+                color: var(--admin-muted);
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            .admin-user-row-role {
+                flex: 1;
+                display: flex;
+                align-items: center;
+                font-size: 0.9rem;
+                font-weight: 600;
+                color: var(--admin-text);
+            }
+            .admin-user-row-role i {
+                margin-right: 8px;
+                opacity: 0.7;
+            }
+            .admin-user-row-status {
+                flex: 1;
+                display: flex;
+                align-items: center;
+            }
+            .admin-user-badge {
+                padding: 4px 10px;
+                border-radius: 20px;
+                font-size: 0.75rem;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+            .admin-user-badge.active {
+                background: rgba(16, 185, 129, 0.1);
+                color: #10b981;
+            }
+            .admin-user-badge.banned {
+                background: rgba(239, 68, 68, 0.1);
+                color: #ef4444;
+            }
+            .admin-user-row-meta {
+                flex: 1;
+                font-size: 0.85rem;
+                color: var(--admin-muted);
+                text-align: right;
+            }
+            .admin-user-row-actions {
+                margin-left: 20px;
+            }
+            .admin-user-row-btn {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 36px;
+                height: 36px;
+                border-radius: 8px;
+                background: var(--admin-bg);
+                color: var(--admin-text);
+                border: 1px solid var(--admin-border);
+                transition: all 0.2s;
+            }
+            .admin-user-row-btn:hover {
+                background: var(--admin-accent);
+                color: #fff;
+                border-color: var(--admin-accent);
+            }
+        </style>
+
+        <div class="admin-users-list">
             {% for user in users %}
             {% set role_label = user.roles[0].name if user.roles else t("none_label") %}
             {% set role_slug = (user.roles[0].name|lower|replace(' ', '-')) if user.roles else 'none' %}
             {% set role_key = (user.roles[0].name|lower) if user.roles else 'none' %}
             {% set role_icon = "fa-user" %}
             {% if role_key == "admin" %}
-                {% set role_icon = "fa-user-shield" %}
+                {% set role_icon = "fa-user-shield text-danger" %}
             {% elif role_key == "expert" %}
-                {% set role_icon = "fa-user-astronaut" %}
+                {% set role_icon = "fa-user-astronaut text-primary" %}
             {% elif role_key == "farmer" %}
-                {% set role_icon = "fa-seedling" %}
+                {% set role_icon = "fa-seedling text-success" %}
             {% endif %}
-            <div class="admin-user-card role-{{ role_slug }}">
-                <div class="admin-user-card-top">
-                    <label class="admin-user-check">
-                        <input type="checkbox"
-                               class="user-select"
-                               name="user_ids"
-                               value="{{ user.id }}"
-                               data-username="{{ user.username }}"
-                               data-email="{{ user.email or '' }}"
-                               data-role="{{ role_label }}"
-                               data-status="{{ t("active") if user.is_active else t("banned") }}"
-                               form="bulk-users-form">
-                        <span></span>
-                    </label>
-                    <div class="admin-user-top-icon">
-                        <i class="fas {{ role_icon }}"></i>
-                    </div>
-                    <div class="admin-user-top-meta">
-                        <span class="admin-user-role">{{ role_label }}</span>
-                        <span class="admin-user-status {% if user.is_active %}is-active{% else %}is-banned{% endif %}">
-                            {{ t("active") if user.is_active else t("banned") }}
-                        </span>
-                    </div>
-                    <div class="admin-user-top-art"></div>
+            
+            <div class="admin-user-row">
+                <div class="admin-user-row-checkbox">
+                    <input type="checkbox"
+                           class="user-select"
+                           name="user_ids"
+                           value="{{ user.id }}"
+                           data-username="{{ user.username }}"
+                           data-email="{{ user.email or '' }}"
+                           data-role="{{ role_label }}"
+                           data-status="{{ t('active') if user.is_active else t('banned') }}"
+                           form="bulk-users-form">
                 </div>
-
-                <div class="admin-user-card-body">
-                    <div class="admin-user-name">{{ user.username }}</div>
-                    <div class="admin-user-email">
-                        {% if user.email %}
-                            {{ user.email }}
-                        {% else %}
-                            <span class="text-muted">&mdash;</span>
-                        {% endif %}
-                    </div>
-                    <div class="admin-user-meta">
-                        <span>#{{ user.id }}</span>
-                        <span>{{ user.created_at.strftime('%b %d, %Y') if user.created_at else '' }}</span>
-                    </div>
+                
+                <img class="admin-user-row-avatar" src="{{ avatar_url(user) }}" alt="Avatar">
+                
+                <div class="admin-user-row-info">
+                    <div class="admin-user-row-name">{{ user.username }}</div>
+                    <div class="admin-user-row-email">{{ user.email or '—' }}</div>
                 </div>
-
-                <div class="admin-user-card-footer">
-                    <div class="admin-user-avatar-wrap">
-                        <img class="admin-user-avatar"
-                             src="{{ avatar_url(user) }}"
-                             alt="{{ user.username }} avatar">
-                    </div>
-                    <a class="btn admin-user-open"
-                       href="{{ url_for('admin.user_detail', user_id=user.id, q=q) }}">
-                        {{ t("open") }} <i class="fas fa-arrow-right ml-2"></i>
+                
+                <div class="admin-user-row-role">
+                    <i class="fas {{ role_icon }}"></i> {{ role_label }}
+                </div>
+                
+                <div class="admin-user-row-status">
+                    <span class="admin-user-badge {{ 'active' if user.is_active else 'banned' }}">
+                        {{ t("active") if user.is_active else t("banned") }}
+                    </span>
+                </div>
+                
+                <div class="admin-user-row-meta">
+                    <div>#{{ user.id }}</div>
+                    <div>{{ user.created_at.strftime('%b %d, %Y') if user.created_at else '' }}</div>
+                </div>
+                
+                <div class="admin-user-row-actions">
+                    <a href="{{ url_for('admin.user_detail', user_id=user.id, q=q) }}" class="admin-user-row-btn" title="{{ t('open') }}">
+                        <i class="fas fa-chevron-right"></i>
                     </a>
                 </div>
             </div>

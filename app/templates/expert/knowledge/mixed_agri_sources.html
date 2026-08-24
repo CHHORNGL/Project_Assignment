@@ -1,6 +1,8 @@
 {% extends "layouts/base.html" %}
 {% block title %}{{ t("mixed_agri_sources") }}{% endblock %}
 
+{% set body_class = "admin-theme" %}
+
 {% block content %}
 <div class="container-fluid">
 
@@ -12,7 +14,7 @@
                 {{ t("back") }}
             </a>
             <a href="{{ url_for('expert.mixed_agri_source_create') }}"
-               class="btn btn-sm btn-success ml-2">
+               class="btn btn-sm btn-admin ml-2">
                 {{ t("add_source") }}
             </a>
             <a href="{{ url_for('expert.mixed_agri_sources_export', format='csv', q=q) }}"
@@ -26,8 +28,8 @@
         </div>
     </div>
 
-    <div class="card shadow-sm mb-4">
-        <div class="card-body">
+    <div class="admin-panel mb-4">
+        <div class="">
             <form method="GET" class="form-inline">
                 <input type="text"
                        name="q"
@@ -48,13 +50,13 @@
         </div>
     </div>
 
-    <div class="card shadow-sm">
-        <div class="card-header d-flex justify-content-between">
+    <div class="admin-panel">
+        <div class="admin-panel-title d-flex justify-content-between">
             <span class="font-weight-bold">{{ t("sources") }}</span>
             <span class="text-muted small">{{ t("total_count", count=pagination.total) }}</span>
         </div>
 
-        <div class="card-body border-bottom">
+        <div class=" border-bottom">
             <form id="bulk-sources-form"
                   method="POST"
                   action="{{ url_for('expert.mixed_agri_sources_bulk') }}"
@@ -81,7 +83,7 @@
             </form>
         </div>
 
-        <div class="card-body p-0 table-responsive">
+        <div class=" p-0 table-responsive">
             <div class="table-responsive">
                 <table class="table table-hover mb-0">
                     <thead class="thead-light">

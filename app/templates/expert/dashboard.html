@@ -1,6 +1,6 @@
 {% extends "layouts/base.html" %}
 {% block title %}{{ t("expert_dashboard_title") }}{% endblock %}
-{% set body_class = "agro-theme expert-simple" %}
+{% set body_class = "admin-theme" %}
 {% block head %}
 <script>
 (function () {
@@ -14,7 +14,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="agro-board expert-board">
+<div class="admin-board">
 
     {% set pending = diagnoses|length %}
     {% set reviewed = approved_count + rejected_count %}
@@ -28,74 +28,74 @@
     {% set rejected_pct = (rejected_count / donut_safe_total * 100) %}
     {% set approved_end = pending_pct + approved_pct %}
 
-    <div class="expert-hero">
+    <div class="admin-hero">
         <div>
-            <div class="expert-title">{{ t("expert_command_center") }}</div>
-            <div class="expert-sub">{{ t("expert_command_sub") }}</div>
-            <div class="expert-hero-meta">
-                <span class="expert-chip">{{ t("status_pending") }} {{ pending }}</span>
-                <span class="expert-chip">{{ t("reviewed") }} {{ reviewed }}</span>
-                <span class="expert-chip">{{ t("completion") }} {{ completion|round(0) }}%</span>
+            <div class="admin-title">{{ t("expert_command_center") }}</div>
+            <div class="admin-sub">{{ t("expert_command_sub") }}</div>
+            <div class="admin-hero-meta">
+                <span class="badge badge-primary">{{ t("status_pending") }} {{ pending }}</span>
+                <span class="badge badge-primary">{{ t("reviewed") }} {{ reviewed }}</span>
+                <span class="badge badge-primary">{{ t("completion") }} {{ completion|round(0) }}%</span>
             </div>
         </div>
-        <div class="expert-hero-actions">
-            <a class="btn btn-agro" href="{{ url_for('expert.create_rule') }}">{{ t("add_rule") }}</a>
-            <a class="btn btn-agro-outline" href="{{ url_for('expert.knowledge_dashboard') }}">{{ t("knowledge_base") }}</a>
+        <div class="admin-hero-actions">
+            <a class="btn btn-admin" href="{{ url_for('expert.create_rule') }}">{{ t("add_rule") }}</a>
+            <a class="btn btn-admin-outline" href="{{ url_for('expert.knowledge_dashboard') }}">{{ t("knowledge_base") }}</a>
         </div>
     </div>
 
     <div class="row mb-4">
         <div class="col-md-3 mb-3">
-            <div class="expert-metric">
+            <div class="admin-kpi">
                 <div>
-                    <div class="expert-metric-label">{{ t("pending_cases") }}</div>
-                    <div class="expert-metric-value">{{ pending }}</div>
-                    <div class="expert-metric-sub">{{ t("awaiting_review") }}</div>
+                    <div class="admin-kpi-label">{{ t("pending_cases") }}</div>
+                    <div class="admin-kpi-value">{{ pending }}</div>
+                    <div class="admin-kpi-sub">{{ t("awaiting_review") }}</div>
                 </div>
-                <div class="expert-metric-icon"><i class="fas fa-hourglass-half"></i></div>
+                <div class="admin-kpi-icon"><i class="fas fa-hourglass-half"></i></div>
             </div>
         </div>
         <div class="col-md-3 mb-3">
-            <div class="expert-metric">
+            <div class="admin-kpi">
                 <div>
-                    <div class="expert-metric-label">{{ t("status_approved") }}</div>
-                    <div class="expert-metric-value">{{ approved_count }}</div>
-                    <div class="expert-metric-sub">{{ t("validated_diagnoses") }}</div>
+                    <div class="admin-kpi-label">{{ t("status_approved") }}</div>
+                    <div class="admin-kpi-value">{{ approved_count }}</div>
+                    <div class="admin-kpi-sub">{{ t("validated_diagnoses") }}</div>
                 </div>
-                <div class="expert-metric-icon"><i class="fas fa-check-circle"></i></div>
+                <div class="admin-kpi-icon"><i class="fas fa-check-circle"></i></div>
             </div>
         </div>
         <div class="col-md-3 mb-3">
-            <div class="expert-metric">
+            <div class="admin-kpi">
                 <div>
-                    <div class="expert-metric-label">{{ t("status_rejected") }}</div>
-                    <div class="expert-metric-value">{{ rejected_count }}</div>
-                    <div class="expert-metric-sub">{{ t("needs_correction") }}</div>
+                    <div class="admin-kpi-label">{{ t("status_rejected") }}</div>
+                    <div class="admin-kpi-value">{{ rejected_count }}</div>
+                    <div class="admin-kpi-sub">{{ t("needs_correction") }}</div>
                 </div>
-                <div class="expert-metric-icon"><i class="fas fa-times-circle"></i></div>
+                <div class="admin-kpi-icon"><i class="fas fa-times-circle"></i></div>
             </div>
         </div>
         <div class="col-md-3 mb-3">
-            <div class="expert-metric">
+            <div class="admin-kpi">
                 <div>
-                    <div class="expert-metric-label">{{ t("active_chats") }}</div>
-                    <div class="expert-metric-value">{{ chat_count }}</div>
-                    <div class="expert-metric-sub">{{ t("live_farmer_support") }}</div>
+                    <div class="admin-kpi-label">{{ t("active_chats") }}</div>
+                    <div class="admin-kpi-value">{{ chat_count }}</div>
+                    <div class="admin-kpi-sub">{{ t("live_farmer_support") }}</div>
                 </div>
-                <div class="expert-metric-icon"><i class="fas fa-comments"></i></div>
+                <div class="admin-kpi-icon"><i class="fas fa-comments"></i></div>
             </div>
         </div>
     </div>
 
     <div class="row mb-4">
         <div class="col-lg-7 mb-3">
-            <div class="expert-panel">
-                <div class="expert-panel-header">
+            <div class="admin-panel">
+                <div class="admin-panel-header">
                     <div>
-                        <div class="expert-panel-title">{{ t("review_pipeline") }}</div>
-                        <div class="expert-panel-sub">{{ t("progress_all_status") }}</div>
+                        <div class="admin-panel-title">{{ t("review_pipeline") }}</div>
+                        <div class="admin-panel-sub">{{ t("progress_all_status") }}</div>
                     </div>
-                    <span class="expert-pill">{{ completion|round(0) }}% {{ t("completion") }}</span>
+                    <span class="badge badge-success">{{ completion|round(0) }}% {{ t("completion") }}</span>
                 </div>
 
                 <div class="expert-progress-stack">
@@ -130,7 +130,7 @@
                 </div>
 
                 <div class="expert-donut-section">
-                    <div class="expert-panel-sub">{{ t("case_breakdown") }}</div>
+                    <div class="admin-panel-sub">{{ t("case_breakdown") }}</div>
                     <div class="expert-donut-wrap">
                         <div class="expert-donut"
                              style="{% if donut_total %}
@@ -176,11 +176,11 @@
         </div>
 
         <div class="col-lg-5 mb-3">
-            <div class="expert-panel">
-                <div class="expert-panel-header">
+            <div class="admin-panel">
+                <div class="admin-panel-header">
                     <div>
-                        <div class="expert-panel-title">{{ t("calendar_time") }}</div>
-                        <div class="expert-panel-sub">{{ t("review_schedule") }}</div>
+                        <div class="admin-panel-title">{{ t("calendar_time") }}</div>
+                        <div class="admin-panel-sub">{{ t("review_schedule") }}</div>
                     </div>
                 </div>
                 <div class="agro-calendar-layout">
@@ -217,11 +217,11 @@
 
     <div class="row mb-4">
         <div class="col-lg-5 mb-3">
-            <div class="expert-panel">
-                <div class="expert-panel-header">
+            <div class="admin-panel">
+                <div class="admin-panel-header">
                     <div>
-                        <div class="expert-panel-title">{{ t("quick_actions") }}</div>
-                        <div class="expert-panel-sub">{{ t("jump_tools") }}</div>
+                        <div class="admin-panel-title">{{ t("quick_actions") }}</div>
+                        <div class="admin-panel-sub">{{ t("jump_tools") }}</div>
                     </div>
                 </div>
                 <div class="expert-actions-grid">
@@ -262,13 +262,13 @@
         </div>
 
         <div class="col-lg-7 mb-3">
-            <div class="expert-panel">
-                <div class="expert-panel-header">
+            <div class="admin-panel">
+                <div class="admin-panel-header">
                     <div>
-                        <div class="expert-panel-title">{{ t("priority_queue") }}</div>
-                        <div class="expert-panel-sub">{{ t("next_cases") }}</div>
+                        <div class="admin-panel-title">{{ t("priority_queue") }}</div>
+                        <div class="admin-panel-sub">{{ t("next_cases") }}</div>
                     </div>
-                    <span class="expert-pill">{{ pending }} {{ t("pending_count") }}</span>
+                    <span class="badge badge-success">{{ pending }} {{ t("pending_count") }}</span>
                 </div>
                 <div class="expert-queue">
                     {% for d in diagnoses[:5] %}
@@ -282,7 +282,7 @@
                         <div class="expert-queue-meta">
                             <span class="expert-queue-date">{{ d.created_at.strftime("%b %d") }}</span>
                             <a href="{{ url_for('expert.review_diagnosis', diagnosis_id=d.id) }}"
-                               class="btn btn-sm btn-agro-outline">
+                               class="btn btn-sm btn-admin-outline">
                                 {{ t("review") }}
                             </a>
                         </div>
@@ -297,20 +297,20 @@
 
     <div class="row mb-4">
         <div class="col-lg-12">
-            <div class="expert-panel">
-                <div class="expert-panel-header">
+            <div class="admin-panel">
+                <div class="admin-panel-header">
                     <div>
-                        <div class="expert-panel-title">{{ t("support_hub_short") }}</div>
-                        <div class="expert-panel-sub">{{ t("support_hub_quick") }}</div>
+                        <div class="admin-panel-title">{{ t("support_hub_short") }}</div>
+                        <div class="admin-panel-sub">{{ t("support_hub_quick") }}</div>
                     </div>
-                    <div class="expert-hero-actions">
-                        <a class="btn btn-agro-outline" href="{{ url_for('expert.farmer_chats') }}">{{ t("open_chats") }}</a>
-                        <a class="btn btn-agro-outline" href="{{ url_for('expert.pending_diagnoses') }}">{{ t("review_auto_cases") }}</a>
+                    <div class="admin-hero-actions">
+                        <a class="btn btn-admin-outline" href="{{ url_for('expert.farmer_chats') }}">{{ t("open_chats") }}</a>
+                        <a class="btn btn-admin-outline" href="{{ url_for('expert.pending_diagnoses') }}">{{ t("review_auto_cases") }}</a>
                     </div>
                 </div>
                 <div class="row">
                     <div class="col-lg-6 mb-3">
-                        <div class="expert-panel-sub mb-2">{{ t("recent_auto_diagnoses") }}</div>
+                        <div class="admin-panel-sub mb-2">{{ t("recent_auto_diagnoses") }}</div>
                         <div class="expert-queue">
                             {% for d in auto_cases %}
                             <div class="expert-queue-item">
@@ -323,7 +323,7 @@
                                 <div class="expert-queue-meta">
                                     <span class="expert-queue-date">{{ d.created_at.strftime("%b %d") }}</span>
                                     <a href="{{ url_for('expert.review_diagnosis', diagnosis_id=d.id) }}"
-                                       class="btn btn-sm btn-agro-outline">
+                                       class="btn btn-sm btn-admin-outline">
                                         {{ t("review") }}
                                     </a>
                                 </div>
@@ -334,7 +334,7 @@
                         </div>
                     </div>
                     <div class="col-lg-6 mb-3">
-                        <div class="expert-panel-sub mb-2">{{ t("support_shortcuts") }}</div>
+                        <div class="admin-panel-sub mb-2">{{ t("support_shortcuts") }}</div>
                         <div class="expert-actions-grid">
                             <a class="expert-action-card" href="{{ url_for('expert.farmer_chats') }}">
                                 <div class="expert-action-icon"><i class="fas fa-comments"></i></div>
@@ -359,11 +359,11 @@
         </div>
     </div>
 
-    <div class="expert-panel" id="pending-diagnoses">
-        <div class="expert-panel-header">
+    <div class="admin-panel" id="pending-diagnoses">
+        <div class="admin-panel-header">
             <div>
-                <div class="expert-panel-title">{{ t("pending_diagnoses_title") }}</div>
-                <div class="expert-panel-sub">{{ t("full_queue_review") }}</div>
+                <div class="admin-panel-title">{{ t("pending_diagnoses_title") }}</div>
+                <div class="admin-panel-sub">{{ t("full_queue_review") }}</div>
             </div>
         </div>
         <div class="table-responsive">
@@ -388,7 +388,7 @@
                         <td class="small">{{ d.created_at.strftime("%Y-%m-%d") }}</td>
                         <td class="text-right">
                             <a href="{{ url_for('expert.review_diagnosis', diagnosis_id=d.id) }}"
-                               class="btn btn-sm btn-agro-outline">
+                               class="btn btn-sm btn-admin-outline">
                                 {{ t("review") }}
                             </a>
                         </td>

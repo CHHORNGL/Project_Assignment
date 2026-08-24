@@ -1,6 +1,8 @@
 {% extends "layouts/base.html" %}
 {% block title %}{{ t("knowledge_base") }}{% endblock %}
 
+{% set body_class = "admin-theme" %}
+
 {% block content %}
 <div class="container-fluid">
 
@@ -14,7 +16,7 @@
                 {{ t("add_symptom") }}
             </a>
             <a href="{{ url_for('expert.create_rule') }}"
-               class="btn btn-sm btn-success ml-2">
+               class="btn btn-sm btn-admin ml-2">
                 {{ t("add_rule") }}
             </a>
             <a href="{{ url_for('expert.mixed_agri_dashboard') }}"
@@ -101,13 +103,13 @@
     </div>
 
     <!-- {{ t("rules_engine") }} Table -->
-    <div class="card shadow-sm mb-4">
-        <div class="card-header d-flex justify-content-between">
+    <div class="admin-panel mb-4">
+        <div class="admin-panel-title d-flex justify-content-between">
             <span class="font-weight-bold">{{ t("diagnosis_rules_engine") }}</span>
             <span class="text-muted small">{{ t("total_count", count=rule_count) }}</span>
         </div>
 
-        <div class="card-body p-0 table-responsive">
+        <div class=" p-0 table-responsive">
             <div class="table-responsive">
                 <table class="table table-hover mb-0">
                     <thead class="thead-light">

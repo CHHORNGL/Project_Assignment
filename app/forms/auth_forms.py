@@ -70,3 +70,41 @@ class RegisterForm(FlaskForm):
     )
 
     submit = SubmitField("Register")
+
+# ===============================
+# FORGOT PASSWORD FORMS
+# ===============================
+class ForgotPasswordForm(FlaskForm):
+    email = StringField(
+        "Gmail / Email",
+        validators=[
+            DataRequired(message="Email is required"),
+            Email(message="Enter a valid email address"),
+            Length(max=120)
+        ]
+    )
+    submit = SubmitField("Continue")
+
+class ResetPasswordForm(FlaskForm):
+    code = StringField(
+        "OTP Code",
+        validators=[
+            DataRequired(message="OTP Code is required"),
+            Length(min=6, max=6, message="Code must be 6 digits")
+        ]
+    )
+    password = PasswordField(
+        "New Password",
+        validators=[
+            DataRequired(message="Password is required"),
+            Length(min=6, message="Password must be at least 6 characters")
+        ]
+    )
+    confirm_password = PasswordField(
+        "Confirm New Password",
+        validators=[
+            DataRequired(message="Please confirm your password"),
+            EqualTo("password", message="Passwords do not match")
+        ]
+    )
+    submit = SubmitField("Reset Password")

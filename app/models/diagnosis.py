@@ -106,6 +106,11 @@ class Diagnosis(db.Model):
         nullable=True
     )
 
+    image_paths = db.Column(
+        db.JSON,
+        nullable=True
+    )
+
 
     # ===============================
     # STATUS

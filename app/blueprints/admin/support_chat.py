@@ -90,4 +90,5 @@ def upload_support_attachment():
         upload_dir = os.path.join(current_app.root_path, 'static', 'uploads', 'chats')
         os.makedirs(upload_dir, exist_ok=True)
         file.save(os.path.join(upload_dir, unique_name))
-        return jsonify({'url': f"/static/uploads/chats/{unique_name}"})
+        from flask import url_for
+        return jsonify({'url': url_for('static', filename=f'uploads/chats/{unique_name}')})

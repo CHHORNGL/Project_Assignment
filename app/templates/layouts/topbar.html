@@ -145,29 +145,143 @@
                     </span>
                 </span>
             </a>
-            <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in p-0"
-                 aria-labelledby="supportDropdown" style="width: 320px; border-radius: 12px; overflow: hidden; z-index: 1050;">
-                <div class="bg-success text-white p-3 font-weight-bold d-flex align-items-center">
-                    <i class="fas fa-headset mr-2"></i> {{ t('admin_support_chat') | default('Admin Support') }}
+            <style>
+                .farmer-chat-widget {
+                    width: 360px;
+                    border-radius: 16px;
+                    overflow: hidden;
+                    z-index: 1050;
+                    border: 1px solid var(--admin-border, #e2e8f0);
+                    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+                    background: var(--admin-card, #ffffff);
+                }
+                .farmer-chat-header {
+                    background: var(--admin-card, #ffffff);
+                    padding: 16px 20px;
+                    border-bottom: 1px solid var(--admin-border, #e2e8f0);
+                    display: flex;
+                    align-items: center;
+                    font-weight: 600;
+                    color: var(--admin-text, #1e293b);
+                    font-size: 1.05rem;
+                }
+                .farmer-chat-header .icon-wrap {
+                    width: 32px;
+                    height: 32px;
+                    background: rgba(16, 185, 129, 0.1);
+                    color: var(--admin-accent, #10b981);
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    margin-right: 12px;
+                    font-size: 0.9rem;
+                }
+                .farmer-chat-header .status-dot {
+                    width: 8px;
+                    height: 8px;
+                    background: var(--admin-accent, #10b981);
+                    border-radius: 50%;
+                    margin-left: auto;
+                    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+                }
+                .farmer-chat-body {
+                    height: 340px;
+                    overflow-y: auto;
+                    background: var(--admin-bg, #f8fafc);
+                    padding: 16px;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 12px;
+                }
+                .farmer-chat-footer {
+                    background: var(--admin-card, #ffffff);
+                    padding: 12px 16px;
+                    border-top: 1px solid var(--admin-border, #e2e8f0);
+                }
+                .farmer-chat-actions {
+                    display: flex;
+                    align-items: center;
+                    gap: 16px;
+                    margin-bottom: 10px;
+                    padding-left: 4px;
+                }
+                .farmer-chat-action-btn {
+                    color: var(--admin-muted, #94a3b8);
+                    cursor: pointer;
+                    font-size: 1.1rem;
+                    transition: color 0.2s;
+                }
+                .farmer-chat-action-btn:hover {
+                    color: var(--admin-accent, #10b981);
+                }
+                .farmer-chat-input-wrapper {
+                    display: flex;
+                    background: var(--admin-bg, #f1f5f9);
+                    border-radius: 24px;
+                    padding: 6px 6px 6px 16px;
+                    align-items: center;
+                    border: 1px solid var(--admin-border, transparent);
+                    transition: border-color 0.2s, background 0.2s;
+                }
+                .farmer-chat-input-wrapper:focus-within {
+                    border-color: var(--admin-accent, #10b981);
+                    background: var(--admin-card, #ffffff);
+                }
+                .farmer-chat-input {
+                    flex-grow: 1;
+                    border: none;
+                    background: transparent;
+                    outline: none;
+                    font-size: 0.95rem;
+                    color: var(--admin-text, #334155);
+                }
+                .farmer-chat-input::placeholder {
+                    color: var(--admin-muted, #94a3b8);
+                }
+                .farmer-chat-send-btn {
+                    width: 36px;
+                    height: 36px;
+                    border-radius: 50%;
+                    border: none;
+                    background: var(--admin-accent, #10b981);
+                    color: white;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    cursor: pointer;
+                    transition: transform 0.1s, opacity 0.2s;
+                }
+                .farmer-chat-send-btn:hover {
+                    opacity: 0.85;
+                    transform: scale(1.05);
+                }
+            </style>
+            <div class="dropdown-menu dropdown-menu-right p-0 farmer-chat-widget animated--grow-in" aria-labelledby="supportDropdown">
+                <div class="farmer-chat-header">
+                    <div class="icon-wrap"><i class="fas fa-headset"></i></div>
+                    <div>
+                        <div style="line-height: 1;">{{ t('admin_support_chat') | default('Admin Support') }}</div>
+                        <div style="font-size: 0.75rem; color: #64748b; font-weight: 400; margin-top: 4px;">We usually reply in minutes</div>
+                    </div>
+                    <div class="status-dot"></div>
                 </div>
-                <div id="support-chat-body" class="p-3" style="height: 300px; overflow-y: auto; background: #f8f9fc; display: flex; flex-direction: column; gap: 8px;">
+                <div id="support-chat-body" class="farmer-chat-body">
                     <!-- Messages will appear here -->
                 </div>
-                <div class="p-2 bg-white border-top">
-                    <div class="d-flex align-items-center mb-2" style="gap: 12px; color: #858796; padding-left: 8px;">
-                        <i class="fas fa-image" style="cursor: pointer;" id="support-chat-img-btn" title="Send Image"></i>
-                        <i class="fas fa-microphone" style="cursor: pointer;" id="support-chat-mic-btn" title="Send Audio"></i>
-                        <i class="fas fa-map-marker-alt" style="cursor: pointer;" id="support-chat-loc-btn" title="Send Location"></i>
+                <div class="farmer-chat-footer">
+                    <div class="farmer-chat-actions">
+                        <i class="fas fa-image farmer-chat-action-btn" id="support-chat-img-btn" title="Send Image"></i>
+                        <i class="fas fa-microphone farmer-chat-action-btn" id="support-chat-mic-btn" title="Send Audio"></i>
+                        <i class="fas fa-map-marker-alt farmer-chat-action-btn" id="support-chat-loc-btn" title="Send Location"></i>
                         <input type="file" id="support-chat-file" accept="image/*" style="display:none;">
                         <input type="file" id="support-chat-audio" accept="audio/*;capture=microphone" style="display:none;">
                     </div>
-                    <div class="input-group">
-                        <input type="text" id="support-chat-input" class="form-control" placeholder="Type a message..." style="border-radius: 20px 0 0 20px;">
-                        <div class="input-group-append">
-                            <button id="support-chat-send" class="btn btn-success" type="button" style="border-radius: 0 20px 20px 0;">
-                                <i class="fas fa-paper-plane"></i>
-                            </button>
-                        </div>
+                    <div class="farmer-chat-input-wrapper">
+                        <input type="text" id="support-chat-input" class="farmer-chat-input" placeholder="Type a message...">
+                        <button id="support-chat-send" class="farmer-chat-send-btn">
+                            <i class="fas fa-paper-plane" style="font-size: 0.85rem;"></i>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -217,14 +331,17 @@
                                 
                                 if (isMe) {
                                     div.style.alignSelf = "flex-end";
-                                    div.style.background = "#1cc88a";
-                                    div.style.color = "white";
-                                    div.style.borderBottomRightRadius = "0";
+                                    div.style.background = "var(--admin-accent, #10b981)";
+                                    div.style.color = "#ffffff";
+                                    div.style.borderBottomRightRadius = "4px";
+                                    div.style.boxShadow = "0 2px 4px rgba(16, 185, 129, 0.2)";
                                 } else {
                                     div.style.alignSelf = "flex-start";
-                                    div.style.background = "#e3e6f0";
-                                    div.style.color = "#3a3b45";
-                                    div.style.borderBottomLeftRadius = "0";
+                                    div.style.background = "var(--admin-card, #ffffff)";
+                                    div.style.color = "var(--admin-text, #334155)";
+                                    div.style.borderBottomLeftRadius = "4px";
+                                    div.style.border = "1px solid var(--admin-border, #e2e8f0)";
+                                    div.style.boxShadow = "0 1px 2px rgba(0, 0, 0, 0.05)";
                                 }
                                 
                                 let contentHTML = msg.message ? `<div>${msg.message}</div>` : '';

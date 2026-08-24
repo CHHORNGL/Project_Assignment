@@ -483,6 +483,26 @@ def _process_diagnose_post():
         matched_symptoms = []
         disease_id = None
 
+    # ---------------------------------
+    # IMAGE UPLOAD
+    # ---------------------------------
+    image_paths = []
+    if "diagnosis_image" in request.files:
+        files = request.files.getlist("diagnosis_image")
+        import os, uuid
+        from werkzeug.utils import secure_filename
+        from flask import current_app
+        
+        for file in files:
+            if file and file.filename != "":
+                ext = os.path.splitext(file.filename)[1].lower()
+                if ext in [".jpg", ".jpeg", ".png", ".webp", ".gif"]:
+                    filename = f"diag_{uuid.uuid4().hex}{ext}"
+                    upload_dir = os.path.join(current_app.root_path, "static", "uploads")
+                    os.makedirs(upload_dir, exist_ok=True)
+                    file.save(os.path.join(upload_dir, filename))
+                    image_paths.append(f"uploads/{filename}")
+
     diagnosis = Diagnosis(
         farmer_id=current_user.id,
         crop_id=crop.id,
@@ -491,7 +511,8 @@ def _process_diagnose_post():
         disease_name=disease_name,
         symptoms=symptoms_text,
         status="AUTO",
-        confidence=confidence
+        confidence=confidence,
+        image_paths=image_paths if image_paths else None
     )
 
     db.session.add(diagnosis)
@@ -716,6 +737,26 @@ def diagnose_rule_based():
                 "- Keep tools and field surfaces clean."
             )
 
+        # ---------------------------------
+        # IMAGE UPLOAD
+        # ---------------------------------
+        image_paths = []
+        if "diagnosis_image" in request.files:
+            files = request.files.getlist("diagnosis_image")
+            import os, uuid
+            from werkzeug.utils import secure_filename
+            from flask import current_app
+            
+            for file in files:
+                if file and file.filename != "":
+                    ext = os.path.splitext(file.filename)[1].lower()
+                    if ext in [".jpg", ".jpeg", ".png", ".webp", ".gif"]:
+                        filename = f"diag_{uuid.uuid4().hex}{ext}"
+                        upload_dir = os.path.join(current_app.root_path, "static", "uploads")
+                        os.makedirs(upload_dir, exist_ok=True)
+                        file.save(os.path.join(upload_dir, filename))
+                        image_paths.append(f"uploads/{filename}")
+
         diagnosis = Diagnosis(
             farmer_id=current_user.id,
             crop_id=crop.id,
@@ -732,7 +773,8 @@ def diagnose_rule_based():
             diagnosis_reason=diagnosis_reason,
             diagnosis_evidence=diagnosis_evidence,
             solution=solution_text,
-            prevention_recommendations=prevention_text
+            prevention_recommendations=prevention_text,
+            image_paths=image_paths if image_paths else None
         )
 
         db.session.add(diagnosis)

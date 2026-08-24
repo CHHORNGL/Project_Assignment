@@ -31,7 +31,7 @@ from sqlalchemy import or_
 from app.extensions import db, oauth
 from app.models.user import User
 from app.models.role import Role
-from app.forms.auth_forms import LoginForm, RegisterForm
+from app.forms.auth_forms import LoginForm, RegisterForm, ForgotPasswordForm, ResetPasswordForm
 from app.services.theme_manager import resolve_active_runtime
 
 
@@ -194,7 +194,9 @@ def login():
             )
 
         # ✅ Role gate by form
-        if active_role == "farmer" and not user.has_role("farmer"):
+        if active_role == "farmer" and not (
+            user.has_role("farmer") or any(r.route_type == "farmer" for r in user.roles)
+        ):
             flash("This login is for Farmers only.", "danger")
             return render_template(
                 "auth/login.html",
@@ -205,7 +207,8 @@ def login():
             )
 
         if active_role == "expert" and not (
-            user.has_role("expert") or user.has_role("admin")
+            user.has_role("expert") or user.has_role("admin") or 
+            any(r.route_type in ["expert", "admin"] for r in user.roles)
         ):
             flash("This login is for Expert & Admin only.", "danger")
             return render_template(
@@ -325,6 +328,96 @@ def register():
         auth_theme_runtime=auth_theme_runtime,
     )
 
+
+# ==================================================
+# FORGOT PASSWORD
+# ==================================================
+@auth_bp.route("/forgot-password", methods=["GET", "POST"])
+def forgot_password():
+    if current_user.is_authenticated:
+        return redirect(url_for("main.index"))
+
+    form = ForgotPasswordForm()
+    auth_theme_runtime = _resolve_auth_theme_runtime("farmer")
+
+    if form.validate_on_submit():
+        email = form.email.data.strip().lower()
+        user = User.query.filter_by(email=email).first()
+
+        if user and user.is_active:
+            # Generate OTP code
+            code = "".join(random.choices(string.digits, k=6))
+            user.two_factor_code = code
+            user.two_factor_expiry = datetime.datetime.utcnow() + datetime.timedelta(minutes=10)
+            db.session.commit()
+
+            # Send OTP email
+            _send_verification_email(user.email, code)
+
+            # Store reset context in session
+            session["reset_password_user_id"] = user.id
+            flash("An OTP code has been sent to your email address.", "info")
+            return redirect(url_for("auth.reset_password"))
+        else:
+            # Show same message to prevent email enumeration
+            flash("If an active account exists with that email, an OTP code has been sent.", "info")
+            # If user not found, still redirect to reset password, they just won't be able to succeed.
+            # But realistically, maybe we should redirect to login.
+            return redirect(url_for("auth.login"))
+
+    return render_template(
+        "auth/forgot_password.html",
+        form=form,
+        auth_theme_runtime=auth_theme_runtime,
+    )
+
+@auth_bp.route("/reset-password", methods=["GET", "POST"])
+def reset_password():
+    if current_user.is_authenticated:
+        return redirect(url_for("main.index"))
+
+    user_id = session.get("reset_password_user_id")
+    if not user_id:
+        flash("Session expired or invalid. Please start the password reset process again.", "danger")
+        return redirect(url_for("auth.forgot_password"))
+
+    user = User.query.get(user_id)
+    if not user:
+        flash("Invalid reset session.", "danger")
+        return redirect(url_for("auth.forgot_password"))
+
+    form = ResetPasswordForm()
+    auth_theme_runtime = _resolve_auth_theme_runtime("farmer")
+
+    if form.validate_on_submit():
+        input_code = form.code.data.strip()
+
+        # Validate OTP
+        if not user.two_factor_code or user.two_factor_code != input_code:
+            flash("Invalid OTP code.", "danger")
+            return render_template("auth/reset_password.html", form=form, email=user.email, auth_theme_runtime=auth_theme_runtime)
+
+        # Check expiry
+        if user.two_factor_expiry and user.two_factor_expiry < datetime.datetime.utcnow():
+            flash("OTP code has expired. Please request a new one.", "danger")
+            return redirect(url_for("auth.forgot_password"))
+
+        # Update password
+        user.set_password(form.password.data)
+        user.two_factor_code = None
+        user.two_factor_expiry = None
+        db.session.commit()
+
+        session.pop("reset_password_user_id", None)
+        flash("Your password has been successfully reset. You can now log in.", "success")
+        return redirect(url_for("auth.login"))
+
+    return render_template(
+        "auth/reset_password.html",
+        form=form,
+        email=user.email,
+        auth_theme_runtime=auth_theme_runtime,
+    )
 
 # ==================================================
 # LOGOUT
@@ -624,3 +717,46 @@ def passkey_login_verify():
         return {"status": "ok"}
     except Exception as e:
         return {"status": "error", "message": str(e)}, 400
+
+@auth_bp.route("/reset-password-api", methods=["POST"])
+def reset_password_api():
+    data = request.get_json()
+    action = data.get("action")
+
+    if action == "send_code":
+        email = (data.get("email") or "").strip().lower()
+        user = User.query.filter_by(email=email).first()
+        if user and user.is_active:
+            code = "".join(random.choices(string.digits, k=6))
+            user.two_factor_code = code
+            user.two_factor_expiry = datetime.datetime.utcnow() + datetime.timedelta(minutes=10)
+            db.session.commit()
+            _send_verification_email(user.email, code)
+            return {"success": True, "message": "OTP sent"}
+        return {"success": True, "message": "If account exists, OTP sent"} # Prevent email enum
+
+    elif action == "verify_code":
+        email = (data.get("email") or "").strip().lower()
+        input_code = (data.get("code") or "").strip()
+        user = User.query.filter_by(email=email).first()
+        if not user or not user.two_factor_code or user.two_factor_code != input_code:
+            return {"success": False, "message": "Invalid OTP code"}
+        if user.two_factor_expiry and user.two_factor_expiry < datetime.datetime.utcnow():
+            return {"success": False, "message": "OTP expired"}
+        return {"success": True, "message": "OTP verified"}
+
+    elif action == "reset_password":
+        email = (data.get("email") or "").strip().lower()
+        input_code = (data.get("code") or "").strip()
+        new_password = data.get("password")
+        user = User.query.filter_by(email=email).first()
+        if not user or not user.two_factor_code or user.two_factor_code != input_code:
+            return {"success": False, "message": "Invalid OTP code"}
+        
+        user.set_password(new_password)
+        user.two_factor_code = None
+        user.two_factor_expiry = None
+        db.session.commit()
+        return {"success": True, "message": "Password reset successfully"}
+
+    return {"success": False, "message": "Unknown action"}, 400

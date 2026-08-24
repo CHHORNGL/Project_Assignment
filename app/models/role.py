@@ -10,6 +10,7 @@ class Role(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), unique=True, nullable=False)
+    route_type = db.Column(db.String(50), default='farmer', nullable=False)
 
     # ===============================
     # RELATIONSHIPS

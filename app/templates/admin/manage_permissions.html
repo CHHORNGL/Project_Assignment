@@ -1,116 +1,154 @@
 {% extends "layouts/base.html" %}
 {% block title %}{{ t("manage_permissions") }}{% endblock %}
+{% set body_class = "admin-theme" %}
 
 {% block content %}
-<div class="container-fluid">
+<div class="admin-board">
 
-    <!-- ===============================
-         PAGE TITLE
-    =============================== -->
-    <div class="d-flex align-items-center mb-4">
-        <i class="fas fa-user-shield mr-2 text-success" style="font-size:20px;"></i>
-        <h1 class="h4 mb-0 font-weight-bold">
-            {{ t("manage_permissions") }} – {{ role.name | upper }}
-        </h1>
+    <!-- Header -->
+    <div class="admin-hero">
+        <div>
+            <div class="admin-title">
+                <i class="fas fa-user-shield mr-2" style="color: var(--admin-accent);"></i>
+                {{ t("manage_permissions") }}
+            </div>
+            <div class="admin-sub">{{ t("manage_permissions") }} &mdash; <strong style="color: var(--admin-text); text-transform: uppercase;">{{ role.name }}</strong></div>
+        </div>
+        <div class="admin-actions">
+            <a href="{{ url_for('admin.roles') }}" class="btn btn-light" style="border-radius: 8px; font-weight: 600; color: var(--admin-text);">
+                <i class="fas fa-arrow-left mr-2"></i>{{ t("back_to_roles", default="Back to Roles") }}
+            </a>
+        </div>
     </div>
 
-    <form method="POST" class="col-md-8 p-0">
+    <!-- Permissions Panel -->
+    <div class="admin-panel" style="max-width: 800px; margin: 0 auto;">
+        <form method="POST">
+            <div class="d-flex justify-content-between align-items-center mb-4 pb-3" style="border-bottom: 1px solid var(--admin-border);">
+                <div>
+                    <h5 class="mb-1" style="font-weight: 700; color: var(--admin-text);">System Permissions</h5>
+                    <div style="font-size: 0.85rem; color: var(--admin-muted);">Toggle the switches below to grant or revoke access for this role.</div>
+                </div>
+                <button type="submit" class="btn btn-admin" style="border-radius: 8px; font-weight: 600; padding: 0.5rem 1.25rem;">
+                    <i class="fas fa-save mr-2"></i>{{ t("save_permissions") }}
+                </button>
+            </div>
 
-        <div class="card shadow-sm">
-            <div class="card-body">
-
-                <!-- ===============================
-                     PERMISSIONS LIST
-                =============================== -->
+            <div class="permissions-list">
                 {% for perm in permissions %}
-                <label class="permission-item d-flex align-items-center mb-3">
-
-                    <!-- REAL CHECKBOX (hidden safely) -->
-                    <input type="checkbox"
-                           class="permission-checkbox"
-                           name="permissions"
-                           value="{{ perm.id }}"
-                           {% if perm in role.permissions %}checked{% endif %}>
-
-                    <!-- CUSTOM CHECK UI -->
-                    <span class="permission-box"></span>
-
-                    <!-- TEXT -->
-                    <div class="ml-3">
-                        <div class="font-weight-bold">
-                            {{ perm.code }}
-                        </div>
-                        <div class="text-muted small">
-                            {{ perm.name }}
+                <label class="permission-row" for="perm_{{ perm.id }}">
+                    <div class="permission-info">
+                        <div class="permission-code">{{ perm.code }}</div>
+                        <div class="permission-desc">{{ perm.name }}</div>
+                    </div>
+                    
+                    <div class="pure-toggle">
+                        <input type="checkbox"
+                               class="pure-toggle-input"
+                               id="perm_{{ perm.id }}"
+                               name="permissions"
+                               value="{{ perm.id }}"
+                               {% if perm in role.permissions %}checked{% endif %}>
+                        <div class="pure-toggle-bg">
+                            <div class="pure-toggle-knob"></div>
                         </div>
                     </div>
-
                 </label>
                 {% endfor %}
-
-                <!-- ===============================
-                     ACTION BUTTONS
-                =============================== -->
-                <div class="mt-4">
-                    <button type="submit" class="btn btn-success mr-2">
-                        <i class="fas fa-save mr-2"></i>{{ t("save_permissions") }}
-                    </button>
-
-                    <a href="{{ url_for('admin.roles') }}"
-                       class="btn btn-secondary">
-                        {{ t("cancel") }}
-                    </a>
-                </div>
-
             </div>
-        </div>
 
-    </form>
+            <div class="mt-4 pt-3 d-flex justify-content-end" style="border-top: 1px solid var(--admin-border);">
+                <a href="{{ url_for('admin.roles') }}" class="btn btn-light mr-3" style="border-radius: 8px; font-weight: 600;">
+                    {{ t("cancel") }}
+                </a>
+                <button type="submit" class="btn btn-admin" style="border-radius: 8px; font-weight: 600; padding: 0.5rem 1.25rem;">
+                    <i class="fas fa-save mr-2"></i>{{ t("save_permissions") }}
+                </button>
+            </div>
+        </form>
+    </div>
 
 </div>
 
-<!-- ===============================
-     LOCAL SAFE STYLE
-=============================== -->
 <style>
-.permission-item {
-    cursor: pointer;
+/* Sleek Permissions List Styling */
+.permissions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
-
-/* Hide checkbox but keep it functional */
-.permission-checkbox {
-    position: absolute;
-    opacity: 0;
-    pointer-events: none;
-}
-
-/* Custom checkbox */
-.permission-box {
-    width: 18px;
-    height: 18px;
-    border-radius: 6px;
-    border: 2px solid var(--success);
-    background: transparent;
-    display: inline-flex;
+.permission-row {
+    display: flex;
+    justify-content: space-between;
     align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
+    padding: 16px 24px;
+    background: var(--admin-bg, #f8fafc);
+    border: 1px solid var(--admin-border, #e2e8f0);
+    border-radius: 12px;
+    cursor: pointer;
     transition: all 0.2s ease;
+    margin: 0;
+}
+.permission-row:hover {
+    background: var(--admin-card, #ffffff);
+    border-color: var(--admin-accent, #10b981);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transform: translateY(-1px);
+}
+.permission-info {
+    display: flex;
+    flex-direction: column;
+}
+.permission-code {
+    font-weight: 700;
+    color: var(--admin-text, #1e293b);
+    font-size: 1.05rem;
+    margin-bottom: 4px;
+}
+.permission-desc {
+    color: var(--admin-muted, #64748b);
+    font-size: 0.9rem;
 }
 
-/* Checked state */
-.permission-checkbox:checked + .permission-box {
-    background-color: var(--success);
-    border-color: var(--success);
+/* Pure CSS Toggle */
+.pure-toggle {
+    position: relative;
+    width: 50px;
+    height: 28px;
+    flex-shrink: 0;
 }
-
-.permission-checkbox:checked + .permission-box::after {
-    content: "\f00c";
-    color: var(--card-bg);
-    font-family: "Font Awesome 5 Free";
-    font-size: 10px;
-    font-weight: 900;
+.pure-toggle-input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+}
+.pure-toggle-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--admin-border, #cbd5e1);
+    border-radius: 34px;
+    transition: 0.3s;
+}
+.pure-toggle-knob {
+    position: absolute;
+    height: 22px;
+    width: 22px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    border-radius: 50%;
+    transition: 0.3s;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+.pure-toggle-input:checked + .pure-toggle-bg {
+    background-color: var(--admin-accent, #10b981);
+}
+.pure-toggle-input:checked + .pure-toggle-bg .pure-toggle-knob {
+    transform: translateX(22px);
 }
 </style>
-
 {% endblock %}

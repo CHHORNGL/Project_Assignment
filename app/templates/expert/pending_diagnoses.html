@@ -1,26 +1,26 @@
 {% extends "layouts/base.html" %}
 {% block title %}{{ t("pending_diagnoses_title") }}{% endblock %}
-{% set body_class = "agro-theme expert-simple" %}
+{% set body_class = "admin-theme" %}
 
 {% block content %}
-<div class="agro-board">
-    <div class="expert-hero">
+<div class="admin-board">
+    <div class="admin-hero">
         <div>
-            <div class="expert-title">{{ t("pending_diagnoses_title") }}</div>
-            <div class="expert-sub">{{ t("cases_waiting_review") }}</div>
+            <div class="admin-title">{{ t("pending_diagnoses_title") }}</div>
+            <div class="admin-sub">{{ t("cases_waiting_review") }}</div>
         </div>
-        <div class="expert-hero-actions">
-            <a class="btn btn-agro" href="{{ url_for('expert.dashboard') }}">{{ t("back") }} {{ t("dashboard") }}</a>
+        <div class="admin-hero-actions">
+            <a class="btn btn-admin" href="{{ url_for('expert.dashboard') }}">{{ t("back") }} {{ t("dashboard") }}</a>
         </div>
     </div>
 
-    <div class="expert-panel">
-        <div class="expert-panel-header">
+    <div class="admin-panel">
+        <div class="admin-panel-header">
             <div>
-                <div class="expert-panel-title">{{ t("pending_queue") }}</div>
-                <div class="expert-panel-sub">{{ t("cases_waiting_review") }}</div>
+                <div class="admin-panel-title">{{ t("pending_queue") }}</div>
+                <div class="admin-panel-sub">{{ t("cases_waiting_review") }}</div>
             </div>
-            <span class="expert-pill">{{ diagnoses|length }} {{ t("pending_count") }}</span>
+            <span class="badge badge-success">{{ diagnoses|length }} {{ t("pending_count") }}</span>
         </div>
 
         <div class="table-responsive">
@@ -45,7 +45,7 @@
                         <td class="small">{{ d.created_at.strftime("%Y-%m-%d") }}</td>
                         <td class="text-right">
                             <a href="{{ url_for('expert.review_diagnosis', diagnosis_id=d.id) }}"
-                               class="btn btn-sm btn-agro-outline">
+                               class="btn btn-sm btn-admin-outline">
                                 {{ t("review") }}
                             </a>
                         </td>

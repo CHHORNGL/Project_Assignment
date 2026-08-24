@@ -1,5 +1,5 @@
 # seed_farmer.py
-
+import os
 from app import create_app
 from app.extensions import db
 from app.models.user import User
@@ -8,6 +8,10 @@ from app.models.role import Role
 app = create_app()
 
 with app.app_context():
+    FARMER_PASSWORD = os.environ.get("FARMER_PASSWORD")
+
+    if not FARMER_PASSWORD:
+        raise RuntimeError("FARMER_PASSWORD is not configured")
 
     # Check if farmer already exists
     farmer = User.query.filter_by(username="farmer").first()
@@ -17,7 +21,7 @@ with app.app_context():
 
     # Create farmer user
     farmer = User(username="farmer")
-    farmer.set_password("farmer123")
+    farmer.set_password(FARMER_PASSWORD)
 
     # Assign farmer role
     farmer_role = Role.query.filter_by(name="farmer").first()

@@ -27,7 +27,9 @@ def role_required(role_name: str):
                 abort(500, description="User model missing has_role()")
 
             # Role check failed
-            if not current_user.has_role(role_name):
+            has_explicit = current_user.has_role(role_name)
+            has_route_type = any(getattr(r, 'route_type', None) == role_name for r in current_user.roles)
+            if not (has_explicit or has_route_type):
                 abort(403)
 
             return func(*args, **kwargs)

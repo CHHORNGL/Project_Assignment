@@ -1,6 +1,8 @@
 {% extends "layouts/base.html" %}
 {% block title %}{{ t("reply_farmer") }}{% endblock %}
 
+{% set body_class = "admin-theme" %}
+
 {% block content %}
 <div class="container-fluid mt-4" style="max-width: 900px;">
 
@@ -11,8 +13,8 @@
     </div>
 
     <!-- Chat Window -->
-    <div class="card shadow-sm mb-3" style="height: 60vh; overflow-y: auto;">
-        <div class="card-body">
+    <div class="admin-panel mb-3" style="height: 60vh; overflow-y: auto;">
+        <div class="">
 
             {% if messages %}
                 {% for m in messages %}
@@ -50,7 +52,7 @@
                required>
 
         <button type="submit"
-                class="btn btn-primary ml-2">
+                class="btn btn-admin ml-2">
             {{ t("send") }}
         </button>
     </form>

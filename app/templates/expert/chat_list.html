@@ -1,6 +1,8 @@
 {% extends "layouts/base.html" %}
 {% block title %}{{ t("expert_chats_title") }}{% endblock %}
 
+{% set body_class = "admin-theme" %}
+
 {% block content %}
 <div class="container-fluid mt-4">
 
@@ -15,7 +17,7 @@
                         <small>{{ c.message[:80] }}...</small>
                     </div>
                     <a href="{{ url_for('expert.reply_chat', farmer_id=c.farmer_id) }}"
-                       class="btn btn-sm btn-success">
+                       class="btn btn-sm btn-admin">
                         {{ t("reply") }}
                     </a>
                 </li>
