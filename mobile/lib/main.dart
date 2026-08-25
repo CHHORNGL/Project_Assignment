@@ -2,15 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'providers/auth_provider.dart';
+import 'providers/language_provider.dart';
 import 'screens/login_screen.dart';
 import 'screens/farmer_dashboard_screen.dart';
+import 'screens/splash_screen.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final langProvider = LanguageProvider();
+  await langProvider.loadLanguage();
+
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
-              ],
+        ChangeNotifierProvider.value(value: langProvider),
+      ],
       child: const AgriApp(),
     ),
   );
@@ -24,11 +31,28 @@ class AgriApp extends StatefulWidget {
 }
 
 class _AgriAppState extends State<AgriApp> {
+  bool _showSplash = true;
+
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<AuthProvider>(context, listen: false).checkAuthStatus();
+    _initializeApp();
+  }
+
+  Future<void> _initializeApp() async {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      
+      await Future.wait([
+        authProvider.checkAuthStatus(),
+        Future.delayed(const Duration(milliseconds: 2500)), // Ensure animation completes
+      ]);
+      
+      if (mounted) {
+        setState(() {
+          _showSplash = false;
+        });
+      }
     });
   }
 
@@ -42,6 +66,9 @@ class _AgriAppState extends State<AgriApp> {
           darkTheme: _buildTheme(Brightness.dark, context),
         home: Consumer<AuthProvider>(
             builder: (context, auth, _) {
+              if (_showSplash) {
+                return const SplashScreen();
+              }
               if (auth.isLoading && auth.user == null) {
                 return const Scaffold(
                   body: Center(child: CircularProgressIndicator()),

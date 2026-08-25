@@ -5,6 +5,7 @@ import '../providers/auth_provider.dart';
 import 'farmer_dashboard_screen.dart';
 import 'register_screen.dart';
 import 'verify_code_screen.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -178,6 +179,23 @@ class _LoginScreenState extends State<LoginScreen> {
                   
                   SizedBox(height: 24),
                   
+                  // Google Sign-In Button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: OutlinedButton.icon(
+                      onPressed: _isLoading ? null : _handleGoogleLogin,
+                      icon: Image.asset('assets/images/google_logo.png', height: 24),
+                      label: Text('Sign in with Google', style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 16)),
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: Colors.grey.shade300),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                    ),
+                  ).animate().fade(delay: 650.ms).slideY(begin: 0.2),
+                  
+                  SizedBox(height: 24),
+                  
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -205,5 +223,66 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ),
     );
+  }
+  
+  Future<void> _handleGoogleLogin() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = '';
+    });
+
+    try {
+      GoogleSignIn.instance.initialize(
+        clientId: '58641591919-0om8j6nv7j7g1t59v04l4onv4otfofn2.apps.googleusercontent.com',
+      );
+      
+      final GoogleSignInAccount account = await GoogleSignIn.instance.authenticate();
+      final GoogleSignInAuthentication auth = account.authentication;
+      final String? idToken = auth.idToken;
+
+      if (idToken == null) {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+            _errorMessage = 'Failed to retrieve Google ID token.';
+          });
+        }
+        return;
+      }
+
+      if (!mounted) return;
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final result = await authProvider.googleLogin(idToken);
+
+      if (result['success'] == true && mounted) {
+        // Restrict access to Farmers only
+        if (authProvider.user != null && !authProvider.user!.isFarmer) {
+          await authProvider.logout();
+          setState(() {
+            _errorMessage = 'Access Denied: This app is only for Farmers. Please use the web dashboard.';
+            _isLoading = false;
+          });
+          return;
+        }
+
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const FarmerDashboardScreen()),
+        );
+      } else {
+        if (mounted) {
+          setState(() {
+            _errorMessage = result['error'] ?? 'Google login failed.';
+            _isLoading = false;
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'Error: ${e.toString()}';
+          _isLoading = false;
+        });
+      }
+    }
   }
 }

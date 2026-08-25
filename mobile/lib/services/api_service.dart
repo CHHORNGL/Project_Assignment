@@ -5,8 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user.dart';
 
 class ApiService {
-  // Configured for physical device testing on local network
-  static const String baseUrl = 'http://192.168.100.194:5000/api';
+  // Use 10.0.2.2 for Android emulator, 127.0.0.1 for iOS Simulator, or your machine's IP for physical devices
+  static const String baseUrl = 'http://192.168.100.196:5000/api';
   
   static Future<Map<String, String>> _getHeaders() async {
     final prefs = await SharedPreferences.getInstance();
@@ -188,24 +188,65 @@ class ApiService {
     }
   }
 
-  static Future<List<dynamic>> getNotifications() async {
+  static Future<Map<String, dynamic>> getNotifications({int page = 1}) async {
     try {
       final headers = await _getHeaders();
       final usersBaseUrl = baseUrl.replaceAll('/api', '/users');
       final response = await http.get(
-        Uri.parse('$usersBaseUrl/notifications/data'),
+        Uri.parse('$usersBaseUrl/notifications/data?page=$page&per_page=20'),
         headers: headers,
       );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        return data['items'] ?? [];
+        return {
+          'items': data['items'] ?? [],
+          'nextPage': data['next_page'],
+        };
       }
-      return [];
+      return {'items': [], 'nextPage': null};
     } catch (e) {
       // ignore: avoid_print
       print('Fetch notifications error: $e');
-      return [];
+      return {'items': [], 'nextPage': null};
+    }
+  }
+
+  static Future<bool> markNotificationsSeen(List<int> ids) async {
+    if (ids.isEmpty) return true;
+    try {
+      final headers = await _getHeaders();
+      final usersBaseUrl = baseUrl.replaceAll('/api', '/users');
+      final response = await http.post(
+        Uri.parse('$usersBaseUrl/notifications/seen'),
+        headers: headers,
+        body: jsonEncode({'ids': ids}),
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      // ignore: avoid_print
+      print('Mark notifications seen error: $e');
+      return false;
+    }
+  }
+
+  static Future<int> getUnreadNotificationsCount() async {
+    try {
+      final headers = await _getHeaders();
+      final usersBaseUrl = baseUrl.replaceAll('/api', '/users');
+      final response = await http.get(
+        Uri.parse('$usersBaseUrl/notifications/data?page=1&per_page=10'),
+        headers: headers,
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final items = data['items'] as List<dynamic>? ?? [];
+        return items.where((n) => n['unread'] == true).length;
+      }
+      return 0;
+    } catch (e) {
+      return 0;
     }
   }
 
@@ -317,6 +358,23 @@ class ApiService {
     }
   }
 
+  static Future<bool> submitSupportRequest(String message) async {
+    try {
+      final headers = await _getHeaders();
+      final assistantBaseUrl = baseUrl.replaceAll('/api', '/assistant');
+      final response = await http.post(
+        Uri.parse('$assistantBaseUrl/support'),
+        headers: headers,
+        body: jsonEncode({'message': message, 'page': 'mobile-help-center'}),
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      // ignore: avoid_print
+      print('Submit support request error: $e');
+      return false;
+    }
+  }
+
   static Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('session_cookie');
@@ -355,6 +413,56 @@ class ApiService {
     } catch (e) {
       print('Exception in diagnoseImage: $e');
       return {'error': 'Failed to connect to server.'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> googleLogin(String idToken) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/google-login'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'id_token': idToken}),
+      );
+      
+      _updateCookie(response);
+      final data = json.decode(response.body);
+      
+      if (response.statusCode == 200) {
+        return {'success': true, 'user': data['user']};
+      } else {
+        return {'success': false, 'error': data['error'] ?? 'Google login failed'};
+      }
+    } catch (e) {
+      return {'success': false, 'error': 'Connection error'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> updateProfileDetails(String username, String email, String password) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final cookie = prefs.getString('session_cookie');
+      
+      final response = await http.post(
+        Uri.parse('$baseUrl/update-profile'),
+        headers: {
+          'Content-Type': 'application/json',
+          if (cookie != null) 'Cookie': cookie,
+        },
+        body: json.encode({
+          'username': username,
+          'email': email,
+          'password': password,
+        }),
+      );
+      
+      final data = json.decode(response.body);
+      if (response.statusCode == 200) {
+        return {'success': true};
+      } else {
+        return {'success': false, 'error': data['error'] ?? 'Failed to update profile'};
+      }
+    } catch (e) {
+      return {'success': false, 'error': 'Connection error'};
     }
   }
 }

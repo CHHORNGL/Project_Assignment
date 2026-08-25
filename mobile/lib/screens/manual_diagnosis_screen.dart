@@ -21,9 +21,27 @@ class _ManualDiagnosisScreenState extends State<ManualDiagnosisScreen> {
   
   int? _selectedCropId;
   final Set<String> _selectedSymptoms = {};
-  
+  final TextEditingController _searchController = TextEditingController();
+
   bool _isDiagnosing = false;
   String _searchQuery = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _resetForm() {
+    setState(() {
+      _selectedCropId = null;
+      _symptoms = [];
+      _selectedSymptoms.clear();
+      _searchQuery = '';
+      _isDiagnosing = false;
+    });
+    _searchController.clear();
+  }
 
   // ... (keep initState, _fetchData, _submitDiagnosis, _showDiagnosisResult, _buildResultCard the same)
 
@@ -152,8 +170,7 @@ class _ManualDiagnosisScreenState extends State<ManualDiagnosisScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        height: MediaQuery.of(context).size.height * 0.85,
+      builder: (context) => Container(        height: MediaQuery.of(context).size.height * 0.85,
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -205,13 +222,13 @@ class _ManualDiagnosisScreenState extends State<ManualDiagnosisScreen> {
               height: 56,
               child: ElevatedButton(
                 onPressed: () => Navigator.pop(context),
-                child: Text('Close'),
+                child: Text('New Diagnosis'),
               ),
             ),
           ],
         ),
       ),
-    );
+    ).whenComplete(_resetForm);
   }
 
   Widget _buildResultCard(String title, String content, IconData icon) {
@@ -331,6 +348,7 @@ class _ManualDiagnosisScreenState extends State<ManualDiagnosisScreen> {
                         )
                       else ...[
                         TextField(
+                          controller: _searchController,
                           decoration: InputDecoration(
                             hintText: 'Search symptoms...',
                             prefixIcon: const Icon(Icons.search),

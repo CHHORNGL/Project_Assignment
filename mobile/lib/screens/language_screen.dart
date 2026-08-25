@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import '../providers/language_provider.dart';
 import '../services/api_service.dart';
 
 class LanguageScreen extends StatefulWidget {
@@ -11,29 +12,11 @@ class LanguageScreen extends StatefulWidget {
 }
 
 class _LanguageScreenState extends State<LanguageScreen> {
-  String _selectedLanguageCode = 'en';
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadCurrentLanguage();
-  }
-
-  Future<void> _loadCurrentLanguage() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _selectedLanguageCode = prefs.getString('app_language') ?? 'en';
-      _isLoading = false;
-    });
-  }
 
   Future<void> _changeLanguage(String code) async {
-    setState(() {
-      _selectedLanguageCode = code;
-    });
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('app_language', code);
+    // Sync with LanguageProvider
+    final langProvider = Provider.of<LanguageProvider>(context, listen: false);
+    await langProvider.setLanguage(code);
     
     // Sync with backend
     await ApiService.setLanguage(code);
@@ -47,6 +30,9 @@ class _LanguageScreenState extends State<LanguageScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final langProvider = Provider.of<LanguageProvider>(context);
+    final currentLang = langProvider.currentLanguage;
+    
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -55,20 +41,18 @@ class _LanguageScreenState extends State<LanguageScreen> {
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black87),
       ),
-      body: _isLoading 
-          ? const Center(child: CircularProgressIndicator())
-          : ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                _buildLanguageOption('English', 'en', 'English'),
-                _buildLanguageOption('Khmer', 'km', 'ភាសាខ្មែរ'),
-              ].animate(interval: 100.ms).fade().slideX(begin: 0.1),
-            ),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          _buildLanguageOption('English', 'en', 'English', currentLang),
+          _buildLanguageOption('Khmer', 'km', 'ភាសាខ្មែរ', currentLang),
+        ].animate(interval: 100.ms).fade().slideX(begin: 0.1),
+      ),
     );
   }
 
-  Widget _buildLanguageOption(String title, String code, String localName) {
-    final isSelected = _selectedLanguageCode == code;
+  Widget _buildLanguageOption(String title, String code, String localName, String currentLang) {
+    final isSelected = currentLang == code;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(

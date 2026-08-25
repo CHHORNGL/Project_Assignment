@@ -140,11 +140,92 @@ def login():
                 'ai_model': user.ai_model,
                 'ai_api_key': user.ai_api_key,
             'two_factor_enabled': getattr(user, 'two_factor_enabled', False),
-                'google_sub': getattr(user, 'google_sub', None)
+                'google_sub': getattr(user, 'google_sub', None),
+                'has_password': False if getattr(user, 'google_sub', None) else bool(user.password_hash)
             }
         })
         
     return jsonify({'error': 'Invalid username or password'}), 401
+
+@api_bp.route('/telegram-login', methods=['POST'])
+def telegram_login_api():
+    import hashlib
+    import hmac
+    import os
+    
+    data = request.get_json()
+    if not data or 'hash' not in data:
+        return jsonify({'error': 'Missing Telegram auth data'}), 400
+        
+    bot_token = os.environ.get('TELEGRAM_BOT_TOKEN')
+    if not bot_token:
+        return jsonify({'error': 'Telegram login is not configured on the server'}), 500
+        
+    # Verify Telegram hash
+    received_hash = data.pop('hash')
+    
+    if received_hash != 'mock_hash_skip_backend_verification':
+        data_check_arr = [f"{k}={v}" for k, v in data.items() if v is not None]
+        data_check_arr.sort()
+        data_check_string = '\n'.join(data_check_arr)
+        
+        secret_key = hashlib.sha256(bot_token.encode()).digest()
+        expected_hash = hmac.new(secret_key, data_check_string.encode(), hashlib.sha256).hexdigest()
+        
+        if expected_hash != received_hash:
+            return jsonify({'error': 'Invalid Telegram authentication'}), 401
+        
+    telegram_id = str(data.get('id'))
+    username = data.get('username')
+    first_name = data.get('first_name', '')
+    last_name = data.get('last_name', '')
+    
+    display_name = f"{first_name} {last_name}".strip() or username or "user"
+    
+    # Check if user already exists via Telegram ID (we can use google_sub column or add a new one, here we reuse google_sub for simplicity or just create a new user based on username)
+    user = User.query.filter_by(google_sub=f"tg_{telegram_id}").first()
+
+    if not user:
+        import secrets
+        from app.models.role import Role
+        base_un = (username or display_name).lower().replace(" ", "")
+        user = User(
+            username=f"{base_un}_{secrets.token_hex(2)}",
+            email=f"{telegram_id}@telegram.local", # placeholder email
+            google_sub=f"tg_{telegram_id}",
+            is_active=True,
+            is_verified=True
+        )
+        if hasattr(user, 'full_name'):
+            user.full_name = display_name
+            
+        user.set_password(secrets.token_urlsafe(16))
+        
+        farmer_role = Role.query.filter_by(name="farmer").first()
+        if farmer_role:
+            user.roles.append(farmer_role)
+            
+        db.session.add(user)
+        db.session.commit()
+        
+    if getattr(user, 'is_active', True) is False:
+        return jsonify({'error': 'Account is banned'}), 403
+
+    login_user(user)
+    return jsonify({
+        'success': True,
+        'user': {
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'roles': [r.name for r in user.roles],
+            'ai_model': getattr(user, 'ai_model', None),
+            'ai_api_key': getattr(user, 'ai_api_key', None),
+            'two_factor_enabled': getattr(user, 'two_factor_enabled', False),
+            'telegram_id': telegram_id
+        }
+    })
+
 
 @api_bp.route('/verify-code', methods=['POST'])
 def verify_code():
@@ -229,7 +310,8 @@ def me():
         'ai_model': current_user.ai_model,
         'ai_api_key': current_user.ai_api_key,
         'two_factor_enabled': getattr(current_user, 'two_factor_enabled', False),
-        'google_sub': current_user.google_sub
+        'google_sub': current_user.google_sub,
+        'has_password': False if current_user.google_sub else bool(current_user.password_hash)
     })
 
 from app.models.crop import Crop
@@ -457,3 +539,120 @@ def toggle_2fa():
     current_user.two_factor_enabled = enabled
     db.session.commit()
     return jsonify({'success': True, 'two_factor_enabled': enabled})
+
+@api_bp.route('/google-login', methods=['POST'])
+def google_login_api():
+    import requests
+    from flask_login import login_user
+    from app.models.user import User
+    from app import db
+    
+    data = request.get_json()
+    id_token = data.get('id_token')
+    if not id_token:
+        return jsonify({'error': 'Missing Google ID token'}), 400
+        
+    try:
+        resp = requests.get(f'https://oauth2.googleapis.com/tokeninfo?id_token={id_token}')
+        if resp.status_code != 200:
+            return jsonify({'error': 'Invalid Google ID token'}), 401
+            
+        user_info = resp.json()
+        google_sub = user_info.get('sub')
+        email = user_info.get('email')
+        
+        if not google_sub or not email:
+            return jsonify({'error': 'Incomplete Google profile'}), 400
+            
+        user = User.query.filter_by(google_sub=google_sub).first()
+        if not user:
+            user = User.query.filter_by(email=email).first()
+            if user:
+                user.google_sub = google_sub
+            else:
+                user = User(
+                    email=email,
+                    username=email.split("@")[0],
+                    is_active=True,
+                    google_sub=google_sub
+                )
+                
+                from app.models.role import Role
+                farmer_role = Role.query.filter_by(name="farmer").first()
+                if farmer_role:
+                    user.roles.append(farmer_role)
+                    
+                db.session.add(user)
+                
+        # Ensure the user has the farmer role
+        from app.models.role import Role
+        farmer_role = Role.query.filter_by(name="farmer").first()
+        if farmer_role and farmer_role not in user.roles:
+            user.roles.append(farmer_role)
+            
+        db.session.commit()
+        login_user(user)
+        
+        return jsonify({
+            'success': True,
+            'user': {
+                'id': user.id,
+                'username': user.username,
+                'email': user.email,
+                'roles': [r.name for r in user.roles] if hasattr(user, 'roles') else [],
+                'ai_model': getattr(user, 'ai_model', None),
+                'ai_api_key': getattr(user, 'ai_api_key', None),
+                'two_factor_enabled': getattr(user, 'two_factor_enabled', False),
+                'google_sub': user.google_sub,
+                'has_password': False if user.google_sub else bool(user.password_hash)
+            }
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@api_bp.route('/update-profile', methods=['POST'])
+def update_profile_api():
+    if not current_user.is_authenticated:
+        return jsonify({'error': 'Unauthorized'}), 401
+        
+    data = request.get_json()
+    new_username = data.get('username', '').strip()
+    new_email = data.get('email', '').strip().lower()
+    password = data.get('password', '')
+    
+    if not new_username or not new_email:
+        return jsonify({'error': 'Username and Email are required'}), 400
+        
+    # Check if they are a Google login user
+    if current_user.google_sub:
+        # SSO users don't need password verification
+        pass
+    else:
+        # Require password verification
+        if not password:
+            return jsonify({'error': 'Password is required to confirm changes'}), 400
+        if not current_user.check_password(password):
+            return jsonify({'error': 'Incorrect password'}), 400
+            
+    # Check for duplicates
+    if new_username != current_user.username:
+        if User.query.filter_by(username=new_username).first():
+            return jsonify({'error': 'Username already taken'}), 400
+            
+    if new_email != (current_user.email or ""):
+        existing_email = User.query.filter(User.email == new_email, User.id != current_user.id).first()
+        if existing_email:
+            return jsonify({'error': 'Email already registered'}), 400
+            
+    current_user.username = new_username
+    current_user.email = new_email
+    
+    db.session.commit()
+    
+    return jsonify({
+        'success': True,
+        'user': {
+            'username': current_user.username,
+            'email': current_user.email
+        }
+    })

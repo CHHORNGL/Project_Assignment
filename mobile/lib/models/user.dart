@@ -7,6 +7,7 @@ class User {
   final String? aiApiKey;
   final String? googleSub;
   final bool twoFactorEnabled;
+  final bool hasPassword;
 
   User({
     required this.id,
@@ -17,6 +18,7 @@ class User {
     this.aiApiKey,
     this.googleSub,
     this.twoFactorEnabled = false,
+    this.hasPassword = false,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -29,6 +31,7 @@ class User {
       aiApiKey: json['ai_api_key'],
       googleSub: json['google_sub'],
       twoFactorEnabled: json['two_factor_enabled'] ?? false,
+      hasPassword: json['has_password'] ?? false,
     );
   }
 
@@ -42,6 +45,7 @@ class User {
       'ai_api_key': aiApiKey,
       'google_sub': googleSub,
       'two_factor_enabled': twoFactorEnabled,
+      'has_password': hasPassword,
     };
   }
 

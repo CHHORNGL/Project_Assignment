@@ -36,6 +36,22 @@ class AuthProvider with ChangeNotifier {
     return result;
   }
 
+  Future<Map<String, dynamic>> googleLogin(String idToken) async {
+    _isLoading = true;
+    notifyListeners();
+
+    final result = await ApiService.googleLogin(idToken);
+    
+    if (result['success'] == true && result['user'] != null) {
+      _user = User.fromJson(result['user']);
+    }
+
+    _isLoading = false;
+    notifyListeners();
+    
+    return result;
+  }
+
   Future<Map<String, dynamic>> register(String email, String fullName, String password) async {
     _isLoading = true;
     notifyListeners();

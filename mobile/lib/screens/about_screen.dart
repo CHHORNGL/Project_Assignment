@@ -15,44 +15,142 @@ class AboutScreen extends StatelessWidget {
         iconTheme: const IconThemeData(color: Colors.black87),
       ),
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: 40),
+              // Brand
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.green.shade50,
-                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: [Colors.green.shade800, Colors.green.shade500],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(20),
                 ),
-                child: Icon(Icons.eco, size: 80, color: Colors.green.shade700),
+                child: Column(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(3),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withValues(alpha: 0.2),
+                      ),
+                      child: ClipOval(
+                        child: Image.asset('assets/images/logo.jpg', width: 64, height: 64, fit: BoxFit.cover),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'Agri Expert System',
+                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+                    ).animate().fade(delay: 100.ms).slideY(),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Empowering farmers and experts with practical, data-informed decision support.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 14, height: 1.4, color: Colors.white.withValues(alpha: 0.9)),
+                    ).animate().fade(delay: 200.ms),
+                  ],
+                ),
               ).animate().fade().scale(),
               const SizedBox(height: 24),
-              const Text(
-                'Agri System',
-                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, letterSpacing: -0.5),
-              ).animate().fade(delay: 100.ms).slideY(),
-              const SizedBox(height: 8),
-              Text(
-                'Version 1.0.0',
-                style: TextStyle(color: Colors.grey.shade500, fontWeight: FontWeight.w600),
-              ).animate().fade(delay: 200.ms),
+
+              _buildSection(
+                context,
+                title: 'Project',
+                items: const [
+                  ('Norton University', null),
+                  ('Expert System', null),
+                ],
+              ).animate().fade(delay: 250.ms).slideY(begin: 0.1),
+              const SizedBox(height: 16),
+
+              _buildSection(
+                context,
+                title: 'Leadership',
+                items: const [
+                  ('Professor', 'Sek Socheat'),
+                  ('Email', 'Socheat.sek@gmail.com'),
+                  ('Manager', 'Mao Seavik'),
+                  ('Email', 'Ahzarky@gmail.com'),
+                ],
+              ).animate().fade(delay: 300.ms).slideY(begin: 0.1),
+              const SizedBox(height: 16),
+
+              _buildSection(
+                context,
+                title: 'Members',
+                items: const [
+                  ('Chea Cheavchorng', 'Cheavchhoorng@gmail.com'),
+                  ('Nov Panha', 'novpanha66@gmail.com'),
+                  ('Pich Rachana', 'pichrachana2003@gmail.com'),
+                ],
+              ).animate().fade(delay: 350.ms).slideY(begin: 0.1),
+
               const SizedBox(height: 32),
               Text(
-                'Agri System is an advanced AI-powered platform designed to help farmers instantly diagnose crop diseases and find actionable treatments.',
+                '© 2026 Agri Expert System. All rights reserved.',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16, height: 1.5, color: Colors.grey.shade700),
-              ).animate().fade(delay: 300.ms),
-              const Spacer(),
-              Text(
-                '© 2026 Agri System. All rights reserved.',
                 style: TextStyle(color: Colors.grey.shade400, fontSize: 12),
               ).animate().fade(delay: 400.ms),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildSection(BuildContext context, {required String title, required List<(String, String?)> items}) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: Colors.green.shade700,
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: 10),
+          ...items.map(_buildItem),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildItem((String, String?) item) {
+    final (label, value) = item;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (value != null) ...[
+            Text(
+              '$label: ',
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black87),
+            ),
+          ],
+          Expanded(
+            child: Text(
+              value ?? label,
+              style: TextStyle(fontSize: 14, height: 1.4, color: value != null ? Colors.grey.shade700 : Colors.black87),
+            ),
+          ),
+        ],
       ),
     );
   }
