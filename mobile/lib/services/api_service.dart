@@ -6,7 +6,7 @@ import '../models/user.dart';
 
 class ApiService {
   // Use 10.0.2.2 for Android emulator, 127.0.0.1 for iOS Simulator, or your machine's IP for physical devices
-  static const String baseUrl = 'http://192.168.100.196:5000/api';
+  static const String baseUrl = 'http://192.168.100.167:5000/api';
   
   static Future<Map<String, String>> _getHeaders() async {
     final prefs = await SharedPreferences.getInstance();

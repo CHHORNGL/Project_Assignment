@@ -14,9 +14,11 @@ from app.models.notification import Notification
 from app.services.notification_service import serialize_notification
 from app.utils.i18n import t, get_current_language, normalize_display_text
 
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 def create_app():
     app = Flask(__name__)
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
     app.config.from_object(Config)
 
     # ===============================
