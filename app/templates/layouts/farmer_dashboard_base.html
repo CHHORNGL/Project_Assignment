@@ -151,7 +151,7 @@
                         <div class="farmer-user-name" style="display: flex; align-items: center; gap: 6px;">
                             {{ current_user.full_name or current_user.username if current_user.is_authenticated else "Guest User" }}
                             {% if current_user.is_authenticated and current_user.is_premium %}
-                                <i class="fas fa-check-circle" style="color: #3b82f6; font-size: 0.9rem;" title="Verified Premium Account"></i>
+                                <i class="fas fa-crown text-warning" style="font-size: 0.85rem;" title="Premium Account"></i>
                             {% endif %}
                         </div>
                         <div class="farmer-user-sub">{{ current_user.username if current_user.is_authenticated else "Unregistered" }}</div>

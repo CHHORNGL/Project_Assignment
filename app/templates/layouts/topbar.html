@@ -621,7 +621,7 @@
                             {% if current_user.is_authenticated %}
                                 {{ current_user.full_name or current_user.username }}
                                 {% if current_user.is_premium %}
-                                    <i class="fas fa-check-circle" style="color: #3b82f6; font-size: 0.9rem; margin-left: 4px;" title="Premium Account"></i>
+                                    <i class="fas fa-crown text-warning ml-1" style="font-size: 0.85rem;" title="Premium Account"></i>
                                 {% endif %}
                             {% else %}
                                 {% if current_lang == 'km' %}អ្នកប្រើប្រាស់ជាភ្ញៀវ{% else %}Guest User{% endif %}

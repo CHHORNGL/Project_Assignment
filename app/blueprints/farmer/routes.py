@@ -29,7 +29,8 @@ from app.models.chat_message import ChatMessage
 from app.models.chat_session import ChatSession
 from app.services.rule_engine import diagnose as rule_diagnose
 from app.services.openai_assistant import generate_assistant_reply, suggest_symptoms_from_image
-from app.services.notification_service import notify_role, _snippet
+from app.services.notification_service import notify_role, notify_user, _snippet
+from app.services.audit_service import log_action
 from app.utils.i18n import t, get_current_language, normalize_display_text
 
 
@@ -1514,7 +1515,7 @@ def premium_checkout():
     base_checkout_price = max(0.0, original_price - savings)
         
     if request.method == "POST":
-        # Payment processing via PayPal frontend SDK success hidden form
+        # Payment processing via PayPal frontend SDK success hidden form or direct checkout
         used_coupon_code = request.form.get("applied_coupon_code", "").strip().upper()
         if used_coupon_code:
             coupon = PremiumCoupon.query.filter_by(code=used_coupon_code).first()
@@ -1524,8 +1525,28 @@ def premium_checkout():
         current_user.is_premium = True
         from datetime import datetime, timedelta
         current_user.premium_expires_at = datetime.utcnow() + timedelta(days=30)
+        
+        # Best effort user notification & audit log
+        try:
+            notify_user(
+                user_id=current_user.id,
+                kind="premium_upgrade",
+                title="Premium Membership Activated!",
+                subtitle="Welcome to Agri System Premium. Enjoy unlimited AI diagnoses, weather alerts, and 24/7 expert chat.",
+                url=url_for("farmer.dashboard"),
+                icon="fas fa-crown",
+                level="success",
+            )
+        except Exception:
+            pass
+
+        try:
+            log_action("farmer_premium_upgrade", detail=f"User @{current_user.username} upgraded to Premium (expires {current_user.premium_expires_at.strftime('%Y-%m-%d')})")
+        except Exception:
+            pass
+
         db.session.commit()
-        flash("Payment successful! Welcome to Premium.", "success")
+        flash("Payment successful! Welcome to Agri System Premium.", "success")
         return redirect(url_for("farmer.dashboard"))
         
     import os
@@ -1536,6 +1557,7 @@ def premium_checkout():
         premium_price=f"{base_checkout_price:.2f}",
         original_price=f"{original_price:.2f}",
         discount_percent=discount_percent,
+        savings=savings,
         coupon_enabled=coupon_enabled
     )
 
