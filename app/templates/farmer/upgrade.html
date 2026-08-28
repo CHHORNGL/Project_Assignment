@@ -1,4 +1,4 @@
-{% extends "layouts/farmer_dashboard_base.html" %}
+{% extends layout_shell|default("layouts/farmer_shell.html") %}
 
 {% block title %}Upgrade to Premium{% endblock %}
 
@@ -6,7 +6,7 @@
 <style>
     .pricing-header {
         text-align: center;
-        padding: 3rem 1rem 2rem;
+        padding: 3rem 1rem 1.5rem;
     }
     .pricing-badge {
         display: inline-block;
@@ -22,7 +22,7 @@
     }
     .pricing-title {
         font-weight: 800;
-        font-size: 2.5rem;
+        font-size: 2.25rem;
         color: var(--text-main);
         margin-bottom: 1rem;
     }
@@ -30,69 +30,84 @@
         color: var(--text-muted);
         max-width: 600px;
         margin: 0 auto;
-        font-size: 1.1rem;
+        font-size: 1.05rem;
         line-height: 1.6;
     }
     .pricing-cards-container {
         display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
+        flex-direction: column;
+        align-items: center;
         gap: 2rem;
-        padding: 2rem 1rem 4rem;
-        max-width: 1000px;
+        padding: 1.5rem 1rem 4rem;
+        max-width: 900px;
         margin: 0 auto;
     }
+    @media (min-width: 768px) {
+        .pricing-cards-container {
+            flex-direction: row;
+            align-items: stretch;
+            justify-content: center;
+        }
+    }
     .pricing-card {
-        flex: 1;
-        min-width: 320px;
-        background: var(--card-bg);
-        border-radius: 20px;
-        padding: 2.5rem;
+        width: 100%;
+        max-width: 400px;
+        background: var(--card-bg, #ffffff);
+        border-radius: 24px;
+        padding: 2.5rem 2rem;
         position: relative;
         transition: transform 0.3s ease, box-shadow 0.3s ease;
+        display: flex;
+        flex-direction: column;
+    }
+    @media (min-width: 768px) {
+        .pricing-card {
+            flex: 1;
+        }
     }
     .pricing-card:hover {
         transform: translateY(-5px);
     }
     .card-free {
-        border: 1px solid var(--border-light);
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        border: 1px solid var(--border-light, #e2e8f0);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
     }
     .card-premium {
         border: 2px solid #3b82f6;
-        box-shadow: 0 20px 40px rgba(59, 130, 246, 0.15);
+        box-shadow: 0 12px 32px rgba(59, 130, 246, 0.12);
     }
     .popular-badge {
         position: absolute;
-        top: -15px;
+        top: -14px;
         left: 50%;
         transform: translateX(-50%);
         background: linear-gradient(135deg, #3b82f6, #2563eb);
         color: white;
-        padding: 0.5rem 1.25rem;
+        padding: 0.4rem 1.2rem;
         border-radius: 50px;
-        font-weight: 600;
-        font-size: 0.85rem;
-        letter-spacing: 0.5px;
+        font-weight: 700;
+        font-size: 0.75rem;
+        letter-spacing: 1px;
         box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        white-space: nowrap;
     }
     .plan-name {
         font-size: 1.25rem;
         font-weight: 700;
         color: var(--text-main);
-        margin-bottom: 1rem;
+        margin-bottom: 0.5rem;
     }
     .plan-price {
         font-size: 3rem;
         font-weight: 800;
         color: var(--text-main);
         display: flex;
-        align-items:baseline;
+        align-items: baseline;
         margin-bottom: 1.5rem;
     }
     .plan-price span {
-        font-size: 1.1rem;
-        font-weight: 500;
+        font-size: 1rem;
+        font-weight: 600;
         color: var(--text-muted);
         margin-left: 0.25rem;
     }
@@ -102,46 +117,51 @@
         padding: 0.875rem;
         text-align: center;
         border-radius: 12px;
-        font-weight: 600;
+        font-weight: 700;
         font-size: 1rem;
         transition: all 0.2s ease;
         text-decoration: none;
+        margin-top: auto;
     }
     .btn-free {
-        background-color: var(--bg-body);
+        background-color: rgba(0, 0, 0, 0.03);
         color: var(--text-muted);
-        border: 1px solid var(--border-light);
+        border: 1px solid transparent;
         pointer-events: none;
+    }
+    .dark-mode .btn-free {
+        background-color: rgba(255, 255, 255, 0.05);
     }
     .btn-premium {
         background: linear-gradient(135deg, #3b82f6, #2563eb);
         color: white;
         border: none;
-        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
     }
     .btn-premium:hover {
         background: linear-gradient(135deg, #2563eb, #1d4ed8);
         color: white;
-        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
+        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
         text-decoration: none;
     }
     .features-list {
         list-style: none;
         padding: 0;
         margin: 2rem 0 0 0;
+        flex-grow: 1;
     }
     .features-list li {
         display: flex;
         align-items: flex-start;
-        margin-bottom: 1rem;
+        margin-bottom: 1.125rem;
         color: var(--text-main);
         font-size: 0.95rem;
         line-height: 1.5;
     }
     .features-list li i {
-        margin-top: 0.25rem;
+        margin-top: 0.2rem;
         margin-right: 0.75rem;
-        font-size: 1rem;
+        font-size: 1.1rem;
     }
     .feature-check {
         color: #10b981;
@@ -152,25 +172,43 @@
     }
     .feature-disabled {
         color: var(--text-muted);
-        opacity: 0.7;
+        opacity: 0.6;
     }
     hr.plan-divider {
         border: 0;
         height: 1px;
-        background: var(--border-light);
+        background: var(--border-light, #e2e8f0);
         margin: 2rem 0;
+        width: 100%;
+    }
+    
+    /* Entry Animations (Interactions) */
+    .animate-up {
+        opacity: 0;
+        transform: translateY(20px);
+        animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .delay-1 { animation-delay: 0.1s; }
+    .delay-2 { animation-delay: 0.2s; }
+    .delay-3 { animation-delay: 0.3s; }
+    
+    @keyframes fadeUp {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 </style>
 
-<div class="pricing-header">
+<div class="pricing-header animate-up">
     <div class="pricing-badge">Pricing Plans</div>
     <h1 class="pricing-title">Choose Your Plan</h1>
-    <p class="pricing-subtitle">Unlock the full power of Agri System with a Premium account. Experience advanced features, direct expert support, and localized weather intelligence.</p>
+    <p class="pricing-subtitle animate-up delay-1">Unlock the full power of Agri System with a Premium account. Experience advanced features, direct expert support, and localized weather intelligence.</p>
 </div>
 
 <div class="pricing-cards-container">
     <!-- Free Plan -->
-    <div class="pricing-card card-free">
+    <div class="pricing-card card-free animate-up delay-2">
         <div class="plan-name">Basic Free</div>
         <div class="plan-price">$0<span>/month</span></div>
         <a href="#" class="plan-btn btn-free">Your Current Plan</a>
@@ -202,7 +240,7 @@
     </div>
     
     <!-- Premium Plan -->
-    <div class="pricing-card card-premium">
+    <div class="pricing-card card-premium animate-up delay-3">
         <div class="popular-badge">RECOMMENDED</div>
         
         <div class="plan-name" style="color: #3b82f6;">Premium <i class="fas fa-crown text-warning ml-1"></i></div>

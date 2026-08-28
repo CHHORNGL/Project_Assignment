@@ -46,7 +46,7 @@
 .settings-row.stack {
     flex-direction: column;
     align-items: flex-start;
-    gap: 12px;
+    gap: 8px;
 }
 .settings-row:last-child {
     border-bottom: none;
@@ -59,6 +59,7 @@
     display: flex;
     align-items: center;
     gap: 16px;
+    flex-shrink: 0;
 }
 
 .settings-icon {
@@ -69,6 +70,7 @@
     place-items: center;
     color: #ffffff;
     font-size: 0.9rem;
+    flex-shrink: 0;
 }
 .icon-profile { background: #3b82f6; }
 .icon-email { background: #10b981; }
@@ -99,13 +101,30 @@
     color: #64748b;
     background: transparent;
     outline: none;
-    width: 200px;
+    flex: 1;
+    min-width: 0;
+    margin-left: 12px;
+    text-overflow: ellipsis;
 }
 .dark-mode .ios-input {
     color: #94a3b8;
 }
 .ios-input:focus {
     color: #3b82f6;
+}
+
+/* Specific styling for stacked inputs like passwords */
+.settings-row.stack .ios-input {
+    width: 100%;
+    margin-left: 0;
+    text-align: left;
+    background: rgba(0, 0, 0, 0.03);
+    padding: 12px;
+    border-radius: 8px;
+    box-sizing: border-box;
+}
+.dark-mode .settings-row.stack .ios-input {
+    background: rgba(255, 255, 255, 0.05);
 }
 
 .avatar-container {
@@ -226,23 +245,20 @@
             <div class="settings-row">
                 <div class="settings-row-left">
                     <div class="settings-icon icon-profile"><i class="fas fa-user"></i></div>
-                    <div class="settings-label">{{ t("username") }}</div>
                 </div>
-                <input type="text" name="username" class="ios-input" value="{{ current_user.username }}" required>
+                <input type="text" name="username" class="ios-input" style="text-align: left;" value="{{ current_user.username }}" placeholder="{{ t('username') }}" required>
             </div>
             <div class="settings-row">
                 <div class="settings-row-left">
                     <div class="settings-icon icon-profile"><i class="fas fa-id-card"></i></div>
-                    <div class="settings-label">{{ t("full_name") }}</div>
                 </div>
-                <input type="text" name="full_name" class="ios-input" value="{{ current_user.full_name or '' }}" placeholder="{{ t('enter_full_name') }}">
+                <input type="text" name="full_name" class="ios-input" style="text-align: left;" value="{{ current_user.full_name or '' }}" placeholder="{{ t('full_name') }}">
             </div>
             <div class="settings-row">
                 <div class="settings-row-left">
                     <div class="settings-icon icon-email"><i class="fas fa-envelope"></i></div>
-                    <div class="settings-label">{{ t("email") }}</div>
                 </div>
-                <input type="email" name="email" class="ios-input" value="{{ current_user.email or '' }}" placeholder="{{ t('enter_email') }}">
+                <input type="email" name="email" class="ios-input" style="text-align: left;" value="{{ current_user.email or '' }}" placeholder="{{ t('email') }}">
             </div>
         </div>
 
@@ -251,15 +267,15 @@
         <div class="settings-card">
             <div class="settings-row stack">
                 <div class="settings-label w-100">{{ t("current_password") }}</div>
-                <input type="password" name="current_password" class="ios-input w-100" style="text-align: left; background: rgba(0,0,0,0.03); padding: 10px; border-radius: 8px;" placeholder="{{ t('enter_current_password') }}">
+                <input type="password" name="current_password" class="ios-input" placeholder="{{ t('enter_current_password') }}">
             </div>
             <div class="settings-row stack">
                 <div class="settings-label w-100">{{ t("new_password") }}</div>
-                <input type="password" name="new_password" class="ios-input w-100" style="text-align: left; background: rgba(0,0,0,0.03); padding: 10px; border-radius: 8px;" placeholder="{{ t('new_password') }}">
+                <input type="password" name="new_password" class="ios-input" placeholder="{{ t('new_password') }}">
             </div>
             <div class="settings-row stack">
                 <div class="settings-label w-100">{{ t("confirm_password") }}</div>
-                <input type="password" name="confirm_password" class="ios-input w-100" style="text-align: left; background: rgba(0,0,0,0.03); padding: 10px; border-radius: 8px;" placeholder="{{ t('confirm_new_password') }}">
+                <input type="password" name="confirm_password" class="ios-input" placeholder="{{ t('confirm_new_password') }}">
             </div>
         </div>
 
