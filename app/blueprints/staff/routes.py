@@ -47,7 +47,7 @@ def login():
     auth_theme_runtime = _resolve_staff_theme_runtime()
 
     if form.validate_on_submit():
-        identifier = (form.username.data or "").strip()
+        identifier = (form.email.data or "").strip()
         user = User.query.filter(db.func.lower(User.email) == db.func.lower(identifier)).first()
 
         if not user or not check_password_hash(user.password_hash, form.password.data):

@@ -18,6 +18,7 @@ import string
 import datetime
 import smtplib
 from email.mime.text import MIMEText
+from email.utils import make_msgid, formatdate
 import os
 from flask_login import (
     login_user,
@@ -85,6 +86,8 @@ def _send_verification_email(email, code):
             msg["Subject"] = subject
             msg["From"] = smtp_sender
             msg["To"] = email
+            msg["Message-ID"] = make_msgid()
+            msg["Date"] = formatdate(localtime=True)
 
             port = int(smtp_port)
             server = smtplib.SMTP(smtp_server, port, timeout=5)
