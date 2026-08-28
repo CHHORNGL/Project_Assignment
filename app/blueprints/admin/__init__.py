@@ -9,3 +9,4 @@ admin_bp = Blueprint(
 
 from . import routes
 from . import support_chat
+from .marquee_routes import *

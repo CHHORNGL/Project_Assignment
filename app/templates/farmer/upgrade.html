@@ -206,6 +206,12 @@
     <p class="pricing-subtitle animate-up delay-1">Unlock the full power of Agri System with a Premium account. Experience advanced features, direct expert support, and localized weather intelligence.</p>
 </div>
 
+{% if discount_banner %}
+<div class="alert alert-primary text-center font-weight-bold shadow-sm animate-up" style="max-width: 900px; margin: 0 auto 2rem auto; border-radius: 12px; background: linear-gradient(135deg, rgba(78, 115, 223, 0.12), rgba(54, 185, 204, 0.12)); border: 1px solid rgba(78, 115, 223, 0.25); color: #2e59d9;">
+    <i class="fas fa-bullhorn mr-2 text-warning"></i> {{ discount_banner }}
+</div>
+{% endif %}
+
 <div class="pricing-cards-container">
     <!-- Free Plan -->
     <div class="pricing-card card-free animate-up delay-2">
@@ -244,7 +250,15 @@
         <div class="popular-badge">RECOMMENDED</div>
         
         <div class="plan-name" style="color: #3b82f6;">Premium <i class="fas fa-crown text-warning ml-1"></i></div>
-        <div class="plan-price">$20<span>/month</span></div>
+        <div class="plan-price">
+            {% if discount_percent > 0 %}
+                <span style="text-decoration: line-through; font-size: 1.25rem; color: #94a3b8; font-weight: normal; margin-right: 6px;">${{ original_price }}</span>
+            {% endif %}
+            ${{ premium_price }}<span>/month</span>
+            {% if discount_percent > 0 %}
+                <span class="badge badge-danger ml-2" style="font-size: 0.72rem; vertical-align: middle; padding: 4px 8px; border-radius: 6px;">{{ discount_percent|int }}% OFF</span>
+            {% endif %}
+        </div>
         <a href="{{ url_for('farmer.premium_checkout') }}" class="plan-btn btn-premium">Upgrade to Premium</a>
         
         <hr class="plan-divider">

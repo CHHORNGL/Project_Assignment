@@ -476,11 +476,15 @@ def dashboard():
         diagnoses = []
         ai_questions = []
 
+    from app.models.marquee import Marquee
+    active_marquees = Marquee.query.filter_by(is_active=True).order_by(Marquee.sort_order).all()
+
     return render_template(
         "farmer/dashboard.html",
         diagnoses=diagnoses,
         ai_questions=ai_questions,
-        crops=crops
+        crops=crops,
+        marquees=active_marquees
     )
 
 
@@ -1453,7 +1457,6 @@ def chat(session_id=None):
     )
 
 @farmer_bp.route("/detail")
-@farmer_required
 def detail():
     return render_template(
         "farmer/detail.html",
@@ -1467,7 +1470,27 @@ def premium_upgrade():
     if current_user.is_authenticated and getattr(current_user, "is_premium", False):
         flash("You are already a Premium member!", "info")
         return redirect(url_for("farmer.dashboard"))
-    return render_template("farmer/upgrade.html")
+    from app.models.site_setting import SiteSetting
+    price_setting = SiteSetting.query.get("premium_price")
+    discount_setting = SiteSetting.query.get("premium_discount_percent")
+    banner_setting = SiteSetting.query.get("premium_discount_banner")
+
+    original_price = float(price_setting.value) if price_setting and price_setting.value else 20.0
+    discount_percent = float(discount_setting.value) if discount_setting and discount_setting.value else 0.0
+    discount_banner = banner_setting.value if banner_setting else ""
+
+    savings = round(original_price * (discount_percent / 100.0), 2) if discount_percent > 0 else 0.0
+    final_price = f"{max(0.0, original_price - savings):.2f}"
+    orig_price_str = f"{original_price:.2f}"
+
+    return render_template(
+        "farmer/upgrade.html",
+        premium_price=final_price,
+        original_price=orig_price_str,
+        discount_percent=discount_percent,
+        discount_banner=discount_banner,
+        savings=savings
+    )
 
 @farmer_bp.route("/premium/checkout", methods=["GET", "POST"])
 @farmer_required
@@ -1476,8 +1499,28 @@ def premium_checkout():
         flash("You are already a Premium member!", "info")
         return redirect(url_for("farmer.dashboard"))
         
+    from app.models.site_setting import SiteSetting
+    from app.models.premium_coupon import PremiumCoupon
+
+    price_setting = SiteSetting.query.get("premium_price")
+    discount_setting = SiteSetting.query.get("premium_discount_percent")
+    coupon_setting = SiteSetting.query.get("premium_coupon_enabled")
+
+    original_price = float(price_setting.value) if price_setting and price_setting.value else 20.0
+    discount_percent = float(discount_setting.value) if discount_setting and discount_setting.value else 0.0
+    coupon_enabled = coupon_setting.value != "0" if coupon_setting else True
+
+    savings = round(original_price * (discount_percent / 100.0), 2) if discount_percent > 0 else 0.0
+    base_checkout_price = max(0.0, original_price - savings)
+        
     if request.method == "POST":
         # Payment processing via PayPal frontend SDK success hidden form
+        used_coupon_code = request.form.get("applied_coupon_code", "").strip().upper()
+        if used_coupon_code:
+            coupon = PremiumCoupon.query.filter_by(code=used_coupon_code).first()
+            if coupon and coupon.is_valid()[0]:
+                coupon.times_used += 1
+
         current_user.is_premium = True
         from datetime import datetime, timedelta
         current_user.premium_expires_at = datetime.utcnow() + timedelta(days=30)
@@ -1487,7 +1530,56 @@ def premium_checkout():
         
     import os
     paypal_client_id = os.getenv("PAYPAL_CLIENT_ID", "YOUR_PAYPAL_CLIENT_ID")
-    return render_template("farmer/checkout.html", paypal_client_id=paypal_client_id)
+    return render_template(
+        "farmer/checkout.html",
+        paypal_client_id=paypal_client_id,
+        premium_price=f"{base_checkout_price:.2f}",
+        original_price=f"{original_price:.2f}",
+        discount_percent=discount_percent,
+        coupon_enabled=coupon_enabled
+    )
+
+@farmer_bp.route("/api/validate-coupon", methods=["POST"])
+@farmer_required
+def validate_coupon():
+    from app.models.site_setting import SiteSetting
+    from app.models.premium_coupon import PremiumCoupon
+
+    data = request.get_json() or {}
+    code = data.get("code", "").strip().upper()
+
+    if not code:
+        return jsonify({"success": False, "message": "Please enter a coupon code."}), 400
+
+    coupon = PremiumCoupon.query.filter_by(code=code).first()
+    if not coupon:
+        return jsonify({"success": False, "message": "Invalid coupon code."}), 404
+
+    is_valid, msg = coupon.is_valid()
+    if not is_valid:
+        return jsonify({"success": False, "message": msg}), 400
+
+    price_setting = SiteSetting.query.get("premium_price")
+    discount_setting = SiteSetting.query.get("premium_discount_percent")
+
+    original_price = float(price_setting.value) if price_setting and price_setting.value else 20.0
+    discount_percent = float(discount_setting.value) if discount_setting and discount_setting.value else 0.0
+
+    savings = round(original_price * (discount_percent / 100.0), 2) if discount_percent > 0 else 0.0
+    current_price = max(0.0, original_price - savings)
+
+    discount_amount, final_price = coupon.calculate_discount(current_price)
+
+    return jsonify({
+        "success": True,
+        "code": coupon.code,
+        "discount_type": coupon.discount_type,
+        "discount_value": coupon.discount_value,
+        "discount_amount": f"{discount_amount:.2f}",
+        "final_price": f"{final_price:.2f}",
+        "message": f"Coupon applied: {coupon.code} (-${discount_amount:.2f})"
+    })
+
 
 @farmer_bp.route("/redeem-code", methods=["POST"])
 @farmer_required

@@ -57,6 +57,20 @@ def notify_user(
     source_id: int | None = None,
     created_at: datetime | None = None,
 ) -> Notification:
+    if source_id is not None:
+        existing = Notification.query.filter_by(
+            user_id=user_id, kind=kind, source_id=source_id
+        ).first()
+        if existing:
+            existing.title = title
+            existing.subtitle = subtitle
+            existing.url = url
+            existing.icon = icon
+            existing.level = level
+            existing.created_at = created_at or datetime.utcnow()
+            existing.read_at = None
+            return existing
+
     n = Notification(
         user_id=user_id,
         kind=kind,
@@ -70,6 +84,7 @@ def notify_user(
     )
     db.session.add(n)
     return n
+
 
 
 def notify_role(

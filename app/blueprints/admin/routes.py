@@ -111,6 +111,122 @@ def _zip_response(files, filename):
 # ==================================================
 # ADMIN DASHBOARD
 # ==================================================
+@admin_bp.route("/premium-settings", methods=["GET", "POST"])
+@login_required
+@admin_required
+def premium_settings():
+    from app.models.site_setting import SiteSetting
+    from app.models.user import User
+    from app.models.premium_coupon import PremiumCoupon
+    from datetime import datetime
+
+    def get_or_set_setting(key, value=None):
+        setting = SiteSetting.query.get(key)
+        if value is not None:
+            if not setting:
+                setting = SiteSetting(key=key, value=str(value))
+                db.session.add(setting)
+            else:
+                setting.value = str(value)
+        return setting.value if setting else ""
+
+    if request.method == "POST":
+        action = request.form.get("action", "save_pricing")
+
+        if action == "save_pricing":
+            new_price = request.form.get("premium_price", "20.00").strip()
+            discount_percent = request.form.get("discount_percent", "0").strip()
+            discount_banner = request.form.get("discount_banner", "").strip()
+            coupon_enabled = "1" if request.form.get("coupon_enabled") else "0"
+
+            get_or_set_setting("premium_price", new_price)
+            get_or_set_setting("premium_discount_percent", discount_percent)
+            get_or_set_setting("premium_discount_banner", discount_banner)
+            get_or_set_setting("premium_coupon_enabled", coupon_enabled)
+
+            db.session.commit()
+            flash("Pricing and discount settings updated successfully.", "success")
+            return redirect(url_for("admin.premium_settings"))
+
+        elif action == "create_coupon":
+            code = request.form.get("code", "").strip().upper()
+            discount_type = request.form.get("discount_type", "percent")
+            discount_value = float(request.form.get("discount_value", 10.0))
+            max_uses = int(request.form.get("max_uses", 100))
+            expiry_str = request.form.get("expires_at", "").strip()
+            
+            expires_at = None
+            if expiry_str:
+                try:
+                    expires_at = datetime.strptime(expiry_str, "%Y-%m-%d")
+                except ValueError:
+                    expires_at = None
+
+            if not code:
+                flash("Coupon code cannot be empty.", "danger")
+            elif PremiumCoupon.query.filter_by(code=code).first():
+                flash(f"Coupon code '{code}' already exists.", "warning")
+            else:
+                new_coupon = PremiumCoupon(
+                    code=code,
+                    discount_type=discount_type,
+                    discount_value=discount_value,
+                    max_uses=max_uses,
+                    expires_at=expires_at,
+                    is_active=True
+                )
+                db.session.add(new_coupon)
+                db.session.commit()
+                flash(f"Coupon '{code}' created successfully!", "success")
+            return redirect(url_for("admin.premium_settings"))
+
+        elif action == "toggle_coupon":
+            coupon_id = request.form.get("coupon_id")
+            coupon = PremiumCoupon.query.get(coupon_id)
+            if coupon:
+                coupon.is_active = not coupon.is_active
+                db.session.commit()
+                status = "activated" if coupon.is_active else "deactivated"
+                flash(f"Coupon '{coupon.code}' {status}.", "info")
+            return redirect(url_for("admin.premium_settings"))
+
+        elif action == "delete_coupon":
+            coupon_id = request.form.get("coupon_id")
+            coupon = PremiumCoupon.query.get(coupon_id)
+            if coupon:
+                code_name = coupon.code
+                db.session.delete(coupon)
+                db.session.commit()
+                flash(f"Coupon '{code_name}' deleted.", "success")
+            return redirect(url_for("admin.premium_settings"))
+
+    # Fetch current settings
+    current_price = get_or_set_setting("premium_price") or "20.00"
+    discount_percent = get_or_set_setting("premium_discount_percent") or "0"
+    discount_banner = get_or_set_setting("premium_discount_banner") or ""
+    coupon_enabled = get_or_set_setting("premium_coupon_enabled") != "0"
+
+    try:
+        orig = float(current_price)
+        disc = float(discount_percent)
+        final_price = f"{max(0.0, orig * (1.0 - disc / 100.0)):.2f}"
+    except (ValueError, TypeError):
+        final_price = current_price
+
+    coupons = PremiumCoupon.query.order_by(PremiumCoupon.created_at.desc()).all()
+    premium_users_count = User.query.filter_by(is_premium=True).count()
+
+    return render_template(
+        "admin/premium_settings.html",
+        current_price=current_price,
+        discount_percent=discount_percent,
+        discount_banner=discount_banner,
+        coupon_enabled=coupon_enabled,
+        final_price=final_price,
+        coupons=coupons,
+        premium_count=premium_users_count
+    )
+
 @admin_bp.route("/dashboard")
 @admin_required
 def dashboard():
@@ -1669,12 +1785,60 @@ def support_requests():
         .all()
     )
 
+    open_count = SupportRequest.query.filter_by(status="open").count()
+    resolved_count = SupportRequest.query.filter_by(status="resolved").count()
+    total_count = SupportRequest.query.count()
+
+    users = User.query.order_by(User.username.asc()).limit(100).all()
+
     return render_template(
         "admin/support_requests.html",
         support_requests=support_requests,
         filter_status=filter_status,
         q=q,
+        open_count=open_count,
+        resolved_count=resolved_count,
+        total_count=total_count,
+        users=users,
     )
+
+
+@admin_bp.route("/support-requests/create", methods=["POST"])
+@login_required
+@permission_required("view_dashboard")
+def create_support_request():
+    user_id = request.form.get("requester_id")
+    message = request.form.get("message", "").strip()
+    page = request.form.get("page", "").strip()
+
+    if not message:
+        flash("Inquiry message cannot be empty.", "danger")
+        return redirect(url_for("admin.support_requests"))
+
+    requester = User.query.get(user_id) if user_id else current_user
+    if not requester:
+        requester = current_user
+
+    role_label = "admin"
+    if hasattr(requester, "has_role"):
+        if requester.has_role("farmer"):
+            role_label = "farmer"
+        elif requester.has_role("expert"):
+            role_label = "expert"
+
+    req = SupportRequest(
+        requester_id=requester.id,
+        requester_role=role_label,
+        message=message,
+        page=page or "/admin/support-requests",
+        user_agent=(request.headers.get("User-Agent") or "Admin Direct Ticket")[:255],
+        status="open"
+    )
+    db.session.add(req)
+    db.session.commit()
+    flash(f"Support inquiry ticket #{req.id} created successfully!", "success")
+    return redirect(url_for("admin.support_requests"))
+
 
 
 @admin_bp.route("/support-requests/<int:req_id>/resolve", methods=["POST"])
@@ -1684,7 +1848,7 @@ def resolve_support_request(req_id):
     req = SupportRequest.query.get_or_404(req_id)
 
     if req.status == "resolved":
-        flash("Support request already resolved.", "info")
+        flash("Support request is already resolved.", "info")
     else:
         req.status = "resolved"
         req.resolved_at = datetime.utcnow()
@@ -1692,12 +1856,13 @@ def resolve_support_request(req_id):
 
         try:
             db.session.commit()
+            flash(f"Support request #{req.id} marked as resolved successfully!", "success")
         except Exception:
             db.session.rollback()
-            flash("Unable to resolve support request. Please try again.", "danger")
+            flash("Unable to update support request status. Please try again.", "danger")
             return redirect(url_for("admin.support_requests"))
 
-        # Notify requester (best-effort).
+        # Notify requester (best-effort; isolated transaction)
         try:
             notify_user(
                 user_id=req.requester_id,
@@ -1713,13 +1878,41 @@ def resolve_support_request(req_id):
         except Exception:
             db.session.rollback()
 
-        flash("Support request marked as resolved.", "success")
-
     next_status = (request.form.get("status") or "open").strip().lower()
     next_q = (request.form.get("q") or "").strip()
     if next_status not in {"open", "resolved", "all"}:
         next_status = "open"
     return redirect(url_for("admin.support_requests", status=next_status, q=next_q))
+
+
+
+@admin_bp.route("/support-requests/<int:req_id>/reopen", methods=["POST"])
+@login_required
+@permission_required("view_dashboard")
+def reopen_support_request(req_id):
+    req = SupportRequest.query.get_or_404(req_id)
+    req.status = "open"
+    req.resolved_at = None
+    req.resolved_by_id = None
+    db.session.commit()
+    flash("Support request reopened.", "info")
+    next_status = (request.form.get("status") or "all").strip().lower()
+    next_q = (request.form.get("q") or "").strip()
+    return redirect(url_for("admin.support_requests", status=next_status, q=next_q))
+
+
+@admin_bp.route("/support-requests/<int:req_id>/delete", methods=["POST"])
+@login_required
+@permission_required("view_dashboard")
+def delete_support_request(req_id):
+    req = SupportRequest.query.get_or_404(req_id)
+    db.session.delete(req)
+    db.session.commit()
+    flash("Support request deleted successfully.", "success")
+    next_status = (request.form.get("status") or "all").strip().lower()
+    next_q = (request.form.get("q") or "").strip()
+    return redirect(url_for("admin.support_requests", status=next_status, q=next_q))
+
 
 
 

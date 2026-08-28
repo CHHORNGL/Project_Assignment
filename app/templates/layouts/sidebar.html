@@ -1,44 +1,593 @@
 <!-- Sidebar -->
+<style>
+/* =========================================================
+   DASHBOARD-STYLE BIG BUSINESS SIDEBAR (LIGHT & DARK MODE)
+   ========================================================= */
+
+:root {
+    --sidebar-width: 270px;
+    --sidebar-width-collapsed: 80px;
+
+    --adm-sb-bg: #ffffff;
+    --adm-sb-border: rgba(60, 50, 40, 0.08);
+    --adm-sb-shadow: 12px 0 28px rgba(15, 23, 42, 0.04);
+    --adm-sb-text: #2d2824;
+    --adm-sb-muted: #7c746c;
+    --adm-sb-primary: #4e73df;
+    
+    --adm-nav-bg: #f8fafc;
+    --adm-nav-border: #edf2f7;
+    --adm-nav-hover-bg: #ffffff;
+    --adm-nav-hover-border: #cbd5e1;
+    --adm-nav-hover-shadow: 0 4px 14px rgba(78, 115, 223, 0.12);
+    
+    --adm-nav-active-bg: #ffffff;
+    --adm-nav-active-border: rgba(78, 115, 223, 0.4);
+    --adm-nav-active-shadow: 0 6px 18px rgba(78, 115, 223, 0.15);
+    --adm-nav-active-text: #4e73df;
+    
+    --adm-icon-bg: rgba(78, 115, 223, 0.12);
+    --adm-icon-color: #4e73df;
+    --adm-icon-active-bg: #4e73df;
+    --adm-icon-active-color: #ffffff;
+}
+
+body.icon-nav {
+    --sidebar-width: 80px !important;
+    --sidebar-width-collapsed: 80px !important;
+}
+
+.dark-mode {
+    --adm-sb-bg: #1e293b;
+    --adm-sb-border: rgba(255, 255, 255, 0.08);
+    --adm-sb-shadow: 12px 0 28px rgba(0, 0, 0, 0.25);
+    --adm-sb-text: #f1f5f9;
+    --adm-sb-muted: #94a3b8;
+    --adm-sb-primary: #60a5fa;
+    
+    --adm-nav-bg: rgba(255, 255, 255, 0.03);
+    --adm-nav-border: rgba(255, 255, 255, 0.06);
+    --adm-nav-hover-bg: rgba(255, 255, 255, 0.07);
+    --adm-nav-hover-border: rgba(255, 255, 255, 0.12);
+    --adm-nav-hover-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+    
+    --adm-nav-active-bg: rgba(96, 165, 250, 0.14);
+    --adm-nav-active-border: rgba(96, 165, 250, 0.35);
+    --adm-nav-active-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+    --adm-nav-active-text: #60a5fa;
+    
+    --adm-icon-bg: rgba(96, 165, 250, 0.15);
+    --adm-icon-color: #60a5fa;
+    --adm-icon-active-bg: #3b82f6;
+    --adm-icon-active-color: #ffffff;
+}
+
+/* =========================================================
+   SIDEBAR CONTAINER & TOPBAR SYNC TRANSITIONS
+   ========================================================= */
+.app-sidebar {
+    width: var(--sidebar-width) !important;
+    min-width: var(--sidebar-width) !important;
+    background: var(--adm-sb-bg) !important;
+    border-right: 1px solid var(--adm-sb-border) !important;
+    box-shadow: var(--adm-sb-shadow) !important;
+    padding: 20px 16px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(148, 163, 184, 0.25) transparent;
+    transition: width 260ms cubic-bezier(0.4, 0, 0.2, 1), min-width 260ms cubic-bezier(0.4, 0, 0.2, 1), padding 260ms cubic-bezier(0.4, 0, 0.2, 1), transform 260ms cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease !important;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    z-index: 100;
+}
+
+.admin-theme .topbar.app-topbar,
+.expert-simple .topbar.app-topbar,
+.farmer-dash-theme .topbar.app-topbar {
+    left: var(--sidebar-width) !important;
+    transition: left 260ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.app-sidebar::-webkit-scrollbar {
+    width: 5px;
+}
+.app-sidebar::-webkit-scrollbar-track {
+    background: transparent;
+}
+.app-sidebar::-webkit-scrollbar-thumb {
+    background-color: rgba(148, 163, 184, 0.25);
+    border-radius: 10px;
+}
+.app-sidebar::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(148, 163, 184, 0.4);
+}
+
+/* Brand Section */
+.app-sidebar .sidebar-brand-row {
+    margin-bottom: 16px;
+    padding: 4px 6px;
+    transition: all 0.24s ease;
+}
+.app-sidebar .sidebar-brand {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    text-decoration: none !important;
+    padding: 0 !important;
+    height: auto !important;
+    transition: all 0.24s ease;
+}
+.app-sidebar .sidebar-logo {
+    width: 44px !important;
+    height: 44px !important;
+    border-radius: 12px !important;
+    object-fit: cover;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transition: all 0.24s ease;
+    flex-shrink: 0;
+}
+.app-sidebar .brand-text-col {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    opacity: 1;
+    max-width: 180px;
+    overflow: hidden;
+    white-space: nowrap;
+    transition: opacity 0.2s ease, max-width 0.24s ease;
+}
+.app-sidebar .brand-main-title {
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--adm-sb-text);
+    line-height: 1.2;
+}
+.app-sidebar .brand-sub-badge {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    color: var(--adm-sb-primary);
+}
+
+/* Section Headings */
+.app-sidebar .sidebar-heading {
+    font-size: 0.72rem !important;
+    letter-spacing: 0.08em !important;
+    text-transform: uppercase !important;
+    color: var(--adm-sb-muted) !important;
+    font-weight: 700 !important;
+    margin: 14px 8px 6px 8px !important;
+    padding: 0 !important;
+    opacity: 1;
+    max-height: 30px;
+    overflow: hidden;
+    transition: opacity 0.2s ease, max-height 0.24s ease, margin 0.24s ease;
+}
+
+/* Nav Item List */
+.app-sidebar .nav-item {
+    margin-bottom: 6px !important;
+    list-style: none !important;
+    width: 100%;
+}
+
+/* Nav Link Card */
+.app-sidebar .nav-item .nav-link {
+    display: grid !important;
+    grid-template-columns: 34px 1fr 16px !important;
+    align-items: center !important;
+    gap: 12px !important;
+    padding: 10px 14px !important;
+    border-radius: 14px !important;
+    color: var(--adm-sb-text) !important;
+    text-decoration: none !important;
+    border: 1px solid var(--adm-nav-border) !important;
+    background: var(--adm-nav-bg) !important;
+    box-shadow: none !important;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease, color 0.18s ease, padding 0.24s ease, width 0.24s ease !important;
+    font-weight: 600 !important;
+    line-height: 1.25 !important;
+    position: relative !important;
+    overflow: visible !important;
+    width: 100% !important;
+}
+
+/* Left Accent Indicator */
+.app-sidebar .nav-item .nav-link::before {
+    content: "" !important;
+    position: absolute !important;
+    left: 4px !important;
+    top: 8px !important;
+    bottom: 8px !important;
+    width: 3px !important;
+    border-radius: 999px !important;
+    background: transparent !important;
+    opacity: 0 !important;
+    transition: opacity 0.18s ease, background-color 0.18s ease !important;
+    display: block !important;
+}
+
+/* Nav Icon Badge (ALWAYS VISIBLE & PROTECTED) */
+.app-sidebar .nav-item .nav-link .nav-icon,
+.app-sidebar.icon-only .nav-item .nav-link .nav-icon,
+body.icon-nav .app-sidebar .nav-item .nav-link .nav-icon,
+.app-sidebar.toggled .nav-item .nav-link .nav-icon {
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 10px !important;
+    background: var(--adm-icon-bg) !important;
+    color: var(--adm-icon-color) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 13px !important;
+    transition: all 0.2s ease !important;
+    flex-shrink: 0 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    max-width: none !important;
+    transform: none !important;
+}
+
+.app-sidebar .nav-item .nav-link .nav-icon i,
+.app-sidebar.icon-only .nav-item .nav-link .nav-icon i,
+body.icon-nav .app-sidebar .nav-item .nav-link .nav-icon i,
+.app-sidebar.toggled .nav-item .nav-link .nav-icon i {
+    display: inline-block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* Nav Label */
+.app-sidebar .nav-item .nav-link .nav-label {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--adm-sb-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    opacity: 1;
+    transition: opacity 0.2s ease;
+}
+
+/* Nav Chevron */
+.app-sidebar .nav-item .nav-link .nav-chevron {
+    color: var(--adm-sb-muted);
+    font-size: 0.75rem;
+    opacity: 0;
+    transform: translateX(-4px);
+    transition: opacity 0.18s ease, transform 0.18s ease;
+    justify-self: end;
+}
+
+/* Hover State */
+.app-sidebar .nav-item .nav-link:hover {
+    background: var(--adm-nav-hover-bg) !important;
+    border-color: var(--adm-nav-hover-border) !important;
+    box-shadow: var(--adm-nav-hover-shadow) !important;
+    transform: translateY(-1px);
+}
+.app-sidebar .nav-item .nav-link:hover .nav-chevron {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* Active State */
+.app-sidebar .nav-item.active .nav-link,
+.app-sidebar .nav-item .nav-link.active {
+    background: var(--adm-nav-active-bg) !important;
+    border-color: var(--adm-nav-active-border) !important;
+    box-shadow: var(--adm-nav-active-shadow) !important;
+    color: var(--adm-nav-active-text) !important;
+}
+.app-sidebar .nav-item.active .nav-link .nav-label,
+.app-sidebar .nav-item .nav-link.active .nav-label {
+    color: var(--adm-nav-active-text) !important;
+    font-weight: 700 !important;
+}
+.app-sidebar .nav-item.active .nav-link .nav-icon,
+.app-sidebar .nav-item .nav-link.active .nav-icon {
+    background: var(--adm-icon-active-bg) !important;
+    color: var(--adm-icon-active-color) !important;
+}
+.app-sidebar .nav-item.active .nav-link .nav-chevron,
+.app-sidebar .nav-item .nav-link.active .nav-chevron {
+    opacity: 1;
+    color: var(--adm-nav-active-text);
+    transform: translateX(0);
+}
+.app-sidebar .nav-item.active .nav-link::before,
+.app-sidebar .nav-item .nav-link.active::before {
+    opacity: 1 !important;
+    background: var(--adm-sb-primary) !important;
+}
+
+/* Accordion Controller Menu */
+.app-sidebar .nav-item .collapse {
+    position: relative !important;
+    left: 0 !important;
+    width: 100% !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    margin-top: 4px;
+}
+.app-sidebar .nav-item .collapse .collapse-inner {
+    padding: 6px 0 6px 12px !important;
+    background: transparent !important;
+    border-left: 2px dashed var(--adm-sb-border);
+    margin-left: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.app-sidebar .nav-item .collapse .collapse-item {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    padding: 8px 12px !important;
+    font-size: 0.86rem !important;
+    font-weight: 600 !important;
+    color: var(--adm-sb-muted) !important;
+    border-radius: 10px !important;
+    text-decoration: none !important;
+    transition: all 0.18s ease !important;
+}
+.app-sidebar .nav-item .collapse .collapse-item:hover {
+    color: var(--adm-sb-text) !important;
+    background: var(--adm-nav-hover-bg) !important;
+    transform: translateX(3px);
+}
+.app-sidebar .nav-item .collapse .collapse-item.active {
+    color: var(--adm-sb-primary) !important;
+    background: var(--adm-nav-active-bg) !important;
+    font-weight: 700 !important;
+}
+.app-sidebar .nav-item .collapse .collapse-item i {
+    width: 18px;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+/* Accordion Toggle Chevron Rotation */
+.app-sidebar .nav-link[data-toggle="collapse"] .nav-chevron {
+    opacity: 1 !important;
+    transform: rotate(0deg);
+    transition: transform 0.2s ease;
+}
+.app-sidebar .nav-link[data-toggle="collapse"]:not(.collapsed) .nav-chevron {
+    transform: rotate(90deg) !important;
+}
+
+/* Logout link special styling */
+.app-sidebar .nav-link-logout {
+    border-color: rgba(231, 74, 59, 0.15) !important;
+    background: rgba(231, 74, 59, 0.04) !important;
+}
+.app-sidebar .nav-link-logout .nav-icon {
+    background: rgba(231, 74, 59, 0.12) !important;
+    color: #e74a3b !important;
+}
+.app-sidebar .nav-link-logout .nav-label {
+    color: #e74a3b !important;
+}
+.app-sidebar .nav-link-logout:hover {
+    background: rgba(231, 74, 59, 0.1) !important;
+    border-color: rgba(231, 74, 59, 0.3) !important;
+}
+
+/* =========================================================
+   ICON-ONLY / COLLAPSED DESKTOP MODE (.icon-only / .toggled)
+   ========================================================= */
+body.icon-nav .app-sidebar,
+.app-sidebar.icon-only,
+.app-sidebar.toggled {
+    width: 80px !important;
+    min-width: 80px !important;
+    padding: 20px 10px !important;
+    align-items: center !important;
+}
+
+body.icon-nav .app-sidebar .sidebar-brand-row,
+.app-sidebar.icon-only .sidebar-brand-row,
+.app-sidebar.toggled .sidebar-brand-row {
+    padding: 0 !important;
+    justify-content: center !important;
+    margin-bottom: 20px !important;
+}
+
+body.icon-nav .app-sidebar .sidebar-brand,
+.app-sidebar.icon-only .sidebar-brand,
+.app-sidebar.toggled .sidebar-brand {
+    justify-content: center !important;
+    gap: 0 !important;
+}
+
+body.icon-nav .app-sidebar .sidebar-logo,
+.app-sidebar.icon-only .sidebar-logo,
+.app-sidebar.toggled .sidebar-logo {
+    width: 40px !important;
+    height: 40px !important;
+}
+
+body.icon-nav .app-sidebar .brand-text-col,
+.app-sidebar.icon-only .brand-text-col,
+.app-sidebar.toggled .brand-text-col,
+body.icon-nav .app-sidebar .sidebar-heading,
+.app-sidebar.icon-only .sidebar-heading,
+.app-sidebar.toggled .sidebar-heading {
+    display: none !important;
+    opacity: 0 !important;
+    max-height: 0 !important;
+    max-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+body.icon-nav .app-sidebar .nav-item,
+.app-sidebar.icon-only .nav-item,
+.app-sidebar.toggled .nav-item {
+    display: flex !important;
+    justify-content: center !important;
+    width: 100% !important;
+}
+
+body.icon-nav .app-sidebar .nav-item .nav-link,
+.app-sidebar.icon-only .nav-item .nav-link,
+.app-sidebar.toggled .nav-item .nav-link {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 48px !important;
+    height: 48px !important;
+    padding: 0 !important;
+    border-radius: 14px !important;
+    margin: 0 auto !important;
+}
+
+body.icon-nav .app-sidebar .nav-item .nav-link .nav-label,
+.app-sidebar.icon-only .nav-item .nav-link .nav-label,
+.app-sidebar.toggled .nav-item .nav-link .nav-label,
+body.icon-nav .app-sidebar .nav-item .nav-link .nav-chevron,
+.app-sidebar.icon-only .nav-item .nav-link .nav-chevron,
+.app-sidebar.toggled .nav-item .nav-link .nav-chevron {
+    display: none !important;
+    opacity: 0 !important;
+    max-width: 0 !important;
+}
+
+body.icon-nav .app-sidebar .nav-item .collapse,
+.app-sidebar.icon-only .nav-item .collapse,
+.app-sidebar.toggled .nav-item .collapse {
+    display: none !important;
+}
+
+/* Floating Tooltips in Icon-only Mode */
+body.icon-nav .app-sidebar .nav-link[data-tooltip]::after,
+.app-sidebar.icon-only .nav-link[data-tooltip]::after,
+.app-sidebar.toggled .nav-link[data-tooltip]::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: calc(100% + 12px);
+    top: 50%;
+    transform: translateY(-50%) translateX(-6px);
+    background: rgba(15, 23, 42, 0.94);
+    color: #ffffff;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 7px 14px;
+    border-radius: 8px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.18s ease, transform 0.18s ease;
+    z-index: 99999;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+    backdrop-filter: blur(8px);
+}
+
+body.icon-nav .app-sidebar .nav-link[data-tooltip]:hover::after,
+.app-sidebar.icon-only .nav-link[data-tooltip]:hover::after,
+.app-sidebar.toggled .nav-link[data-tooltip]:hover::after {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+}
+
+/* =========================================================
+   MOBILE RESPONSIVE BEHAVIOR (Sliding Drawer)
+   ========================================================= */
+@media (max-width: 767.98px) {
+    .app-sidebar {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        bottom: 0 !important;
+        height: 100vh !important;
+        max-height: 100vh !important;
+        width: 270px !important;
+        min-width: 270px !important;
+        transform: translateX(-100%) !important;
+        transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        box-shadow: 16px 0 36px rgba(0, 0, 0, 0.25) !important;
+        z-index: 1050 !important;
+    }
+
+    body.mobile-nav-open .app-sidebar,
+    .app-sidebar:not(.toggled) {
+        transform: translateX(0) !important;
+    }
+
+    .app-sidebar.toggled {
+        transform: translateX(-100%) !important;
+        width: 270px !important;
+        min-width: 270px !important;
+    }
+
+    #mobile-sidebar-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(15, 23, 42, 0.55);
+        backdrop-filter: blur(4px);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.28s ease;
+        z-index: 1040;
+    }
+
+    body.mobile-nav-open #mobile-sidebar-backdrop {
+        opacity: 1;
+        pointer-events: auto;
+    }
+}
+</style>
+
 {% set path = request.path %}
-{% set home_url = url_for('main.index') %}
+{% set home_url = url_for("main.index") %}
 {% set active_side = "farmer" %}
 {% if current_user.is_authenticated %}
-    {% if path.startswith('/admin') and (current_user.has_role("admin") or current_user.has_route_access("admin")) %}
-        {% set home_url = url_for('admin.dashboard') %}
+    {% if path.startswith("/admin") and (current_user.has_role("admin") or current_user.has_route_access("admin")) %}
+        {% set home_url = url_for("admin.dashboard") %}
         {% set active_side = "admin" %}
-    {% elif path.startswith('/expert') and (current_user.has_role("expert") or current_user.has_route_access("expert")) %}
-        {% set home_url = url_for('expert.dashboard') %}
+    {% elif path.startswith("/expert") and (current_user.has_role("expert") or current_user.has_route_access("expert")) %}
+        {% set home_url = url_for("expert.dashboard") %}
         {% set active_side = "expert" %}
-    {% elif path.startswith('/farmer') and (current_user.has_role("farmer") or current_user.has_route_access("farmer")) %}
-        {% set home_url = url_for('farmer.dashboard') %}
+    {% elif path.startswith("/farmer") and (current_user.has_role("farmer") or current_user.has_route_access("farmer")) %}
+        {% set home_url = url_for("farmer.dashboard") %}
         {% set active_side = "farmer" %}
     {% elif current_user.has_role("admin") or current_user.has_route_access("admin") %}
-        {% set home_url = url_for('admin.dashboard') %}
+        {% set home_url = url_for("admin.dashboard") %}
         {% set active_side = "admin" %}
     {% elif current_user.has_role("expert") or current_user.has_route_access("expert") %}
-        {% set home_url = url_for('expert.dashboard') %}
+        {% set home_url = url_for("expert.dashboard") %}
         {% set active_side = "expert" %}
     {% elif current_user.has_role("farmer") or current_user.has_route_access("farmer") %}
-        {% set home_url = url_for('farmer.dashboard') %}
+        {% set home_url = url_for("farmer.dashboard") %}
         {% set active_side = "farmer" %}
     {% endif %}
 {% endif %}
-<ul class="navbar-nav sidebar accordion app-sidebar"
-    id="accordionSidebar">
+
+<ul class="navbar-nav sidebar accordion app-sidebar" id="accordionSidebar">
 
     <!-- ===============================
          BRAND / LOGO
     =============================== -->
     <div class="sidebar-brand-row">
-        <a class="sidebar-brand d-flex align-items-center"
-           href="{{ home_url }}"
-           style="text-decoration:none;">
-            <img src="{{ url_for('static', filename='img/logo.jpg') }}"
+        <a class="sidebar-brand" href="{{ home_url }}">
+            <img src="{{ url_for("static", filename="img/logo.jpg") }}"
                  alt="Agri Logo"
                  class="sidebar-logo app-logo-circle">
-            <span class="ml-2 font-weight-bold sidebar-logo-text">
-                Agri System
-            </span>
+            <div class="brand-text-col">
+                <span class="brand-main-title">Agri System</span>
+                <span class="brand-sub-badge">
+                    {% if active_side == "admin" %}ADMIN PANEL{% elif active_side == "expert" %}EXPERT PANEL{% else %}FARMER PANEL{% endif %}
+                </span>
+            </div>
         </a>
     </div>
 
@@ -47,127 +596,144 @@
     =============================== -->
     {% if current_user.is_authenticated and active_side == "admin" %}
 
-    <div class="sidebar-heading mt-3">
+    <div class="sidebar-heading">
         {{ t("admin") }}
     </div>
 
     <li class="nav-item">
-        <a class="nav-link {% if path == url_for('admin.dashboard') %}active{% endif %}"
-           href="{{ url_for('admin.dashboard') }}"
-           data-tooltip="{{ t('dashboard') }}"
-           aria-label="{{ t('dashboard') }}">
-            <i class="menu-icon fas fa-home"></i>
-            <span>{{ t("dashboard") }}</span>
+        <a class="nav-link {% if path == url_for("admin.dashboard") %}active{% endif %}"
+           href="{{ url_for("admin.dashboard") }}"
+           data-tooltip="{{ t("dashboard") }}"
+           aria-label="{{ t("dashboard") }}">
+            <span class="nav-icon"><i class="fas fa-home"></i></span>
+            <span class="nav-label">{{ t("dashboard") }}</span>
+            <span class="nav-chevron"><i class="fas fa-chevron-right"></i></span>
         </a>
     </li>
 
-    {% if current_user.has_role('admin') or current_user.has_permission('manage_users') %}
+    {% if current_user.has_role("admin") or current_user.has_permission("manage_users") %}
     <li class="nav-item">
-        <a class="nav-link {% if path.startswith('/admin/users') and not path.startswith('/admin/users/promo') %}active{% endif %}"
-           href="{{ url_for('admin.users') }}"
-           data-tooltip="{{ t('manage_users') }}"
-           aria-label="{{ t('manage_users') }}">
-            <i class="menu-icon fas fa-users"></i>
-            <span>{{ t("manage_users") }}</span>
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link {% if path.startswith('/admin/promo-codes') %}active{% endif %}"
-           href="{{ url_for('admin.promo_codes') }}"
-           data-tooltip="Reward Codes"
-           aria-label="Reward Codes">
-            <i class="menu-icon fas fa-gift"></i>
-            <span>Reward Codes</span>
+        <a class="nav-link {% if path.startswith("/admin/users") and not path.startswith("/admin/users/promo") %}active{% endif %}"
+           href="{{ url_for("admin.users") }}"
+           data-tooltip="{{ t("manage_users") }}"
+           aria-label="{{ t("manage_users") }}">
+            <span class="nav-icon"><i class="fas fa-users"></i></span>
+            <span class="nav-label">{{ t("manage_users") }}</span>
+            <span class="nav-chevron"><i class="fas fa-chevron-right"></i></span>
         </a>
     </li>
     {% endif %}
 
-    {% if current_user.has_role('admin') or current_user.has_permission('manage_roles') %}
+    {% if current_user.has_role("admin") or current_user.has_permission("manage_roles") %}
     <li class="nav-item">
-        <a class="nav-link {% if path.startswith('/admin/roles') %}active{% endif %}"
-           href="{{ url_for('admin.roles') }}"
-           data-tooltip="{{ t('roles_permissions') }}"
-           aria-label="{{ t('roles_permissions') }}">
-            <i class="menu-icon fas fa-user-shield"></i>
-            <span>{{ t("roles_permissions") }}</span>
+        <a class="nav-link {% if path.startswith("/admin/roles") %}active{% endif %}"
+           href="{{ url_for("admin.roles") }}"
+           data-tooltip="{{ t("roles_permissions") }}"
+           aria-label="{{ t("roles_permissions") }}">
+            <span class="nav-icon"><i class="fas fa-user-shield"></i></span>
+            <span class="nav-label">{{ t("roles_permissions") }}</span>
+            <span class="nav-chevron"><i class="fas fa-chevron-right"></i></span>
         </a>
     </li>
     {% endif %}
 
-    {% if current_user.has_role('admin') or current_user.has_permission('view_dashboard') %}
+    {% if current_user.has_role("admin") or current_user.has_permission("view_dashboard") %}
     <li class="nav-item">
-        <a class="nav-link {% if path.startswith('/admin/audit-logs') %}active{% endif %}"
-           href="{{ url_for('admin.audit_logs') }}"
-           data-tooltip="{{ t('audit_logs') }}"
-           aria-label="{{ t('audit_logs') }}">
-            <i class="menu-icon fas fa-clipboard-list"></i>
-            <span>{{ t("audit_logs") }}</span>
-        </a>
-    </li>
-
-    <li class="nav-item">
-        <a class="nav-link {% if path.startswith('/admin/support-requests') %}active{% endif %}"
-           href="{{ url_for('admin.support_requests') }}"
-           data-tooltip="{{ t('support_requests') }}"
-           aria-label="{{ t('support_requests') }}">
-            <i class="menu-icon fas fa-life-ring"></i>
-            <span>{{ t("support_requests") }}</span>
-        </a>
-    </li>
-
-    <li class="nav-item">
-        <a class="nav-link {% if path.startswith('/admin/support_chats') %}active{% endif %}"
-           href="{{ url_for('admin.support_chats') }}"
-           data-tooltip="Live Support Chats"
-           aria-label="Live Support Chats">
-            <i class="menu-icon fas fa-comments"></i>
-            <span>Live Support Chats</span>
+        <a class="nav-link {% if path.startswith("/admin/audit-logs") %}active{% endif %}"
+           href="{{ url_for("admin.audit_logs") }}"
+           data-tooltip="{{ t("audit_logs") }}"
+           aria-label="{{ t("audit_logs") }}">
+            <span class="nav-icon"><i class="fas fa-clipboard-list"></i></span>
+            <span class="nav-label">{{ t("audit_logs") }}</span>
+            <span class="nav-chevron"><i class="fas fa-chevron-right"></i></span>
         </a>
     </li>
     {% endif %}
 
-    {% if current_user.has_role('admin') or current_user.has_permission('manage_crops') %}
+    {% if current_user.has_role("admin") or current_user.has_permission("manage_crops") %}
     <li class="nav-item">
-        <a class="nav-link {% if path.startswith('/admin/crops') %}active{% endif %}"
-           href="{{ url_for('admin_crop.index') }}"
-           data-tooltip="{{ t('crops') }}"
-           aria-label="{{ t('crops') }}">
-            <i class="menu-icon fas fa-seedling"></i>
-            <span>{{ t("crops") }}</span>
+        <a class="nav-link {% if path.startswith("/admin/crops") %}active{% endif %}"
+           href="{{ url_for("admin_crop.index") }}"
+           data-tooltip="{{ t("crops") }}"
+           aria-label="{{ t("crops") }}">
+            <span class="nav-icon"><i class="fas fa-seedling"></i></span>
+            <span class="nav-label">{{ t("crops") }}</span>
+            <span class="nav-chevron"><i class="fas fa-chevron-right"></i></span>
         </a>
     </li>
     {% endif %}
 
-    {% if current_user.has_role('admin') or current_user.has_permission('manage_crops') %}
+    {% if current_user.has_role("admin") or current_user.has_permission("manage_crops") %}
     <li class="nav-item">
-        <a class="nav-link {% if path.startswith('/admin/translations') %}active{% endif %}"
-           href="{{ url_for('admin.translations') }}"
-           data-tooltip="{{ t('translations') }}"
-           aria-label="{{ t('translations') }}">
-            <i class="menu-icon fas fa-language"></i>
-            <span>{{ t("translations") }}</span>
+        <a class="nav-link {% if path.startswith("/admin/translations") %}active{% endif %}"
+           href="{{ url_for("admin.translations") }}"
+           data-tooltip="Manage Translations"
+           aria-label="Translations">
+            <span class="nav-icon"><i class="fas fa-language"></i></span>
+            <span class="nav-label">Translations</span>
+            <span class="nav-chevron"><i class="fas fa-chevron-right"></i></span>
         </a>
     </li>
     {% endif %}
 
+    <!-- Controller Tree View -->
+    {% if current_user.has_role("admin") %}
+    {% set is_controller_active = path.startswith("/admin/premium-settings") or path.startswith("/admin/marquees") or path.startswith("/admin/support_chats") or path.startswith("/admin/support-requests") or path.startswith("/admin/promo-codes") %}
     <li class="nav-item">
-        <a class="nav-link {% if path.startswith('/admin/world') %}active{% endif %}"
-           href="{{ url_for('admin.world') }}"
-           data-tooltip="{{ t('world_map') }}"
-           aria-label="{{ t('world_map') }}">
-            <i class="menu-icon fas fa-globe-asia"></i>
-            <span>{{ t("world_map") }}</span>
+        <a class="nav-link {% if not is_controller_active %}collapsed{% else %}active{% endif %}"
+           href="#"
+           data-toggle="collapse"
+           data-target="#collapseController"
+           aria-expanded="{% if is_controller_active %}true{% else %}false{% endif %}"
+           aria-controls="collapseController"
+           data-tooltip="Controller"
+           aria-label="Controller">
+            <span class="nav-icon"><i class="fas fa-sliders-h"></i></span>
+            <span class="nav-label">Controller</span>
+            <span class="nav-chevron"><i class="fas fa-chevron-right"></i></span>
+        </a>
+        <div id="collapseController" class="collapse {% if is_controller_active %}show{% endif %}" data-parent="#accordionSidebar">
+            <div class="collapse-inner">
+                <a class="collapse-item {% if path.startswith("/admin/premium-settings") %}active{% endif %}" href="{{ url_for("admin.premium_settings") }}">
+                    <i class="fas fa-crown text-warning"></i> <span>Premium Price</span>
+                </a>
+                <a class="collapse-item {% if path.startswith("/admin/marquees") %}active{% endif %}" href="{{ url_for("admin.marquees") }}">
+                    <i class="fas fa-bullhorn text-info"></i> <span>Marquees</span>
+                </a>
+                <a class="collapse-item {% if path.startswith("/admin/support_chats") %}active{% endif %}" href="{{ url_for("admin.support_chats") }}">
+                    <i class="fas fa-comments text-success"></i> <span>Live Support</span>
+                </a>
+                <a class="collapse-item {% if path.startswith("/admin/support-requests") %}active{% endif %}" href="{{ url_for("admin.support_requests") }}">
+                    <i class="fas fa-life-ring text-danger"></i> <span>Support Requests</span>
+                </a>
+                <a class="collapse-item {% if path.startswith("/admin/promo-codes") %}active{% endif %}" href="{{ url_for("admin.promo_codes") }}">
+                    <i class="fas fa-gift text-primary"></i> <span>Reward Codes</span>
+                </a>
+            </div>
+        </div>
+    </li>
+    {% endif %}
+
+    <li class="nav-item">
+        <a class="nav-link {% if path.startswith("/admin/world") %}active{% endif %}"
+           href="{{ url_for("admin.world") }}"
+           data-tooltip="{{ t("world_map") }}"
+           aria-label="{{ t("world_map") }}">
+            <span class="nav-icon"><i class="fas fa-globe-asia"></i></span>
+            <span class="nav-label">{{ t("world_map") }}</span>
+            <span class="nav-chevron"><i class="fas fa-chevron-right"></i></span>
         </a>
     </li>
 
-    {% if current_user.has_role('admin') %}
-    <li class="nav-item mt-2">
-        <a class="nav-link {% if path.startswith('/admin/settings') %}active{% endif %}"
-           href="{{ url_for('admin.settings') }}"
+    {% if current_user.has_role("admin") %}
+    <li class="nav-item">
+        <a class="nav-link {% if path.startswith("/admin/settings") %}active{% endif %}"
+           href="{{ url_for("admin.settings") }}"
            data-tooltip="System Settings"
            aria-label="System Settings">
-            <i class="menu-icon fas fa-cogs"></i>
-            <span>System Settings</span>
+            <span class="nav-icon"><i class="fas fa-cog"></i></span>
+            <span class="nav-label">System Settings</span>
+            <span class="nav-chevron"><i class="fas fa-chevron-right"></i></span>
         </a>
     </li>
     {% endif %}
@@ -179,79 +745,86 @@
     =============================== -->
     {% if current_user.is_authenticated and active_side == "expert" %}
 
-    <div class="sidebar-heading mt-4">
+    <div class="sidebar-heading">
         {{ t("expert_panel") }}
     </div>
 
     <li class="nav-item">
-        <a class="nav-link {% if path == url_for('expert.dashboard') %}active{% endif %}"
-           href="{{ url_for('expert.dashboard') }}"
-           data-tooltip="{{ t('dashboard') }}"
-           aria-label="{{ t('dashboard') }}">
-            <i class="menu-icon fas fa-home"></i>
-            <span>{{ t("dashboard") }}</span>
+        <a class="nav-link {% if path == url_for("expert.dashboard") %}active{% endif %}"
+           href="{{ url_for("expert.dashboard") }}"
+           data-tooltip="{{ t("dashboard") }}"
+           aria-label="{{ t("dashboard") }}">
+            <span class="nav-icon"><i class="fas fa-home"></i></span>
+            <span class="nav-label">{{ t("dashboard") }}</span>
+            <span class="nav-chevron"><i class="fas fa-chevron-right"></i></span>
         </a>
     </li>
 
     <li class="nav-item">
-        <a class="nav-link {% if path.startswith('/expert/pending') %}active{% endif %}"
-           href="{{ url_for('expert.pending_diagnoses') }}"
-           data-tooltip="{{ t('pending_diagnoses') }}"
-           aria-label="{{ t('pending_diagnoses') }}">
-            <i class="menu-icon fas fa-hourglass-half"></i>
-            <span>{{ t("pending_diagnoses") }}</span>
+        <a class="nav-link {% if path.startswith("/expert/pending") %}active{% endif %}"
+           href="{{ url_for("expert.pending_diagnoses") }}"
+           data-tooltip="{{ t("pending_diagnoses") }}"
+           aria-label="{{ t("pending_diagnoses") }}">
+            <span class="nav-icon"><i class="fas fa-hourglass-half"></i></span>
+            <span class="nav-label">{{ t("pending_diagnoses") }}</span>
+            <span class="nav-chevron"><i class="fas fa-chevron-right"></i></span>
         </a>
     </li>
 
     <li class="nav-item">
-        <a class="nav-link {% if path.startswith('/expert/farmer-chats') or path.startswith('/expert/chat') %}active{% endif %}"
-           href="{{ url_for('expert.farmer_chats') }}"
-           data-tooltip="{{ t('farmer_chats') }}"
-           aria-label="{{ t('farmer_chats') }}">
-            <i class="menu-icon fas fa-comments"></i>
-            <span>{{ t("farmer_chats") }}</span>
+        <a class="nav-link {% if path.startswith("/expert/farmer-chats") or path.startswith("/expert/chat") %}active{% endif %}"
+           href="{{ url_for("expert.farmer_chats") }}"
+           data-tooltip="{{ t("farmer_chats") }}"
+           aria-label="{{ t("farmer_chats") }}">
+            <span class="nav-icon"><i class="fas fa-comments"></i></span>
+            <span class="nav-label">{{ t("farmer_chats") }}</span>
+            <span class="nav-chevron"><i class="fas fa-chevron-right"></i></span>
         </a>
     </li>
 
     <li class="nav-item">
-        <a class="nav-link {% if path.startswith('/expert/support') %}active{% endif %}"
-           href="{{ url_for('expert.support_hub') }}"
-           data-tooltip="{{ t('support_hub') }}"
-           aria-label="{{ t('support_hub') }}">
-            <i class="menu-icon fas fa-headset"></i>
-            <span>{{ t("support_hub") }}</span>
+        <a class="nav-link {% if path.startswith("/expert/support") %}active{% endif %}"
+           href="{{ url_for("expert.support_hub") }}"
+           data-tooltip="{{ t("support_hub") }}"
+           aria-label="{{ t("support_hub") }}">
+            <span class="nav-icon"><i class="fas fa-headset"></i></span>
+            <span class="nav-label">{{ t("support_hub") }}</span>
+            <span class="nav-chevron"><i class="fas fa-chevron-right"></i></span>
         </a>
     </li>
 
     <li class="nav-item">
-        <a class="nav-link {% if path.startswith('/expert/diseases') %}active{% endif %}"
-           href="{{ url_for('expert.diseases') }}"
-           data-tooltip="{{ t('diagnosis_knowledge') }}"
-           aria-label="{{ t('diagnosis_knowledge') }}">
-            <i class="menu-icon fas fa-notes-medical"></i>
-            <span>{{ t("diagnosis_knowledge") }}</span>
+        <a class="nav-link {% if path.startswith("/expert/diseases") %}active{% endif %}"
+           href="{{ url_for("expert.diseases") }}"
+           data-tooltip="{{ t("diagnosis_knowledge") }}"
+           aria-label="{{ t("diagnosis_knowledge") }}">
+            <span class="nav-icon"><i class="fas fa-notes-medical"></i></span>
+            <span class="nav-label">{{ t("diagnosis_knowledge") }}</span>
+            <span class="nav-chevron"><i class="fas fa-chevron-right"></i></span>
         </a>
     </li>
 
-    {% set knowledge_path = url_for('expert.knowledge_dashboard') %}
-    {% set mixed_agri_path = url_for('expert.mixed_agri_dashboard') %}
+    {% set knowledge_path = url_for("expert.knowledge_dashboard") %}
+    {% set mixed_agri_path = url_for("expert.mixed_agri_dashboard") %}
     <li class="nav-item">
         <a class="nav-link {% if path.startswith(knowledge_path) and not path.startswith(mixed_agri_path) %}active{% endif %}"
            href="{{ knowledge_path }}"
-           data-tooltip="{{ t('knowledge_base') }}"
-           aria-label="{{ t('knowledge_base') }}">
-            <i class="menu-icon fas fa-book-open"></i>
-            <span>{{ t("knowledge_base") }}</span>
+           data-tooltip="{{ t("knowledge_base") }}"
+           aria-label="{{ t("knowledge_base") }}">
+            <span class="nav-icon"><i class="fas fa-book-open"></i></span>
+            <span class="nav-label">{{ t("knowledge_base") }}</span>
+            <span class="nav-chevron"><i class="fas fa-chevron-right"></i></span>
         </a>
     </li>
 
     <li class="nav-item">
         <a class="nav-link {% if path.startswith(mixed_agri_path) %}active{% endif %}"
-           href="{{ url_for('expert.mixed_agri_dashboard') }}"
-           data-tooltip="{{ t('mixed_agriculture') }}"
-           aria-label="{{ t('mixed_agriculture') }}">
-            <i class="menu-icon fas fa-leaf"></i>
-            <span>{{ t("mixed_agriculture") }}</span>
+           href="{{ url_for("expert.mixed_agri_dashboard") }}"
+           data-tooltip="{{ t("mixed_agriculture") }}"
+           aria-label="{{ t("mixed_agriculture") }}">
+            <span class="nav-icon"><i class="fas fa-leaf"></i></span>
+            <span class="nav-label">{{ t("mixed_agriculture") }}</span>
+            <span class="nav-chevron"><i class="fas fa-chevron-right"></i></span>
         </a>
     </li>
 
@@ -262,59 +835,64 @@
     =============================== -->
     {% if current_user.is_authenticated and active_side == "farmer" %}
 
-    <div class="sidebar-heading mt-4">
+    <div class="sidebar-heading">
         {{ t("farmer") }}
     </div>
 
     <li class="nav-item">
-        <a class="nav-link {% if path == url_for('farmer.dashboard') %}active{% endif %}"
-           href="{{ url_for('farmer.dashboard') }}"
-           data-tooltip="{{ t('dashboard') }}"
-           aria-label="{{ t('dashboard') }}">
-            <i class="menu-icon far fa-compass"></i>
-            <span>{{ t("dashboard") }}</span>
+        <a class="nav-link {% if path == url_for("farmer.dashboard") %}active{% endif %}"
+           href="{{ url_for("farmer.dashboard") }}"
+           data-tooltip="{{ t("dashboard") }}"
+           aria-label="{{ t("dashboard") }}">
+            <span class="nav-icon"><i class="far fa-compass"></i></span>
+            <span class="nav-label">{{ t("dashboard") }}</span>
+            <span class="nav-chevron"><i class="fas fa-chevron-right"></i></span>
         </a>
     </li>
 
-    {% set diagnose_url = url_for('farmer.diagnose') %}
+    {% set diagnose_url = url_for("farmer.diagnose") %}
     <li class="nav-item">
         <a class="nav-link {% if path.startswith(diagnose_url) %}active{% endif %}"
            href="{{ diagnose_url }}"
-           data-tooltip="{{ t('new_diagnosis') }}"
-           aria-label="{{ t('new_diagnosis') }}">
-            <i class="menu-icon fas fa-stethoscope"></i>
-            <span>{{ t("new_diagnosis") }}</span>
+           data-tooltip="{{ t("new_diagnosis") }}"
+           aria-label="{{ t("new_diagnosis") }}">
+            <span class="nav-icon"><i class="fas fa-stethoscope"></i></span>
+            <span class="nav-label">{{ t("new_diagnosis") }}</span>
+            <span class="nav-chevron"><i class="fas fa-chevron-right"></i></span>
         </a>
     </li>
 
     <li class="nav-item">
-        <a class="nav-link {% if path.startswith('/farmer/diagnoses') or path.startswith('/farmer/result') %}active{% endif %}"
-           href="{{ url_for('farmer.diagnosis_history') }}"
-           data-tooltip="{{ t('diagnoses_label') }}"
-           aria-label="{{ t('diagnoses_label') }}">
-            <i class="menu-icon far fa-file-alt"></i>
-            <span>{{ t("diagnoses_label") }}</span>
+        <a class="nav-link {% if path.startswith("/farmer/diagnoses") or path.startswith("/farmer/result") %}active{% endif %}"
+           href="{{ url_for("farmer.diagnosis_history") }}"
+           data-tooltip="{{ t("diagnoses_label") }}"
+           aria-label="{{ t("diagnoses_label") }}">
+            <span class="nav-icon"><i class="far fa-file-alt"></i></span>
+            <span class="nav-label">{{ t("diagnoses_label") }}</span>
+            <span class="nav-chevron"><i class="fas fa-chevron-right"></i></span>
         </a>
     </li>
 
-    {% set rule_history_url = url_for('farmer.rule_inference_history') %}
+    {% set rule_history_url = url_for("farmer.rule_inference_history") %}
     <li class="nav-item">
         <a class="nav-link {% if path.startswith(rule_history_url) %}active{% endif %}"
            href="{{ rule_history_url }}"
-           data-tooltip="{{ t('rule_history') }}"
-           aria-label="{{ t('rule_history') }}">
-            <i class="menu-icon far fa-clock"></i>
-            <span>{{ t("rule_history") }}</span>
+           data-tooltip="{{ t("rule_history") }}"
+           aria-label="{{ t("rule_history") }}">
+            <span class="nav-icon"><i class="far fa-clock"></i></span>
+            <span class="nav-label">{{ t("rule_history") }}</span>
+            <span class="nav-chevron"><i class="fas fa-chevron-right"></i></span>
         </a>
     </li>
 
     <li class="nav-item">
-        <a class="nav-link {% if path.startswith('/farmer/chat') or path.startswith('/farmer/history/ai') %}active{% endif %}"
-           href="{{ url_for('farmer.chat') }}"
-           data-tooltip="{{ t('ask_expert') }}"
-           aria-label="{{ t('ask_expert') }}">
-            <i class="menu-icon far fa-comments"></i>
-            <span>{{ t("ask_expert") }}</span>
+        <a class="nav-link {% if path.startswith("/farmer/chat") or path.startswith("/farmer/history/ai") %}active{% endif %}"
+           href="{{ url_for("farmer.chat") }}"
+           data-tooltip="{{ t("ask_expert") }}"
+           aria-label="{{ t("ask_expert") }}">
+            <span class="nav-icon"><i class="far fa-comments"></i></span>
+            <span class="nav-label">{{ t("ask_expert") }}</span>
+            <span class="nav-chevron"><i class="fas fa-chevron-right"></i></span>
         </a>
     </li>
 
@@ -324,13 +902,14 @@
          LOGOUT
     =============================== -->
     {% if current_user.is_authenticated %}
-    <li class="nav-item mt-4">
-        <a class="nav-link text-danger"
-           href="{{ url_for('auth.logout') }}"
-           data-tooltip="{{ t('logout') }}"
-           aria-label="{{ t('logout') }}">
-            <i class="menu-icon fas fa-sign-out-alt"></i>
-            <span>{{ t("logout") }}</span>
+    <li class="nav-item mt-auto pt-3">
+        <a class="nav-link nav-link-logout"
+           href="{{ url_for("auth.logout") }}"
+           data-tooltip="{{ t("logout") }}"
+           aria-label="{{ t("logout") }}">
+            <span class="nav-icon"><i class="fas fa-sign-out-alt"></i></span>
+            <span class="nav-label">{{ t("logout") }}</span>
+            <span class="nav-chevron"><i class="fas fa-chevron-right"></i></span>
         </a>
     </li>
     {% endif %}

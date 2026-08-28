@@ -273,6 +273,8 @@ input:checked + .ios-slider:before {
         </a>
     </div>
 
+    {% if not current_user.has_role("admin") and (current_user.has_role("farmer") or not current_user.has_role("expert")) %}
+
     <div class="settings-section-title">Subscription & Billing</div>
     <div class="settings-card" style="margin-bottom: 24px; position: relative; overflow: hidden;">
         {% if current_user.is_premium %}
@@ -332,8 +334,10 @@ input:checked + .ios-slider:before {
             </div>
         {% endif %}
     </div>
+    {% endif %}
 
     <form method="POST" action="{{ url_for('user.settings') }}">
+
         <!-- APPEARANCE -->
         <div class="settings-section-title">{{ t("appearance") }}</div>
         <div class="settings-card">

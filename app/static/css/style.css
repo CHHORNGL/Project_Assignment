@@ -11317,15 +11317,20 @@ body.qb-dragging * {
 }
 
 /* =========================================
-   MODAL Z-INDEX FIX
-   (Ensure modals appear above topbar/sidebar)
+   MODAL Z-INDEX & OVERLAY FIX
+   (Ensure modals appear strictly above backdrop and layouts)
 ========================================= */
 .modal-backdrop {
-    z-index: 1400 !important;
+    z-index: 1040 !important;
 }
 .modal {
-    z-index: 1410 !important;
+    z-index: 1050 !important;
 }
+.modal-dialog {
+    z-index: 1060 !important;
+    position: relative !important;
+}
+
 
 
 @media (max-width: 767.98px) {

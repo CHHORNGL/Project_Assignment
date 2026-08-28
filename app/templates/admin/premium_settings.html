@@ -1,0 +1,386 @@
+{% extends "layouts/base.html" %}
+{% set body_class = "admin-theme" %}
+{% block title %}Premium Subscription Settings{% endblock %}
+
+{% block content %}
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h1 class="h3 mb-1 text-gray-800 font-weight-bold">
+            <i class="fas fa-crown text-warning mr-2"></i> Premium Subscription & Coupon Controller
+        </h1>
+        <p class="text-muted small mb-0">Manage global pricing, promotional sale discounts, and checkout coupon codes.</p>
+    </div>
+</div>
+
+<!-- ===============================
+     ANALYTICS STATS ROW
+=============================== -->
+<div class="row mb-4">
+    <!-- Active Subscribers -->
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card shadow-sm h-100 py-2 border-left-primary" style="border-radius: 12px;">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Active Subscribers</div>
+                        <div class="h4 mb-0 font-weight-bold text-gray-800">{{ premium_count }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(78, 115, 223, 0.12); display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-crown text-primary fa-lg"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Base Price -->
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card shadow-sm h-100 py-2 border-left-info" style="border-radius: 12px;">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Regular Monthly Price</div>
+                        <div class="h4 mb-0 font-weight-bold text-gray-800">${{ current_price }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(54, 185, 204, 0.12); display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-tag text-info fa-lg"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Global Discount -->
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card shadow-sm h-100 py-2 border-left-success" style="border-radius: 12px;">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Global Sale Discount</div>
+                        <div class="h4 mb-0 font-weight-bold text-gray-800">
+                            {% if discount_percent|float > 0 %}
+                                {{ discount_percent }}% OFF
+                            {% else %}
+                                None (0%)
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(28, 200, 138, 0.12); display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-percent text-success fa-lg"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Final Checkout Price -->
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card shadow-sm h-100 py-2 border-left-warning" style="border-radius: 12px;">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Effective Live Price</div>
+                        <div class="h4 mb-0 font-weight-bold text-gray-800">${{ final_price }} <small class="text-muted" style="font-size: 0.75rem;">/mo</small></div>
+                    </div>
+                    <div class="col-auto">
+                        <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(246, 194, 62, 0.15); display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-wallet text-warning fa-lg"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- ===============================
+         PRICING & GLOBAL DISCOUNT FORM
+    =============================== -->
+    <div class="col-lg-5 mb-4">
+        <div class="card shadow-sm mb-4" style="border: none; border-radius: 14px; overflow: hidden;">
+            <div class="card-header py-3 bg-white d-flex align-items-center justify-content-between" style="border-bottom: 1px solid #edf2f7;">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-sliders-h mr-2"></i> Pricing & Sale Discount
+                </h6>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST" id="pricingForm">
+                    <input type="hidden" name="action" value="save_pricing">
+
+                    <!-- Regular Price -->
+                    <div class="form-group mb-3">
+                        <label class="font-weight-bold text-gray-700 small">Regular Monthly Price (USD) <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text bg-light font-weight-bold">$</span>
+                            </div>
+                            <input type="number" step="0.01" min="0" name="premium_price" id="input_price" class="form-control font-weight-bold" value="{{ current_price }}" required>
+                            <div class="input-group-append">
+                                <span class="input-group-text bg-light text-muted">/ month</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Global Discount % -->
+                    <div class="form-group mb-3">
+                        <label class="font-weight-bold text-gray-700 small">Global Sale Discount (%)</label>
+                        <div class="input-group">
+                            <input type="number" step="1" min="0" max="100" name="discount_percent" id="input_discount" class="form-control" value="{{ discount_percent }}" placeholder="0">
+                            <div class="input-group-append">
+                                <span class="input-group-text bg-light font-weight-bold text-success">% OFF</span>
+                            </div>
+                        </div>
+                        <small class="text-muted">Enter 20 for 20% off. Set to 0 to disable global discount.</small>
+                    </div>
+
+                    <!-- Live Calculation Preview -->
+                    <div class="p-3 mb-3 rounded" style="background: #f8fafc; border: 1px dashed #cbd5e1;">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="text-muted small font-weight-bold">Live Customer Price Preview:</span>
+                            <span id="preview_final" class="h5 font-weight-bold text-primary mb-0">${{ final_price }} / mo</span>
+                        </div>
+                        <div id="preview_savings" class="text-success small" style="{% if discount_percent|float <= 0 %}display:none;{% endif %}">
+                            <i class="fas fa-check-circle mr-1"></i> Farmers will save <span id="preview_saved_amount">$0.00</span> per month!
+                        </div>
+                    </div>
+
+                    <!-- Promotional Banner Text -->
+                    <div class="form-group mb-3">
+                        <label class="font-weight-bold text-gray-700 small">Promotional Announcement Banner</label>
+                        <input type="text" name="discount_banner" class="form-control" value="{{ discount_banner }}" placeholder="e.g. 🎉 Special Launch Offer: 20% OFF this month!">
+                        <small class="text-muted">Shown at the top of the plan upgrade page. Leave empty to hide.</small>
+                    </div>
+
+                    <!-- Enable Coupons at Checkout -->
+                    <div class="custom-control custom-switch mb-4">
+                        <input type="checkbox" class="custom-control-input" id="coupon_enabled" name="coupon_enabled" {% if coupon_enabled %}checked{% endif %}>
+                        <label class="custom-control-label font-weight-bold text-gray-700 small" for="coupon_enabled">
+                            Enable Coupon Code Box on Checkout Page
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block shadow-sm" style="border-radius: 10px; font-weight: 600; padding: 12px;">
+                        <i class="fas fa-save mr-2"></i> Save Pricing & Discount Settings
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===============================
+         COUPONS & PROMO CODES MANAGEMENT
+    =============================== -->
+    <div class="col-lg-7 mb-4">
+        <!-- Create Coupon Card -->
+        <div class="card shadow-sm mb-4" style="border: none; border-radius: 14px; overflow: hidden;">
+            <div class="card-header py-3 bg-white d-flex align-items-center justify-content-between" style="border-bottom: 1px solid #edf2f7;">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-ticket-alt mr-2"></i> Create New Discount Coupon
+                </h6>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST">
+                    <input type="hidden" name="action" value="create_coupon">
+
+                    <div class="row">
+                        <!-- Code -->
+                        <div class="col-md-6 mb-3">
+                            <label class="font-weight-bold text-gray-700 small">Coupon Code <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text bg-light"><i class="fas fa-barcode"></i></span>
+                                </div>
+                                <input type="text" name="code" class="form-control text-uppercase font-weight-bold" placeholder="e.g. SAVE20, SUMMER50" required>
+                            </div>
+                        </div>
+
+                        <!-- Discount Type -->
+                        <div class="col-md-6 mb-3">
+                            <label class="font-weight-bold text-gray-700 small">Discount Type</label>
+                            <select name="discount_type" id="discount_type" class="custom-select font-weight-bold">
+                                <option value="percent">Percentage Discount (% OFF)</option>
+                                <option value="fixed">Fixed Amount ($ OFF)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Value -->
+                        <div class="col-md-4 mb-3">
+                            <label class="font-weight-bold text-gray-700 small">Discount Value <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="number" step="0.01" min="0.1" name="discount_value" class="form-control font-weight-bold" placeholder="20" required>
+                                <div class="input-group-append">
+                                    <span class="input-group-text bg-light font-weight-bold" id="unit_symbol">%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Max Uses -->
+                        <div class="col-md-4 mb-3">
+                            <label class="font-weight-bold text-gray-700 small">Max Usages Limit</label>
+                            <input type="number" name="max_uses" class="form-control" value="100" min="1" required>
+                        </div>
+
+                        <!-- Expiry Date -->
+                        <div class="col-md-4 mb-3">
+                            <label class="font-weight-bold text-gray-700 small">Expiry Date (Optional)</label>
+                            <input type="date" name="expires_at" class="form-control">
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end mt-2">
+                        <button type="submit" class="btn btn-success shadow-sm px-4" style="border-radius: 8px; font-weight: 600;">
+                            <i class="fas fa-plus mr-1"></i> Generate Coupon
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Existing Coupons List -->
+        <div class="card shadow-sm" style="border: none; border-radius: 14px; overflow: hidden;">
+            <div class="card-header py-3 bg-white d-flex align-items-center justify-content-between" style="border-bottom: 1px solid #edf2f7;">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-tags mr-2"></i> Active Discount Coupons ({{ coupons|length }})
+                </h6>
+            </div>
+            <div class="card-body p-0 table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="border-top-0">Coupon Code</th>
+                            <th class="border-top-0">Discount</th>
+                            <th class="border-top-0">Usage</th>
+                            <th class="border-top-0">Expires</th>
+                            <th class="border-top-0">Status</th>
+                            <th class="border-top-0 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if coupons %}
+                            {% for c in coupons %}
+                            <tr>
+                                <td>
+                                    <span class="badge badge-light border font-weight-bold text-primary px-2 py-1" style="font-size: 0.9rem; letter-spacing: 0.05em;">
+                                        {{ c.code }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if c.discount_type == 'percent' %}
+                                        <span class="font-weight-bold text-success">{{ c.discount_value|int }}% OFF</span>
+                                    {% else %}
+                                        <span class="font-weight-bold text-success">${{ c.discount_value }} OFF</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="small font-weight-bold">{{ c.times_used }}</span>
+                                    <span class="text-muted small">/ {{ c.max_uses }}</span>
+                                </td>
+                                <td>
+                                    {% if c.expires_at %}
+                                        <span class="small text-muted">{{ c.expires_at.strftime('%b %d, %Y') }}</span>
+                                    {% else %}
+                                        <span class="small text-muted">Never</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if not c.is_active %}
+                                        <span class="badge badge-secondary">Inactive</span>
+                                    {% elif c.expires_at and c.expires_at < now %}
+                                        <span class="badge badge-danger">Expired</span>
+                                    {% elif c.times_used >= c.max_uses %}
+                                        <span class="badge badge-warning">Maxed Out</span>
+                                    {% else %}
+                                        <span class="badge badge-success">Active</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-right">
+                                    <div class="d-inline-flex gap-1">
+                                        <!-- Toggle Active -->
+                                        <form method="POST" class="d-inline">
+                                            <input type="hidden" name="action" value="toggle_coupon">
+                                            <input type="hidden" name="coupon_id" value="{{ c.id }}">
+                                            <button type="submit" class="btn btn-sm {% if c.is_active %}btn-outline-warning{% else %}btn-outline-success{% endif %}" title="{% if c.is_active %}Deactivate{% else %}Activate{% endif %}">
+                                                <i class="fas {% if c.is_active %}fa-pause{% else %}fa-play{% endif %}"></i>
+                                            </button>
+                                        </form>
+
+                                        <!-- Delete -->
+                                        <form method="POST" class="d-inline ml-1" onsubmit="return confirm('Are you sure you want to delete coupon {{ c.code }}?');">
+                                            <input type="hidden" name="action" value="delete_coupon">
+                                            <input type="hidden" name="coupon_id" value="{{ c.id }}">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Coupon">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center py-4 text-muted">
+                                    <i class="fas fa-ticket-alt fa-2x mb-2 d-block opacity-50"></i>
+                                    No discount coupons created yet. Create one above!
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const inputPrice = document.getElementById("input_price");
+    const inputDiscount = document.getElementById("input_discount");
+    const previewFinal = document.getElementById("preview_final");
+    const previewSavings = document.getElementById("preview_savings");
+    const previewSavedAmount = document.getElementById("preview_saved_amount");
+    const discountType = document.getElementById("discount_type");
+    const unitSymbol = document.getElementById("unit_symbol");
+
+    function updatePreview() {
+        const price = parseFloat(inputPrice.value) || 0;
+        const discount = parseFloat(inputDiscount.value) || 0;
+        
+        let finalPrice = price;
+        let savings = 0;
+        
+        if (discount > 0 && discount <= 100) {
+            savings = price * (discount / 100);
+            finalPrice = Math.max(0, price - savings);
+            previewSavings.style.display = "block";
+            previewSavedAmount.textContent = "$" + savings.toFixed(2);
+        } else {
+            previewSavings.style.display = "none";
+        }
+        
+        previewFinal.textContent = "$" + finalPrice.toFixed(2) + " / mo";
+    }
+
+    if (inputPrice && inputDiscount) {
+        inputPrice.addEventListener("input", updatePreview);
+        inputDiscount.addEventListener("input", updatePreview);
+    }
+
+    if (discountType && unitSymbol) {
+        discountType.addEventListener("change", function() {
+            unitSymbol.textContent = this.value === "percent" ? "%" : "$";
+        });
+    }
+});
+</script>
+{% endblock %}

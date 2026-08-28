@@ -1,190 +1,621 @@
 {% extends "layouts/base.html" %}
-{% block title %}{{ t("support_requests") }}{% endblock %}
+{% set body_class = "admin-theme" %}
+{% block title %}Support Requests Management{% endblock %}
 
 {% block content %}
-<div class="d-flex align-items-center justify-content-between flex-wrap mb-3">
-    <div class="mb-2">
-        <h1 class="h3 text-gray-800 font-weight-bold mb-1">{{ t("support_requests") }}</h1>
-        <div class="text-muted small">
-            {{ t("support_requests_sub") }}
-        </div>
-    </div>
+<style>
+/* Support Requests Styles with Full Dark/Light Mode Support */
+.support-card {
+    background: var(--card-bg, #ffffff);
+    border: 1px solid var(--border-light, #e3e6f0);
+    border-radius: 14px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+    overflow: hidden;
+}
+.support-table th {
+    background: var(--table-head-bg, #f8fafc);
+    color: var(--text-muted, #64748b);
+    font-weight: 700;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-top: none;
+    border-bottom: 1px solid var(--border-light, #e2e8f0);
+    padding: 12px 16px;
+}
+.support-table td {
+    padding: 14px 16px;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--border-light, #edf2f7);
+    color: var(--text-main, #334155);
+}
+.support-table tr:hover td {
+    background-color: var(--table-row-hover, #f8fafc);
+}
 
-    <form class="form-inline mb-2" method="GET" action="{{ url_for('admin.support_requests') }}">
-        <input type="hidden" name="status" value="{{ filter_status }}">
-        <input class="form-control form-control-sm mr-2"
-               type="text"
-               name="q"
-               value="{{ q }}"
-               placeholder="{{ t('search') }}...">
-        <button class="btn btn-sm btn-success" type="submit">{{ t("apply") }}</button>
-    </form>
+/* Modal Styling */
+.support-modal-content {
+    background: var(--card-bg, #ffffff) !important;
+    color: var(--text-main, #1e293b) !important;
+    border: 1px solid var(--border-light, #e2e8f0) !important;
+    border-radius: 18px !important;
+    overflow: hidden;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+}
+.support-modal-header,
+.support-modal-footer {
+    background: var(--surface-soft, #f8fafc) !important;
+    border-color: var(--border-light, #e2e8f0) !important;
+}
+.support-meta-box {
+    background: var(--surface-soft, #f8fafc);
+    border: 1px solid var(--border-light, #e2e8f0);
+    border-radius: 14px;
+    padding: 16px;
+}
+.support-message-bubble {
+    background: var(--card-bg, #ffffff);
+    border: 1px solid var(--border-light, #cbd5e1);
+    color: var(--text-main, #0f172a);
+    border-radius: 14px;
+    padding: 20px;
+    font-size: 1rem;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    word-break: break-word;
+    position: relative;
+}
+.dark-mode .support-message-bubble {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #f1f5f9;
+}
+.dark-mode .support-meta-box {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+.msg-preview-box {
+    cursor: pointer;
+    padding: 6px 10px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
+.msg-preview-box:hover {
+    background: rgba(78, 115, 223, 0.08);
+    border-color: rgba(78, 115, 223, 0.2);
+}
+</style>
+
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h1 class="h3 mb-1 font-weight-bold" style="color: var(--text-main);">
+            <i class="fas fa-life-ring text-danger mr-2"></i> Support Requests Hub
+        </h1>
+        <p class="text-muted small mb-0">Review, respond to, and resolve assistance inquiries submitted by farmers and experts.</p>
+    </div>
+    <div class="mt-3 mt-sm-0">
+        <button type="button" class="btn btn-primary shadow-sm font-weight-bold" data-toggle="modal" data-target="#createInquiryModal" style="border-radius: 10px; padding: 9px 18px;">
+            <i class="fas fa-plus mr-1"></i> New Support Ticket
+        </button>
+    </div>
 </div>
 
-<div class="card shadow-sm border-0 rounded-lg">
-    <div class="card-header bg-white d-flex align-items-center justify-content-between flex-wrap">
-        <div class="btn-group btn-group-sm mb-2" role="group" aria-label="Filter status">
-            <a class="btn {% if filter_status == 'open' %}btn-success{% else %}btn-outline-success{% endif %}"
-               href="{{ url_for('admin.support_requests', status='open', q=q) }}">
-                {{ t("open") }}
-            </a>
-            <a class="btn {% if filter_status == 'resolved' %}btn-success{% else %}btn-outline-success{% endif %}"
-               href="{{ url_for('admin.support_requests', status='resolved', q=q) }}">
-                {{ t("resolved") }}
-            </a>
-            <a class="btn {% if filter_status not in ['open', 'resolved'] %}btn-success{% else %}btn-outline-success{% endif %}"
-               href="{{ url_for('admin.support_requests', status='all', q=q) }}">
-                {{ t("all") }}
-            </a>
-        </div>
-        <div class="text-muted small mb-2">
-            {{ t("total_count", count=support_requests|length) }}
+<!-- ===============================
+     ANALYTICS & METRICS ROW
+=============================== -->
+<div class="row mb-4">
+    <!-- Total Inquiries -->
+    <div class="col-xl-4 col-md-6 mb-3">
+        <div class="card shadow-sm h-100 py-2 border-left-primary support-card">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Inquiries</div>
+                        <div class="h4 mb-0 font-weight-bold">{{ total_count }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(78, 115, 223, 0.12); display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-inbox text-primary fa-lg"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
+    <!-- Pending / Open Requests -->
+    <div class="col-xl-4 col-md-6 mb-3">
+        <div class="card shadow-sm h-100 py-2 border-left-warning support-card">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Pending / Open</div>
+                        <div class="h4 mb-0 font-weight-bold">{{ open_count }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(246, 194, 62, 0.15); display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-exclamation-circle text-warning fa-lg"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resolved Requests -->
+    <div class="col-xl-4 col-md-6 mb-3">
+        <div class="card shadow-sm h-100 py-2 border-left-success support-card">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Resolved Tickets</div>
+                        <div class="h4 mb-0 font-weight-bold">{{ resolved_count }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(28, 200, 138, 0.12); display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-check-circle text-success fa-lg"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===============================
+     MAIN TABLE CARD
+=============================== -->
+<div class="card support-card mb-4">
+    <!-- Filter & Search Toolbar -->
+    <div class="card-header py-3 d-flex align-items-center justify-content-between flex-wrap gap-2 support-modal-header">
+        <!-- Status Tabs -->
+        <div class="btn-group btn-group-sm mb-1" role="group">
+            <a class="btn {% if filter_status == 'open' %}btn-primary font-weight-bold{% else %}btn-light text-muted border{% endif %}"
+               href="{{ url_for('admin.support_requests', status='open', q=q) }}">
+                <i class="fas fa-clock mr-1"></i> Open ({{ open_count }})
+            </a>
+            <a class="btn {% if filter_status == 'resolved' %}btn-primary font-weight-bold{% else %}btn-light text-muted border{% endif %}"
+               href="{{ url_for('admin.support_requests', status='resolved', q=q) }}">
+                <i class="fas fa-check mr-1"></i> Resolved ({{ resolved_count }})
+            </a>
+            <a class="btn {% if filter_status == 'all' %}btn-primary font-weight-bold{% else %}btn-light text-muted border{% endif %}"
+               href="{{ url_for('admin.support_requests', status='all', q=q) }}">
+                <i class="fas fa-list mr-1"></i> All Tickets ({{ total_count }})
+            </a>
+        </div>
+
+        <!-- Search Form -->
+        <form class="form-inline mb-1" method="GET" action="{{ url_for('admin.support_requests') }}">
+            <input type="hidden" name="status" value="{{ filter_status }}">
+            <div class="input-group input-group-sm">
+                <div class="input-group-prepend">
+                    <span class="input-group-text bg-light border-right-0"><i class="fas fa-search text-muted"></i></span>
+                </div>
+                <input class="form-control border-left-0 pl-0"
+                       type="text"
+                       name="q"
+                       value="{{ q }}"
+                       placeholder="Search message, user, page...">
+                <div class="input-group-append">
+                    <button class="btn btn-primary font-weight-bold" type="submit">Filter</button>
+                    {% if q %}
+                    <a href="{{ url_for('admin.support_requests', status=filter_status) }}" class="btn btn-outline-secondary" title="Clear Search">
+                        <i class="fas fa-times"></i>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Table -->
     <div class="card-body p-0 table-responsive">
         {% if support_requests and support_requests|length > 0 %}
-        <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead class="thead-light">
-                    <tr>
-                        <th style="width:70px;">{{ t("id_label") }}</th>
-                        <th style="width:180px;">{{ t("from") }}</th>
-                        <th>{{ t("message_label") }}</th>
-                        <th style="width:240px;">{{ t("page") }}</th>
-                        <th style="width:160px;">{{ t("date") }}</th>
-                        <th style="width:110px;">{{ t("status") }}</th>
-                        <th style="width:120px;"></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for r in support_requests %}
-                    <tr>
-                        <td class="text-muted">{{ r.id }}</td>
-                        <td>
-                            <div class="font-weight-bold">{{ r.requester.username }}</div>
-                            <div class="text-muted small text-uppercase" style="letter-spacing:.06em;">
-                                {{ r.requester_role }}
+        <table class="table support-table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th style="width: 70px;">ID</th>
+                    <th style="width: 210px;">Requester</th>
+                    <th>Message Snippet</th>
+                    <th style="width: 190px;">Context Page</th>
+                    <th style="width: 150px;">Submitted</th>
+                    <th style="width: 110px;">Status</th>
+                    <th style="width: 160px;" class="text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in support_requests %}
+                <tr>
+                    <!-- ID -->
+                    <td class="text-muted font-weight-bold">#{{ r.id }}</td>
+
+                    <!-- Requester Profile -->
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <div class="mr-2" style="width: 36px; height: 36px; border-radius: 50%; background: #e2e8f0; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #475569; font-size: 0.85rem; flex-shrink: 0;">
+                                {{ (r.requester.full_name or r.requester.username)[:2]|upper }}
                             </div>
-                        </td>
-                        <td style="min-width:260px;">
-                            <div class="text-truncate" style="max-width:520px; cursor: pointer; color: #3b82f6;" data-toggle="modal" data-target="#supportModal{{ r.id }}" title="Click to read full message">
-                                <strong>{{ r.message }}</strong>
+                            <div class="text-truncate" style="max-width: 150px;">
+                                <div class="font-weight-bold text-truncate" style="font-size: 0.9rem;">
+                                    {{ r.requester.full_name or r.requester.username }}
+                                </div>
+                                <span class="badge {% if r.requester_role == 'farmer' %}badge-success{% elif r.requester_role == 'expert' %}badge-info{% else %}badge-secondary{% endif %}" style="font-size: 0.65rem; text-transform: uppercase;">
+                                    {{ r.requester_role }}
+                                </span>
+                            </div>
+                        </div>
+                    </td>
+
+                    <!-- Message Body (Clickable preview) -->
+                    <td>
+                        <div class="msg-preview-box btn-open-detail"
+                             data-id="{{ r.id }}"
+                             data-requester="{{ r.requester.full_name or r.requester.username }}"
+                             data-avatar="{{ (r.requester.full_name or r.requester.username)[:2]|upper }}"
+                             data-role="{{ r.requester_role }}"
+                             data-email="{{ r.requester.email or '' }}"
+                             data-message="{{ r.message }}"
+                             data-page="{{ r.page or '' }}"
+                             data-agent="{{ r.user_agent or '' }}"
+                             data-date="{{ r.created_at.strftime('%b %d, %Y at %H:%M') if r.created_at else '' }}"
+                             data-status="{{ r.status }}"
+                             data-resolved-date="{{ r.resolved_at.strftime('%B %d, %Y at %H:%M') if r.resolved_at else '' }}"
+                             data-resolved-by="{{ r.resolved_by.username if r.resolved_by else '' }}"
+                             title="Click to view full message & response">
+                            <div class="text-truncate font-weight-600" style="max-width: 440px; color: #2563eb;">
+                                <i class="fas fa-envelope-open-text mr-1"></i> {{ r.message }}
                             </div>
                             {% if r.user_agent %}
-                            <div class="text-muted small text-truncate" style="max-width:520px;">
-                                {{ r.user_agent }}
+                            <div class="text-muted small text-truncate" style="max-width: 420px; font-size: 0.75rem;">
+                                <i class="fas fa-desktop mr-1 opacity-50"></i> {{ r.user_agent }}
                             </div>
                             {% endif %}
-                        </td>
-                        <td class="text-truncate" style="max-width:240px;">
-                            {{ r.page or "-" }}
-                        </td>
-                        <td class="text-muted">
-                            {{ r.created_at.strftime('%b %d, %Y %H:%M') if r.created_at else "-" }}
-                        </td>
-                        <td>
+                        </div>
+                    </td>
+
+                    <!-- Page Context -->
+                    <td>
+                        {% if r.page %}
+                        <span class="badge badge-light border text-muted px-2 py-1 text-truncate d-inline-block" style="max-width: 180px;" title="{{ r.page }}">
+                            <i class="fas fa-link mr-1"></i> {{ r.page }}
+                        </span>
+                        {% else %}
+                        <span class="text-muted small">-</span>
+                        {% endif %}
+                    </td>
+
+                    <!-- Date -->
+                    <td class="small text-muted">
+                        {{ r.created_at.strftime('%b %d, %Y %H:%M') if r.created_at else "-" }}
+                    </td>
+
+                    <!-- Status Badge -->
+                    <td>
+                        {% if r.status == 'open' %}
+                            <span class="badge badge-warning px-2 py-1" style="font-size: 0.75rem; border-radius: 6px;">
+                                <i class="fas fa-dot-circle mr-1"></i> Open
+                            </span>
+                        {% else %}
+                            <span class="badge badge-success px-2 py-1" style="font-size: 0.75rem; border-radius: 6px;">
+                                <i class="fas fa-check-circle mr-1"></i> Resolved
+                            </span>
+                        {% endif %}
+                    </td>
+
+                    <!-- Action Buttons -->
+                    <td class="text-right">
+                        <div class="d-inline-flex gap-1">
+                            <!-- View Details Button -->
+                            <button type="button" class="btn btn-sm btn-primary shadow-sm btn-open-detail"
+                                    data-id="{{ r.id }}"
+                                    data-requester="{{ r.requester.full_name or r.requester.username }}"
+                                    data-avatar="{{ (r.requester.full_name or r.requester.username)[:2]|upper }}"
+                                    data-role="{{ r.requester_role }}"
+                                    data-email="{{ r.requester.email or '' }}"
+                                    data-message="{{ r.message }}"
+                                    data-page="{{ r.page or '' }}"
+                                    data-agent="{{ r.user_agent or '' }}"
+                                    data-date="{{ r.created_at.strftime('%b %d, %Y at %H:%M') if r.created_at else '' }}"
+                                    data-status="{{ r.status }}"
+                                    data-resolved-date="{{ r.resolved_at.strftime('%B %d, %Y at %H:%M') if r.resolved_at else '' }}"
+                                    data-resolved-by="{{ r.resolved_by.username if r.resolved_by else '' }}"
+                                    title="Read Full Message">
+                                <i class="fas fa-eye mr-1"></i> View
+                            </button>
+
                             {% if r.status == 'open' %}
-                                <span class="badge badge-warning">{{ t("open") }}</span>
-                            {% else %}
-                                <span class="badge badge-success">{{ t("resolved") }}</span>
-                            {% endif %}
-                        </td>
-                        <td class="text-right">
-                            {% if r.status == 'open' %}
-                            <form method="POST"
-                                  action="{{ url_for('admin.resolve_support_request', req_id=r.id) }}"
-                                  class="d-inline">
+                            <!-- Quick Resolve -->
+                            <form method="POST" action="{{ url_for('admin.resolve_support_request', req_id=r.id) }}" class="d-inline ml-1">
                                 <input type="hidden" name="status" value="{{ filter_status }}">
                                 <input type="hidden" name="q" value="{{ q }}">
-                                <button type="submit" class="btn btn-sm btn-outline-success">
-                                    {{ t("resolve") }}
+                                <button type="submit" class="btn btn-sm btn-success shadow-sm" title="Mark as Resolved">
+                                    <i class="fas fa-check"></i>
                                 </button>
                             </form>
                             {% else %}
-                                <span class="text-muted small">{{ t("ok") }}</span>
+                            <!-- Reopen -->
+                            <form method="POST" action="{{ url_for('admin.reopen_support_request', req_id=r.id) }}" class="d-inline ml-1">
+                                <input type="hidden" name="status" value="{{ filter_status }}">
+                                <input type="hidden" name="q" value="{{ q }}">
+                                <button type="submit" class="btn btn-sm btn-outline-warning" title="Re-open Ticket">
+                                    <i class="fas fa-redo-alt"></i>
+                                </button>
+                            </form>
                             {% endif %}
-                        </td>
-                    </tr>
-                    
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        
 
-
+                            <!-- Delete -->
+                            <form method="POST" action="{{ url_for('admin.delete_support_request', req_id=r.id) }}" class="d-inline ml-1" onsubmit="return confirm('Are you sure you want to permanently delete support request #{{ r.id }}?');">
+                                <input type="hidden" name="status" value="{{ filter_status }}">
+                                <input type="hidden" name="q" value="{{ q }}">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Ticket">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
         {% else %}
-        <div class="p-4 text-muted">
-            {{ t("no_support_requests") }}
+        <div class="text-center py-5 text-muted">
+            <i class="fas fa-life-ring fa-3x mb-3 text-gray-300"></i>
+            <h6 class="font-weight-bold">No Support Requests Found</h6>
+            <p class="small text-muted mb-0">There are currently no tickets matching your active filter criteria.</p>
         </div>
         {% endif %}
     </div>
 </div>
 
-<!-- Modals for Full Message -->
-{% if support_requests %}
-{% for r in support_requests %}
-<div class="modal fade" id="supportModal{{ r.id }}" tabindex="-1" role="dialog" aria-labelledby="supportModalLabel{{ r.id }}" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title text-primary font-weight-bold" id="supportModalLabel{{ r.id }}"><i class="fas fa-envelope-open-text mr-2"></i> Support Request #{{ r.id }}</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
+<!-- ===============================
+     SINGLE DYNAMIC DETAIL MODAL
+=============================== -->
+<div class="modal fade" id="supportDetailModal" tabindex="-1" role="dialog" aria-labelledby="supportDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content support-modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header support-modal-header py-3 px-4 d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center">
+                    <div class="mr-3" style="width: 40px; height: 40px; border-radius: 10px; background: rgba(78, 115, 223, 0.15); display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-envelope-open-text text-primary"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title font-weight-bold mb-0" id="modalTicketTitle" style="color: var(--text-main);">
+                            Support Inquiry #
+                        </h5>
+                        <small class="text-muted" id="modalTicketDate"></small>
+                    </div>
+                </div>
+                <div>
+                    <span id="modalStatusBadge" class="badge px-3 py-2 font-weight-bold"></span>
+                    <button type="button" class="close ml-3 text-muted" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
             </div>
-            <div class="modal-body">
-                <div class="p-3 bg-light rounded mb-3">
-                    <div class="row">
-                        <div class="col-md-6 mb-2">
-                            <small class="text-muted d-block text-uppercase">From</small>
-                            <strong>{{ r.requester.username }}</strong> <span class="badge badge-secondary">{{ r.requester_role }}</span>
+
+            <!-- Modal Body -->
+            <div class="modal-body p-4">
+                <!-- Requester Meta Banner -->
+                <div class="support-meta-box mb-4">
+                    <div class="row align-items-center">
+                        <div class="col-md-7 mb-2 mb-md-0 d-flex align-items-center">
+                            <div id="modalRequesterAvatar" class="mr-3" style="width: 46px; height: 46px; border-radius: 50%; background: #e2e8f0; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #334155; font-size: 1.1rem; flex-shrink: 0;">
+                                US
+                            </div>
+                            <div>
+                                <div id="modalRequesterName" class="font-weight-bold" style="font-size: 1rem; color: var(--text-main);"></div>
+                                <div id="modalRequesterEmail" class="text-muted small"></div>
+                            </div>
                         </div>
-                        <div class="col-md-6 mb-2">
-                            <small class="text-muted d-block text-uppercase">Date</small>
-                            <strong>{{ r.created_at.strftime('%b %d, %Y %H:%M') if r.created_at else "-" }}</strong>
-                        </div>
-                        <div class="col-md-12">
-                            <small class="text-muted d-block text-uppercase">Page / Context</small>
-                            <span class="text-break">{{ r.page or "-" }}</span>
+                        <div class="col-md-5 text-md-right">
+                            <span id="modalRequesterRole" class="badge text-uppercase px-2 py-1"></span>
+                            <div class="mt-2">
+                                <a href="{{ url_for('admin.support_chats') }}" class="btn btn-sm btn-outline-primary" style="font-size: 0.78rem;">
+                                    <i class="fas fa-comments mr-1"></i> Live Support Chat
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
-                
-                <small class="text-muted d-block text-uppercase mb-2">Full Message</small>
-                <div class="p-4 rounded border" style="white-space: pre-wrap; font-size: 1.05rem; line-height: 1.6; background-color: #fcfcfc; color: #333;">{{ r.message }}</div>
-                
-                {% if r.user_agent %}
-                <div class="mt-3">
-                    <small class="text-muted d-block text-uppercase">User Agent</small>
-                    <code class="small text-muted">{{ r.user_agent }}</code>
+
+                <!-- Full Message Section -->
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label class="font-weight-bold small text-uppercase mb-0 text-muted" style="letter-spacing: 0.05em;">
+                            <i class="fas fa-comment-dots text-primary mr-1"></i> Inquiry Message Content
+                        </label>
+                        <button type="button" class="btn btn-sm btn-link text-muted p-0" id="btnCopyModalMsg">
+                            <i class="fas fa-copy mr-1"></i> Copy Message
+                        </button>
+                    </div>
+                    <div id="modalMessageContent" class="support-message-bubble"></div>
                 </div>
-                {% endif %}
+
+                <!-- Context Metadata Cards -->
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="support-meta-box h-100 p-3">
+                            <div class="text-muted small text-uppercase font-weight-bold mb-1">
+                                <i class="fas fa-link mr-1"></i> Page Origin
+                            </div>
+                            <div id="modalPageOrigin" class="font-weight-600 text-truncate" style="color: var(--text-main);"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="support-meta-box h-100 p-3">
+                            <div class="text-muted small text-uppercase font-weight-bold mb-1">
+                                <i class="fas fa-desktop mr-1"></i> Device & Browser
+                            </div>
+                            <div id="modalUserAgent" class="small text-truncate" style="color: var(--text-main);"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resolution History (Dynamic) -->
+                <div id="modalResolutionAlert" class="alert alert-success d-flex align-items-center mb-0 mt-2 p-3 rounded-lg" style="display: none !important; border-radius: 12px;">
+                    <i class="fas fa-check-double fa-2x mr-3 text-success"></i>
+                    <div>
+                        <div class="font-weight-bold">Resolved by Administrator</div>
+                        <div class="small text-muted" id="modalResolutionText"></div>
+                    </div>
+                </div>
             </div>
-            <div class="modal-footer border-0 pt-0">
-                {% if r.status == 'open' %}
-                <form method="POST" action="{{ url_for('admin.resolve_support_request', req_id=r.id) }}" class="d-inline">
-                    <input type="hidden" name="status" value="{{ filter_status }}">
-                    <input type="hidden" name="q" value="{{ q }}">
-                    <button type="submit" class="btn btn-success"><i class="fas fa-check"></i> Mark as Resolved</button>
-                </form>
-                {% endif %}
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+
+            <!-- Modal Footer -->
+            <div class="modal-footer support-modal-footer px-4 py-3 d-flex justify-content-between">
+                <button type="button" class="btn btn-light border font-weight-bold" data-dismiss="modal">Close</button>
+                
+                <div class="d-inline-flex gap-2">
+                    <!-- Dynamic Action Form -->
+                    <form id="modalActionForm" method="POST" action="">
+                        <input type="hidden" name="status" value="{{ filter_status }}">
+                        <input type="hidden" name="q" value="{{ q }}">
+                        <button type="submit" id="modalActionButton" class="btn font-weight-bold px-4 shadow-sm"></button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
 </div>
-{% endfor %}
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        // Move all support modals to the body to avoid z-index and backdrop issues
-        const modals = document.querySelectorAll('.modal[id^="supportModal"]');
-        modals.forEach(function(modal) {
-            document.body.appendChild(modal);
-        });
-    });
-</script>
-{% endif %}
 
+<!-- ===============================
+     CREATE SUPPORT INQUIRY MODAL
+=============================== -->
+<div class="modal fade" id="createInquiryModal" tabindex="-1" role="dialog" aria-labelledby="createInquiryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content support-modal-content">
+            <form method="POST" action="{{ url_for('admin.create_support_request') }}">
+                <div class="modal-header support-modal-header py-3 px-4 d-flex align-items-center justify-content-between">
+                    <h5 class="modal-title font-weight-bold" id="createInquiryModalLabel" style="color: var(--text-main);">
+                        <i class="fas fa-plus-circle text-primary mr-2"></i> Create Support Inquiry Ticket
+                    </h5>
+                    <button type="button" class="close text-muted" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="form-group mb-3">
+                        <label class="font-weight-bold small text-uppercase text-muted">Requester / User Account</label>
+                        <select name="requester_id" class="custom-select font-weight-600" style="border-radius: 10px;">
+                            <option value="{{ current_user.id }}">Myself ({{ current_user.username }} - Admin)</option>
+                            {% for u in users %}
+                                {% if u.id != current_user.id %}
+                                    <option value="{{ u.id }}">{{ u.full_name or u.username }} ({{ u.email or 'No email' }})</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label class="font-weight-bold small text-uppercase text-muted">Inquiry / Support Message <span class="text-danger">*</span></label>
+                        <textarea name="message" class="form-control" rows="5" placeholder="Describe the assistance inquiry, technical issue, or customer request..." required style="border-radius: 12px; font-size: 0.95rem;"></textarea>
+                    </div>
+
+                    <div class="form-group mb-0">
+                        <label class="font-weight-bold small text-uppercase text-muted">Page Origin / Feature Context (Optional)</label>
+                        <input type="text" name="page" class="form-control" placeholder="e.g. /farmer/diagnose or /expert/chat" style="border-radius: 10px;">
+                    </div>
+                </div>
+                <div class="modal-footer support-modal-footer px-4 py-3 d-flex justify-content-between">
+                    <button type="button" class="btn btn-light border font-weight-bold" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary font-weight-bold px-4 shadow-sm" style="border-radius: 8px;">
+                        <i class="fas fa-paper-plane mr-1"></i> Submit Support Inquiry
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const detailModal = $("#supportDetailModal");
+    const titleEl = document.getElementById("modalTicketTitle");
+    const dateEl = document.getElementById("modalTicketDate");
+    const statusBadge = document.getElementById("modalStatusBadge");
+    const avatarEl = document.getElementById("modalRequesterAvatar");
+    const nameEl = document.getElementById("modalRequesterName");
+    const emailEl = document.getElementById("modalRequesterEmail");
+    const roleBadge = document.getElementById("modalRequesterRole");
+    const messageContent = document.getElementById("modalMessageContent");
+    const pageOrigin = document.getElementById("modalPageOrigin");
+    const userAgent = document.getElementById("modalUserAgent");
+    const resolutionAlert = document.getElementById("modalResolutionAlert");
+    const resolutionText = document.getElementById("modalResolutionText");
+    const actionForm = document.getElementById("modalActionForm");
+    const actionButton = document.getElementById("modalActionButton");
+    const btnCopy = document.getElementById("btnCopyModalMsg");
+
+    $(document).on("click", ".btn-open-detail", function() {
+        const btn = $(this);
+        const id = btn.data("id");
+        const requester = btn.data("requester") || "User";
+        const avatar = btn.data("avatar") || "US";
+        const role = btn.data("role") || "farmer";
+        const email = btn.data("email") || "No email address";
+        const message = btn.data("message") || "";
+        const page = btn.data("page") || "General / Not specified";
+        const agent = btn.data("agent") || "Unknown Device";
+        const date = btn.data("date") || "";
+        const status = btn.data("status") || "open";
+        const resolvedDate = btn.data("resolved-date") || "";
+        const resolvedBy = btn.data("resolved-by") || "Admin";
+
+        titleEl.textContent = `Support Inquiry #${id}`;
+        dateEl.textContent = date ? `Submitted ${date}` : "";
+        avatarEl.textContent = avatar;
+        nameEl.textContent = requester;
+        emailEl.textContent = email;
+        messageContent.textContent = message;
+        pageOrigin.textContent = page;
+        userAgent.textContent = agent;
+
+        // Role badge styling
+        roleBadge.textContent = role;
+        roleBadge.className = "badge text-uppercase px-2 py-1 " + (
+            role === "farmer" ? "badge-success" : (role === "expert" ? "badge-info" : "badge-secondary")
+        );
+
+        // Status badge & Action form
+        if (status === "open") {
+            statusBadge.className = "badge badge-warning px-3 py-2 font-weight-bold";
+            statusBadge.innerHTML = '<i class="fas fa-clock mr-1"></i> OPEN TICKET';
+            resolutionAlert.style.setProperty("display", "none", "important");
+
+            actionForm.action = `/admin/support-requests/${id}/resolve`;
+            actionButton.className = "btn btn-success font-weight-bold px-4 shadow-sm";
+            actionButton.innerHTML = '<i class="fas fa-check mr-1"></i> Mark as Resolved';
+        } else {
+            statusBadge.className = "badge badge-success px-3 py-2 font-weight-bold";
+            statusBadge.innerHTML = '<i class="fas fa-check-circle mr-1"></i> RESOLVED';
+            resolutionAlert.style.setProperty("display", "flex", "important");
+            resolutionText.textContent = `Marked as resolved on ${resolvedDate || 'recent date'} by ${resolvedBy}`;
+
+            actionForm.action = `/admin/support-requests/${id}/reopen`;
+            actionButton.className = "btn btn-warning font-weight-bold px-4";
+            actionButton.innerHTML = '<i class="fas fa-redo-alt mr-1"></i> Re-open Ticket';
+        }
+
+        detailModal.modal("show");
+    });
+
+    if (btnCopy) {
+        btnCopy.addEventListener("click", function() {
+            const text = messageContent.innerText || messageContent.textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                const orig = btnCopy.innerHTML;
+                btnCopy.innerHTML = '<i class="fas fa-check text-success mr-1"></i> Copied!';
+                setTimeout(() => {
+                    btnCopy.innerHTML = orig;
+                }, 2000);
+            });
+        });
+    }
+});
+</script>
 {% endblock %}

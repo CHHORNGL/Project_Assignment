@@ -33,23 +33,22 @@ def _rate_limited(key: str) -> bool:
 
 def _allowed_role() -> bool:
     try:
-        return (
-            current_user.is_authenticated
-            and hasattr(current_user, "has_role")
-            and (current_user.has_role("farmer") or current_user.has_role("expert"))
-        )
+        if not current_user.is_authenticated:
+            return False
+        return True
     except Exception:
         return False
 
 
 def _role_label() -> str:
     try:
-        if current_user.has_role("admin"):
-            return "admin"
-        if current_user.has_role("expert"):
-            return "expert"
-        if current_user.has_role("farmer"):
-            return "farmer"
+        if hasattr(current_user, "has_role"):
+            if current_user.has_role("admin"):
+                return "admin"
+            if current_user.has_role("expert"):
+                return "expert"
+            if current_user.has_role("farmer"):
+                return "farmer"
     except Exception:
         pass
     return "user"

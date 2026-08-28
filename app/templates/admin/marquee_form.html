@@ -1,0 +1,78 @@
+{% extends "layouts/base.html" %}
+{% set body_class = "admin-theme" %}
+{% block title %}{{ 'Edit Marquee' if marquee else 'Add Marquee' }}{% endblock %}
+{% block content %}
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">
+        <i class="fas fa-bullhorn text-secondary mr-2"></i> {{ 'Edit Marquee Announcement' if marquee else 'Create New Announcement' }}
+    </h1>
+    <a href="{{ url_for('admin.marquees') }}" class="btn btn-sm btn-light shadow-sm border">
+        <i class="fas fa-arrow-left fa-sm text-gray-500 mr-1"></i> Back to List
+    </a>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow mb-4" style="border: none; border-radius: 12px; overflow: hidden;">
+            <div class="card-header py-3" style="background-color: #f8f9fc; border-bottom: 1px solid #e3e6f0;">
+                <h6 class="m-0 font-weight-bold text-primary">Announcement Details</h6>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST">
+                    
+                    <div class="form-group mb-4">
+                        <label class="font-weight-bold text-gray-700">Text (English) <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text bg-light"><i class="fas fa-language text-primary"></i></span>
+                            </div>
+                            <textarea name="text" class="form-control" required rows="2" placeholder="Enter the announcement in English...">{{ marquee.text if marquee else '' }}</textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group mb-4">
+                        <label class="font-weight-bold text-gray-700">Text (Khmer)</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text bg-light"><i class="fas fa-language text-success"></i></span>
+                            </div>
+                            <textarea name="text_kh" class="form-control" rows="2" placeholder="បញ្ចូលការប្រកាសជាភាសាខ្មែរ...">{{ marquee.text_kh if marquee else '' }}</textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-4">
+                                <label class="font-weight-bold text-gray-700">Sort Order</label>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text bg-light"><i class="fas fa-sort-numeric-down"></i></span>
+                                    </div>
+                                    <input type="number" name="sort_order" class="form-control" value="{{ marquee.sort_order if marquee else 0 }}" placeholder="e.g. 1">
+                                </div>
+                                <small class="text-muted">Lower numbers appear first.</small>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 d-flex align-items-center">
+                            <div class="form-group form-check mb-0 ml-3">
+                                <input type="checkbox" name="is_active" class="form-check-input" id="isActive" style="transform: scale(1.3); margin-top: 0.25rem;" {% if not marquee or marquee.is_active %}checked{% endif %}>
+                                <label class="form-check-label font-weight-bold text-gray-700 ml-2" for="isActive">Display this announcement</label>
+                                <div class="text-muted small mt-1 ml-2">Uncheck to hide without deleting.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="mt-4 mb-4">
+                    
+                    <div class="d-flex justify-content-end">
+                        <button type="submit" class="btn btn-primary px-4 shadow-sm" style="border-radius: 8px;">
+                            <i class="fas fa-check mr-1"></i> {{ 'Update Announcement' if marquee else 'Save Announcement' }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
