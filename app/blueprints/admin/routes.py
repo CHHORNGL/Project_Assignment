@@ -1279,6 +1279,68 @@ def toggle_user_status(user_id):
     flash("User status updated.", "warning")
     return redirect(url_for("admin.users"))
 
+@admin_bp.route("/users/<int:user_id>/toggle-premium", methods=["POST"])
+@login_required
+@permission_required("manage_users")
+def toggle_user_premium(user_id):
+    user = User.query.get_or_404(user_id)
+    user.is_premium = not user.is_premium
+    user.premium_expires_at = None
+    
+    db.session.add(
+        AuditLog(
+            user_id=current_user.id,
+            action="TOGGLE_PREMIUM",
+            target_user=user.username,
+            detail=f"is_premium={user.is_premium}"
+        )
+    )
+    db.session.commit()
+    
+    status_text = "Premium granted" if user.is_premium else "Premium revoked"
+    flash(f"{status_text} for {user.username}.", "success")
+    return redirect(url_for("admin.users"))
+
+@admin_bp.route("/users/<int:user_id>/add-premium-time", methods=["POST"])
+@login_required
+@permission_required("manage_users")
+def add_premium_time(user_id):
+    user = User.query.get_or_404(user_id)
+    try:
+        amount = int(request.form.get("amount", 0))
+    except ValueError:
+        amount = 0
+    unit = request.form.get("unit", "days")
+    
+    if amount > 0:
+        from datetime import datetime, timedelta
+        
+        user.is_premium = True
+        
+        # If lifetime, adding time turns it into a fixed expiration starting from now
+        base_date = user.premium_expires_at if user.premium_expires_at and user.premium_expires_at > datetime.utcnow() else datetime.utcnow()
+        
+        if unit == "days":
+            user.premium_expires_at = base_date + timedelta(days=amount)
+        elif unit == "months":
+            user.premium_expires_at = base_date + timedelta(days=amount * 30)
+        elif unit == "years":
+            user.premium_expires_at = base_date + timedelta(days=amount * 365)
+            
+        db.session.add(
+            AuditLog(
+                user_id=current_user.id,
+                action="ADD_PREMIUM_TIME",
+                target_user=user.username,
+                detail=f"Added {amount} {unit}"
+            )
+        )
+        db.session.commit()
+        flash(f"Added {amount} {unit} of Premium time to {user.username}.", "success")
+    else:
+        flash("Invalid amount.", "danger")
+        
+    return redirect(request.referrer or url_for("admin.users"))
 
 # ==================================================
 # CHANGE USER ROLE
@@ -1660,3 +1722,37 @@ def resolve_support_request(req_id):
     return redirect(url_for("admin.support_requests", status=next_status, q=next_q))
 
 
+
+@admin_bp.route("/promo-codes", methods=["GET", "POST"])
+@login_required
+@permission_required("manage_users")
+def promo_codes():
+    from app.models.promo import PromoCode
+    import random
+    import string
+    
+    if request.method == "POST":
+        tokens = request.form.get("tokens", type=int, default=1000)
+        # Generate random 8-character code
+        code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+        
+        new_promo = PromoCode(code=code, tokens_reward=tokens)
+        db.session.add(new_promo)
+        db.session.commit()
+        
+        flash(f"Created new reward code: {code}", "success")
+        return redirect(url_for("admin.promo_codes"))
+        
+    codes = PromoCode.query.order_by(PromoCode.created_at.desc()).all()
+    return render_template("admin/promo_codes.html", codes=codes)
+
+@admin_bp.route("/promo-codes/<int:code_id>/delete", methods=["POST"])
+@login_required
+@permission_required("manage_users")
+def delete_promo_code(code_id):
+    from app.models.promo import PromoCode
+    promo = PromoCode.query.get_or_404(code_id)
+    db.session.delete(promo)
+    db.session.commit()
+    flash("Reward code deleted.", "info")
+    return redirect(url_for("admin.promo_codes"))

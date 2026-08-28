@@ -255,7 +255,67 @@ input:checked + .ios-slider:before {
         </a>
     </div>
 
-    <form method="POST">
+    <div class="settings-section-title">Subscription & Billing</div>
+    <div class="settings-card" style="margin-bottom: 24px; position: relative; overflow: hidden;">
+        {% if current_user.is_premium %}
+            <div style="position: absolute; top: 0; right: 0; width: 150px; height: 150px; background: radial-gradient(circle, rgba(59,130,246,0.15) 0%, transparent 70%); border-radius: 50%; transform: translate(50%, -50%); pointer-events: none;"></div>
+            <div class="settings-row" style="padding: 24px 20px;">
+                <div class="settings-row-left" style="align-items: flex-start; gap: 16px;">
+                    <div class="settings-icon" style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; width: 48px; height: 48px; border-radius: 12px; font-size: 1.5rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);">
+                        <i class="fas fa-crown"></i>
+                    </div>
+                    <div>
+                        <div class="settings-label" style="font-size: 1.15rem; font-weight: 700; margin-bottom: 4px;">Agri System Premium</div>
+                        <div class="settings-sublabel" style="font-size: 0.9rem; margin-bottom: 12px;">
+                            Active &mdash; 
+                            {% if current_user.premium_expires_at %}
+                                Expires on <span id="premium-expiry-date" data-expiry="{{ current_user.premium_expires_at.isoformat() + 'Z' }}">{{ current_user.premium_expires_at.strftime('%d %B %Y') }}</span>
+                            {% else %}
+                                <span style="color: #10b981; font-weight: 600;">Lifetime (No expiration)</span>
+                            {% endif %}
+                            <br>
+                            <strong id="premium-countdown" style="color: #3b82f6; display: inline-block; margin-top: 4px;"></strong>
+                        </div>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <span style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 700;"><i class="fas fa-check mr-1"></i> Unlimited AI</span>
+                            <span style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 700;"><i class="fas fa-check mr-1"></i> Weather Intel</span>
+                            <span style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 700;"><i class="fas fa-check mr-1"></i> Expert Chat</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="settings-row" style="padding: 24px 20px;">
+                <div class="settings-row-left" style="align-items: flex-start; gap: 16px;">
+                    <div class="settings-icon" style="background: #f1f5f9; color: #64748b; width: 48px; height: 48px; border-radius: 12px; font-size: 1.5rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <i class="fas fa-leaf"></i>
+                    </div>
+                    <div style="flex: 1;">
+                        <div class="settings-label" style="font-size: 1.15rem; font-weight: 700; margin-bottom: 4px;">Free Account</div>
+                        <div class="settings-sublabel" style="font-size: 0.9rem; margin-bottom: 6px;">
+                            <span class="badge" style="background: rgba(245, 158, 11, 0.15); color: #d97706; padding: 6px 10px; border-radius: 8px; font-weight: 600;">
+                                <i class="fas fa-coins mr-1"></i> {{ current_user.ai_credits }} AI Tokens Remaining
+                            </span>
+                        </div>
+                        <div class="settings-sublabel" style="font-size: 0.9rem; margin-bottom: 16px; line-height: 1.5; white-space: normal;">You are currently on the free tier. Upgrade to unlock unlimited AI diagnoses, weather intelligence, and direct expert chat.</div>
+                        <a href="{{ url_for('farmer.premium_upgrade') }}" class="btn btn-sm" style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border-radius: 99px; font-weight: 700; padding: 8px 20px; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); border: none; display: inline-flex; align-items: center; text-decoration: none;">
+                            <i class="fas fa-crown mr-2"></i> Upgrade to Premium
+                        </a>
+                        
+                        <div style="margin-top: 24px; padding-top: 16px; border-top: 1px dashed var(--border-light);">
+                            <div class="settings-sublabel" style="font-size: 0.85rem; font-weight: 600; margin-bottom: 8px; color: var(--text-main);">Have a reward code?</div>
+                            <form method="POST" action="{{ url_for('farmer.redeem_code') }}" class="d-flex" style="gap: 10px; align-items: center;">
+                                <input type="text" name="promo_code" class="form-control form-control-sm" placeholder="Enter code..." required style="max-width: 180px; border-radius: 8px; text-transform: uppercase;">
+                                <button type="submit" class="btn btn-sm btn-outline-success" style="border-radius: 8px; font-weight: 600;"><i class="fas fa-gift mr-1"></i> Claim Tokens</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <form method="POST" action="{{ url_for('user.settings') }}">
         <!-- APPEARANCE -->
         <div class="settings-section-title">{{ t("appearance") }}</div>
         <div class="settings-card">
@@ -341,35 +401,6 @@ input:checked + .ios-slider:before {
             <!-- Dynamically populated via JS -->
         </div>
 
-        {% if current_user.has_role('farmer') %}
-        <!-- AI SETTINGS -->
-        <div class="settings-section-title">AI Engine</div>
-        <div class="settings-card">
-            <div class="settings-row">
-                <div class="settings-row-left" style="width: 100%;">
-                    <div class="settings-icon icon-ai"><i class="fas fa-brain"></i></div>
-                    <div style="flex: 1; display: flex; align-items: center; justify-content: space-between;">
-                        <div class="settings-label">Model</div>
-                        <select name="ai_model" class="settings-select" id="aiModelSelect">
-                            <option value="original-ai" {% if current_user.ai_model == 'original-ai' or not current_user.ai_model %}selected{% endif %}>Original AI (OpenAI / Groq)</option>
-                            <option value="gemini-1.5-flash" {% if current_user.ai_model == 'gemini-1.5-flash' %}selected{% endif %}>Gemini 1.5 Flash</option>
-                            <option value="gemini-1.5-pro" {% if current_user.ai_model == 'gemini-1.5-pro' %}selected{% endif %}>Gemini 1.5 Pro</option>
-                            <option value="gemini-1.0-pro" {% if current_user.ai_model == 'gemini-1.0-pro' %}selected{% endif %}>Gemini 1.0 Pro</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-            <div class="settings-row" id="geminiApiKeyRow">
-                <div class="settings-row-left" style="width: 100%;">
-                    <div style="flex: 1; display: flex; flex-direction: column;">
-                        <div class="settings-label" style="font-size: 0.85rem; color: #64748b; margin-bottom: 4px;">Gemini API Key (Required)</div>
-                        <input type="password" name="ai_api_key" class="settings-input" style="text-align: left;" placeholder="Paste API Key here..." value="{{ current_user.ai_api_key or '' }}">
-                    </div>
-                </div>
-            </div>
-        </div>
-        {% endif %}
-
         <!-- FOOTER / SAVE BUTTON -->
         <div class="settings-footer">
             <button type="submit" class="btn-save">
@@ -399,7 +430,7 @@ input:checked + .ios-slider:before {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ language: lang })
             });
-            if (res.ok) window.location.reload();
+            if (res.ok) window.location.href = window.location.pathname + "?_cache=" + new Date().getTime();
         } catch (err) {
             console.error(err);
         }
@@ -564,24 +595,38 @@ input:checked + .ios-slider:before {
     // Load initial list
     loadPasskeysList();
 
-    // 3. AI Model Selection Handler
-    const aiModelSelect = document.getElementById("aiModelSelect");
-    const geminiApiKeyRow = document.getElementById("geminiApiKeyRow");
-    
-    if (aiModelSelect && geminiApiKeyRow) {
-        function toggleGeminiKeyRow() {
-            if (aiModelSelect.value === 'original-ai') {
-                geminiApiKeyRow.style.display = 'none';
-            } else {
-                geminiApiKeyRow.style.display = 'flex';
+    // Premium Expiry Countdown
+    const expiryElement = document.getElementById("premium-expiry-date");
+    const countdownElement = document.getElementById("premium-countdown");
+    if (expiryElement && countdownElement) {
+        const expiryIso = expiryElement.getAttribute("data-expiry");
+        if (expiryIso) {
+            function updateCountdown() {
+                const now = new Date();
+                const expiryDate = new Date(expiryIso);
+                const diffTime = expiryDate - now;
+
+                if (diffTime > 0) {
+                    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                    const diffHours = Math.floor((diffTime / (1000 * 60 * 60)) % 24);
+                    
+                    if (diffDays > 0) {
+                        countdownElement.innerHTML = `<i class="fas fa-clock"></i> Expires in ${diffDays} days, ${diffHours} hours`;
+                    } else if (diffHours > 0) {
+                        countdownElement.innerHTML = `<i class="fas fa-clock"></i> Expires in ${diffHours} hours`;
+                        countdownElement.style.color = "#f59e0b"; // Warning color
+                    } else {
+                        countdownElement.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Expiring very soon!`;
+                        countdownElement.style.color = "#ef4444"; // Danger color
+                    }
+                } else {
+                    countdownElement.innerHTML = `<i class="fas fa-times-circle"></i> Subscription Expired`;
+                    countdownElement.style.color = "#ef4444";
+                }
             }
+            updateCountdown();
+            setInterval(updateCountdown, 1000 * 60 * 60); // Update every hour
         }
-        
-        // Initial state
-        toggleGeminiKeyRow();
-        
-        // On change
-        aiModelSelect.addEventListener("change", toggleGeminiKeyRow);
     }
 
 })();

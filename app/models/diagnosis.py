@@ -16,7 +16,7 @@ class Diagnosis(db.Model):
     farmer_id = db.Column(
         db.Integer,
         db.ForeignKey("users.id"),
-        nullable=False
+        nullable=True
     )
 
     # ===============================

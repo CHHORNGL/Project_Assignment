@@ -103,30 +103,19 @@
                 </div>
             </div>
 
-            {% set active_role = active_role|default('farmer') %}
             {% set next_url = next_url|default(None) %}
-            <div class="auth-tabs auth-stagger delay-2">
-                <a class="auth-tab {% if active_role == 'farmer' %}is-active{% endif %}"
-                   href="{{ url_for('auth.login', role='farmer', next=next_url) if next_url else url_for('auth.login', role='farmer') }}">
-                    {{ t("farmer") }}
-                </a>
-                <a class="auth-tab {% if active_role == 'expert' %}is-active{% endif %}"
-                   href="{{ url_for('auth.login', role='expert', next=next_url) if next_url else url_for('auth.login', role='expert') }}">
-                    {{ t("expert_admin") }}
-                </a>
-            </div>
 
             <div class="auth-panel-head auth-stagger delay-3">
                 <h2 class="auth-title">{{ t("auth_welcome_back") }}</h2>
                 <p class="auth-subtitle">{{ t("auth_sign_in_sub") }}</p>
             </div>
 
-            <form method="POST" action="{{ url_for('auth.login', role=active_role, next=next_url) if next_url else url_for('auth.login', role=active_role) }}" class="auth-form auth-stagger delay-5">
+            <form method="POST" action="" class="auth-form auth-stagger delay-5">
                 {{ form.hidden_tag() }}
 
                 <div class="auth-field">
-                    {{ form.username.label }}
-                    {{ form.username(class="auth-input", placeholder="example@gmail.com") }}
+                    {{ form.email.label }}
+                    {{ form.email(class="auth-input", placeholder="example@gmail.com") }}
                 </div>
 
                 <div class="auth-field">
@@ -148,7 +137,6 @@
                     <i class="fas fa-fingerprint mr-2" style="color: #10b981; font-size: 1.15rem;"></i>
                     Sign in with Passkey
                 </button>
-                {% if active_role == 'farmer' %}
                     <a class="auth-oauth-btn d-flex align-items-center justify-content-center" href="{{ url_for('auth.google_login') }}" style="border-radius: 12px; height: 48px; border: 1px solid rgba(0,0,0,0.08); background: #ffffff; color: #334155; font-weight: 600; cursor: pointer;">
                         <svg class="mr-2" style="width: 1.15rem; height: 1.15rem;" version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
                             <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path>
@@ -159,15 +147,12 @@
                         </svg>
                         {{ t("auth_google") or "Sign in with Google" }}
                     </a>
-                {% endif %}
             </div>
 
-            {% if active_role == 'farmer' %}
-                <div class="auth-foot auth-stagger delay-6">
-                    {% if current_lang == 'km' %}មិនទាន់មានគណនីមែនទេ?{% else %}Don't have an account yet?{% endif %}
-                    <a href="{{ url_for('auth.register') }}">{% if current_lang == 'km' %}ចុះឈ្មោះជាកសិករ{% else %}Register as Farmer{% endif %}</a>
-                </div>
-            {% endif %}
+            <div class="auth-foot auth-stagger delay-6">
+                {% if current_lang == 'km' %}មិនទាន់មានគណនីមែនទេ?{% else %}Don't have an account yet?{% endif %}
+                <a href="{{ url_for('auth.register') }}">{% if current_lang == 'km' %}ចុះឈ្មោះជាកសិករ{% else %}Register as Farmer{% endif %}</a>
+            </div>
         </div>
     </section>
 </main>
@@ -265,7 +250,7 @@ window.AuthThemeMotionConfig = {{ {
         }
         try {
             // 1. Fetch options
-            const optionsResp = await fetch("{{ url_for('auth.passkey_login_options') }}");
+            const optionsResp = await fetch("{{ url_for('staff.passkey_login_options') if request.blueprint == 'staff' else url_for('auth.passkey_login_options') }}");
             if (!optionsResp.ok) throw new Error("Failed to get passkey login options.");
             const options = await optionsResp.json();
 
@@ -287,7 +272,7 @@ window.AuthThemeMotionConfig = {{ {
                 }
             };
 
-            const verifyResp = await fetch("{{ url_for('auth.passkey_login_verify') }}", {
+            const verifyResp = await fetch("{{ url_for('staff.passkey_login_verify') if request.blueprint == 'staff' else url_for('auth.passkey_login_verify') }}", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload)

@@ -54,6 +54,8 @@
                         <div class="mb-3">
                             <label for="groq_model" class="form-label fw-bold">Primary Model</label>
                             <select class="form-select" id="groq_model" name="openai_model" disabled>
+                                <option value="openai/gpt-oss-20b" {% if openai_model == "openai/gpt-oss-20b" %}selected{% endif %}>GPT-OSS 20B (Groq Fast)</option>
+                                <option value="qwen/qwen3.8-27b" {% if openai_model == "qwen/qwen3.8-27b" %}selected{% endif %}>Qwen 3.8 27B (Groq Fast)</option>
                                 <option value="llama-3.3-70b-versatile" {% if openai_model == "llama-3.3-70b-versatile" %}selected{% endif %}>Llama 3.3 70B (Versatile)</option>
                                 <option value="llama-3.1-8b-instant" {% if openai_model == "llama-3.1-8b-instant" %}selected{% endif %}>Llama 3.1 8B (Instant)</option>
                                 <option value="mixtral-8x7b-32768" {% if openai_model == "mixtral-8x7b-32768" %}selected{% endif %}>Mixtral 8x7B</option>

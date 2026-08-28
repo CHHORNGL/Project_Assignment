@@ -50,7 +50,7 @@ export default function Stepper({ steps, currentStep, title, stepProgressText, h
                     </div>
                     <div>
                       <p className="text-sm font-semibold text-slate-900 dark:text-white">{step.label}</p>
-                      <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400 dark:text-slate-500">{step.description}</p>
+                      <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">{step.description}</p>
                     </div>
                   </div>
                   {index < steps.length - 1 ? (
@@ -101,7 +101,7 @@ export default function Stepper({ steps, currentStep, title, stepProgressText, h
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-slate-900 dark:text-white">{step.label}</p>
-                  <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400 dark:text-slate-500">{step.description}</p>
+                  <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">{step.description}</p>
                 </div>
               </div>
             );

@@ -18,3 +18,4 @@ from .expert_question_answer import ExpertQuestionAnswer
 from .theme import ThemeProfile, ThemeRuntimeState, ThemeSchedule
 from .passkey import UserPasskey
 from .admin_chat import AdminChatMessage
+from .promo import PromoCode

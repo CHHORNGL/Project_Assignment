@@ -90,9 +90,12 @@ def create_app():
         if next_url.endswith("?"):
             next_url = request.path
         next_url = _safe_next_url(next_url)
+        
+        login_route = "staff.login" if role == "expert" else "auth.login"
+        
         if next_url:
-            return redirect(url_for("auth.login", role=role, next=next_url))
-        return redirect(url_for("auth.login", role=role))
+            return redirect(url_for(login_route, next=next_url))
+        return redirect(url_for(login_route))
 
     # 🔑 IMPORTANT: Flask-Migrate
     migrate.init_app(app, db)
@@ -117,6 +120,7 @@ def create_app():
     # ===============================
     from .blueprints.main.routes import main_bp
     from .blueprints.auth.routes import auth_bp
+    from .blueprints.staff.routes import staff_bp
     from .blueprints.admin.routes import admin_bp
     from .blueprints.admin.crop_routes import admin_crop_bp
     from .blueprints.assistant.routes import assistant_bp
@@ -129,6 +133,7 @@ def create_app():
     # Main & Auth
     app.register_blueprint(main_bp)     # /
     app.register_blueprint(auth_bp)     # /auth
+    app.register_blueprint(staff_bp)    # /staff
 
     # Role-based Blueprints
     app.register_blueprint(admin_bp)    # /admin/...

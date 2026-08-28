@@ -247,6 +247,7 @@ def _fallback_reply(user_message: str, *, user_role: str, page: str, lang: str) 
 
 
 def generate_project_reply(user_message: str, *, user_role: str, page: str = "") -> Optional[str]:
+
     lang = get_current_language()
     if _looks_like_agri_query(user_message) and not _looks_like_system_query(user_message):
         return _system_only_reply(lang)
@@ -290,16 +291,39 @@ def generate_project_reply(user_message: str, *, user_role: str, page: str = "")
         else:
             client = _get_client()
             if not client:
-                return _fallback_reply(user_message, user_role=user_role, page=page, lang=lang)
-            response = client.models.generate_content(
-                model=model_name,
-                contents=[system_prompt, user_prompt],
-                config=types.GenerateContentConfig(
-                    temperature=0.2,
-                    max_output_tokens=1000
-                )
-            )
-            content = response.text if response else None
+                client = _get_openai_client()
+                if client:
+                    model = _get_openai_model()
+                    try:
+                        response = client.chat.completions.create(
+                            model=model,
+                            messages=[
+                                {"role": "system", "content": system_prompt},
+                                {"role": "user", "content": user_prompt},
+                            ],
+                            temperature=0.2,
+                            max_tokens=1000,
+                        )
+                        content = response.choices[0].message.content if response.choices and response.choices[0].message else None
+                    except Exception as e:
+                        print(f"Error calling OpenAI API in project_assistant: {e}", flush=True)
+                        content = None
+                else:
+                    return _fallback_reply(user_message, user_role=user_role, page=page, lang=lang)
+            else:
+                try:
+                    response = client.models.generate_content(
+                        model=model_name,
+                        contents=[system_prompt, user_prompt],
+                        config=types.GenerateContentConfig(
+                            temperature=0.2,
+                            max_output_tokens=1000
+                        )
+                    )
+                    content = response.text if response else None
+                except Exception as e:
+                    print(f"Error calling Gemini API in project_assistant: {e}", flush=True)
+                    content = None
     except Exception:
         return _fallback_reply(user_message, user_role=user_role, page=page, lang=lang)
 

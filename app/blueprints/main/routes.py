@@ -7,9 +7,9 @@ main_bp = Blueprint("main", __name__)
 
 @main_bp.route("/")
 def index():
-    # 🔐 Not logged in → login page
+    # 🔐 Not logged in → go to farmer dashboard as guest
     if not current_user.is_authenticated:
-        return redirect(url_for("auth.login"))
+        return redirect(url_for("farmer.dashboard"))
 
     # 👑 Admin / Has Admin Access
     if current_user.has_role("admin") or any(r.route_type == "admin" for r in current_user.roles):

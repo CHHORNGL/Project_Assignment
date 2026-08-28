@@ -114,10 +114,24 @@
             <form method="POST" novalidate class="auth-form auth-stagger delay-4">
                 {{ form.hidden_tag() }}
 
+                
                 <div class="auth-field">
                     {{ form.email.label }}
-                    {{ form.email(class="auth-input", placeholder="example@gmail.com") }}
+                    {{ form.email(class="auth-input", placeholder="name@example.com", id="register-email") }}
                     {% for error in form.email.errors %}
+                        <div class="auth-errors">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="auth-field">
+                    {{ form.verification_code.label }}
+                    <div style="display: flex; gap: 12px; align-items: center;">
+                        {{ form.verification_code(class="auth-input", placeholder="123456", style="flex: 1;") }}
+                        <button type="button" id="btn-send-otp" class="auth-button" style="width: auto; height: 100%; padding: 0 24px; font-size: 0.95rem; border-radius: 12px; background: color-mix(in srgb, var(--auth-accent) 15%, transparent); color: var(--auth-accent-2); border: 1px solid color-mix(in srgb, var(--auth-accent) 30%, transparent);">
+                            Send Code
+                        </button>
+                    </div>
+                    {% for error in form.verification_code.errors %}
                         <div class="auth-errors">{{ error }}</div>
                     {% endfor %}
                 </div>
@@ -221,5 +235,73 @@ window.AuthThemeMotionConfig = {{ {
 })();
 </script>
 
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const btnSendOtp = document.getElementById("btn-send-otp");
+    const emailInput = document.getElementById("register-email");
+    
+    if (btnSendOtp && emailInput) {
+        btnSendOtp.addEventListener("click", function() {
+            const email = emailInput.value.trim();
+            if (!email || !email.includes("@")) {
+                showToast("Please enter a valid email address first.", "warning");
+                emailInput.focus();
+                return;
+            }
+            
+            // Start countdown
+            let timeLeft = 60;
+            btnSendOtp.disabled = true;
+            btnSendOtp.style.opacity = "0.7";
+            const originalText = btnSendOtp.innerText;
+            btnSendOtp.innerText = timeLeft + "s";
+            
+            const timer = setInterval(() => {
+                timeLeft--;
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    btnSendOtp.disabled = false;
+                    btnSendOtp.style.opacity = "1";
+                    btnSendOtp.innerText = "Resend Code";
+                } else {
+                    btnSendOtp.innerText = timeLeft + "s";
+                }
+            }, 1000);
+            
+            // Make AJAX request
+            fetch("/auth/send-register-otp", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ email: email })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showToast(data.message, "success");
+                } else {
+                    showToast(data.message || "Failed to send code.", "danger");
+                    // Reset timer on failure
+                    clearInterval(timer);
+                    btnSendOtp.disabled = false;
+                    btnSendOtp.style.opacity = "1";
+                    btnSendOtp.innerText = "Send Code";
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                showToast("An error occurred.", "danger");
+                clearInterval(timer);
+                btnSendOtp.disabled = false;
+                btnSendOtp.style.opacity = "1";
+                btnSendOtp.innerText = "Send Code";
+            });
+        });
+    }
+});
+</script>
 </body>
+
 </html>

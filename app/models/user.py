@@ -71,6 +71,20 @@ class User(db.Model, UserMixin):
         db.String(255),
         nullable=True
     )
+    
+    ai_credits = db.Column(
+        db.Integer,
+        default=13000,
+        server_default="13000",
+        nullable=False
+    )
+
+    last_credit_reset = db.Column(
+        db.DateTime,
+        default=datetime.utcnow,
+        server_default=db.func.now(),
+        nullable=False
+    )
 
     # ===============================
     # ACCOUNT STATUS
@@ -80,6 +94,13 @@ class User(db.Model, UserMixin):
         default=True,
         nullable=False
     )
+    
+    is_premium = db.Column(
+        db.Boolean,
+        default=False,
+        nullable=False
+    )
+    premium_expires_at = db.Column(db.DateTime, nullable=True)
 
     # ===============================
     # TWO-STEP VERIFICATION & EMAIL VERIFY

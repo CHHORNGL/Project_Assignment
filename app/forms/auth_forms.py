@@ -13,11 +13,12 @@ from wtforms.validators import (
 # LOGIN FORM
 # ===============================
 class LoginForm(FlaskForm):
-    username = StringField(
-        "Gmail / Email",
+    email = StringField(
+        "Email Address",
         validators=[
             DataRequired(message="Email is required"),
-            Length(min=3, max=80)
+            Email(message="Please enter a valid email address"),
+            Length(min=3, max=120)
         ]
     )
 
@@ -37,11 +38,19 @@ class LoginForm(FlaskForm):
 # ===============================
 class RegisterForm(FlaskForm):
     email = StringField(
-        "Gmail / Email",
+        "Email (required for verification)",
         validators=[
             DataRequired(message="Email is required"),
             Email(message="Enter a valid email address"),
             Length(max=120)
+        ]
+    )
+    
+    verification_code = StringField(
+        "Verification code",
+        validators=[
+            DataRequired(message="Verification code is required"),
+            Length(min=6, max=6, message="Code must be 6 digits")
         ]
     )
 

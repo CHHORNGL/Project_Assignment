@@ -155,15 +155,15 @@ function CropCard({ crop, selected, onSelect, subtitle, isKhmer, selectedText, c
     >
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="font-display text-lg font-bold text-slate-900 dark:text-white">{cropName}</p>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{subtitle}</p>
+          <p className={cn("font-display text-lg", selected ? "font-bold text-slate-900 dark:text-white" : "font-semibold text-slate-700 dark:text-slate-300")}>{cropName}</p>
+          <p className={cn("mt-1 text-sm", selected ? "text-indigo-700 dark:text-indigo-300/90" : "text-slate-500 dark:text-slate-400")}>{subtitle}</p>
         </div>
         <div
           className={cn(
             "flex h-10 w-10 items-center justify-center rounded-2xl border text-sm transition-all duration-200",
             selected
-              ? "border-emerald-600 bg-emerald-600 text-white"
-              : "border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-slate-400 dark:text-slate-500",
+              ? "border-indigo-600 bg-indigo-600 text-white"
+              : "border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-slate-400",
           )}
         >
           <i className={`fas ${selected ? "fa-check" : "fa-seedling"}`} aria-hidden="true" />
@@ -173,7 +173,7 @@ function CropCard({ crop, selected, onSelect, subtitle, isKhmer, selectedText, c
         <span className="inline-flex rounded-full bg-slate-100 dark:bg-slate-800/80 px-3 py-1 text-xs font-semibold text-slate-600 dark:text-slate-400">
           {titleFromSlug(crop.subcategoryId, generalText)}
         </span>
-        <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+        <span className={cn("text-xs font-semibold", selected ? "text-indigo-700 dark:text-indigo-400" : "text-slate-500 dark:text-slate-400")}>
           {selected ? selectedText : chooseCropText}
         </span>
       </div>
@@ -191,15 +191,15 @@ function ContextCard({ label, description, selected, onSelect }) {
     >
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-base font-semibold text-slate-900 dark:text-white">{label}</p>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{description}</p>
+          <p className={cn("text-base", selected ? "font-bold text-slate-900 dark:text-white" : "font-semibold text-slate-700 dark:text-slate-300")}>{label}</p>
+          <p className={cn("mt-1 text-sm", selected ? "text-indigo-700 dark:text-indigo-300/90" : "text-slate-500 dark:text-slate-400")}>{description}</p>
         </div>
         <div
           className={cn(
             "flex h-9 w-9 items-center justify-center rounded-xl border text-sm transition-all duration-200",
             selected
-              ? "border-emerald-600 bg-emerald-600 text-white"
-              : "border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-slate-400 dark:text-slate-500",
+              ? "border-indigo-600 bg-indigo-600 text-white"
+              : "border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-slate-400",
           )}
         >
           <i className={`fas ${selected ? "fa-check" : "fa-leaf"}`} aria-hidden="true" />
@@ -1250,7 +1250,7 @@ export default function DiagnosisWizardPage({ bootstrap }) {
                                 className={cn(
                                   "flex flex-col items-center justify-center p-4 rounded-2xl border text-sm font-semibold transition-all duration-200",
                                   catAnswer === "yes"
-                                    ? "border-emerald-500 bg-emerald-50 text-emerald-800 dark:bg-emerald-950/20 dark:text-emerald-400"
+                                    ? "border-indigo-500 bg-indigo-50 text-indigo-800 dark:bg-indigo-500/10 dark:text-indigo-400"
                                     : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 text-slate-600 dark:text-slate-400 hover:bg-slate-50"
                                 )}
                               >
@@ -1307,15 +1307,15 @@ export default function DiagnosisWizardPage({ bootstrap }) {
                                       className={cn(
                                         "flex items-start gap-3 rounded-2xl border p-4 text-left transition-all duration-200",
                                         isSelected
-                                          ? "border-emerald-500 bg-emerald-50/50 dark:border-emerald-600 dark:bg-emerald-950/20"
-                                          : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/40"
+                                          ? "border-indigo-500 bg-indigo-50/50 dark:border-indigo-400 dark:bg-indigo-500/10"
+                                          : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/40 hover:border-slate-300 dark:hover:border-slate-500/50"
                                       )}
                                     >
                                       <div
                                         className={cn(
                                           "flex h-5 w-5 shrink-0 items-center justify-center rounded border mt-0.5",
                                           isSelected
-                                            ? "border-emerald-600 bg-emerald-600 text-white"
+                                            ? "border-indigo-600 bg-indigo-600 text-white"
                                             : "border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950"
                                         )}
                                       >

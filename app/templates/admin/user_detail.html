@@ -99,6 +99,32 @@
                             {% if user.is_active %}{{ t("ban") }}{% else %}{{ t("unban") }}{% endif %}
                         </button>
                     </form>
+                    
+                    <form method="POST"
+                          action="{{ url_for('admin.toggle_user_premium', user_id=user.id) }}"
+                          class="admin-user-control-form">
+                        <label class="admin-user-control-label">Premium Account</label>
+                        <button class="btn btn-sm
+                            {% if user.is_premium %}btn-outline-warning{% else %}btn-warning{% endif %}">
+                            <i class="fas fa-crown"></i>
+                            {% if user.is_premium %}Revoke Premium{% else %}Grant Premium{% endif %}
+                        </button>
+                    </form>
+
+                    <form method="POST"
+                          action="{{ url_for('admin.add_premium_time', user_id=user.id) }}"
+                          class="admin-user-control-form admin-user-control-wide">
+                        <label class="admin-user-control-label">Add Premium Time</label>
+                        <div class="input-group input-group-sm">
+                            <input type="number" name="amount" min="1" class="form-control" placeholder="Qty" required style="max-width: 80px;">
+                            <select name="unit" class="form-select" style="max-width: 100px;">
+                                <option value="days">Days</option>
+                                <option value="months">Months</option>
+                                <option value="years">Years</option>
+                            </select>
+                            <button class="btn btn-success" type="submit"><i class="fas fa-plus"></i> Add</button>
+                        </div>
+                    </form>
                     {% endif %}
 
                     <form method="POST"

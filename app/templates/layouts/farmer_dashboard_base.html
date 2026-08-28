@@ -138,17 +138,23 @@
 
             <div class="farmer-dash-footer">
                 <button type="button" class="farmer-user-card" id="farmer-user-toggle" aria-expanded="false">
-                    <div class="farmer-user-avatar">
-                        {% if current_user.avatar_data or current_user.avatar_path %}
-                            <img src="{{ avatar_url(current_user) }}"
-                                 alt="{{ t("profile_avatar") }}">
+                    <div class="farmer-user-avatar" {% if current_user.is_authenticated and current_user.is_premium %}style="background: linear-gradient(45deg, #4285f4, #9b72cb, #d96570); padding: 3px; border-radius: 50%; box-shadow: 0 4px 15px rgba(155, 114, 203, 0.4);"{% endif %}>
+                        {% if current_user.is_authenticated and (current_user.avatar_data or current_user.avatar_path) %}
+                            <img src="{{ avatar_url(current_user) }}" alt="Avatar" style="{% if current_user.is_authenticated and current_user.is_premium %}border-radius: 50%; width: 100%; height: 100%; object-fit: cover; border: 2px solid var(--bg-body);{% endif %}">
                         {% else %}
-                            {{ (current_user.full_name or current_user.username)[:2]|upper }}
+                            <span style="{% if current_user.is_authenticated and current_user.is_premium %}border-radius: 50%; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: var(--bg-body); color: var(--text-main); font-weight: 700; border: 2px solid var(--bg-body);{% endif %}">
+                                {{ (current_user.full_name or current_user.username)[:2]|upper if current_user.is_authenticated else "GU" }}
+                            </span>
                         {% endif %}
                     </div>
-                    <div class="farmer-user-meta">
-                        <div class="farmer-user-name">{{ current_user.full_name or current_user.username }}</div>
-                        <div class="farmer-user-sub">{{ current_user.username }}</div>
+                    <div class="farmer-user-info">
+                        <div class="farmer-user-name" style="display: flex; align-items: center; gap: 6px;">
+                            {{ current_user.full_name or current_user.username if current_user.is_authenticated else "Guest User" }}
+                            {% if current_user.is_authenticated and current_user.is_premium %}
+                                <i class="fas fa-check-circle" style="color: #3b82f6; font-size: 0.9rem;" title="Verified Premium Account"></i>
+                            {% endif %}
+                        </div>
+                        <div class="farmer-user-sub">{{ current_user.username if current_user.is_authenticated else "Unregistered" }}</div>
                     </div>
                     <i class="fas fa-chevron-down farmer-user-caret"></i>
                 </button>
@@ -160,21 +166,21 @@
                             <i class="fas fa-columns"></i>
                             {{ t("dashboard") }}
                         </a>
-                        <a class="farmer-dash-footer-btn"
-                           href="{{ url_for('user.profile') }}">
-                            <i class="fas fa-user-circle"></i>
-                            {{ t("profile") }}
-                        </a>
-                        <a class="farmer-dash-footer-btn"
-                           href="{{ url_for('user.settings') }}">
-                            <i class="fas fa-sliders-h"></i>
-                            {{ t("settings") }}
-                        </a>
-                        <a class="farmer-dash-footer-btn danger"
-                           href="{{ url_for('auth.logout') }}">
-                            <i class="fas fa-sign-out-alt"></i>
-                            {{ t("logout") }}
-                        </a>
+                        {% if current_user.is_authenticated %}
+                            <a class="farmer-dash-footer-btn" href="{{ url_for('user.profile') }}">
+                                <i class="fas fa-user-circle"></i> {{ t("profile") }}
+                            </a>
+                            <a class="farmer-dash-footer-btn" href="{{ url_for('user.settings') }}">
+                                <i class="fas fa-sliders-h"></i> {{ t("settings") }}
+                            </a>
+                            <a class="farmer-dash-footer-btn danger" href="{{ url_for('auth.logout') }}">
+                                <i class="fas fa-sign-out-alt"></i> {{ t("logout") }}
+                            </a>
+                        {% else %}
+                            <a class="farmer-dash-footer-btn danger" href="{{ url_for('auth.login') }}">
+                                <i class="fas fa-sign-in-alt"></i> Login
+                            </a>
+                        {% endif %}
                     </div>
 
                      <div class="farmer-user-section">
@@ -212,7 +218,7 @@
                     body: JSON.stringify({ language })
                 });
             } catch (e) {}
-            window.location.reload();
+            window.location.href = window.location.pathname + "?_cache=" + new Date().getTime();
         });
     });
     </script>
@@ -314,5 +320,6 @@
     {% include "layouts/ai_helper_widget.html" %}
 
     <script src="{{ url_for('static', filename='js/system_status.js', v=static_version) }}"></script>
+    {% block scripts %}{% endblock %}
 </body>
 </html>

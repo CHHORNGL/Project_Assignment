@@ -749,6 +749,7 @@ TRANSLATIONS = {
         "knowledge_base": "មូលដ្ឋានចំណេះដឹង",
         "mixed_agriculture": "កសិកម្មចម្រុះ",
         "new_diagnosis": "រោគវិនិច្ឆ័យថ្មី",
+        "detail": "ព័ត៌មានលម្អិត",
         "ask_expert": "សួរអ្នកជំនាញ",
         "farmer_panel": "ផ្នែកកសិករ",
         "full_rule_based": "ការវិនិច្ឆ័យតាមច្បាប់ពេញលេញ",

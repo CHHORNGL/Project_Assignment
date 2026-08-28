@@ -43,6 +43,96 @@ DIAGNOSIS_CATEGORIES = [
     {"id": "other", "label": "Not sure"},
 ]
 
+# ---------------------------------------------------------------------------
+# PROJECT TEAM (rendered by /farmer/detail)
+#
+# TODO: replace the placeholder values below with the real data.
+#   - "task"       : what the person contributed to the project
+#   - "student_id" : university ID          (placeholder: 20xx-xxxx)
+#   - "department" : faculty / department   (placeholder: Faculty / Department)
+#   - "phone"      : phone number          (placeholder: +855 00 000 000)
+#   - "telegram"   : Telegram handle       (placeholder: @username)
+# Leave any field as "" (empty string) to hide that row on the card.
+# ---------------------------------------------------------------------------
+PROJECT_SUPERVISOR = {
+    "name": "Sek Socheat",
+    "name_kh": "សេក&nbsp;សុជាតិ",
+    "rank": "Professor",
+    "rank_kh": "សាស្ត្រាចារ្យ",
+    "photo": "Sek Socheat.jpeg",
+    "task": "Project Supervisor & Academic Advisor",
+    "task_kh": "អ្នកគ្រប់គ្រងគម្រោង និងទីប្រឹក្សាសិក្សា",
+    "student_id": "",
+    "department": "Faculty / Software Development",
+    "department_kh": "មហាវិទ្យាល័យ / អភិវឌ្ឍន៍កម្មវិធី",
+    "email": "Socheat.sek@gmail.com",
+    "phone": "+855 17 879 967",
+    "telegram": "",
+}
+
+PROJECT_TEAM = [
+    {
+        "name": "Mao Seavik",
+        "name_kh": "ម៉ៅ&nbsp;សៀវអ៊ិ",
+        "rank": "Manager",
+        "rank_kh": "អ្នកគ្រប់គ្រង",
+        "photo": "Mao Seavik.jpg",
+        "task": "Add contribution",
+        "task_kh": "បន្ថែមការរួមចំណែក",
+        "student_id": "20241706",
+        "department": "Student / Software Development",
+        "department_kh": "និស្សិត / អភិវឌ្ឍន៍កម្មវិធី",
+        "email": "Ahzarky@gmail.com",
+        "phone": "+855 16 214 262",
+        "telegram": "@Error404_ik",
+    },
+    {
+        "name": "Chea Cheavchorng",
+        "name_kh": "ជា&nbsp;ជៀវឈ័ង្ស",
+        "rank": "Member",
+        "rank_kh": "សមាជិក",
+        "photo": "Chea Cheavchorng.jpeg",
+        "task": "Add contribution",
+        "task_kh": "បន្ថែមការរួមចំណែក",
+        "student_id": "B20241176",
+        "department": "Student / Software Development",
+        "department_kh": "និស្សិត / អភិវឌ្ឍន៍កម្មវិធី",
+        "email": "cheacheavchhorng@gmail.com",
+        "phone": "+855 96 866 8000",
+        "telegram": "@CHRNGL1",
+    },
+    {
+        "name": "Nov Panha",
+        "name_kh": "នូវ&nbsp;បញ្ញា",
+        "rank": "Member",
+        "rank_kh": "សមាជិក",
+        "photo": "Nov Panha.png",
+        "task": "Add contribution",
+        "task_kh": "បន្ថែមការរួមចំណែក",
+        "student_id": "B20243413",
+        "department": "Student / Software Development",
+        "department_kh": "និស្សិត / អភិវឌ្ឍន៍កម្មវិធី",
+        "email": "novpanha66@gmail.com",
+        "phone": "+855 71 347 4377",
+        "telegram": "@panha2509",
+    },
+    {
+        "name": "Pich Rachana",
+        "name_kh": "ពេជ្រ&nbsp;រចនា",
+        "rank": "Member",
+        "rank_kh": "សមាជិក",
+        "photo": "Pich Rachana.jpeg",
+        "task": "Add contribution",
+        "task_kh": "បន្ថែមការរួមចំណែក",
+        "student_id": "B20241559",
+        "department": "Student / Software Development",
+        "department_kh": "និស្សិត / អភិវឌ្ឍន៍កម្មវិធី",
+        "email": "pichrachana2003@gmail.com",
+        "phone": "+855 10 606 032",
+        "telegram": "@wirtzDisone",
+    },
+]
+
 AGRI_QCM_DOMAINS = [
     {
         "id": "crop",
@@ -348,32 +438,43 @@ farmer_bp = Blueprint(
 # FARMER DASHBOARD
 # ===============================
 @farmer_bp.route("/dashboard")
-@farmer_required
 def dashboard():
     """
-    Show diagnoses submitted by this farmer only
+    Show diagnoses submitted by this farmer only, allow guests to view dashboard
     """
+    if current_user.is_authenticated:
+        if not (current_user.has_role("farmer") or any(getattr(r, 'route_type', None) == "farmer" for r in current_user.roles)):
+            from flask import abort
+            abort(403)
+        farmer_id = current_user.id
+    else:
+        farmer_id = None
+
     crops = Crop.query.order_by(Crop.name.asc()).all()
 
-    diagnoses = (
-        Diagnosis.query
-        .filter_by(farmer_id=current_user.id)
-        .order_by(Diagnosis.created_at.desc())
-        .all()
-    )
-
-    ai_questions = (
-        db.session.query(ChatMessage, ChatSession)
-        .join(ChatSession, ChatSession.id == ChatMessage.session_id)
-        .filter(
-            ChatSession.farmer_id == current_user.id,
-            ChatSession.session_type == "ai",
-            ChatMessage.sender == "farmer"
+    if farmer_id:
+        diagnoses = (
+            Diagnosis.query
+            .filter_by(farmer_id=farmer_id)
+            .order_by(Diagnosis.created_at.desc())
+            .all()
         )
-        .order_by(ChatMessage.created_at.desc())
-        .limit(6)
-        .all()
-    )
+
+        ai_questions = (
+            db.session.query(ChatMessage, ChatSession)
+            .join(ChatSession, ChatSession.id == ChatMessage.session_id)
+            .filter(
+                ChatSession.farmer_id == farmer_id,
+                ChatSession.session_type == "ai",
+                ChatMessage.sender == "farmer"
+            )
+            .order_by(ChatMessage.created_at.desc())
+            .limit(6)
+            .all()
+        )
+    else:
+        diagnoses = []
+        ai_questions = []
 
     return render_template(
         "farmer/dashboard.html",
@@ -503,8 +604,16 @@ def _process_diagnose_post():
                     file.save(os.path.join(upload_dir, filename))
                     image_paths.append(f"uploads/{filename}")
 
+    if not current_user.is_authenticated:
+        from flask import session
+        count = session.get("guest_diagnosis_count", 0)
+        if count >= 3:
+            flash("You have reached the limit of 3 free diagnoses. Please register an account to continue.", "warning")
+            return redirect(url_for("auth.login"))
+        session["guest_diagnosis_count"] = count + 1
+
     diagnosis = Diagnosis(
-        farmer_id=current_user.id,
+        farmer_id=current_user.id if current_user.is_authenticated else None,
         crop_id=crop.id,
         crop_name=_localize_field(crop, "name", crop.name),
         disease_id=disease_id,
@@ -555,12 +664,17 @@ def _process_diagnose_post():
 
 
 @farmer_bp.route("/diagnose", methods=["GET", "POST"])
-@farmer_required
 def diagnose():
     """
     Farmer submits crop + symptoms
     System uses Rule Engine to auto-diagnose
     """
+    if not current_user.is_authenticated:
+        from flask import session
+        if session.get("guest_diagnosis_count", 0) >= 3:
+            flash("You have reached the limit of 3 free diagnoses. Please register an account to continue.", "warning")
+            return redirect(url_for("auth.login"))
+
     # Redirect removed to use the cleaner, native native Diagnose UI instead of React wizard
     if request.method == "GET":
         pass
@@ -578,13 +692,16 @@ def diagnose():
     crop_symptoms = {c.id: _symptom_candidates_for_crop(c.id) for c in crops}
 
     # Sidebar: recent diagnoses
-    diagnoses = (
-        Diagnosis.query
-        .filter_by(farmer_id=current_user.id)
-        .order_by(Diagnosis.created_at.desc())
-        .limit(10)
-        .all()
-    )
+    if current_user.is_authenticated:
+        diagnoses = (
+            Diagnosis.query
+            .filter_by(farmer_id=current_user.id)
+            .order_by(Diagnosis.created_at.desc())
+            .limit(10)
+            .all()
+        )
+    else:
+        diagnoses = []
 
     return render_template(
         "farmer/diagnose.html",
@@ -600,7 +717,6 @@ def diagnose():
 
 
 @farmer_bp.route("/api/diagnose/live-evaluation", methods=["POST"])
-@farmer_required
 def api_diagnose_live_evaluation():
     data = request.get_json() or {}
     crop_id_raw = data.get("crop_id")
@@ -652,11 +768,16 @@ def api_diagnose_live_evaluation():
 
 
 @farmer_bp.route("/diagnose/rule-based", methods=["GET", "POST"])
-@farmer_required
 def diagnose_rule_based():
     """
     Farmer submits crop + symptoms (fully rule-based inference form)
     """
+    if not current_user.is_authenticated:
+        from flask import session
+        if session.get("guest_diagnosis_count", 0) >= 3:
+            flash("You have reached the limit of 3 free diagnoses. Please register an account to continue.", "warning")
+            return redirect(url_for("auth.login"))
+
     scan_mode = request.args.get("scan", "").strip() == "1"
     instant_scan_mode = request.args.get("instant", "").strip() == "1"
     initial_crop_id = request.args.get("crop_id", "").strip() or ""
@@ -757,8 +878,16 @@ def diagnose_rule_based():
                         file.save(os.path.join(upload_dir, filename))
                         image_paths.append(f"uploads/{filename}")
 
+        if not current_user.is_authenticated:
+            from flask import session
+            count = session.get("guest_diagnosis_count", 0)
+            if count >= 3:
+                flash("You have reached the limit of 3 free diagnoses. Please register an account to continue.", "warning")
+                return redirect(url_for("auth.login"))
+            session["guest_diagnosis_count"] = count + 1
+
         diagnosis = Diagnosis(
-            farmer_id=current_user.id,
+            farmer_id=current_user.id if current_user.is_authenticated else None,
             crop_id=crop.id,
             crop_name=_localize_field(crop, "name", crop.name),
             disease_id=disease_id,
@@ -1009,27 +1138,30 @@ def diagnose_rule_based():
 # DIAGNOSIS RESULT
 # ===============================
 @farmer_bp.route("/result/<int:diagnosis_id>")
-@farmer_required
 def diagnosis_result(diagnosis_id):
     """
-    Show diagnosis result (owner only)
+    Show diagnosis result (owner only or guest)
     """
 
     diagnosis = Diagnosis.query.get_or_404(diagnosis_id)
 
-    # Security: owner only
-    if diagnosis.farmer_id != current_user.id:
-        flash("Access denied.", "danger")
-        return redirect(url_for("farmer.dashboard"))
+    # Security: owner only if it belongs to a user
+    if diagnosis.farmer_id is not None:
+        if not current_user.is_authenticated or diagnosis.farmer_id != current_user.id:
+            flash("Access denied.", "danger")
+            return redirect(url_for("farmer.dashboard"))
 
     # Sidebar: recent diagnoses
-    diagnoses = (
-        Diagnosis.query
-        .filter_by(farmer_id=current_user.id)
-        .order_by(Diagnosis.created_at.desc())
-        .limit(10)
-        .all()
-    )
+    if current_user.is_authenticated:
+        diagnoses = (
+            Diagnosis.query
+            .filter_by(farmer_id=current_user.id)
+            .order_by(Diagnosis.created_at.desc())
+            .limit(10)
+            .all()
+        )
+    else:
+        diagnoses = []
 
     possible_diseases = []
     if diagnosis.crop_id:
@@ -1319,3 +1451,76 @@ def chat(session_id=None):
         sessions=sessions,
         active_session=session
     )
+
+@farmer_bp.route("/detail")
+@farmer_required
+def detail():
+    return render_template(
+        "farmer/detail.html",
+        supervisor=PROJECT_SUPERVISOR,
+        team=PROJECT_TEAM,
+    )
+
+@farmer_bp.route("/premium/upgrade")
+@farmer_required
+def premium_upgrade():
+    if current_user.is_authenticated and getattr(current_user, "is_premium", False):
+        flash("You are already a Premium member!", "info")
+        return redirect(url_for("farmer.dashboard"))
+    return render_template("farmer/upgrade.html")
+
+@farmer_bp.route("/premium/checkout", methods=["GET", "POST"])
+@farmer_required
+def premium_checkout():
+    if current_user.is_authenticated and getattr(current_user, "is_premium", False):
+        flash("You are already a Premium member!", "info")
+        return redirect(url_for("farmer.dashboard"))
+        
+    if request.method == "POST":
+        # Payment processing via PayPal frontend SDK success hidden form
+        current_user.is_premium = True
+        from datetime import datetime, timedelta
+        current_user.premium_expires_at = datetime.utcnow() + timedelta(days=30)
+        db.session.commit()
+        flash("Payment successful! Welcome to Premium.", "success")
+        return redirect(url_for("farmer.dashboard"))
+        
+    import os
+    paypal_client_id = os.getenv("PAYPAL_CLIENT_ID", "YOUR_PAYPAL_CLIENT_ID")
+    return render_template("farmer/checkout.html", paypal_client_id=paypal_client_id)
+
+@farmer_bp.route("/redeem-code", methods=["POST"])
+@farmer_required
+def redeem_code():
+    code_input = request.form.get("promo_code", "").strip().upper()
+    if not code_input:
+        flash("Please enter a code.", "danger")
+        return redirect(url_for("user.settings"))
+        
+    from app.models.promo import PromoCode
+    from datetime import datetime
+    
+    promo = PromoCode.query.filter(PromoCode.code.ilike(code_input)).first()
+    
+    if not promo:
+        flash("Invalid reward code.", "danger")
+        return redirect(url_for("user.settings"))
+        
+    if promo.is_used:
+        flash("This reward code has already been used.", "danger")
+        return redirect(url_for("user.settings"))
+        
+    # Apply reward
+    promo.is_used = True
+    promo.used_by_id = current_user.id
+    promo.used_at = datetime.utcnow()
+    
+    from app.models.user import User
+    user = User.query.get(current_user.id)
+    user.ai_credits = (user.ai_credits or 0) + promo.tokens_reward
+    db.session.add(promo)
+    db.session.add(user)
+    db.session.commit()
+    
+    flash(f"Success! You claimed {promo.tokens_reward} AI Tokens.", "success")
+    return redirect(url_for("user.settings"))

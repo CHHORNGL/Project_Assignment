@@ -1,34 +1,52 @@
 {% set path = request.path %}
-<nav class="farmer-topnav" aria-label="Farmer navigation">
-    <a href="{{ url_for('farmer.dashboard') }}"
-       class="{% if path == url_for('farmer.dashboard') %}active{% endif %}">
-        <i class="far fa-compass"></i>
-        <span>{{ t("home") }}</span>
-    </a>
+<nav class="farmer-topnav" aria-label="Farmer navigation" style="display: block; padding: 0;">
+    <div class="farmer-topnav-scroll" style="display: flex; flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; width: 100%; height: 100%; scrollbar-width: none; -ms-overflow-style: none; touch-action: pan-x; padding: 0 10px;">
+        <style>
+            .farmer-topnav-scroll::-webkit-scrollbar { display: none; }
+            .farmer-topnav-scroll a {
+                display: inline-flex;
+                align-items: center;
+                white-space: nowrap;
+                flex: 0 0 auto;
+                padding: 0 12px;
+            }
+        </style>
+        <a href="{{ url_for('farmer.dashboard') }}"
+           class="{% if path == url_for('farmer.dashboard') %}active{% endif %}">
+            <i class="far fa-compass"></i>
+            <span>{{ t("home") }}</span>
+        </a>
 
-    {% set diagnose_url = url_for('farmer.diagnose') %}
-    <a href="{{ diagnose_url }}"
-       class="{% if path.startswith(diagnose_url) %}active{% endif %}">
-        <i class="fas fa-stethoscope"></i>
-        <span>{{ t("new_diagnosis") }}</span>
-    </a>
+        {% set diagnose_url = url_for('farmer.diagnose') %}
+        <a href="{{ diagnose_url }}"
+           class="{% if path.startswith(diagnose_url) %}active{% endif %}">
+            <i class="fas fa-stethoscope"></i>
+            <span>{{ t("new_diagnosis") }}</span>
+        </a>
 
-    <a href="{{ url_for('farmer.diagnosis_history') }}"
-       class="{% if path.startswith('/farmer/diagnoses') or path.startswith('/farmer/result') %}active{% endif %}">
-        <i class="far fa-file-alt"></i>
-        <span>{{ t("diagnoses_label") }}</span>
-    </a>
+        <a href="{{ url_for('farmer.diagnosis_history') }}"
+           class="{% if path.startswith('/farmer/diagnoses') or path.startswith('/farmer/result') %}active{% endif %}">
+            <i class="far fa-file-alt"></i>
+            <span>{{ t("diagnoses_label") }}</span>
+        </a>
 
-    {% set rule_history_url = url_for('farmer.rule_inference_history') %}
-    <a href="{{ rule_history_url }}"
-       class="{% if path.startswith(rule_history_url) %}active{% endif %}">
-        <i class="far fa-clock"></i>
-        <span>{{ t("rule_history") }}</span>
-    </a>
+        {% set rule_history_url = url_for('farmer.rule_inference_history') %}
+        <a href="{{ rule_history_url }}"
+           class="{% if path.startswith(rule_history_url) %}active{% endif %}">
+            <i class="far fa-clock"></i>
+            <span>{{ t("rule_history") }}</span>
+        </a>
 
-    <a href="{{ url_for('farmer.chat') }}"
-       class="{% if path.startswith('/farmer/chat') or path.startswith('/farmer/history/ai') %}active{% endif %}">
-        <i class="far fa-comments"></i>
-        <span>{{ t("ask_expert") }}</span>
-    </a>
+        <a href="{{ url_for('farmer.chat') }}"
+           class="{% if path.startswith('/farmer/chat') or path.startswith('/farmer/history/ai') %}active{% endif %}">
+            <i class="far fa-comments"></i>
+            <span>{{ t("ask_expert") }}</span>
+        </a>
+
+        <a href="{{ url_for('farmer.detail') }}"
+           class="{% if path.startswith('/farmer/detail') %}active{% endif %}">
+            <i class="fas fa-info-circle"></i>
+            <span>{% if current_lang == 'km' %}ព័ត៌មានលម្អិត{% else %}Detail{% endif %}</span>
+        </a>
+    </div>
 </nav>

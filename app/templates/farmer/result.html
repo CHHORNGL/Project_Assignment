@@ -176,12 +176,21 @@
                 {% endif %}
                 
                 <div class="diag-result-actions">
+                    <button type="button" class="btn btn-outline-secondary" onclick="if(navigator.share){navigator.share({title:'AI Crop Diagnosis', url: window.location.href})}else{navigator.clipboard.writeText(window.location.href);alert('Link copied to clipboard!');}">
+                        <i class="fas fa-share-alt mr-2"></i>Share Result
+                    </button>
                     <a href="{{ url_for('farmer.diagnose') }}" class="btn btn-success">
                         <i class="fas fa-redo-alt mr-2"></i>{{ t("restart_diagnosis") }}
                     </a>
+                    {% if current_user.is_authenticated %}
                     <a href="{{ url_for('farmer.chat') }}" class="btn btn-outline-success">
                         <i class="fas fa-user-md mr-2"></i>{{ t("ask_expert") }}
                     </a>
+                    {% else %}
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-user-plus mr-2"></i>Sign up to Ask Expert
+                    </a>
+                    {% endif %}
                 </div>
             </div>
         </div>

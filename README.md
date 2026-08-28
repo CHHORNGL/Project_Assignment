@@ -213,7 +213,7 @@ Docker Compose automates the React builds, sets up PostgreSQL, executes database
    ```bash
    docker-compose up --build
    ```
-4. Once database checks pass and seeding succeeds, open `http://localhost:5001` in your browser.
+4. Once database checks pass and seeding succeeds, open `http://localhost:5000` in your browser.
 
 ---
 
@@ -233,6 +233,6 @@ Our pre-configured knowledge database (`seed_rule_based_knowledge.py`) populates
 
 ## 🤝 Collaboration & Review
 For reviews, bugs, and development:
-* Code validation scripts can be tested using `python smoke_test.py`.
-* Reviewers can invoke specialized instructions in [.github/agents/code-reviewer.agent.md](file:///Users/ahzarjy/Documents/Ai/Project_Assignment/.github/agents/code-reviewer.agent.md).
-* Themes can be completely reset and reseeded to defaults using `python reset_themes.py`.
+* Code validation scripts can be tested using `python scripts/dev_tools/smoke_test.py`.
+* Reviewers can invoke specialized instructions in [.github/agents/code-reviewer.agent.md](.github/agents/code-reviewer.agent.md).
+* Themes can be completely reset and reseeded to defaults using `python scripts/dev_tools/reset_themes.py`.

@@ -3,25 +3,34 @@
 
 {% block content %}
 <div class="d-flex flex-column h-100">
+    <style>
+        :root { --chat-user-bg: #f4f4f4; }
+        .dark-mode { --chat-user-bg: #2f2f2f; }
+    </style>
 
     {% if messages and messages|length > 0 %}
+        <div style="max-width: 800px; margin: 0 auto; width: 100%; padding: 20px 0;">
         {% for m in messages %}
             {% if m.sender == "farmer" %}
                 <!-- USER -->
-                <div class="d-flex justify-content-end mb-3">
-                    <div class="chat-bubble-user">
+                <div class="d-flex justify-content-end mb-4">
+                    <div style="background: var(--chat-user-bg, #f4f4f4); color: var(--text-main, #0f172a); padding: 10px 16px; border-radius: 20px; max-width: 85%; font-size: 0.95rem; line-height: 1.5; white-space: pre-wrap; word-break: break-word;">
                         {{ m.message }}
                     </div>
                 </div>
             {% else %}
                 <!-- AI / EXPERT -->
-                <div class="d-flex justify-content-start mb-3">
-                    <div class="chat-bubble-ai">
-                         {{ m.message }}
+                <div class="d-flex justify-content-start mb-4" style="gap: 16px; width: 100%;">
+                    <div style="width: 32px; height: 32px; border-radius: 50%; background: #ffffff; border: 1px solid var(--border-light, #e2e8f0); display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;">
+                        <img src="{{ url_for('static', filename='img/logo.jpg') }}" style="width: 20px; height: 20px; border-radius: 50%; object-fit: cover;">
+                    </div>
+                    <div style="color: var(--text-main, #0f172a); font-size: 0.95rem; line-height: 1.6; max-width: 100%; width: 100%; white-space: pre-wrap; word-break: break-word; overflow-x: auto;">
+                         {{ m.message | safe }}
                     </div>
                 </div>
             {% endif %}
         {% endfor %}
+        </div>
     {% else %}
         <div class="text-center text-muted mt-5">
             <h5><i class="fas fa-comments text-success mr-2" aria-hidden="true"></i>{{ t("ask_expert_title") }}</h5>
@@ -34,18 +43,19 @@
 
 
 {% block input %}
-<form method="POST" class="d-flex gap-2">
+<form method="POST" class="d-flex align-items-center" style="background: var(--card-bg, #ffffff); border: 1px solid var(--border-light, #e2e8f0); border-radius: 24px; padding: 4px 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); gap: 8px;">
     <input type="text"
            name="message"
            id="farmer-chat-input"
-           class="form-control rounded-pill px-4"
-           placeholder="{{ t("ask_expert_placeholder") }}"
+           class="form-control border-0 shadow-none bg-transparent"
+           placeholder="{{ t('ask_expert_placeholder') }}"
            autocomplete="off"
            autofocus
-           required>
+           required
+           style="font-size: 16px; min-height: 44px; padding-left: 16px;">
 
-    <button class="btn btn-success rounded-pill px-4">
-        {{ t("send") }}
+    <button type="submit" class="btn" style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3); border: none; transition: transform 0.2s;">
+        <i class="fas fa-arrow-up"></i>
     </button>
 </form>
 {% endblock %}

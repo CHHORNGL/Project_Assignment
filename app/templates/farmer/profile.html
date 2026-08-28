@@ -3,547 +3,292 @@
 
 {% block content %}
 <style>
-/* Base Layout */
-.premium-profile-grid {
-    display: grid;
-    grid-template-columns: 300px 1fr;
-    gap: 28px;
-    align-items: start;
-}
-@media (max-width: 900px) {
-    .premium-profile-grid {
-        grid-template-columns: 1fr;
-    }
+/* 📱 iOS/Mobile App Style Settings */
+.settings-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 0 16px 80px 16px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
-.premium-profile-card {
+.settings-section-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 24px 0 8px 16px;
+}
+.dark-mode .settings-section-title {
+    color: #94a3b8;
+}
+
+.settings-card {
     background: #ffffff;
-    border-radius: 24px;
-    border: 1px solid rgba(226, 232, 240, 0.8);
-    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.03), 0 1px 3px rgba(15, 23, 42, 0.02);
+    border-radius: 12px;
     overflow: hidden;
-    transition: all 0.3s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e2e8f0;
 }
-.dark-mode .premium-profile-card {
-    background: #0b1116;
-    border-color: rgba(148, 163, 184, 0.12);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+.dark-mode .settings-card {
+    background: #1c2431;
+    border-color: rgba(148, 163, 184, 0.1);
+    box-shadow: none;
 }
 
-/* Profile Left Panel */
-.profile-overview-panel {
-    padding: 36px 24px;
+.settings-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    border-bottom: 1px solid #f1f5f9;
+}
+.settings-row.stack {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+}
+.settings-row:last-child {
+    border-bottom: none;
+}
+.dark-mode .settings-row {
+    border-bottom-color: rgba(148, 163, 184, 0.08);
+}
+
+.settings-row-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.settings-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: grid;
+    place-items: center;
+    color: #ffffff;
+    font-size: 0.9rem;
+}
+.icon-profile { background: #3b82f6; }
+.icon-email { background: #10b981; }
+.icon-lock { background: #f59e0b; }
+.icon-qr { background: #8b5cf6; }
+
+.settings-label {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #1e293b;
+}
+.dark-mode .settings-label {
+    color: #f1f5f9;
+}
+.settings-sublabel {
+    font-size: 0.75rem;
+    color: #64748b;
+    margin-top: 2px;
+}
+.dark-mode .settings-sublabel {
+    color: #94a3b8;
+}
+
+.ios-input {
+    border: none;
+    text-align: right;
+    font-size: 0.95rem;
+    color: #64748b;
+    background: transparent;
+    outline: none;
+    width: 200px;
+}
+.dark-mode .ios-input {
+    color: #94a3b8;
+}
+.ios-input:focus {
+    color: #3b82f6;
+}
+
+.avatar-container {
     display: flex;
     flex-direction: column;
     align-items: center;
-    text-align: center;
-}
-
-/* Premium Hover Avatar Widget */
-.avatar-container {
-    position: relative;
-    width: 110px;
-    height: 110px;
-    border-radius: 50%;
-    cursor: pointer;
-    overflow: visible;
-    margin-bottom: 20px;
+    padding: 24px 0;
 }
 .avatar-image-box {
-    width: 110px;
-    height: 110px;
+    width: 90px;
+    height: 90px;
     border-radius: 50%;
     overflow: hidden;
-    border: 4px solid #ffffff;
-    box-shadow: 0 8px 24px rgba(16, 185, 129, 0.12);
+    border: 3px solid #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     display: grid;
     place-items: center;
     background: linear-gradient(135deg, #10b981, #059669);
     color: #ffffff;
-    font-size: 2.8rem;
+    font-size: 2.2rem;
     font-weight: 700;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
 }
 .dark-mode .avatar-image-box {
-    border-color: #12181f;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-}
-.avatar-upload-badge {
-    position: absolute;
-    bottom: 2px;
-    right: 2px;
-    background: #10b981;
-    color: #ffffff;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    display: grid;
-    place-items: center;
-    border: 3px solid #ffffff;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-    font-size: 0.85rem;
-    transition: all 0.2s ease;
-}
-.dark-mode .avatar-upload-badge {
-    border-color: #12181f;
-}
-.avatar-container:hover .avatar-image-box {
-    transform: scale(1.03);
-    filter: brightness(0.95);
-}
-.avatar-container:hover .avatar-upload-badge {
-    transform: scale(1.1);
-    background: #059669;
+    border-color: #1c2431;
 }
 
-.profile-name-title {
-    font-weight: 700;
-    font-size: 1.25rem;
-    color: #0f172a;
-    margin-bottom: 4px;
-    line-height: 1.4;
-}
-.dark-mode .profile-name-title {
-    color: #f1f5f9;
-}
-.profile-role-badge {
-    background: rgba(16, 185, 129, 0.08);
-    color: #10b981;
-    font-size: 0.72rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    padding: 5px 12px;
-    border-radius: 9999px;
-    margin-bottom: 24px;
-}
-.profile-info-list {
-    width: 100%;
-    border-top: 1px solid #f1f5f9;
-    padding-top: 24px;
-    text-align: left;
-}
-.dark-mode .profile-info-list {
-    border-top-color: rgba(148, 163, 184, 0.08);
-}
-.profile-info-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 14px;
-    font-size: 0.85rem;
-    color: #475569;
-    line-height: 1.4;
-}
-.dark-mode .profile-info-item {
-    color: #94a3b8;
-}
-.profile-info-item i {
-    color: #10b981;
-    width: 16px;
-    text-align: center;
-    font-size: 0.95rem;
-}
-.profile-qr {
-    margin-top: 20px;
+.sticky-save {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     padding: 16px;
-    border-radius: 16px;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
+    border-top: 1px solid #e2e8f0;
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
+    justify-content: center;
+    z-index: 100;
+}
+.dark-mode .sticky-save {
+    background: rgba(15, 23, 42, 0.85);
+    border-top-color: rgba(148, 163, 184, 0.1);
+}
+.sticky-save .btn-primary {
     width: 100%;
-}
-.dark-mode .profile-qr {
-    background: #12181f;
-    border-color: rgba(148, 163, 184, 0.08);
-}
-.profile-qr-title {
-    font-size: 0.75rem;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    font-weight: 700;
-    color: #475569;
-}
-.dark-mode .profile-qr-title {
-    color: #cbd5e1;
-}
-.profile-qr-box {
-    width: 148px;
-    height: 148px;
-    background: #ffffff;
+    max-width: 600px;
     border-radius: 12px;
-    padding: 8px;
-    display: grid;
-    place-items: center;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    font-weight: 600;
+    padding: 12px;
+    background: #3b82f6;
+    border: none;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.profile-qr-box {
+    width: 120px;
+    height: 120px;
+    background: #ffffff;
+    border-radius: 8px;
+    padding: 6px;
+    margin: 10px 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 .profile-qr-box img {
     width: 100%;
     height: 100%;
     display: block;
 }
-.profile-qr-sub {
-    font-size: 0.78rem;
-    color: #64748b;
-    text-align: center;
-}
-.profile-qr-link {
-    font-size: 0.78rem;
-    font-weight: 600;
-    color: #10b981;
-    text-decoration: none;
-    transition: color 0.2s ease;
-}
-.profile-qr-link:hover {
-    color: #059669;
-    text-decoration: underline;
-}
-
-/* Profile Form Panel */
-.profile-form-panel {
-    padding: 32px;
-}
-.profile-form-title {
-    font-weight: 700;
-    font-size: 1.2rem;
-    color: #0f172a;
-    margin-bottom: 4px;
-    line-height: 1.4;
-}
-.dark-mode .profile-form-title {
-    color: #e2e8f0;
-}
-.profile-form-sub {
-    font-size: 0.8rem;
-    color: #64748b;
-    margin-bottom: 28px;
-    line-height: 1.4;
-}
-.dark-mode .profile-form-sub {
-    color: #94a3b8;
-}
-
-/* Input Wrappers & Icon styling */
-.premium-input-wrapper {
-    position: relative;
-    display: flex;
-    align-items: center;
-    width: 100%;
-}
-.premium-input-icon {
-    position: absolute;
-    left: 16px;
-    color: #94a3b8;
-    font-size: 0.95rem;
-    pointer-events: none;
-    transition: color 0.2s ease;
-}
-.premium-form-control {
-    border-radius: 14px;
-    border: 1px solid #cbd5e1;
-    padding: 11px 16px 11px 44px; /* Space on left for prefix icon */
-    font-size: 0.95rem;
-    color: #334155;
-    background-color: #ffffff;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    width: 100%;
-}
-.dark-mode .premium-form-control {
-    border-color: rgba(148, 163, 184, 0.2);
-    background-color: #12181f;
-    color: #cbd5e1;
-}
-.premium-form-control:focus {
-    border-color: #10b981;
-    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.12);
-    background-color: #ffffff;
-    outline: none;
-}
-.dark-mode .premium-form-control:focus {
-    background-color: #12181f;
-}
-.premium-form-control:focus + .premium-input-icon {
-    color: #10b981;
-}
-
-/* Password Change Box */
-.password-change-box {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 18px;
-    padding: 24px;
-    margin-top: 28px;
-    margin-bottom: 28px;
-}
-.dark-mode .password-change-box {
-    background: #12181f;
-    border-color: rgba(148, 163, 184, 0.08);
-}
-.password-box-title {
-    font-weight: 700;
-    font-size: 1rem;
-    color: #1e293b;
-    margin-bottom: 16px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-.dark-mode .password-box-title {
-    color: #cbd5e1;
-}
-.password-box-title i {
-    color: #10b981;
-}
-
-/* Custom file upload picker */
-.custom-file-upload {
-    display: block;
-    width: 100%;
-    border: 2px dashed #cbd5e1;
-    border-radius: 14px;
-    padding: 20px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    margin-bottom: 0;
-    background: #f8fafc;
-}
-.dark-mode .custom-file-upload {
-    border-color: rgba(148, 163, 184, 0.2);
-    background: #12181f;
-}
-.custom-file-upload:hover {
-    border-color: #10b981;
-    background: rgba(16, 185, 129, 0.02);
-}
-.custom-file-upload i {
-    font-size: 1.6rem;
-    color: #64748b;
-    margin-bottom: 8px;
-    transition: color 0.2s ease;
-}
-.custom-file-upload:hover i {
-    color: #10b981;
-}
-.custom-file-upload span {
-    font-size: 0.85rem;
-    color: #475569;
-    display: block;
-}
-.dark-mode .custom-file-upload span {
-    color: #cbd5e1;
-}
-
-/* Save changes premium button */
-.save-profile-btn {
-    width: 100%;
-    padding: 14px;
-    border-radius: 16px;
-    font-weight: 600;
-    font-size: 1rem;
-    border: none;
-    color: #ffffff;
-    background: linear-gradient(135deg, #10b981, #059669);
-    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.25);
-    transition: all 0.2s ease;
-    cursor: pointer;
-}
-.save-profile-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 24px rgba(16, 185, 129, 0.35);
-    background: linear-gradient(135deg, #059669, #047857);
-}
-.save-profile-btn:active {
-    transform: translateY(0);
-}
 </style>
 
-<div class="farmer-hero mb-4">
-    <div class="d-flex justify-content-between align-items-center flex-wrap">
-        <div>
-            <h4 class="mb-1 font-weight-bold text-success">{{ t("profile") }}</h4>
-            <div class="text-muted small">{{ t("account_details_sub") }}</div>
-        </div>
-        <div class="mt-3 mt-md-0">
-            <a class="btn btn-sm btn-outline-success" href="{{ url_for('user.settings') }}">
-                <i class="fas fa-sliders-h mr-1"></i>
-                {{ t("settings") }}
-            </a>
-        </div>
+<div class="settings-container pt-4">
+    <div style="text-align: center; margin-bottom: 24px;">
+        <h2 style="font-size: 1.5rem; font-weight: 700; color: var(--text-main);">{{ t("profile") }}</h2>
     </div>
-</div>
 
-<div class="premium-profile-grid container px-0" style="max-width: 900px;">
-    <!-- Left Column: Summary Card -->
-    <div class="premium-profile-card">
-        <div class="profile-overview-panel">
-            <div class="avatar-container" onclick="document.getElementById('avatar-input-file').click();">
-                <div class="avatar-image-box">
-                    {% if current_user.avatar_data or current_user.avatar_path %}
-                        <img class="profile-avatar-img"
-                             src="{{ avatar_url(current_user) }}"
-                             alt="{{ t("profile_avatar") }}">
+    <form method="POST" enctype="multipart/form-data">
+        <!-- AVATAR UPLOAD -->
+        <div class="avatar-container">
+            <label for="avatar-input-file" style="cursor: pointer; position: relative;">
+                <div class="avatar-image-box" {% if current_user.is_premium %}style="background: linear-gradient(45deg, #4285f4, #9b72cb, #d96570); padding: 4px; box-shadow: 0 8px 24px rgba(155, 114, 203, 0.4); border: none;"{% endif %}>
+                    {% if current_user.avatar_data %}
+                        <img src="{{ url_for('user.avatar', user_id=current_user.id) }}" alt="Avatar" id="avatar-preview" style="{% if current_user.is_premium %}border: 3px solid var(--card-bg); border-radius: 50%;{% endif %} width: 100%; height: 100%; object-fit: cover;">
                     {% else %}
-                        {{ (current_user.full_name or current_user.username)[:1]|upper }}
+                        <img src="" alt="Avatar" id="avatar-preview" style="display:none; {% if current_user.is_premium %}border: 3px solid var(--card-bg); border-radius: 50%;{% endif %} width: 100%; height: 100%; object-fit: cover;">
+                        <span id="avatar-initial" style="{% if current_user.is_premium %}border: 3px solid var(--card-bg); border-radius: 50%; background: #059669; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;{% endif %}">{{ current_user.username[0]|upper }}</span>
                     {% endif %}
                 </div>
-                <div class="avatar-upload-badge">
-                    <i class="fas fa-camera"></i>
+                <div style="position: absolute; bottom: 0; right: 0; background: {% if current_user.is_premium %}#9b72cb{% else %}#3b82f6{% endif %}; color: white; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; border: 2px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.15);">
+                    <i class="fas fa-camera" style="font-size: 0.7rem;"></i>
                 </div>
+            </label>
+            <input type="file" name="avatar" accept=".jpg,.jpeg,.png,.gif,.webp" style="display: none;" id="avatar-input-file" onchange="const preview=document.getElementById('avatar-preview'); preview.src=window.URL.createObjectURL(this.files[0]); preview.style.display='block'; const initial=document.getElementById('avatar-initial'); if(initial) initial.style.display='none';">
+            
+            <div class="settings-label mt-3" style="display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 1.2rem; font-weight: 700;">
+                {{ current_user.username }}
+                {% if current_user.is_premium %}
+                    <i class="fas fa-check-circle" style="color: #3b82f6; font-size: 1rem; transform: translateY(1px);" title="Premium Account"></i>
+                {% endif %}
             </div>
             
-            <h5 class="profile-name-title">{{ current_user.full_name or current_user.username }}</h5>
-            <span class="profile-role-badge">
-                {{ current_user.roles | map(attribute='name') | list | join(', ') }}
-            </span>
-            <div class="profile-info-list">
-                <div class="profile-info-item">
-                    <i class="fas fa-envelope"></i>
-                    <span>{{ current_user.email or t("no_email_added") }}</span>
+            <div style="display: flex; gap: 8px; margin-top: 8px; justify-content: center;">
+                <div class="settings-sublabel" style="text-transform: uppercase; font-weight: 600; font-size: 0.7rem; letter-spacing: 0.5px; background: rgba(59, 130, 246, 0.1); color: #3b82f6; padding: 4px 10px; border-radius: 20px;">
+                    {{ rep_label if rep_label else 'FARMER' }}
                 </div>
-                <div class="profile-info-item">
-                    <i class="fas fa-calendar-alt"></i>
-                    <span>{{ t("joined") }} {{ current_user.created_at.strftime('%b %d, %Y') }}</span>
+                {% if current_user.is_premium %}
+                <div class="settings-sublabel" style="text-transform: uppercase; font-weight: 700; font-size: 0.7rem; letter-spacing: 0.5px; background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; padding: 4px 10px; border-radius: 20px; box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);">
+                    <i class="fas fa-crown"></i> PREMIUM
                 </div>
+                {% endif %}
             </div>
+        </div>
 
-            {% if rep_label %}
-            <div class="profile-qr">
-                <div class="profile-qr-title">{{ rep_label }} QR</div>
-                <div class="profile-qr-box" id="profile-qr-code"
-                     data-qr="{{ member_card_url }}"
-                     data-qr-img="{{ member_card_qr_url }}">
-                    <img class="profile-qr-img"
-                         src="{{ member_card_qr_url }}"
-                         alt="QR code">
+        <!-- ACCOUNT DETAILS -->
+        <div class="settings-section-title">{{ t("account_details") }}</div>
+        <div class="settings-card">
+            <div class="settings-row">
+                <div class="settings-row-left">
+                    <div class="settings-icon icon-profile"><i class="fas fa-user"></i></div>
+                    <div class="settings-label">{{ t("username") }}</div>
                 </div>
-                <div class="profile-qr-sub">Scan to view member card</div>
-                <a class="profile-qr-link"
-                   href="{{ url_for('user.member_card', user_id=current_user.id) }}"
-                   target="_blank" rel="noopener">
-                    Open Member Card
-                </a>
+                <input type="text" name="username" class="ios-input" value="{{ current_user.username }}" required>
             </div>
-            {% endif %}
+            <div class="settings-row">
+                <div class="settings-row-left">
+                    <div class="settings-icon icon-profile"><i class="fas fa-id-card"></i></div>
+                    <div class="settings-label">{{ t("full_name") }}</div>
+                </div>
+                <input type="text" name="full_name" class="ios-input" value="{{ current_user.full_name or '' }}" placeholder="{{ t('enter_full_name') }}">
+            </div>
+            <div class="settings-row">
+                <div class="settings-row-left">
+                    <div class="settings-icon icon-email"><i class="fas fa-envelope"></i></div>
+                    <div class="settings-label">{{ t("email") }}</div>
+                </div>
+                <input type="email" name="email" class="ios-input" value="{{ current_user.email or '' }}" placeholder="{{ t('enter_email') }}">
+            </div>
         </div>
-    </div>
 
-    <!-- Right Column: Details form -->
-    <div class="premium-profile-card">
-        <div class="profile-form-panel">
-            <h5 class="profile-form-title">{{ t("account_details") }}</h5>
-            <p class="profile-form-sub">{{ t("account_details_sub") }}</p>
-
-            <form method="POST" enctype="multipart/form-data">
-                <div class="form-row">
-                    <div class="form-group col-md-6">
-                        <label class="font-weight-bold text-dark dark-mode-text-white" style="font-size: 0.9rem;">{{ t("username") }}</label>
-                        <div class="premium-input-wrapper">
-                            <input class="form-control premium-form-control"
-                                   type="text"
-                                   name="username"
-                                   value="{{ current_user.username }}"
-                                   required>
-                            <span class="premium-input-icon"><i class="fas fa-user"></i></span>
-                        </div>
-                    </div>
-
-                    <div class="form-group col-md-6">
-                        <label class="font-weight-bold text-dark dark-mode-text-white" style="font-size: 0.9rem;">{{ t("full_name") }}</label>
-                        <div class="premium-input-wrapper">
-                            <input class="form-control premium-form-control"
-                                   type="text"
-                                   name="full_name"
-                                   value="{{ current_user.full_name or '' }}"
-                                   placeholder="{{ t("enter_full_name") }}">
-                            <span class="premium-input-icon"><i class="fas fa-id-card"></i></span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-group mt-3">
-                    <label class="font-weight-bold text-dark dark-mode-text-white" style="font-size: 0.9rem;">{{ t("email") }}</label>
-                    <div class="premium-input-wrapper">
-                        <input class="form-control premium-form-control"
-                               type="email"
-                               name="email"
-                               value="{{ current_user.email or '' }}"
-                               placeholder="{{ t("enter_email") }}">
-                        <span class="premium-input-icon"><i class="fas fa-envelope"></i></span>
-                    </div>
-                </div>
-
-                <div class="form-group mt-3">
-                    <label class="font-weight-bold text-dark dark-mode-text-white" style="font-size: 0.9rem; margin-bottom: 8px;">{{ t("profile_photo") }}</label>
-                    <label class="custom-file-upload" for="avatar-input-file">
-                        <input type="file" name="avatar" accept=".jpg,.jpeg,.png,.gif,.webp" style="display: none;" id="avatar-input-file">
-                        <i class="fas fa-cloud-upload-alt"></i>
-                        <span id="file-upload-filename">Choose photo (JPG, PNG, GIF, WEBP)</span>
-                    </label>
-                </div>
-
-                <!-- Password change box -->
-                <div class="password-change-box">
-                    <div class="password-box-title">
-                        <i class="fas fa-key"></i>
-                        <span>{% if current_lang == 'km' %}ប្តូរលេខសម្ងាត់{% else %}Change Password{% endif %}</span>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="text-dark dark-mode-text-white" style="font-size: 0.85rem;">{{ t("current_password") }}</label>
-                        <div class="premium-input-wrapper">
-                            <input class="form-control premium-form-control"
-                                   type="password"
-                                   name="current_password"
-                                   placeholder="{{ t("enter_current_password") }}">
-                            <span class="premium-input-icon"><i class="fas fa-lock"></i></span>
-                        </div>
-                    </div>
-
-                    <div class="form-row mt-3">
-                        <div class="form-group col-md-6">
-                            <label class="text-dark dark-mode-text-white" style="font-size: 0.85rem;">{{ t("new_password") }}</label>
-                            <div class="premium-input-wrapper">
-                                <input class="form-control premium-form-control"
-                                       type="password"
-                                       name="new_password"
-                                       placeholder="{{ t("new_password") }}">
-                                <span class="premium-input-icon"><i class="fas fa-lock"></i></span>
-                            </div>
-                        </div>
-                        <div class="form-group col-md-6">
-                            <label class="text-dark dark-mode-text-white" style="font-size: 0.85rem;">{{ t("confirm_password") }}</label>
-                            <div class="premium-input-wrapper">
-                                <input class="form-control premium-form-control"
-                                       type="password"
-                                       name="confirm_password"
-                                       placeholder="{{ t("confirm_new_password") }}">
-                                <span class="premium-input-icon"><i class="fas fa-lock"></i></span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Save button -->
-                <button type="submit" class="save-profile-btn">
-                    <i class="fas fa-check-circle mr-2"></i>
-                    {{ t("save_changes") }}
-                </button>
-            </form>
+        <!-- SECURITY -->
+        <div class="settings-section-title">{% if current_lang == 'km' %}ប្តូរលេខសម្ងាត់{% else %}Change Password{% endif %}</div>
+        <div class="settings-card">
+            <div class="settings-row stack">
+                <div class="settings-label w-100">{{ t("current_password") }}</div>
+                <input type="password" name="current_password" class="ios-input w-100" style="text-align: left; background: rgba(0,0,0,0.03); padding: 10px; border-radius: 8px;" placeholder="{{ t('enter_current_password') }}">
+            </div>
+            <div class="settings-row stack">
+                <div class="settings-label w-100">{{ t("new_password") }}</div>
+                <input type="password" name="new_password" class="ios-input w-100" style="text-align: left; background: rgba(0,0,0,0.03); padding: 10px; border-radius: 8px;" placeholder="{{ t('new_password') }}">
+            </div>
+            <div class="settings-row stack">
+                <div class="settings-label w-100">{{ t("confirm_password") }}</div>
+                <input type="password" name="confirm_password" class="ios-input w-100" style="text-align: left; background: rgba(0,0,0,0.03); padding: 10px; border-radius: 8px;" placeholder="{{ t('confirm_new_password') }}">
+            </div>
         </div>
-    </div>
+
+        <!-- MEMBER QR CARD (If applicable) -->
+        {% if rep_label %}
+        <div class="settings-section-title">Member Card</div>
+        <div class="settings-card">
+            <div class="settings-row stack align-items-center text-center">
+                <div class="settings-icon icon-qr" style="margin: 0 auto;"><i class="fas fa-qrcode"></i></div>
+                <div class="settings-label mt-2">{{ rep_label }} QR</div>
+                
+                <div class="profile-qr-box" id="profile-qr-code" data-qr="{{ member_card_url }}" data-qr-img="{{ member_card_qr_url }}">
+                    <img src="{{ member_card_qr_url }}" alt="QR code">
+                </div>
+                
+                <div class="settings-sublabel">Scan to view member card</div>
+                <a href="{{ url_for('user.member_card', user_id=current_user.id) }}" target="_blank" class="btn btn-sm btn-outline-primary mt-2" style="border-radius: 20px; font-weight: 600;">Open Member Card</a>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- STICKY SAVE BUTTON -->
+        <div class="sticky-save">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-check mr-2"></i> {{ t("save_changes") }}
+            </button>
+        </div>
+    </form>
 </div>
-
-<script>
-// Filename display helper
-document.getElementById('avatar-input-file').addEventListener('change', function(e) {
-    const filename = e.target.files[0] ? e.target.files[0].name : "Choose photo (JPG, PNG, GIF, WEBP)";
-    document.getElementById('file-upload-filename').textContent = filename;
-});
-</script>
 {% endblock %}
 
 {% block scripts %}

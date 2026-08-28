@@ -63,12 +63,21 @@
 
     {% if current_user.has_role('admin') or current_user.has_permission('manage_users') %}
     <li class="nav-item">
-        <a class="nav-link {% if path.startswith('/admin/users') %}active{% endif %}"
+        <a class="nav-link {% if path.startswith('/admin/users') and not path.startswith('/admin/users/promo') %}active{% endif %}"
            href="{{ url_for('admin.users') }}"
            data-tooltip="{{ t('manage_users') }}"
            aria-label="{{ t('manage_users') }}">
             <i class="menu-icon fas fa-users"></i>
             <span>{{ t("manage_users") }}</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {% if path.startswith('/admin/promo-codes') %}active{% endif %}"
+           href="{{ url_for('admin.promo_codes') }}"
+           data-tooltip="Reward Codes"
+           aria-label="Reward Codes">
+            <i class="menu-icon fas fa-gift"></i>
+            <span>Reward Codes</span>
         </a>
     </li>
     {% endif %}

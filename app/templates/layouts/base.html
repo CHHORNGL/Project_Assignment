@@ -159,7 +159,6 @@ h1,h2,h3,h4,h5,h6 { font-weight: 700; }
 </div>
 
 </div>
-{% include "layouts/footer.html" %}
 </div>
 </div>
 
@@ -939,7 +938,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 700; }
                     body: JSON.stringify({ language })
                 });
             } catch (e) {}
-            window.location.reload();
+            window.location.href = window.location.pathname + "?_cache=" + new Date().getTime();
         });
     });
 })();

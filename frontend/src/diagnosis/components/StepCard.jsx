@@ -19,7 +19,7 @@ export default function StepCard({
             {title}
           </h2>
           {description ? (
-            <p className="mt-2 text-sm leading-7 text-slate-600 dark:text-slate-400 dark:text-slate-500 md:text-base">
+            <p className="mt-2 text-sm leading-7 text-slate-600 dark:text-slate-400 md:text-base">
               {description}
             </p>
           ) : null}

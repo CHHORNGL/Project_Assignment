@@ -5,7 +5,7 @@
 <script>
 (function () {
     const welcomePrefix = {{ t("welcome_back") | tojson }};
-    const displayName = {{ (current_user.full_name or current_user.username) | tojson }};
+    const displayName = {% if current_user.is_authenticated %}{{ (current_user.full_name or current_user.username) | tojson }}{% else %}{{ ("Guest User" if current_lang != "km" else "អ្នកប្រើប្រាស់ជាភ្ញៀវ") | tojson }}{% endif %};
     if (welcomePrefix && displayName) {
         document.title = welcomePrefix + ", " + displayName + "! | AGRI SYSTEM";
     }
@@ -19,6 +19,7 @@
 {% set approved = diagnoses|selectattr("status", "equalto", "APPROVED")|list|length %}
 {% set rejected = diagnoses|selectattr("status", "equalto", "REJECTED")|list|length %}
 
+{% if current_user.is_authenticated %}
 <div class="fd-wrap">
     <div class="farmer-hero mb-4">
         <div class="d-flex justify-content-between align-items-center flex-wrap">
@@ -267,6 +268,80 @@
     </div>
 </div>
 
+
+
+{% else %}
+<div class="fdash-guest" style="max-width: 1200px; margin: 0 auto; padding: 0 16px;">
+    <!-- Guest Hero -->
+    <section class="fdash-hero" style="flex-direction: column; text-align: center; padding: 60px 20px; background: linear-gradient(135deg, var(--primary-soft, #f0fdf4), var(--card-bg, #ffffff)); border: 1px solid var(--border-light); margin-bottom: 30px; border-radius: 16px;">
+        <div style="margin-bottom: 25px;">
+            <div style="width: 80px; height: 80px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 36px; margin: 0 auto 20px; box-shadow: 0 10px 25px color-mix(in srgb, var(--primary) 30%, transparent);">
+                <i class="fas fa-leaf"></i>
+            </div>
+            <h1 class="fdash-hello" style="font-size: 2.2rem; font-weight: 800; color: var(--text-main); margin-bottom: 12px;">
+                {% if current_lang == 'km' %}សូមស្វាគមន៍មកកាន់ប្រព័ន្ធអ្នកជំនាញកសិកម្ម{% else %}Welcome to Agri Expert System{% endif %}
+            </h1>
+            <p class="fdash-hello-sub" style="margin: 0 auto; max-width: 650px; font-size: 1.05rem; line-height: 1.6; color: var(--text-muted);">
+                {% if current_lang == 'km' %}
+                ធ្វើការវិភាគជំងឺដំណាំរបស់អ្នកដោយឥតគិតថ្លៃ និងទទួលបានការណែនាំពីអ្នកជំនាញ។ ចុះឈ្មោះថ្ងៃនេះដើម្បីទទួលបានអត្ថប្រយោជន៍ពេញលេញដូចជា ការជជែកជាមួយ AI និងការព្យាករណ៍អាកាសធាតុ!
+                {% else %}
+                Diagnose crop diseases instantly for free. Create an account to unlock unlimited AI consultations, local weather intelligence, and save your diagnosis history!
+                {% endif %}
+            </p>
+        </div>
+        <div style="display: flex; gap: 16px; flex-wrap: wrap; justify-content: center;">
+            <a class="fdash-cta" href="{{ url_for('farmer.diagnose') }}" style="font-size: 1.05rem; padding: 14px 32px; background: var(--primary); color: white; border-radius: 99px; text-decoration: none;">
+                <i class="fas fa-stethoscope"></i> {% if current_lang == 'km' %}វិភាគជំងឺឥឡូវនេះ{% else %}Diagnose Now{% endif %}
+            </a>
+            <a class="fdash-cta" href="{{ url_for('auth.register') }}" style="background: transparent; color: var(--primary); border: 2px solid var(--primary); box-shadow: none; font-size: 1.05rem; padding: 12px 30px; border-radius: 99px; text-decoration: none;">
+                <i class="fas fa-user-plus"></i> {% if current_lang == 'km' %}បង្កើតគណនី{% else %}Create Account{% endif %}
+            </a>
+        </div>
+    </section>
+
+    <!-- Guest Feature Highlights -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin-bottom: 40px;">
+        <!-- Feature 1 -->
+        <div class="fdash-card" style="padding: 30px 24px; text-align: center; border-radius: 20px; transition: transform 0.2s; border-top: 4px solid #3b82f6; background: var(--card-bg);">
+            <div style="width: 60px; height: 60px; background: rgba(59,130,246,0.1); color: #3b82f6; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 20px;">
+                <i class="fas fa-robot"></i>
+            </div>
+            <h4 style="font-weight: 700; font-size: 1.2rem; color: var(--text-main); margin-bottom: 12px;">
+                {% if current_lang == 'km' %}ជជែកជាមួយ AI{% else %}AI Chat Assistant{% endif %}
+            </h4>
+            <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.5; margin: 0;">
+                {% if current_lang == 'km' %}ចុះឈ្មោះគណនីដើម្បីពិភាក្សាផ្ទាល់ជាមួយអ្នកជំនាញ AI។{% else %}Register to chat directly with our agronomy AI model.{% endif %}
+            </p>
+        </div>
+        
+        <!-- Feature 2 -->
+        <div class="fdash-card" style="padding: 30px 24px; text-align: center; border-radius: 20px; transition: transform 0.2s; border-top: 4px solid #f59e0b; background: var(--card-bg);">
+            <div style="width: 60px; height: 60px; background: rgba(245,158,11,0.1); color: #f59e0b; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 20px;">
+                <i class="fas fa-cloud-sun-rain"></i>
+            </div>
+            <h4 style="font-weight: 700; font-size: 1.2rem; color: var(--text-main); margin-bottom: 12px;">
+                {% if current_lang == 'km' %}ព័ត៌មានអាកាសធាតុ{% else %}Weather Intelligence{% endif %}
+            </h4>
+            <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.5; margin: 0;">
+                {% if current_lang == 'km' %}ទទួលបានការព្យាករណ៍អាកាសធាតុរយៈពេល ៧ ថ្ងៃ។{% else %}Get detailed 7-day crop-specific weather forecasts.{% endif %}
+            </p>
+        </div>
+        
+        <!-- Feature 3 -->
+        <div class="fdash-card" style="padding: 30px 24px; text-align: center; border-radius: 20px; transition: transform 0.2s; border-top: 4px solid #10b981; background: var(--card-bg);">
+            <div style="width: 60px; height: 60px; background: rgba(16,185,129,0.1); color: #10b981; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 20px;">
+                <i class="fas fa-history"></i>
+            </div>
+            <h4 style="font-weight: 700; font-size: 1.2rem; color: var(--text-main); margin-bottom: 12px;">
+                {% if current_lang == 'km' %}រក្សាទុកប្រវត្តិ{% else %}Save History{% endif %}
+            </h4>
+            <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.5; margin: 0;">
+                {% if current_lang == 'km' %}រក្សាទុកគ្រប់កំណត់ត្រាវិភាគ និងការជជែករបស់អ្នកដោយសុវត្ថិភាព។{% else %}Keep all your crop diagnoses securely backed up on the cloud.{% endif %}
+            </p>
+        </div>
+    </div>
+</div>
+{% endif %}
 
 {% endblock %}
 

@@ -12,7 +12,7 @@ from app.models.audit_log import AuditLog
 from app.extensions import db
 
 def log_auth_event(sender, user, **extra):
-    if user.has_role("admin") or user.has_role("expert"):
+    if user and user.is_authenticated and (user.has_role("admin") or user.has_role("expert")):
         action = "USER_LOGIN"
         detail = f"{user.username} logged into the system."
         
@@ -26,7 +26,7 @@ def log_auth_event(sender, user, **extra):
         db.session.commit()
 
 def log_auth_event_out(sender, user, **extra):
-    if user and (user.has_role("admin") or user.has_role("expert")):
+    if user and user.is_authenticated and (user.has_role("admin") or user.has_role("expert")):
         action = "USER_LOGOUT"
         detail = f"{user.username} logged out of the system."
         

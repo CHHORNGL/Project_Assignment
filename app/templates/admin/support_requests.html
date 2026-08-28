@@ -68,8 +68,8 @@
                             </div>
                         </td>
                         <td style="min-width:260px;">
-                            <div class="text-truncate" style="max-width:520px;">
-                                {{ r.message }}
+                            <div class="text-truncate" style="max-width:520px; cursor: pointer; color: #3b82f6;" data-toggle="modal" data-target="#supportModal{{ r.id }}" title="Click to read full message">
+                                <strong>{{ r.message }}</strong>
                             </div>
                             {% if r.user_agent %}
                             <div class="text-muted small text-truncate" style="max-width:520px;">
@@ -106,10 +106,14 @@
                             {% endif %}
                         </td>
                     </tr>
+                    
                     {% endfor %}
                 </tbody>
             </table>
         </div>
+        
+
+
         {% else %}
         <div class="p-4 text-muted">
             {{ t("no_support_requests") }}
@@ -117,4 +121,70 @@
         {% endif %}
     </div>
 </div>
+
+<!-- Modals for Full Message -->
+{% if support_requests %}
+{% for r in support_requests %}
+<div class="modal fade" id="supportModal{{ r.id }}" tabindex="-1" role="dialog" aria-labelledby="supportModalLabel{{ r.id }}" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title text-primary font-weight-bold" id="supportModalLabel{{ r.id }}"><i class="fas fa-envelope-open-text mr-2"></i> Support Request #{{ r.id }}</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="p-3 bg-light rounded mb-3">
+                    <div class="row">
+                        <div class="col-md-6 mb-2">
+                            <small class="text-muted d-block text-uppercase">From</small>
+                            <strong>{{ r.requester.username }}</strong> <span class="badge badge-secondary">{{ r.requester_role }}</span>
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <small class="text-muted d-block text-uppercase">Date</small>
+                            <strong>{{ r.created_at.strftime('%b %d, %Y %H:%M') if r.created_at else "-" }}</strong>
+                        </div>
+                        <div class="col-md-12">
+                            <small class="text-muted d-block text-uppercase">Page / Context</small>
+                            <span class="text-break">{{ r.page or "-" }}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <small class="text-muted d-block text-uppercase mb-2">Full Message</small>
+                <div class="p-4 rounded border" style="white-space: pre-wrap; font-size: 1.05rem; line-height: 1.6; background-color: #fcfcfc; color: #333;">{{ r.message }}</div>
+                
+                {% if r.user_agent %}
+                <div class="mt-3">
+                    <small class="text-muted d-block text-uppercase">User Agent</small>
+                    <code class="small text-muted">{{ r.user_agent }}</code>
+                </div>
+                {% endif %}
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                {% if r.status == 'open' %}
+                <form method="POST" action="{{ url_for('admin.resolve_support_request', req_id=r.id) }}" class="d-inline">
+                    <input type="hidden" name="status" value="{{ filter_status }}">
+                    <input type="hidden" name="q" value="{{ q }}">
+                    <button type="submit" class="btn btn-success"><i class="fas fa-check"></i> Mark as Resolved</button>
+                </form>
+                {% endif %}
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Move all support modals to the body to avoid z-index and backdrop issues
+        const modals = document.querySelectorAll('.modal[id^="supportModal"]');
+        modals.forEach(function(modal) {
+            document.body.appendChild(modal);
+        });
+    });
+</script>
+{% endif %}
+
 {% endblock %}

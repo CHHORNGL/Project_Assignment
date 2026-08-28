@@ -103,30 +103,18 @@ def _send_verification_email(email, code):
     print("*" * 80)
 
 
-def _normalize_login_role(value: Optional[str]) -> str:
-    role = (value or "").strip().lower()
-    if role in {"farmer", "expert"}:
-        return role
-    return "farmer"
-
-
 def _safe_next_url(value: Optional[str]) -> Optional[str]:
     if value and value.startswith("/"):
         return value
     return None
 
 
-def _resolve_auth_theme_runtime(active_role: Optional[str]):
+def _resolve_auth_theme_runtime():
     """
     Auth pages are public, so we resolve runtime server-side instead of calling
     the login-protected theme API from the browser.
     """
-    # Dynamic Theme Manager UI currently controls the admin scope, and that
-    # theme is used as the global runtime across routes.
-    scope_candidates = ["admin"]
-    role_scope = "expert" if _normalize_login_role(active_role) == "expert" else "farmer"
-    if role_scope not in scope_candidates:
-        scope_candidates.append(role_scope)
+    scope_candidates = ["admin", "farmer"]
 
     for scope in scope_candidates:
         try:
@@ -148,36 +136,27 @@ def login():
         return redirect(url_for("main.index"))
 
     form = LoginForm()
-    active_role = _normalize_login_role(request.args.get("role"))
     next_url = _safe_next_url(request.args.get("next"))
-    auth_theme_runtime = _resolve_auth_theme_runtime(active_role)
+    auth_theme_runtime = _resolve_auth_theme_runtime()
 
     if form.validate_on_submit():
-        identifier = (form.username.data or "").strip()
-        if active_role == "expert":
-            # For Admin/Expert, only allow login via email/Gmail
-            user = User.query.filter(
-                db.func.lower(User.email) == db.func.lower(identifier)
-            ).first()
-        else:
-            # For Farmers, allow username or email
-            user = User.query.filter(
-                or_(
-                    db.func.lower(User.username) == db.func.lower(identifier),
-                    db.func.lower(User.email) == db.func.lower(identifier)
-                )
-            ).first()
+        email_input = (form.email.data or "").strip()
+        
+        # Only allow login via email, no longer allowing 'username'
+        user = User.query.filter(
+            db.func.lower(User.email) == db.func.lower(email_input)
+        ).first()
 
-        # ❌ Invalid username or password
+        # ❌ Invalid email or password
         if not user or not check_password_hash(
             user.password_hash,
             form.password.data
         ):
-            flash("Invalid username or password.", "danger")
+            flash("Invalid email or password.", "danger")
             return render_template(
                 "auth/login.html",
                 form=form,
-                active_role=active_role,
+                active_role="farmer",
                 next_url=next_url,
                 auth_theme_runtime=auth_theme_runtime,
             )
@@ -188,33 +167,18 @@ def login():
             return render_template(
                 "auth/login.html",
                 form=form,
-                active_role=active_role,
+                active_role="farmer",
                 next_url=next_url,
                 auth_theme_runtime=auth_theme_runtime,
             )
 
         # ✅ Role gate by form
-        if active_role == "farmer" and not (
-            user.has_role("farmer") or any(r.route_type == "farmer" for r in user.roles)
-        ):
+        if not (user.has_role("farmer") or any(r.route_type == "farmer" for r in user.roles)):
             flash("This login is for Farmers only.", "danger")
             return render_template(
                 "auth/login.html",
                 form=form,
-                active_role=active_role,
-                next_url=next_url,
-                auth_theme_runtime=auth_theme_runtime,
-            )
-
-        if active_role == "expert" and not (
-            user.has_role("expert") or user.has_role("admin") or 
-            any(r.route_type in ["expert", "admin"] for r in user.roles)
-        ):
-            flash("This login is for Expert & Admin only.", "danger")
-            return render_template(
-                "auth/login.html",
-                form=form,
-                active_role=active_role,
+                active_role="farmer",
                 next_url=next_url,
                 auth_theme_runtime=auth_theme_runtime,
             )
@@ -255,7 +219,7 @@ def login():
     return render_template(
         "auth/login.html",
         form=form,
-        active_role=active_role,
+        active_role="farmer",
         next_url=next_url,
         auth_theme_runtime=auth_theme_runtime,
     )
@@ -271,7 +235,7 @@ def register():
         return redirect(url_for("main.index"))
 
     form = RegisterForm()
-    auth_theme_runtime = _resolve_auth_theme_runtime("farmer")
+    auth_theme_runtime = _resolve_auth_theme_runtime()
 
     if form.validate_on_submit():
         email_value = form.email.data.strip().lower()
@@ -283,12 +247,30 @@ def register():
                 auth_theme_runtime=auth_theme_runtime,
             )
 
+        # Validate OTP from session
+        input_code = form.verification_code.data.strip()
+        session_email = session.get("register_otp_email")
+        session_code = session.get("register_otp_code")
+        session_expiry = session.get("register_otp_expiry")
+
+        if not session_code or not session_email or email_value != session_email:
+            flash("Please request a new verification code for this email.", "danger")
+            return render_template("auth/register.html", form=form, auth_theme_runtime=auth_theme_runtime)
+
+        if input_code != session_code:
+            flash("Invalid verification code.", "danger")
+            return render_template("auth/register.html", form=form, auth_theme_runtime=auth_theme_runtime)
+
+        if session_expiry and datetime.datetime.utcnow().timestamp() > session_expiry:
+            flash("Verification code has expired. Please request a new one.", "danger")
+            return render_template("auth/register.html", form=form, auth_theme_runtime=auth_theme_runtime)
+
         # ✅ Generate a unique username from email prefix
         email_prefix = email_value.split("@")[0]
         generated_username = _unique_username(email_prefix)
 
-        # ✅ Create farmer user
-        user = User(username=generated_username, is_active=True, is_verified=False)
+        # ✅ Create farmer user (verified immediately)
+        user = User(username=generated_username, is_active=True, is_verified=True)
         full_name_value = (form.full_name.data or "").strip()
         if full_name_value:
             user.full_name = full_name_value
@@ -306,21 +288,14 @@ def register():
         db.session.add(user)
         db.session.commit()
 
-        # Generate and save verification code
-        code = "".join(random.choices(string.digits, k=6))
-        user.two_factor_code = code
-        user.two_factor_expiry = datetime.datetime.utcnow() + datetime.timedelta(minutes=10)
-        db.session.commit()
+        # Clear OTP session
+        session.pop("register_otp_email", None)
+        session.pop("register_otp_code", None)
+        session.pop("register_otp_expiry", None)
 
-        # Send mock/real email
-        _send_verification_email(user.email, code)
-
-        # Store in session
-        session["verify_user_id"] = user.id
-        session["verify_purpose"] = "register"
-
-        flash("A verification code has been sent to your Gmail/Email address. Please verify to activate your account.", "info")
-        return redirect(url_for("auth.verify_code"))
+        login_user(user)
+        flash("Registration successful! Welcome to Agri System.", "success")
+        return redirect(url_for("main.index"))
 
     return render_template(
         "auth/register.html",
@@ -328,6 +303,28 @@ def register():
         auth_theme_runtime=auth_theme_runtime,
     )
 
+@auth_bp.route("/send-register-otp", methods=["POST"])
+def send_register_otp():
+    data = request.get_json()
+    email = (data.get("email") or "").strip().lower()
+    
+    if not email or "@" not in email:
+        return {"success": False, "message": "Please enter a valid email address"}
+        
+    if User.query.filter_by(email=email).first():
+        return {"success": False, "message": "This email is already registered"}
+        
+    code = "".join(random.choices(string.digits, k=6))
+    session["register_otp_email"] = email
+    session["register_otp_code"] = code
+    session["register_otp_expiry"] = datetime.datetime.utcnow().timestamp() + 600
+    
+    import os
+    if os.environ.get("MAIL_USERNAME") == "your_gmail_address_here@gmail.com" or not os.environ.get("MAIL_USERNAME"):
+        return {"success": False, "message": "SMTP not configured! Open .env and add your MAIL_USERNAME and MAIL_PASSWORD."}
+        
+    _send_verification_email(email, code)
+    return {"success": True, "message": "Verification code sent to your email"}
 
 # ==================================================
 # FORGOT PASSWORD
@@ -338,7 +335,7 @@ def forgot_password():
         return redirect(url_for("main.index"))
 
     form = ForgotPasswordForm()
-    auth_theme_runtime = _resolve_auth_theme_runtime("farmer")
+    auth_theme_runtime = _resolve_auth_theme_runtime()
 
     if form.validate_on_submit():
         email = form.email.data.strip().lower()
@@ -387,7 +384,7 @@ def reset_password():
         return redirect(url_for("auth.forgot_password"))
 
     form = ResetPasswordForm()
-    auth_theme_runtime = _resolve_auth_theme_runtime("farmer")
+    auth_theme_runtime = _resolve_auth_theme_runtime()
 
     if form.validate_on_submit():
         input_code = form.code.data.strip()
@@ -696,6 +693,9 @@ def passkey_login_verify():
          return {"status": "error", "message": "User not found"}, 400
     if not user.is_active:
          return {"status": "error", "message": "User is inactive"}, 400
+         
+    if not (user.has_role("farmer") or any(r.route_type == "farmer" for r in user.roles)):
+         return {"status": "error", "message": "This passkey is for Farmers only."}, 403
          
     expected_challenge = base64.b64decode(session.get("passkey_login_challenge", ""))
     

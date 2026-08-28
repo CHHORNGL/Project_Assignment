@@ -1,0 +1,92 @@
+{% extends "layouts/farmer_dashboard_base.html" %}
+
+{% block title %}Checkout | Premium{% endblock %}
+
+{% block content %}
+<div class="row" style="max-width: 900px; margin: 2rem auto;">
+    <div class="col-md-7">
+        <h2 style="font-weight: 700; color: var(--text-main); margin-bottom: 2rem;">Secure Checkout</h2>
+        
+        <div style="background: var(--card-bg); border: 1px solid var(--border-light); border-radius: var(--fdash-radius); padding: 30px; margin-bottom: 20px;">
+            <h4 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 20px; color: var(--text-main);">Secure Payment via PayPal</h4>
+            
+            <p style="font-size: 0.95rem; color: var(--text-muted); margin-bottom: 25px;">You will be securely redirected to PayPal to complete your $20/month subscription.</p>
+            
+            <!-- PayPal Button Container -->
+            <div id="paypal-button-container"></div>
+            
+            <form id="paypal-success-form" method="POST" action="{{ url_for('farmer.premium_checkout') }}" style="display: none;">
+                <input type="hidden" name="paypal_order_id" id="paypal_order_id">
+            </form>
+        </div>
+        
+        <p style="text-align: center; font-size: 0.85rem; color: var(--text-muted); margin-top: 15px;">By confirming your subscription, you allow Agri System to process your payment in accordance with our terms.</p>
+    </div>
+    
+    <div class="col-md-5">
+        <div style="background: var(--card-bg); border-radius: var(--fdash-radius); padding: 30px; border: 1px solid var(--border-light); position: sticky; top: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+                <div>
+                    <h4 style="font-weight: 700; margin: 0 0 5px 0; color: var(--text-main);">Premium <i class="fas fa-crown text-warning ml-1"></i></h4>
+                    <div style="color: var(--text-muted); font-size: 0.9rem;">Billed monthly</div>
+                </div>
+                <div style="font-weight: 700; font-size: 1.2rem; color: var(--text-main);">$20.00</div>
+            </div>
+            
+            <hr style="border-color: var(--border-light); margin: 20px 0;">
+            
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px; color: var(--text-main);">
+                <span>Subtotal</span>
+                <span>$20.00</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 20px; color: var(--text-muted);">
+                <span>Tax</span>
+                <span>$0.00</span>
+            </div>
+            
+            <hr style="border-color: var(--border-light); margin: 20px 0;">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-weight: 600; color: var(--text-main);">Total due today</span>
+                <span style="font-weight: 700; font-size: 1.5rem; color: var(--text-main);">$20.00</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- PayPal JS SDK injected with actual Client ID -->
+<script src="https://www.paypal.com/sdk/js?client-id={{ paypal_client_id }}&currency=USD&intent=capture"></script>
+<script>
+    paypal.Buttons({
+        // Set up the transaction
+        createOrder: function(data, actions) {
+            return actions.order.create({
+                purchase_units: [{
+                    description: 'Agri System Premium Subscription (Monthly)',
+                    amount: {
+                        currency_code: 'USD',
+                        value: '20.00'
+                    }
+                }]
+            });
+        },
+        // Finalize the transaction
+        onApprove: function(data, actions) {
+            return actions.order.capture().then(function(orderData) {
+                // Successful capture! 
+                console.log('Capture result', orderData, JSON.stringify(orderData, null, 2));
+                
+                // Submit our hidden form to upgrade the account on the backend
+                document.getElementById('paypal_order_id').value = orderData.id;
+                document.getElementById('paypal-success-form').submit();
+            });
+        },
+        onError: function (err) {
+            console.error('PayPal Checkout onError', err);
+            alert("Payment could not be processed. Please try again.");
+        }
+    }).render('#paypal-button-container');
+</script>
+{% endblock %}

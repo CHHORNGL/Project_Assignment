@@ -32,23 +32,54 @@
         }
         .otp-container {
             display: flex;
-            gap: 0.75rem;
-            justify-content: center;
-            margin-top: 0.5rem;
+            gap: 0.5rem;
+            justify-content: space-between;
+            margin-top: 1rem;
+            max-width: 100%;
         }
         .otp-input {
-            width: 3.5rem;
+            flex: 1;
+            max-width: 3.5rem;
             height: 4rem;
             text-align: center;
             font-size: 1.75rem;
             font-weight: 700;
-            border-radius: 8px;
+            border-radius: 12px;
             padding: 0;
             transition: all 0.2s ease;
+            border: 2px solid var(--auth-panel-light-border);
+            color: var(--auth-panel-light-text);
+        }
+        .auth-panel-dark .otp-input {
+            border-color: var(--auth-panel-dark-border);
+            color: var(--auth-panel-dark-text);
         }
         .otp-input:focus {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);
+            box-shadow: 0 8px 16px rgba(34, 197, 94, 0.15);
+            border-color: var(--auth-accent) !important;
+            outline: none;
+        }
+
+        @media (max-width: 480px) {
+            .otp-container {
+                gap: 0.35rem;
+            }
+            .otp-input {
+                height: 3.5rem;
+                font-size: 1.4rem;
+                border-radius: 10px;
+            }
+        }
+        @media (max-width: 360px) {
+            .otp-container {
+                gap: 0.25rem;
+            }
+            .otp-input {
+                height: 3rem;
+                font-size: 1.2rem;
+                border-radius: 8px;
+            }
         }
     </style>
     <script>

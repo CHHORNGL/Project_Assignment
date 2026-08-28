@@ -1,0 +1,238 @@
+{% extends "layouts/farmer_dashboard_base.html" %}
+
+{% block title %}Upgrade to Premium{% endblock %}
+
+{% block content %}
+<style>
+    .pricing-header {
+        text-align: center;
+        padding: 3rem 1rem 2rem;
+    }
+    .pricing-badge {
+        display: inline-block;
+        padding: 0.35rem 1rem;
+        background-color: rgba(59, 130, 246, 0.1);
+        color: #3b82f6;
+        border-radius: 50px;
+        font-weight: 700;
+        font-size: 0.8rem;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        margin-bottom: 1rem;
+    }
+    .pricing-title {
+        font-weight: 800;
+        font-size: 2.5rem;
+        color: var(--text-main);
+        margin-bottom: 1rem;
+    }
+    .pricing-subtitle {
+        color: var(--text-muted);
+        max-width: 600px;
+        margin: 0 auto;
+        font-size: 1.1rem;
+        line-height: 1.6;
+    }
+    .pricing-cards-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 2rem;
+        padding: 2rem 1rem 4rem;
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+    .pricing-card {
+        flex: 1;
+        min-width: 320px;
+        background: var(--card-bg);
+        border-radius: 20px;
+        padding: 2.5rem;
+        position: relative;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .pricing-card:hover {
+        transform: translateY(-5px);
+    }
+    .card-free {
+        border: 1px solid var(--border-light);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+    .card-premium {
+        border: 2px solid #3b82f6;
+        box-shadow: 0 20px 40px rgba(59, 130, 246, 0.15);
+    }
+    .popular-badge {
+        position: absolute;
+        top: -15px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        color: white;
+        padding: 0.5rem 1.25rem;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    }
+    .plan-name {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--text-main);
+        margin-bottom: 1rem;
+    }
+    .plan-price {
+        font-size: 3rem;
+        font-weight: 800;
+        color: var(--text-main);
+        display: flex;
+        align-items:baseline;
+        margin-bottom: 1.5rem;
+    }
+    .plan-price span {
+        font-size: 1.1rem;
+        font-weight: 500;
+        color: var(--text-muted);
+        margin-left: 0.25rem;
+    }
+    .plan-btn {
+        display: block;
+        width: 100%;
+        padding: 0.875rem;
+        text-align: center;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.2s ease;
+        text-decoration: none;
+    }
+    .btn-free {
+        background-color: var(--bg-body);
+        color: var(--text-muted);
+        border: 1px solid var(--border-light);
+        pointer-events: none;
+    }
+    .btn-premium {
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        color: white;
+        border: none;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    }
+    .btn-premium:hover {
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        color: white;
+        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
+        text-decoration: none;
+    }
+    .features-list {
+        list-style: none;
+        padding: 0;
+        margin: 2rem 0 0 0;
+    }
+    .features-list li {
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+        color: var(--text-main);
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+    .features-list li i {
+        margin-top: 0.25rem;
+        margin-right: 0.75rem;
+        font-size: 1rem;
+    }
+    .feature-check {
+        color: #10b981;
+    }
+    .feature-cross {
+        color: #94a3b8;
+        opacity: 0.7;
+    }
+    .feature-disabled {
+        color: var(--text-muted);
+        opacity: 0.7;
+    }
+    hr.plan-divider {
+        border: 0;
+        height: 1px;
+        background: var(--border-light);
+        margin: 2rem 0;
+    }
+</style>
+
+<div class="pricing-header">
+    <div class="pricing-badge">Pricing Plans</div>
+    <h1 class="pricing-title">Choose Your Plan</h1>
+    <p class="pricing-subtitle">Unlock the full power of Agri System with a Premium account. Experience advanced features, direct expert support, and localized weather intelligence.</p>
+</div>
+
+<div class="pricing-cards-container">
+    <!-- Free Plan -->
+    <div class="pricing-card card-free">
+        <div class="plan-name">Basic Free</div>
+        <div class="plan-price">$0<span>/month</span></div>
+        <a href="#" class="plan-btn btn-free">Your Current Plan</a>
+        
+        <hr class="plan-divider">
+        
+        <ul class="features-list">
+            <li>
+                <i class="fas fa-check-circle feature-check"></i>
+                <span>Access to our base AI diagnosis model</span>
+            </li>
+            <li>
+                <i class="fas fa-check-circle feature-check"></i>
+                <span>Standard processing speed</span>
+            </li>
+            <li>
+                <i class="fas fa-check-circle feature-check"></i>
+                <span>Unlimited basic queries in Assistance AI</span>
+            </li>
+            <li class="feature-disabled">
+                <i class="fas fa-times-circle feature-cross"></i>
+                <span>Advanced Weather Intelligence</span>
+            </li>
+            <li class="feature-disabled">
+                <i class="fas fa-times-circle feature-cross"></i>
+                <span>Direct Chat with Agronomy Experts</span>
+            </li>
+        </ul>
+    </div>
+    
+    <!-- Premium Plan -->
+    <div class="pricing-card card-premium">
+        <div class="popular-badge">RECOMMENDED</div>
+        
+        <div class="plan-name" style="color: #3b82f6;">Premium <i class="fas fa-crown text-warning ml-1"></i></div>
+        <div class="plan-price">$20<span>/month</span></div>
+        <a href="{{ url_for('farmer.premium_checkout') }}" class="plan-btn btn-premium">Upgrade to Premium</a>
+        
+        <hr class="plan-divider">
+        
+        <ul class="features-list">
+            <li>
+                <i class="fas fa-check-circle feature-check" style="color: #3b82f6;"></i>
+                <span><strong>Everything in Free</strong>, plus:</span>
+            </li>
+            <li>
+                <i class="fas fa-bolt feature-check" style="color: #3b82f6;"></i>
+                <span><strong>Unlimited</strong> high-speed AI diagnoses</span>
+            </li>
+            <li>
+                <i class="fas fa-cloud-sun-rain feature-check" style="color: #3b82f6;"></i>
+                <span><strong>Advanced Weather Intelligence</strong> & 7-day crop forecasting</span>
+            </li>
+            <li>
+                <i class="fas fa-user-md feature-check" style="color: #3b82f6;"></i>
+                <span><strong>Direct 24/7 Chat</strong> with our network of human experts</span>
+            </li>
+            <li>
+                <i class="fas fa-history feature-check" style="color: #3b82f6;"></i>
+                <span>Permanent cloud storage for all your history</span>
+            </li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

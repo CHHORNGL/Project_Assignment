@@ -126,7 +126,6 @@ def update_theme():
 # 🌐 UPDATE GLOBAL LANGUAGE
 # ===============================
 @user_bp.route("/language", methods=["POST"])
-@login_required
 def update_language():
     """
     Set global language preference for all users.

@@ -26,7 +26,7 @@ from app.models.rule import Rule
 from app.utils.i18n import get_current_language, normalize_display_text
 
 
-DEFAULT_MODEL = "llama-3.3-70b-versatile"
+DEFAULT_MODEL = "gpt-4o-mini"
 
 
 def _get_openai_model():
@@ -127,9 +127,10 @@ def _get_client():
                 import random
                 return genai.Client(api_key=random.choice(keys))
         
-        # If user is a farmer and didn't provide a key, deny fallback to env
+        # If user is a farmer and didn't provide a key, deny fallback to env UNLESS they are premium
         if getattr(current_user, 'role', None) == 'farmer':
-            return None
+            if not getattr(current_user, 'is_premium', False):
+                return None
 
     api_key = ""
     try:
@@ -460,12 +461,27 @@ def _build_kb_context(message: str) -> Tuple[str, Optional[Crop]]:
 
 
 def generate_assistant_reply(user_message: str) -> Optional[str]:
-    """
-    Use AI to generate a smart agricultural expert response based on the DB knowledge base.
-    Returns None if AI is not configured or fails.
-    """
-    kb_context, crop = _build_kb_context(user_message)
+    from app.extensions import db
+    is_premium = getattr(current_user, 'is_premium', False)
     
+    if current_user and current_user.is_authenticated and current_user.has_role('farmer') and not is_premium:
+        from datetime import datetime, timedelta
+        if current_user.last_credit_reset and (datetime.utcnow() - current_user.last_credit_reset) >= timedelta(days=1):
+            current_user.ai_credits = 13000
+            current_user.last_credit_reset = datetime.utcnow()
+            try:
+                db.session.commit()
+            except:
+                db.session.rollback()
+
+        if current_user.ai_credits <= 0:
+            lang = get_current_language()
+            if lang == "km":
+                return "សុំទោស! អ្នកបានអស់ចំនួន Token (Credits) សម្រាប់ប្រើប្រាស់ AI ហើយ។ សូមដំឡើងទៅគណនី Premium ដើម្បីប្រើប្រាស់ដោយគ្មានដែនកំណត់។"
+            else:
+                return "Sorry! You have run out of AI Credits (Tokens). Please upgrade to a Premium account for unlimited AI chat."
+
+    kb_context, crop = _build_kb_context(user_message)
     lang = get_current_language()
     lang_name = "Khmer" if lang == "km" else "English"
     
@@ -479,36 +495,12 @@ def generate_assistant_reply(user_message: str) -> Optional[str]:
     user_prompt = user_message
     
     model_name = _get_model_name()
+    reply_content = None
     
     if model_name == "original-ai":
         client = _get_openai_client()
-        if not client:
-            return None
-        model = _get_openai_model()
-        try:
-            response = client.chat.completions.create(
-                model=model,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt},
-                ],
-                temperature=0.3,
-                max_tokens=600,
-            )
-            content = response.choices[0].message.content if response.choices and response.choices[0].message else ""
-            return content.strip() if content else None
-        except Exception:
-            return None
-    else:
-        client = _get_client()
-        if not client:
-            # Fallback to original-ai if Gemini is selected but no keys are available
-            client = _get_openai_client()
-            if not client:
-                print("FALLBACK ERROR: _get_openai_client returned None")
-                return None
+        if client:
             model = _get_openai_model()
-            print(f"FALLBACK TRIGGERED: Using model {model}")
             try:
                 response = client.chat.completions.create(
                     model=model,
@@ -519,25 +511,50 @@ def generate_assistant_reply(user_message: str) -> Optional[str]:
                     temperature=0.3,
                     max_tokens=600,
                 )
-                content = response.choices[0].message.content if response.choices and response.choices[0].message else ""
-                print(f"FALLBACK SUCCESS: Generated {len(content)} chars")
-                return content.strip() if content else None
-            except Exception as e:
-                import traceback
-                print(f"FALLBACK EXCEPTION: {e}")
-                traceback.print_exc()
-                return None
-                
-        try:
-            response = client.models.generate_content(
-                model=model_name,
-                contents=[system_prompt, user_prompt],
-                config=types.GenerateContentConfig(
-                    temperature=0.3,
-                    max_output_tokens=600,
+                reply_content = response.choices[0].message.content if response.choices and response.choices[0].message else ""
+            except Exception:
+                pass
+    else:
+        client = _get_client()
+        if not client:
+            client = _get_openai_client()
+            if client:
+                model = _get_openai_model()
+                try:
+                    response = client.chat.completions.create(
+                        model=model,
+                        messages=[
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": user_prompt},
+                        ],
+                        temperature=0.3,
+                        max_tokens=600,
+                    )
+                    reply_content = response.choices[0].message.content if response.choices and response.choices[0].message else ""
+                except Exception as e:
+                    print(f"Error calling OpenAI API: {e}", flush=True)
+        else:
+            try:
+                response = client.models.generate_content(
+                    model=model_name,
+                    contents=[system_prompt, user_prompt],
+                    config=types.GenerateContentConfig(
+                        temperature=0.3,
+                        max_output_tokens=600,
+                    )
                 )
-            )
-            content = response.text if response else ""
-            return content.strip() if content else None
-        except Exception:
-            return None
+                reply_content = response.text if response else ""
+            except Exception as e:
+                print(f"Error calling Gemini API: {e}", flush=True)
+
+    if reply_content:
+        reply_content = reply_content.strip()
+        if current_user and current_user.is_authenticated and current_user.has_role('farmer') and not is_premium:
+            tokens_used = (len(system_prompt) + len(user_prompt) + len(reply_content)) // 4
+            current_user.ai_credits = max(0, current_user.ai_credits - tokens_used)
+            try:
+                db.session.commit()
+            except:
+                db.session.rollback()
+        return reply_content
+    return None

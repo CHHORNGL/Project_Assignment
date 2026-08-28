@@ -1,0 +1,88 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Reward Codes{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h1 class="h3 text-gray-800 font-weight-bold mb-1">Reward Codes</h1>
+        <div class="text-muted small">Generate random codes to give users free AI tokens</div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Generate Form -->
+    <div class="col-md-4 mb-4">
+        <div class="card shadow-sm border-0 rounded-lg">
+            <div class="card-header bg-white font-weight-bold">
+                Generate New Code
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('admin.promo_codes') }}">
+                    <div class="form-group">
+                        <label>Tokens Reward Amount</label>
+                        <input type="number" name="tokens" class="form-control" value="1000" min="1" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block"><i class="fas fa-magic mr-2"></i> Generate Random Code</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Codes Table -->
+    <div class="col-md-8 mb-4">
+        <div class="card shadow-sm border-0 rounded-lg">
+            <div class="card-header bg-white font-weight-bold">
+                Existing Codes
+            </div>
+            <div class="card-body p-0 table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Code</th>
+                            <th>Reward</th>
+                            <th>Status</th>
+                            <th>Used By</th>
+                            <th>Created</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for code in codes %}
+                        <tr>
+                            <td><strong class="text-primary">{{ code.code }}</strong></td>
+                            <td>{{ code.tokens_reward }}</td>
+                            <td>
+                                {% if code.is_used %}
+                                <span class="badge badge-secondary">Used</span>
+                                {% else %}
+                                <span class="badge badge-success">Active</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if code.is_used and code.used_by %}
+                                <a href="{{ url_for('admin.user_detail', user_id=code.used_by.id) }}">{{ code.used_by.username }}</a>
+                                <div class="small text-muted">{{ code.used_at.strftime('%Y-%m-%d %H:%M') if code.used_at else '' }}</div>
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                            <td class="text-muted small">{{ code.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>
+                                <form method="POST" action="{{ url_for('admin.delete_promo_code', code_id=code.id) }}" onsubmit="return confirm('Are you sure?');">
+                                    <button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted p-4">No reward codes generated yet.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
