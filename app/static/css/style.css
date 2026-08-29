@@ -5026,16 +5026,7 @@ body.farmer-no-sidebar .topbar-divider:first-of-type {
     to { opacity: 1; transform: translateY(0); }
 }
 
-@media (max-width: 992px) {
-    .farmer-chat-shell {
-        flex-direction: column;
-    }
-    .farmer-chat-sidebar {
-        width: 100%;
-        border-right: 0;
-        border-bottom: 1px solid var(--fc-border);
-    }
-}
+
 
 /* =========================================
    EXPERT SIMPLE DARK MODE OVERRIDES
