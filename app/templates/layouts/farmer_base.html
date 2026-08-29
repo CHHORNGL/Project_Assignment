@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>{% block title %}Ask Expert{% endblock %} | AGRI SYSTEM</title>
 
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
     <link rel="icon" type="image/jpeg" href="{{ url_for('static', filename='img/logo.jpg') }}">
     <link rel="shortcut icon" type="image/jpeg" href="{{ url_for('static', filename='img/logo.jpg') }}">
     <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/logo.jpg') }}">
@@ -60,18 +60,28 @@
 <div class="farmer-chat-shell">
 
     <!-- ===============================
+         MOBILE BACKDROP
+    =============================== -->
+    <div class="farmer-chat-backdrop" id="farmer-chat-backdrop" aria-hidden="true"></div>
+
+    <!-- ===============================
          LEFT SIDEBAR
     =============================== -->
-    <aside class="farmer-chat-sidebar">
+    <aside class="farmer-chat-sidebar" id="farmer-chat-sidebar">
 
-        <div class="farmer-chat-brand">
-            <div class="farmer-chat-logo">
-                <img src="{{ url_for('static', filename='img/logo.jpg') }}"
-                     alt="Agri System"
-                     class="app-logo-circle">
-                <span>{{ t("farmer_expert") }}</span>
+        <div class="farmer-chat-sidebar-header">
+            <div class="farmer-chat-brand">
+                <div class="farmer-chat-logo">
+                    <img src="{{ url_for('static', filename='img/logo.jpg') }}"
+                         alt="Agri System"
+                         class="app-logo-circle">
+                    <span>{{ t("farmer_expert") }}</span>
+                </div>
+                <div class="farmer-chat-brand-sub">{{ t("agri_assistant") }}</div>
             </div>
-            <div class="farmer-chat-brand-sub">{{ t("agri_assistant") }}</div>
+            <button type="button" class="farmer-chat-sidebar-close" id="farmer-chat-sidebar-close" aria-label="Close sidebar">
+                <i class="fas fa-times"></i>
+            </button>
         </div>
 
         <a href="{{ url_for('farmer.new_chat') }}" class="farmer-chat-new">
@@ -81,7 +91,7 @@
 
         <div class="farmer-chat-search">
             <i class="fas fa-search"></i>
-            <input type="text" id="farmer-chat-search" placeholder="{{ t("search_chats") }}">
+            <input type="text" id="farmer-chat-search" placeholder="{{ t("search_chats") }}" autocomplete="off">
         </div>
 
         <div class="farmer-chat-section">{{ t("chat_history") }}</div>
@@ -91,11 +101,12 @@
                 {% for s in sessions %}
                     <a href="{{ url_for('farmer.chat', session_id=s.id) }}"
                        class="farmer-chat-history-item text-truncate {% if active_session and active_session.id == s.id %}active{% endif %}">
-                        {{ s.title if s.title else t("new_chat") }}
+                        <i class="far fa-comment-alt mr-2 text-muted" style="font-size: 0.82rem;"></i>
+                        <span class="text-truncate">{{ s.title if s.title else t("new_chat") }}</span>
                     </a>
                 {% endfor %}
             {% else %}
-                <div class="small text-muted mt-3">
+                <div class="small text-muted mt-2 text-center py-3">
                     {{ t("no_history_yet") }}
                 </div>
             {% endif %}
@@ -112,14 +123,14 @@
                         </span>
                     {% endif %}
                 </div>
-                <div class="farmer-user-info">
-                    <div class="farmer-user-name" style="display: flex; align-items: center; gap: 6px;">
-                        {{ current_user.full_name or current_user.username if current_user.is_authenticated else "Guest User" }}
+                <div class="farmer-user-info text-truncate">
+                    <div class="farmer-user-name text-truncate" style="display: flex; align-items: center; gap: 6px;">
+                        <span class="text-truncate">{{ current_user.full_name or current_user.username if current_user.is_authenticated else "Guest User" }}</span>
                         {% if current_user.is_authenticated and current_user.is_premium %}
                             <i class="fas fa-crown text-warning" style="font-size: 0.85rem;" title="Premium Account"></i>
                         {% endif %}
                     </div>
-                    <div class="farmer-user-sub">{{ current_user.username if current_user.is_authenticated else "Unregistered" }}</div>
+                    <div class="farmer-user-sub text-truncate">{{ current_user.username if current_user.is_authenticated else "Unregistered" }}</div>
                 </div>
                 <i class="fas fa-chevron-down farmer-user-caret"></i>
             </button>
@@ -157,24 +168,32 @@
     <main class="farmer-chat-main">
 
         <header class="farmer-chat-header">
-            <div>
-                <div class="farmer-chat-title">{{ t("ask_agri_expert") }}</div>
-                <div class="farmer-chat-sub">{{ t("expert_guidance") }}</div>
+            <div class="farmer-chat-header-left">
+                <button type="button" class="farmer-chat-mobile-toggle" id="farmer-chat-mobile-toggle" aria-label="Toggle chat history">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="farmer-chat-header-titles">
+                    <div class="farmer-chat-title">{{ t("ask_agri_expert") }}</div>
+                    <div class="farmer-chat-sub d-none d-md-block">{{ t("expert_guidance") }}</div>
+                </div>
             </div>
             <div class="farmer-chat-actions">
-                <button type="button" class="farmer-chat-help-btn" id="ai-help-toggle">
+                <button type="button" class="farmer-chat-help-btn" id="ai-help-toggle" title="{{ t('ai_help') }}">
                     <span class="help-icon"><i class="fas fa-headset"></i></span>
-                    <span>{{ t("ai_help") }}</span>
+                    <span class="d-none d-sm-inline">{{ t("ai_help") }}</span>
                 </button>
-                <span class="farmer-chat-status">{{ t("ai_online") }}</span>
+                <span class="farmer-chat-status">
+                    <i class="fas fa-circle text-success mr-1" style="font-size: 0.55rem;"></i>
+                    <span class="d-none d-sm-inline">{{ t("ai_online") }}</span>
+                </span>
                 {% if current_user.is_authenticated and current_user.has_role('farmer') %}
                     {% if not current_user.is_premium %}
-                    <span class="badge ml-2" style="font-size: 0.8rem; padding: 6px 10px; border-radius: 12px; background: rgba(245, 158, 11, 0.15); color: #d97706; border: 1px solid rgba(245, 158, 11, 0.3);">
-                        <i class="fas fa-coins mr-1"></i> {{ current_user.ai_credits }} Tokens
+                    <span class="badge farmer-credit-badge" title="AI Tokens">
+                        <i class="fas fa-coins mr-1"></i> {{ current_user.ai_credits }} <span class="d-none d-md-inline">Tokens</span>
                     </span>
                     {% else %}
-                    <span class="badge ml-2" style="font-size: 0.8rem; padding: 6px 10px; border-radius: 12px; background: rgba(59, 130, 246, 0.15); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3);">
-                        <i class="fas fa-infinity mr-1"></i> Unlimited
+                    <span class="badge farmer-premium-badge" title="Unlimited AI Access">
+                        <i class="fas fa-infinity mr-1"></i> <span class="d-none d-md-inline">Unlimited</span>
                     </span>
                     {% endif %}
                 {% endif %}
@@ -210,17 +229,19 @@
 </div>
 
 <script>
-    (function () {
-        const input = document.getElementById("farmer-chat-input");
-        if (input) {
+(function () {
+    // Focus and scroll
+    const input = document.getElementById("farmer-chat-input");
+    if (input) {
+        // On mobile avoid auto-focusing on initial page load as it forces onscreen keyboard popup
+        if (window.innerWidth >= 768) {
             input.focus();
-            const end = input.value.length;
-            try {
-                input.setSelectionRange(end, end);
-            } catch (e) {
-                // Ignore browsers that do not support setSelectionRange on this input type.
-            }
         }
+        const end = input.value.length;
+        try {
+            input.setSelectionRange(end, end);
+        } catch (e) {}
+    }
     const thread = document.getElementById("farmer-chat-thread");
     if (thread) {
         thread.scrollTop = thread.scrollHeight;
@@ -228,9 +249,68 @@
 })();
 </script>
 
+<script>
+(function () {
+    // Mobile Sidebar Drawer Management
+    const shell = document.querySelector(".farmer-chat-shell");
+    const sidebar = document.getElementById("farmer-chat-sidebar");
+    const toggleBtn = document.getElementById("farmer-chat-mobile-toggle");
+    const closeBtn = document.getElementById("farmer-chat-sidebar-close");
+    const backdrop = document.getElementById("farmer-chat-backdrop");
+    const historyItems = document.querySelectorAll(".farmer-chat-history-item");
+
+    function openSidebar() {
+        if (shell) shell.classList.add("sidebar-mobile-open");
+        if (sidebar) sidebar.classList.add("is-open");
+        if (backdrop) backdrop.classList.add("is-visible");
+        document.body.classList.add("farmer-chat-sidebar-active");
+    }
+
+    function closeSidebar() {
+        if (shell) shell.classList.remove("sidebar-mobile-open");
+        if (sidebar) sidebar.classList.remove("is-open");
+        if (backdrop) backdrop.classList.remove("is-visible");
+        document.body.classList.remove("farmer-chat-sidebar-active");
+    }
+
+    if (toggleBtn) {
+        toggleBtn.addEventListener("click", function(e) {
+            e.stopPropagation();
+            if (sidebar && sidebar.classList.contains("is-open")) {
+                closeSidebar();
+            } else {
+                openSidebar();
+            }
+        });
+    }
+
+    if (closeBtn) {
+        closeBtn.addEventListener("click", closeSidebar);
+    }
+
+    if (backdrop) {
+        backdrop.addEventListener("click", closeSidebar);
+    }
+
+    historyItems.forEach(item => {
+        item.addEventListener("click", () => {
+            if (window.innerWidth < 992) {
+                closeSidebar();
+            }
+        });
+    });
+
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && sidebar && sidebar.classList.contains("is-open")) {
+            closeSidebar();
+        }
+    });
+})();
+</script>
 
 <script>
 (function () {
+    // User menu popover toggle
     const toggle = document.getElementById("farmer-user-toggle");
     const menu = document.querySelector(".farmer-user-menu");
 
@@ -239,15 +319,24 @@
     menu.classList.add("is-collapsed");
     toggle.setAttribute("aria-expanded", "false");
 
-    toggle.addEventListener("click", () => {
+    toggle.addEventListener("click", (e) => {
+        e.stopPropagation();
         const isCollapsed = menu.classList.toggle("is-collapsed");
         toggle.setAttribute("aria-expanded", isCollapsed ? "false" : "true");
+    });
+
+    document.addEventListener("click", (e) => {
+        if (!menu.contains(e.target) && !toggle.contains(e.target)) {
+            menu.classList.add("is-collapsed");
+            toggle.setAttribute("aria-expanded", "false");
+        }
     });
 })();
 </script>
 
 <script>
 (function () {
+    // Search chats in sidebar
     const input = document.getElementById("farmer-chat-search");
     const items = document.querySelectorAll(".farmer-chat-history-item");
     if (!input || !items.length) return;
@@ -264,6 +353,7 @@
 
 <script>
 (function () {
+    // AI Help toggle & example injector
     const toggle = document.getElementById("ai-help-toggle");
     const panel = document.getElementById("ai-help-panel");
     const exampleBtn = document.getElementById("ai-help-example");
@@ -286,8 +376,6 @@
     }
 })();
 </script>
-
-{% include "layouts/ai_helper_widget.html" %}
 
 <script src="{{ url_for('static', filename='js/system_status.js', v=static_version) }}"></script>
 

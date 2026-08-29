@@ -2,60 +2,108 @@
 {% block title %}{{ t("ask_expert") }}{% endblock %}
 
 {% block content %}
-<div class="d-flex flex-column h-100">
-    <style>
-        :root { --chat-user-bg: #f4f4f4; }
-        .dark-mode { --chat-user-bg: #2f2f2f; }
-    </style>
-
+<div class="farmer-chat-container">
     {% if messages and messages|length > 0 %}
-        <div style="max-width: 800px; margin: 0 auto; width: 100%; padding: 20px 0;">
+        <div class="farmer-chat-messages">
         {% for m in messages %}
             {% if m.sender == "farmer" %}
-                <!-- USER -->
-                <div class="d-flex justify-content-end mb-4">
-                    <div style="background: var(--chat-user-bg, #f4f4f4); color: var(--text-main, #0f172a); padding: 10px 16px; border-radius: 20px; max-width: 85%; font-size: 0.95rem; line-height: 1.5; white-space: pre-wrap; word-break: break-word;">
-                        {{ m.message }}
+                <!-- USER MESSAGE -->
+                <div class="farmer-msg-row farmer-msg-row-user">
+                    <div class="farmer-bubble-user">
+                        <div class="farmer-bubble-text">{{ m.message }}</div>
+                        {% if m.created_at %}
+                        <div class="farmer-msg-time">{{ m.created_at.strftime('%H:%M') }}</div>
+                        {% endif %}
                     </div>
                 </div>
             {% else %}
-                <!-- AI / EXPERT -->
-                <div class="d-flex justify-content-start mb-4" style="gap: 16px; width: 100%;">
-                    <div style="width: 32px; height: 32px; border-radius: 50%; background: #ffffff; border: 1px solid var(--border-light, #e2e8f0); display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;">
-                        <img src="{{ url_for('static', filename='img/logo.jpg') }}" style="width: 20px; height: 20px; border-radius: 50%; object-fit: cover;">
+                <!-- EXPERT / AI MESSAGE -->
+                <div class="farmer-msg-row farmer-msg-row-expert">
+                    <div class="farmer-expert-avatar">
+                        <img src="{{ url_for('static', filename='img/logo.jpg') }}" alt="Expert">
                     </div>
-                    <div style="color: var(--text-main, #0f172a); font-size: 0.95rem; line-height: 1.6; max-width: 100%; width: 100%; white-space: pre-wrap; word-break: break-word; overflow-x: auto;">
-                         {{ m.message | safe }}
+                    <div class="farmer-bubble-expert">
+                        <div class="farmer-expert-name-badge">
+                            <span class="farmer-expert-badge-title">{{ t("farmer_expert") }}</span>
+                            {% if m.created_at %}
+                            <span class="farmer-msg-time">{{ m.created_at.strftime('%H:%M') }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="farmer-bubble-text">{{ m.message | safe }}</div>
                     </div>
                 </div>
             {% endif %}
         {% endfor %}
         </div>
     {% else %}
-        <div class="text-center text-muted mt-5">
-            <h5><i class="fas fa-comments text-success mr-2" aria-hidden="true"></i>{{ t("ask_expert_title") }}</h5>
-            <p>{{ t("ask_expert_sub") }}</p>
+        <!-- EMPTY STATE WITH SUGGESTIONS -->
+        <div class="farmer-chat-empty-state">
+            <div class="farmer-empty-icon-wrap">
+                <i class="fas fa-comments"></i>
+            </div>
+            <h4 class="farmer-empty-title">{{ t("ask_expert_title") }}</h4>
+            <p class="farmer-empty-sub">{{ t("ask_expert_sub") }}</p>
+
+            <div class="farmer-quick-suggestions">
+                <div class="farmer-suggestions-label">
+                    <i class="fas fa-lightbulb text-warning mr-1"></i> {{ t("quick_actions") }}
+                </div>
+                <div class="farmer-suggestion-chips">
+                    <button type="button" class="farmer-suggestion-chip" data-prompt="{{ t('suggestion_rice_blast') }}">
+                        {{ t("suggestion_rice_blast") }}
+                    </button>
+                    <button type="button" class="farmer-suggestion-chip" data-prompt="{{ t('suggestion_tomato_curl') }}">
+                        {{ t("suggestion_tomato_curl") }}
+                    </button>
+                    <button type="button" class="farmer-suggestion-chip" data-prompt="{{ t('suggestion_pest_control') }}">
+                        {{ t("suggestion_pest_control") }}
+                    </button>
+                    <button type="button" class="farmer-suggestion-chip" data-prompt="{{ t('suggestion_dry_season') }}">
+                        {{ t("suggestion_dry_season") }}
+                    </button>
+                </div>
+            </div>
         </div>
     {% endif %}
-
 </div>
+
+<script>
+(function () {
+    const chips = document.querySelectorAll(".farmer-suggestion-chip");
+    const input = document.getElementById("farmer-chat-input");
+    if (!chips.length || !input) return;
+
+    chips.forEach(chip => {
+        chip.addEventListener("click", () => {
+            const prompt = chip.getAttribute("data-prompt") || chip.textContent.trim();
+            if (prompt) {
+                input.value = prompt;
+                input.focus();
+                const end = input.value.length;
+                try {
+                    input.setSelectionRange(end, end);
+                } catch (e) {}
+            }
+        });
+    });
+})();
+</script>
 {% endblock %}
 
 
 {% block input %}
-<form method="POST" class="d-flex align-items-center" style="background: var(--card-bg, #ffffff); border: 1px solid var(--border-light, #e2e8f0); border-radius: 24px; padding: 4px 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); gap: 8px;">
-    <input type="text"
-           name="message"
-           id="farmer-chat-input"
-           class="form-control border-0 shadow-none bg-transparent"
-           placeholder="{{ t('ask_expert_placeholder') }}"
-           autocomplete="off"
-           autofocus
-           required
-           style="font-size: 16px; min-height: 44px; padding-left: 16px;">
-
-    <button type="submit" class="btn" style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3); border: none; transition: transform 0.2s;">
-        <i class="fas fa-arrow-up"></i>
-    </button>
+<form method="POST" class="farmer-chat-form" id="farmer-chat-form">
+    <div class="farmer-chat-input-box">
+        <input type="text"
+               name="message"
+               id="farmer-chat-input"
+               class="farmer-chat-input-field"
+               placeholder="{{ t('ask_expert_placeholder') }}"
+               autocomplete="off"
+               required>
+        <button type="submit" class="farmer-chat-submit-btn" id="farmer-chat-submit-btn" aria-label="{{ t('send') }}" title="{{ t('send') }}">
+            <i class="fas fa-arrow-up"></i>
+        </button>
+    </div>
 </form>
 {% endblock %}
