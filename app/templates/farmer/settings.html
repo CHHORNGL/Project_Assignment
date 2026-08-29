@@ -7,9 +7,9 @@
    CLEAN & PROFESSIONAL SETTINGS STYLES
    ========================================= */
 .settings-container {
-    max-width: 720px;
+    max-width: 740px;
     margin: 0 auto;
-    padding: 1.25rem 1rem 120px; /* bottom padding for sticky action bar */
+    padding: 1.25rem 1rem 80px;
     box-sizing: border-box;
     width: 100%;
 }
@@ -38,20 +38,20 @@
 }
 
 .settings-section-title {
-    font-size: 0.8rem;
+    font-size: 0.82rem;
     font-weight: 700;
     color: var(--text-muted, #64748b);
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    margin: 26px 0 10px 6px;
+    margin: 26px 0 10px 4px;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 7px;
 }
 
 .settings-card {
     background: var(--card-bg, #ffffff);
-    border-radius: 16px;
+    border-radius: 18px;
     border: 1px solid var(--border-light, #e2e8f0);
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
     overflow: hidden;
@@ -92,10 +92,10 @@
 }
 
 .settings-icon {
-    width: 36px;
-    height: 36px;
-    min-width: 36px;
-    border-radius: 10px;
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    border-radius: 11px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -129,170 +129,6 @@
 
 .dark-mode .settings-sublabel {
     color: #94a3b8;
-}
-
-/* =========================================
-   SUBSCRIPTION & BILLING CARDS
-   ========================================= */
-.sub-billing-card {
-    padding: 20px;
-    position: relative;
-    overflow: hidden;
-}
-
-@media (min-width: 768px) {
-    .sub-billing-card {
-        padding: 24px;
-    }
-}
-
-.sub-header-row {
-    display: flex;
-    align-items: flex-start;
-    gap: 16px;
-    flex-wrap: wrap;
-}
-
-.sub-icon-badge {
-    width: 52px;
-    height: 52px;
-    min-width: 52px;
-    border-radius: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    flex-shrink: 0;
-}
-
-.sub-icon-premium {
-    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-    color: #ffffff;
-    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
-}
-
-.sub-icon-free {
-    background: var(--surface-muted, #f1f5f9);
-    color: var(--text-muted, #64748b);
-    border: 1px solid var(--border-light, #e2e8f0);
-}
-
-.dark-mode .sub-icon-free {
-    background: #0f172a;
-    border-color: #334155;
-    color: #94a3b8;
-}
-
-.sub-details-box {
-    flex: 1;
-    min-width: 0;
-}
-
-.sub-plan-title {
-    font-size: 1.2rem;
-    font-weight: 800;
-    color: var(--text-main, #1e293b);
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-}
-
-.dark-mode .sub-plan-title {
-    color: #f8fafc;
-}
-
-.sub-perks-wrap {
-    display: flex;
-    gap: 6px 10px;
-    flex-wrap: wrap;
-    margin-top: 12px;
-}
-
-.sub-perk-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    background: rgba(16, 185, 129, 0.12);
-    color: #059669;
-    padding: 4px 10px;
-    border-radius: 999px;
-    font-size: 0.78rem;
-    font-weight: 700;
-}
-
-.dark-mode .sub-perk-chip {
-    background: rgba(16, 185, 129, 0.2);
-    color: #34d399;
-}
-
-/* Reward Promo Code Box */
-.reward-code-box {
-    margin-top: 20px;
-    padding-top: 16px;
-    border-top: 1px dashed var(--border-light, #e2e8f0);
-}
-
-.dark-mode .reward-code-box {
-    border-top-color: #334155;
-}
-
-.reward-code-form {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    flex-wrap: wrap;
-    margin-top: 8px;
-}
-
-.reward-code-input {
-    flex: 1;
-    min-width: 140px;
-    max-width: 220px;
-    height: 40px;
-    border-radius: 10px;
-    border: 1px solid var(--border-light, #e2e8f0);
-    background: var(--input-bg, #ffffff);
-    color: var(--text-main, #1e293b);
-    padding: 0 12px;
-    font-size: 0.88rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    box-sizing: border-box;
-}
-
-.dark-mode .reward-code-input {
-    background: #0f172a;
-    border-color: #334155;
-    color: #f8fafc;
-}
-
-.reward-code-btn {
-    height: 40px;
-    padding: 0 16px;
-    border-radius: 10px;
-    font-weight: 700;
-    font-size: 0.85rem;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border: 1.5px solid #10b981;
-    background: transparent;
-    color: #059669;
-    cursor: pointer;
-    transition: all 0.18s ease;
-    white-space: nowrap;
-}
-
-.dark-mode .reward-code-btn {
-    color: #34d399;
-    border-color: #34d399;
-}
-
-.reward-code-btn:hover {
-    background: #10b981;
-    color: #ffffff;
 }
 
 /* =========================================
@@ -584,31 +420,167 @@
 }
 
 /* =========================================
-   LANGUAGE SELECTOR
+   SUBSCRIPTION & BILLING CARDS
    ========================================= */
-.lang-row {
-    cursor: pointer;
-    user-select: none;
+.sub-billing-card {
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
 }
 
-.lang-row:hover {
-    background: rgba(59, 130, 246, 0.04);
+@media (min-width: 768px) {
+    .sub-billing-card {
+        padding: 24px;
+    }
 }
 
-.dark-mode .lang-row:hover {
-    background: rgba(59, 130, 246, 0.1);
+.sub-header-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    flex-wrap: wrap;
 }
 
-.lang-active-badge {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
+.sub-icon-badge {
+    width: 52px;
+    height: 52px;
+    min-width: 52px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.sub-icon-premium {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+}
+
+.sub-icon-free {
+    background: var(--surface-muted, #f1f5f9);
+    color: var(--text-muted, #64748b);
+    border: 1px solid var(--border-light, #e2e8f0);
+}
+
+.dark-mode .sub-icon-free {
+    background: #0f172a;
+    border-color: #334155;
+    color: #94a3b8;
+}
+
+.sub-details-box {
+    flex: 1;
+    min-width: 0;
+}
+
+.sub-plan-title {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: var(--text-main, #1e293b);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.dark-mode .sub-plan-title {
+    color: #f8fafc;
+}
+
+.sub-perks-wrap {
+    display: flex;
+    gap: 6px 10px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+}
+
+.sub-perk-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
     background: rgba(16, 185, 129, 0.12);
-    color: #10b981;
+    color: #059669;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+.dark-mode .sub-perk-chip {
+    background: rgba(16, 185, 129, 0.2);
+    color: #34d399;
+}
+
+/* Reward Promo Code Box */
+.reward-code-box {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px dashed var(--border-light, #e2e8f0);
+}
+
+.dark-mode .reward-code-box {
+    border-top-color: #334155;
+}
+
+.reward-code-form {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 8px;
+}
+
+.reward-code-input {
+    flex: 1;
+    min-width: 140px;
+    max-width: 220px;
+    height: 40px;
+    border-radius: 10px;
+    border: 1px solid var(--border-light, #e2e8f0);
+    background: var(--input-bg, #ffffff);
+    color: var(--text-main, #1e293b);
+    padding: 0 12px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-sizing: border-box;
+}
+
+.dark-mode .reward-code-input {
+    background: #0f172a;
+    border-color: #334155;
+    color: #f8fafc;
+}
+
+.reward-code-btn {
+    height: 40px;
+    padding: 0 16px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 0.85rem;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.85rem;
+    border: 1.5px solid #10b981;
+    background: transparent;
+    color: #059669;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    white-space: nowrap;
+}
+
+.dark-mode .reward-code-btn {
+    color: #34d399;
+    border-color: #34d399;
+}
+
+.reward-code-btn:hover {
+    background: #10b981;
+    color: #ffffff;
 }
 
 /* =========================================
@@ -684,57 +656,17 @@ input:checked + .ios-slider:before {
 }
 
 /* =========================================
-   STICKY FOOTER ACTION BAR
+   CLEAN FLOATING ACTION BAR
    ========================================= */
-.settings-footer {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: 12px 16px max(14px, env(safe-area-inset-bottom, 14px));
-    background: rgba(255, 255, 255, 0.88);
-    -webkit-backdrop-filter: blur(14px);
-    backdrop-filter: blur(14px);
-    border-top: 1px solid var(--border-light, #e2e8f0);
+.settings-save-dock {
+    position: sticky;
+    bottom: 20px;
     z-index: 100;
+    margin-top: 2rem;
     display: flex;
-    justify-content: center;
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.04);
-}
-
-.dark-mode .settings-footer {
-    background: rgba(15, 23, 42, 0.92);
-    border-top-color: #334155;
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.25);
-}
-
-.btn-save {
-    background: linear-gradient(135deg, #10b981, #059669);
-    color: #ffffff;
-    font-size: 1rem;
-    font-weight: 700;
-    min-height: 48px;
-    padding: 12px 28px;
-    border-radius: 999px;
-    border: none;
-    width: 100%;
-    max-width: 440px;
-    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.35);
-    cursor: pointer;
-    transition: transform 0.18s ease, box-shadow 0.18s ease;
-    display: inline-flex;
+    justify-content: flex-end;
     align-items: center;
-    justify-content: center;
-    gap: 8px;
-}
-
-.btn-save:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45);
-}
-
-.btn-save:active {
-    transform: translateY(0);
+    transition: all 0.2s ease;
 }
 
 /* =========================================
@@ -742,27 +674,16 @@ input:checked + .ios-slider:before {
    ========================================= */
 @media (max-width: 575.98px) {
     .settings-container {
-        padding: 1rem 0.75rem 110px;
+        padding: 1rem 0.75rem 90px;
     }
 
     .settings-card {
-        border-radius: 14px;
+        border-radius: 16px;
     }
 
     .settings-row {
         padding: 14px 14px;
         gap: 10px;
-    }
-
-    .sub-billing-card {
-        padding: 16px 14px;
-    }
-
-    .sub-icon-badge {
-        width: 44px;
-        height: 44px;
-        min-width: 44px;
-        font-size: 1.25rem;
     }
 
     .reward-code-form {
@@ -777,6 +698,37 @@ input:checked + .ios-slider:before {
 
     .reward-code-btn {
         width: 100%;
+    }
+
+    .settings-save-dock {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        margin: 0;
+        padding: 12px 16px max(14px, env(safe-area-inset-bottom, 14px));
+        background: rgba(255, 255, 255, 0.94);
+        -webkit-backdrop-filter: blur(14px);
+        backdrop-filter: blur(14px);
+        border-top: 1px solid var(--border-light, #e2e8f0);
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
+        justify-content: center;
+    }
+
+    .dark-mode .settings-save-dock {
+        background: rgba(15, 23, 42, 0.95);
+        border-top-color: #334155;
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .settings-save-dock .btn-save-clean {
+        width: 100%;
+        min-height: 48px;
+        font-size: 1rem;
+        border-radius: 12px;
+    }
+}
+        border-radius: 12px;
     }
 }
 </style>
@@ -875,7 +827,6 @@ input:checked + .ios-slider:before {
         </div>
 
         <div class="settings-card theme-section-card">
-            <!-- Section Sub-Header -->
             <div class="settings-row-left mb-1">
                 <div class="settings-icon icon-theme"><i class="fas fa-palette"></i></div>
                 <div>
@@ -884,104 +835,49 @@ input:checked + .ios-slider:before {
                 </div>
             </div>
 
-            <!-- Interactive Visual Theme Cards -->
             <div class="theme-card-grid">
-                
-                <!-- LIGHT THEME CARD -->
+                <!-- LIGHT THEME -->
                 <label class="theme-preview-card {% if current_user.theme == 'light' %}is-active{% endif %}" data-theme-val="light">
                     <input type="radio" name="theme" value="light" {% if current_user.theme == 'light' %}checked{% endif %}>
                     <div class="theme-mockup mockup-light">
-                        <div class="mockup-header">
-                            <span class="mockup-dot"></span>
-                            <span class="mockup-dot"></span>
-                            <span class="mockup-dot"></span>
-                        </div>
-                        <div class="mockup-body">
-                            <div class="mockup-side"></div>
-                            <div class="mockup-main">
-                                <div class="mockup-bar accent" style="width: 80%;"></div>
-                                <div class="mockup-bar" style="width: 60%;"></div>
-                                <div class="mockup-bar" style="width: 45%;"></div>
-                            </div>
-                        </div>
+                        <div class="mockup-header"><span class="mockup-dot"></span><span class="mockup-dot"></span><span class="mockup-dot"></span></div>
+                        <div class="mockup-body"><div class="mockup-side"></div><div class="mockup-main"><div class="mockup-bar accent" style="width: 80%;"></div><div class="mockup-bar" style="width: 60%;"></div><div class="mockup-bar" style="width: 45%;"></div></div></div>
                     </div>
                     <div class="theme-card-meta">
-                        <div class="theme-meta-left">
-                            <div class="theme-icon-indicator theme-icon-light">
-                                <i class="fas fa-sun"></i>
-                            </div>
-                            <span class="theme-name-text">{{ t("light") }}</span>
-                        </div>
-                        <div class="theme-check-icon">
-                            <i class="fas fa-check"></i>
-                        </div>
+                        <div class="theme-meta-left"><div class="theme-icon-indicator theme-icon-light"><i class="fas fa-sun"></i></div><span class="theme-name-text">{{ t("light") }}</span></div>
+                        <div class="theme-check-icon"><i class="fas fa-check"></i></div>
                     </div>
                 </label>
-
-                <!-- DARK THEME CARD -->
+                <!-- DARK THEME -->
                 <label class="theme-preview-card {% if current_user.theme == 'dark' %}is-active{% endif %}" data-theme-val="dark">
                     <input type="radio" name="theme" value="dark" {% if current_user.theme == 'dark' %}checked{% endif %}>
                     <div class="theme-mockup mockup-dark">
-                        <div class="mockup-header">
-                            <span class="mockup-dot"></span>
-                            <span class="mockup-dot"></span>
-                            <span class="mockup-dot"></span>
-                        </div>
-                        <div class="mockup-body">
-                            <div class="mockup-side"></div>
-                            <div class="mockup-main">
-                                <div class="mockup-bar accent" style="width: 80%;"></div>
-                                <div class="mockup-bar" style="width: 60%;"></div>
-                                <div class="mockup-bar" style="width: 45%;"></div>
-                            </div>
-                        </div>
+                        <div class="mockup-header"><span class="mockup-dot"></span><span class="mockup-dot"></span><span class="mockup-dot"></span></div>
+                        <div class="mockup-body"><div class="mockup-side"></div><div class="mockup-main"><div class="mockup-bar accent" style="width: 80%;"></div><div class="mockup-bar" style="width: 60%;"></div><div class="mockup-bar" style="width: 45%;"></div></div></div>
                     </div>
                     <div class="theme-card-meta">
-                        <div class="theme-meta-left">
-                            <div class="theme-icon-indicator theme-icon-dark">
-                                <i class="fas fa-moon"></i>
-                            </div>
-                            <span class="theme-name-text">{{ t("dark") }}</span>
-                        </div>
-                        <div class="theme-check-icon">
-                            <i class="fas fa-check"></i>
-                        </div>
+                        <div class="theme-meta-left"><div class="theme-icon-indicator theme-icon-dark"><i class="fas fa-moon"></i></div><span class="theme-name-text">{{ t("dark") }}</span></div>
+                        <div class="theme-check-icon"><i class="fas fa-check"></i></div>
                     </div>
                 </label>
-
-                <!-- SYSTEM THEME CARD -->
+                <!-- SYSTEM THEME -->
                 <label class="theme-preview-card {% if current_user.theme == 'system' %}is-active{% endif %}" data-theme-val="system">
                     <input type="radio" name="theme" value="system" {% if current_user.theme == 'system' %}checked{% endif %}>
                     <div class="theme-mockup mockup-system">
-                        <div class="mockup-split mockup-split-light">
-                            <div class="mockup-bar accent" style="width: 85%;"></div>
-                            <div class="mockup-bar" style="width: 55%;"></div>
-                        </div>
-                        <div class="mockup-split mockup-split-dark">
-                            <div class="mockup-bar accent" style="width: 85%;"></div>
-                            <div class="mockup-bar" style="width: 55%;"></div>
-                        </div>
+                        <div class="mockup-split mockup-split-light"><div class="mockup-bar accent" style="width: 85%;"></div><div class="mockup-bar" style="width: 55%;"></div></div>
+                        <div class="mockup-split mockup-split-dark"><div class="mockup-bar accent" style="width: 85%;"></div><div class="mockup-bar" style="width: 55%;"></div></div>
                     </div>
                     <div class="theme-card-meta">
-                        <div class="theme-meta-left">
-                            <div class="theme-icon-indicator theme-icon-system">
-                                <i class="fas fa-desktop"></i>
-                            </div>
-                            <span class="theme-name-text">{{ t("system") }}</span>
-                        </div>
-                        <div class="theme-check-icon">
-                            <i class="fas fa-check"></i>
-                        </div>
+                        <div class="theme-meta-left"><div class="theme-icon-indicator theme-icon-system"><i class="fas fa-desktop"></i></div><span class="theme-name-text">{{ t("system") }}</span></div>
+                        <div class="theme-check-icon"><i class="fas fa-check"></i></div>
                     </div>
                 </label>
-
             </div>
         </div>
 
         <!-- Language Options Card -->
         <div class="settings-card">
-
-            <!-- Language Options -->
+            <!-- English Row -->
             <div class="settings-row lang-row" id="langRowEn" role="button" tabindex="0">
                 <div class="settings-row-left">
                     <div class="settings-icon icon-lang"><i class="fas fa-globe"></i></div>
@@ -997,6 +893,7 @@ input:checked + .ios-slider:before {
                 </div>
             </div>
 
+            <!-- Khmer Row -->
             <div class="settings-row lang-row" id="langRowKm" role="button" tabindex="0">
                 <div class="settings-row-left">
                     <div class="settings-icon icon-lang"><i class="fas fa-language"></i></div>
@@ -1019,7 +916,6 @@ input:checked + .ios-slider:before {
             <span>{{ t("security")|default('Security') }}</span>
         </div>
         <div class="settings-card">
-            <!-- 2FA Toggle -->
             <div class="settings-row">
                 <div class="settings-row-left">
                     <div class="settings-icon icon-sec"><i class="fas fa-shield-alt"></i></div>
@@ -1034,7 +930,6 @@ input:checked + .ios-slider:before {
                 </label>
             </div>
             
-            <!-- Passkey Registration -->
             <div class="settings-row" id="btn-register-passkey" style="cursor: pointer;" role="button" tabindex="0">
                 <div class="settings-row-left">
                     <div class="settings-icon icon-key"><i class="fas fa-fingerprint"></i></div>
@@ -1054,10 +949,10 @@ input:checked + .ios-slider:before {
             <!-- Dynamically populated via JS -->
         </div>
 
-        <!-- 4. FLOATING STICKY SAVE BAR -->
-        <div class="settings-footer">
-            <button type="submit" class="btn-save">
-                <i class="fas fa-check-circle"></i>
+        <!-- 4. CLEAN FLOATING SAVE DOCK -->
+        <div class="settings-save-dock">
+            <button type="submit" class="btn-save-clean" id="btnSaveSettings">
+                <i class="fas fa-check"></i>
                 <span>{{ t("save_settings") }}</span>
             </button>
         </div>
@@ -1065,9 +960,6 @@ input:checked + .ios-slider:before {
     </form>
 </div>
 
-<!-- ========================= -->
-<!-- JAVASCRIPT LOGIC -->
-<!-- ========================= -->
 <script>
 (() => {
     // 0. Live Real-Time Theme Preview Switcher
@@ -1076,17 +968,13 @@ input:checked + .ios-slider:before {
         card.addEventListener("click", () => {
             const radio = card.querySelector("input[type='radio']");
             if (radio) radio.checked = true;
-
             themeCards.forEach(c => c.classList.remove("is-active"));
             card.classList.add("is-active");
-
             const selectedTheme = card.dataset.themeVal;
             if (selectedTheme) {
-                if (selectedTheme === "dark") {
-                    document.documentElement.classList.add("dark-mode");
-                } else if (selectedTheme === "light") {
-                    document.documentElement.classList.remove("dark-mode");
-                } else if (selectedTheme === "system") {
+                if (selectedTheme === "dark") document.documentElement.classList.add("dark-mode");
+                else if (selectedTheme === "light") document.documentElement.classList.remove("dark-mode");
+                else if (selectedTheme === "system") {
                     const isDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
                     document.documentElement.classList.toggle("dark-mode", isDark);
                 }
@@ -1098,7 +986,6 @@ input:checked + .ios-slider:before {
     // 1. Language Option Switchers
     const langRowEn = document.getElementById("langRowEn");
     const langRowKm = document.getElementById("langRowKm");
-
     if (langRowEn) {
         langRowEn.addEventListener("click", () => setLanguage("en"));
         langRowEn.addEventListener("keydown", (e) => { if (e.key === 'Enter' || e.key === ' ') setLanguage("en"); });
@@ -1121,113 +1008,81 @@ input:checked + .ios-slider:before {
         }
     }
 
-    // 2. Passkey WebAuthn Helper Functions
+    // 2. Form submit loading feedback
+    const settingsForm = document.getElementById("settingsForm");
+    const btnSave = document.getElementById("btnSaveSettings");
+    if (settingsForm && btnSave) {
+        settingsForm.addEventListener("submit", () => {
+            btnSave.disabled = true;
+            btnSave.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Saving...';
+        });
+    }
+
+    // 3. Passkey WebAuthn Helper Functions
     function base64urlToBytes(base64url) {
         const base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
         const pad = base64.length % 4;
         const padded = pad ? base64 + '='.repeat(4 - pad) : base64;
         const binary = atob(padded);
         const bytes = new Uint8Array(binary.length);
-        for (let i = 0; i < binary.length; i++) {
-            bytes[i] = binary.charCodeAt(i);
-        }
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
         return bytes;
     }
 
     function bytesToBase64url(bytes) {
         const uint8 = new Uint8Array(bytes);
         let binary = '';
-        for (let i = 0; i < uint8.byteLength; i++) {
-            binary += String.fromCharCode(uint8[i]);
-        }
-        const base64 = btoa(binary);
-        return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+        for (let i = 0; i < uint8.byteLength; i++) binary += String.fromCharCode(uint8[i]);
+        return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
     }
 
     function prepareRegistrationOptions(options) {
         options.challenge = base64urlToBytes(options.challenge);
         options.user.id = base64urlToBytes(options.user.id);
         if (options.excludeCredentials) {
-            options.excludeCredentials = options.excludeCredentials.map(cred => ({
-                ...cred,
-                id: base64urlToBytes(cred.id)
-            }));
+            options.excludeCredentials = options.excludeCredentials.map(cred => ({...cred, id: base64urlToBytes(cred.id)}));
         }
         return options;
     }
 
     function escapeHtml(text) {
-        return (text || "")
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;");
+        return (text || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
     }
 
     async function loadPasskeysList() {
         const container = document.getElementById("passkeys-list-container");
         if (!container) return;
-        
         try {
             const res = await fetch("{{ url_for('user.list_passkeys') }}");
             if (!res.ok) throw new Error("Failed to load passkeys.");
             const data = await res.json();
-            
-            if (!data.passkeys || data.passkeys.length === 0) {
-                container.innerHTML = "";
-                return;
-            }
-            
-            let html = `
-                <div class="settings-section-title">
-                    <i class="fas fa-key text-info"></i>
-                    <span>{{ t("registered_passkeys") }}</span>
-                </div>
-                <div class="settings-card">
-            `;
-            
+            if (!data.passkeys || data.passkeys.length === 0) { container.innerHTML = ""; return; }
+            let html = `<div class="settings-section-title"><i class="fas fa-key text-info"></i><span>{{ t("registered_passkeys") }}</span></div><div class="settings-card">`;
             html += data.passkeys.map(key => `
                 <div class="settings-row">
                     <div class="settings-row-left">
-                        <div class="settings-icon" style="background: rgba(139, 92, 246, 0.12); color: #8b5cf6;">
-                            <i class="fas fa-key"></i>
-                        </div>
+                        <div class="settings-icon" style="background: rgba(139, 92, 246, 0.12); color: #8b5cf6;"><i class="fas fa-key"></i></div>
                         <div>
                             <div class="settings-label">${escapeHtml(key.name)}</div>
                             <div class="settings-sublabel">Added on ${escapeHtml(key.created_at)}</div>
                         </div>
                     </div>
-                    <button type="button" class="btn-delete-passkey" data-id="${key.id}" title="Delete Passkey">
-                        <i class="fas fa-trash-alt"></i>
-                        <span>Delete</span>
-                    </button>
+                    <button type="button" class="btn-delete-passkey" data-id="${key.id}" title="Delete Passkey"><i class="fas fa-trash-alt"></i> <span>Delete</span></button>
                 </div>
             `).join("");
-            
             html += '</div>';
             container.innerHTML = html;
-            
-            // Delete Handlers
             container.querySelectorAll(".btn-delete-passkey").forEach(btn => {
                 btn.addEventListener("click", async () => {
                     if (!confirm("Are you sure you want to remove this passkey?")) return;
-                    const passkeyId = btn.dataset.id;
                     try {
-                        const deleteRes = await fetch(`/users/passkeys/${passkeyId}`, { method: "DELETE" });
-                        if (deleteRes.ok) {
-                            loadPasskeysList();
-                        } else {
-                            alert("Failed to delete passkey.");
-                        }
-                    } catch (err) {
-                        alert("Error: " + err.message);
-                    }
+                        const deleteRes = await fetch(`/users/passkeys/${btn.dataset.id}`, { method: "DELETE" });
+                        if (deleteRes.ok) loadPasskeysList();
+                        else alert("Failed to delete passkey.");
+                    } catch (err) { alert("Error: " + err.message); }
                 });
             });
-        } catch (err) {
-            console.error("Passkey list error:", err);
-        }
+        } catch (err) { console.error("Passkey list error:", err); }
     }
 
     const registerBtn = document.getElementById("btn-register-passkey");
@@ -1235,23 +1090,18 @@ input:checked + .ios-slider:before {
         registerBtn.addEventListener("click", async () => {
             if (window.location.hostname === "127.0.0.1") {
                 const port = window.location.port ? ":" + window.location.port : "";
-                alert(`Passkeys require accessing the site via http://localhost${port} instead of http://127.0.0.1${port}. Redirecting you now...`);
+                alert(`Redirecting to localhost...`);
                 window.location.hostname = "localhost";
                 return;
             }
-            const passkeyName = prompt("Enter a name for this device/passkey (e.g. iPhone 15, MacBook Pro):", "My Device");
+            const passkeyName = prompt("Enter a name for this device/passkey:", "My Device");
             if (passkeyName === null) return;
             const name = passkeyName.trim() || "My Device";
-            
             try {
                 const optionsResp = await fetch("{{ url_for('auth.passkey_register_options') }}");
-                if (!optionsResp.ok) throw new Error("Failed to load registration options.");
+                if (!optionsResp.ok) throw new Error("Failed to load options.");
                 const options = await optionsResp.json();
-                
-                const credential = await navigator.credentials.create({
-                    publicKey: prepareRegistrationOptions(options)
-                });
-                
+                const credential = await navigator.credentials.create({ publicKey: prepareRegistrationOptions(options) });
                 const payload = {
                     id: credential.id,
                     rawId: bytesToBase64url(credential.rawId),
@@ -1263,33 +1113,24 @@ input:checked + .ios-slider:before {
                         transports: typeof credential.response.getTransports === 'function' ? credential.response.getTransports() : []
                     }
                 };
-                
                 const verifyResp = await fetch("{{ url_for('auth.passkey_register_verify') }}", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(payload)
                 });
-                
                 const verifyResult = await verifyResp.json();
-                if (verifyResult.status === "ok") {
-                    alert("Passkey registered successfully!");
-                    loadPasskeysList();
-                } else {
-                    alert(verifyResult.message || "Failed to verify passkey.");
-                }
+                if (verifyResult.status === "ok") { alert("Passkey registered!"); loadPasskeysList(); }
+                else alert(verifyResult.message || "Failed to verify.");
             } catch (err) {
                 console.error(err);
-                if (err.name !== "NotAllowedError") {
-                    alert("Registration failed: " + err.message);
-                }
+                if (err.name !== "NotAllowedError") alert("Registration failed: " + err.message);
             }
         });
     }
 
-    // Load registered passkeys on init
     loadPasskeysList();
 
-    // 3. Premium Expiration Countdown
+    // 4. Premium Expiration Countdown
     const expiryElement = document.getElementById("premium-expiry-date");
     const countdownElement = document.getElementById("premium-countdown");
     if (expiryElement && countdownElement) {

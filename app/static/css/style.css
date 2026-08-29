@@ -11749,3 +11749,69 @@ body.qb-dragging * {
         min-width: max-content !important;
     }
 }
+
+/* =========================================
+   UNIVERSAL CLEAN & PROFESSIONAL SAVE BUTTONS
+   ========================================= */
+.btn-save-clean,
+.btn-app-save {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: #ffffff !important;
+    font-size: 0.94rem;
+    font-weight: 700;
+    line-height: 1;
+    min-height: 44px;
+    padding: 0 24px;
+    border-radius: 12px;
+    border: 1px solid transparent;
+    box-shadow: 0 3px 10px rgba(37, 99, 235, 0.28);
+    cursor: pointer;
+    transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+    text-decoration: none !important;
+    user-select: none;
+    white-space: nowrap;
+}
+
+.btn-save-clean:hover,
+.btn-app-save:hover {
+    background: linear-gradient(135deg, #1d4ed8, #1e40af);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.38);
+    color: #ffffff !important;
+}
+
+.btn-save-clean:active,
+.btn-app-save:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.2);
+}
+
+.btn-save-clean:disabled,
+.btn-app-save:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.btn-save-clean.btn-emerald,
+.btn-save-emerald {
+    background: linear-gradient(135deg, #10b981, #059669);
+    box-shadow: 0 3px 10px rgba(16, 185, 129, 0.28);
+}
+
+.btn-save-clean.btn-emerald:hover,
+.btn-save-emerald:hover {
+    background: linear-gradient(135deg, #059669, #047857);
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.38);
+}
+
+.btn-save-clean.btn-block,
+.btn-app-save.btn-block {
+    width: 100%;
+}
+

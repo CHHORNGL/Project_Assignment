@@ -85,14 +85,14 @@
                     </div>
                 </div>
 
-                <div class="text-right mt-4">
-                    <button class="btn btn-admin px-4">
-                        {{ t("update") if is_edit else t("save") }} {{ t("fact") }}
-                    </button>
-                    <a href="{{ url_for('expert.mixed_agri_facts') }}"
-                       class="btn btn-secondary ml-2">
+                <div class="text-right mt-4 d-flex justify-content-end align-items-center" style="gap: 10px;">
+                    <a href="{{ url_for('expert.mixed_agri_facts') }}" class="btn btn-light border px-4 font-weight-bold" style="border-radius: 12px; min-height: 44px; display: inline-flex; align-items: center;">
                         {{ t("cancel") }}
                     </a>
+                    <button type="submit" class="btn-save-clean">
+                        <i class="fas fa-check"></i>
+                        <span>{{ t("update") if is_edit else t("save") }} {{ t("fact") }}</span>
+                    </button>
                 </div>
             </form>
         </div>

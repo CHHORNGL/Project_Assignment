@@ -99,31 +99,36 @@
     }
     
     .btn-modern {
-        padding: 10px 20px;
-        font-size: 0.9rem;
-        font-weight: 600;
-        border-radius: 8px;
+        padding: 10px 22px;
+        font-size: 0.92rem;
+        font-weight: 700;
+        border-radius: 12px;
         cursor: pointer;
-        transition: all 0.2s;
+        transition: all 0.18s ease;
         border: none;
         display: inline-flex;
         align-items: center;
         gap: 8px;
+        min-height: 44px;
+        text-decoration: none !important;
     }
     .btn-modern-primary {
-        background: var(--admin-accent, #10b981);
-        color: white;
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white !important;
+        box-shadow: 0 3px 10px rgba(16, 185, 129, 0.28);
     }
     .btn-modern-primary:hover {
-        background: #059669;
+        background: linear-gradient(135deg, #059669, #047857);
         transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(16, 185, 129, 0.38);
     }
     .btn-modern-secondary {
-        background: #e2e8f0;
-        color: #475569;
+        background: #f1f5f9;
+        color: #475569 !important;
+        border: 1px solid #cbd5e1;
     }
     .btn-modern-secondary:hover {
-        background: #cbd5e1;
+        background: #e2e8f0;
     }
 
     @media (max-width: 768px) {
