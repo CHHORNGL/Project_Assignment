@@ -17,6 +17,7 @@ try:
 except Exception:
     OpenAI = None
 
+from flask import current_app
 from flask_login import current_user
 from sqlalchemy.orm import joinedload
 
