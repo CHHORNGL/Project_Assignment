@@ -530,6 +530,9 @@ def generate_assistant_reply(user_message: str) -> Optional[str]:
                     reply_content = response.choices[0].message.content if response.choices and response.choices[0].message else ""
                 except Exception as e:
                     current_app.logger.error(f"Error calling OpenAI API: {e}")
+                    return f"⚠️ [System Diagnostic] OpenAI API Error in AWS: {str(e)}"
+            else:
+                return "⚠️ [System Diagnostic] No AI clients could be initialized. Please check that your API keys are saved in the Admin Settings panel on your AWS database."
         else:
             try:
                 response = client.models.generate_content(
@@ -543,6 +546,7 @@ def generate_assistant_reply(user_message: str) -> Optional[str]:
                 reply_content = response.text if response else ""
             except Exception as e:
                 current_app.logger.error(f"Error calling Gemini API: {e}")
+                return f"⚠️ [System Diagnostic] Gemini API Error in AWS: {str(e)}"
 
     if reply_content:
         reply_content = reply_content.strip()
@@ -550,6 +554,7 @@ def generate_assistant_reply(user_message: str) -> Optional[str]:
             tokens_used = (len(system_prompt) + len(user_prompt) + len(reply_content)) // 4
             current_user.ai_credits = max(0, current_user.ai_credits - tokens_used)
             try:
+                from app.extensions import db
                 db.session.commit()
             except:
                 db.session.rollback()
