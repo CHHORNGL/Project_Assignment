@@ -367,10 +367,23 @@ def create_app():
                 return normalize_display_text(value, lang=lang)
             return normalize_display_text(fallback or "", lang=lang)
 
+        def translate_symptoms(symptoms_str):
+            if not symptoms_str or get_current_language() != "km":
+                return symptoms_str
+            from flask import g
+            if not hasattr(g, 'symptom_kh_map'):
+                from app.models.symptom import Symptom
+                g.symptom_kh_map = {s.name.lower().strip(): s.name_kh for s in Symptom.query.all() if s.name and s.name_kh}
+            
+            names = [s.strip() for s in symptoms_str.split(',') if s.strip()]
+            translated = [g.symptom_kh_map.get(name.lower(), name) for name in names]
+            return ", ".join(translated)
+
         return {
             "t": t,
             "current_lang": get_current_language(),
             "localize": localize,
+            "translate_symptoms": translate_symptoms,
             "static_version": _static_version(),
         }
 

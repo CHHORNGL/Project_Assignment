@@ -1,4 +1,6 @@
-<!DOCTYPE html>
+import os
+
+register_html = """<!DOCTYPE html>
 <html lang="{{ current_lang }}">
 <head>
     <meta charset="UTF-8">
@@ -68,13 +70,13 @@
             {{ form.hidden_tag() }}
 
             <div class="auth-form-group">
-                <label for="name" class="auth-form-label">{{ form.full_name.label.text }}</label>
+                <label for="name" class="auth-form-label">{{ form.name.label.text }}</label>
                 <div class="auth-input-box">
                     <i class="fas fa-user auth-field-icon"></i>
-                    {{ form.full_name(class="auth-clean-input", placeholder=t("auth_name_placeholder")|default("Enter your full name"), id="name", autofocus=true) }}
+                    {{ form.name(class="auth-clean-input", placeholder=t("auth_name_placeholder")|default("Enter your full name"), id="name", autofocus=true) }}
                 </div>
-                {% for error in form.full_name.errors %}
-                    <div class="auth-field-error"><i class="fas fa-exclamation-circle"></i> {{ error }}</div>
+                {% for error in form.name.errors %}
+                    <div class="text-danger small mt-1"><i class="fas fa-exclamation-circle"></i> {{ error }}</div>
                 {% endfor %}
             </div>
 
@@ -85,26 +87,25 @@
                     {{ form.email(class="auth-clean-input", placeholder="example@gmail.com", autocomplete="email", id="register-email") }}
                 </div>
                 {% for error in form.email.errors %}
-                    <div class="auth-field-error"><i class="fas fa-exclamation-circle"></i> {{ error }}</div>
+                    <div class="text-danger small mt-1"><i class="fas fa-exclamation-circle"></i> {{ error }}</div>
                 {% endfor %}
             </div>
 
             <div class="auth-form-group">
                 <div class="auth-label-row">
-                    <label for="verification_code" class="auth-form-label">{{ form.verification_code.label.text }}</label>
+                    <label for="otp" class="auth-form-label">{{ form.otp.label.text }}</label>
                 </div>
-                <div class="auth-otp-row">
-                    <div class="auth-otp-input-box">
-                        <i class="fas fa-shield-alt auth-field-icon"></i>
-                        {{ form.verification_code(class="auth-clean-input", placeholder=t("auth_otp_placeholder")|default("Enter 6-digit code"), id="verification_code", maxlength="6", autocomplete="one-time-code") }}
+                <div class="d-flex" style="gap: 10px;">
+                    <div class="auth-input-box" style="flex: 1;">
+                        <i class="fas fa-key auth-field-icon"></i>
+                        {{ form.otp(class="auth-clean-input", placeholder=t("auth_otp_placeholder")|default("Enter 6-digit code"), id="otp") }}
                     </div>
-                    <button type="button" class="auth-send-code-btn" id="btn-send-otp">
-                        <i class="fas fa-paper-plane"></i>
-                        <span id="btn-send-otp-text">{{ t("auth_send_code")|default("Send Code") }}</span>
+                    <button type="button" class="btn btn-primary" id="btn-send-otp" style="border-radius: 12px; font-weight: 600; padding: 0 1.2rem;">
+                        {{ t("auth_send_code")|default("Send Code") }}
                     </button>
                 </div>
-                {% for error in form.verification_code.errors %}
-                    <div class="auth-field-error"><i class="fas fa-exclamation-circle"></i> {{ error }}</div>
+                {% for error in form.otp.errors %}
+                    <div class="text-danger small mt-1"><i class="fas fa-exclamation-circle"></i> {{ error }}</div>
                 {% endfor %}
             </div>
 
@@ -118,7 +119,7 @@
                     </button>
                 </div>
                 {% for error in form.password.errors %}
-                    <div class="auth-field-error"><i class="fas fa-exclamation-circle"></i> {{ error }}</div>
+                    <div class="text-danger small mt-1"><i class="fas fa-exclamation-circle"></i> {{ error }}</div>
                 {% endfor %}
             </div>
 
@@ -132,11 +133,11 @@
                     </button>
                 </div>
                 {% for error in form.confirm_password.errors %}
-                    <div class="auth-field-error"><i class="fas fa-exclamation-circle"></i> {{ error }}</div>
+                    <div class="text-danger small mt-1"><i class="fas fa-exclamation-circle"></i> {{ error }}</div>
                 {% endfor %}
             </div>
 
-            <button type="submit" class="auth-primary-btn" style="margin-top: 0.5rem;">
+            <button type="submit" class="auth-primary-btn" style="margin-top: 1rem;">
                 <i class="fas fa-user-plus mr-2"></i>
                 {{ form.submit.label.text }}
             </button>
@@ -215,27 +216,35 @@
     // Send OTP logic
     const btnSendOtp = document.getElementById("btn-send-otp");
     const emailInput = document.getElementById("register-email");
-    const isKhmer = "{{ current_lang }}" === "km";
-    
-    const txtSending = isKhmer ? "កំពុងផ្ញើ..." : "Sending...";
-    const txtSendCode = isKhmer ? "ផ្ញើលេខកូដ" : "Send Code";
-    const txtResendCode = isKhmer ? "ផ្ញើលេខកូដម្តងទៀត" : "Resend Code";
-    const txtInvalidEmail = isKhmer ? "សូមបញ្ចូលអាសយដ្ឋានអ៊ីមែលត្រឹមត្រូវជាមុនសិន។" : "Please enter a valid email address first.";
     
     if (btnSendOtp && emailInput) {
         btnSendOtp.addEventListener("click", function() {
             const email = emailInput.value.trim();
             if (!email || !email.includes("@")) {
-                if (window.Toast) window.Toast.warning(txtInvalidEmail);
-                else alert(txtInvalidEmail);
+                if(window.Toast) window.Toast.warning("Please enter a valid email address first.");
+                else alert("Please enter a valid email address first.");
                 emailInput.focus();
                 return;
             }
             
-            // Set loading state
+            // Start countdown
+            let timeLeft = 60;
             btnSendOtp.disabled = true;
-            btnSendOtp.classList.add("is-disabled");
-            btnSendOtp.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> <span>${txtSending}</span>`;
+            btnSendOtp.style.opacity = "0.7";
+            const originalText = btnSendOtp.innerText;
+            btnSendOtp.innerText = timeLeft + "s";
+            
+            const timer = setInterval(() => {
+                timeLeft--;
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    btnSendOtp.disabled = false;
+                    btnSendOtp.style.opacity = "1";
+                    btnSendOtp.innerText = "Resend Code";
+                } else {
+                    btnSendOtp.innerText = timeLeft + "s";
+                }
+            }, 1000);
             
             // Make AJAX request
             fetch("/auth/send-register-otp", {
@@ -248,36 +257,23 @@
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    if (window.Toast) window.Toast.success(data.message);
-                    // Start countdown
-                    let timeLeft = 60;
-                    btnSendOtp.innerHTML = `<i class="fas fa-clock"></i> <span>${timeLeft}s</span>`;
-                    
-                    const timer = setInterval(() => {
-                        timeLeft--;
-                        if (timeLeft <= 0) {
-                            clearInterval(timer);
-                            btnSendOtp.disabled = false;
-                            btnSendOtp.classList.remove("is-disabled");
-                            btnSendOtp.innerHTML = `<i class="fas fa-redo-alt"></i> <span>${txtResendCode}</span>`;
-                        } else {
-                            btnSendOtp.innerHTML = `<i class="fas fa-clock"></i> <span>${timeLeft}s</span>`;
-                        }
-                    }, 1000);
+                    if(window.Toast) window.Toast.success(data.message);
                 } else {
-                    if (window.Toast) window.Toast.error(data.message || "Failed to send code.");
+                    if(window.Toast) window.Toast.error(data.message || "Failed to send code.");
                     else alert(data.message || "Failed to send code.");
+                    clearInterval(timer);
                     btnSendOtp.disabled = false;
-                    btnSendOtp.classList.remove("is-disabled");
-                    btnSendOtp.innerHTML = `<i class="fas fa-paper-plane"></i> <span>${txtSendCode}</span>`;
+                    btnSendOtp.style.opacity = "1";
+                    btnSendOtp.innerText = "Send Code";
                 }
             })
             .catch(err => {
                 console.error(err);
-                if (window.Toast) window.Toast.error("An error occurred. Please try again.");
+                if(window.Toast) window.Toast.error("An error occurred.");
+                clearInterval(timer);
                 btnSendOtp.disabled = false;
-                btnSendOtp.classList.remove("is-disabled");
-                btnSendOtp.innerHTML = `<i class="fas fa-paper-plane"></i> <span>${txtSendCode}</span>`;
+                btnSendOtp.style.opacity = "1";
+                btnSendOtp.innerText = "Send Code";
             });
         });
     }
@@ -285,3 +281,9 @@
 </script>
 </body>
 </html>
+"""
+
+with open("app/templates/auth/register.html", "w") as f:
+    f.write(register_html)
+
+print("register.html rewritten successfully!")

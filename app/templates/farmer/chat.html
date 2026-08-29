@@ -2,108 +2,533 @@
 {% block title %}{{ t("ask_expert") }}{% endblock %}
 
 {% block content %}
-<div class="farmer-chat-container">
+<style>
+/* ==========================================================================
+   V0 AI CHAT & ASK EXPERT MODERN UI
+   ========================================================================== */
+.v0-chat-wrapper {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+    height: 100%;
+    min-height: calc(100vh - 160px);
+}
+
+/* Empty State Container */
+.v0-empty-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 3rem 1.5rem 2rem;
+    margin: auto 0;
+    width: 100%;
+}
+
+.v0-empty-title {
+    font-family: "Space Grotesk", "Kantumruy Pro", sans-serif;
+    font-size: clamp(2rem, 4.5vw, 2.75rem);
+    font-weight: 700;
+    color: var(--text-main, #09090b);
+    margin-bottom: 0.75rem;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+}
+
+.v0-empty-sub {
+    color: var(--text-muted, #71717a);
+    font-size: 1.05rem;
+    max-width: 580px;
+    margin-bottom: 2rem;
+    line-height: 1.55;
+}
+
+/* Quick Action Suggestion Buttons */
+.v0-action-pills {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    margin-top: 1.5rem;
+    max-width: 780px;
+}
+
+.v0-action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem 1.15rem;
+    background: #ffffff;
+    border: 1px solid #e4e4e7;
+    border-radius: 999px;
+    color: #52525b;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.v0-action-btn:hover {
+    background: #f4f4f5;
+    color: #09090b;
+    border-color: #d4d4d8;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+}
+
+.dark-mode .v0-action-btn {
+    background: #18181b;
+    border-color: #27272a;
+    color: #a1a1aa;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.dark-mode .v0-action-btn:hover {
+    background: #27272a;
+    border-color: #3f3f46;
+    color: #ffffff;
+}
+
+/* Chat Messages Layout */
+.v0-messages-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    padding: 1.5rem 1rem 2rem;
+    max-width: 860px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.v0-msg-row {
+    display: flex;
+    width: 100%;
+}
+
+.v0-msg-user {
+    justify-content: flex-end;
+}
+
+.v0-bubble-user {
+    max-width: min(85%, 600px);
+    background: #09090b;
+    color: #f4f4f5;
+    padding: 0.85rem 1.25rem;
+    border-radius: 20px 20px 4px 20px;
+    font-size: 0.95rem;
+    line-height: 1.55;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+}
+
+.dark-mode .v0-bubble-user {
+    background: #27272a;
+    border: 1px solid #3f3f46;
+    color: #ffffff;
+}
+
+.v0-msg-expert {
+    justify-content: flex-start;
+    gap: 0.75rem;
+}
+
+.v0-expert-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+    border: 1.5px solid #e4e4e7;
+    margin-top: 2px;
+}
+
+.v0-expert-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.v0-bubble-expert {
+    max-width: min(88%, 680px);
+    background: #ffffff;
+    border: 1px solid #e4e4e7;
+    padding: 1rem 1.35rem;
+    border-radius: 4px 20px 20px 20px;
+    color: #09090b;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+}
+
+.dark-mode .v0-bubble-expert {
+    background: #18181b;
+    border-color: #27272a;
+    color: #f4f4f5;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+.v0-bubble-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.4rem;
+    font-size: 0.78rem;
+    color: #71717a;
+    font-weight: 600;
+}
+
+.v0-bubble-expert-badge {
+    background: rgba(16, 185, 129, 0.12);
+    color: #10b981;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+
+/* ==========================================================================
+   V0 COMPOSER BOX (Inspired by v0-ai-chat.tsx)
+   ========================================================================== */
+.v0-composer-card {
+    position: relative;
+    width: 100%;
+    max-width: 860px;
+    margin: 0 auto;
+    background: #ffffff;
+    border: 1.5px solid #e4e4e7;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    overflow: hidden;
+}
+
+.dark-mode .v0-composer-card {
+    background: #18181b;
+    border-color: #27272a;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+.v0-composer-card:focus-within {
+    border-color: #a1a1aa;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.1);
+}
+
+.dark-mode .v0-composer-card:focus-within {
+    border-color: #52525b;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
+}
+
+.v0-textarea-container {
+    width: 100%;
+    padding: 0.85rem 1.15rem 0.25rem;
+}
+
+.v0-chat-textarea {
+    width: 100%;
+    min-height: 52px;
+    max-height: 180px;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    font-family: inherit;
+    color: #09090b;
+    resize: none;
+    padding: 0;
+    box-shadow: none;
+}
+
+.dark-mode .v0-chat-textarea {
+    color: #f4f4f5;
+}
+
+.v0-chat-textarea::placeholder {
+    color: #a1a1aa;
+    font-size: 0.93rem;
+}
+
+/* Bottom Controls Bar */
+.v0-composer-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.6rem 0.85rem 0.75rem;
+    gap: 0.5rem;
+}
+
+.v0-toolbar-left,
+.v0-toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.v0-tool-btn {
+    appearance: none;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.4rem 0.65rem;
+    border-radius: 8px;
+    color: #71717a;
+    font-size: 0.82rem;
+    font-weight: 500;
+    transition: all 0.15s ease;
+}
+
+.v0-tool-btn:hover {
+    background: #f4f4f5;
+    color: #09090b;
+}
+
+.dark-mode .v0-tool-btn:hover {
+    background: #27272a;
+    color: #ffffff;
+}
+
+.v0-context-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.3rem 0.75rem;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border: 1px dashed #d4d4d8;
+    color: #52525b;
+    background: #fafafa;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.dark-mode .v0-context-badge {
+    border-color: #3f3f46;
+    color: #a1a1aa;
+    background: #27272a;
+}
+
+.v0-context-badge:hover {
+    border-color: #a1a1aa;
+    color: #09090b;
+}
+
+.dark-mode .v0-context-badge:hover {
+    border-color: #52525b;
+    color: #ffffff;
+}
+
+/* Send Button */
+.v0-send-btn {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    border-radius: 10px;
+    border: 1px solid #e4e4e7;
+    background: #f4f4f5;
+    color: #a1a1aa;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    outline: none;
+}
+
+.dark-mode .v0-send-btn {
+    border-color: #27272a;
+    background: #27272a;
+    color: #71717a;
+}
+
+.v0-send-btn.has-input {
+    background: #09090b !important;
+    border-color: #09090b !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    transform: scale(1.02);
+}
+
+.dark-mode .v0-send-btn.has-input {
+    background: #ffffff !important;
+    border-color: #ffffff !important;
+    color: #09090b !important;
+    box-shadow: 0 4px 14px rgba(255, 255, 255, 0.25);
+}
+
+.v0-send-btn:hover.has-input {
+    transform: scale(1.06);
+}
+</style>
+
+<div class="v0-chat-wrapper">
     {% if messages and messages|length > 0 %}
-        <div class="farmer-chat-messages">
+        <!-- CHAT THREAD MESSAGES -->
+        <div class="v0-messages-list">
         {% for m in messages %}
             {% if m.sender == "farmer" %}
                 <!-- USER MESSAGE -->
-                <div class="farmer-msg-row farmer-msg-row-user">
-                    <div class="farmer-bubble-user">
-                        <div class="farmer-bubble-text">{{ m.message }}</div>
+                <div class="v0-msg-row v0-msg-user">
+                    <div class="v0-bubble-user">
+                        <div>{{ m.message }}</div>
                         {% if m.created_at %}
-                        <div class="farmer-msg-time">{{ m.created_at.strftime('%H:%M') }}</div>
+                        <div style="font-size: 0.72rem; opacity: 0.65; text-align: right; margin-top: 4px;">
+                            {{ m.created_at.strftime('%H:%M') }}
+                        </div>
                         {% endif %}
                     </div>
                 </div>
             {% else %}
                 <!-- EXPERT / AI MESSAGE -->
-                <div class="farmer-msg-row farmer-msg-row-expert">
-                    <div class="farmer-expert-avatar">
+                <div class="v0-msg-row v0-msg-expert">
+                    <div class="v0-expert-avatar">
                         <img src="{{ url_for('static', filename='img/logo.jpg') }}" alt="Expert">
                     </div>
-                    <div class="farmer-bubble-expert">
-                        <div class="farmer-expert-name-badge">
-                            <span class="farmer-expert-badge-title">{{ t("farmer_expert") }}</span>
+                    <div class="v0-bubble-expert">
+                        <div class="v0-bubble-meta">
+                            <span class="v0-bubble-expert-badge">{{ t("farmer_expert") }}</span>
                             {% if m.created_at %}
-                            <span class="farmer-msg-time">{{ m.created_at.strftime('%H:%M') }}</span>
+                            <span>{{ m.created_at.strftime('%H:%M') }}</span>
                             {% endif %}
                         </div>
-                        <div class="farmer-bubble-text">{{ m.message | safe }}</div>
+                        <div class="v0-bubble-text">{{ m.message | safe }}</div>
                     </div>
                 </div>
             {% endif %}
         {% endfor %}
         </div>
     {% else %}
-        <!-- EMPTY STATE WITH SUGGESTIONS -->
-        <div class="farmer-chat-empty-state">
-            <div class="farmer-empty-icon-wrap">
-                <i class="fas fa-comments"></i>
-            </div>
-            <h4 class="farmer-empty-title">{{ t("ask_expert_title") }}</h4>
-            <p class="farmer-empty-sub">{{ t("ask_expert_sub") }}</p>
+        <!-- V0 EMPTY STATE HERO -->
+        <div class="v0-empty-container">
+            <h1 class="v0-empty-title">
+                {% if current_lang == 'km' %}
+                    តើខ្ញុំអាចជួយអ្វីដល់ដំណាំរបស់អ្នក?
+                {% else %}
+                    What can I help you diagnose?
+                {% endif %}
+            </h1>
+            <p class="v0-empty-sub">
+                {{ t("ask_expert_sub")|default("Ask about crop diseases, pest controls, seasonal planting schedules, or weather risks.") }}
+            </p>
 
-            <div class="farmer-quick-suggestions">
-                <div class="farmer-suggestions-label">
-                    <i class="fas fa-lightbulb text-warning mr-1"></i> {{ t("quick_actions") }}
-                </div>
-                <div class="farmer-suggestion-chips">
-                    <button type="button" class="farmer-suggestion-chip" data-prompt="{{ t('suggestion_rice_blast') }}">
-                        {{ t("suggestion_rice_blast") }}
-                    </button>
-                    <button type="button" class="farmer-suggestion-chip" data-prompt="{{ t('suggestion_tomato_curl') }}">
-                        {{ t("suggestion_tomato_curl") }}
-                    </button>
-                    <button type="button" class="farmer-suggestion-chip" data-prompt="{{ t('suggestion_pest_control') }}">
-                        {{ t("suggestion_pest_control") }}
-                    </button>
-                    <button type="button" class="farmer-suggestion-chip" data-prompt="{{ t('suggestion_dry_season') }}">
-                        {{ t("suggestion_dry_season") }}
-                    </button>
-                </div>
+            <!-- Quick Suggestion Buttons -->
+            <div class="v0-action-pills">
+                <button type="button" class="v0-action-btn" data-prompt="{{ t('suggestion_rice_blast') }}">
+                    <i class="fas fa-leaf text-success"></i>
+                    <span>{{ t("suggestion_rice_blast")|default("🌾 Rice Blast Diagnosis") }}</span>
+                </button>
+                <button type="button" class="v0-action-btn" data-prompt="{{ t('suggestion_tomato_curl') }}">
+                    <i class="fas fa-virus text-warning"></i>
+                    <span>{{ t("suggestion_tomato_curl")|default("🍅 Tomato Leaf Curl") }}</span>
+                </button>
+                <button type="button" class="v0-action-btn" data-prompt="{{ t('suggestion_pest_control') }}">
+                    <i class="fas fa-bug text-danger"></i>
+                    <span>{{ t("suggestion_pest_control")|default("🐛 Pest & Caterpillar") }}</span>
+                </button>
+                <button type="button" class="v0-action-btn" data-prompt="{{ t('suggestion_dry_season') }}">
+                    <i class="fas fa-tint text-primary"></i>
+                    <span>{{ t("suggestion_dry_season")|default("🧪 Soil & Fertilizer") }}</span>
+                </button>
+                <button type="button" class="v0-action-btn" data-prompt="How does today's weather affect crop disease risks?">
+                    <i class="fas fa-cloud-sun text-info"></i>
+                    <span>🌦️ Weather Risks</span>
+                </button>
             </div>
         </div>
     {% endif %}
 </div>
-
-<script>
-(function () {
-    const chips = document.querySelectorAll(".farmer-suggestion-chip");
-    const input = document.getElementById("farmer-chat-input");
-    if (!chips.length || !input) return;
-
-    chips.forEach(chip => {
-        chip.addEventListener("click", () => {
-            const prompt = chip.getAttribute("data-prompt") || chip.textContent.trim();
-            if (prompt) {
-                input.value = prompt;
-                input.focus();
-                const end = input.value.length;
-                try {
-                    input.setSelectionRange(end, end);
-                } catch (e) {}
-            }
-        });
-    });
-})();
-</script>
 {% endblock %}
 
 
 {% block input %}
-<form method="POST" class="farmer-chat-form" id="farmer-chat-form">
-    <div class="farmer-chat-input-box">
-        <input type="text"
-               name="message"
-               id="farmer-chat-input"
-               class="farmer-chat-input-field"
-               placeholder="{{ t('ask_expert_placeholder') }}"
-               autocomplete="off"
-               required>
-        <button type="submit" class="farmer-chat-submit-btn" id="farmer-chat-submit-btn" aria-label="{{ t('send') }}" title="{{ t('send') }}">
-            <i class="fas fa-arrow-up"></i>
-        </button>
+<!-- V0 AI CHAT COMPOSER -->
+<form method="POST" class="w-100" id="farmer-chat-form">
+    <div class="v0-composer-card">
+        <div class="v0-textarea-container">
+            <textarea
+                name="message"
+                id="farmer-chat-input"
+                class="v0-chat-textarea"
+                placeholder="{{ t('ask_expert_placeholder')|default('Ask Agri Expert a question... (Enter to send, Shift+Enter for new line)') }}"
+                rows="1"
+                required
+                autocomplete="off"></textarea>
+        </div>
+
+        <div class="v0-composer-toolbar">
+            <div class="v0-toolbar-left">
+                <button type="button" class="v0-context-badge" id="btn-quick-context" title="Smart Assistant Context">
+                    <i class="fas fa-seedling text-success"></i>
+                    <span>Smart Expert</span>
+                </button>
+            </div>
+
+            <div class="v0-toolbar-right">
+                <button type="submit" class="v0-send-btn" id="v0-send-btn" aria-label="{{ t('send') }}" title="{{ t('send') }}">
+                    <i class="fas fa-arrow-up"></i>
+                </button>
+            </div>
+        </div>
     </div>
 </form>
+
+<script>
+(function () {
+    const textarea = document.getElementById("farmer-chat-input");
+    const sendBtn = document.getElementById("v0-send-btn");
+    const form = document.getElementById("farmer-chat-form");
+    const suggestionChips = document.querySelectorAll(".v0-action-btn");
+
+    if (!textarea) return;
+
+    // Auto-resize logic (min 52px, max 180px)
+    function autoResize() {
+        textarea.style.height = "auto";
+        const newHeight = Math.min(Math.max(textarea.scrollHeight, 52), 180);
+        textarea.style.height = newHeight + "px";
+
+        // Update send button active state
+        if (textarea.value.trim().length > 0) {
+            sendBtn.classList.add("has-input");
+        } else {
+            sendBtn.classList.remove("has-input");
+        }
+    }
+
+    textarea.addEventListener("input", autoResize);
+
+    // Keyboard submit on Enter (without Shift)
+    textarea.addEventListener("keydown", function(e) {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            if (textarea.value.trim().length > 0 && form) {
+                form.submit();
+            }
+        }
+    });
+
+    // Handle suggestion chips click
+    suggestionChips.forEach(btn => {
+        btn.addEventListener("click", function() {
+            const prompt = this.getAttribute("data-prompt");
+            if (prompt) {
+                textarea.value = prompt;
+                autoResize();
+                textarea.focus();
+            }
+        });
+    });
+
+    // Initial resize on load
+    autoResize();
+})();
+</script>
 {% endblock %}

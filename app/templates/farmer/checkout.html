@@ -1,677 +1,727 @@
 {% extends layout_shell|default("layouts/farmer_shell.html") %}
 
-{% block title %}{{ t("secure_checkout") }} | Agri System Premium{% endblock %}
+{% block title %}{{ t("secure_checkout")|default("Secure Checkout") }} | Agri System Pro{% endblock %}
 
 {% block content %}
 <style>
-    /* =========================================
-       CLEAN SAAS SECURE CHECKOUT RESPONSIVE STYLES
-       ========================================= */
-    .checkout-page-container {
-        max-width: 1040px;
-        margin: 0 auto;
-        padding: 1.5rem 1rem 3.5rem;
-        width: 100%;
-        box-sizing: border-box;
+    /* ==========================================================================
+       PROFESSIONAL SAAS SECURE CHECKOUT (Coherent with Plans & Pricing)
+       ========================================================================== */
+    :root {
+        --checkout-container-bg: #f4f4f5;
+        --checkout-border-subtle: #e4e4e7;
+        --checkout-accent-green: #10b981;
+        --checkout-accent-blue: #3b82f6;
     }
 
-    /* Header & Back Link */
-    .checkout-top-nav {
-        margin-bottom: 1.25rem;
+    .dark-mode, html.auth-panel-dark {
+        --checkout-container-bg: #18181b;
+        --checkout-border-subtle: #27272a;
+    }
+
+    .checkout-page-wrapper {
+        max-width: 1160px;
+        margin: 0 auto;
+        padding: 2rem 1rem 5rem;
+    }
+
+    /* Top Navigation Bar */
+    .checkout-nav-bar {
         display: flex;
         align-items: center;
         justify-content: space-between;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
     }
 
-    .checkout-back-link {
+    .checkout-back-btn {
         display: inline-flex;
         align-items: center;
         gap: 0.5rem;
-        font-size: 0.88rem;
+        color: var(--text-muted, #71717a);
+        font-size: 0.9rem;
         font-weight: 600;
-        color: var(--text-muted, #64748b);
         text-decoration: none;
-        padding: 0.45rem 0.85rem;
-        min-height: 38px;
-        border-radius: 10px;
+        padding: 0.5rem 1rem;
+        border-radius: 999px;
         background: var(--card-bg, #ffffff);
-        border: 1px solid var(--border-light, #e2e8f0);
+        border: 1px solid var(--border-light, #e4e4e7);
         transition: all 0.2s ease;
     }
 
-    .checkout-back-link:hover {
-        color: #2563eb;
-        border-color: #3b82f6;
-        text-decoration: none;
+    .checkout-back-btn:hover {
+        color: #09090b;
+        border-color: #cbd5e1;
         transform: translateX(-3px);
+        text-decoration: none;
     }
 
-    .checkout-page-header {
-        margin-bottom: 1.75rem;
+    .dark-mode .checkout-back-btn:hover {
+        color: #f4f4f5;
+        border-color: #3f3f46;
+    }
+
+    .checkout-security-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        padding: 0.45rem 1rem;
+        border-radius: 999px;
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+        border: 1px solid rgba(16, 185, 129, 0.25);
+    }
+
+    /* Header Section */
+    .checkout-header-section {
+        margin-bottom: 2.25rem;
+        text-align: left;
     }
 
     .checkout-main-title {
-        font-size: clamp(1.4rem, 4vw, 1.85rem);
-        font-weight: 800;
-        color: var(--text-main, #1e293b);
-        margin: 0 0 0.35rem;
+        font-family: "Space Grotesk", "Kantumruy Pro", sans-serif;
+        font-size: clamp(2rem, 4vw, 2.75rem);
+        font-weight: 700;
+        color: var(--text-main, #09090b);
+        margin: 0 0 0.5rem 0;
+        letter-spacing: -0.025em;
+        line-height: 1.2;
         display: flex;
         align-items: center;
-        gap: 0.6rem;
+        gap: 0.75rem;
         flex-wrap: wrap;
-        line-height: 1.25;
     }
 
-    .checkout-subtitle {
-        font-size: clamp(0.85rem, 2.5vw, 0.95rem);
-        color: var(--text-muted, #64748b);
+    .checkout-main-subtitle {
+        color: var(--text-muted, #71717a);
+        font-size: 1.05rem;
+        line-height: 1.55;
         margin: 0;
-        line-height: 1.5;
+        max-width: 640px;
     }
 
-    /* Main Checkout Grid: Order Summary Left (First), Payment Right (Second) */
-    .checkout-main-grid {
+    /* 2-Column Responsive Container */
+    .checkout-layout-grid {
         display: grid;
         grid-template-columns: 1fr;
-        gap: 1.25rem;
+        gap: 1.5rem;
         align-items: start;
-        width: 100%;
     }
 
     @media (min-width: 992px) {
-        .checkout-main-grid {
+        .checkout-layout-grid {
             grid-template-columns: 1.15fr 1fr;
-            gap: 1.75rem;
+            gap: 2rem;
         }
     }
 
     /* Card Panels */
-    .checkout-panel {
+    .checkout-card {
         background: var(--card-bg, #ffffff);
-        border: 1px solid var(--border-light, #e2e8f0);
-        border-radius: 18px;
-        padding: 1.5rem;
-        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.03);
-        width: 100%;
-        box-sizing: border-box;
+        border: 1px solid var(--border-light, #e4e4e7);
+        border-radius: 24px;
+        padding: 1.75rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+        position: relative;
     }
 
-    @media (min-width: 768px) {
-        .checkout-panel {
-            padding: 1.75rem;
-            border-radius: 20px;
-        }
+    .dark-mode .checkout-card {
+        background: #18181b;
+        border-color: #27272a;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
     }
 
-    .dark-mode .checkout-panel {
-        background: #1e293b;
-        border-color: #334155;
-        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25);
-    }
-
-    .checkout-panel-title {
-        font-size: 1.12rem;
-        font-weight: 800;
-        color: var(--text-main, #1e293b);
-        margin: 0 0 1.25rem;
-        padding-bottom: 0.85rem;
-        border-bottom: 1px solid var(--border-light, #e2e8f0);
+    .checkout-card-header {
         display: flex;
         align-items: center;
         justify-content: space-between;
+        padding-bottom: 1.25rem;
+        margin-bottom: 1.5rem;
+        border-bottom: 1px solid var(--border-light, #e4e4e7);
         flex-wrap: wrap;
-        gap: 0.5rem;
+        gap: 0.75rem;
     }
 
-    .dark-mode .checkout-panel-title {
-        color: #f1f5f9;
-        border-bottom-color: #334155;
+    .dark-mode .checkout-card-header {
+        border-bottom-color: #27272a;
     }
 
-    /* Plan Header Box inside Summary */
-    .order-plan-card {
-        background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(37, 99, 235, 0.04));
-        border: 1px solid rgba(59, 130, 246, 0.25);
-        border-radius: 14px;
-        padding: 1rem;
-        margin-bottom: 1.25rem;
-    }
-
-    @media (min-width: 768px) {
-        .order-plan-card {
-            padding: 1.15rem;
-        }
-    }
-
-    .dark-mode .order-plan-card {
-        background: linear-gradient(135deg, rgba(59, 130, 246, 0.14), rgba(37, 99, 235, 0.08));
-        border-color: rgba(59, 130, 246, 0.35);
-    }
-
-    .order-plan-top {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-        margin-bottom: 0.5rem;
-    }
-
-    .order-plan-name {
-        font-size: clamp(1rem, 3vw, 1.15rem);
-        font-weight: 800;
-        color: #2563eb;
-        display: flex;
-        align-items: center;
-        gap: 0.4rem;
-    }
-
-    .dark-mode .order-plan-name {
-        color: #60a5fa;
-    }
-
-    .order-plan-period {
-        font-size: 0.75rem;
+    .checkout-card-title {
+        font-family: "Space Grotesk", "Kantumruy Pro", sans-serif;
+        font-size: 1.25rem;
         font-weight: 700;
-        background: rgba(59, 130, 246, 0.15);
-        color: #2563eb;
-        padding: 0.25rem 0.65rem;
-        border-radius: 50px;
-        white-space: nowrap;
+        color: var(--text-main, #09090b);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        letter-spacing: -0.01em;
     }
 
-    .dark-mode .order-plan-period {
-        background: rgba(59, 130, 246, 0.25);
-        color: #93c5fd;
+    /* Hero Plan Preview Card (Matching Pro Farmer Card) */
+    .order-hero-plan {
+        background: linear-gradient(180deg, #18181b 0%, #09090b 100%);
+        border: 1.5px solid #27272a;
+        border-radius: 20px;
+        padding: 1.5rem;
+        color: #ffffff;
+        margin-bottom: 1.75rem;
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+        position: relative;
     }
 
-    .order-plan-perks {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 0.4rem 0.75rem;
-        font-size: 0.82rem;
-        color: var(--text-main, #334155);
-        margin-top: 0.6rem;
+    .order-plan-top-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 0.75rem;
+        flex-wrap: wrap;
+        gap: 0.5rem;
     }
 
-    @media (min-width: 480px) {
-        .order-plan-perks {
-            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-        }
+    .order-plan-badge {
+        background: #3f3f46;
+        color: #ffffff;
+        padding: 3px 10px;
+        border-radius: 999px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        border: 1px solid #52525b;
     }
 
-    .dark-mode .order-plan-perks {
-        color: #cbd5e1;
+    .order-plan-title {
+        font-family: "Space Grotesk", "Kantumruy Pro", sans-serif;
+        font-size: 1.35rem;
+        font-weight: 700;
+        margin: 0 0 0.5rem 0;
+        color: #ffffff;
     }
 
-    .order-plan-perks span {
+    .order-plan-interval-pill {
         display: inline-flex;
         align-items: center;
         gap: 0.35rem;
+        padding: 2px 9px;
+        border-radius: 999px;
+        background: rgba(59, 130, 246, 0.2);
+        color: #93c5fd;
+        font-size: 0.75rem;
+        font-weight: 700;
+        border: 1px solid rgba(59, 130, 246, 0.35);
     }
 
-    /* Breakdown Rows */
-    .breakdown-row {
+    .order-plan-features {
+        list-style: none;
+        padding: 0;
+        margin: 0.85rem 0 0 0;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+        border-top: 1px solid #27272a;
+        padding-top: 0.85rem;
+    }
+
+    @media (min-width: 480px) {
+        .order-plan-features {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    .order-plan-feature-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.835rem;
+        color: #d4d4d8;
+        font-weight: 500;
+    }
+
+    .order-feature-check {
+        width: 18px;
+        height: 18px;
+        border-radius: 999px;
+        background: #27272a;
+        border: 1px solid #52525b;
+        color: #ffffff;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.65rem;
+        flex-shrink: 0;
+    }
+
+    /* Financial Breakdown Rows */
+    .pricing-breakdown-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .breakdown-line {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        font-size: 0.92rem;
-        color: var(--text-main, #334155);
-        margin-bottom: 0.65rem;
-        gap: 0.5rem;
-        word-break: break-word;
+        font-size: 0.935rem;
+        color: var(--text-main, #3f3f46);
     }
 
-    .dark-mode .breakdown-row {
-        color: #cbd5e1;
+    .dark-mode .breakdown-line {
+        color: #d4d4d8;
     }
 
-    .breakdown-row.muted {
-        color: var(--text-muted, #64748b);
-        font-size: 0.88rem;
+    .breakdown-line.is-muted {
+        color: #71717a;
+        font-size: 0.9rem;
     }
 
-    .dark-mode .breakdown-row.muted {
-        color: #94a3b8;
+    .dark-mode .breakdown-line.is-muted {
+        color: #a1a1aa;
     }
 
-    .breakdown-row.discount {
+    .breakdown-line.is-discount {
         color: #10b981;
         font-weight: 600;
     }
 
-    .dark-mode .breakdown-row.discount {
-        color: #34d399;
-    }
-
-    .breakdown-divider {
+    .breakdown-divider-line {
         height: 1px;
-        background: var(--border-light, #e2e8f0);
-        margin: 1rem 0;
+        background: var(--border-light, #e4e4e7);
+        margin: 0.5rem 0;
     }
 
-    .dark-mode .breakdown-divider {
-        background: #334155;
+    .dark-mode .breakdown-divider-line {
+        background: #27272a;
     }
 
-    .breakdown-total {
+    .breakdown-total-box {
         display: flex;
         justify-content: space-between;
         align-items: baseline;
-        margin-top: 0.5rem;
-        gap: 0.5rem;
-        flex-wrap: wrap;
+        padding-top: 0.5rem;
     }
 
     .breakdown-total-label {
-        font-size: 1.05rem;
-        font-weight: 800;
-        color: var(--text-main, #1e293b);
+        font-family: "Space Grotesk", "Kantumruy Pro", sans-serif;
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: var(--text-main, #09090b);
     }
 
-    .dark-mode .breakdown-total-label {
-        color: #f1f5f9;
+    .breakdown-total-val {
+        font-family: "Space Grotesk", "Kantumruy Pro", sans-serif;
+        font-size: clamp(1.8rem, 3.5vw, 2.25rem);
+        font-weight: 700;
+        color: var(--text-main, #09090b);
+        letter-spacing: -0.02em;
     }
 
-    .breakdown-total-price {
-        font-size: clamp(1.5rem, 5vw, 1.85rem);
-        font-weight: 800;
-        color: #2563eb;
+    .dark-mode .breakdown-total-val {
+        color: #ffffff;
     }
 
-    .dark-mode .breakdown-total-price {
-        color: #60a5fa;
+    /* Coupon Input Section */
+    .coupon-box-modern {
+        background: var(--surface-muted, #f4f4f5);
+        border: 1px solid var(--border-light, #e4e4e7);
+        border-radius: 16px;
+        padding: 1.15rem;
+        margin-top: 1.5rem;
     }
 
-    /* Coupon Box */
-    .checkout-coupon-section {
-        margin-top: 1.25rem;
-        padding-top: 1.15rem;
-        border-top: 1px solid var(--border-light, #e2e8f0);
+    .dark-mode .coupon-box-modern {
+        background: #09090b;
+        border-color: #27272a;
     }
 
-    .dark-mode .checkout-coupon-section {
-        border-top-color: #334155;
+    .coupon-label-text {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: var(--text-main, #09090b);
+        margin-bottom: 0.5rem;
+        display: block;
     }
 
-    .coupon-field-group {
+    .coupon-input-group {
         display: flex;
         gap: 0.5rem;
-        margin-top: 0.4rem;
-        width: 100%;
     }
 
-    .coupon-field-input {
+    .coupon-text-field {
         flex: 1;
         min-width: 0;
-        background: var(--input-bg, #ffffff);
-        border: 1px solid var(--border-light, #e2e8f0);
-        color: var(--text-main, #1e293b);
+        height: 42px;
+        padding: 0 1rem;
         border-radius: 10px;
-        padding: 0.55rem 0.85rem;
-        min-height: 42px;
-        font-size: 0.9rem;
+        border: 1px solid var(--border-light, #e4e4e7);
+        background: var(--card-bg, #ffffff);
+        color: var(--text-main, #09090b);
         font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
-        box-sizing: border-box;
-    }
-
-    .dark-mode .coupon-field-input {
-        background: #0f172a;
-        border-color: #334155;
-        color: #f8fafc;
-    }
-
-    .coupon-field-input:focus {
-        outline: none;
-        border-color: #3b82f6;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
-    }
-
-    .coupon-field-btn {
-        background: var(--card-bg, #ffffff);
-        border: 1.5px solid #3b82f6;
-        color: #3b82f6;
-        font-weight: 700;
         font-size: 0.88rem;
-        padding: 0.55rem 1.15rem;
-        min-height: 42px;
+        letter-spacing: 0.05em;
+        outline: none;
+        transition: border-color 0.2s ease;
+    }
+
+    .dark-mode .coupon-text-field {
+        background: #18181b;
+        border-color: #27272a;
+        color: #ffffff;
+    }
+
+    .coupon-text-field:focus {
+        border-color: #09090b;
+    }
+
+    .dark-mode .coupon-text-field:focus {
+        border-color: #71717a;
+    }
+
+    .coupon-action-btn {
+        height: 42px;
+        padding: 0 1.25rem;
         border-radius: 10px;
+        border: 1px solid #09090b;
+        background: #09090b;
+        color: #ffffff;
+        font-weight: 600;
+        font-size: 0.88rem;
         cursor: pointer;
         transition: all 0.2s ease;
-        flex-shrink: 0;
         display: inline-flex;
         align-items: center;
         justify-content: center;
     }
 
-    .dark-mode .coupon-field-btn {
-        background: #1e293b;
-        color: #60a5fa;
-        border-color: #60a5fa;
+    .dark-mode .coupon-action-btn {
+        background: #ffffff;
+        color: #09090b;
+        border-color: #ffffff;
     }
 
-    .coupon-field-btn:hover {
-        background: #3b82f6;
-        color: #ffffff;
+    .coupon-action-btn:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
     }
 
-    .dark-mode .coupon-field-btn:hover {
-        background: #2563eb;
-        color: #ffffff;
-    }
-
-    .coupon-remove-link {
-        background: none;
+    .coupon-remove-btn {
+        background: transparent;
         border: none;
         color: #ef4444;
         cursor: pointer;
-        font-size: 0.85rem;
-        padding: 4px 6px;
-        margin-left: 0.35rem;
-        display: inline-flex;
+        padding: 0 4px;
+        margin-left: 6px;
+        font-size: 0.9rem;
+    }
+
+    /* Account Activation Badge */
+    .checkout-user-badge {
+        display: flex;
         align-items: center;
-        justify-content: center;
-        transition: color 0.15s ease;
+        gap: 0.75rem;
+        padding-top: 1.25rem;
+        margin-top: 1.25rem;
+        border-top: 1px dashed var(--border-light, #e4e4e7);
+        font-size: 0.85rem;
+        color: #71717a;
     }
 
-    .coupon-remove-link:hover {
-        color: #dc2626;
+    .dark-mode .checkout-user-badge {
+        border-top-color: #27272a;
     }
 
-    /* Payment Panel Elements */
-    .payment-subtext {
-        font-size: 0.88rem;
-        color: var(--text-muted, #64748b);
-        margin-bottom: 1.25rem;
-        line-height: 1.5;
+    /* Right Card: Payment Gateway */
+    .payment-instruction-text {
+        font-size: 0.9rem;
+        color: #71717a;
+        line-height: 1.55;
+        margin-bottom: 1.5rem;
     }
 
-    .dark-mode .payment-subtext {
-        color: #94a3b8;
-    }
-
-    .paypal-mount-container {
+    .paypal-gateway-container {
         min-height: 130px;
-        width: 100%;
-        max-width: 100%;
         position: relative;
     }
 
-    #paypal-button-container {
-        width: 100%;
-        max-width: 100%;
-    }
-
-    .payment-loading-state {
+    .payment-loading-box {
         text-align: center;
-        padding: 1.75rem 0;
-        color: var(--text-muted, #64748b);
+        padding: 2rem 0;
+        color: #71717a;
     }
 
-    .dark-mode .payment-loading-state {
-        color: #94a3b8;
-    }
-
-    .payment-complete-overlay {
+    .payment-success-overlay {
         display: none;
         text-align: center;
-        padding: 2rem 1rem;
+        padding: 2.5rem 1rem;
         background: var(--card-bg, #ffffff);
-        border-radius: 16px;
+        border-radius: 20px;
     }
 
-    .dark-mode .payment-complete-overlay {
-        background: #1e293b;
+    .dark-mode .payment-success-overlay {
+        background: #18181b;
     }
 
-    .payment-complete-overlay i {
-        font-size: 2.5rem;
-        color: #3b82f6;
-        margin-bottom: 1rem;
+    /* Trust & Guarantee List in Checkout */
+    .checkout-trust-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+        margin-top: 1.75rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border-light, #e4e4e7);
     }
 
-    /* Trust & Guarantee Box */
-    .checkout-trust-box {
-        margin-top: 1.5rem;
-        padding: 0.9rem 1.1rem;
-        border-radius: 14px;
-        background: var(--surface-muted, #f8fafc);
-        border: 1px solid var(--border-light, #e2e8f0);
+    .dark-mode .checkout-trust-grid {
+        border-top-color: #27272a;
+    }
+
+    .checkout-trust-item {
         display: flex;
         align-items: flex-start;
         gap: 0.75rem;
-    }
-
-    .dark-mode .checkout-trust-box {
-        background: rgba(255, 255, 255, 0.03);
-        border-color: #334155;
-    }
-
-    .checkout-trust-box i {
-        font-size: 1.25rem;
-        color: #10b981;
-        margin-top: 0.15rem;
-        flex-shrink: 0;
-    }
-
-    .checkout-trust-text {
-        font-size: 0.82rem;
-        color: var(--text-muted, #64748b);
-        margin: 0;
+        font-size: 0.835rem;
+        color: #71717a;
         line-height: 1.45;
     }
 
-    .dark-mode .checkout-trust-text {
-        color: #94a3b8;
-    }
-
-    .security-footer-badge {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-        font-size: 0.8rem;
-        color: var(--text-muted, #64748b);
-        margin-top: 1.25rem;
-        text-align: center;
-        flex-wrap: wrap;
-    }
-
-    .dark-mode .security-footer-badge {
-        color: #94a3b8;
-    }
-
-    .security-footer-badge i {
+    .checkout-trust-item i {
         color: #10b981;
+        font-size: 1rem;
+        margin-top: 2px;
+        flex-shrink: 0;
     }
 
-    /* Mobile specific adjustments */
-    @media (max-width: 575.98px) {
-        .checkout-page-container {
-            padding: 1rem 0.75rem 2.5rem;
-        }
+    .checkout-trust-item strong {
+        color: var(--text-main, #09090b);
+    }
 
-        .checkout-panel {
-            padding: 1.15rem 1rem;
-            border-radius: 16px;
-        }
-
-        .checkout-page-header {
-            margin-bottom: 1.25rem;
-        }
-
-        .coupon-field-input {
-            padding: 0.45rem 0.75rem;
-            font-size: 0.85rem;
-        }
-
-        .coupon-field-btn {
-            padding: 0.45rem 0.85rem;
-            font-size: 0.82rem;
-        }
+    .dark-mode .checkout-trust-item strong {
+        color: #f4f4f5;
     }
 </style>
 
-<div class="checkout-page-container">
-    <!-- Top Nav -->
-    <div class="checkout-top-nav">
-        <a href="{{ url_for('farmer.premium_upgrade') }}" class="checkout-back-link">
+<div class="checkout-page-wrapper">
+    <!-- Top Navigation Bar -->
+    <div class="checkout-nav-bar">
+        <a href="{{ url_for('farmer.premium_upgrade') }}" class="checkout-back-btn">
             <i class="fas fa-arrow-left"></i>
-            <span>{{ t('back_to_plans') }}</span>
+            <span>{{ t('back_to_plans')|default('Back to Plans & Pricing') }}</span>
         </a>
+        <div class="checkout-security-pill">
+            <i class="fas fa-shield-check"></i>
+            <span>256-Bit SSL Encrypted &bull; Guaranteed Safe Checkout</span>
+        </div>
     </div>
 
     <!-- Header -->
-    <div class="checkout-page-header">
+    <div class="checkout-header-section">
         <h1 class="checkout-main-title">
-            <i class="fas fa-shield-alt text-primary"></i>
-            <span>{{ t("secure_checkout") }}</span>
+            <span>{{ t("secure_checkout")|default("Secure Checkout") }}</span>
         </h1>
-        <p class="checkout-subtitle">Review your subscription and complete payment to unlock full precision farming features.</p>
+        <p class="checkout-main-subtitle">
+            Review your order details and choose your preferred payment method to unlock full Smart Expert AI and weather tools.
+        </p>
     </div>
 
-    <!-- Main 2-Column Grid: Order Summary (Left/Top) & Payment (Right/Bottom) -->
-    <div class="checkout-main-grid">
+    <!-- 2-Column Responsive Grid -->
+    <div class="checkout-layout-grid">
         
-        <!-- 1. ORDER SUMMARY (LEFT COLUMN / TOP ON MOBILE) -->
-        <div>
-            <div class="checkout-panel">
-                <div class="checkout-panel-title">
-                    <span><i class="fas fa-receipt text-primary mr-2"></i>{{ t("order_summary") }}</span>
-                    <span class="badge badge-light border text-muted px-2 py-1" style="font-size: 0.75rem; font-weight: 700;">1 Plan</span>
+        <!-- LEFT COLUMN: ORDER SUMMARY -->
+        <div class="checkout-card">
+            <div class="checkout-card-header">
+                <h3 class="checkout-card-title">
+                    <i class="fas fa-receipt text-primary"></i>
+                    <span>{{ t("order_summary")|default("Order Summary") }}</span>
+                </h3>
+                <span class="badge badge-light border text-muted px-2.5 py-1" style="font-size: 0.75rem; font-weight: 700; border-radius: 999px;">
+                    1 Subscription
+                </span>
+            </div>
+
+            <!-- Hero Plan Preview Card -->
+            <div class="order-hero-plan">
+                <div class="order-plan-top-row">
+                    <span class="order-plan-badge">
+                        <i class="fas fa-crown mr-1"></i> Pro Tier
+                    </span>
+                    <span class="order-plan-interval-pill">
+                        <i class="fas fa-sync-alt"></i>
+                        {% if is_yearly %}
+                            Yearly (Save {{ yearly_discount_percent|int }}%)
+                        {% else %}
+                            Monthly
+                        {% endif %}
+                    </span>
                 </div>
 
-                <!-- Selected Plan Card -->
-                <div class="order-plan-card">
-                    <div class="order-plan-top">
-                        <div class="order-plan-name">
-                            <span>Agri System Premium</span>
-                            <i class="fas fa-crown text-warning"></i>
-                        </div>
-                        <div class="order-plan-period">
-                            <i class="fas fa-sync-alt mr-1"></i> Monthly
-                        </div>
-                    </div>
-                    <div class="order-plan-perks">
-                        <span><i class="fas fa-check text-success"></i> Unlimited AI Diagnoses</span>
-                        <span><i class="fas fa-check text-success"></i> Weather Intelligence</span>
-                        <span><i class="fas fa-check text-success"></i> 24/7 Expert Chat</span>
-                    </div>
-                </div>
+                <h4 class="order-plan-title">Agri System Pro</h4>
 
-                <!-- Price Breakdown Rows -->
-                <div class="breakdown-row muted">
-                    <span>{{ t("base_price") }}</span>
+                <ul class="order-plan-features">
+                    <li class="order-plan-feature-item">
+                        <span class="order-feature-check"><i class="fas fa-check"></i></span>
+                        <span>Unlimited GPT-4o Crop Diagnoses</span>
+                    </li>
+                    <li class="order-plan-feature-item">
+                        <span class="order-feature-check"><i class="fas fa-check"></i></span>
+                        <span>Advanced Weather &amp; Storm Alerts</span>
+                    </li>
+                    <li class="order-plan-feature-item">
+                        <span class="order-feature-check"><i class="fas fa-check"></i></span>
+                        <span>Direct 24/7 Agronomist Chat</span>
+                    </li>
+                    <li class="order-plan-feature-item">
+                        <span class="order-feature-check"><i class="fas fa-check"></i></span>
+                        <span>Zero Queue VIP Priority</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Price Breakdown List -->
+            <div class="pricing-breakdown-list">
+                <div class="breakdown-line is-muted">
+                    <span>Base Subscription ({% if is_yearly %}1 Year{% else %}1 Month{% endif %})</span>
                     <span>${{ original_price }}</span>
                 </div>
 
-                {% if discount_percent > 0 %}
-                <div class="breakdown-row discount">
-                    <span>{{ t("sale_discount") }} ({{ discount_percent|int }}% OFF)</span>
+                {% if is_yearly %}
+                <div class="breakdown-line is-discount">
+                    <span>Yearly Plan Discount ({{ yearly_discount_percent|int }}% OFF)</span>
+                    <span>-${{ "%.2f"|format(original_price|float - premium_price|float) }}</span>
+                </div>
+                {% elif discount_percent > 0 %}
+                <div class="breakdown-line is-discount">
+                    <span>Promo Discount ({{ discount_percent|int }}% OFF)</span>
                     <span>-${{ "%.2f"|format(original_price|float - premium_price|float) }}</span>
                 </div>
                 {% endif %}
 
                 <!-- Dynamic Coupon Row -->
-                <div class="breakdown-row discount" id="coupon-row" style="display: none;">
+                <div class="breakdown-line is-discount" id="coupon-row" style="display: none;">
                     <span>
-                        Coupon (<span id="coupon-name"></span>)
-                        <button type="button" class="coupon-remove-link" onclick="removeCoupon()" title="Remove coupon" aria-label="Remove coupon">
+                        Coupon Applied (<strong id="coupon-name"></strong>)
+                        <button type="button" class="coupon-remove-btn" onclick="removeCoupon()" title="Remove coupon" aria-label="Remove coupon">
                             <i class="fas fa-times-circle"></i>
                         </button>
                     </span>
                     <span id="coupon-amount">-$0.00</span>
                 </div>
 
-                <div class="breakdown-row muted">
-                    <span>{{ t("taxes_and_fees") }}</span>
+                <div class="breakdown-line is-muted">
+                    <span>Taxes &amp; Processing Fees</span>
                     <span>$0.00</span>
                 </div>
 
-                <div class="breakdown-divider"></div>
+                <div class="breakdown-divider-line"></div>
 
-                <!-- Total Amount Due -->
-                <div class="breakdown-total">
+                <div class="breakdown-total-box">
                     <div>
-                        <div class="breakdown-total-label">{{ t("total_due_today") }}</div>
-                        <div style="font-size: 0.78rem; color: var(--text-muted);">{{ t("auto_activates_on_payment") }}</div>
+                        <div class="breakdown-total-label">{{ t("total_due_today")|default("Total Due Today") }}</div>
+                        <div style="font-size: 0.8rem; color: #71717a;">Auto-renews &bull; Cancel anytime</div>
                     </div>
-                    <div class="breakdown-total-price" id="total_price_display">${{ premium_price }}</div>
+                    <div class="breakdown-total-val" id="total_price_display">${{ premium_price }}</div>
                 </div>
+            </div>
 
-                <!-- Coupon Input Form -->
-                {% if coupon_enabled %}
-                <div class="checkout-coupon-section">
-                    <label style="font-size: 0.85rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.35rem; display: block;">
-                        <i class="fas fa-tag text-primary mr-1"></i> {{ t("have_coupon") }}
-                    </label>
-                    <div class="coupon-field-group">
-                        <input type="text" id="coupon_input" class="coupon-field-input" placeholder="e.g. SAVE20" maxlength="30" autocomplete="off">
-                        <button type="button" id="btn_apply_coupon" class="coupon-field-btn">{{ t("apply") }}</button>
-                    </div>
-                    <div id="coupon_feedback" style="font-size: 0.82rem; margin-top: 0.5rem; display: none;"></div>
+            <!-- Coupon Input Section -->
+            {% if coupon_enabled %}
+            <div class="coupon-box-modern">
+                <label class="coupon-label-text" for="coupon_input">
+                    <i class="fas fa-tag text-primary mr-1"></i> {{ t("have_coupon")|default("Have a promo or coupon code?") }}
+                </label>
+                <div class="coupon-input-group">
+                    <input type="text" id="coupon_input" class="coupon-text-field" placeholder="e.g. AGRI20" maxlength="30" autocomplete="off">
+                    <button type="button" id="btn_apply_coupon" class="coupon-action-btn">{{ t("apply")|default("Apply") }}</button>
                 </div>
-                {% endif %}
+                <div id="coupon_feedback" style="font-size: 0.82rem; margin-top: 0.5rem; display: none;"></div>
+            </div>
+            {% endif %}
 
-                <div style="font-size: 0.84rem; color: var(--text-muted); margin-top: 1.25rem; padding-top: 1rem; border-top: 1px dashed var(--border-light); word-break: break-word; overflow-wrap: anywhere;">
-                    <i class="fas fa-user-check text-success mr-1"></i> {{ t("activating_for") }}: <strong>@{{ current_user.username }}</strong> {% if current_user.email %}({{ current_user.email }}){% endif %}
+            <!-- User Account Info -->
+            <div class="checkout-user-badge">
+                <i class="fas fa-user-check text-success" style="font-size: 1.1rem;"></i>
+                <div>
+                    <div>Activating for: <strong>@{{ current_user.username }}</strong></div>
+                    {% if current_user.email %}
+                    <div style="font-size: 0.78rem; opacity: 0.8;">{{ current_user.email }}</div>
+                    {% endif %}
                 </div>
             </div>
         </div>
 
-        <!-- 2. PAYMENT METHOD (RIGHT COLUMN / BELOW ON MOBILE) -->
-        <div>
-            <div class="checkout-panel">
-                <div class="checkout-panel-title">
-                    <span><i class="fab fa-paypal text-primary mr-2"></i>{{ t("payment_method") }}</span>
-                    <div style="display: flex; gap: 0.4rem; font-size: 1.2rem; color: var(--text-muted);">
-                        <i class="fab fa-cc-paypal" title="PayPal"></i>
-                        <i class="fab fa-cc-visa" title="Visa"></i>
-                        <i class="fab fa-cc-mastercard" title="Mastercard"></i>
-                    </div>
+        <!-- RIGHT COLUMN: PAYMENT GATEWAY -->
+        <div class="checkout-card">
+            <div class="checkout-card-header">
+                <h3 class="checkout-card-title">
+                    <i class="fab fa-paypal text-primary"></i>
+                    <span>{{ t("payment_method")|default("Payment Method") }}</span>
+                </h3>
+                <div style="display: flex; gap: 0.5rem; font-size: 1.3rem; color: #71717a;">
+                    <i class="fab fa-cc-paypal" title="PayPal"></i>
+                    <i class="fab fa-cc-visa" title="Visa"></i>
+                    <i class="fab fa-cc-mastercard" title="Mastercard"></i>
                 </div>
+            </div>
 
-                <p class="payment-subtext">
-                    Choose PayPal, Debit, or Credit Card. Your 30-day Premium membership will be automatically activated upon successful confirmation.
+            <p class="payment-instruction-text">
+                Pay securely using your PayPal balance, debit, or credit card. Your Pro membership unlocks instantly upon approval.
+            </p>
+
+            <!-- Processing Overlay -->
+            <div id="payment-processing" class="payment-success-overlay">
+                <i class="fas fa-circle-notch fa-spin fa-2x text-primary mb-3"></i>
+                <h4 style="font-weight: 700; color: var(--text-main, #09090b); margin-bottom: 0.5rem;">Processing Payment...</h4>
+                <p style="color: #71717a; font-size: 0.9rem;">
+                    Activating your Pro membership and preparing your smart farming tools...
                 </p>
+            </div>
 
-                <!-- Processing Overlay (when payment is capturing) -->
-                <div id="payment-processing" class="payment-complete-overlay">
-                    <i class="fas fa-circle-notch fa-spin"></i>
-                    <h4 style="font-weight: 700; color: var(--text-main); margin-bottom: 0.4rem;">Payment Approved!</h4>
-                    <p style="color: var(--text-muted); font-size: 0.88rem;">
-                        Activating your Premium membership and opening dashboard...
-                    </p>
+            <!-- PayPal Button Mount -->
+            <div class="paypal-gateway-container" id="paypal-wrapper">
+                <div id="paypal-loading-spinner" class="payment-loading-box">
+                    <i class="fas fa-circle-notch fa-spin fa-2x text-primary mb-2"></i>
+                    <div style="font-size: 0.9rem; font-weight: 600;">Connecting to secure gateway...</div>
                 </div>
+                <div id="paypal-button-container"></div>
+            </div>
 
-                <!-- PayPal SDK Buttons -->
-                <div class="paypal-mount-container" id="paypal-wrapper">
-                    <div id="paypal-loading-spinner" class="payment-loading-state">
-                        <i class="fas fa-circle-notch fa-spin fa-2x text-primary mb-2"></i>
-                        <div style="font-size: 0.88rem; font-weight: 600;">Loading payment gateway...</div>
-                    </div>
-                    <div id="paypal-button-container"></div>
-                </div>
+            <!-- Hidden Submission Form -->
+            <form id="paypal-success-form" method="POST" action="{{ url_for('farmer.premium_checkout', billing=billing_interval) }}" style="display: none;">
+                <input type="hidden" name="paypal_order_id" id="paypal_order_id">
+                <input type="hidden" name="applied_coupon_code" id="applied_coupon_code" value="">
+                <input type="hidden" name="billing_interval" id="billing_interval" value="{{ billing_interval }}">
+            </form>
 
-                <!-- Hidden Form for submission on PayPal approval -->
-                <form id="paypal-success-form" method="POST" action="{{ url_for('farmer.premium_checkout') }}" style="display: none;">
-                    <input type="hidden" name="paypal_order_id" id="paypal_order_id">
-                    <input type="hidden" name="applied_coupon_code" id="applied_coupon_code" value="">
-                </form>
-
-                <!-- Trust Guarantee Box -->
-                <div class="checkout-trust-box">
+            <!-- Trust & Guarantees List -->
+            <div class="checkout-trust-grid">
+                <div class="checkout-trust-item">
                     <i class="fas fa-shield-alt"></i>
-                    <p class="checkout-trust-text">
-                        <strong>{{ t("money_back_guarantee_title") }}:</strong> {{ t("money_back_guarantee_desc") }}
-                    </p>
+                    <div>
+                        <strong>30-Day Guarantee:</strong> If you're not fully satisfied with our AI crop diagnosis tools, request a full refund within 30 days.
+                    </div>
                 </div>
-
-                <div class="security-footer-badge">
+                <div class="checkout-trust-item">
                     <i class="fas fa-lock"></i>
-                    <span>{{ t("ssl_encryption_badge") }}</span>
+                    <div>
+                        <strong>Bank-Grade Encryption:</strong> Your transaction is processed through encrypted SSL gateways.
+                    </div>
+                </div>
+                <div class="checkout-trust-item">
+                    <i class="fas fa-bolt"></i>
+                    <div>
+                        <strong>Instant Activation:</strong> All premium features unlock immediately after approval.
+                    </div>
+                </div>
+                <div class="checkout-trust-item">
+                    <i class="fas fa-calendar-check"></i>
+                    <div>
+                        <strong>Cancel Anytime:</strong> Easily manage or cancel your subscription anytime with one click.
+                    </div>
                 </div>
             </div>
         </div>
@@ -777,7 +827,7 @@ document.addEventListener("DOMContentLoaded", function() {
             } finally {
                 btnApply.disabled = false;
                 if (!appliedCoupon) {
-                    btnApply.textContent = "{{ t('apply') }}";
+                    btnApply.textContent = "{{ t('apply')|default('Apply') }}";
                 }
             }
         });
@@ -803,7 +853,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 createOrder: function(data, actions) {
                     return actions.order.create({
                         purchase_units: [{
-                            description: 'Agri System Premium Subscription (Monthly)',
+                            description: 'Agri System Pro ({{ "Yearly" if is_yearly else "Monthly" }})',
                             amount: {
                                 currency_code: 'USD',
                                 value: currentFinalPrice
@@ -841,6 +891,7 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 </script>
 {% endblock %}
+
 
 
 

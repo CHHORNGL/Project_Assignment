@@ -135,17 +135,19 @@ def premium_settings():
 
         if action == "save_pricing":
             new_price = request.form.get("premium_price", "20.00").strip()
+            yearly_discount_percent = request.form.get("yearly_discount_percent", "20").strip()
             discount_percent = request.form.get("discount_percent", "0").strip()
             discount_banner = request.form.get("discount_banner", "").strip()
             coupon_enabled = "1" if request.form.get("coupon_enabled") else "0"
 
             get_or_set_setting("premium_price", new_price)
+            get_or_set_setting("premium_yearly_discount_percent", yearly_discount_percent)
             get_or_set_setting("premium_discount_percent", discount_percent)
             get_or_set_setting("premium_discount_banner", discount_banner)
             get_or_set_setting("premium_coupon_enabled", coupon_enabled)
 
             db.session.commit()
-            flash("Pricing and discount settings updated successfully.", "success")
+            flash("Monthly and Yearly pricing & discount settings updated successfully.", "success")
             return redirect(url_for("admin.premium_settings"))
 
         elif action == "create_coupon":
@@ -202,6 +204,7 @@ def premium_settings():
 
     # Fetch current settings
     current_price = get_or_set_setting("premium_price") or "20.00"
+    yearly_discount_percent = get_or_set_setting("premium_yearly_discount_percent") or "20"
     discount_percent = get_or_set_setting("premium_discount_percent") or "0"
     discount_banner = get_or_set_setting("premium_discount_banner") or ""
     coupon_enabled = get_or_set_setting("premium_coupon_enabled") != "0"
@@ -213,12 +216,24 @@ def premium_settings():
     except (ValueError, TypeError):
         final_price = current_price
 
+    try:
+        ydisc = float(yearly_discount_percent)
+        monthly_val = float(final_price)
+        yearly_final_monthly_rate = f"{monthly_val * (1.0 - ydisc / 100.0):.2f}"
+        yearly_total_amount = f"{float(yearly_final_monthly_rate) * 12:.2f}"
+    except (ValueError, TypeError):
+        yearly_final_monthly_rate = "16.00"
+        yearly_total_amount = "192.00"
+
     coupons = PremiumCoupon.query.order_by(PremiumCoupon.created_at.desc()).all()
     premium_users_count = User.query.filter_by(is_premium=True).count()
 
     return render_template(
         "admin/premium_settings.html",
         current_price=current_price,
+        yearly_discount_percent=yearly_discount_percent,
+        yearly_final_monthly_rate=yearly_final_monthly_rate,
+        yearly_total_amount=yearly_total_amount,
         discount_percent=discount_percent,
         discount_banner=discount_banner,
         coupon_enabled=coupon_enabled,
@@ -459,9 +474,20 @@ def _save_translation_backup(scope: str, payload: dict):
     for item in old:
         db.session.delete(item)
 
+from functools import wraps
+from flask import abort
+from flask_login import current_user
+
+def translation_access_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not (current_user.has_role("admin") or current_user.has_role("expert") or current_user.has_permission("manage_crops")):
+            abort(403)
+        return f(*args, **kwargs)
+    return login_required(decorated_function)
+
 @admin_bp.route("/translations", methods=["GET", "POST"])
-@login_required
-@permission_required("manage_crops")
+@translation_access_required
 def translations():
     section = (request.values.get("section") or "").strip().lower() or "crops"
     missing_only = (request.values.get("missing") or "").strip().lower() == "1"
@@ -921,8 +947,7 @@ def translations():
 
 
 @admin_bp.route("/translations/ai", methods=["POST"])
-@login_required
-@permission_required("manage_crops")
+@translation_access_required
 def translations_ai():
     if not request.is_json:
         return jsonify({"ok": False, "error": "Invalid request"}), 400
@@ -935,7 +960,8 @@ def translations_ai():
         return jsonify({"ok": False, "error": "Text too long"}), 400
     if not text:
         return jsonify({"ok": False, "error": "No text provided"}), 400
-    translated = translate_to_khmer(text)
+    model = payload.get("model")
+    translated = translate_to_khmer(text, model_choice=model)
     if not translated:
         return jsonify({"ok": False, "error": "Translation service unavailable"}), 503
     return jsonify({"success": True, "translation": translated})
@@ -1000,8 +1026,7 @@ def settings():
 
 
 @admin_bp.route("/translations/backups", methods=["GET"])
-@login_required
-@permission_required("manage_crops")
+@translation_access_required
 def translations_backups():
     backups = (
         TranslationBackup.query
@@ -1016,8 +1041,7 @@ def translations_backups():
 
 
 @admin_bp.route("/translations/undo", methods=["POST"])
-@login_required
-@permission_required("manage_crops")
+@translation_access_required
 def translations_undo():
     backup_id = request.form.get("backup_id")
     if backup_id:

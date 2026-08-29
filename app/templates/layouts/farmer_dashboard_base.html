@@ -16,6 +16,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', v=static_version) }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/system_status.css', v=static_version) }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/neumorphic_toggle.css', v=static_version) }}">
 
     <style>
         body {
@@ -35,22 +36,17 @@
     <!-- Theme loader (same behavior as base.html) -->
     <script>
     (function () {
-        const userTheme = "{{ current_user.theme if current_user.is_authenticated else 'system' }}";
+        const userTheme = "{{ current_user.theme if current_user.is_authenticated else '' }}";
         const storedTheme = localStorage.getItem("theme");
+        const activeTheme = (storedTheme === "dark" || storedTheme === "light")
+            ? storedTheme
+            : (userTheme === "dark" ? "dark" : "light");
 
-        function prefersDark() {
-            return window.matchMedia("(prefers-color-scheme: dark)").matches;
-        }
-
-        function applyTheme(theme) {
+        if (activeTheme === "dark") {
+            document.documentElement.classList.add("dark-mode");
+        } else {
             document.documentElement.classList.remove("dark-mode");
-            if (theme === "dark") document.documentElement.classList.add("dark-mode");
-            if (theme === "system" && prefersDark()) document.documentElement.classList.add("dark-mode");
         }
-
-        if (userTheme && userTheme !== "system") applyTheme(userTheme);
-        else if (storedTheme) applyTheme(storedTheme);
-        else applyTheme("system");
     })();
     </script>
 </head>
@@ -183,18 +179,27 @@
                         {% endif %}
                     </div>
 
-                     <div class="farmer-user-section">
-                        <div class="farmer-dash-section-title">{{ t("language") }}</div>
+                    <div class="farmer-user-section">
+                        <div class="farmer-dash-section-title">{{ t("language")|default("Language") }}</div>
                         <div class="farmer-user-grid">
                             <button type="button" class="farmer-dash-footer-btn lang-option d-flex align-items-center justify-content-center" data-lang="en">
                                 <span class="fi fi-us mr-2 rounded-circle"></span>
-                                {{ t("english") }}
+                                {{ t("english")|default("English") }}
                             </button>
                             <button type="button" class="farmer-dash-footer-btn lang-option d-flex align-items-center justify-content-center" data-lang="km">
                                 <span class="fi fi-kh mr-2 rounded-circle"></span>
-                                {{ t("khmer") }}
+                                {{ t("khmer")|default("Khmer") }}
                             </button>
                         </div>
+                    </div>
+
+                    <div class="farmer-user-section" style="padding: 10px 12px; border-top: 1px solid var(--border-light, #e2e8f0); display: flex; align-items: center; justify-content: center;">
+                        <label class="label mb-0" for="farmerDashThemeToggle">
+                            <div class="toggle">
+                                <input class="toggle-state theme-toggle-input" type="checkbox" id="farmerDashThemeToggle" name="check" value="dark">
+                                <div class="indicator"></div>
+                            </div>
+                        </label>
                     </div>
                 </div>
             </div>
@@ -224,32 +229,58 @@
     </script>
 
     <script>
-    document.querySelectorAll(".theme-option[data-theme]").forEach(btn => {
-        btn.addEventListener("click", async () => {
-            const theme = btn.dataset.theme;
+    (function () {
+        function syncThemeUI(theme) {
+            const isDark = (theme === "dark");
+            document.querySelectorAll(".theme-toggle-input, .toggle-state").forEach(input => {
+                input.checked = isDark;
+            });
+            document.querySelectorAll(".theme-option[data-theme]").forEach(btn => {
+                btn.classList.toggle("is-active", btn.dataset.theme === theme);
+            });
+        }
 
-            document.documentElement.classList.remove("dark-mode");
-            if (theme === "dark") document.documentElement.classList.add("dark-mode");
-            if (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        const storedTheme = localStorage.getItem("theme");
+        const dbTheme = "{{ current_user.theme if current_user.is_authenticated else '' }}";
+        const currentTheme = (storedTheme === "dark" || storedTheme === "light")
+            ? storedTheme
+            : (dbTheme === "dark" ? "dark" : "light");
+        syncThemeUI(currentTheme);
+
+        function applyAndSaveTheme(theme) {
+            if (theme === "dark") {
                 document.documentElement.classList.add("dark-mode");
+            } else {
+                document.documentElement.classList.remove("dark-mode");
             }
 
             localStorage.setItem("theme", theme);
+            syncThemeUI(theme);
 
             try {
-                await fetch("/users/theme", {
+                fetch("/users/theme", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ theme })
-                });
+                }).catch(() => {});
             } catch (e) {}
-        });
-    });
+        }
 
-    (function () {
-        const activeTheme = localStorage.getItem("theme") || "{{ current_user.theme if current_user.is_authenticated else 'system' }}";
+        // Neumorphic Toggle Checkbox Listener
+        document.querySelectorAll(".theme-toggle-input, .toggle-state").forEach(input => {
+            input.addEventListener("change", () => {
+                const theme = input.checked ? "dark" : "light";
+                applyAndSaveTheme(theme);
+            });
+        });
+
+        // Button Option Listeners
         document.querySelectorAll(".theme-option[data-theme]").forEach(btn => {
-            btn.classList.toggle("is-active", btn.dataset.theme === activeTheme);
+            btn.addEventListener("click", (e) => {
+                e.preventDefault();
+                const theme = (btn.dataset.theme === "dark") ? "dark" : "light";
+                applyAndSaveTheme(theme);
+            });
         });
     })();
     </script>

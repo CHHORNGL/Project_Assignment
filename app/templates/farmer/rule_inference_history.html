@@ -19,7 +19,7 @@
                     <div class="font-weight-bold">{{ localize(d.crop, "name", d.crop_name) }}</div>
                     <div class="small text-muted">{{ t("disease_label") }}: {{ disease_label }}</div>
                     <div class="small text-muted">
-                        {{ t("symptoms_label") }}: {{ d.symptoms[:80] }}{% if d.symptoms|length > 80 %}...{% endif %}
+                        {{ t("symptoms_label") }}: {{ translate_symptoms(d.symptoms)[:80] }}{% if d.symptoms|length > 80 %}...{% endif %}
                     </div>
                     <div class="small text-muted mt-1">
                         {{ d.created_at.strftime("%Y-%m-%d %H:%M") if d.created_at else "" }}

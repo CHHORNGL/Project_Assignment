@@ -527,42 +527,15 @@
         </li>
 
         <!-- ===============================
-             THEME MODE
+             THEME TOGGLE (NEUMORPHIC)
         =============================== -->
-        <li class="nav-item dropdown no-arrow mx-1">
-            <a class="nav-link dropdown-toggle d-flex align-items-center p-0"
-               href="#"
-               id="themeDropdown"
-               role="button"
-               data-toggle="dropdown"
-               aria-haspopup="true"
-               aria-expanded="false">
-                <span class="icon-btn theme-trigger-btn" id="themeCurrentIcon">
-                    <i class="fas fa-adjust" id="themeCurrentIconEl"></i>
-                </span>
-            </a>
-
-            <div class="dropdown-menu dropdown-menu-right theme-switcher-menu shadow-lg"
-                 aria-labelledby="themeDropdown">
-                <div class="theme-switcher-label">{% if current_lang == 'km' %}រចនាប័ទ្ម{% else %}Theme{% endif %}</div>
-                <div class="theme-switcher-grid">
-                    <button class="theme-switcher-btn theme-option" type="button" data-theme="system"
-                            data-icon="fa-desktop" title="{{ t('system') }}">
-                        <i class="fas fa-desktop"></i>
-                        <span>{{ t("system") }}</span>
-                    </button>
-                    <button class="theme-switcher-btn theme-option" type="button" data-theme="light"
-                            data-icon="fa-sun" title="{{ t('light') }}">
-                        <i class="fas fa-sun text-warning"></i>
-                        <span>{{ t("light") }}</span>
-                    </button>
-                    <button class="theme-switcher-btn theme-option" type="button" data-theme="dark"
-                            data-icon="fa-moon" title="{{ t('dark') }}">
-                        <i class="fas fa-moon text-primary"></i>
-                        <span>{{ t("dark") }}</span>
-                    </button>
+        <li class="nav-item d-flex align-items-center mx-2">
+            <label class="label mb-0" for="topbarThemeToggle" title="{{ t('theme')|default('Toggle Light / Dark Mode') }}">
+                <div class="toggle">
+                    <input class="toggle-state theme-toggle-input" type="checkbox" id="topbarThemeToggle" name="check" value="dark" aria-label="Toggle Dark Mode">
+                    <div class="indicator"></div>
                 </div>
-            </div>
+            </label>
         </li>
 
                 <!-- ===============================

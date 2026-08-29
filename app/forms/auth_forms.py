@@ -38,7 +38,7 @@ class LoginForm(FlaskForm):
 # ===============================
 class RegisterForm(FlaskForm):
     email = StringField(
-        "Email (required for verification)",
+        "Email Address",
         validators=[
             DataRequired(message="Email is required"),
             Email(message="Enter a valid email address"),
@@ -47,7 +47,7 @@ class RegisterForm(FlaskForm):
     )
     
     verification_code = StringField(
-        "Verification code",
+        "Verification Code",
         validators=[
             DataRequired(message="Verification code is required"),
             Length(min=6, max=6, message="Code must be 6 digits")
@@ -78,14 +78,14 @@ class RegisterForm(FlaskForm):
         ]
     )
 
-    submit = SubmitField("Register")
+    submit = SubmitField("Create Account")
 
 # ===============================
 # FORGOT PASSWORD FORMS
 # ===============================
 class ForgotPasswordForm(FlaskForm):
     email = StringField(
-        "Gmail / Email",
+        "Email Address",
         validators=[
             DataRequired(message="Email is required"),
             Email(message="Enter a valid email address"),
@@ -96,9 +96,9 @@ class ForgotPasswordForm(FlaskForm):
 
 class ResetPasswordForm(FlaskForm):
     code = StringField(
-        "OTP Code",
+        "Verification Code",
         validators=[
-            DataRequired(message="OTP Code is required"),
+            DataRequired(message="Verification code is required"),
             Length(min=6, max=6, message="Code must be 6 digits")
         ]
     )

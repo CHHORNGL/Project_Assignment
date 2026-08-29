@@ -83,32 +83,68 @@ def _get_client() -> Optional[MultiKeyOpenAI]:
     return _cached_openai_client
 
 
-def translate_to_khmer(text: str) -> Optional[str]:
-    try:
-        # Check if user has Gemini API Key configured in their settings
-        model_name = getattr(current_user, 'ai_model', 'original-ai') if current_user.is_authenticated else 'original-ai'
-        if model_name != "original-ai" and current_user and current_user.is_authenticated and getattr(current_user, 'ai_api_key', None) and genai:
-            keys = [k.strip() for k in current_user.ai_api_key.split(',') if k.strip()]
-            if keys:
+def translate_to_khmer(text: str, model_choice: Optional[str] = None) -> Optional[str]:
+    from flask import has_request_context
+    from app.models.site_setting import SiteSetting
+    
+    # 1. Determine Model Name
+    model_name = model_choice
+    
+    # If no explicit model choice, check current_user if in request context
+    if not model_name and has_request_context() and current_user.is_authenticated:
+        model_name = getattr(current_user, 'ai_model', '')
+        
+    # If still no model, check global settings
+    if not model_name:
+        try:
+            db_model = SiteSetting.query.get("OPENAI_MODEL")
+            if db_model and db_model.value:
+                model_name = db_model.value.strip()
+        except Exception:
+            pass
+            
+    # Ultimate fallback
+    if not model_name or model_name == "original-ai":
+        model_name = os.getenv("OPENAI_TRANSLATE_MODEL", "").strip() or DEFAULT_TRANSLATE_MODEL
+
+    # 2. If it's a Gemini model, try Gemini API first
+    if "gemini" in model_name.lower():
+        try:
+            keys = []
+            if has_request_context() and current_user.is_authenticated and getattr(current_user, 'ai_api_key', None):
+                keys = [k.strip() for k in current_user.ai_api_key.split(',') if k.strip()]
+            if not keys:
+                try:
+                    db_gemini = SiteSetting.query.get("API_KEY_GEMINI")
+                    if db_gemini and db_gemini.value:
+                        keys = [k.strip() for k in db_gemini.value.split(',') if k.strip()]
+                except Exception:
+                    pass
+            if not keys:
+                env_gemini = os.getenv("GEMINI_API_KEY", "").strip()
+                if env_gemini:
+                    keys = [env_gemini]
+                    
+            if keys and genai:
                 import random
                 client = genai.Client(api_key=random.choice(keys))
                 prompt = (
-                "Translate the user's text into Khmer. "
-                "Preserve technical terms and crop/disease names if they are already Khmer. "
-                "Return only the translated text.\\n\\n"
-                f"Text to translate:\\n{text}"
-            )
-            response = client.models.generate_content(model=model_name, contents=prompt)
-            if response and response.text:
-                return response.text.strip()
-    except Exception as e:
-        logging.warning(f"Gemini translation failed: {e}")
+                    "Translate the user's text into Khmer. "
+                    "Preserve technical terms and crop/disease names if they are already Khmer. "
+                    "Return only the translated text.\\n\\n"
+                    f"Text to translate:\\n{text}"
+                )
+                response = client.models.generate_content(model=model_name, contents=prompt)
+                if response and response.text:
+                    return response.text.strip()
+        except Exception as e:
+            logging.warning(f"Gemini translation failed for model {model_name}: {e}")
 
+    # 3. Fallback to OpenAI / Groq Compatible Client
     client = _get_client()
     if not client:
         return None
 
-    model = os.getenv("OPENAI_TRANSLATE_MODEL", "").strip() or DEFAULT_TRANSLATE_MODEL
     system_prompt = (
         "Translate the user's text into Khmer. "
         "Preserve technical terms and crop/disease names if they are already Khmer. "
@@ -117,7 +153,7 @@ def translate_to_khmer(text: str) -> Optional[str]:
 
     try:
         response = client.chat.completions.create(
-            model=model,
+            model=model_name,
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": text},
@@ -125,7 +161,8 @@ def translate_to_khmer(text: str) -> Optional[str]:
             temperature=0.2,
             max_tokens=300,
         )
-    except Exception:
+    except Exception as e:
+        logging.warning(f"OpenAI/Groq translation failed for model {model_name}: {e}")
         return None
 
     if not response or not response.choices:
@@ -136,8 +173,12 @@ def translate_to_khmer(text: str) -> Optional[str]:
 def translate_audio_to_khmer(file_path: str) -> Optional[str]:
     """Translates an audio file to Khmer using Gemini API."""
     try:
-        model_name = getattr(current_user, 'ai_model', 'original-ai') if current_user.is_authenticated else 'original-ai'
-        if model_name != "original-ai" and current_user and current_user.is_authenticated and getattr(current_user, 'ai_api_key', None) and genai:
+        from flask import has_request_context
+        model_name = 'original-ai'
+        if has_request_context() and current_user.is_authenticated:
+            model_name = getattr(current_user, 'ai_model', 'original-ai')
+            
+        if model_name != "original-ai" and has_request_context() and current_user.is_authenticated and getattr(current_user, 'ai_api_key', None) and genai:
             keys = [k.strip() for k in current_user.ai_api_key.split(',') if k.strip()]
             if not keys:
                 return None

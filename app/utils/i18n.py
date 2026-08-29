@@ -13,6 +13,7 @@ DEFAULT_LANGUAGE = "en"
 
 TRANSLATIONS = {
     "en": {
+        "auth_forgot_password": "Forgot Password?",
         "language": "Language",
         "english": "English",
         "khmer": "Khmer",
@@ -453,15 +454,31 @@ TRANSLATIONS = {
         "signed_in_as": "Signed in as",
         "save_settings": "Save Settings",
         "personalize_experience": "Personalize your experience.",
-        "auth_welcome_back": "Welcome back",
-        "auth_sign_in_sub": "Sign in to manage your expert system.",
-        "auth_create_account": "Create an account",
+        "auth_welcome_back": "Welcome Back",
+        "auth_sign_in_sub": "Sign in to access your farm and expert system.",
+        "auth_create_account": "Create Account",
+        "auth_register_sub": "Join us today to manage your farm efficiently.",
+        "auth_full_name": "Full Name",
+        "auth_name_placeholder": "Enter your full name",
+        "auth_email": "Email Address",
+        "auth_email_placeholder": "example@gmail.com",
+        "auth_verification_code": "Verification Code",
+        "auth_otp_placeholder": "Enter 6-digit code",
+        "auth_send_code": "Send Code",
+        "auth_resend_code": "Resend Code",
+        "auth_sending": "Sending...",
+        "auth_password": "Password",
+        "auth_password_placeholder": "Enter your password",
+        "auth_confirm_password": "Confirm Password",
+        "auth_confirm_password_placeholder": "Confirm your password",
+        "auth_submit_register": "Create Account",
         "auth_already_have": "Already have an account?",
-        "auth_log_in": "Log in",
+        "auth_log_in": "Sign In",
         "auth_continue_with": "or continue with",
         "auth_google": "Continue with Google",
+        "auth_passkey_login": "Sign in with Passkey",
         "auth_farmer": "Farmer?",
-        "auth_create_farmer": "Create an account",
+        "auth_create_farmer": "Create Account",
         "auth_terms": "By signing up, you agree to our Terms and Conditions.",
         "auth_login_title": "Sign In",
         "auth_register_title": "Create Account",
@@ -657,6 +674,7 @@ TRANSLATIONS = {
         "total_count": "Total: {count}",
     },
     "km": {
+        "auth_forgot_password": "ភ្លេចពាក្យសម្ងាត់?",
         "language": "ភាសា",
         "english": "អង់គ្លេស",
         "khmer": "ខ្មែរ",
@@ -974,15 +992,31 @@ TRANSLATIONS = {
         "save_settings": "រក្សាទុកការកំណត់",
         "personalize_experience": "កែតម្រូវបទពិសោធន៍របស់អ្នក។",
         "auth_welcome_back": "សូមស្វាគមន៍មកវិញ",
-        "auth_sign_in_sub": "ចូលដើម្បីគ្រប់គ្រងប្រព័ន្ធអ្នកជំនាញ។",
+        "auth_sign_in_sub": "ចូលដើម្បីគ្រប់គ្រងកសិដ្ឋាន និងប្រព័ន្ធរបស់អ្នក។",
         "auth_create_account": "បង្កើតគណនី",
+        "auth_register_sub": "ចូលរួមជាមួយយើងថ្ងៃនេះ ដើម្បីគ្រប់គ្រងកសិដ្ឋានរបស់អ្នកយ៉ាងមានប្រសិទ្ធភាព។",
+        "auth_full_name": "ឈ្មោះពេញ",
+        "auth_name_placeholder": "បញ្ចូលឈ្មោះពេញរបស់អ្នក",
+        "auth_email": "អាសយដ្ឋានអ៊ីមែល",
+        "auth_email_placeholder": "example@gmail.com",
+        "auth_verification_code": "លេខកូដផ្ទៀងផ្ទាត់",
+        "auth_otp_placeholder": "បញ្ចូលលេខកូដ ៦ ខ្ទង់",
+        "auth_send_code": "ផ្ញើលេខកូដ",
+        "auth_resend_code": "ផ្ញើលេខកូដម្តងទៀត",
+        "auth_sending": "កំពុងផ្ញើ...",
+        "auth_password": "ពាក្យសម្ងាត់",
+        "auth_password_placeholder": "បញ្ចូលពាក្យសម្ងាត់របស់អ្នក",
+        "auth_confirm_password": "បញ្ជាក់ពាក្យសម្ងាត់",
+        "auth_confirm_password_placeholder": "បញ្ជាក់ពាក្យសម្ងាត់របស់អ្នក",
+        "auth_submit_register": "បង្កើតគណនី",
         "auth_already_have": "មានគណនីរួចហើយ?",
-        "auth_log_in": "ចូល",
+        "auth_log_in": "ចូលគណនី",
         "auth_continue_with": "ឬបន្តជាមួយ",
-        "auth_google": "បន្តជាមួយ Google",
+        "auth_google": "ចុះឈ្មោះជាមួយ Google",
+        "auth_passkey_login": "ចូលជាមួយ Passkey",
         "auth_farmer": "កសិករ?",
         "auth_create_farmer": "បង្កើតគណនី",
-        "auth_terms": "ដោយចុះឈ្មោះ អ្នកយល់ព្រមលើលក្ខខណ្ឌ និងលក្ខខណ្ឌប្រើប្រាស់។",
+        "auth_terms": "ដោយចុះឈ្មោះ អ្នកយល់ព្រមលើលក្ខខណ្ឌប្រើប្រាស់។",
         "auth_login_title": "ចូលប្រព័ន្ធ",
         "auth_register_title": "បង្កើតគណនី",
         "lang_changed": "បានប្តូរភាសា",
@@ -2146,7 +2180,15 @@ def t(key: str, **kwargs) -> str:
     lang = get_current_language()
     text = TRANSLATIONS.get(lang, {}).get(key)
     if text is None:
-        text = TRANSLATIONS.get(DEFAULT_LANGUAGE, {}).get(key, key)
+        text = TRANSLATIONS.get(DEFAULT_LANGUAGE, {}).get(key)
+    if text is None:
+        cleaned = key
+        for prefix in ("auth_", "admin_", "farmer_", "expert_", "nav_", "btn_"):
+            if cleaned.startswith(prefix):
+                cleaned = cleaned[len(prefix):]
+                break
+        cleaned = cleaned.replace("_", " ").strip()
+        text = cleaned.title() if cleaned else key
     text = normalize_display_text(text, lang=lang)
     if kwargs:
         try:

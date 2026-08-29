@@ -127,10 +127,6 @@ def _get_client():
                 import random
                 return genai.Client(api_key=random.choice(keys))
         
-        # If user is a farmer and didn't provide a key, deny fallback to env UNLESS they are premium
-        if getattr(current_user, 'role', None) == 'farmer':
-            if not getattr(current_user, 'is_premium', False):
-                return None
 
     api_key = ""
     try:
@@ -532,7 +528,7 @@ def generate_assistant_reply(user_message: str) -> Optional[str]:
                     )
                     reply_content = response.choices[0].message.content if response.choices and response.choices[0].message else ""
                 except Exception as e:
-                    print(f"Error calling OpenAI API: {e}", flush=True)
+                    current_app.logger.error(f"Error calling OpenAI API: {e}")
         else:
             try:
                 response = client.models.generate_content(
@@ -545,7 +541,7 @@ def generate_assistant_reply(user_message: str) -> Optional[str]:
                 )
                 reply_content = response.text if response else ""
             except Exception as e:
-                print(f"Error calling Gemini API: {e}", flush=True)
+                current_app.logger.error(f"Error calling Gemini API: {e}")
 
     if reply_content:
         reply_content = reply_content.strip()

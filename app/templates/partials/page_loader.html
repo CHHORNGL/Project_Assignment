@@ -1,0 +1,51 @@
+<!-- Full-Page Newton's Cradle Preloader Overlay -->
+<div id="page-preloader" class="page-loader-overlay" aria-live="polite" aria-label="Loading page">
+    <div class="page-loader-card">
+        <div class="page-loader-brand">
+            <img src="{{ url_for('static', filename='img/logo.jpg') }}" alt="Agri System" class="page-loader-logo">
+            <span class="page-loader-title">Agri Precision</span>
+        </div>
+
+        <div class="newtons-cradle-wrapper">
+            <div class="newtons-cradle">
+                <div class="newtons-cradle__dot"></div>
+                <div class="newtons-cradle__dot"></div>
+                <div class="newtons-cradle__dot"></div>
+                <div class="newtons-cradle__dot"></div>
+            </div>
+        </div>
+
+        <div class="page-loader-status">
+            <span class="page-loader-pulse-dot"></span>
+            <span class="page-loader-text">{{ loading_text|default("Optimizing diagnostics...") }}</span>
+        </div>
+
+        <div class="page-loader-progress-bar"></div>
+    </div>
+</div>
+
+<script>
+(function() {
+    function dismissPreloader() {
+        const preloader = document.getElementById("page-preloader");
+        if (preloader && !preloader.classList.contains("is-hidden")) {
+            preloader.classList.add("is-hidden");
+            setTimeout(function() {
+                if (preloader && preloader.parentNode) {
+                    preloader.parentNode.removeChild(preloader);
+                }
+            }, 480);
+        }
+    }
+
+    if (document.readyState === "complete") {
+        setTimeout(dismissPreloader, 350);
+    } else {
+        window.addEventListener("load", function() {
+            setTimeout(dismissPreloader, 350);
+        });
+        // Safety timeout so user is never blocked
+        setTimeout(dismissPreloader, 2800);
+    }
+})();
+</script>

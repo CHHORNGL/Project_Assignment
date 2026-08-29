@@ -1,0 +1,320 @@
+/**
+ * ============================================================================
+ * PROFESSIONAL NEWTON'S CRADLE PRELOADER & SPINNER
+ * High-End Glassmorphic Design with Realistic 3D Pendulum Physics
+ * ============================================================================
+ */
+
+:root {
+  --uib-size: 54px;
+  --uib-speed: 1.2s;
+  --uib-color: #10b981;
+}
+
+/* ============================================================================
+   1. FULL-PAGE PRELOADER OVERLAY
+   ============================================================================ */
+.page-loader-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 50% 50%, rgba(248, 250, 252, 0.94) 0%, rgba(241, 245, 249, 0.98) 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dark-mode .page-loader-overlay,
+html.dark-mode .page-loader-overlay {
+  background: radial-gradient(circle at 50% 50%, rgba(18, 18, 23, 0.95) 0%, rgba(9, 9, 11, 0.98) 100%);
+}
+
+.page-loader-overlay.is-hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* ============================================================================
+   2. FLOATING GLASSMORPHIC LOADER CARD
+   ============================================================================ */
+.page-loader-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 36px;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 24px;
+  box-shadow: 
+    0 4px 6px -1px rgba(0, 0, 0, 0.03),
+    0 20px 40px -15px rgba(16, 185, 129, 0.12),
+    0 10px 25px -5px rgba(0, 0, 0, 0.05);
+  text-align: center;
+  min-width: 260px;
+  max-width: 90vw;
+  transform: translateY(0);
+  transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dark-mode .page-loader-card,
+html.dark-mode .page-loader-card {
+  background: rgba(24, 24, 27, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 
+    0 4px 6px -1px rgba(0, 0, 0, 0.2),
+    0 20px 40px -15px rgba(16, 185, 129, 0.18),
+    0 10px 25px -5px rgba(0, 0, 0, 0.4);
+}
+
+.page-loader-overlay.is-hidden .page-loader-card {
+  transform: scale(0.96) translateY(6px);
+}
+
+/* ============================================================================
+   3. BRAND HEADER BADGE
+   ============================================================================ */
+.page-loader-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.page-loader-logo {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.page-loader-title {
+  font-family: "Space Grotesk", "Inter", sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #0f172a;
+}
+
+.dark-mode .page-loader-title {
+  color: #f8fafc;
+}
+
+/* ============================================================================
+   4. NEWTON'S CRADLE ANIMATION COMPONENT
+   ============================================================================ */
+.newtons-cradle-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 0 14px 0;
+}
+
+.newtons-cradle {
+  --uib-size: 54px;
+  --uib-speed: 1.2s;
+  --uib-color: #10b981;
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  width: var(--uib-size);
+  height: var(--uib-size);
+}
+
+/* Minimalist Top Suspension Bar */
+.newtons-cradle::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 5%;
+  width: 90%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, rgba(148, 163, 184, 0.6) 20%, rgba(148, 163, 184, 0.6) 80%, transparent 100%);
+  border-radius: 2px;
+}
+
+.dark-mode .newtons-cradle::before {
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.2) 20%, rgba(255, 255, 255, 0.2) 80%, transparent 100%);
+}
+
+/* Dot Container Column */
+.newtons-cradle__dot {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  height: 100%;
+  width: 25%;
+  transform-origin: center top;
+  will-change: transform;
+}
+
+/* Micro Suspension String */
+.newtons-cradle__dot::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 24%;
+  width: 1px;
+  background: rgba(148, 163, 184, 0.45);
+}
+
+.dark-mode .newtons-cradle__dot::before {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* 3D Sphere Dot (Aspect ratio 1:1, Specular Highlight + Ambient Drop Shadow) */
+.newtons-cradle__dot::after {
+  content: '';
+  display: block;
+  width: 92%;
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #34d399 0%, #10b981 60%, #059669 100%);
+  box-shadow: 
+    0 4px 8px -2px rgba(16, 185, 129, 0.5),
+    0 1px 2px rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 2;
+}
+
+.dark-mode .newtons-cradle__dot::after {
+  background: radial-gradient(circle at 35% 35%, #6ee7b7 0%, #10b981 60%, #047857 100%);
+  box-shadow: 
+    0 0 12px rgba(16, 185, 129, 0.6),
+    0 4px 8px -2px rgba(0, 0, 0, 0.5);
+}
+
+/* Swing Animations */
+.newtons-cradle__dot:first-child {
+  animation: swing var(--uib-speed) linear infinite;
+}
+
+.newtons-cradle__dot:last-child {
+  animation: swing2 var(--uib-speed) linear infinite;
+}
+
+@keyframes swing {
+  0% {
+    transform: rotate(0deg);
+    animation-timing-function: ease-out;
+  }
+  25% {
+    transform: rotate(70deg);
+    animation-timing-function: ease-in;
+  }
+  50% {
+    transform: rotate(0deg);
+    animation-timing-function: linear;
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes swing2 {
+  0% {
+    transform: rotate(0deg);
+    animation-timing-function: linear;
+  }
+  50% {
+    transform: rotate(0deg);
+    animation-timing-function: ease-out;
+  }
+  75% {
+    transform: rotate(-70deg);
+    animation-timing-function: ease-in;
+  }
+  100% {
+    transform: rotate(0deg);
+    animation-timing-function: linear;
+  }
+}
+
+/* ============================================================================
+   5. PROGRESS INDICATOR & TEXT
+   ============================================================================ */
+.page-loader-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.page-loader-pulse-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #10b981;
+  animation: loaderPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes loaderPulse {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+.page-loader-text {
+  font-family: "Space Grotesk", "Kantumruy Pro", sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #64748b;
+  letter-spacing: 0.03em;
+}
+
+.dark-mode .page-loader-text {
+  color: #94a3b8;
+}
+
+/* Sleek Micro-Shimmer Line */
+.page-loader-progress-bar {
+  width: 100%;
+  height: 3px;
+  background: rgba(226, 232, 240, 0.6);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-top: 16px;
+  position: relative;
+}
+
+.dark-mode .page-loader-progress-bar {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.page-loader-progress-bar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 40%;
+  background: linear-gradient(90deg, transparent 0%, #10b981 50%, transparent 100%);
+  border-radius: 999px;
+  animation: shimmerProgress 1.4s ease-in-out infinite;
+}
+
+@keyframes shimmerProgress {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(300%);
+  }
+}

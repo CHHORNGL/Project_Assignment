@@ -306,7 +306,7 @@ def generate_project_reply(user_message: str, *, user_role: str, page: str = "")
                         )
                         content = response.choices[0].message.content if response.choices and response.choices[0].message else None
                     except Exception as e:
-                        print(f"Error calling OpenAI API in project_assistant: {e}", flush=True)
+                        current_app.logger.error(f"Error calling OpenAI API in project_assistant: {e}")
                         content = None
                 else:
                     return _fallback_reply(user_message, user_role=user_role, page=page, lang=lang)
@@ -322,7 +322,7 @@ def generate_project_reply(user_message: str, *, user_role: str, page: str = "")
                     )
                     content = response.text if response else None
                 except Exception as e:
-                    print(f"Error calling Gemini API in project_assistant: {e}", flush=True)
+                    current_app.logger.error(f"Error calling Gemini API in project_assistant: {e}")
                     content = None
     except Exception:
         return _fallback_reply(user_message, user_role=user_role, page=page, lang=lang)

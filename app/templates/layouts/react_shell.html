@@ -54,27 +54,16 @@ html[lang^="km"] * {
 
 <script>
 (function () {
-    const userTheme = "{{ current_user.theme if current_user.is_authenticated else 'system' }}";
+    const userTheme = "{{ current_user.theme if current_user.is_authenticated else '' }}";
     const storedTheme = localStorage.getItem("theme");
+    const activeTheme = (storedTheme === "dark" || storedTheme === "light")
+        ? storedTheme
+        : (userTheme === "dark" ? "dark" : "light");
 
-    function prefersDark() {
-        return window.matchMedia("(prefers-color-scheme: dark)").matches;
-    }
-
-    function applyTheme(theme) {
+    if (activeTheme === "dark") {
+        document.documentElement.classList.add("dark-mode");
+    } else {
         document.documentElement.classList.remove("dark-mode");
-        if (theme === "dark") document.documentElement.classList.add("dark-mode");
-        if (theme === "system" && prefersDark()) document.documentElement.classList.add("dark-mode");
-    }
-
-    if (userTheme && userTheme !== "system") applyTheme(userTheme);
-    else if (storedTheme) applyTheme(storedTheme);
-    else applyTheme("system");
-
-    if (userTheme === "system" || storedTheme === "system") {
-        window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", function (event) {
-            document.documentElement.classList.toggle("dark-mode", event.matches);
-        });
     }
 })();
 </script>

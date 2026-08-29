@@ -3,196 +3,168 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <title>{{ t("welcome") }}</title>
+    <title>Staff Portal | AGRI SYSTEM</title>
     <link rel="icon" type="image/jpeg" href="{{ url_for('static', filename='img/logo.jpg') }}">
     <link rel="shortcut icon" type="image/jpeg" href="{{ url_for('static', filename='img/logo.jpg') }}">
     <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/logo.jpg') }}">
-    {% set runtime = auth_theme_runtime or {} %}
-    {% set profile = runtime.get("profile", {}) if runtime else {} %}
-    {% set tokens = profile.get("tokens", {}) if profile else {} %}
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;500;600;700&family=Noto+Sans+Khmer:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=Kantumruy+Pro:wght@400;500;600;700&family=Noto+Sans+Khmer:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <link href="{{ url_for('static', filename='sb-admin/vendor/fontawesome-free/css/all.min.css') }}" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.0.0/css/flag-icons.min.css" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/auth.css', v=static_version) }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/neumorphic_toggle.css', v=static_version) }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/notifications.css', v=static_version) }}" rel="stylesheet">
-    <link href="{{ url_for('static', filename='css/system_status.css', v=static_version) }}" rel="stylesheet">
-    <style>
-        :root {
-            --auth-accent: {{ (tokens.get("admin_accent") or tokens.get("primary") or "#22c55e")|e }};
-            --auth-accent-2: {{ (tokens.get("primary") or tokens.get("admin_accent") or "#16a34a")|e }};
-            --auth-panel-light-bg: {{ (tokens.get("admin_bg_light") or tokens.get("admin_bg") or "#f8fafc")|e }};
-            --auth-panel-light-card: {{ (tokens.get("admin_card_light") or tokens.get("admin_card") or "rgba(255, 255, 255, 0.92)")|e }};
-            --auth-panel-light-border: {{ (tokens.get("admin_border_light") or tokens.get("admin_border") or "rgba(15, 23, 42, 0.14)")|e }};
-            --auth-panel-light-text: {{ (tokens.get("admin_text_light") or tokens.get("admin_text") or "#0f172a")|e }};
-            --auth-panel-light-muted: {{ (tokens.get("admin_muted_light") or tokens.get("admin_muted") or "#475569")|e }};
-            --auth-panel-dark-bg: {{ (tokens.get("admin_bg_dark") or "#0b1116")|e }};
-            --auth-panel-dark-card: {{ (tokens.get("admin_card_dark") or "rgba(12, 16, 28, 0.88)")|e }};
-            --auth-panel-dark-border: {{ (tokens.get("admin_border_dark") or "rgba(148, 163, 184, 0.22)")|e }};
-            --auth-panel-dark-text: {{ (tokens.get("admin_text_dark") or "#e7edf5")|e }};
-            --auth-panel-dark-muted: {{ (tokens.get("admin_muted_dark") or "#9fb1a6")|e }};
-        }
-    </style>
 
     <script>
     (function () {
         const storedTheme = localStorage.getItem("theme");
-        const mq = window.matchMedia("(prefers-color-scheme: dark)");
-
-        function applyTheme(theme) {
-            document.documentElement.classList.toggle(
-                "auth-panel-dark",
-                theme === "dark" || (theme === "system" && mq.matches)
-            );
-        }
-
-        if (storedTheme === "light" || storedTheme === "dark" || storedTheme === "system") {
-            applyTheme(storedTheme);
+        if (storedTheme === "dark") {
+            document.documentElement.classList.add("dark-mode", "auth-panel-dark");
         } else {
-            // Auth pages default to Light mode unless the user explicitly chose otherwise.
-            applyTheme("light");
+            document.documentElement.classList.remove("dark-mode", "auth-panel-dark");
         }
-
-        mq.addEventListener("change", e => {
-            const now = localStorage.getItem("theme");
-            if (now === "system") document.documentElement.classList.toggle("auth-panel-dark", e.matches);
-        });
     })();
     </script>
 </head>
-<body class="auth-body">
+<body class="auth-clean-body">
 
 {% include "partials/flash_notices.html" %}
 
-<main class="auth-shell">
-    <section class="auth-card">
-        <div class="auth-visual">
-            <div class="auth-visual-top">
-                <div class="auth-brand">
-                    <span class="auth-brand-mark">Agri System</span>
-                    <span class="auth-brand-sub">{{ t("auth_brand_sub_expert") }}</span>
+<div class="auth-clean-container">
+    <!-- Top Utility Controls (Language & Neumorphic Theme Toggle) -->
+    <div class="auth-clean-topbar">
+        <div class="auth-lang-pills">
+            <a href="{{ url_for('user.update_language', lang='en', next=request.path) }}" class="auth-lang-btn {% if current_lang == 'en' %}is-active{% endif %}">
+                <span class="fi fi-us"></span> EN
+            </a>
+            <a href="{{ url_for('user.update_language', lang='km', next=request.path) }}" class="auth-lang-btn {% if current_lang == 'km' %}is-active{% endif %}">
+                <span class="fi fi-kh"></span> KH
+            </a>
+        </div>
+        <div class="auth-theme-pill">
+            <label class="label mb-0" for="staffThemeToggle" title="Toggle Light/Dark Mode">
+                <div class="toggle">
+                    <input class="toggle-state" type="checkbox" id="staffThemeToggle" name="check" value="dark">
+                    <div class="indicator"></div>
                 </div>
-                <div class="auth-pill">{{ t("auth_pill_trusted") }}</div>
-            </div>
+            </label>
+        </div>
+    </div>
 
-            <div class="auth-visual-content">
-                <h1 class="auth-visual-title">{{ t("auth_visual_title_login") }}</h1>
-                <p>{{ t("auth_visual_sub_login") }}</p>
-                <ul class="auth-feature-list">
-                    <li><span class="auth-dot"></span>{{ t("auth_feature_login_1") }}</li>
-                    <li><span class="auth-dot"></span>{{ t("auth_feature_login_2") }}</li>
-                    <li><span class="auth-dot"></span>{{ t("auth_feature_login_3") }}</li>
-                </ul>
+    <!-- Centered Minimalist Login Card -->
+    <div class="auth-clean-card">
+        <!-- Brand Header -->
+        <div class="auth-card-header">
+            <div class="auth-brand-badge">
+                <img src="{{ url_for('static', filename='img/logo.jpg') }}" alt="Agri System" class="auth-clean-logo">
             </div>
+            <h1 class="auth-clean-title">Staff Portal</h1>
+            <p class="auth-clean-subtitle">Sign in with authorized administrative or expert credentials</p>
         </div>
 
-        <div class="auth-panel">
-            <div class="auth-panel-tools auth-stagger delay-1">
-                <div class="auth-theme-toggle" role="group" aria-label="{{ t('theme') }}">
-                    <button type="button" class="auth-theme-btn" data-auth-theme="light" aria-label="{{ t('light') }}" title="{{ t('light') }}">
-                        <i class="fas fa-sun" aria-hidden="true"></i>
-                    </button>
-                    <button type="button" class="auth-theme-btn" data-auth-theme="dark" aria-label="{{ t('dark') }}" title="{{ t('dark') }}">
-                        <i class="fas fa-moon" aria-hidden="true"></i>
-                    </button>
-                    <button type="button" class="auth-theme-btn" data-auth-theme="system" aria-label="{{ t('system') }}" title="{{ t('system') }}">
-                        <i class="fas fa-desktop" aria-hidden="true"></i>
+        <!-- Login Form -->
+        <form method="POST" action="" class="auth-clean-form">
+            {{ form.hidden_tag() }}
+
+            <div class="auth-form-group">
+                <label for="email" class="auth-form-label">{{ form.email.label.text }}</label>
+                <div class="auth-input-box">
+                    <i class="fas fa-envelope auth-field-icon"></i>
+                    {{ form.email(class="auth-clean-input", placeholder="staff@agrisystem.com", autocomplete="email", id="email") }}
+                </div>
+            </div>
+
+            <div class="auth-form-group">
+                <div class="auth-label-row">
+                    <label for="staff-password" class="auth-form-label">{{ form.password.label.text }}</label>
+                    <a href="{{ url_for('auth.forgot_password') }}" class="auth-forgot-password">
+                        {% if current_lang == 'km' %}ភ្លេចពាក្យសម្ងាត់?{% else %}Forgot password?{% endif %}
+                    </a>
+                </div>
+                <div class="auth-input-box">
+                    <i class="fas fa-lock auth-field-icon"></i>
+                    {{ form.password(class="auth-clean-input has-toggle", placeholder=t("auth_password_placeholder")|default("Enter your password"), id="staff-password", autocomplete="current-password") }}
+                    <button type="button" class="auth-password-toggle-btn" data-target="staff-password" aria-label="Toggle password visibility">
+                        <i class="far fa-eye"></i>
                     </button>
                 </div>
             </div>
 
-            {% set next_url = next_url|default(None) %}
+            <button type="submit" class="auth-primary-btn">
+                <i class="fas fa-shield-halved mr-2"></i>
+                Sign in to Dashboard
+            </button>
+        </form>
 
-            <div class="auth-panel-head auth-stagger delay-3">
-                <h2 class="auth-title">Staff Portal</h2>
-                <p class="auth-subtitle">Sign in as Expert or Administrator</p>
-            </div>
-
-            <form method="POST" action="" class="auth-form auth-stagger delay-5">
-                {{ form.hidden_tag() }}
-
-                <div class="auth-field">
-                    {{ form.email.label }}
-                    {{ form.email(class="auth-input", placeholder="example@gmail.com") }}
-                </div>
-
-                <div class="auth-field">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        {{ form.password.label }}
-                        <a href="{{ url_for('auth.forgot_password') }}" class="auth-forgot-link" style="font-size: 0.875rem; color: var(--auth-accent); text-decoration: none;">Forgot password?</a>
-                    </div>
-                    {{ form.password(class="auth-input", placeholder=t("auth_password_placeholder")) }}
-                </div>
-
-                <button type="submit" class="auth-button">
-                    {{ form.submit.label.text }}
-                </button>
-            </form>
-
-            <div class="auth-divider auth-stagger delay-5">Or</div>
-            <div class="auth-oauth-container auth-stagger delay-6" style="margin-top: 0.5rem; margin-bottom: 1rem; display: flex; flex-direction: column; gap: 8px; width: 100%;">
-                <button type="button" id="btn-login-passkey" class="auth-oauth-btn d-flex align-items-center justify-content-center" style="width: 100%; border: 1px solid rgba(0,0,0,0.08); background: #ffffff; color: #334155; font-weight: 600; cursor: pointer; border-radius: 12px; height: 48px;">
-                    <i class="fas fa-fingerprint mr-2" style="color: #10b981; font-size: 1.15rem;"></i>
-                    Sign in with Passkey
-                </button>
-
-            </div>
+        <!-- Divider -->
+        <div class="auth-clean-divider">
+            <span>{{ t("or")|default("or continue with") }}</span>
         </div>
-    </section>
-</main>
+
+        <!-- Passkey Option -->
+        <div class="auth-social-stack">
+            <button type="button" id="btn-login-passkey" class="auth-social-btn">
+                <i class="fas fa-fingerprint text-success"></i>
+                <span>{{ t("auth_passkey_login")|default("Sign in with Passkey") }}</span>
+            </button>
+        </div>
+
+        <!-- Footer -->
+        <div class="auth-card-footer">
+            <span>Farmer account?</span>
+            <a href="{{ url_for('auth.login') }}" class="auth-register-link">
+                Go to Farmer Sign In
+            </a>
+        </div>
+    </div>
+</div>
 
 <script src="{{ url_for('static', filename='js/toast.js') }}"></script>
-<script src="{{ url_for('static', filename='js/system_status.js', v=static_version) }}"></script>
-<script>
-window.AuthThemeMotionConfig = {{ {
-    "layers": tokens.get("admin_motion_layers") or "[]",
-    "legacy_url": tokens.get("admin_lottie_url") or ""
-}|tojson }};
-</script>
-<script src="{{ url_for('static', filename='js/auth_theme_motion.js', v=static_version) }}"></script>
 <script>
 (function () {
-    const mq = window.matchMedia("(prefers-color-scheme: dark)");
-    const buttons = Array.from(document.querySelectorAll("[data-auth-theme]"));
-    if (!buttons.length) return;
-
-    function normalize(value) {
-        const t = String(value || "").toLowerCase();
-        if (t === "light" || t === "dark" || t === "system") return t;
-        return "light";
-    }
-
-    function applyTheme(theme) {
-        document.documentElement.classList.toggle(
-            "auth-panel-dark",
-            theme === "dark" || (theme === "system" && mq.matches)
-        );
-    }
-
-    function setActive(theme) {
-        buttons.forEach((btn) => {
-            btn.classList.toggle("is-active", btn.getAttribute("data-auth-theme") === theme);
+    // Theme sync
+    const toggleInput = document.getElementById("staffThemeToggle");
+    const currentTheme = localStorage.getItem("theme") === "dark" ? "dark" : "light";
+    if (toggleInput) {
+        toggleInput.checked = (currentTheme === "dark");
+        toggleInput.addEventListener("change", () => {
+            const isDark = toggleInput.checked;
+            const theme = isDark ? "dark" : "light";
+            document.documentElement.classList.toggle("dark-mode", isDark);
+            document.documentElement.classList.toggle("auth-panel-dark", isDark);
+            localStorage.setItem("theme", theme);
+            fetch("/users/theme", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ theme })
+            }).catch(() => {});
         });
     }
 
-    const initial = normalize(localStorage.getItem("theme"));
-    setActive(initial);
-
-    buttons.forEach((btn) => {
-        btn.addEventListener("click", () => {
-            const theme = normalize(btn.getAttribute("data-auth-theme"));
-            localStorage.setItem("theme", theme);
-            applyTheme(theme);
-            setActive(theme);
+    // Password visibility toggle
+    document.querySelectorAll(".auth-password-toggle-btn").forEach(btn => {
+        btn.addEventListener("click", function() {
+            const targetId = this.getAttribute("data-target");
+            const input = document.getElementById(targetId);
+            const icon = this.querySelector("i");
+            if (input) {
+                if (input.type === "password") {
+                    input.type = "text";
+                    icon.classList.remove("fa-eye", "far");
+                    icon.classList.add("fa-eye-slash", "fas");
+                } else {
+                    input.type = "password";
+                    icon.classList.remove("fa-eye-slash", "fas");
+                    icon.classList.add("fa-eye", "far");
+                }
+            }
         });
     });
-})();
-</script>
 
-<script>
-(function() {
+    // Passkey Login Logic
     function base64urlToBytes(base64url) {
         const base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
         const pad = base64.length % 4;
@@ -211,8 +183,7 @@ window.AuthThemeMotionConfig = {{ {
         for (let i = 0; i < uint8.byteLength; i++) {
             binary += String.fromCharCode(uint8[i]);
         }
-        const base64 = btoa(binary);
-        return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+        return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
     }
 
     function prepareAuthenticationOptions(options) {
@@ -227,58 +198,49 @@ window.AuthThemeMotionConfig = {{ {
     }
 
     const btn = document.getElementById("btn-login-passkey");
-    if (!btn) return;
+    if (btn) {
+        btn.addEventListener("click", async () => {
+            try {
+                const optionsResp = await fetch("{{ url_for('staff.passkey_login_options') }}");
+                if (!optionsResp.ok) throw new Error("Failed to get passkey options.");
+                const options = await optionsResp.json();
 
-    btn.addEventListener("click", async () => {
-        if (window.location.hostname === "127.0.0.1") {
-            window.location.hostname = "localhost";
-            return;
-        }
-        try {
-            // 1. Fetch options
-            const optionsResp = await fetch("{{ url_for('staff.passkey_login_options') if request.blueprint == 'staff' else url_for('auth.passkey_login_options') }}");
-            if (!optionsResp.ok) throw new Error("Failed to get passkey login options.");
-            const options = await optionsResp.json();
+                const credential = await navigator.credentials.get({
+                    publicKey: prepareAuthenticationOptions(options)
+                });
 
-            // 2. Browser request
-            const credential = await navigator.credentials.get({
-                publicKey: prepareAuthenticationOptions(options)
-            });
+                const payload = {
+                    id: credential.id,
+                    rawId: bytesToBase64url(credential.rawId),
+                    type: credential.type,
+                    response: {
+                        clientDataJSON: bytesToBase64url(credential.response.clientDataJSON),
+                        authenticatorData: bytesToBase64url(credential.response.authenticatorData),
+                        signature: bytesToBase64url(credential.response.signature),
+                        userHandle: credential.response.userHandle ? bytesToBase64url(credential.response.userHandle) : null
+                    }
+                };
 
-            // 3. Serialize and send to verify
-            const payload = {
-                id: credential.id,
-                rawId: bytesToBase64url(credential.rawId),
-                type: credential.type,
-                response: {
-                    clientDataJSON: bytesToBase64url(credential.response.clientDataJSON),
-                    authenticatorData: bytesToBase64url(credential.response.authenticatorData),
-                    signature: bytesToBase64url(credential.response.signature),
-                    userHandle: credential.response.userHandle ? bytesToBase64url(credential.response.userHandle) : null
+                const verifyResp = await fetch("{{ url_for('staff.passkey_login_verify') }}", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+
+                const verifyResult = await verifyResp.json();
+                if (verifyResult.status === "ok") {
+                    window.location.href = "{{ url_for('main.index') }}";
+                } else {
+                    alert(verifyResult.message || "Login failed.");
                 }
-            };
-
-            const verifyResp = await fetch("{{ url_for('staff.passkey_login_verify') if request.blueprint == 'staff' else url_for('auth.passkey_login_verify') }}", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
-            });
-
-            const verifyResult = await verifyResp.json();
-            if (verifyResult.status === "ok") {
-                window.location.href = "{{ url_for('main.index') }}";
-            } else {
-                alert(verifyResult.message || "Login failed.");
+            } catch (err) {
+                if (err.name !== "NotAllowedError") {
+                    alert("Passkey login error: " + err.message);
+                }
             }
-        } catch (err) {
-            console.error(err);
-            if (err.name !== "NotAllowedError") {
-                alert("Passkey login error: " + err.message);
-            }
-        }
-    });
+        });
+    }
 })();
 </script>
-
 </body>
 </html>

@@ -1,37 +1,41 @@
 {% extends layout_shell|default("layouts/farmer_shell.html") %}
 
-{% block title %}Choose Your Plan | Upgrade to Premium{% endblock %}
+{% block title %}Plans & Pricing | Upgrade to Premium{% endblock %}
 
 {% block content %}
 <style>
-    /* =========================================
-       PRICING & UPGRADE PAGE STYLES
-       ========================================= */
+    /* ==========================================================================
+       MODERN PRICING & CHOOSE YOUR PLAN STYLES (Inspired by shadcn/pricing-3)
+       ========================================================================== */
     :root {
-        --upgrade-blue-1: #3b82f6;
-        --upgrade-blue-2: #2563eb;
-        --upgrade-gold-1: #f59e0b;
-        --upgrade-gold-2: #d97706;
-        --upgrade-green: #10b981;
+        --pricing-bg-container: #f4f4f5;
+        --pricing-border-subtle: #e4e4e7;
+        --pricing-accent-green: #10b981;
+        --pricing-accent-blue: #3b82f6;
     }
 
-    .upgrade-wrapper {
-        max-width: 1040px;
+    .dark-mode, html.auth-panel-dark {
+        --pricing-bg-container: #18181b;
+        --pricing-border-subtle: #27272a;
+    }
+
+    .pricing-page-wrapper {
+        max-width: 1200px;
         margin: 0 auto;
-        padding: 1.5rem 1rem 4rem;
+        padding: 2rem 1rem 5rem;
     }
 
-    /* Back & Breadcrumb Bar */
-    .upgrade-nav-bar {
+    /* Top Navigation Bar */
+    .pricing-nav-bar {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-bottom: 1.5rem;
+        margin-bottom: 2rem;
         flex-wrap: wrap;
-        gap: 0.75rem;
+        gap: 1rem;
     }
 
-    .upgrade-back-btn {
+    .pricing-back-btn {
         display: inline-flex;
         align-items: center;
         gap: 0.5rem;
@@ -39,769 +43,827 @@
         font-size: 0.9rem;
         font-weight: 600;
         text-decoration: none;
-        padding: 0.5rem 0.85rem;
-        border-radius: 10px;
+        padding: 0.5rem 1rem;
+        border-radius: 999px;
         background: var(--card-bg, #ffffff);
         border: 1px solid var(--border-light, #e2e8f0);
         transition: all 0.2s ease;
     }
 
-    .upgrade-back-btn:hover {
-        color: var(--upgrade-blue-2);
-        border-color: var(--upgrade-blue-1);
-        text-decoration: none;
+    .pricing-back-btn:hover {
+        color: #0f172a;
+        border-color: #cbd5e1;
         transform: translateX(-3px);
+        text-decoration: none;
     }
 
-    .upgrade-status-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.4rem;
-        font-size: 0.82rem;
-        font-weight: 700;
-        padding: 0.4rem 0.9rem;
-        border-radius: 50px;
-        background: rgba(100, 116, 139, 0.1);
-        color: var(--text-muted, #64748b);
-        border: 1px solid var(--border-light, #e2e8f0);
-    }
-
-    /* Header Section */
-    .pricing-header {
-        text-align: center;
-        padding: 1.5rem 1rem 2rem;
-    }
-
-    .pricing-badge {
+    .pricing-status-pill {
         display: inline-flex;
         align-items: center;
         gap: 0.5rem;
-        padding: 0.4rem 1.15rem;
-        background: linear-gradient(135deg, rgba(59, 130, 246, 0.12), rgba(147, 51, 234, 0.12));
-        color: var(--upgrade-blue-1);
-        border: 1px solid rgba(59, 130, 246, 0.25);
-        border-radius: 50px;
-        font-weight: 700;
-        font-size: 0.82rem;
-        letter-spacing: 0.75px;
-        text-transform: uppercase;
-        margin-bottom: 1.15rem;
-    }
-
-    .pricing-title {
-        font-weight: 800;
-        font-size: clamp(1.85rem, 4vw, 2.65rem);
-        color: var(--text-main, #1e293b);
-        margin-bottom: 0.85rem;
-        line-height: 1.25;
-        letter-spacing: -0.5px;
-    }
-
-    .pricing-subtitle {
-        color: var(--text-muted, #64748b);
-        max-width: 640px;
-        margin: 0 auto;
-        font-size: clamp(0.95rem, 2vw, 1.08rem);
-        line-height: 1.65;
-    }
-
-    /* Discount Announcement Banner */
-    .pricing-promo-banner {
-        max-width: 880px;
-        margin: 0 auto 2rem;
-        padding: 1rem 1.5rem;
-        border-radius: 16px;
-        background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(16, 185, 129, 0.1));
-        border: 1px solid rgba(59, 130, 246, 0.25);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.85rem;
-        color: var(--text-main, #1e293b);
-        font-weight: 600;
-        font-size: 0.95rem;
-        box-shadow: 0 4px 14px rgba(59, 130, 246, 0.06);
-    }
-
-    .pricing-promo-banner i {
-        font-size: 1.25rem;
-        color: var(--upgrade-gold-1);
-    }
-
-    /* Billing Interval Switcher Bar */
-    .billing-toggle-container {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 0.75rem;
-        margin-bottom: 2.25rem;
-    }
-
-    .billing-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.45rem 1.1rem;
-        border-radius: 50px;
-        background: var(--card-bg, #ffffff);
-        border: 1px solid var(--border-light, #e2e8f0);
         font-size: 0.85rem;
         font-weight: 600;
+        padding: 0.45rem 1rem;
+        border-radius: 999px;
+        background: rgba(100, 116, 139, 0.08);
         color: var(--text-muted, #64748b);
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+        border: 1px solid var(--border-light, #e2e8f0);
     }
 
-    .billing-pill .dot-active {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background-color: var(--upgrade-green);
-        display: inline-block;
-    }
-
-    /* Pricing Cards Grid */
-    .pricing-cards-grid {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 1.75rem;
-        max-width: 900px;
-        margin: 0 auto;
-        align-items: stretch;
+    /* Top Article Header Section */
+    .pricing-header-article {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 2.5rem;
+        gap: 1.5rem;
     }
 
     @media (min-width: 768px) {
-        .pricing-cards-grid {
-            grid-template-columns: repeat(2, 1fr);
-            gap: 2rem;
+        .pricing-header-article {
+            flex-direction: row;
+            align-items: center;
         }
     }
 
-    .pricing-card {
-        background: var(--card-bg, #ffffff);
-        border-radius: 24px;
-        padding: 2.5rem 2rem;
+    .pricing-header-text {
+        max-width: 600px;
+        text-align: left;
+    }
+
+    .pricing-main-title {
+        font-family: "Space Grotesk", "Kantumruy Pro", sans-serif;
+        font-size: clamp(2.2rem, 4vw, 3rem);
+        font-weight: 700;
+        line-height: 1.15;
+        color: var(--text-main, #09090b);
+        margin: 0 0 0.75rem 0;
+        letter-spacing: -0.03em;
+    }
+
+    .pricing-main-subtitle {
+        color: var(--text-muted, #71717a);
+        font-size: 1.05rem;
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    /* Pricing Switcher Pill */
+    .pricing-switch-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .pricing-switch-box {
         position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        width: fit-content;
+        border-radius: 999px;
+        background: #f4f4f5;
+        border: 1px solid #e4e4e7;
+        padding: 4px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+
+    .dark-mode .pricing-switch-box {
+        background: #18181b;
+        border-color: #27272a;
+    }
+
+    .pricing-switch-btn {
+        position: relative;
+        z-index: 2;
+        appearance: none;
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        height: 42px;
+        border-radius: 999px;
+        padding: 0 1.25rem;
+        font-weight: 600;
+        font-size: 0.925rem;
+        color: #71717a;
+        transition: color 0.25s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        outline: none;
+        user-select: none;
+    }
+
+    .pricing-switch-btn.is-active {
+        color: #09090b;
+    }
+
+    .dark-mode .pricing-switch-btn.is-active {
+        color: #f4f4f5;
+    }
+
+    .pricing-switch-indicator {
+        position: absolute;
+        top: 4px;
+        left: 4px;
+        height: 42px;
+        width: calc(50% - 4px);
+        border-radius: 999px;
+        border: 2px solid #e4e4e7;
+        background: #ffffff;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        z-index: 1;
+        transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), width 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        pointer-events: none;
+    }
+
+    .dark-mode .pricing-switch-indicator {
+        background: #27272a;
+        border-color: #3f3f46;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    }
+
+    .pricing-save-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 2px 8px;
+        border-radius: 999px;
+        background: #dbeafe;
+        color: #1d4ed8;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+    }
+
+    /* Grid Layout Container */
+    .pricing-cards-container {
+        background: linear-gradient(180deg, #f4f4f5 0%, #e4e4e7 100%);
+        border: 1px solid #e4e4e7;
+        border-radius: 24px;
+        padding: 1.25rem;
+        margin-bottom: 3.5rem;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
+        align-items: stretch;
+    }
+
+    .dark-mode .pricing-cards-container {
+        background: linear-gradient(180deg, #18181b 0%, #09090b 100%);
+        border-color: #27272a;
+    }
+
+    @media (min-width: 992px) {
+        .pricing-cards-container {
+            grid-template-columns: repeat(3, 1fr);
+            padding: 1.5rem;
+            gap: 1.5rem;
+            align-items: center;
+        }
+    }
+
+    /* Card Component */
+    .plan-card {
+        border-radius: 20px;
+        padding: 2rem 1.75rem;
         display: flex;
         flex-direction: column;
-        transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+        justify-content: space-between;
+        position: relative;
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        height: 100%;
     }
 
-    .pricing-card:hover {
-        transform: translateY(-4px);
-    }
-
-    /* Card: Free Tier */
-    .card-free {
-        border: 1px solid var(--border-light, #e2e8f0);
+    /* Regular Cards (Starter & Enterprise) */
+    .plan-card-standard {
+        background: rgba(255, 255, 255, 0.75);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(228, 228, 231, 0.8);
+        color: #09090b;
         box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
     }
 
-    .dark-mode .card-free {
-        border-color: var(--border-light, #2a3340);
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+    .dark-mode .plan-card-standard {
+        background: rgba(24, 24, 27, 0.7);
+        border-color: rgba(39, 39, 42, 0.9);
+        color: #f4f4f5;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
     }
 
-    /* Card: Premium Tier */
-    .card-premium {
-        border: 2px solid var(--upgrade-blue-1);
-        background: linear-gradient(180deg, var(--card-bg, #ffffff) 0%, rgba(59, 130, 246, 0.02) 100%);
-        box-shadow: 0 14px 36px rgba(59, 130, 246, 0.12);
+    .plan-card-standard:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.06);
     }
 
-    .dark-mode .card-premium {
-        border-color: #3b82f6;
-        background: linear-gradient(180deg, var(--card-bg, #161c24) 0%, rgba(59, 130, 246, 0.06) 100%);
-        box-shadow: 0 14px 36px rgba(0, 0, 0, 0.45);
+    /* Hero / Popular Card (Pro Plan) */
+    .plan-card-hero {
+        background: linear-gradient(180deg, #18181b 0%, #09090b 100%);
+        border: 2px solid #27272a;
+        color: #ffffff;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.45);
+        z-index: 2;
     }
 
-    .popular-ribbon {
+    @media (min-width: 992px) {
+        .plan-card-hero {
+            transform: scale(1.04);
+            padding: 2.25rem 1.85rem;
+        }
+        .plan-card-hero:hover {
+            transform: scale(1.05) translateY(-4px);
+        }
+    }
+
+    /* Popular Badge Pill */
+    .plan-popular-pill {
         position: absolute;
-        top: -14px;
+        top: -13px;
         left: 50%;
         transform: translateX(-50%);
-        background: linear-gradient(135deg, var(--upgrade-blue-1), var(--upgrade-blue-2));
+        background: #3f3f46;
         color: #ffffff;
-        padding: 0.4rem 1.25rem;
-        border-radius: 50px;
-        font-weight: 700;
+        padding: 4px 14px;
+        border-radius: 999px;
         font-size: 0.75rem;
-        letter-spacing: 0.75px;
-        text-transform: uppercase;
-        box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
-        white-space: nowrap;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.35rem;
-    }
-
-    .plan-header {
-        margin-bottom: 1.25rem;
-    }
-
-    .plan-tag {
-        font-size: 0.8rem;
         font-weight: 700;
+        letter-spacing: 0.05em;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
-        color: var(--text-muted, #64748b);
-        margin-bottom: 0.35rem;
+        border: 1px solid #52525b;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        white-space: nowrap;
     }
 
-    .plan-name {
-        font-size: 1.5rem;
-        font-weight: 800;
-        color: var(--text-main, #1e293b);
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
+    /* Plan Header & Price */
+    .plan-top-box {
+        margin-bottom: 1.5rem;
     }
 
-    .plan-desc {
-        font-size: 0.9rem;
-        color: var(--text-muted, #64748b);
-        margin-top: 0.4rem;
-        line-height: 1.5;
-        min-height: 2.75rem;
-    }
-
-    .plan-pricing-box {
-        margin-bottom: 1.75rem;
-        padding-bottom: 1.25rem;
-        border-bottom: 1px solid var(--border-light, #e2e8f0);
-    }
-
-    .plan-price-row {
+    .plan-price-display {
         display: flex;
         align-items: baseline;
-        gap: 0.35rem;
-        flex-wrap: wrap;
+        margin-bottom: 0.5rem;
     }
 
-    .plan-price {
-        font-size: clamp(2.4rem, 4vw, 3rem);
-        font-weight: 800;
-        color: var(--text-main, #1e293b);
+    .plan-currency {
+        font-size: 2.2rem;
+        font-weight: 700;
         line-height: 1;
+    }
+
+    .plan-price-num {
+        font-size: clamp(2.4rem, 3.5vw, 3rem);
+        font-weight: 700;
+        line-height: 1;
+        letter-spacing: -0.02em;
+        font-feature-settings: "tnum";
+        transition: all 0.25s ease;
     }
 
     .plan-price-period {
         font-size: 0.95rem;
-        font-weight: 600;
-        color: var(--text-muted, #64748b);
-    }
-
-    .plan-original-price {
-        font-size: 1.25rem;
-        color: var(--text-muted, #94a3b8);
-        text-decoration: line-through;
         font-weight: 500;
-        margin-right: 0.25rem;
+        margin-left: 6px;
+        opacity: 0.75;
     }
 
-    .plan-discount-badge {
-        background: linear-gradient(135deg, #ef4444, #dc2626);
-        color: #ffffff;
-        font-size: 0.72rem;
-        font-weight: 800;
-        padding: 0.25rem 0.65rem;
-        border-radius: 6px;
-        letter-spacing: 0.5px;
+    .plan-card-title {
+        font-family: "Space Grotesk", "Kantumruy Pro", sans-serif;
+        font-size: 1.55rem;
+        font-weight: 700;
+        margin: 0.5rem 0 0.4rem 0;
+        letter-spacing: -0.01em;
+    }
+
+    .plan-card-desc {
+        font-size: 0.885rem;
+        line-height: 1.5;
+        margin: 0 0 1.25rem 0;
+        min-height: 2.6rem;
+    }
+
+    .plan-card-standard .plan-card-desc {
+        color: #71717a;
+    }
+
+    .dark-mode .plan-card-standard .plan-card-desc {
+        color: #a1a1aa;
+    }
+
+    .plan-card-hero .plan-card-desc {
+        color: #a1a1aa;
+    }
+
+    /* Key Features / Includes list */
+    .plan-features-wrapper {
+        border-top: 1px solid rgba(228, 228, 231, 0.8);
+        padding-top: 1.25rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .plan-card-hero .plan-features-wrapper {
+        border-top-color: #27272a;
+    }
+
+    .plan-features-heading {
+        font-size: 0.85rem;
+        font-weight: 700;
         text-transform: uppercase;
-        vertical-align: middle;
-        display: inline-block;
-        margin-left: 0.35rem;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.85rem;
+    }
+
+    .plan-card-standard .plan-features-heading {
+        color: #09090b;
+    }
+
+    .dark-mode .plan-card-standard .plan-features-heading {
+        color: #f4f4f5;
+    }
+
+    .plan-card-hero .plan-features-heading {
+        color: #ffffff;
+    }
+
+    .plan-features-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .plan-feature-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        line-height: 1.45;
+    }
+
+    .plan-card-standard .plan-feature-item {
+        color: #3f3f46;
+    }
+
+    .dark-mode .plan-card-standard .plan-feature-item {
+        color: #d4d4d8;
+    }
+
+    .plan-card-hero .plan-feature-item {
+        color: #e4e4e7;
+    }
+
+    .plan-check-icon {
+        width: 22px;
+        height: 22px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 0.75rem;
+    }
+
+    .plan-card-standard .plan-check-icon {
+        background: #ffffff;
+        border: 1.5px solid #09090b;
+        color: #09090b;
+    }
+
+    .dark-mode .plan-card-standard .plan-check-icon {
+        background: #27272a;
+        border-color: #f4f4f5;
+        color: #f4f4f5;
+    }
+
+    .plan-card-hero .plan-check-icon {
+        background: #27272a;
+        border: 1.5px solid #52525b;
+        color: #ffffff;
     }
 
     /* Action Buttons */
-    .plan-btn {
-        display: flex;
+    .plan-card-btn {
+        width: 100%;
+        height: 48px;
+        padding: 0 1.25rem;
+        border-radius: 12px;
+        font-size: 0.98rem;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 0.6rem;
-        width: 100%;
-        padding: 0.95rem 1.25rem;
-        text-align: center;
-        border-radius: 14px;
-        font-weight: 700;
-        font-size: 1rem;
-        transition: all 0.2s ease;
+        gap: 0.5rem;
         text-decoration: none;
-        margin-bottom: 1.75rem;
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        margin-top: auto;
     }
 
-    .btn-current-plan {
-        background: var(--surface-muted, #f1f5f9);
-        color: var(--text-muted, #64748b);
-        border: 1px solid var(--border-light, #e2e8f0);
+    /* Standard Card Button (Dark metallic button) */
+    .btn-plan-dark {
+        background: linear-gradient(180deg, #27272a 0%, #18181b 100%);
+        color: #ffffff !important;
+        border: 1px solid #3f3f46;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .btn-plan-dark:hover {
+        background: linear-gradient(180deg, #3f3f46 0%, #27272a 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2);
+        text-decoration: none;
+    }
+
+    /* Current Active Plan Button */
+    .btn-plan-current {
+        background: rgba(100, 116, 139, 0.1);
+        color: #71717a !important;
+        border: 1px solid #e4e4e7;
         cursor: default;
         pointer-events: none;
     }
 
-    .dark-mode .btn-current-plan {
-        background: rgba(255, 255, 255, 0.05);
-        color: var(--text-muted, #94a3b8);
-        border-color: var(--border-light, #2a3340);
+    .dark-mode .btn-plan-current {
+        border-color: #27272a;
+        color: #a1a1aa !important;
     }
 
-    .btn-upgrade-action {
-        background: linear-gradient(135deg, var(--upgrade-blue-1), var(--upgrade-blue-2));
-        color: #ffffff !important;
-        border: none;
-        box-shadow: 0 4px 16px rgba(37, 99, 235, 0.3);
+    /* Hero Card Button (Light metallic gradient) */
+    .btn-plan-hero {
+        background: linear-gradient(180deg, #ffffff 0%, #e4e4e7 100%);
+        color: #09090b !important;
+        border: 1px solid #d4d4d8;
+        font-weight: 700;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
     }
 
-    .btn-upgrade-action:hover {
-        background: linear-gradient(135deg, var(--upgrade-blue-2), #1d4ed8);
-        box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4);
+    .btn-plan-hero:hover {
+        background: linear-gradient(180deg, #ffffff 0%, #f4f4f5 100%);
         transform: translateY(-2px);
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
         text-decoration: none;
     }
 
-    /* Features List */
-    .features-list {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-        flex-grow: 1;
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
+    /* Trust Section & FAQ */
+    .trust-section-modern {
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 1px solid var(--border-light, #e4e4e7);
     }
 
-    .features-list li {
-        display: flex;
-        align-items: flex-start;
-        gap: 0.75rem;
-        color: var(--text-main, #334155);
-        font-size: 0.92rem;
-        line-height: 1.5;
-    }
-
-    .features-list li i {
-        font-size: 1.1rem;
-        flex-shrink: 0;
-        margin-top: 0.15rem;
-    }
-
-    .feature-icon-check {
-        color: var(--upgrade-green);
-    }
-
-    .feature-icon-star {
-        color: var(--upgrade-blue-1);
-    }
-
-    .feature-icon-cross {
-        color: var(--text-muted, #94a3b8);
-        opacity: 0.5;
-    }
-
-    .feature-disabled {
-        color: var(--text-muted, #94a3b8) !important;
-        opacity: 0.7;
-    }
-
-    /* Trust & Guarantee Grid */
-    .trust-section {
-        margin-top: 4rem;
-        padding-top: 2.5rem;
-        border-top: 1px solid var(--border-light, #e2e8f0);
-    }
-
-    .trust-grid {
+    .trust-grid-modern {
         display: grid;
         grid-template-columns: 1fr;
         gap: 1.25rem;
     }
 
     @media (min-width: 600px) {
-        .trust-grid {
+        .trust-grid-modern {
             grid-template-columns: repeat(2, 1fr);
         }
     }
 
     @media (min-width: 992px) {
-        .trust-grid {
+        .trust-grid-modern {
             grid-template-columns: repeat(4, 1fr);
         }
     }
 
-    .trust-card {
+    .trust-card-modern {
         background: var(--card-bg, #ffffff);
-        border: 1px solid var(--border-light, #e2e8f0);
+        border: 1px solid var(--border-light, #e4e4e7);
         border-radius: 16px;
-        padding: 1.35rem 1.15rem;
+        padding: 1.25rem;
         display: flex;
         flex-direction: column;
-        align-items: flex-start;
-        gap: 0.75rem;
+        gap: 0.5rem;
         transition: transform 0.2s ease, border-color 0.2s ease;
     }
 
-    .trust-card:hover {
-        border-color: var(--upgrade-blue-1);
+    .trust-card-modern:hover {
+        border-color: #a1a1aa;
         transform: translateY(-2px);
     }
 
-    .trust-icon-box {
-        width: 42px;
-        height: 42px;
-        border-radius: 12px;
+    .trust-icon-box-modern {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.2rem;
-        background: rgba(59, 130, 246, 0.1);
-        color: var(--upgrade-blue-1);
+        font-size: 1.1rem;
+        background: rgba(16, 185, 129, 0.12);
+        color: #10b981;
     }
 
-    .trust-card-title {
+    .trust-title-modern {
         font-size: 0.95rem;
         font-weight: 700;
-        color: var(--text-main, #1e293b);
+        color: var(--text-main, #09090b);
         margin: 0;
     }
 
-    .trust-card-desc {
-        font-size: 0.82rem;
-        color: var(--text-muted, #64748b);
+    .trust-desc-modern {
+        font-size: 0.835rem;
+        color: var(--text-muted, #71717a);
         margin: 0;
         line-height: 1.45;
     }
-
-    /* FAQ Section */
-    .faq-section {
-        margin-top: 3.5rem;
-    }
-
-    .faq-title {
-        text-align: center;
-        font-size: 1.5rem;
-        font-weight: 800;
-        color: var(--text-main, #1e293b);
-        margin-bottom: 0.5rem;
-    }
-
-    .faq-subtitle {
-        text-align: center;
-        font-size: 0.92rem;
-        color: var(--text-muted, #64748b);
-        margin-bottom: 2rem;
-    }
-
-    .faq-grid {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 1rem;
-        max-width: 880px;
-        margin: 0 auto;
-    }
-
-    @media (min-width: 768px) {
-        .faq-grid {
-            grid-template-columns: repeat(2, 1fr);
-        }
-    }
-
-    .faq-card {
-        background: var(--card-bg, #ffffff);
-        border: 1px solid var(--border-light, #e2e8f0);
-        border-radius: 16px;
-        padding: 1.25rem 1.35rem;
-    }
-
-    .faq-q {
-        font-size: 0.95rem;
-        font-weight: 700;
-        color: var(--text-main, #1e293b);
-        margin-bottom: 0.45rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .faq-q i {
-        color: var(--upgrade-blue-1);
-        font-size: 0.85rem;
-    }
-
-    .faq-a {
-        font-size: 0.86rem;
-        color: var(--text-muted, #64748b);
-        line-height: 1.55;
-        margin: 0;
-    }
-
-    /* Animation Utilities */
-    .fade-in-up {
-        opacity: 0;
-        transform: translateY(16px);
-        animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    }
-
-    .delay-1 { animation-delay: 0.08s; }
-    .delay-2 { animation-delay: 0.16s; }
-    .delay-3 { animation-delay: 0.24s; }
-
-    @keyframes fadeInUp {
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
 </style>
 
-<div class="upgrade-wrapper">
+<div class="pricing-page-wrapper">
     <!-- Top Navigation Bar -->
-    <div class="upgrade-nav-bar fade-in-up">
-        <a href="{{ url_for('farmer.dashboard') }}" class="upgrade-back-btn">
+    <div class="pricing-nav-bar">
+        <a href="{{ url_for('farmer.dashboard') }}" class="pricing-back-btn">
             <i class="fas fa-arrow-left"></i>
             <span>{{ t('back_to_dashboard')|default('Back to Dashboard') }}</span>
         </a>
-        <div class="upgrade-status-pill">
-            <i class="fas fa-user-tag"></i>
-            <span>Current Tier: <strong>Basic Free</strong></span>
+        <div class="pricing-status-pill">
+            <i class="fas fa-seedling text-success"></i>
+            <span>Active Tier: <strong>Basic Free</strong></span>
         </div>
     </div>
 
-    <!-- Header -->
-    <div class="pricing-header fade-in-up delay-1">
-        <div class="pricing-badge">
-            <i class="fas fa-crown"></i>
-            <span>Agri System Membership</span>
+    <!-- Header Article -->
+    <article class="pricing-header-article">
+        <div class="pricing-header-text">
+            <h1 class="pricing-main-title">Plans &amp; Pricing</h1>
+            <p class="pricing-main-subtitle">
+                Trusted by thousands of farmers. Unlock precision agricultural AI tools, weather intelligence, and certified expert guidance.
+            </p>
         </div>
-        <h1 class="pricing-title">Choose Your Plan</h1>
-        <p class="pricing-subtitle">
-            Unlock precision agricultural AI tools, hyper-localized weather forecasts, and direct 24/7 agronomist support to protect and maximize your crop yield.
-        </p>
-    </div>
 
-    <!-- Discount Announcement Banner (if configured) -->
-    {% if discount_banner %}
-    <div class="pricing-promo-banner fade-in-up delay-2">
-        <i class="fas fa-bullhorn"></i>
-        <span>{{ discount_banner }}</span>
-    </div>
-    {% endif %}
-
-    <!-- Billing Interval Switcher Pill -->
-    <div class="billing-toggle-container fade-in-up delay-2">
-        <div class="billing-pill">
-            <span class="dot-active"></span>
-            <span>Monthly Subscription</span>
-            <span style="color: var(--text-muted); opacity: 0.6;">&bull;</span>
-            <span style="color: var(--upgrade-green); font-weight: 700;">Cancel Anytime</span>
+        <!-- Monthly / Yearly Interactive Switcher -->
+        <div class="pricing-switch-container">
+            <div class="pricing-switch-box" role="group" aria-label="Billing Interval">
+                <span class="pricing-switch-indicator" id="switchIndicator"></span>
+                <button type="button" class="pricing-switch-btn is-active" id="btnMonthly">
+                    <span>Monthly</span>
+                </button>
+                <button type="button" class="pricing-switch-btn" id="btnYearly">
+                    <span>Yearly</span>
+                    <span class="pricing-save-badge">Save {{ yearly_discount_percent|int }}%</span>
+                </button>
+            </div>
         </div>
-    </div>
+    </article>
 
-    <!-- Pricing Cards Grid -->
-    <div class="pricing-cards-grid">
-        <!-- Basic Free Plan Card -->
-        <div class="pricing-card card-free fade-in-up delay-2">
-            <div class="plan-header">
-                <div class="plan-tag">Starter Tier</div>
-                <div class="plan-name">
-                    <span>Basic Free</span>
-                    <i class="fas fa-seedling text-success" style="font-size: 1.15rem;"></i>
+    <!-- Pricing 3-Card Grid -->
+    <div class="pricing-cards-container">
+        <!-- PLAN 1: STARTER -->
+        <div class="plan-card plan-card-standard">
+            <div class="plan-top-box">
+                <div class="plan-price-display">
+                    <span class="plan-currency">$</span>
+                    <span class="plan-price-num" id="priceStarter">0</span>
+                    <span class="plan-price-period" id="periodStarter">/month</span>
                 </div>
-                <div class="plan-desc">Essential diagnostic capabilities for individual farmers to start managing crop health.</div>
+                <h3 class="plan-card-title">Starter</h3>
+                <p class="plan-card-desc">
+                    Great for individual farmers and family plots getting started with disease diagnosis.
+                </p>
+
+                <div class="plan-features-wrapper">
+                    <div class="plan-features-heading">Includes:</div>
+                    <ul class="plan-features-list">
+                        <li class="plan-feature-item">
+                            <span class="plan-check-icon"><i class="fas fa-check"></i></span>
+                            <span>Up to 10 crop diagnoses / month</span>
+                        </li>
+                        <li class="plan-feature-item">
+                            <span class="plan-check-icon"><i class="fas fa-check"></i></span>
+                            <span>Standard AI rule engine</span>
+                        </li>
+                        <li class="plan-feature-item">
+                            <span class="plan-check-icon"><i class="fas fa-check"></i></span>
+                            <span>Khmer lunar seasonal calendar</span>
+                        </li>
+                        <li class="plan-feature-item">
+                            <span class="plan-check-icon"><i class="fas fa-check"></i></span>
+                            <span>Community Q&amp;A access</span>
+                        </li>
+                    </ul>
+                </div>
             </div>
 
-            <div class="plan-pricing-box">
-                <div class="plan-price-row">
-                    <div class="plan-price">$0</div>
-                    <div class="plan-price-period">/ month</div>
-                </div>
-            </div>
-
-            <a href="#" class="plan-btn btn-current-plan">
-                <i class="fas fa-check"></i>
+            <button type="button" class="plan-card-btn btn-plan-current">
+                <i class="fas fa-check-circle"></i>
                 <span>Your Active Plan</span>
-            </a>
-
-            <ul class="features-list">
-                <li>
-                    <i class="fas fa-check-circle feature-icon-check"></i>
-                    <span>Base AI crop disease diagnosis engine</span>
-                </li>
-                <li>
-                    <i class="fas fa-check-circle feature-icon-check"></i>
-                    <span>Standard processing speed</span>
-                </li>
-                <li>
-                    <i class="fas fa-check-circle feature-icon-check"></i>
-                    <span>Basic symptom checklist & seasonal guidelines</span>
-                </li>
-                <li>
-                    <i class="fas fa-check-circle feature-icon-check"></i>
-                    <span>Access to community agronomy Q&A</span>
-                </li>
-                <li class="feature-disabled">
-                    <i class="fas fa-times-circle feature-icon-cross"></i>
-                    <span>Advanced Weather Intelligence & 7-day risk forecasting</span>
-                </li>
-                <li class="feature-disabled">
-                    <i class="fas fa-times-circle feature-icon-cross"></i>
-                    <span>Direct 24/7 1-on-1 chat with Agronomy Experts</span>
-                </li>
-                <li class="feature-disabled">
-                    <i class="fas fa-times-circle feature-icon-cross"></i>
-                    <span>Permanent cloud diagnosis history & PDF reports</span>
-                </li>
-            </ul>
+            </button>
         </div>
 
-        <!-- Premium Plan Card (Hero) -->
-        <div class="pricing-card card-premium fade-in-up delay-3">
-            <div class="popular-ribbon">
-                <i class="fas fa-crown"></i>
-                <span>RECOMMENDED &bull; BEST VALUE</span>
+        <!-- PLAN 2: PRO FARMER (HERO / POPULAR) -->
+        <div class="plan-card plan-card-hero">
+            <div class="plan-popular-pill">
+                <i class="fas fa-crown mr-1"></i> Popular &bull; Recommended
             </div>
 
-            <div class="plan-header" style="margin-top: 0.35rem;">
-                <div class="plan-tag" style="color: var(--upgrade-blue-1);">Pro Tier</div>
-                <div class="plan-name" style="color: var(--upgrade-blue-1);">
-                    <span>Agri System Premium</span>
-                    <i class="fas fa-crown text-warning" style="font-size: 1.15rem;"></i>
+            <div class="plan-top-box">
+                <div class="plan-price-display">
+                    <span class="plan-currency">$</span>
+                    <span class="plan-price-num" id="pricePro">{{ premium_price|int }}</span>
+                    <span class="plan-price-period" id="periodPro">/month</span>
                 </div>
-                <div class="plan-desc">The complete smart farming toolkit with unlimited AI power, weather forecasts, and direct expert access.</div>
-            </div>
+                <h3 class="plan-card-title">Pro Farmer</h3>
+                <p class="plan-card-desc">
+                    Best value for active producers who need unlimited smart AI power, weather warnings, and direct agronomist chat.
+                </p>
 
-            <div class="plan-pricing-box">
-                <div class="plan-price-row">
-                    {% if discount_percent > 0 %}
-                        <span class="plan-original-price">${{ original_price }}</span>
-                    {% endif %}
-                    <div class="plan-price" style="color: var(--upgrade-blue-1);">${{ premium_price }}</div>
-                    <div class="plan-price-period">/ month</div>
-                    {% if discount_percent > 0 %}
-                        <span class="plan-discount-badge">{{ discount_percent|int }}% OFF</span>
-                    {% endif %}
+                <div class="plan-features-wrapper">
+                    <div class="plan-features-heading">Everything in Starter, plus:</div>
+                    <ul class="plan-features-list">
+                        <li class="plan-feature-item">
+                            <span class="plan-check-icon"><i class="fas fa-check"></i></span>
+                            <span><strong>Unlimited</strong> GPT-4o Vision &amp; LLM diagnoses</span>
+                        </li>
+                        <li class="plan-feature-item">
+                            <span class="plan-check-icon"><i class="fas fa-check"></i></span>
+                            <span><strong>Ultra-Advanced Weather Intelligence</strong> &amp; storm alerts</span>
+                        </li>
+                        <li class="plan-feature-item">
+                            <span class="plan-check-icon"><i class="fas fa-check"></i></span>
+                            <span><strong>Direct 24/7 Chat</strong> with certified Agronomy Experts</span>
+                        </li>
+                        <li class="plan-feature-item">
+                            <span class="plan-check-icon"><i class="fas fa-check"></i></span>
+                            <span><strong>Permanent cloud history</strong> &amp; PDF treatment reports</span>
+                        </li>
+                        <li class="plan-feature-item">
+                            <span class="plan-check-icon"><i class="fas fa-check"></i></span>
+                            <span><strong>Zero queue waiting</strong> with VIP priority inference</span>
+                        </li>
+                    </ul>
                 </div>
             </div>
 
-            <a href="{{ url_for('farmer.premium_checkout') }}" class="plan-btn btn-upgrade-action">
-                <span>Upgrade to Premium</span>
+            <a href="{{ url_for('farmer.premium_checkout') }}" class="plan-card-btn btn-plan-hero" id="checkoutProBtn">
+                <span>Upgrade to Pro</span>
                 <i class="fas fa-arrow-right"></i>
             </a>
+        </div>
 
-            <ul class="features-list">
-                <li style="font-weight: 700; color: var(--upgrade-blue-1);">
-                    <i class="fas fa-crown feature-icon-star"></i>
-                    <span>Everything in Basic Free, plus:</span>
-                </li>
-                <li>
-                    <i class="fas fa-bolt feature-icon-star"></i>
-                    <span><strong>Unlimited</strong> high-speed AI diagnoses (GPT-4o Vision & Engine)</span>
-                </li>
-                <li>
-                    <i class="fas fa-cloud-sun-rain feature-icon-star"></i>
-                    <span><strong>Advanced Weather Intelligence</strong> & 7-day crop risk warnings</span>
-                </li>
-                <li>
-                    <i class="fas fa-user-md feature-icon-star"></i>
-                    <span><strong>Direct 24/7 Chat</strong> with certified agronomy specialists</span>
-                </li>
-                <li>
-                    <i class="fas fa-history feature-icon-star"></i>
-                    <span><strong>Permanent cloud history</strong> & downloadable PDF treatment guides</span>
-                </li>
-                <li>
-                    <i class="fas fa-tachometer-alt feature-icon-star"></i>
-                    <span><strong>Priority processing queue</strong> with zero waiting time</span>
-                </li>
-                <li>
-                    <i class="fas fa-shield-alt feature-icon-star"></i>
-                    <span><strong>Early access</strong> to new crop disease models & features</span>
-                </li>
-            </ul>
+        <!-- PLAN 3: ENTERPRISE / COMMERCIAL -->
+        <div class="plan-card plan-card-standard">
+            <div class="plan-top-box">
+                <div class="plan-price-display">
+                    <span class="plan-currency">$</span>
+                    <span class="plan-price-num" id="priceEnterprise">48</span>
+                    <span class="plan-price-period" id="periodEnterprise">/month</span>
+                </div>
+                <h3 class="plan-card-title">Commercial Farm</h3>
+                <p class="plan-card-desc">
+                    Advanced plan for agricultural cooperatives, large plantations, and multi-field management teams.
+                </p>
+
+                <div class="plan-features-wrapper">
+                    <div class="plan-features-heading">Everything in Pro, plus:</div>
+                    <ul class="plan-features-list">
+                        <li class="plan-feature-item">
+                            <span class="plan-check-icon"><i class="fas fa-check"></i></span>
+                            <span>Multi-user farm &amp; worker permissions</span>
+                        </li>
+                        <li class="plan-feature-item">
+                            <span class="plan-check-icon"><i class="fas fa-check"></i></span>
+                            <span>Custom pest &amp; pathogen rule modeling</span>
+                        </li>
+                        <li class="plan-feature-item">
+                            <span class="plan-check-icon"><i class="fas fa-check"></i></span>
+                            <span>Dedicated agronomist advisor via Phone &amp; Video</span>
+                        </li>
+                        <li class="plan-feature-item">
+                            <span class="plan-check-icon"><i class="fas fa-check"></i></span>
+                            <span>Bulk diagnosis data export &amp; API access</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <a href="mailto:support@agrisystem.com?subject=Enterprise%20Farm%20Plan%20Inquiry" class="plan-card-btn btn-plan-dark">
+                <span>Contact Agronomy Team</span>
+                <i class="fas fa-paper-plane"></i>
+            </a>
         </div>
     </div>
 
-    <!-- Trust & Guarantee Grid -->
-    <div class="trust-section fade-in-up delay-3">
-        <div class="trust-grid">
-            <div class="trust-card">
-                <div class="trust-icon-box">
+    <!-- Trust Guarantees -->
+    <div class="trust-section-modern">
+        <div class="trust-grid-modern">
+            <div class="trust-card-modern">
+                <div class="trust-icon-box-modern">
                     <i class="fas fa-shield-alt"></i>
                 </div>
-                <h4 class="trust-card-title">30-Day Guarantee</h4>
-                <p class="trust-card-desc">Try Premium risk-free. If you are not satisfied, request a full refund within 30 days.</p>
+                <h4 class="trust-title-modern">30-Day Guarantee</h4>
+                <p class="trust-desc-modern">Try Pro risk-free. If you are not satisfied, request a full refund within 30 days.</p>
             </div>
 
-            <div class="trust-card">
-                <div class="trust-icon-box">
+            <div class="trust-card-modern">
+                <div class="trust-icon-box-modern">
                     <i class="fas fa-lock"></i>
                 </div>
-                <h4 class="trust-card-title">256-Bit SSL Security</h4>
-                <p class="trust-card-desc">All transactions are processed through encrypted, bank-grade payment gateways.</p>
+                <h4 class="trust-title-modern">256-Bit SSL Security</h4>
+                <p class="trust-desc-modern">All transactions are processed through encrypted, bank-grade payment gateways.</p>
             </div>
 
-            <div class="trust-card">
-                <div class="trust-icon-box">
+            <div class="trust-card-modern">
+                <div class="trust-icon-box-modern">
                     <i class="fas fa-bolt"></i>
                 </div>
-                <h4 class="trust-card-title">Instant Activation</h4>
-                <p class="trust-card-desc">Your premium capabilities unlock immediately upon successful payment.</p>
+                <h4 class="trust-title-modern">Instant Activation</h4>
+                <p class="trust-desc-modern">Your premium capabilities unlock immediately upon successful subscription.</p>
             </div>
 
-            <div class="trust-card">
-                <div class="trust-icon-box">
+            <div class="trust-card-modern">
+                <div class="trust-icon-box-modern">
                     <i class="fas fa-calendar-check"></i>
                 </div>
-                <h4 class="trust-card-title">No Long Contracts</h4>
-                <p class="trust-card-desc">Pay monthly and cancel or pause anytime directly from your settings panel.</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- FAQ Section -->
-    <div class="faq-section fade-in-up delay-3">
-        <h3 class="faq-title">Frequently Asked Questions</h3>
-        <p class="faq-subtitle">Everything you need to know about Agri System plans and billing.</p>
-
-        <div class="faq-grid">
-            <div class="faq-card">
-                <div class="faq-q">
-                    <i class="fas fa-question-circle"></i>
-                    <span>How does the monthly subscription work?</span>
-                </div>
-                <p class="faq-a">
-                    Your subscription gives you 30 days of full access to all Premium features. You can renew monthly or manage your billing preferences anytime from your account settings.
-                </p>
-            </div>
-
-            <div class="faq-card">
-                <div class="faq-q">
-                    <i class="fas fa-question-circle"></i>
-                    <span>Can I cancel at any time?</span>
-                </div>
-                <p class="faq-a">
-                    Yes! There are no long-term contracts or cancellation fees. If you cancel, your Premium benefits remain active until the end of your current 30-day billing period.
-                </p>
-            </div>
-
-            <div class="faq-card">
-                <div class="faq-q">
-                    <i class="fas fa-question-circle"></i>
-                    <span>How do I chat with agronomy experts?</span>
-                </div>
-                <p class="faq-a">
-                    As a Premium member, you can navigate to the "Ask Expert" tab and initiate direct chats with certified agronomists, attach crop photos, and receive customized treatment guidance.
-                </p>
-            </div>
-
-            <div class="faq-card">
-                <div class="faq-q">
-                    <i class="fas fa-question-circle"></i>
-                    <span>What payment methods do you accept?</span>
-                </div>
-                <p class="faq-a">
-                    We support PayPal, Visa, Mastercard, and major debit/credit cards through our secure checkout system.
-                </p>
+                <h4 class="trust-title-modern">Cancel Anytime</h4>
+                <p class="trust-desc-modern">No lock-in contracts. Manage or cancel your billing preference anytime with one click.</p>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const btnMonthly = document.getElementById("btnMonthly");
+    const btnYearly = document.getElementById("btnYearly");
+    const indicator = document.getElementById("switchIndicator");
+
+    const priceStarter = document.getElementById("priceStarter");
+    const periodStarter = document.getElementById("periodStarter");
+
+    const pricePro = document.getElementById("pricePro");
+    const periodPro = document.getElementById("periodPro");
+
+    const priceEnterprise = document.getElementById("priceEnterprise");
+    const periodEnterprise = document.getElementById("periodEnterprise");
+
+    const checkoutProBtn = document.getElementById("checkoutProBtn");
+
+    const baseMonthlyPrice = {{ premium_price|default(20)|float }};
+    const yearlyDiscountRate = {{ yearly_discount_percent|default(20)|float }} / 100.0;
+    const yearlyMonthlyRate = Math.round(baseMonthlyPrice * (1.0 - yearlyDiscountRate));
+    const yearlyTotalPrice = yearlyMonthlyRate * 12;
+
+    function animateValue(element, start, end, duration) {
+        let startTimestamp = null;
+        const step = (timestamp) => {
+            if (!startTimestamp) startTimestamp = timestamp;
+            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+            element.innerText = Math.floor(progress * (end - start) + start);
+            if (progress < 1) {
+                window.requestAnimationFrame(step);
+            } else {
+                element.innerText = end;
+            }
+        };
+        window.requestAnimationFrame(step);
+    }
+
+    function setBilling(isYearly) {
+        if (isYearly) {
+            btnYearly.classList.add("is-active");
+            btnMonthly.classList.remove("is-active");
+            indicator.style.transform = "translateX(100%)";
+
+            // Update Pro Price (Yearly Rate)
+            animateValue(pricePro, parseInt(pricePro.innerText) || baseMonthlyPrice, yearlyMonthlyRate, 250);
+            periodPro.innerText = "/month (billed $ " + yearlyTotalPrice + "/yr)";
+
+            // Update Enterprise Price
+            animateValue(priceEnterprise, parseInt(priceEnterprise.innerText) || 48, 38, 250);
+            periodEnterprise.innerText = "/month (billed $456/yr)";
+
+            if (checkoutProBtn) {
+                checkoutProBtn.href = "{{ url_for('farmer.premium_checkout') }}?billing=yearly";
+            }
+        } else {
+            btnMonthly.classList.add("is-active");
+            btnYearly.classList.remove("is-active");
+            indicator.style.transform = "translateX(0%)";
+
+            // Update Pro Price (Monthly Rate)
+            animateValue(pricePro, parseInt(pricePro.innerText) || yearlyMonthlyRate, Math.round(baseMonthlyPrice), 250);
+            periodPro.innerText = "/month";
+
+            // Update Enterprise Price
+            animateValue(priceEnterprise, parseInt(priceEnterprise.innerText) || 38, 48, 250);
+            periodEnterprise.innerText = "/month";
+
+            if (checkoutProBtn) {
+                checkoutProBtn.href = "{{ url_for('farmer.premium_checkout') }}?billing=monthly";
+            }
+        }
+    }
+
+    btnMonthly.addEventListener("click", () => setBilling(false));
+    btnYearly.addEventListener("click", () => setBilling(true));
+});
+</script>
 {% endblock %}
+
 

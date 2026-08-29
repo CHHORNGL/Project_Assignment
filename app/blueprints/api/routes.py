@@ -553,7 +553,7 @@ def google_login_api():
         return jsonify({'error': 'Missing Google ID token'}), 400
         
     try:
-        resp = requests.get(f'https://oauth2.googleapis.com/tokeninfo?id_token={id_token}')
+        resp = requests.get(f'https://oauth2.googleapis.com/tokeninfo?id_token={id_token}', timeout=10)
         if resp.status_code != 200:
             return jsonify({'error': 'Invalid Google ID token'}), 401
             

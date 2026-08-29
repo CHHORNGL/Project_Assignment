@@ -1,0 +1,18 @@
+<!-- Exact Neumorphic Toggle Switch Partial -->
+<label class="label" {% if toggle_id %}for="{{ toggle_id }}"{% endif %}>
+    <div class="toggle">
+        <input 
+            class="toggle-state" 
+            type="checkbox" 
+            {% if toggle_id %}id="{{ toggle_id }}"{% endif %} 
+            {% if toggle_name %}name="{{ toggle_name }}"{% else %}name="check"{% endif %} 
+            value="dark"
+            {% if toggle_checked %}checked{% endif %}
+            aria-label="{{ toggle_label|default('Toggle theme') }}"
+        >
+        <div class="indicator"></div>
+    </div>
+    {% if toggle_label %}
+    <span class="label-text">{{ toggle_label }}</span>
+    {% endif %}
+</label>

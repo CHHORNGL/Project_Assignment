@@ -97,7 +97,6 @@ def index():
 # 🌗 UPDATE USER THEME
 # ===============================
 @user_bp.route("/theme", methods=["POST"])
-@login_required
 def update_theme():
     """
     Save user theme preference
@@ -112,9 +111,10 @@ def update_theme():
             "message": "Invalid theme value"
         }), 400
 
-    # Save preference
-    current_user.theme = theme
-    db.session.commit()
+    # Save preference if user is authenticated
+    if current_user.is_authenticated:
+        current_user.theme = theme
+        db.session.commit()
 
     return jsonify({
         "status": "success",
@@ -125,19 +125,27 @@ def update_theme():
 # ===============================
 # 🌐 UPDATE GLOBAL LANGUAGE
 # ===============================
-@user_bp.route("/language", methods=["POST"])
+@user_bp.route("/language", methods=["GET", "POST"])
 def update_language():
     """
     Set global language preference for all users.
     Accepted values: en | km
     """
-    data = request.get_json(silent=True) or {}
-    lang = data.get("language")
-    lang = set_current_language(lang)
-    return jsonify({
-        "status": "success",
-        "language": lang
-    })
+    if request.method == "POST":
+        data = request.get_json(silent=True) or {}
+        lang = data.get("language")
+        lang = set_current_language(lang)
+        return jsonify({
+            "status": "success",
+            "language": lang
+        })
+    else:
+        lang = request.args.get("lang")
+        set_current_language(lang)
+        next_url = request.args.get("next")
+        if not next_url or not next_url.startswith("/"):
+            next_url = url_for("auth.login")
+        return redirect(next_url)
 
 
 # ===============================

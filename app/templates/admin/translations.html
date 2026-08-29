@@ -18,6 +18,42 @@
     </div>
 
     <div class="card shadow-sm mb-4">
+        <div class="card-body py-3 d-flex flex-wrap align-items-center justify-content-between">
+            <div class="d-flex align-items-center">
+                <div class="icon-circle bg-light-primary text-primary mr-3" style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div>
+                    <h6 class="mb-0 font-weight-bold">{{ t("ai_translation_model") | default("AI Translation Model") }}</h6>
+                    <div class="small text-muted">{{ t("ai_translation_model_hint") | default("Choose the AI model to use when clicking the robot icon.") }}</div>
+                </div>
+            </div>
+            <div style="min-width: 200px;">
+                <select class="form-control form-control-sm font-weight-bold" id="ai-translation-model">
+                    <option value="">Auto (Default Settings)</option>
+                    <optgroup label="Groq (Currently Available)">
+                        <option value="qwen/qwen3.8-27b" selected>Qwen 3.8 27B (Groq Fast)</option>
+                        <option value="openai/gpt-oss-20b">GPT-OSS 20B (Groq)</option>
+                    </optgroup>
+                    <optgroup label="Groq (Standard)">
+                        <option value="llama-3.3-70b-versatile">Llama 3.3 70B</option>
+                        <option value="llama-3.1-8b-instant">Llama 3.1 8B</option>
+                        <option value="mixtral-8x7b-32768">Mixtral 8x7B</option>
+                    </optgroup>
+                    <optgroup label="Google Gemini">
+                        <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                        <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                    </optgroup>
+                    <optgroup label="OpenAI GPT">
+                        <option value="gpt-4o-mini">GPT-4o Mini</option>
+                        <option value="gpt-4o">GPT-4o</option>
+                    </optgroup>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
         <div class="card-body">
             <form method="GET" class="form-row align-items-end">
                 <div class="col-md-4 mb-2">
@@ -689,13 +725,14 @@ document.querySelectorAll(".kh-key").forEach((btn) => {
 });
 
 async function aiTranslate(text) {
+    const model = document.getElementById("ai-translation-model")?.value || "";
     const res = await fetch("/admin/translations/ai", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text })
+        body: JSON.stringify({ text, model })
     });
     const data = await res.json();
-    if (!data.ok) throw new Error(data.error || "Translation failed");
+    if (!data.success && !data.ok) throw new Error(data.error || "Translation failed");
     return data.translation;
 }
 

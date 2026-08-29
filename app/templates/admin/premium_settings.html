@@ -35,18 +35,37 @@
         </div>
     </div>
 
-    <!-- Base Price -->
+    <!-- Monthly Price -->
     <div class="col-xl-3 col-md-6 mb-3">
         <div class="card shadow-sm h-100 py-2 border-left-info" style="border-radius: 12px;">
             <div class="card-body">
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Regular Monthly Price</div>
-                        <div class="h4 mb-0 font-weight-bold text-gray-800">${{ current_price }}</div>
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Monthly Plan Rate</div>
+                        <div class="h4 mb-0 font-weight-bold text-gray-800">${{ final_price }} <small class="text-muted" style="font-size: 0.75rem;">/mo</small></div>
                     </div>
                     <div class="col-auto">
                         <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(54, 185, 204, 0.12); display: flex; align-items: center; justify-content: center;">
-                            <i class="fas fa-tag text-info fa-lg"></i>
+                            <i class="fas fa-calendar-alt text-info fa-lg"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Yearly Plan Rate -->
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card shadow-sm h-100 py-2 border-left-success" style="border-radius: 12px;">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Yearly Plan Rate</div>
+                        <div class="h4 mb-0 font-weight-bold text-gray-800">${{ yearly_final_monthly_rate }} <small class="text-muted" style="font-size: 0.75rem;">/mo (${{ yearly_total_amount }}/yr)</small></div>
+                    </div>
+                    <div class="col-auto">
+                        <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(28, 200, 138, 0.12); display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-sync-alt text-success fa-lg"></i>
                         </div>
                     </div>
                 </div>
@@ -56,41 +75,16 @@
 
     <!-- Active Global Discount -->
     <div class="col-xl-3 col-md-6 mb-3">
-        <div class="card shadow-sm h-100 py-2 border-left-success" style="border-radius: 12px;">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Global Sale Discount</div>
-                        <div class="h4 mb-0 font-weight-bold text-gray-800">
-                            {% if discount_percent|float > 0 %}
-                                {{ discount_percent }}% OFF
-                            {% else %}
-                                None (0%)
-                            {% endif %}
-                        </div>
-                    </div>
-                    <div class="col-auto">
-                        <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(28, 200, 138, 0.12); display: flex; align-items: center; justify-content: center;">
-                            <i class="fas fa-percent text-success fa-lg"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Final Checkout Price -->
-    <div class="col-xl-3 col-md-6 mb-3">
         <div class="card shadow-sm h-100 py-2 border-left-warning" style="border-radius: 12px;">
             <div class="card-body">
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Effective Live Price</div>
-                        <div class="h4 mb-0 font-weight-bold text-gray-800">${{ final_price }} <small class="text-muted" style="font-size: 0.75rem;">/mo</small></div>
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Yearly Plan Discount</div>
+                        <div class="h4 mb-0 font-weight-bold text-gray-800">{{ yearly_discount_percent }}% OFF</div>
                     </div>
                     <div class="col-auto">
                         <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(246, 194, 62, 0.15); display: flex; align-items: center; justify-content: center;">
-                            <i class="fas fa-wallet text-warning fa-lg"></i>
+                            <i class="fas fa-percent text-warning fa-lg"></i>
                         </div>
                     </div>
                 </div>
@@ -107,16 +101,16 @@
         <div class="card shadow-sm mb-4" style="border: none; border-radius: 14px; overflow: hidden;">
             <div class="card-header py-3 bg-white d-flex align-items-center justify-content-between" style="border-bottom: 1px solid #edf2f7;">
                 <h6 class="m-0 font-weight-bold text-primary">
-                    <i class="fas fa-sliders-h mr-2"></i> Pricing & Sale Discount
+                    <i class="fas fa-sliders-h mr-2"></i> Monthly &amp; Yearly Pricing Controller
                 </h6>
             </div>
             <div class="card-body p-4">
                 <form method="POST" id="pricingForm">
                     <input type="hidden" name="action" value="save_pricing">
 
-                    <!-- Regular Price -->
+                    <!-- Regular Monthly Price -->
                     <div class="form-group mb-3">
-                        <label class="font-weight-bold text-gray-700 small">Regular Monthly Price (USD) <span class="text-danger">*</span></label>
+                        <label class="font-weight-bold text-gray-700 small">Base Monthly Price (USD) <span class="text-danger">*</span></label>
                         <div class="input-group">
                             <div class="input-group-prepend">
                                 <span class="input-group-text bg-light font-weight-bold">$</span>
@@ -128,26 +122,42 @@
                         </div>
                     </div>
 
-                    <!-- Global Discount % -->
+                    <!-- Yearly Discount % -->
                     <div class="form-group mb-3">
-                        <label class="font-weight-bold text-gray-700 small">Global Sale Discount (%)</label>
+                        <label class="font-weight-bold text-gray-700 small">Yearly Subscription Discount (%) <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <input type="number" step="1" min="0" max="90" name="yearly_discount_percent" id="input_yearly_discount" class="form-control font-weight-bold" value="{{ yearly_discount_percent }}" placeholder="20" required>
+                            <div class="input-group-append">
+                                <span class="input-group-text bg-light font-weight-bold text-primary">% OFF Yearly</span>
+                            </div>
+                        </div>
+                        <small class="text-muted">Discount applied when users choose Yearly billing (Default: 20%).</small>
+                    </div>
+
+                    <!-- Global Promo Sale Discount % -->
+                    <div class="form-group mb-3">
+                        <label class="font-weight-bold text-gray-700 small">Seasonal Promo Sale Discount (%)</label>
                         <div class="input-group">
                             <input type="number" step="1" min="0" max="100" name="discount_percent" id="input_discount" class="form-control" value="{{ discount_percent }}" placeholder="0">
                             <div class="input-group-append">
                                 <span class="input-group-text bg-light font-weight-bold text-success">% OFF</span>
                             </div>
                         </div>
-                        <small class="text-muted">Enter 20 for 20% off. Set to 0 to disable global discount.</small>
+                        <small class="text-muted">Extra discount off all plans. Set to 0 to disable promo sale.</small>
                     </div>
 
                     <!-- Live Calculation Preview -->
                     <div class="p-3 mb-3 rounded" style="background: #f8fafc; border: 1px dashed #cbd5e1;">
-                        <div class="d-flex justify-content-between align-items-center mb-1">
-                            <span class="text-muted small font-weight-bold">Live Customer Price Preview:</span>
-                            <span id="preview_final" class="h5 font-weight-bold text-primary mb-0">${{ final_price }} / mo</span>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-muted small font-weight-bold">Live Customer Monthly:</span>
+                            <span id="preview_final_monthly" class="h6 font-weight-bold text-primary mb-0">${{ final_price }} / mo</span>
                         </div>
-                        <div id="preview_savings" class="text-success small" style="{% if discount_percent|float <= 0 %}display:none;{% endif %}">
-                            <i class="fas fa-check-circle mr-1"></i> Farmers will save <span id="preview_saved_amount">$0.00</span> per month!
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="text-muted small font-weight-bold">Live Customer Yearly:</span>
+                            <span id="preview_final_yearly" class="h6 font-weight-bold text-success mb-0">${{ yearly_final_monthly_rate }} / mo (${{ yearly_total_amount }}/yr)</span>
+                        </div>
+                        <div id="preview_savings" class="text-success small mt-2 pt-2 border-top" style="{% if discount_percent|float <= 0 and yearly_discount_percent|float <= 0 %}display:none;{% endif %}">
+                            <i class="fas fa-check-circle mr-1"></i> Farmers save <span id="preview_saved_yearly" class="font-weight-bold">${{ "%.2f"|format(current_price|float * 12 - yearly_total_amount|float) }}</span> per year with Yearly plan!
                         </div>
                     </div>
 
@@ -168,7 +178,7 @@
 
                     <button type="submit" class="btn-save-clean btn-block">
                         <i class="fas fa-check-circle"></i>
-                        <span>Save Pricing & Discount Settings</span>
+                        <span>Save Pricing &amp; Discount Settings</span>
                     </button>
                 </form>
             </div>
@@ -346,36 +356,53 @@
 <script>
 document.addEventListener("DOMContentLoaded", function() {
     const inputPrice = document.getElementById("input_price");
+    const inputYearlyDiscount = document.getElementById("input_yearly_discount");
     const inputDiscount = document.getElementById("input_discount");
-    const previewFinal = document.getElementById("preview_final");
+    const previewFinalMonthly = document.getElementById("preview_final_monthly");
+    const previewFinalYearly = document.getElementById("preview_final_yearly");
     const previewSavings = document.getElementById("preview_savings");
-    const previewSavedAmount = document.getElementById("preview_saved_amount");
+    const previewSavedYearly = document.getElementById("preview_saved_yearly");
     const discountType = document.getElementById("discount_type");
     const unitSymbol = document.getElementById("unit_symbol");
 
     function updatePreview() {
-        const price = parseFloat(inputPrice.value) || 0;
-        const discount = parseFloat(inputDiscount.value) || 0;
+        const basePrice = parseFloat(inputPrice.value) || 0;
+        const promoDiscount = parseFloat(inputDiscount.value) || 0;
+        const yearlyDiscount = parseFloat(inputYearlyDiscount ? inputYearlyDiscount.value : 20) || 0;
         
-        let finalPrice = price;
-        let savings = 0;
-        
-        if (discount > 0 && discount <= 100) {
-            savings = price * (discount / 100);
-            finalPrice = Math.max(0, price - savings);
-            previewSavings.style.display = "block";
-            previewSavedAmount.textContent = "$" + savings.toFixed(2);
-        } else {
-            previewSavings.style.display = "none";
+        let monthlyEffective = basePrice;
+        if (promoDiscount > 0 && promoDiscount <= 100) {
+            monthlyEffective = Math.max(0, basePrice * (1.0 - promoDiscount / 100));
+        }
+
+        let yearlyMonthlyRate = monthlyEffective;
+        if (yearlyDiscount > 0 && yearlyDiscount <= 100) {
+            yearlyMonthlyRate = Math.max(0, monthlyEffective * (1.0 - yearlyDiscount / 100));
+        }
+        const yearlyTotal = yearlyMonthlyRate * 12;
+        const fullYearlyBase = basePrice * 12;
+        const totalSavedPerYear = Math.max(0, fullYearlyBase - yearlyTotal);
+
+        if (previewFinalMonthly) {
+            previewFinalMonthly.textContent = "$" + monthlyEffective.toFixed(2) + " / mo";
+        }
+        if (previewFinalYearly) {
+            previewFinalYearly.textContent = "$" + yearlyMonthlyRate.toFixed(2) + " / mo ($" + yearlyTotal.toFixed(2) + "/yr)";
         }
         
-        previewFinal.textContent = "$" + finalPrice.toFixed(2) + " / mo";
+        if (previewSavings && previewSavedYearly) {
+            if (totalSavedPerYear > 0) {
+                previewSavings.style.display = "block";
+                previewSavedYearly.textContent = "$" + totalSavedPerYear.toFixed(2);
+            } else {
+                previewSavings.style.display = "none";
+            }
+        }
     }
 
-    if (inputPrice && inputDiscount) {
-        inputPrice.addEventListener("input", updatePreview);
-        inputDiscount.addEventListener("input", updatePreview);
-    }
+    if (inputPrice) inputPrice.addEventListener("input", updatePreview);
+    if (inputDiscount) inputDiscount.addEventListener("input", updatePreview);
+    if (inputYearlyDiscount) inputYearlyDiscount.addEventListener("input", updatePreview);
 
     if (discountType && unitSymbol) {
         discountType.addEventListener("change", function() {

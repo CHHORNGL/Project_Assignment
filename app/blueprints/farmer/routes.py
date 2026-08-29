@@ -1474,10 +1474,12 @@ def premium_upgrade():
     from app.models.site_setting import SiteSetting
     price_setting = SiteSetting.query.get("premium_price")
     discount_setting = SiteSetting.query.get("premium_discount_percent")
+    yearly_discount_setting = SiteSetting.query.get("premium_yearly_discount_percent")
     banner_setting = SiteSetting.query.get("premium_discount_banner")
 
     original_price = float(price_setting.value) if price_setting and price_setting.value else 20.0
     discount_percent = float(discount_setting.value) if discount_setting and discount_setting.value else 0.0
+    yearly_discount_percent = float(yearly_discount_setting.value) if yearly_discount_setting and yearly_discount_setting.value else 20.0
     discount_banner = banner_setting.value if banner_setting else ""
 
     savings = round(original_price * (discount_percent / 100.0), 2) if discount_percent > 0 else 0.0
@@ -1489,6 +1491,7 @@ def premium_upgrade():
         premium_price=final_price,
         original_price=orig_price_str,
         discount_percent=discount_percent,
+        yearly_discount_percent=yearly_discount_percent,
         discount_banner=discount_banner,
         savings=savings
     )
@@ -1505,14 +1508,27 @@ def premium_checkout():
 
     price_setting = SiteSetting.query.get("premium_price")
     discount_setting = SiteSetting.query.get("premium_discount_percent")
+    yearly_discount_setting = SiteSetting.query.get("premium_yearly_discount_percent")
     coupon_setting = SiteSetting.query.get("premium_coupon_enabled")
 
     original_price = float(price_setting.value) if price_setting and price_setting.value else 20.0
     discount_percent = float(discount_setting.value) if discount_setting and discount_setting.value else 0.0
+    yearly_discount_percent = float(yearly_discount_setting.value) if yearly_discount_setting and yearly_discount_setting.value else 20.0
     coupon_enabled = coupon_setting.value != "0" if coupon_setting else True
 
     savings = round(original_price * (discount_percent / 100.0), 2) if discount_percent > 0 else 0.0
     base_checkout_price = max(0.0, original_price - savings)
+
+    billing_interval = request.args.get("billing", "monthly").strip().lower()
+    is_yearly = (billing_interval == "yearly")
+
+    if is_yearly:
+        yearly_rate = round(base_checkout_price * (1.0 - yearly_discount_percent / 100.0) * 12, 2)
+        display_checkout_price = f"{yearly_rate:.2f}"
+        display_orig_price = f"{original_price * 12:.2f}"
+    else:
+        display_checkout_price = f"{base_checkout_price:.2f}"
+        display_orig_price = f"{original_price:.2f}"
         
     if request.method == "POST":
         # Payment processing via PayPal frontend SDK success hidden form or direct checkout
@@ -1522,9 +1538,12 @@ def premium_checkout():
             if coupon and coupon.is_valid()[0]:
                 coupon.times_used += 1
 
+        post_interval = request.form.get("billing_interval", billing_interval).strip().lower()
+        days_to_add = 365 if post_interval == "yearly" else 30
+
         current_user.is_premium = True
         from datetime import datetime, timedelta
-        current_user.premium_expires_at = datetime.utcnow() + timedelta(days=30)
+        current_user.premium_expires_at = datetime.utcnow() + timedelta(days=days_to_add)
         
         # Best effort user notification & audit log
         try:
@@ -1541,7 +1560,7 @@ def premium_checkout():
             pass
 
         try:
-            log_action("farmer_premium_upgrade", detail=f"User @{current_user.username} upgraded to Premium (expires {current_user.premium_expires_at.strftime('%Y-%m-%d')})")
+            log_action("farmer_premium_upgrade", detail=f"User @{current_user.username} upgraded to Premium ({post_interval}, expires {current_user.premium_expires_at.strftime('%Y-%m-%d')})")
         except Exception:
             pass
 
@@ -1554,11 +1573,14 @@ def premium_checkout():
     return render_template(
         "farmer/checkout.html",
         paypal_client_id=paypal_client_id,
-        premium_price=f"{base_checkout_price:.2f}",
-        original_price=f"{original_price:.2f}",
+        premium_price=display_checkout_price,
+        original_price=display_orig_price,
         discount_percent=discount_percent,
+        yearly_discount_percent=yearly_discount_percent,
         savings=savings,
-        coupon_enabled=coupon_enabled
+        coupon_enabled=coupon_enabled,
+        billing_interval=billing_interval,
+        is_yearly=is_yearly
     )
 
 @farmer_bp.route("/api/validate-coupon", methods=["POST"])

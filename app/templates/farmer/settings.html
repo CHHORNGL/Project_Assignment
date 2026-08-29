@@ -144,63 +144,83 @@
     }
 }
 
-.theme-card-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-    width: 100%;
-    margin-top: 14px;
+/* =========================================
+   CLEAN & PROFESSIONAL APPEARANCE STYLING
+   ========================================= */
+.theme-section-card {
+    padding: 24px;
+    background: var(--card-bg, #ffffff);
+    border: 1px solid var(--border-light, #e2e8f0);
+    border-radius: 18px;
+    box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.04);
 }
 
-@media (max-width: 575.98px) {
+.settings-section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.theme-card-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    width: 100%;
+}
+
+@media (max-width: 640px) {
     .theme-card-grid {
         grid-template-columns: 1fr;
-        gap: 10px;
+        gap: 12px;
     }
 }
 
 .theme-preview-card {
     position: relative;
     border: 2px solid var(--border-light, #e2e8f0);
-    background: var(--card-bg, #ffffff);
-    border-radius: 14px;
-    padding: 10px;
+    background: var(--surface-bg, #f8fafc);
+    border-radius: 16px;
+    padding: 14px;
     cursor: pointer;
-    transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
     margin: 0;
     user-select: none;
 }
 
 .theme-preview-card:hover {
-    border-color: #93c5fd;
+    border-color: #10b981;
+    background: #ffffff;
     transform: translateY(-2px);
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.1);
 }
 
 .theme-preview-card.is-active,
 .theme-preview-card:has(input[type="radio"]:checked) {
-    border-color: #2563eb;
-    background: rgba(37, 99, 235, 0.03);
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15), 0 8px 20px rgba(37, 99, 235, 0.08);
+    border-color: #10b981;
+    background: rgba(16, 185, 129, 0.04);
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.18), 0 12px 28px -6px rgba(16, 185, 129, 0.14);
 }
 
 .dark-mode .theme-preview-card {
-    background: #1e293b;
-    border-color: #334155;
+    background: rgba(24, 24, 27, 0.6);
+    border-color: rgba(255, 255, 255, 0.1);
 }
 
 .dark-mode .theme-preview-card:hover {
-    border-color: #60a5fa;
+    border-color: #10b981;
+    background: rgba(39, 39, 42, 0.8);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
 }
 
 .dark-mode .theme-preview-card.is-active,
 .dark-mode .theme-preview-card:has(input[type="radio"]:checked) {
-    border-color: #60a5fa;
-    background: rgba(96, 165, 250, 0.06);
-    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2), 0 8px 20px rgba(0, 0, 0, 0.3);
+    border-color: #10b981;
+    background: rgba(16, 185, 129, 0.08);
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25), 0 12px 28px -6px rgba(0, 0, 0, 0.6);
 }
 
 .theme-preview-card input[type="radio"] {
@@ -209,24 +229,30 @@
     pointer-events: none;
 }
 
-/* Mini Mockup Visual */
+/* Modern Mockup Frame */
 .theme-mockup {
-    height: 72px;
-    border-radius: 9px;
+    height: 84px;
+    border-radius: 10px;
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    border: 1px solid rgba(0, 0, 0, 0.08);
-    position: relative;
-    box-shadow: inset 0 1px 2px rgba(0,0,0,0.04);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+    transition: all 0.2s ease;
 }
 
 .mockup-header {
-    height: 14px;
+    height: 16px;
     display: flex;
     align-items: center;
-    gap: 4px;
+    justify-content: space-between;
     padding: 0 8px;
+}
+
+.mockup-dots {
+    display: flex;
+    align-items: center;
+    gap: 3px;
 }
 
 .mockup-dot {
@@ -235,188 +261,221 @@
     border-radius: 50%;
 }
 
+.mockup-top-nav {
+    width: 28px;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(0, 0, 0, 0.1);
+}
+
 .mockup-body {
     flex: 1;
     display: flex;
-    padding: 5px 6px;
-    gap: 5px;
+    padding: 6px 8px;
+    gap: 6px;
 }
 
 .mockup-side {
-    width: 24%;
-    border-radius: 4px;
+    width: 22%;
+    border-radius: 5px;
 }
 
 .mockup-main {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 5px;
     justify-content: center;
 }
 
+.mockup-card-preview {
+    padding: 5px;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
 .mockup-bar {
-    height: 5px;
+    height: 4px;
+    border-radius: 2px;
+}
+
+.mockup-mini-grid {
+    display: flex;
+    gap: 4px;
+}
+
+.mockup-mini-box {
+    flex: 1;
+    height: 12px;
     border-radius: 3px;
 }
 
-/* Light Mockup Colors */
+/* Light Theme Mockup Palette */
 .mockup-light {
-    background: #f8fafc;
+    background: #ffffff;
 }
 .mockup-light .mockup-header {
-    background: #e2e8f0;
+    background: #f1f5f9;
+    border-bottom: 1px solid #e2e8f0;
 }
 .mockup-light .mockup-dot {
-    background: #94a3b8;
+    background: #cbd5e1;
 }
 .mockup-light .mockup-side {
-    background: #e2e8f0;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+}
+.mockup-light .mockup-card-preview {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
 }
 .mockup-light .mockup-bar {
     background: #cbd5e1;
 }
 .mockup-light .mockup-bar.accent {
-    background: #3b82f6;
+    background: #10b981;
+}
+.mockup-light .mockup-mini-box {
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
 }
 
-/* Dark Mockup Colors */
+/* Dark Theme Mockup Palette */
 .mockup-dark {
-    background: #0f172a;
+    background: #09090b;
 }
 .mockup-dark .mockup-header {
-    background: #1e293b;
+    background: #18181b;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 .mockup-dark .mockup-dot {
-    background: #64748b;
+    background: #3f3f46;
+}
+.mockup-dark .mockup-top-nav {
+    background: rgba(255, 255, 255, 0.15);
 }
 .mockup-dark .mockup-side {
-    background: #1e293b;
+    background: #18181b;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.mockup-dark .mockup-card-preview {
+    background: #18181b;
+    border: 1px solid rgba(255, 255, 255, 0.08);
 }
 .mockup-dark .mockup-bar {
-    background: #334155;
+    background: #3f3f46;
 }
 .mockup-dark .mockup-bar.accent {
     background: #10b981;
 }
-
-/* System Mockup Split Visual */
-.mockup-system {
-    display: flex;
-    flex-direction: row;
+.mockup-dark .mockup-mini-box {
+    background: #18181b;
+    border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.mockup-split {
-    flex: 1;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    padding: 8px 6px;
-    gap: 5px;
-    justify-content: center;
-}
-
-.mockup-split-light {
-    background: #f8fafc;
-    border-right: 1px solid #cbd5e1;
-}
-.mockup-split-light .mockup-bar {
-    background: #cbd5e1;
-}
-.mockup-split-light .mockup-bar.accent {
-    background: #3b82f6;
-}
-
-.mockup-split-dark {
-    background: #0f172a;
-}
-.mockup-split-dark .mockup-bar {
-    background: #334155;
-}
-.mockup-split-dark .mockup-bar.accent {
-    background: #10b981;
-}
-
-/* Theme Card Meta */
+/* Theme Card Footer & Meta */
 .theme-card-meta {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 2px 2px;
+    padding: 2px 0;
 }
 
 .theme-meta-left {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     min-width: 0;
 }
 
 .theme-icon-indicator {
-    width: 28px;
-    height: 28px;
-    min-width: 28px;
-    border-radius: 8px;
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.85rem;
+    font-size: 0.95rem;
 }
 
 .theme-icon-light {
-    background: rgba(245, 158, 11, 0.14);
+    background: rgba(245, 158, 11, 0.12);
     color: #d97706;
 }
 
 .theme-icon-dark {
-    background: rgba(99, 102, 241, 0.14);
+    background: rgba(99, 102, 241, 0.12);
     color: #6366f1;
 }
 
-.theme-icon-system {
-    background: rgba(100, 116, 139, 0.14);
-    color: #64748b;
+.dark-mode .theme-icon-light {
+    background: rgba(245, 158, 11, 0.2);
+    color: #fbbf24;
 }
 
-.dark-mode .theme-icon-light { background: rgba(245, 158, 11, 0.22); color: #fbbf24; }
-.dark-mode .theme-icon-dark { background: rgba(129, 140, 248, 0.22); color: #a5b4fc; }
-.dark-mode .theme-icon-system { background: rgba(148, 163, 184, 0.22); color: #cbd5e1; }
+.dark-mode .theme-icon-dark {
+    background: rgba(129, 140, 248, 0.2);
+    color: #a5b4fc;
+}
+
+.theme-text-group {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
 
 .theme-name-text {
-    font-size: 0.88rem;
+    font-size: 0.9rem;
     font-weight: 700;
-    color: var(--text-main, #1e293b);
+    color: var(--text-main, #0f172a);
 }
 
 .dark-mode .theme-name-text {
     color: #f8fafc;
 }
 
-.theme-check-icon {
-    width: 20px;
-    height: 20px;
+.theme-desc-text {
+    font-size: 0.74rem;
+    color: var(--text-muted, #64748b);
+}
+
+.dark-mode .theme-desc-text {
+    color: #94a3b8;
+}
+
+.theme-check-badge {
+    width: 22px;
+    height: 22px;
     border-radius: 50%;
     border: 1.5px solid var(--border-light, #cbd5e1);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.65rem;
+    font-size: 0.7rem;
     color: transparent;
-    transition: all 0.18s ease;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.theme-preview-card.is-active .theme-check-icon,
-.theme-preview-card:has(input[type="radio"]:checked) .theme-check-icon {
-    background: #2563eb;
-    border-color: #2563eb;
+.theme-preview-card.is-active .theme-check-badge,
+.theme-preview-card:has(input[type="radio"]:checked) .theme-check-badge {
+    background: #10b981;
+    border-color: #10b981;
     color: #ffffff;
+    transform: scale(1.05);
 }
 
-.dark-mode .theme-preview-card.is-active .theme-check-icon,
-.dark-mode .theme-preview-card:has(input[type="radio"]:checked) .theme-check-icon {
-    background: #60a5fa;
-    border-color: #60a5fa;
-    color: #0f172a;
+.dark-mode .theme-check-badge {
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.dark-mode .theme-preview-card.is-active .theme-check-badge,
+.dark-mode .theme-preview-card:has(input[type="radio"]:checked) .theme-check-badge {
+    background: #10b981;
+    border-color: #10b981;
+    color: #ffffff;
 }
 
 /* =========================================
@@ -823,53 +882,84 @@ input:checked + .ios-slider:before {
         <!-- 1. APPEARANCE & THEME SECTION -->
         <div class="settings-section-title">
             <i class="fas fa-palette text-warning"></i>
-            <span>{{ t("appearance") }}</span>
+            <span>{{ t("appearance")|default("Appearance & Theme") }}</span>
         </div>
 
         <div class="settings-card theme-section-card">
-            <div class="settings-row-left mb-1">
-                <div class="settings-icon icon-theme"><i class="fas fa-palette"></i></div>
+            <div class="settings-section-header">
+                <div class="settings-icon icon-theme"><i class="fas fa-swatchbook"></i></div>
                 <div>
-                    <div class="settings-label">{{ t("theme") }}</div>
-                    <div class="settings-sublabel">Select your preferred visual mode for the interface</div>
+                    <div class="settings-label">{{ t("theme")|default("Interface Theme") }}</div>
+                    <div class="settings-sublabel">Choose your preferred visual mode for Agri Precision</div>
                 </div>
             </div>
 
             <div class="theme-card-grid">
                 <!-- LIGHT THEME -->
-                <label class="theme-preview-card {% if current_user.theme == 'light' %}is-active{% endif %}" data-theme-val="light">
-                    <input type="radio" name="theme" value="light" {% if current_user.theme == 'light' %}checked{% endif %}>
+                <label class="theme-preview-card {% if current_user.theme == 'light' or not current_user.theme %}is-active{% endif %}" data-theme-val="light">
+                    <input type="radio" name="theme" value="light" {% if current_user.theme == 'light' or not current_user.theme %}checked{% endif %}>
                     <div class="theme-mockup mockup-light">
-                        <div class="mockup-header"><span class="mockup-dot"></span><span class="mockup-dot"></span><span class="mockup-dot"></span></div>
-                        <div class="mockup-body"><div class="mockup-side"></div><div class="mockup-main"><div class="mockup-bar accent" style="width: 80%;"></div><div class="mockup-bar" style="width: 60%;"></div><div class="mockup-bar" style="width: 45%;"></div></div></div>
+                        <div class="mockup-header">
+                            <div class="mockup-dots"><span class="mockup-dot"></span><span class="mockup-dot"></span><span class="mockup-dot"></span></div>
+                            <div class="mockup-top-nav"></div>
+                        </div>
+                        <div class="mockup-body">
+                            <div class="mockup-side"></div>
+                            <div class="mockup-main">
+                                <div class="mockup-card-preview">
+                                    <div class="mockup-bar accent" style="width: 75%;"></div>
+                                    <div class="mockup-bar" style="width: 50%;"></div>
+                                </div>
+                                <div class="mockup-mini-grid">
+                                    <div class="mockup-mini-box"></div>
+                                    <div class="mockup-mini-box"></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="theme-card-meta">
-                        <div class="theme-meta-left"><div class="theme-icon-indicator theme-icon-light"><i class="fas fa-sun"></i></div><span class="theme-name-text">{{ t("light") }}</span></div>
-                        <div class="theme-check-icon"><i class="fas fa-check"></i></div>
+                        <div class="theme-meta-left">
+                            <div class="theme-icon-indicator theme-icon-light"><i class="fas fa-sun"></i></div>
+                            <div class="theme-text-group">
+                                <span class="theme-name-text">{{ t("light")|default("Light") }}</span>
+                                <span class="theme-desc-text">Clean, crisp & high contrast</span>
+                            </div>
+                        </div>
+                        <div class="theme-check-badge"><i class="fas fa-check"></i></div>
                     </div>
                 </label>
+
                 <!-- DARK THEME -->
                 <label class="theme-preview-card {% if current_user.theme == 'dark' %}is-active{% endif %}" data-theme-val="dark">
                     <input type="radio" name="theme" value="dark" {% if current_user.theme == 'dark' %}checked{% endif %}>
                     <div class="theme-mockup mockup-dark">
-                        <div class="mockup-header"><span class="mockup-dot"></span><span class="mockup-dot"></span><span class="mockup-dot"></span></div>
-                        <div class="mockup-body"><div class="mockup-side"></div><div class="mockup-main"><div class="mockup-bar accent" style="width: 80%;"></div><div class="mockup-bar" style="width: 60%;"></div><div class="mockup-bar" style="width: 45%;"></div></div></div>
+                        <div class="mockup-header">
+                            <div class="mockup-dots"><span class="mockup-dot"></span><span class="mockup-dot"></span><span class="mockup-dot"></span></div>
+                            <div class="mockup-top-nav"></div>
+                        </div>
+                        <div class="mockup-body">
+                            <div class="mockup-side"></div>
+                            <div class="mockup-main">
+                                <div class="mockup-card-preview">
+                                    <div class="mockup-bar accent" style="width: 75%;"></div>
+                                    <div class="mockup-bar" style="width: 50%;"></div>
+                                </div>
+                                <div class="mockup-mini-grid">
+                                    <div class="mockup-mini-box"></div>
+                                    <div class="mockup-mini-box"></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="theme-card-meta">
-                        <div class="theme-meta-left"><div class="theme-icon-indicator theme-icon-dark"><i class="fas fa-moon"></i></div><span class="theme-name-text">{{ t("dark") }}</span></div>
-                        <div class="theme-check-icon"><i class="fas fa-check"></i></div>
-                    </div>
-                </label>
-                <!-- SYSTEM THEME -->
-                <label class="theme-preview-card {% if current_user.theme == 'system' %}is-active{% endif %}" data-theme-val="system">
-                    <input type="radio" name="theme" value="system" {% if current_user.theme == 'system' %}checked{% endif %}>
-                    <div class="theme-mockup mockup-system">
-                        <div class="mockup-split mockup-split-light"><div class="mockup-bar accent" style="width: 85%;"></div><div class="mockup-bar" style="width: 55%;"></div></div>
-                        <div class="mockup-split mockup-split-dark"><div class="mockup-bar accent" style="width: 85%;"></div><div class="mockup-bar" style="width: 55%;"></div></div>
-                    </div>
-                    <div class="theme-card-meta">
-                        <div class="theme-meta-left"><div class="theme-icon-indicator theme-icon-system"><i class="fas fa-desktop"></i></div><span class="theme-name-text">{{ t("system") }}</span></div>
-                        <div class="theme-check-icon"><i class="fas fa-check"></i></div>
+                        <div class="theme-meta-left">
+                            <div class="theme-icon-indicator theme-icon-dark"><i class="fas fa-moon"></i></div>
+                            <div class="theme-text-group">
+                                <span class="theme-name-text">{{ t("dark")|default("Dark") }}</span>
+                                <span class="theme-desc-text">Easy on eyes in low light</span>
+                            </div>
+                        </div>
+                        <div class="theme-check-badge"><i class="fas fa-check"></i></div>
                     </div>
                 </label>
             </div>
@@ -970,16 +1060,29 @@ input:checked + .ios-slider:before {
             if (radio) radio.checked = true;
             themeCards.forEach(c => c.classList.remove("is-active"));
             card.classList.add("is-active");
-            const selectedTheme = card.dataset.themeVal;
-            if (selectedTheme) {
-                if (selectedTheme === "dark") document.documentElement.classList.add("dark-mode");
-                else if (selectedTheme === "light") document.documentElement.classList.remove("dark-mode");
-                else if (selectedTheme === "system") {
-                    const isDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-                    document.documentElement.classList.toggle("dark-mode", isDark);
-                }
-                localStorage.setItem("theme", selectedTheme);
+            const selectedTheme = (card.dataset.themeVal === "dark") ? "dark" : "light";
+            
+            if (selectedTheme === "dark") {
+                document.documentElement.classList.add("dark-mode");
+            } else {
+                document.documentElement.classList.remove("dark-mode");
             }
+            
+            localStorage.setItem("theme", selectedTheme);
+            
+            // Sync all neumorphic switches on page
+            document.querySelectorAll(".theme-toggle-input, .toggle-state").forEach(input => {
+                input.checked = (selectedTheme === "dark");
+            });
+
+            // Persist immediately via API
+            try {
+                fetch("/users/theme", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ theme: selectedTheme })
+                }).catch(() => {});
+            } catch (err) {}
         });
     });
 

@@ -47,7 +47,7 @@
             {% set conf_pct = ((d.confidence * 100)|round(0)|int) if d.confidence is not none else None %}
             <a class="diag-hist-item text-decoration-none text-reset diag-status-{{ d.status|lower }}"
                data-status="{{ d.status }}"
-               data-search="{{ crop_label }} {{ disease_label }} {{ d.symptoms }}"
+               data-search="{{ crop_label }} {{ disease_label }} {{ translate_symptoms(d.symptoms) }}"
                href="{{ url_for('farmer.diagnosis_result', diagnosis_id=d.id) }}">
 
                 <div class="diag-hist-icon-wrap">
@@ -64,7 +64,8 @@
                     <div class="diag-hist-disease">
                         <i class="fas fa-virus mr-1"></i>{{ disease_label or "Unknown" }}
                     </div>
-                    <div class="diag-hist-symptoms">{{ d.symptoms[:80] if d.symptoms else "—" }}{% if d.symptoms and d.symptoms|length > 80 %}…{% endif %}</div>
+                    {% set tr_symptoms = translate_symptoms(d.symptoms) %}
+                    <div class="diag-hist-symptoms">{{ tr_symptoms[:80] if tr_symptoms else "—" }}{% if tr_symptoms and tr_symptoms|length > 80 %}…{% endif %}</div>
                 </div>
 
                 <div class="diag-hist-right">

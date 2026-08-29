@@ -1,4 +1,6 @@
-<!DOCTYPE html>
+import os
+
+forgot_html = """<!DOCTYPE html>
 <html lang="{{ current_lang }}">
 <head>
     <meta charset="UTF-8">
@@ -183,21 +185,21 @@
             <!-- STEP 1: EMAIL -->
             <div id="step-1" class="step-container active">
                 <div class="auth-form-group">
-                    <label for="email-input" class="auth-form-label">Email Address</label>
+                    <label for="email-input" class="auth-form-label">Gmail / Email</label>
                     <div class="auth-input-box">
                         <i class="fas fa-envelope auth-field-icon"></i>
                         <input type="email" id="email-input" class="auth-clean-input" placeholder="example@gmail.com" required>
                     </div>
                 </div>
                 <button type="button" id="btn-get-code" class="auth-primary-btn" style="margin-top: 1.5rem;">
-                    <i class="fas fa-paper-plane mr-2"></i> Send Code
+                    <i class="fas fa-paper-plane mr-2"></i> Get Code
                 </button>
             </div>
 
             <!-- STEP 2: OTP -->
             <div id="step-2" class="step-container">
                 <div class="auth-form-group">
-                    <label for="code-input" class="auth-form-label">Verification Code</label>
+                    <label for="code-input" class="auth-form-label">OTP Code</label>
                     <div class="auth-input-box">
                         <i class="fas fa-shield-alt auth-field-icon"></i>
                         <input type="text" id="code-input" class="auth-clean-input" placeholder="123456" style="letter-spacing: 2px; font-weight: 600;" required>
@@ -469,3 +471,9 @@
 </script>
 </body>
 </html>
+"""
+
+with open("app/templates/auth/forgot_password.html", "w") as f:
+    f.write(forgot_html)
+
+print("forgot_password.html rewritten successfully!")

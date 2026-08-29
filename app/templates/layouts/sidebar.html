@@ -828,6 +828,17 @@ body.icon-nav .app-sidebar .nav-link[data-tooltip]:hover::after,
         </a>
     </li>
 
+    <li class="nav-item">
+        <a class="nav-link {% if path.startswith('/admin/translations') %}active{% endif %}"
+           href="{{ url_for('admin.translations') }}"
+           data-tooltip="Manage Translations"
+           aria-label="Translations">
+            <span class="nav-icon"><i class="fas fa-language"></i></span>
+            <span class="nav-label">Translations</span>
+            <span class="nav-chevron"><i class="fas fa-chevron-right"></i></span>
+        </a>
+    </li>
+
     {% endif %}
 
     <!-- ===============================

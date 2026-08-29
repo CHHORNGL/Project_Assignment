@@ -444,7 +444,8 @@ window.toggleCategory = function(categoryId, headerElement) {
         {% endfor %}
     };
 
-    const isKm = {{ 'true' if is_km else 'false' }};
+    console.log("LANG: '{{ current_lang }}'");
+    const isKm = {{ 'true' if current_lang == 'km' else 'false' }};
     let selectedCropId = document.getElementById("hidden-crop-id").value;
     const selectedSymptoms = new Set();
     const btnSubmit = document.getElementById("btn-submit");
@@ -473,13 +474,14 @@ window.toggleCategory = function(categoryId, headerElement) {
             const cat = getSymptomCategory(s.name, s.name_kh);
             const container = document.getElementById(`category-${cat}`);
             const isChecked = selectedSymptoms.has(s.name);
-            const text = isKm ? s.name_kh : s.name;
+            const text = (isKm && s.name_kh) ? s.name_kh : s.name;
+            const safeSearch = text ? text.toLowerCase() : "";
             
             const chip = document.createElement("div");
             chip.className = `symptom-chip ${isChecked ? 'selected' : ''}`;
             chip.dataset.symptomName = s.name;
-            chip.dataset.searchText = text.toLowerCase();
-            chip.textContent = text;
+            chip.dataset.searchText = safeSearch;
+            chip.textContent = text || s.name;
             
             chip.addEventListener("click", () => {
                 chip.classList.toggle("selected");
