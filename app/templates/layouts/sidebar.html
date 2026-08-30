@@ -81,13 +81,18 @@ body.icon-nav {
     scrollbar-color: rgba(148, 163, 184, 0.25) transparent;
     transition: width 260ms cubic-bezier(0.4, 0, 0.2, 1), min-width 260ms cubic-bezier(0.4, 0, 0.2, 1), padding 260ms cubic-bezier(0.4, 0, 0.2, 1), transform 260ms cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease !important;
     font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-    z-index: 100;
+    position: sticky !important;
+    top: 0 !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    z-index: 1250 !important;
 }
 
 .admin-theme .topbar.app-topbar,
 .expert-simple .topbar.app-topbar,
 .farmer-dash-theme .topbar.app-topbar {
     left: var(--sidebar-width) !important;
+    z-index: 1200 !important;
     transition: left 260ms cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
@@ -107,6 +112,10 @@ body.icon-nav {
 
 /* Brand Section */
 .app-sidebar .sidebar-brand-row {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: 100% !important;
     margin-bottom: 16px;
     padding: 4px 6px;
     transition: all 0.24s ease;
@@ -506,6 +515,27 @@ body.icon-nav .app-sidebar .nav-link[data-tooltip]:hover::after,
     .farmer-dash-theme .topbar.app-topbar {
         left: 0 !important;
         width: 100% !important;
+        z-index: 1100 !important;
+    }
+
+    #mobile-sidebar-backdrop {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        background: rgba(15, 23, 42, 0.65) !important;
+        backdrop-filter: blur(6px) !important;
+        -webkit-backdrop-filter: blur(6px) !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+        transition: opacity 0.28s ease !important;
+        z-index: 1350 !important;
+    }
+
+    body.mobile-nav-open #mobile-sidebar-backdrop {
+        opacity: 1 !important;
+        pointer-events: auto !important;
     }
 
     .app-sidebar {
@@ -520,9 +550,10 @@ body.icon-nav .app-sidebar .nav-link[data-tooltip]:hover::after,
         min-width: 280px !important;
         transform: translateX(-100%) !important;
         transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
-        box-shadow: 20px 0 40px rgba(0, 0, 0, 0.3) !important;
-        z-index: 1050 !important;
+        box-shadow: 20px 0 40px rgba(0, 0, 0, 0.4) !important;
+        z-index: 1400 !important;
         -webkit-overflow-scrolling: touch;
+        padding-top: max(20px, env(safe-area-inset-top, 20px)) !important;
     }
 
     body.mobile-nav-open .app-sidebar {
@@ -535,26 +566,6 @@ body.icon-nav .app-sidebar .nav-link[data-tooltip]:hover::after,
 
     body.mobile-nav-open .app-sidebar.toggled {
         transform: translateX(0) !important;
-    }
-
-    #mobile-sidebar-backdrop {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(15, 23, 42, 0.6);
-        backdrop-filter: blur(5px);
-        -webkit-backdrop-filter: blur(5px);
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.28s ease;
-        z-index: 1040;
-    }
-
-    body.mobile-nav-open #mobile-sidebar-backdrop {
-        opacity: 1;
-        pointer-events: auto;
     }
 
     .mobile-sidebar-close-btn {

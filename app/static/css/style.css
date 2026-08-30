@@ -471,8 +471,8 @@ input:focus {
 ========================================= */
 :root {
     --topbar-height: 4.375rem;
-    --sidebar-width: 14rem;
-    --sidebar-width-collapsed: 6.5rem;
+    --sidebar-width: 270px;
+    --sidebar-width-collapsed: 80px;
 }
 
 @media (max-width: 767.98px) {
