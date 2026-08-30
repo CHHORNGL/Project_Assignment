@@ -16,10 +16,15 @@ from app.utils.i18n import t, get_current_language, normalize_display_text
 
 from werkzeug.middleware.proxy_fix import ProxyFix
 
+from flask_cors import CORS
+
 def create_app():
     app = Flask(__name__)
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
     app.config.from_object(Config)
+    
+    # 🌍 Enable CORS for all routes, allowing credentials (cookies) to be sent cross-origin
+    CORS(app, supports_credentials=True)
 
     # ===============================
     # LOGGING

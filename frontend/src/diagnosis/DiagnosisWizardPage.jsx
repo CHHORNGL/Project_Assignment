@@ -644,6 +644,7 @@ export default function DiagnosisWizardPage({ bootstrap }) {
         method: "POST",
         body: payload,
         headers: { "X-Requested-With": "XMLHttpRequest" },
+        credentials: "include",
       });
 
       const data = await response.json().catch(() => null);
@@ -882,6 +883,7 @@ export default function DiagnosisWizardPage({ bootstrap }) {
           "X-Requested-With": "XMLHttpRequest",
           "X-CSRFToken": bootstrap?.csrfToken || "",
         },
+        credentials: "include",
         body: JSON.stringify({
           crop_id: selectedCropId,
           symptoms: currentPos,

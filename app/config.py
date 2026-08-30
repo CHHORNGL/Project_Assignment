@@ -59,3 +59,15 @@ class Config:
     CLOUDINARY_CLOUD_NAME = (os.getenv("CLOUDINARY_CLOUD_NAME", "") or "").strip()
     CLOUDINARY_UPLOAD_PRESET = (os.getenv("CLOUDINARY_UPLOAD_PRESET", "") or "").strip()
     CLOUDINARY_UPLOAD_FOLDER = (os.getenv("CLOUDINARY_UPLOAD_FOLDER", "agri-theme-animations") or "").strip()
+
+    # Make sessions persistent for 30 days so users are not logged out on inactivity/browser close
+    from datetime import timedelta
+    PERMANENT_SESSION_LIFETIME = timedelta(days=30)
+    
+    # 🌍 Cross-Origin (CORS) Cookie Settings
+    # Required for Cloudflare Frontend and AWS Backend on different domains
+    SESSION_COOKIE_SAMESITE = "None"
+    SESSION_COOKIE_SECURE = True
+    REMEMBER_COOKIE_SAMESITE = "None"
+    REMEMBER_COOKIE_SECURE = True
+    REMEMBER_COOKIE_DURATION = timedelta(days=30)

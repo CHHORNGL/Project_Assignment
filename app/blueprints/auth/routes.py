@@ -215,7 +215,7 @@ def login():
             return redirect(url_for("auth.verify_code"))
 
         # ✅ Login success
-        login_user(user)
+        login_user(user, remember=True)
         flash("Welcome back!", "success")
         return redirect(next_url or url_for("main.index"))
 
@@ -296,7 +296,7 @@ def register():
         session.pop("register_otp_code", None)
         session.pop("register_otp_expiry", None)
 
-        login_user(user)
+        login_user(user, remember=True)
         flash("Registration successful! Welcome to Agri System.", "success")
         return redirect(url_for("main.index"))
 
@@ -467,7 +467,7 @@ def verify_code():
         db.session.commit()
 
         # Log in the user
-        login_user(user)
+        login_user(user, remember=True)
 
         session.pop("verify_user_id", None)
         session.pop("verify_purpose", None)
@@ -601,7 +601,7 @@ def google_callback():
         flash("Two-step verification code has been sent to your Gmail/Email address.", "info")
         return redirect(url_for("auth.verify_code"))
 
-    login_user(user)
+    login_user(user, remember=True)
     flash("Welcome back!", "success")
     return redirect(url_for("main.index"))
 
@@ -715,7 +715,7 @@ def passkey_login_verify():
         passkey.sign_count = auth_verification.new_sign_count
         db.session.commit()
         
-        login_user(user)
+        login_user(user, remember=True)
         flash("Logged in successfully via Passkey!", "success")
         return {"status": "ok"}
     except Exception as e:

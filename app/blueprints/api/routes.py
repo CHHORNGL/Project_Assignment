@@ -129,7 +129,7 @@ def login():
             session["verify_purpose"] = "login"
             return jsonify({'success': True, 'requires_2fa': True, 'purpose': 'login', 'email': user.email})
             
-        login_user(user)
+        login_user(user, remember=True)
         return jsonify({
             'success': True,
             'user': {
@@ -211,7 +211,7 @@ def telegram_login_api():
     if getattr(user, 'is_active', True) is False:
         return jsonify({'error': 'Account is banned'}), 403
 
-    login_user(user)
+    login_user(user, remember=True)
     return jsonify({
         'success': True,
         'user': {
@@ -257,7 +257,7 @@ def verify_code():
         user.is_verified = True
         
     db.session.commit()
-    login_user(user)
+    login_user(user, remember=True)
     
     session.pop("verify_user_id", None)
     session.pop("verify_purpose", None)
@@ -591,7 +591,7 @@ def google_login_api():
             user.roles.append(farmer_role)
             
         db.session.commit()
-        login_user(user)
+        login_user(user, remember=True)
         
         return jsonify({
             'success': True,

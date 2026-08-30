@@ -74,7 +74,7 @@ def login():
             flash("Verification code sent to your email.", "info")
             return redirect(url_for("auth.verify_code"))
 
-        login_user(user)
+        login_user(user, remember=True)
         flash("Welcome back!", "success")
         return redirect(next_url or url_for("main.index"))
 
@@ -123,7 +123,7 @@ def passkey_login_verify():
         passkey.sign_count = auth_verification.new_sign_count
         db.session.commit()
         
-        login_user(user)
+        login_user(user, remember=True)
         flash("Logged in successfully via Passkey!", "success")
         return {"status": "ok"}
     except Exception as e:
