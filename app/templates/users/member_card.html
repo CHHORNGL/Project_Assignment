@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Member Card | AGRI SYSTEM</title>
+    <title>Member Card | {{ member.full_name or member.username }} - AGRI SYSTEM</title>
     <link rel="icon" type="image/jpeg" href="{{ url_for('static', filename='img/logo.jpg') }}">
     <link rel="shortcut icon" type="image/jpeg" href="{{ url_for('static', filename='img/logo.jpg') }}">
     <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/logo.jpg') }}">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     {% set runtime = theme_runtime or {} %}
     {% set profile = runtime.get("profile", {}) if runtime else {} %}
     {% set tokens = profile.get("tokens", {}) if profile else {} %}
@@ -34,7 +34,7 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
 
     <link href="{{ url_for('static', filename='sb-admin/vendor/fontawesome-free/css/all.min.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/style.css', v=static_version) }}" rel="stylesheet">
@@ -45,15 +45,431 @@
             --admin-bg-light: {{ (tokens.get("admin_bg_light") or tokens.get("admin_bg") or "#f8f9fc")|e }};
             --admin-card-light: {{ (tokens.get("admin_card_light") or tokens.get("admin_card") or "#ffffff")|e }};
             --admin-border-light: {{ (tokens.get("admin_border_light") or tokens.get("admin_border") or "#e3e6f0")|e }};
-            --admin-text-light: {{ (tokens.get("admin_text_light") or tokens.get("admin_text") or "#3a3b45")|e }};
-            --admin-muted-light: {{ (tokens.get("admin_muted_light") or tokens.get("admin_muted") or "#858796")|e }};
-            --admin-bg-dark: {{ (tokens.get("admin_bg_dark") or "#0f172a")|e }};
+            --admin-text-light: {{ (tokens.get("admin_text_light") or tokens.get("admin_text") or "#1e293b")|e }};
+            --admin-muted-light: {{ (tokens.get("admin_muted_light") or tokens.get("admin_muted") or "#64748b")|e }};
+            --admin-bg-dark: {{ (tokens.get("admin_bg_dark") or "#0b0f17")|e }};
             --admin-card-dark: {{ (tokens.get("admin_card_dark") or "#111827")|e }};
             --admin-border-dark: {{ (tokens.get("admin_border_dark") or "#1f2937")|e }};
-            --admin-text-dark: {{ (tokens.get("admin_text_dark") or "#e2e8f0")|e }};
+            --admin-text-dark: {{ (tokens.get("admin_text_dark") or "#f1f5f9")|e }};
             --admin-muted-dark: {{ (tokens.get("admin_muted_dark") or "#94a3b8")|e }};
             --admin-accent: {{ (tokens.get("admin_accent") or tokens.get("primary") or "#4e73df")|e }};
             --admin-accent-soft: {{ (tokens.get("admin_accent_soft") or tokens.get("primary_soft") or "rgba(78, 115, 223, 0.14)")|e }};
+        }
+
+        /* Enhanced inline styles for maximum cross-device responsiveness */
+        body.member-card-page {
+            min-height: 100vh;
+            margin: 0;
+            padding: 1.25rem 0.85rem 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+            background-attachment: fixed;
+        }
+
+        .member-card-wrapper {
+            width: 100%;
+            max-width: 480px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        /* Top Action Bar */
+        .member-top-actions {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .member-action-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.45rem 0.85rem;
+            min-height: 36px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            border-radius: 999px;
+            color: var(--admin-text);
+            background: var(--admin-card);
+            border: 1px solid color-mix(in srgb, var(--admin-border) 80%, transparent);
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+            box-sizing: border-box;
+        }
+
+        .member-action-btn:hover {
+            color: var(--admin-accent);
+            border-color: var(--admin-accent);
+            transform: translateY(-1px);
+            text-decoration: none;
+        }
+
+        .member-actions-right {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        /* Executive Card Design */
+        .executive-member-card {
+            width: 100%;
+            background: var(--admin-card);
+            border-radius: 20px;
+            border: 1px solid color-mix(in srgb, var(--admin-border) 75%, transparent);
+            box-shadow: 0 16px 36px color-mix(in srgb, var(--admin-accent) 16%, rgba(15, 23, 42, 0.2));
+            overflow: hidden;
+            position: relative;
+            box-sizing: border-box;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .executive-member-card:hover {
+            box-shadow: 0 22px 48px color-mix(in srgb, var(--admin-accent) 22%, rgba(15, 23, 42, 0.26));
+        }
+
+        /* Header */
+        .member-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 16px 18px;
+            color: #ffffff;
+            background: linear-gradient(
+                135deg,
+                color-mix(in srgb, var(--admin-accent) 88%, #090e17 12%),
+                color-mix(in srgb, var(--admin-accent) 64%, #ffffff 36%)
+            );
+            flex-wrap: wrap;
+        }
+
+        @media (min-width: 480px) {
+            .member-card-header {
+                padding: 18px 22px;
+            }
+        }
+
+        .member-card-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+        }
+
+        .member-card-logo {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 2px;
+            display: grid;
+            place-items: center;
+            flex-shrink: 0;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .member-card-logo img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .member-card-project {
+            font-family: "Space Grotesk", sans-serif;
+            font-weight: 700;
+            font-size: clamp(0.92rem, 2.5vw, 1.05rem);
+            line-height: 1.2;
+            color: #ffffff;
+        }
+
+        .member-card-sub {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.88);
+            font-weight: 500;
+        }
+
+        .member-card-badge {
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(4px);
+            color: #ffffff;
+            text-align: center;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        /* Card Body */
+        .member-card-body {
+            display: flex;
+            gap: 16px;
+            padding: 18px;
+            align-items: center;
+            background: var(--admin-card);
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        @media (min-width: 480px) {
+            .member-card-body {
+                padding: 22px;
+                gap: 20px;
+            }
+        }
+
+        .member-card-avatar {
+            width: 72px;
+            height: 72px;
+            min-width: 72px;
+            border-radius: 18px;
+            background: color-mix(in srgb, var(--admin-accent-soft) 70%, var(--admin-card));
+            color: var(--admin-text);
+            font-weight: 700;
+            display: grid;
+            place-items: center;
+            font-size: 1.4rem;
+            overflow: hidden;
+            flex-shrink: 0;
+            border: 2.5px solid color-mix(in srgb, var(--admin-accent) 60%, transparent);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .member-card-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .member-card-info {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .member-card-name-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            min-width: 0;
+        }
+
+        .member-card-name {
+            font-family: "Space Grotesk", sans-serif;
+            font-weight: 700;
+            font-size: clamp(1.1rem, 3.5vw, 1.3rem);
+            color: var(--admin-text);
+            word-break: break-word;
+            overflow-wrap: anywhere;
+            line-height: 1.25;
+        }
+
+        .member-verified-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2.5px 8px;
+            border-radius: 999px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            color: #059669;
+            background: rgba(16, 185, 129, 0.12);
+            border: 1px solid rgba(16, 185, 129, 0.32);
+            white-space: nowrap;
+            flex-shrink: 0;
+            line-height: 1.2;
+            box-shadow: 0 1px 3px rgba(16, 185, 129, 0.08);
+            vertical-align: middle;
+        }
+
+        .member-verified-badge i {
+            font-size: 0.76rem;
+            color: #10b981;
+        }
+
+        .dark-mode .member-verified-badge {
+            background: rgba(16, 185, 129, 0.18);
+            border-color: rgba(16, 185, 129, 0.4);
+            color: #34d399;
+        }
+
+        .dark-mode .member-verified-badge i {
+            color: #34d399;
+        }
+
+        .member-card-role-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.78rem;
+            color: var(--admin-accent);
+            background: color-mix(in srgb, var(--admin-accent-soft) 60%, transparent);
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-weight: 600;
+            width: fit-content;
+            word-break: break-word;
+        }
+
+        .member-card-meta {
+            font-size: 0.82rem;
+            color: var(--admin-muted);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            word-break: break-all;
+            overflow-wrap: anywhere;
+            min-width: 0;
+            line-height: 1.35;
+        }
+
+        .member-card-meta i {
+            flex-shrink: 0;
+            width: 14px;
+            text-align: center;
+            color: var(--admin-accent);
+        }
+
+        /* Verified Badge Row */
+        .member-card-verification-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 18px;
+            background: color-mix(in srgb, var(--admin-card) 92%, var(--admin-accent-soft) 8%);
+            border-top: 1px dashed color-mix(in srgb, var(--admin-border) 75%, transparent);
+            font-size: 0.76rem;
+            color: var(--admin-muted);
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .verification-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            color: #10b981;
+            font-weight: 600;
+        }
+
+        /* Footer */
+        .member-card-footer {
+            padding: 10px 18px;
+            font-size: 0.75rem;
+            color: var(--admin-muted);
+            text-align: center;
+            border-top: 1px solid color-mix(in srgb, var(--admin-border) 70%, transparent);
+            background: color-mix(in srgb, var(--admin-card) 88%, var(--admin-accent-soft) 12%);
+            letter-spacing: 0.02em;
+        }
+
+        /* Responsive Breakpoints */
+        @media (max-width: 400px) {
+            .member-top-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .member-actions-right {
+                justify-content: space-between;
+                width: 100%;
+            }
+            .member-action-btn {
+                justify-content: center;
+            }
+            .member-card-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            .member-card-badge {
+                align-self: flex-start;
+            }
+            .member-card-body {
+                flex-direction: column;
+                text-align: center;
+                align-items: center;
+                gap: 12px;
+            }
+            .member-card-role-pill {
+                margin: 0 auto;
+            }
+            .member-card-meta {
+                justify-content: center;
+            }
+            .member-card-verification-row {
+                justify-content: center;
+                text-align: center;
+            }
+        }
+
+        /* Toast Feedback */
+        .toast-notification {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #18181b;
+            color: #ffffff;
+            padding: 10px 18px;
+            border-radius: 999px;
+            font-size: 0.84rem;
+            font-weight: 600;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 9999;
+            pointer-events: none;
+        }
+
+        .toast-notification.is-visible {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        /* Print Layout Optimization */
+        @media print {
+            body.member-card-page {
+                background: #ffffff !important;
+                padding: 0 !important;
+                display: block !important;
+            }
+            .member-top-actions, .toast-notification {
+                display: none !important;
+            }
+            .member-card-wrapper {
+                max-width: 480px;
+                margin: 40px auto;
+            }
+            .executive-member-card {
+                box-shadow: none !important;
+                border: 1px solid #cbd5e1 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
         }
     </style>
 </head>
@@ -63,48 +479,197 @@
     data-admin-radius="{{ runtime.get('radius_mode', 'soft') }}"
     data-admin-density="{{ runtime.get('density_mode', 'comfortable') }}"
 >
-    <div class="member-card">
-        <div class="member-card-header">
-            <div class="member-card-brand">
-                <div class="member-card-logo">
-                    <img src="{{ url_for('static', filename='img/logo.jpg') }}"
-                         alt="Agri System"
-                         class="app-logo-circle">
-                </div>
-                <div>
-                    <div class="member-card-project">Agri Expert System</div>
-                    <div class="member-card-sub">Project Member Card</div>
-                </div>
-            </div>
-            <span class="member-card-badge">{{ rep_label }}</span>
-        </div>
-
-        <div class="member-card-body">
-            <div class="member-card-avatar">
-                {% if member.avatar_data or member.avatar_path %}
-                    <img src="{{ avatar_url(member) }}"
-                         alt="{{ member.full_name or member.username }}">
-                {% else %}
-                    {{ (member.full_name or member.username)[:2]|upper }}
-                {% endif %}
-            </div>
-            <div class="member-card-info">
-                <div class="member-card-name">{{ member.full_name or member.username }}</div>
-                <div class="member-card-role">{{ role_names }}</div>
-                <div class="member-card-meta">
-                    <i class="fas fa-envelope"></i>
-                    {{ member.email or "No email provided" }}
-                </div>
-                <div class="member-card-meta">
-                    <i class="fas fa-calendar-alt"></i>
-                    Joined {{ member.created_at.strftime('%b %d, %Y') }}
-                </div>
+    <div class="member-card-wrapper">
+        <!-- Top Actions Bar -->
+        <div class="member-top-actions">
+            <button type="button" class="member-action-btn" onclick="handleGoBack()" title="Back">
+                <i class="fas fa-arrow-left"></i>
+                <span>Back</span>
+            </button>
+            <div class="member-actions-right">
+                <button type="button" class="member-action-btn" onclick="copyCardUrl()" title="Copy Link">
+                    <i class="fas fa-link"></i>
+                    <span>Share</span>
+                </button>
+                <button type="button" class="member-action-btn" onclick="window.print()" title="Print / PDF">
+                    <i class="fas fa-print"></i>
+                    <span>Print</span>
+                </button>
+                <button type="button" class="member-action-btn" onclick="toggleCardTheme()" title="Toggle Theme" id="theme-toggle-btn">
+                    <i class="fas fa-moon" id="theme-icon"></i>
+                </button>
             </div>
         </div>
 
-        <div class="member-card-footer">
-            Agri Expert System - Official Representative
+        <!-- The Executive Member Card -->
+        {% set is_admin_member = member.has_role('admin') %}
+        {% set is_expert_member = member.has_role('expert') %}
+        
+        <div class="executive-member-card">
+            <!-- Header -->
+            <div class="member-card-header" style="{% if is_admin_member %}background: linear-gradient(135deg, #b45309, #d97706, #dc2626);{% elif is_expert_member %}background: linear-gradient(135deg, #065f46, #059669, #0284c7);{% endif %}">
+                <div class="member-card-brand">
+                    <div class="member-card-logo">
+                        <img src="{{ url_for('static', filename='img/logo.jpg') }}"
+                             alt="Agri System"
+                             class="app-logo-circle">
+                    </div>
+                    <div>
+                        <div class="member-card-project">Agri Expert System</div>
+                        <div class="member-card-sub">
+                            {% if is_admin_member %}
+                                Executive Administrative Pass
+                            {% elif is_expert_member %}
+                                Certified Diagnostic Credential
+                            {% else %}
+                                Project Member Card
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <span class="member-card-badge" style="{% if is_admin_member %}background: #fef3c7; color: #92400e; border: 1px solid #f59e0b;{% elif is_expert_member %}background: #d1fae5; color: #065f46; border: 1px solid #10b981;{% endif %}">
+                    {% if is_admin_member %}
+                        <i class="fas fa-shield-alt mr-1"></i> {{ rep_label }}
+                    {% elif is_expert_member %}
+                        <i class="fas fa-certificate mr-1"></i> {{ rep_label }}
+                    {% else %}
+                        {{ rep_label }}
+                    {% endif %}
+                </span>
+            </div>
+
+            <!-- Body -->
+            <div class="member-card-body">
+                <div class="member-card-avatar" style="{% if is_admin_member %}border-color: #f59e0b; box-shadow: 0 0 16px rgba(245, 158, 11, 0.4);{% elif is_expert_member %}border-color: #10b981; box-shadow: 0 0 16px rgba(16, 185, 129, 0.4);{% endif %}">
+                    {% if member.avatar_data or member.avatar_path %}
+                        <img src="{{ avatar_url(member) }}"
+                             alt="{{ member.full_name or member.username }}">
+                    {% else %}
+                        {{ (member.full_name or member.username)[:2]|upper }}
+                    {% endif %}
+                </div>
+                <div class="member-card-info">
+                    <div class="member-card-name-row">
+                        <span class="member-card-name">{{ member.full_name or member.username }}</span>
+                        <span class="member-verified-badge" title="Official Verified Identity">
+                            <i class="fas fa-check-circle"></i>
+                            <span>Verified</span>
+                        </span>
+                    </div>
+                    {% if role_names %}
+                    <div class="member-card-role-pill" style="{% if is_admin_member %}color: #d97706; background: rgba(245, 158, 11, 0.12);{% elif is_expert_member %}color: #059669; background: rgba(16, 185, 129, 0.12);{% endif %}">
+                        <i class="{% if is_admin_member %}fas fa-crown{% elif is_expert_member %}fas fa-award{% else %}fas fa-id-badge{% endif %}"></i>
+                        <span>{{ role_names }}</span>
+                    </div>
+                    {% endif %}
+                    <div class="member-card-meta">
+                        <i class="fas fa-envelope"></i>
+                        <span>{{ member.email or "No email provided" }}</span>
+                    </div>
+                    <div class="member-card-meta">
+                        <i class="fas fa-calendar-check"></i>
+                        <span>Joined {{ member.created_at.strftime('%b %d, %Y') }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Verification Ribbon -->
+            <div class="member-card-verification-row">
+                <div class="verification-tag" style="{% if is_admin_member %}color: #d97706;{% elif is_expert_member %}color: #059669;{% endif %}">
+                    <i class="{% if is_admin_member %}fas fa-shield-check{% elif is_expert_member %}fas fa-certificate{% else %}fas fa-check-circle{% endif %}"></i>
+                    <span>
+                        {% if is_admin_member %}
+                            Level 4 Root Authority Verified
+                        {% elif is_expert_member %}
+                            Level 3 Diagnostic Authority Verified
+                        {% else %}
+                            Verified Representative
+                        {% endif %}
+                    </span>
+                </div>
+                <div>ID: #AGRI-{% if is_admin_member %}ADM{% elif is_expert_member %}EXP{% else %}REP{% endif %}-{{ "%04d"|format(member.id) }}</div>
+            </div>
+
+            <!-- Footer -->
+            <div class="member-card-footer">
+                Agri Expert System &bull; Official Digital Credentials
+            </div>
         </div>
     </div>
+
+    <!-- Toast Notification -->
+    <div id="toast-notify" class="toast-notification">
+        <i class="fas fa-check-circle text-success"></i>
+        <span id="toast-text">Link copied to clipboard!</span>
+    </div>
+
+    <script>
+    function handleGoBack() {
+        if (window.history.length > 1) {
+            window.history.back();
+        } else {
+            window.location.href = "{{ url_for('farmer.dashboard') if current_user.is_authenticated else '/' }}";
+        }
+    }
+
+    function showToast(message) {
+        const toast = document.getElementById("toast-notify");
+        const text = document.getElementById("toast-text");
+        if (!toast || !text) return;
+        text.textContent = message;
+        toast.classList.add("is-visible");
+        setTimeout(() => {
+            toast.classList.remove("is-visible");
+        }, 2500);
+    }
+
+    function copyCardUrl() {
+        const url = window.location.href;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(url).then(() => {
+                showToast("Card link copied to clipboard!");
+            }).catch(() => {
+                fallbackCopy(url);
+            });
+        } else {
+            fallbackCopy(url);
+        }
+    }
+
+    function fallbackCopy(text) {
+        const input = document.createElement("input");
+        input.value = text;
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand("copy");
+        document.body.removeChild(input);
+        showToast("Card link copied to clipboard!");
+    }
+
+    function toggleCardTheme() {
+        const isDark = document.documentElement.classList.contains("dark-mode");
+        const icon = document.getElementById("theme-icon");
+        if (isDark) {
+            document.documentElement.classList.remove("dark-mode");
+            localStorage.setItem("theme", "light");
+            if (icon) icon.className = "fas fa-moon";
+        } else {
+            document.documentElement.classList.add("dark-mode");
+            localStorage.setItem("theme", "dark");
+            if (icon) icon.className = "fas fa-sun";
+        }
+    }
+
+    // Sync theme icon on load
+    document.addEventListener("DOMContentLoaded", () => {
+        const icon = document.getElementById("theme-icon");
+        if (document.documentElement.classList.contains("dark-mode")) {
+            if (icon) icon.className = "fas fa-sun";
+        } else {
+            if (icon) icon.className = "fas fa-moon";
+        }
+    });
+    </script>
 </body>
 </html>
+

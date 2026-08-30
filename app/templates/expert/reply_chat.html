@@ -4,58 +4,100 @@
 {% set body_class = "admin-theme" %}
 
 {% block content %}
-<div class="container-fluid mt-4" style="max-width: 900px;">
+<div class="admin-board">
 
-    <h4 class="mb-2">{{ t("expert_farmer_chat") }}</h4>
-    <div class="text-muted mb-3">
-        {{ session.farmer.username if session and session.farmer else t("farmer") }}
-        {% if session and session.title %} - {{ session.title }}{% endif %}
+    <!-- Header -->
+    <div class="admin-hero mb-3">
+        <div>
+            <div class="admin-title">
+                <i class="fas fa-comment-dots text-primary mr-2"></i>{{ t("expert_farmer_chat") }}
+            </div>
+            <div class="admin-sub">
+                <span class="font-weight-bold text-primary">@{{ session.farmer.username if session and session.farmer else t("farmer") }}</span>
+                {% if session and session.title %} &bull; {{ session.title }}{% endif %}
+            </div>
+        </div>
+        <div class="admin-actions">
+            <a class="btn btn-admin-outline" href="{{ url_for('expert.farmer_chats') }}">
+                <i class="fas fa-arrow-left mr-1"></i>{{ t("back")|default("Back to Chats") }}
+            </a>
+        </div>
     </div>
 
-    <!-- Chat Window -->
-    <div class="admin-panel mb-3" style="height: 60vh; overflow-y: auto;">
-        <div class="">
-
+    <!-- Chat Card Panel -->
+    <div class="admin-panel p-0 overflow-hidden d-flex flex-column" style="height: calc(100vh - 280px); min-height: 420px; max-height: 680px; border-radius: 16px;">
+        
+        <!-- Messages Stream -->
+        <div class="p-3 p-md-4 flex-grow-1 overflow-auto" id="chatStream" style="background: color-mix(in srgb, var(--admin-card) 95%, var(--admin-bg) 5%); display: flex; flex-direction: column; gap: 12px;">
             {% if messages %}
                 {% for m in messages %}
                     {% if m.sender == "farmer" %}
-                        <!-- Farmer message -->
-                        <div class="text-left mb-3">
-                            <div class="d-inline-block bg-success text-white p-2 rounded">
-                                {{ t("farmer") }}: {{ m.message }}
+                        <!-- Farmer Message (Left) -->
+                        <div class="d-flex align-items-end gap-2" style="gap: 8px; max-width: 85%;">
+                            <div class="flex-shrink-0 d-flex align-items-center justify-content-center text-white"
+                                 style="width: 32px; height: 32px; border-radius: 50%; background: #10b981; font-size: 0.75rem; font-weight: 700;">
+                                F
+                            </div>
+                            <div class="p-3 rounded-lg shadow-sm"
+                                 style="background: var(--admin-card); border: 1px solid var(--admin-border); color: var(--admin-text); border-bottom-left-radius: 4px; font-size: 0.92rem; line-height: 1.45; word-break: break-word;">
+                                <div class="small font-weight-bold text-success mb-1">{{ t("farmer") }}</div>
+                                {{ m.message }}
                             </div>
                         </div>
                     {% else %}
-                        <!-- Expert / system message -->
-                        <div class="text-right mb-3">
-                            <div class="d-inline-block bg-info text-white p-2 rounded">
-                                {{ t("expert") }}: {{ m.message }}
+                        <!-- Expert / System Message (Right) -->
+                        <div class="d-flex align-items-end justify-content-end gap-2 ml-auto" style="gap: 8px; max-width: 85%;">
+                            <div class="p-3 rounded-lg shadow-sm text-white"
+                                 style="background: linear-gradient(135deg, var(--admin-accent), #2563eb); border-bottom-right-radius: 4px; font-size: 0.92rem; line-height: 1.45; word-break: break-word;">
+                                <div class="small font-weight-bold text-white-50 mb-1">{{ t("expert") }}</div>
+                                {{ m.message }}
+                            </div>
+                            <div class="flex-shrink-0 d-flex align-items-center justify-content-center text-white"
+                                 style="width: 32px; height: 32px; border-radius: 50%; background: #3b82f6; font-size: 0.75rem; font-weight: 700;">
+                                E
                             </div>
                         </div>
                     {% endif %}
                 {% endfor %}
             {% else %}
-                <p class="text-muted">
-                    {{ t("no_messages_yet") }}
-                </p>
+                <div class="text-center py-5 my-auto">
+                    <i class="fas fa-comments fa-2x text-muted mb-2" style="opacity: 0.4;"></i>
+                    <p class="text-muted small mb-0">{{ t("no_messages_yet") }}</p>
+                </div>
             {% endif %}
-
         </div>
+
+        <!-- Chat Input Footer -->
+        <div class="p-2 p-md-3 border-top" style="background: var(--admin-card); border-color: var(--admin-border) !important;">
+            <form method="POST" class="d-flex align-items-center gap-2" style="gap: 8px;">
+                <input type="text"
+                       name="message"
+                       class="form-control"
+                       style="border-radius: 12px; font-size: 0.95rem; min-height: 44px; background: var(--admin-bg); border-color: var(--admin-border); color: var(--admin-text);"
+                       placeholder="{{ t('type_expert_advice_placeholder') }}"
+                       required
+                       autocomplete="off">
+
+                <button type="submit"
+                        class="btn btn-admin d-inline-flex align-items-center justify-content-center px-3"
+                        style="min-height: 44px; border-radius: 12px; font-weight: 600; white-space: nowrap;">
+                    <i class="fas fa-paper-plane mr-md-1"></i>
+                    <span class="d-none d-md-inline">{{ t("send") }}</span>
+                </button>
+            </form>
+        </div>
+
     </div>
 
-    <!-- Reply Form -->
-    <form method="POST" class="d-flex">
-        <input type="text"
-               name="message"
-               class="form-control"
-               placeholder="{{ t('type_expert_advice_placeholder') }}"
-               required>
-
-        <button type="submit"
-                class="btn btn-admin ml-2">
-            {{ t("send") }}
-        </button>
-    </form>
-
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const stream = document.getElementById("chatStream");
+    if (stream) {
+        stream.scrollTop = stream.scrollHeight;
+    }
+});
+</script>
 {% endblock %}
+

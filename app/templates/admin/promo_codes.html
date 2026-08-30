@@ -1,88 +1,115 @@
 {% extends "layouts/base.html" %}
 
-{% block title %}Reward Codes{% endblock %}
+{% block title %}Reward Codes - Admin{% endblock %}
+{% set body_class = "admin-theme" %}
 
 {% block content %}
-<div class="d-flex align-items-center justify-content-between mb-4">
-    <div>
-        <h1 class="h3 text-gray-800 font-weight-bold mb-1">Reward Codes</h1>
-        <div class="text-muted small">Generate random codes to give users free AI tokens</div>
-    </div>
-</div>
+<div class="admin-board">
 
-<div class="row">
-    <!-- Generate Form -->
-    <div class="col-md-4 mb-4">
-        <div class="card shadow-sm border-0 rounded-lg">
-            <div class="card-header bg-white font-weight-bold">
-                Generate New Code
+    <div class="admin-hero mb-4">
+        <div>
+            <div class="admin-title">
+                <i class="fas fa-gift text-primary mr-2"></i>Reward &amp; Token Promo Codes
             </div>
-            <div class="card-body">
+            <div class="admin-sub">
+                Generate random redemption codes to grant farmers complimentary AI scan tokens
+            </div>
+        </div>
+        <div class="admin-actions">
+            <a class="btn btn-admin-outline" href="{{ url_for('admin.dashboard') }}">
+                <i class="fas fa-arrow-left mr-1"></i>{{ t("dashboard") }}
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Generate Form -->
+        <div class="col-lg-4 mb-4">
+            <div class="admin-panel h-100">
+                <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom" style="border-color: var(--admin-border) !important;">
+                    <h6 class="mb-0 font-weight-bold" style="color: var(--admin-text);">
+                        <i class="fas fa-magic text-primary mr-2"></i>Generate New Code
+                    </h6>
+                </div>
                 <form method="POST" action="{{ url_for('admin.promo_codes') }}">
-                    <div class="form-group">
-                        <label>Tokens Reward Amount</label>
-                        <input type="number" name="tokens" class="form-control" value="1000" min="1" required>
+                    <div class="form-group mb-4">
+                        <label class="font-weight-bold small mb-1" style="color: var(--admin-text);">Tokens Reward Amount</label>
+                        <input type="number" name="tokens" class="form-control font-weight-bold" style="background: var(--admin-bg); border-color: var(--admin-border); color: var(--admin-text);" value="1000" min="1" required>
+                        <small class="text-muted">Number of AI diagnosis tokens to credit upon redemption.</small>
                     </div>
-                    <button type="submit" class="btn btn-primary btn-block"><i class="fas fa-magic mr-2"></i> Generate Random Code</button>
+                    <button type="submit" class="btn btn-admin btn-block">
+                        <i class="fas fa-bolt mr-1"></i> Generate Code
+                    </button>
                 </form>
             </div>
         </div>
-    </div>
-    
-    <!-- Codes Table -->
-    <div class="col-md-8 mb-4">
-        <div class="card shadow-sm border-0 rounded-lg">
-            <div class="card-header bg-white font-weight-bold">
-                Existing Codes
-            </div>
-            <div class="card-body p-0 table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead class="thead-light">
-                        <tr>
-                            <th>Code</th>
-                            <th>Reward</th>
-                            <th>Status</th>
-                            <th>Used By</th>
-                            <th>Created</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for code in codes %}
-                        <tr>
-                            <td><strong class="text-primary">{{ code.code }}</strong></td>
-                            <td>{{ code.tokens_reward }}</td>
-                            <td>
-                                {% if code.is_used %}
-                                <span class="badge badge-secondary">Used</span>
-                                {% else %}
-                                <span class="badge badge-success">Active</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if code.is_used and code.used_by %}
-                                <a href="{{ url_for('admin.user_detail', user_id=code.used_by.id) }}">{{ code.used_by.username }}</a>
-                                <div class="small text-muted">{{ code.used_at.strftime('%Y-%m-%d %H:%M') if code.used_at else '' }}</div>
-                                {% else %}
-                                -
-                                {% endif %}
-                            </td>
-                            <td class="text-muted small">{{ code.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
-                            <td>
-                                <form method="POST" action="{{ url_for('admin.delete_promo_code', code_id=code.id) }}" onsubmit="return confirm('Are you sure?');">
-                                    <button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
-                                </form>
-                            </td>
-                        </tr>
-                        {% else %}
-                        <tr>
-                            <td colspan="6" class="text-center text-muted p-4">No reward codes generated yet.</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+        
+        <!-- Codes Table -->
+        <div class="col-lg-8 mb-4">
+            <div class="admin-panel p-0 overflow-hidden">
+                <div class="p-3 border-bottom d-flex align-items-center justify-content-between" style="border-color: var(--admin-border) !important;">
+                    <h6 class="m-0 font-weight-bold" style="color: var(--admin-text);">
+                        <i class="fas fa-list text-primary mr-2"></i>Active &amp; Historical Codes ({{ codes|length }})
+                    </h6>
+                </div>
+                <div class="table-responsive m-0">
+                    <table class="table table-hover align-middle mb-0" style="color: var(--admin-text);">
+                        <thead>
+                            <tr style="background: color-mix(in srgb, var(--admin-card) 90%, var(--admin-bg) 10%); border-bottom: 1px solid var(--admin-border);">
+                                <th class="border-top-0">Code</th>
+                                <th class="border-top-0">Reward</th>
+                                <th class="border-top-0">Status</th>
+                                <th class="border-top-0">Used By</th>
+                                <th class="border-top-0">Created</th>
+                                <th class="border-top-0 text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for code in codes %}
+                            <tr style="border-bottom: 1px solid var(--admin-border);">
+                                <td>
+                                    <span class="badge badge-light border font-weight-bold text-primary px-2 py-1" style="background: var(--admin-bg); border-color: var(--admin-border) !important; font-size: 0.88rem; letter-spacing: 0.05em;">
+                                        {{ code.code }}
+                                    </span>
+                                </td>
+                                <td><span class="font-weight-bold text-success">+{{ code.tokens_reward }} Tokens</span></td>
+                                <td>
+                                    {% if code.is_used %}
+                                    <span class="badge badge-secondary">Used</span>
+                                    {% else %}
+                                    <span class="badge badge-success">Active</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if code.is_used and code.used_by %}
+                                    <a href="{{ url_for('admin.user_detail', user_id=code.used_by.id) }}" class="font-weight-bold">{{ code.used_by.username }}</a>
+                                    <div class="small text-muted">{{ code.used_at.strftime('%Y-%m-%d %H:%M') if code.used_at else '' }}</div>
+                                    {% else %}
+                                    <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-muted small">{{ code.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                <td class="text-right">
+                                    <form method="POST" action="{{ url_for('admin.delete_promo_code', code_id=code.id) }}" onsubmit="return confirm('Are you sure you want to delete this reward code?');">
+                                        <button class="btn btn-sm btn-outline-danger" title="Delete Code"><i class="fas fa-trash"></i></button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted p-4">
+                                    <i class="fas fa-gift fa-2x mb-2 d-block opacity-50"></i>
+                                    No reward codes generated yet.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
+
 </div>
 {% endblock %}
+

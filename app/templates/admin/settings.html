@@ -1,235 +1,481 @@
 {% extends "layouts/base.html" %}
-{% block title %}System Settings - Admin{% endblock %}
+{% block title %}System Configuration - Admin{% endblock %}
 {% set body_class = "admin-theme" %}
-
-{% block page_title %}System Settings{% endblock %}
-
 
 {% block content %}
 <style>
-.smooth-fade {
-    animation: smoothFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+/* ==========================================================================
+   SYSTEM CONFIGURATION - DARK MODE & RESPONSIVE ENGINE
+   ========================================================================== */
+.config-tabs-wrapper {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 1.25rem;
 }
+
+.provider-tab-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 0.88rem;
+    color: var(--admin-muted);
+    background: var(--admin-card);
+    border: 1px solid var(--admin-border);
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    text-decoration: none !important;
+    user-select: none;
+}
+
+.dark-mode .provider-tab-btn {
+    background: #18181b;
+    border-color: #27272a;
+    color: #a1a1aa;
+}
+
+.provider-tab-btn:hover {
+    color: var(--admin-text);
+    border-color: var(--admin-accent);
+    transform: translateY(-1px);
+}
+
+.provider-tab-btn.is-active {
+    color: #ffffff !important;
+}
+
+.provider-tab-btn.is-active.tab-groq {
+    background: linear-gradient(135deg, #f97316, #ea580c) !important;
+    border-color: #ea580c !important;
+    box-shadow: 0 4px 14px rgba(249, 115, 22, 0.35);
+}
+
+.provider-tab-btn.is-active.tab-openai {
+    background: linear-gradient(135deg, #10b981, #059669) !important;
+    border-color: #059669 !important;
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+}
+
+.provider-tab-btn.is-active.tab-gemini {
+    background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+    border-color: #2563eb !important;
+    box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35);
+}
+
+.config-provider-box {
+    background: var(--admin-card);
+    border: 1px solid var(--admin-border);
+    border-radius: 18px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+}
+
+.dark-mode .config-provider-box {
+    background: #18181b;
+    border-color: #27272a;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+}
+
+.admin-input-group {
+    display: flex;
+    align-items: center;
+    border-radius: 10px;
+    border: 1px solid var(--admin-border);
+    background: var(--admin-bg);
+    overflow: hidden;
+    margin-bottom: 0.65rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.dark-mode .admin-input-group {
+    background: #09090b;
+    border-color: #27272a;
+}
+
+.admin-input-group:focus-within {
+    border-color: var(--admin-accent);
+    box-shadow: 0 0 0 3px rgba(78, 115, 223, 0.15);
+}
+
+.admin-input-field {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 10px 14px;
+    font-size: 0.92rem;
+    color: var(--admin-text);
+    outline: none;
+    font-family: monospace;
+    min-height: 42px;
+}
+
+.dark-mode .admin-input-field {
+    color: #f1f5f9;
+}
+
+.admin-input-field::placeholder {
+    color: var(--admin-muted);
+    opacity: 0.6;
+}
+
+.admin-input-btn {
+    border: none;
+    background: transparent;
+    padding: 10px 14px;
+    color: var(--admin-muted);
+    cursor: pointer;
+    transition: color 0.15s, background-color 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.admin-input-btn:hover {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.08);
+}
+
+.admin-input-btn.btn-eye:hover {
+    color: var(--admin-accent);
+    background: rgba(78, 115, 223, 0.08);
+}
+
+.form-select-dark {
+    background-color: var(--admin-bg) !important;
+    border-color: var(--admin-border) !important;
+    color: var(--admin-text) !important;
+    border-radius: 10px !important;
+    padding: 10px 14px !important;
+    font-size: 0.95rem !important;
+    min-height: 44px !important;
+    width: 100%;
+}
+
+.dark-mode .form-select-dark {
+    background-color: #09090b !important;
+    border-color: #27272a !important;
+    color: #f1f5f9 !important;
+}
+
+.form-select-dark option {
+    background-color: var(--admin-card);
+    color: var(--admin-text);
+}
+
+.dark-mode .form-select-dark option {
+    background-color: #18181b;
+    color: #f1f5f9;
+}
+
+.smooth-fade {
+    animation: smoothFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 @keyframes smoothFadeIn {
     from { 
         opacity: 0; 
-        transform: translateY(-8px); 
+        transform: translateY(-6px); 
     }
     to { 
         opacity: 1; 
         transform: translateY(0); 
     }
 }
-.input-group {
-    transition: all 0.3s ease;
-}
 </style>
 
-<div class="row justify-content-center">
-    <div class="col-12 col-lg-8 col-xl-7">
-        <div class="card shadow-sm border-0 rounded-4">
-            <div class="card-header bg-white border-bottom-0 pt-4 pb-0 px-3 px-sm-4">
-                <h5 class="mb-0 text-primary fw-bold">
-                    <i class="fas fa-cogs me-2"></i>System Configuration
-                </h5>
-                <p class="text-muted small mt-2 mb-0">Select an AI provider to configure its API keys and model settings.</p>
+<div class="admin-board">
+
+    <!-- Header -->
+    <div class="admin-hero mb-4">
+        <div>
+            <div class="admin-title">
+                <i class="fas fa-cogs text-primary mr-2"></i>System Configuration &amp; AI Engine
             </div>
-            <div class="card-body p-3 p-sm-4">
-                <form action="{{ url_for('admin.settings') }}" method="POST">
-                    
-                    <div class="mb-4">
-                        <label for="provider_selector" class="form-label fw-bold text-dark">1. Choose AI Provider to Configure</label>
-                        <select class="form-select form-select-lg" id="provider_selector" onchange="updateProviderVisibility()">
-                            <option value="none" selected>-- Select an AI Provider --</option>
-                            <option value="groq">Groq (Llama / Mixtral)</option>
-                            <option value="openai">OpenAI (ChatGPT)</option>
-                            <option value="gemini">Gemini (Google Vision)</option>
-                        </select>
-                    </div>
-
-                    <!-- GROQ SECTION -->
-                    <div id="groq_section" style="display: none;" class="p-4 bg-light rounded-4 border smooth-fade">
-                        <h6 class="text-orange fw-bold mb-3"><i class="fas fa-bolt me-2"></i>Groq Configuration</h6>
-                        
-                        <div class="mb-3">
-                            <label for="groq_model" class="form-label fw-bold">Primary Model</label>
-                            <select class="form-select" id="groq_model" name="openai_model" disabled>
-                                <option value="openai/gpt-oss-20b" {% if openai_model == "openai/gpt-oss-20b" %}selected{% endif %}>GPT-OSS 20B (Groq Fast)</option>
-                                <option value="qwen/qwen3.8-27b" {% if openai_model == "qwen/qwen3.8-27b" %}selected{% endif %}>Qwen 3.8 27B (Groq Fast)</option>
-                                <option value="llama-3.3-70b-versatile" {% if openai_model == "llama-3.3-70b-versatile" %}selected{% endif %}>Llama 3.3 70B (Versatile)</option>
-                                <option value="llama-3.1-8b-instant" {% if openai_model == "llama-3.1-8b-instant" %}selected{% endif %}>Llama 3.1 8B (Instant)</option>
-                                <option value="mixtral-8x7b-32768" {% if openai_model == "mixtral-8x7b-32768" %}selected{% endif %}>Mixtral 8x7B</option>
-                            </select>
-                        </div>
-
-                        
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Groq API Keys</label>
-                            <div id="groq_keys_container">
-                                {% set groq_keys_list = (groq_key or '').split(',') %}
-                                {% for key in groq_keys_list %}
-                                    {% if key.strip() %}
-                                    <div class="input-group mb-2">
-                                        <input type="password" class="form-control" name="groq_key[]" value="{{ key.strip() }}" placeholder="gsk_...">
-                                        <button class="btn btn-outline-danger" type="button" onclick="this.parentElement.remove()"><i class="fas fa-trash"></i></button>
-                                    </div>
-                                    {% endif %}
-                                {% endfor %}
-                                <!-- Always show at least one empty input -->
-                                <div class="input-group mb-2">
-                                    <input type="password" class="form-control" name="groq_key[]" placeholder="gsk_...">
-                                    <button class="btn btn-outline-danger" type="button" onclick="this.parentElement.remove()"><i class="fas fa-trash"></i></button>
-                                </div>
-                            </div>
-                            <button type="button" class="btn btn-sm btn-outline-secondary mt-1" onclick="addKeyField('groq_keys_container', 'groq_key[]', 'gsk_...')">
-                                <i class="fas fa-plus me-1"></i> Add Another Key
-                            </button>
-                        </div>
-
-                    </div>
-
-                    <!-- OPENAI SECTION -->
-                    <div id="openai_section" style="display: none;" class="p-4 bg-light rounded-4 border smooth-fade">
-                        <h6 class="text-success fw-bold mb-3"><i class="fas fa-brain me-2"></i>OpenAI Configuration</h6>
-                        
-                        <div class="mb-3">
-                            <label for="openai_model_select" class="form-label fw-bold">Primary Model</label>
-                            <select class="form-select" id="openai_model_select" name="openai_model" disabled>
-                                <option value="gpt-4o" {% if openai_model == "gpt-4o" %}selected{% endif %}>GPT-4o (Most Capable)</option>
-                                <option value="gpt-4o-mini" {% if openai_model == "gpt-4o-mini" %}selected{% endif %}>GPT-4o Mini (Fast)</option>
-                            </select>
-                        </div>
-
-                        
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">OpenAI API Keys</label>
-                            <div id="openai_keys_container">
-                                {% set openai_keys_list = (openai_key or '').split(',') %}
-                                {% for key in openai_keys_list %}
-                                    {% if key.strip() %}
-                                    <div class="input-group mb-2">
-                                        <input type="password" class="form-control" name="openai_key[]" value="{{ key.strip() }}" placeholder="sk-...">
-                                        <button class="btn btn-outline-danger" type="button" onclick="this.parentElement.remove()"><i class="fas fa-trash"></i></button>
-                                    </div>
-                                    {% endif %}
-                                {% endfor %}
-                                <div class="input-group mb-2">
-                                    <input type="password" class="form-control" name="openai_key[]" placeholder="sk-...">
-                                    <button class="btn btn-outline-danger" type="button" onclick="this.parentElement.remove()"><i class="fas fa-trash"></i></button>
-                                </div>
-                            </div>
-                            <button type="button" class="btn btn-sm btn-outline-secondary mt-1" onclick="addKeyField('openai_keys_container', 'openai_key[]', 'sk-...')">
-                                <i class="fas fa-plus me-1"></i> Add Another Key
-                            </button>
-                        </div>
-
-                    </div>
-
-                    <!-- GEMINI SECTION -->
-                    <div id="gemini_section" style="display: none;" class="p-4 bg-light rounded-4 border smooth-fade">
-                        <h6 class="text-primary fw-bold mb-3"><i class="fas fa-camera me-2"></i>Gemini Configuration</h6>
-                        <p class="small text-muted mb-3">Gemini is primarily used for the Camera AI Scan feature.</p>
-                        
-                        
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Gemini API Keys</label>
-                            <div id="gemini_keys_container">
-                                {% set gemini_keys_list = (gemini_key or '').split(',') %}
-                                {% for key in gemini_keys_list %}
-                                    {% if key.strip() %}
-                                    <div class="input-group mb-2">
-                                        <input type="password" class="form-control" name="gemini_key[]" value="{{ key.strip() }}" placeholder="AIza...">
-                                        <button class="btn btn-outline-danger" type="button" onclick="this.parentElement.remove()"><i class="fas fa-trash"></i></button>
-                                    </div>
-                                    {% endif %}
-                                {% endfor %}
-                                <div class="input-group mb-2">
-                                    <input type="password" class="form-control" name="gemini_key[]" placeholder="AIza...">
-                                    <button class="btn btn-outline-danger" type="button" onclick="this.parentElement.remove()"><i class="fas fa-trash"></i></button>
-                                </div>
-                            </div>
-                            <button type="button" class="btn btn-sm btn-outline-secondary mt-1" onclick="addKeyField('gemini_keys_container', 'gemini_key[]', 'AIza...')">
-                                <i class="fas fa-plus me-1"></i> Add Another Key
-                            </button>
-                        </div>
-
-                    </div>
-
-                    <div class="d-grid mt-4" id="save_button_container" style="display: none;" class="smooth-fade">
-                        <button type="submit" class="btn-save-clean btn-block">
-                            <i class="fas fa-check-circle"></i>
-                            <span>Save API Configuration</span>
-                        </button>
-                    </div>
-                </form>
+            <div class="admin-sub">
+                Manage global AI engine providers, API security tokens, and inference model configurations
             </div>
         </div>
+        <div class="admin-actions">
+            <a class="btn btn-admin-outline" href="{{ url_for('admin.dashboard') }}">
+                <i class="fas fa-arrow-left mr-1"></i>{{ t("dashboard") }}
+            </a>
+            <a class="btn btn-admin-outline" href="{{ url_for('admin.audit_logs') }}">
+                <i class="fas fa-history mr-1"></i>Audit Logs
+            </a>
+        </div>
     </div>
+
+    <!-- Provider Selection Tabs -->
+    <div class="config-tabs-wrapper">
+        <button type="button" class="provider-tab-btn tab-groq" id="tab_groq" onclick="selectProvider('groq')">
+            <i class="fas fa-bolt"></i>
+            <span>Groq (Fast Inference)</span>
+            {% if groq_key %}<span class="badge badge-warning badge-pill ml-1">Active</span>{% endif %}
+        </button>
+        <button type="button" class="provider-tab-btn tab-openai" id="tab_openai" onclick="selectProvider('openai')">
+            <i class="fas fa-brain"></i>
+            <span>OpenAI (ChatGPT)</span>
+            {% if openai_key %}<span class="badge badge-success badge-pill ml-1">Active</span>{% endif %}
+        </button>
+        <button type="button" class="provider-tab-btn tab-gemini" id="tab_gemini" onclick="selectProvider('gemini')">
+            <i class="fas fa-camera"></i>
+            <span>Gemini (Vision Scan)</span>
+            {% if gemini_key %}<span class="badge badge-primary badge-pill ml-1">Active</span>{% endif %}
+        </button>
+    </div>
+
+    <form action="{{ url_for('admin.settings') }}" method="POST" id="configForm">
+        
+        <!-- Hidden provider select for backwards compatibility -->
+        <input type="hidden" name="active_provider" id="active_provider_input" value="groq">
+
+        <!-- ===============================
+             1. GROQ SECTION
+        =============================== -->
+        <div id="groq_section" class="config-provider-box smooth-fade mb-4" style="display: none;">
+            <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom" style="border-color: var(--admin-border) !important;">
+                <div class="d-flex align-items-center gap-2" style="gap: 8px;">
+                    <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(249, 115, 22, 0.15); color: #f97316; display: grid; place-items: center; font-size: 1.1rem;">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <div>
+                        <h5 class="mb-0 font-weight-bold" style="color: var(--admin-text);">Groq Inference Engine</h5>
+                        <div class="text-muted small">High-throughput, ultra low-latency Llama &amp; Mixtral models</div>
+                    </div>
+                </div>
+                <span class="badge badge-warning px-2.5 py-1" style="font-size: 0.75rem;">Llama / Mixtral</span>
+            </div>
+            
+            <div class="form-group mb-4">
+                <label for="groq_model" class="font-weight-bold mb-1" style="color: var(--admin-text); font-size: 0.9rem;">
+                    Primary Groq Model
+                </label>
+                <select class="form-select-dark custom-select" id="groq_model" name="openai_model">
+                    <option value="openai/gpt-oss-20b" {% if openai_model == "openai/gpt-oss-20b" %}selected{% endif %}>GPT-OSS 20B (Groq Fast)</option>
+                    <option value="qwen/qwen3.8-27b" {% if openai_model == "qwen/qwen3.8-27b" %}selected{% endif %}>Qwen 3.8 27B (Groq Fast)</option>
+                    <option value="llama-3.3-70b-versatile" {% if openai_model == "llama-3.3-70b-versatile" or not openai_model %}selected{% endif %}>Llama 3.3 70B (Versatile - Recommended)</option>
+                    <option value="llama-3.1-8b-instant" {% if openai_model == "llama-3.1-8b-instant" %}selected{% endif %}>Llama 3.1 8B (Instant)</option>
+                    <option value="mixtral-8x7b-32768" {% if openai_model == "mixtral-8x7b-32768" %}selected{% endif %}>Mixtral 8x7B</option>
+                </select>
+            </div>
+
+            <div class="form-group mb-2">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <label class="font-weight-bold mb-0" style="color: var(--admin-text); font-size: 0.9rem;">
+                        Groq API Key Pool (Load-Balanced)
+                    </label>
+                    <span class="text-muted small">Keys are automatically rotated to prevent rate limits</span>
+                </div>
+                <div id="groq_keys_container">
+                    {% set groq_keys_list = (groq_key or '').split(',') %}
+                    {% for key in groq_keys_list %}
+                        {% if key.strip() %}
+                        <div class="admin-input-group">
+                            <input type="password" class="admin-input-field" name="groq_key[]" value="{{ key.strip() }}" placeholder="gsk_...">
+                            <button class="admin-input-btn btn-eye" type="button" onclick="toggleKeyVisibility(this)" title="Show/Hide Key"><i class="fas fa-eye"></i></button>
+                            <button class="admin-input-btn" type="button" onclick="this.closest('.admin-input-group').remove()" title="Remove Key"><i class="fas fa-trash"></i></button>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                    <!-- Always show at least one input if empty -->
+                    <div class="admin-input-group">
+                        <input type="password" class="admin-input-field" name="groq_key[]" placeholder="gsk_...">
+                        <button class="admin-input-btn btn-eye" type="button" onclick="toggleKeyVisibility(this)" title="Show/Hide Key"><i class="fas fa-eye"></i></button>
+                        <button class="admin-input-btn" type="button" onclick="this.closest('.admin-input-group').remove()" title="Remove Key"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-admin-outline mt-2" onclick="addAdminKeyField('groq_keys_container', 'groq_key[]', 'gsk_...')">
+                    <i class="fas fa-plus mr-1"></i> Add Another Groq Key
+                </button>
+            </div>
+        </div>
+
+        <!-- ===============================
+             2. OPENAI SECTION
+        =============================== -->
+        <div id="openai_section" class="config-provider-box smooth-fade mb-4" style="display: none;">
+            <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom" style="border-color: var(--admin-border) !important;">
+                <div class="d-flex align-items-center gap-2" style="gap: 8px;">
+                    <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(16, 185, 129, 0.15); color: #10b981; display: grid; place-items: center; font-size: 1.1rem;">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <div>
+                        <h5 class="mb-0 font-weight-bold" style="color: var(--admin-text);">OpenAI ChatGPT Engine</h5>
+                        <div class="text-muted small">GPT-4o &amp; GPT-4o Mini natural language capabilities</div>
+                    </div>
+                </div>
+                <span class="badge badge-success px-2.5 py-1" style="font-size: 0.75rem;">GPT-4o</span>
+            </div>
+            
+            <div class="form-group mb-4">
+                <label for="openai_model_select" class="font-weight-bold mb-1" style="color: var(--admin-text); font-size: 0.9rem;">
+                    Primary OpenAI Model
+                </label>
+                <select class="form-select-dark custom-select" id="openai_model_select" name="openai_model" disabled>
+                    <option value="gpt-4o" {% if openai_model == "gpt-4o" %}selected{% endif %}>GPT-4o (Most Capable)</option>
+                    <option value="gpt-4o-mini" {% if openai_model == "gpt-4o-mini" %}selected{% endif %}>GPT-4o Mini (Fast &amp; Cost Efficient)</option>
+                </select>
+            </div>
+
+            <div class="form-group mb-2">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <label class="font-weight-bold mb-0" style="color: var(--admin-text); font-size: 0.9rem;">
+                        OpenAI API Key Pool
+                    </label>
+                    <span class="text-muted small">Keys are automatically rotated</span>
+                </div>
+                <div id="openai_keys_container">
+                    {% set openai_keys_list = (openai_key or '').split(',') %}
+                    {% for key in openai_keys_list %}
+                        {% if key.strip() %}
+                        <div class="admin-input-group">
+                            <input type="password" class="admin-input-field" name="openai_key[]" value="{{ key.strip() }}" placeholder="sk-...">
+                            <button class="admin-input-btn btn-eye" type="button" onclick="toggleKeyVisibility(this)" title="Show/Hide Key"><i class="fas fa-eye"></i></button>
+                            <button class="admin-input-btn" type="button" onclick="this.closest('.admin-input-group').remove()" title="Remove Key"><i class="fas fa-trash"></i></button>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                    <div class="admin-input-group">
+                        <input type="password" class="admin-input-field" name="openai_key[]" placeholder="sk-...">
+                        <button class="admin-input-btn btn-eye" type="button" onclick="toggleKeyVisibility(this)" title="Show/Hide Key"><i class="fas fa-eye"></i></button>
+                        <button class="admin-input-btn" type="button" onclick="this.closest('.admin-input-group').remove()" title="Remove Key"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-admin-outline mt-2" onclick="addAdminKeyField('openai_keys_container', 'openai_key[]', 'sk-...')">
+                    <i class="fas fa-plus mr-1"></i> Add Another OpenAI Key
+                </button>
+            </div>
+        </div>
+
+        <!-- ===============================
+             3. GEMINI SECTION
+        =============================== -->
+        <div id="gemini_section" class="config-provider-box smooth-fade mb-4" style="display: none;">
+            <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom" style="border-color: var(--admin-border) !important;">
+                <div class="d-flex align-items-center gap-2" style="gap: 8px;">
+                    <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(59, 130, 246, 0.15); color: #3b82f6; display: grid; place-items: center; font-size: 1.1rem;">
+                        <i class="fas fa-camera"></i>
+                    </div>
+                    <div>
+                        <h5 class="mb-0 font-weight-bold" style="color: var(--admin-text);">Google Gemini Vision Engine</h5>
+                        <div class="text-muted small">Powers plant disease diagnostic scans and multimodal analysis</div>
+                    </div>
+                </div>
+                <span class="badge badge-primary px-2.5 py-1" style="font-size: 0.75rem;">Vision AI</span>
+            </div>
+            
+            <div class="form-group mb-2">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <label class="font-weight-bold mb-0" style="color: var(--admin-text); font-size: 0.9rem;">
+                        Gemini API Key Pool
+                    </label>
+                    <span class="text-muted small">Keys for Google Cloud AI / Gemini Vision</span>
+                </div>
+                <div id="gemini_keys_container">
+                    {% set gemini_keys_list = (gemini_key or '').split(',') %}
+                    {% for key in gemini_keys_list %}
+                        {% if key.strip() %}
+                        <div class="admin-input-group">
+                            <input type="password" class="admin-input-field" name="gemini_key[]" value="{{ key.strip() }}" placeholder="AIza...">
+                            <button class="admin-input-btn btn-eye" type="button" onclick="toggleKeyVisibility(this)" title="Show/Hide Key"><i class="fas fa-eye"></i></button>
+                            <button class="admin-input-btn" type="button" onclick="this.closest('.admin-input-group').remove()" title="Remove Key"><i class="fas fa-trash"></i></button>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                    <div class="admin-input-group">
+                        <input type="password" class="admin-input-field" name="gemini_key[]" placeholder="AIza...">
+                        <button class="admin-input-btn btn-eye" type="button" onclick="toggleKeyVisibility(this)" title="Show/Hide Key"><i class="fas fa-eye"></i></button>
+                        <button class="admin-input-btn" type="button" onclick="this.closest('.admin-input-group').remove()" title="Remove Key"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-admin-outline mt-2" onclick="addAdminKeyField('gemini_keys_container', 'gemini_key[]', 'AIza...')">
+                    <i class="fas fa-plus mr-1"></i> Add Another Gemini Key
+                </button>
+            </div>
+        </div>
+
+        <!-- Save Button -->
+        <div class="d-flex justify-content-end mt-4">
+            <button type="submit" class="btn-save-clean">
+                <i class="fas fa-check-circle"></i>
+                <span>Save System Configuration</span>
+            </button>
+        </div>
+    </form>
+
 </div>
 
 <script>
-function addKeyField(containerId, inputName, placeholder) {
+function toggleKeyVisibility(btn) {
+    const group = btn.closest('.admin-input-group');
+    const input = group ? group.querySelector('.admin-input-field') : null;
+    if (!input) return;
+    if (input.type === "password") {
+        input.type = "text";
+        btn.innerHTML = '<i class="fas fa-eye-slash"></i>';
+    } else {
+        input.type = "password";
+        btn.innerHTML = '<i class="fas fa-eye"></i>';
+    }
+}
+
+function addAdminKeyField(containerId, inputName, placeholder) {
     const container = document.getElementById(containerId);
+    if (!container) return;
     const div = document.createElement('div');
-    div.className = 'input-group mb-2 smooth-fade';
-    div.innerHTML = `<input type="password" class="form-control" name="${inputName}" placeholder="${placeholder}">
-                     <button class="btn btn-outline-danger" type="button" onclick="this.parentElement.remove()"><i class="fas fa-trash"></i></button>`;
+    div.className = 'admin-input-group smooth-fade';
+    div.innerHTML = `<input type="password" class="admin-input-field" name="${inputName}" placeholder="${placeholder}">
+                     <button class="admin-input-btn btn-eye" type="button" onclick="toggleKeyVisibility(this)" title="Show/Hide Key"><i class="fas fa-eye"></i></button>
+                     <button class="admin-input-btn" type="button" onclick="this.closest('.admin-input-group').remove()" title="Remove Key"><i class="fas fa-trash"></i></button>`;
     container.appendChild(div);
 }
 
-function updateProviderVisibility() {
-    const provider = document.getElementById('provider_selector').value;
-    
+function selectProvider(provider) {
     const groqSection = document.getElementById('groq_section');
     const openaiSection = document.getElementById('openai_section');
     const geminiSection = document.getElementById('gemini_section');
-    const saveButton = document.getElementById('save_button_container');
+    const activeInput = document.getElementById('active_provider_input');
     
-    // Disable inputs that are hidden so they don't overwrite the DB with empty/wrong values
+    const tabGroq = document.getElementById('tab_groq');
+    const tabOpenai = document.getElementById('tab_openai');
+    const tabGemini = document.getElementById('tab_gemini');
+    
     const groqModel = document.getElementById('groq_model');
     const openaiModel = document.getElementById('openai_model_select');
     
-    // Disable all key inputs
-    document.querySelectorAll('input[name="groq_key[]"], input[name="openai_key[]"], input[name="gemini_key[]"]').forEach(el => el.disabled = true);
+    // Toggle Tab Active Classes
+    tabGroq.classList.toggle('is-active', provider === 'groq');
+    tabOpenai.classList.toggle('is-active', provider === 'openai');
+    tabGemini.classList.toggle('is-active', provider === 'gemini');
     
     // Reset visibility
-    groqSection.style.display = 'none';
-    openaiSection.style.display = 'none';
-    geminiSection.style.display = 'none';
-    saveButton.style.display = 'none';
+    groqSection.style.display = (provider === 'groq') ? 'block' : 'none';
+    openaiSection.style.display = (provider === 'openai') ? 'block' : 'none';
+    geminiSection.style.display = (provider === 'gemini') ? 'block' : 'none';
     
-    if (provider === 'groq') {
-        groqSection.style.display = 'block';
-        saveButton.style.display = 'block';
-        groqModel.disabled = false;
-        document.querySelectorAll('input[name="groq_key[]"]').forEach(el => el.disabled = false);
-    } else if (provider === 'openai') {
-        openaiSection.style.display = 'block';
-        saveButton.style.display = 'block';
-        openaiModel.disabled = false;
-        document.querySelectorAll('input[name="openai_key[]"]').forEach(el => el.disabled = false);
-    } else if (provider === 'gemini') {
-        geminiSection.style.display = 'block';
-        saveButton.style.display = 'block';
-        document.querySelectorAll('input[name="gemini_key[]"]').forEach(el => el.disabled = false);
-    }
+    if (activeInput) activeInput.value = provider;
+    
+    // Enable/disable appropriate model inputs
+    if (groqModel) groqModel.disabled = (provider !== 'groq');
+    if (openaiModel) openaiModel.disabled = (provider !== 'openai');
 }
 
-// Run on page load to hide everything initially
+// Initial Selection
 document.addEventListener("DOMContentLoaded", function() {
-    // Determine if we should pre-select a provider based on current model
     const currentModel = "{{ openai_model }}";
-    const providerSelect = document.getElementById('provider_selector');
+    let defaultProvider = 'groq';
     
-    if (currentModel.includes('llama') || currentModel.includes('mixtral')) {
-        providerSelect.value = 'groq';
-    } else if (currentModel.includes('gpt')) {
-        providerSelect.value = 'openai';
-    } else if ("{{ gemini_key }}" !== "") {
-        providerSelect.value = 'gemini';
+    if (currentModel.includes('gpt')) {
+        defaultProvider = 'openai';
+    } else if ("{{ gemini_key }}" !== "" && !currentModel) {
+        defaultProvider = 'gemini';
     }
     
-    updateProviderVisibility();
+    selectProvider(defaultProvider);
 });
 </script>
 {% endblock %}
+

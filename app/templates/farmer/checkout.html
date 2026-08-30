@@ -5,7 +5,7 @@
 {% block content %}
 <style>
     /* ==========================================================================
-       PROFESSIONAL SAAS SECURE CHECKOUT (Coherent with Plans & Pricing)
+       PROFESSIONAL SAAS SECURE CHECKOUT (Fully Responsive & Mobile-First)
        ========================================================================== */
     :root {
         --checkout-container-bg: #f4f4f5;
@@ -20,9 +20,17 @@
     }
 
     .checkout-page-wrapper {
-        max-width: 1160px;
+        width: 100%;
+        max-width: 1140px;
         margin: 0 auto;
-        padding: 2rem 1rem 5rem;
+        padding: 1.25rem 0.85rem 4rem;
+        box-sizing: border-box;
+    }
+
+    @media (min-width: 768px) {
+        .checkout-page-wrapper {
+            padding: 2rem 1.5rem 5rem;
+        }
     }
 
     /* Top Navigation Bar */
@@ -30,9 +38,9 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-bottom: 2rem;
+        margin-bottom: 1.5rem;
         flex-wrap: wrap;
-        gap: 1rem;
+        gap: 0.85rem;
     }
 
     .checkout-back-btn {
@@ -40,20 +48,22 @@
         align-items: center;
         gap: 0.5rem;
         color: var(--text-muted, #71717a);
-        font-size: 0.9rem;
+        font-size: 0.88rem;
         font-weight: 600;
         text-decoration: none;
-        padding: 0.5rem 1rem;
+        padding: 0.45rem 0.95rem;
+        min-height: 38px;
         border-radius: 999px;
         background: var(--card-bg, #ffffff);
         border: 1px solid var(--border-light, #e4e4e7);
         transition: all 0.2s ease;
+        box-sizing: border-box;
     }
 
     .checkout-back-btn:hover {
         color: #09090b;
         border-color: #cbd5e1;
-        transform: translateX(-3px);
+        transform: translateX(-2px);
         text-decoration: none;
     }
 
@@ -66,39 +76,62 @@
         display: inline-flex;
         align-items: center;
         gap: 0.5rem;
-        font-size: 0.85rem;
+        font-size: 0.8rem;
         font-weight: 600;
-        padding: 0.45rem 1rem;
+        padding: 0.4rem 0.85rem;
+        min-height: 34px;
         border-radius: 999px;
         background: rgba(16, 185, 129, 0.1);
         color: #10b981;
         border: 1px solid rgba(16, 185, 129, 0.25);
+        line-height: 1.35;
+        box-sizing: border-box;
+    }
+
+    @media (max-width: 480px) {
+        .checkout-nav-bar {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
+        }
+        .checkout-back-btn {
+            width: auto;
+        }
+        .checkout-security-pill {
+            width: 100%;
+            justify-content: center;
+            font-size: 0.76rem;
+            padding: 0.4rem 0.6rem;
+            text-align: center;
+        }
     }
 
     /* Header Section */
     .checkout-header-section {
-        margin-bottom: 2.25rem;
+        margin-bottom: 1.75rem;
         text-align: left;
     }
 
     .checkout-main-title {
         font-family: "Space Grotesk", "Kantumruy Pro", sans-serif;
-        font-size: clamp(2rem, 4vw, 2.75rem);
+        font-size: clamp(1.5rem, 4vw, 2.35rem);
         font-weight: 700;
         color: var(--text-main, #09090b);
-        margin: 0 0 0.5rem 0;
-        letter-spacing: -0.025em;
-        line-height: 1.2;
+        margin: 0 0 0.4rem 0;
+        letter-spacing: -0.02em;
+        line-height: 1.25;
         display: flex;
         align-items: center;
-        gap: 0.75rem;
+        gap: 0.6rem;
         flex-wrap: wrap;
+        word-break: break-word;
     }
 
     .checkout-main-subtitle {
         color: var(--text-muted, #71717a);
-        font-size: 1.05rem;
-        line-height: 1.55;
+        font-size: clamp(0.88rem, 2vw, 1rem);
+        line-height: 1.5;
         margin: 0;
         max-width: 640px;
     }
@@ -107,14 +140,15 @@
     .checkout-layout-grid {
         display: grid;
         grid-template-columns: 1fr;
-        gap: 1.5rem;
+        gap: 1.25rem;
         align-items: start;
+        width: 100%;
     }
 
     @media (min-width: 992px) {
         .checkout-layout-grid {
-            grid-template-columns: 1.15fr 1fr;
-            gap: 2rem;
+            grid-template-columns: 1.15fr 0.95fr;
+            gap: 1.75rem;
         }
     }
 
@@ -122,10 +156,21 @@
     .checkout-card {
         background: var(--card-bg, #ffffff);
         border: 1px solid var(--border-light, #e4e4e7);
-        border-radius: 24px;
-        padding: 1.75rem;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+        border-radius: 18px;
+        padding: 1.25rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
         position: relative;
+        box-sizing: border-box;
+        width: 100%;
+        overflow: hidden;
+    }
+
+    @media (min-width: 768px) {
+        .checkout-card {
+            border-radius: 22px;
+            padding: 1.65rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+        }
     }
 
     .dark-mode .checkout-card {
@@ -138,11 +183,11 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding-bottom: 1.25rem;
-        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        margin-bottom: 1.25rem;
         border-bottom: 1px solid var(--border-light, #e4e4e7);
         flex-wrap: wrap;
-        gap: 0.75rem;
+        gap: 0.6rem;
     }
 
     .dark-mode .checkout-card-header {
@@ -151,13 +196,13 @@
 
     .checkout-card-title {
         font-family: "Space Grotesk", "Kantumruy Pro", sans-serif;
-        font-size: 1.25rem;
+        font-size: clamp(1.1rem, 2.5vw, 1.25rem);
         font-weight: 700;
         color: var(--text-main, #09090b);
         margin: 0;
         display: flex;
         align-items: center;
-        gap: 0.6rem;
+        gap: 0.55rem;
         letter-spacing: -0.01em;
     }
 
@@ -165,12 +210,21 @@
     .order-hero-plan {
         background: linear-gradient(180deg, #18181b 0%, #09090b 100%);
         border: 1.5px solid #27272a;
-        border-radius: 20px;
-        padding: 1.5rem;
+        border-radius: 16px;
+        padding: 1.25rem;
         color: #ffffff;
-        margin-bottom: 1.75rem;
-        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+        margin-bottom: 1.35rem;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
         position: relative;
+        box-sizing: border-box;
+        width: 100%;
+    }
+
+    @media (min-width: 768px) {
+        .order-hero-plan {
+            border-radius: 20px;
+            padding: 1.5rem;
+        }
     }
 
     .order-plan-top-row {
@@ -192,13 +246,15 @@
         letter-spacing: 0.05em;
         text-transform: uppercase;
         border: 1px solid #52525b;
+        display: inline-flex;
+        align-items: center;
     }
 
     .order-plan-title {
         font-family: "Space Grotesk", "Kantumruy Pro", sans-serif;
-        font-size: 1.35rem;
+        font-size: clamp(1.2rem, 3vw, 1.35rem);
         font-weight: 700;
-        margin: 0 0 0.5rem 0;
+        margin: 0 0 0.4rem 0;
         color: #ffffff;
     }
 
@@ -213,37 +269,40 @@
         font-size: 0.75rem;
         font-weight: 700;
         border: 1px solid rgba(59, 130, 246, 0.35);
+        white-space: nowrap;
     }
 
     .order-plan-features {
         list-style: none;
         padding: 0;
-        margin: 0.85rem 0 0 0;
+        margin: 0.75rem 0 0 0;
         display: grid;
         grid-template-columns: 1fr;
-        gap: 0.5rem;
+        gap: 0.55rem;
         border-top: 1px solid #27272a;
-        padding-top: 0.85rem;
+        padding-top: 0.75rem;
     }
 
     @media (min-width: 480px) {
         .order-plan-features {
             grid-template-columns: repeat(2, 1fr);
+            gap: 0.65rem;
         }
     }
 
     .order-plan-feature-item {
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         gap: 0.5rem;
-        font-size: 0.835rem;
+        font-size: 0.825rem;
         color: #d4d4d8;
         font-weight: 500;
+        line-height: 1.35;
     }
 
     .order-feature-check {
-        width: 18px;
-        height: 18px;
+        width: 17px;
+        height: 17px;
         border-radius: 999px;
         background: #27272a;
         border: 1px solid #52525b;
@@ -251,24 +310,39 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        font-size: 0.65rem;
+        font-size: 0.6rem;
         flex-shrink: 0;
+        margin-top: 1px;
     }
 
     /* Financial Breakdown Rows */
     .pricing-breakdown-list {
         display: flex;
         flex-direction: column;
-        gap: 0.75rem;
-        margin-bottom: 1.5rem;
+        gap: 0.7rem;
+        margin-bottom: 1.25rem;
     }
 
     .breakdown-line {
         display: flex;
         justify-content: space-between;
-        align-items: center;
-        font-size: 0.935rem;
+        align-items: flex-start;
+        gap: 0.75rem;
+        font-size: 0.92rem;
         color: var(--text-main, #3f3f46);
+        line-height: 1.4;
+    }
+
+    .breakdown-line > span:first-child {
+        min-width: 0;
+        word-break: break-word;
+    }
+
+    .breakdown-line > span:last-child {
+        white-space: nowrap;
+        font-weight: 600;
+        flex-shrink: 0;
+        text-align: right;
     }
 
     .dark-mode .breakdown-line {
@@ -277,7 +351,7 @@
 
     .breakdown-line.is-muted {
         color: #71717a;
-        font-size: 0.9rem;
+        font-size: 0.88rem;
     }
 
     .dark-mode .breakdown-line.is-muted {
@@ -292,7 +366,7 @@
     .breakdown-divider-line {
         height: 1px;
         background: var(--border-light, #e4e4e7);
-        margin: 0.5rem 0;
+        margin: 0.4rem 0;
     }
 
     .dark-mode .breakdown-divider-line {
@@ -303,22 +377,25 @@
         display: flex;
         justify-content: space-between;
         align-items: baseline;
-        padding-top: 0.5rem;
+        gap: 0.75rem;
+        padding-top: 0.4rem;
+        flex-wrap: wrap;
     }
 
     .breakdown-total-label {
         font-family: "Space Grotesk", "Kantumruy Pro", sans-serif;
-        font-size: 1.15rem;
+        font-size: clamp(1.05rem, 2.5vw, 1.15rem);
         font-weight: 700;
         color: var(--text-main, #09090b);
     }
 
     .breakdown-total-val {
         font-family: "Space Grotesk", "Kantumruy Pro", sans-serif;
-        font-size: clamp(1.8rem, 3.5vw, 2.25rem);
+        font-size: clamp(1.6rem, 4vw, 2.15rem);
         font-weight: 700;
         color: var(--text-main, #09090b);
         letter-spacing: -0.02em;
+        white-space: nowrap;
     }
 
     .dark-mode .breakdown-total-val {
@@ -329,9 +406,11 @@
     .coupon-box-modern {
         background: var(--surface-muted, #f4f4f5);
         border: 1px solid var(--border-light, #e4e4e7);
-        border-radius: 16px;
-        padding: 1.15rem;
-        margin-top: 1.5rem;
+        border-radius: 14px;
+        padding: 1rem;
+        margin-top: 1.25rem;
+        box-sizing: border-box;
+        width: 100%;
     }
 
     .dark-mode .coupon-box-modern {
@@ -340,23 +419,25 @@
     }
 
     .coupon-label-text {
-        font-size: 0.85rem;
+        font-size: 0.835rem;
         font-weight: 700;
         color: var(--text-main, #09090b);
         margin-bottom: 0.5rem;
         display: block;
+        line-height: 1.35;
     }
 
     .coupon-input-group {
         display: flex;
         gap: 0.5rem;
+        width: 100%;
     }
 
     .coupon-text-field {
         flex: 1;
         min-width: 0;
         height: 42px;
-        padding: 0 1rem;
+        padding: 0 0.85rem;
         border-radius: 10px;
         border: 1px solid var(--border-light, #e4e4e7);
         background: var(--card-bg, #ffffff);
@@ -367,6 +448,7 @@
         letter-spacing: 0.05em;
         outline: none;
         transition: border-color 0.2s ease;
+        box-sizing: border-box;
     }
 
     .dark-mode .coupon-text-field {
@@ -385,7 +467,7 @@
 
     .coupon-action-btn {
         height: 42px;
-        padding: 0 1.25rem;
+        padding: 0 1.15rem;
         border-radius: 10px;
         border: 1px solid #09090b;
         background: #09090b;
@@ -397,6 +479,9 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        white-space: nowrap;
+        flex-shrink: 0;
+        box-sizing: border-box;
     }
 
     .dark-mode .coupon-action-btn {
@@ -425,11 +510,20 @@
         display: flex;
         align-items: center;
         gap: 0.75rem;
-        padding-top: 1.25rem;
-        margin-top: 1.25rem;
+        padding-top: 1.1rem;
+        margin-top: 1.1rem;
         border-top: 1px dashed var(--border-light, #e4e4e7);
-        font-size: 0.85rem;
+        font-size: 0.835rem;
         color: #71717a;
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    .checkout-user-badge > div {
+        min-width: 0;
+        overflow: hidden;
+        word-break: break-word;
+        overflow-wrap: anywhere;
     }
 
     .dark-mode .checkout-user-badge {
@@ -438,29 +532,37 @@
 
     /* Right Card: Payment Gateway */
     .payment-instruction-text {
-        font-size: 0.9rem;
+        font-size: 0.88rem;
         color: #71717a;
-        line-height: 1.55;
-        margin-bottom: 1.5rem;
+        line-height: 1.5;
+        margin-bottom: 1.25rem;
     }
 
     .paypal-gateway-container {
-        min-height: 130px;
+        min-height: 140px;
         position: relative;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    #paypal-button-container {
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow: hidden;
     }
 
     .payment-loading-box {
         text-align: center;
-        padding: 2rem 0;
+        padding: 1.75rem 0;
         color: #71717a;
     }
 
     .payment-success-overlay {
         display: none;
         text-align: center;
-        padding: 2.5rem 1rem;
+        padding: 2rem 1rem;
         background: var(--card-bg, #ffffff);
-        border-radius: 20px;
+        border-radius: 16px;
     }
 
     .dark-mode .payment-success-overlay {
@@ -472,8 +574,8 @@
         display: grid;
         grid-template-columns: 1fr;
         gap: 0.75rem;
-        margin-top: 1.75rem;
-        padding-top: 1.5rem;
+        margin-top: 1.5rem;
+        padding-top: 1.25rem;
         border-top: 1px solid var(--border-light, #e4e4e7);
     }
 
@@ -484,15 +586,15 @@
     .checkout-trust-item {
         display: flex;
         align-items: flex-start;
-        gap: 0.75rem;
-        font-size: 0.835rem;
+        gap: 0.65rem;
+        font-size: 0.825rem;
         color: #71717a;
         line-height: 1.45;
     }
 
     .checkout-trust-item i {
         color: #10b981;
-        font-size: 1rem;
+        font-size: 0.95rem;
         margin-top: 2px;
         flex-shrink: 0;
     }
@@ -503,6 +605,15 @@
 
     .dark-mode .checkout-trust-item strong {
         color: #f4f4f5;
+    }
+
+    @media (max-width: 360px) {
+        .coupon-input-group {
+            flex-direction: column;
+        }
+        .coupon-action-btn {
+            width: 100%;
+        }
     }
 </style>
 

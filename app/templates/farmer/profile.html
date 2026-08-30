@@ -3,157 +3,445 @@
 
 {% block content %}
 <style>
-/* 📱 iOS/Mobile App Style Settings */
+/* ==========================================================================
+   EXECUTIVE & PROFESSIONAL USER PROFILE (ADMIN, EXPERT & FARMER)
+   ========================================================================== */
 .settings-container {
-    max-width: 600px;
+    width: 100%;
+    max-width: 720px;
     margin: 0 auto;
-    padding: 0 16px 80px 16px;
+    padding: 0.5rem 12px 90px 12px;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    box-sizing: border-box;
+}
+
+@media (min-width: 768px) {
+    .settings-container {
+        padding: 1rem 16px 80px 16px;
+    }
 }
 
 .settings-section-title {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: #64748b;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--admin-muted, #64748b);
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin: 24px 0 8px 16px;
-}
-.dark-mode .settings-section-title {
-    color: #94a3b8;
+    letter-spacing: 0.06em;
+    margin: 22px 0 8px 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 
 .settings-card {
-    background: #ffffff;
-    border-radius: 12px;
+    background: var(--admin-card, #ffffff);
+    border-radius: 16px;
     overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+    border: 1px solid var(--admin-border, #e2e8f0);
+    margin-bottom: 1rem;
+    box-sizing: border-box;
 }
+
 .dark-mode .settings-card {
-    background: #1c2431;
-    border-color: rgba(148, 163, 184, 0.1);
-    box-shadow: none;
+    background: #18181b;
+    border-color: #27272a;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
 }
 
 .settings-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 16px;
-    border-bottom: 1px solid #f1f5f9;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--admin-border, #f1f5f9);
+    gap: 12px;
+    flex-wrap: nowrap;
 }
+
 .settings-row.stack {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
 }
+
 .settings-row:last-child {
     border-bottom: none;
 }
+
 .dark-mode .settings-row {
-    border-bottom-color: rgba(148, 163, 184, 0.08);
+    border-bottom-color: #27272a;
 }
 
 .settings-row-left {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 12px;
     flex-shrink: 0;
 }
 
 .settings-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
     display: grid;
     place-items: center;
     color: #ffffff;
     font-size: 0.9rem;
     flex-shrink: 0;
 }
+
 .icon-profile { background: #3b82f6; }
 .icon-email { background: #10b981; }
 .icon-lock { background: #f59e0b; }
 .icon-qr { background: #8b5cf6; }
+.icon-shield { background: #dc2626; }
+.icon-award { background: #059669; }
 
 .settings-label {
-    font-size: 0.95rem;
-    font-weight: 500;
-    color: #1e293b;
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--admin-text, #1e293b);
 }
+
 .dark-mode .settings-label {
     color: #f1f5f9;
 }
+
 .settings-sublabel {
     font-size: 0.75rem;
-    color: #64748b;
+    color: var(--admin-muted, #64748b);
     margin-top: 2px;
-}
-.dark-mode .settings-sublabel {
-    color: #94a3b8;
 }
 
 .ios-input {
     border: none;
     text-align: right;
     font-size: 0.95rem;
-    color: #64748b;
+    color: var(--admin-text, #334155);
     background: transparent;
     outline: none;
     flex: 1;
     min-width: 0;
     margin-left: 12px;
     text-overflow: ellipsis;
-}
-.dark-mode .ios-input {
-    color: #94a3b8;
-}
-.ios-input:focus {
-    color: #3b82f6;
+    font-weight: 500;
 }
 
-/* Specific styling for stacked inputs like passwords */
+.dark-mode .ios-input {
+    color: #e2e8f0;
+}
+
+.ios-input:focus {
+    color: var(--admin-accent, #3b82f6);
+}
+
+/* Stacked inputs like passwords */
 .settings-row.stack .ios-input {
     width: 100%;
     margin-left: 0;
     text-align: left;
-    background: rgba(0, 0, 0, 0.03);
-    padding: 12px;
-    border-radius: 8px;
+    background: color-mix(in srgb, var(--admin-card) 94%, var(--admin-bg) 6%);
+    padding: 12px 14px;
+    border-radius: 10px;
     box-sizing: border-box;
-}
-.dark-mode .settings-row.stack .ios-input {
-    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--admin-border, #e2e8f0);
+    min-height: 44px;
 }
 
+.dark-mode .settings-row.stack .ios-input {
+    background: #09090b;
+    border-color: #27272a;
+}
+
+/* ==========================================================================
+   PRESTIGE HERO & AVATAR AURA TIERS (ADMIN & EXPERT ULTRA-SPECIAL)
+   ========================================================================== */
 .avatar-container {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 24px 0;
-}
-.avatar-image-box {
-    width: 90px;
-    height: 90px;
-    border-radius: 50%;
-    overflow: hidden;
-    border: 3px solid #ffffff;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    display: grid;
-    place-items: center;
-    background: linear-gradient(135deg, #10b981, #059669);
-    color: #ffffff;
-    font-size: 2.2rem;
-    font-weight: 700;
+    padding: 1.5rem 0 1.25rem;
     position: relative;
 }
-.dark-mode .avatar-image-box {
-    border-color: #1c2431;
+
+.avatar-image-box {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    overflow: hidden;
+    display: grid;
+    place-items: center;
+    font-size: 2.3rem;
+    font-weight: 700;
+    position: relative;
+    box-sizing: border-box;
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+}
+
+/* 1. ADMIN IMPERIAL AURA RING */
+.avatar-box-admin {
+    background: linear-gradient(135deg, #ffd700, #f59e0b, #ef4444, #b45309, #ffd700);
+    background-size: 300% 300%;
+    animation: goldShimmer 6s ease infinite;
+    padding: 4px;
+    box-shadow: 0 0 28px rgba(245, 158, 11, 0.45), 0 8px 30px rgba(0, 0, 0, 0.25);
+    border: none;
+}
+
+@keyframes goldShimmer {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* 2. EXPERT SCIENTIFIC AURA RING */
+.avatar-box-expert {
+    background: linear-gradient(135deg, #10b981, #06b6d4, #3b82f6, #10b981);
+    background-size: 300% 300%;
+    animation: cyanShimmer 6s ease infinite;
+    padding: 4px;
+    box-shadow: 0 0 28px rgba(16, 185, 129, 0.45), 0 8px 30px rgba(0, 0, 0, 0.25);
+    border: none;
+}
+
+@keyframes cyanShimmer {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* 3. PREMIUM USER AURA RING */
+.avatar-box-premium {
+    background: linear-gradient(45deg, #4285f4, #9b72cb, #d96570);
+    padding: 4px;
+    box-shadow: 0 8px 24px rgba(155, 114, 203, 0.4);
+    border: none;
+}
+
+/* 4. STANDARD USER AURA */
+.avatar-box-standard {
+    border: 3px solid var(--admin-card, #ffffff);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: #ffffff;
+}
+
+.avatar-inner-img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    background: var(--admin-card, #ffffff);
+}
+
+.avatar-initial-text {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: #0f172a;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+}
+
+/* Role Badges & Pills */
+.profile-badge-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.badge-role-admin {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #92400e;
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    border: 1px solid #f59e0b;
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.25);
+}
+
+.dark-mode .badge-role-admin {
+    color: #fde68a;
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.22), rgba(239, 68, 68, 0.18));
+    border-color: rgba(245, 158, 11, 0.45);
+}
+
+.badge-role-expert {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #065f46;
+    background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+    border: 1px solid #10b981;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
+}
+
+.dark-mode .badge-role-expert {
+    color: #6ee7b7;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.22), rgba(6, 182, 212, 0.18));
+    border-color: rgba(16, 185, 129, 0.45);
+}
+
+.badge-clearance-admin {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #ffffff;
+    background: linear-gradient(135deg, #dc2626, #991b1b);
+    box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+}
+
+.badge-clearance-expert {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #ffffff;
+    background: linear-gradient(135deg, #0284c7, #0369a1);
+    box-shadow: 0 2px 8px rgba(2, 132, 199, 0.3);
+}
+
+/* ==========================================================================
+   EXECUTIVE CREDENTIALS PANEL (EXCLUSIVE FOR ADMIN & EXPERT)
+   ========================================================================== */
+.executive-credentials-card {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--admin-card) 90%, var(--admin-accent) 10%), var(--admin-card));
+    border-radius: 18px;
+    border: 1.5px solid color-mix(in srgb, var(--admin-accent) 35%, var(--admin-border));
+    padding: 1.25rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+    margin-bottom: 1.25rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.dark-mode .executive-credentials-card {
+    background: linear-gradient(180deg, #18181b, #09090b);
+    border-color: color-mix(in srgb, var(--admin-accent) 45%, #27272a);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+.credentials-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding-bottom: 0.85rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--admin-border) 80%, transparent);
+    margin-bottom: 1rem;
+}
+
+.credentials-id-tag {
+    font-family: "Space Grotesk", monospace;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: var(--admin-accent);
+    background: color-mix(in srgb, var(--admin-accent-soft) 80%, transparent);
+    padding: 4px 10px;
+    border-radius: 8px;
+}
+
+.credentials-status-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #10b981;
+}
+
+.credentials-capabilities-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 1.25rem;
+}
+
+.capability-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.74rem;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: var(--admin-bg, #f1f5f9);
+    border: 1px solid var(--admin-border, #e2e8f0);
+    color: var(--admin-text, #334155);
+}
+
+.dark-mode .capability-pill {
+    background: #27272a;
+    border-color: #3f3f46;
+    color: #e2e8f0;
+}
+
+.digital-pass-preview-box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    background: color-mix(in srgb, var(--admin-card) 95%, var(--admin-bg) 5%);
+    border: 1px dashed var(--admin-border, #cbd5e1);
+    border-radius: 14px;
+    padding: 12px 16px;
+    flex-wrap: wrap;
+}
+
+.dark-mode .digital-pass-preview-box {
+    background: #111827;
+    border-color: #374151;
+}
+
+.profile-qr-box {
+    width: 100px;
+    height: 100px;
+    background: #ffffff;
+    border-radius: 10px;
+    padding: 5px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.profile-qr-box canvas,
+.profile-qr-box img {
+    width: 100%;
+    height: 100%;
+    display: block;
 }
 
 .sticky-save {
-    margin-top: 2rem;
+    margin-top: 1.75rem;
     display: flex;
     justify-content: flex-end;
     align-items: center;
@@ -166,111 +454,221 @@
         left: 0;
         right: 0;
         margin: 0;
-        padding: 12px 16px max(14px, env(safe-area-inset-bottom, 14px));
-        background: rgba(255, 255, 255, 0.94);
+        padding: 10px 14px max(12px, env(safe-area-inset-bottom, 12px));
+        background: rgba(255, 255, 255, 0.95);
         -webkit-backdrop-filter: blur(14px);
         backdrop-filter: blur(14px);
         border-top: 1px solid var(--border-light, #e2e8f0);
-        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
         z-index: 100;
         justify-content: center;
     }
 
     .dark-mode .sticky-save {
         background: rgba(15, 23, 42, 0.95);
-        border-top-color: #334155;
-        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+        border-top-color: #27272a;
     }
 
     .sticky-save .btn-save-clean {
         width: 100%;
         min-height: 48px;
     }
-}
 
-.profile-qr-box {
-    width: 120px;
-    height: 120px;
-    background: #ffffff;
-    border-radius: 8px;
-    padding: 6px;
-    margin: 10px 0;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
-.profile-qr-box img {
-    width: 100%;
-    height: 100%;
-    display: block;
+    .digital-pass-preview-box {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
 }
 </style>
 
-<div class="settings-container pt-4">
-    <div style="text-align: center; margin-bottom: 24px;">
-        <h2 style="font-size: 1.5rem; font-weight: 700; color: var(--text-main);">{{ t("profile") }}</h2>
+{% set is_admin = current_user.has_role('admin') %}
+{% set is_expert = current_user.has_role('expert') %}
+{% set is_premium = current_user.is_premium %}
+
+<div class="settings-container pt-3">
+    <!-- Header Title -->
+    <div style="text-align: center; margin-bottom: 16px;">
+        <h2 style="font-size: clamp(1.3rem, 4vw, 1.65rem); font-weight: 800; color: var(--admin-text, #09090b); letter-spacing: -0.02em; margin-bottom: 4px;">
+            {{ t("profile") }}
+        </h2>
+        <div class="text-muted" style="font-size: 0.85rem;">
+            {% if is_admin %}
+                System Administrator &bull; Executive Control Center
+            {% elif is_expert %}
+                Agricultural Specialist &bull; Verified Diagnostic Authority
+            {% elif is_premium %}
+                Agri System Pro Subscriber
+            {% else %}
+                Manage your account credentials and personal preferences
+            {% endif %}
+        </div>
     </div>
 
     <form method="POST" enctype="multipart/form-data">
-        <!-- AVATAR UPLOAD -->
+        <!-- AVATAR UPLOAD & AURA HEADER -->
         <div class="avatar-container">
             <label for="avatar-input-file" style="cursor: pointer; position: relative;">
-                <div class="avatar-image-box" {% if current_user.is_premium %}style="background: linear-gradient(45deg, #4285f4, #9b72cb, #d96570); padding: 4px; box-shadow: 0 8px 24px rgba(155, 114, 203, 0.4); border: none;"{% endif %}>
+                <div class="avatar-image-box {% if is_admin %}avatar-box-admin{% elif is_expert %}avatar-box-expert{% elif is_premium %}avatar-box-premium{% else %}avatar-box-standard{% endif %}">
                     {% if current_user.avatar_data %}
-                        <img src="{{ url_for('user.avatar', user_id=current_user.id) }}" alt="Avatar" id="avatar-preview" style="{% if current_user.is_premium %}border: 3px solid var(--card-bg); border-radius: 50%;{% endif %} width: 100%; height: 100%; object-fit: cover;">
+                        <img src="{{ url_for('user.avatar', user_id=current_user.id) }}" alt="Avatar" id="avatar-preview" class="avatar-inner-img">
                     {% else %}
-                        <img src="" alt="Avatar" id="avatar-preview" style="display:none; {% if current_user.is_premium %}border: 3px solid var(--card-bg); border-radius: 50%;{% endif %} width: 100%; height: 100%; object-fit: cover;">
-                        <span id="avatar-initial" style="{% if current_user.is_premium %}border: 3px solid var(--card-bg); border-radius: 50%; background: #059669; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;{% endif %}">{{ current_user.username[0]|upper }}</span>
+                        <img src="" alt="Avatar" id="avatar-preview" class="avatar-inner-img" style="display:none;">
+                        <span id="avatar-initial" class="avatar-initial-text">{{ current_user.username[0]|upper }}</span>
                     {% endif %}
                 </div>
-                <div style="position: absolute; bottom: 0; right: 0; background: {% if current_user.is_premium %}#9b72cb{% else %}#3b82f6{% endif %}; color: white; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; border: 2px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.15);">
-                    <i class="fas fa-camera" style="font-size: 0.7rem;"></i>
+
+                <!-- Bottom Emblem Icon -->
+                <div style="position: absolute; bottom: 0; right: 0; background: {% if is_admin %}#dc2626{% elif is_expert %}#059669{% elif is_premium %}#9b72cb{% else %}#3b82f6{% endif %}; color: white; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; border: 2.5px solid var(--admin-card, #ffffff); box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+                    {% if is_admin %}
+                        <i class="fas fa-shield-alt" style="font-size: 0.72rem;"></i>
+                    {% elif is_expert %}
+                        <i class="fas fa-user-graduate" style="font-size: 0.72rem;"></i>
+                    {% elif is_premium %}
+                        <i class="fas fa-crown" style="font-size: 0.72rem;"></i>
+                    {% else %}
+                        <i class="fas fa-camera" style="font-size: 0.72rem;"></i>
+                    {% endif %}
                 </div>
             </label>
             <input type="file" name="avatar" accept=".jpg,.jpeg,.png,.gif,.webp" style="display: none;" id="avatar-input-file" onchange="const preview=document.getElementById('avatar-preview'); preview.src=window.URL.createObjectURL(this.files[0]); preview.style.display='block'; const initial=document.getElementById('avatar-initial'); if(initial) initial.style.display='none';">
             
-            <div class="settings-label mt-3" style="display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 1.2rem; font-weight: 700;">
-                {{ current_user.username }}
-                {% if current_user.is_premium %}
-                    <i class="fas fa-crown text-warning" style="font-size: 0.95rem; transform: translateY(-1px);" title="Premium Account"></i>
+            <!-- User Display Name -->
+            <div class="settings-label mt-3" style="display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 1.25rem; font-weight: 800; color: var(--admin-text);">
+                <span>{{ current_user.full_name or current_user.username }}</span>
+                {% if is_admin %}
+                    <i class="fas fa-shield-check text-warning" title="System Administrator"></i>
+                {% elif is_expert %}
+                    <i class="fas fa-check-circle text-success" title="Verified Expert"></i>
+                {% elif is_premium %}
+                    <i class="fas fa-crown text-warning" title="Premium Subscriber"></i>
                 {% endif %}
             </div>
             
-            <div style="display: flex; gap: 8px; margin-top: 8px; justify-content: center;">
-                <div class="settings-sublabel" style="text-transform: uppercase; font-weight: 600; font-size: 0.7rem; letter-spacing: 0.5px; background: rgba(59, 130, 246, 0.1); color: #3b82f6; padding: 4px 10px; border-radius: 20px;">
-                    {{ rep_label if rep_label else 'FARMER' }}
-                </div>
-                {% if current_user.is_premium %}
-                <div class="settings-sublabel" style="text-transform: uppercase; font-weight: 700; font-size: 0.7rem; letter-spacing: 0.5px; background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; padding: 4px 10px; border-radius: 20px; box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);">
-                    <i class="fas fa-crown"></i> PREMIUM
-                </div>
+            <!-- Prestige Rank Badges -->
+            <div class="profile-badge-row">
+                {% if is_admin %}
+                    <span class="badge-role-admin"><i class="fas fa-shield-alt"></i> SYSTEM ADMINISTRATOR</span>
+                    <span class="badge-clearance-admin"><i class="fas fa-key"></i> LEVEL 4 ROOT CLEARANCE</span>
+                {% elif is_expert %}
+                    <span class="badge-role-expert"><i class="fas fa-certificate"></i> CERTIFIED AGRICULTURAL EXPERT</span>
+                    <span class="badge-clearance-expert"><i class="fas fa-microscope"></i> DIAGNOSTIC AUTHORITY</span>
+                {% elif is_premium %}
+                    <div class="settings-sublabel" style="text-transform: uppercase; font-weight: 700; font-size: 0.72rem; letter-spacing: 0.5px; background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; padding: 4px 12px; border-radius: 20px; box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);">
+                        <i class="fas fa-crown"></i> PRO FARMER
+                    </div>
+                {% else %}
+                    <div class="settings-sublabel" style="text-transform: uppercase; font-weight: 600; font-size: 0.72rem; letter-spacing: 0.5px; background: rgba(59, 130, 246, 0.1); color: #3b82f6; padding: 4px 12px; border-radius: 20px;">
+                        FARMER
+                    </div>
                 {% endif %}
             </div>
         </div>
 
+        <!-- ===============================
+             EXCLUSIVE EXECUTIVE DIGITAL PASS (ADMIN & EXPERT)
+        =============================== -->
+        {% if is_admin or is_expert or rep_label %}
+        <div class="settings-section-title">
+            <i class="fas fa-id-badge text-primary"></i>
+            <span>{{ t("official_credentials")|default("Official Digital Credentials") }}</span>
+        </div>
+        <div class="executive-credentials-card">
+            <div class="credentials-header-row">
+                <div class="credentials-id-tag">
+                    {% if is_admin %}
+                        #AGRI-ADM-{{ "%04d"|format(current_user.id) }}
+                    {% elif is_expert %}
+                        #AGRI-EXP-{{ "%04d"|format(current_user.id) }}
+                    {% else %}
+                        #AGRI-REP-{{ "%04d"|format(current_user.id) }}
+                    {% endif %}
+                </div>
+                <div class="credentials-status-tag">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Verified Representative</span>
+                </div>
+            </div>
+
+            <div style="font-size: 0.8rem; font-weight: 700; color: var(--admin-muted); margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 0.04em;">
+                Authorized System Capabilities
+            </div>
+            <div class="credentials-capabilities-list">
+                {% if is_admin %}
+                    <span class="capability-pill"><i class="fas fa-database text-primary"></i> Database Master</span>
+                    <span class="capability-pill"><i class="fas fa-users-cog text-info"></i> User &amp; Role Auditing</span>
+                    <span class="capability-pill"><i class="fas fa-palette text-success"></i> Theme Studio</span>
+                    <span class="capability-pill"><i class="fas fa-robot text-warning"></i> AI Knowledge Engine</span>
+                    <span class="capability-pill"><i class="fas fa-shield-virus text-danger"></i> Security Overrides</span>
+                {% elif is_expert %}
+                    <span class="capability-pill"><i class="fas fa-notes-medical text-success"></i> Diagnostic Validation</span>
+                    <span class="capability-pill"><i class="fas fa-brain text-primary"></i> Rule Engine Control</span>
+                    <span class="capability-pill"><i class="fas fa-comments text-info"></i> Farmer Live Advisory</span>
+                    <span class="capability-pill"><i class="fas fa-flask text-warning"></i> Scientific Fact Publishing</span>
+                {% else %}
+                    <span class="capability-pill"><i class="fas fa-id-card text-primary"></i> Official Representative Pass</span>
+                {% endif %}
+            </div>
+
+            <!-- Digital Pass & QR Preview -->
+            <div class="digital-pass-preview-box">
+                <div class="profile-qr-box" id="profile-qr-code" data-qr="{{ member_card_url }}" data-qr-img="{{ member_card_qr_url }}">
+                    <img src="{{ member_card_qr_url }}" alt="QR code">
+                </div>
+                <div style="flex: 1; min-width: 0;">
+                    <div style="font-weight: 700; font-size: 0.95rem; color: var(--admin-text); margin-bottom: 4px;">
+                        Digital Member Badge &amp; QR
+                    </div>
+                    <div class="text-muted" style="font-size: 0.8rem; line-height: 1.4; margin-bottom: 10px;">
+                        Instant verification credential pass. Open to view full verified card, share with colleagues, or print ID.
+                    </div>
+                    <div class="d-flex align-items-center gap-2 flex-wrap" style="gap: 8px;">
+                        <a href="{{ url_for('user.member_card', user_id=current_user.id) }}"
+                           target="_blank"
+                           class="btn btn-sm btn-admin d-inline-flex align-items-center"
+                           style="border-radius: 999px; font-weight: 700; padding: 6px 14px;">
+                            <i class="fas fa-external-link-alt mr-1.5"></i> Open Member Card
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
         <!-- ACCOUNT DETAILS -->
-        <div class="settings-section-title">{{ t("account_details") }}</div>
+        <div class="settings-section-title">
+            <i class="fas fa-user-circle"></i>
+            <span>{{ t("account_details") }}</span>
+        </div>
         <div class="settings-card">
             <div class="settings-row">
                 <div class="settings-row-left">
                     <div class="settings-icon icon-profile"><i class="fas fa-user"></i></div>
+                    <div class="settings-label">{{ t("username") }}</div>
                 </div>
-                <input type="text" name="username" class="ios-input" style="text-align: left;" value="{{ current_user.username }}" placeholder="{{ t('username') }}" required>
+                <input type="text" name="username" class="ios-input" value="{{ current_user.username }}" placeholder="{{ t('username') }}" required>
             </div>
             <div class="settings-row">
                 <div class="settings-row-left">
                     <div class="settings-icon icon-profile"><i class="fas fa-id-card"></i></div>
+                    <div class="settings-label">{{ t("full_name") }}</div>
                 </div>
-                <input type="text" name="full_name" class="ios-input" style="text-align: left;" value="{{ current_user.full_name or '' }}" placeholder="{{ t('full_name') }}">
+                <input type="text" name="full_name" class="ios-input" value="{{ current_user.full_name or '' }}" placeholder="{{ t('full_name') }}">
             </div>
             <div class="settings-row">
                 <div class="settings-row-left">
                     <div class="settings-icon icon-email"><i class="fas fa-envelope"></i></div>
+                    <div class="settings-label">{{ t("email") }}</div>
                 </div>
-                <input type="email" name="email" class="ios-input" style="text-align: left;" value="{{ current_user.email or '' }}" placeholder="{{ t('email') }}">
+                <input type="email" name="email" class="ios-input" value="{{ current_user.email or '' }}" placeholder="{{ t('email') }}">
             </div>
         </div>
 
-        <!-- SECURITY -->
-        <div class="settings-section-title">{% if current_lang == 'km' %}ប្តូរលេខសម្ងាត់{% else %}Change Password{% endif %}</div>
+        <!-- SECURITY & PASSWORD -->
+        <div class="settings-section-title">
+            <i class="fas fa-shield-alt"></i>
+            <span>{% if current_lang == 'km' %}ប្តូរលេខសម្ងាត់{% else %}Security &amp; Password{% endif %}</span>
+        </div>
         <div class="settings-card">
             <div class="settings-row stack">
                 <div class="settings-label w-100">{{ t("current_password") }}</div>
@@ -286,24 +684,6 @@
             </div>
         </div>
 
-        <!-- MEMBER QR CARD (If applicable) -->
-        {% if rep_label %}
-        <div class="settings-section-title">Member Card</div>
-        <div class="settings-card">
-            <div class="settings-row stack align-items-center text-center">
-                <div class="settings-icon icon-qr" style="margin: 0 auto;"><i class="fas fa-qrcode"></i></div>
-                <div class="settings-label mt-2">{{ rep_label }} QR</div>
-                
-                <div class="profile-qr-box" id="profile-qr-code" data-qr="{{ member_card_url }}" data-qr-img="{{ member_card_qr_url }}">
-                    <img src="{{ member_card_qr_url }}" alt="QR code">
-                </div>
-                
-                <div class="settings-sublabel">Scan to view member card</div>
-                <a href="{{ url_for('user.member_card', user_id=current_user.id) }}" target="_blank" class="btn btn-sm btn-outline-primary mt-2" style="border-radius: 20px; font-weight: 600;">Open Member Card</a>
-            </div>
-        </div>
-        {% endif %}
-
         <!-- SAVE BUTTON -->
         <div class="sticky-save">
             <button type="submit" class="btn-save-clean">
@@ -317,7 +697,7 @@
 
 {% block scripts %}
 {{ super() }}
-{% if rep_label %}
+{% if rep_label or is_admin or is_expert %}
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 <script>
 (() => {
@@ -325,6 +705,7 @@
     if (!holder) return;
     if (typeof QRCode === "undefined") return;
     const url = holder.dataset.qr;
+    if (!url) return;
     const canvas = document.createElement("canvas");
     QRCode.toCanvas(canvas, url, {
         width: 140,
@@ -332,7 +713,7 @@
         color: { dark: "#0f172a", light: "#ffffff" }
     }, (err) => {
         if (err) {
-            holder.textContent = "QR unavailable";
+            console.warn("QR generation note:", err);
             return;
         }
         holder.innerHTML = "";
@@ -342,3 +723,4 @@
 </script>
 {% endif %}
 {% endblock %}
+

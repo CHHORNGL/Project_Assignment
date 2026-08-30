@@ -8913,14 +8913,15 @@ body.admin-theme .settings-theme-option input[type="radio"] {
 }
 
 /* =========================================
-   MEMBER CARD (QR LANDING)
+   MEMBER CARD (QR LANDING) - RESPONSIVE & EXECUTIVE
 ========================================= */
 .member-card-page {
     min-height: 100vh;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 24px;
+    padding: 16px 12px;
     background:
         radial-gradient(
             860px circle at 14% 14%,
@@ -8934,44 +8935,111 @@ body.admin-theme .settings-theme-option input[type="radio"] {
         );
     color: var(--admin-text);
     font-family: "Inter", "Manrope", sans-serif;
+    box-sizing: border-box;
+}
+
+@media (min-width: 768px) {
+    .member-card-page {
+        padding: 32px 20px;
+    }
+}
+
+.member-card-container {
+    width: 100%;
+    max-width: 500px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    align-items: center;
+}
+
+.member-card-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.member-card-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    border-radius: 999px;
+    color: var(--admin-text);
+    background: var(--admin-card);
+    border: 1px solid color-mix(in srgb, var(--admin-border) 80%, transparent);
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.member-card-btn:hover {
+    color: var(--admin-accent);
+    border-color: var(--admin-accent);
+    transform: translateY(-1px);
+    text-decoration: none;
 }
 
 .member-card {
-    width: min(520px, 100%);
+    width: 100%;
     background: var(--admin-card);
-    border-radius: 22px;
+    border-radius: 20px;
     border: 1px solid color-mix(in srgb, var(--admin-border) 76%, transparent);
-    box-shadow: 0 20px 40px color-mix(in srgb, var(--admin-accent) 18%, rgba(15, 23, 42, 0.24));
+    box-shadow: 0 16px 36px color-mix(in srgb, var(--admin-accent) 15%, rgba(15, 23, 42, 0.18));
     overflow: hidden;
+    position: relative;
+    box-sizing: border-box;
+}
+
+@media (min-width: 480px) {
+    .member-card {
+        border-radius: 22px;
+        box-shadow: 0 20px 40px color-mix(in srgb, var(--admin-accent) 18%, rgba(15, 23, 42, 0.24));
+    }
 }
 
 .member-card-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 16px;
-    padding: 20px 22px;
+    gap: 12px;
+    padding: 16px 18px;
     color: #ffffff;
     background: linear-gradient(
         135deg,
         color-mix(in srgb, var(--admin-accent) 86%, #0f172a 14%),
         color-mix(in srgb, var(--admin-accent) 62%, #ffffff 38%)
     );
+    flex-wrap: wrap;
+}
+
+@media (min-width: 480px) {
+    .member-card-header {
+        padding: 20px 22px;
+    }
 }
 
 .member-card-brand {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
+    min-width: 0;
 }
 
 .member-card-logo {
-    width: 42px;
-    height: 42px;
+    width: 38px;
+    height: 38px;
     border-radius: 50%;
     background: transparent;
     display: grid;
     place-items: center;
+    flex-shrink: 0;
 }
 
 .member-card-logo img {
@@ -8983,45 +9051,70 @@ body.admin-theme .settings-theme-option input[type="radio"] {
 
 .member-card-project {
     font-weight: 700;
-    font-size: 1rem;
+    font-size: clamp(0.9rem, 2.5vw, 1rem);
+    line-height: 1.25;
 }
 
 .member-card-sub {
-    font-size: 0.78rem;
+    font-size: 0.75rem;
     color: rgba(255, 255, 255, 0.88);
 }
 
 .member-card-badge {
-    padding: 6px 12px;
+    padding: 4px 10px;
     border-radius: 999px;
-    font-size: 0.7rem;
-    letter-spacing: 0.08em;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
     border: 1px solid color-mix(in srgb, var(--admin-border) 55%, rgba(255, 255, 255, 0.42));
     background: color-mix(in srgb, var(--admin-accent-soft) 66%, rgba(255, 255, 255, 0.2));
     color: rgba(255, 255, 255, 0.95);
     text-align: center;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .member-card-body {
     display: flex;
-    gap: 16px;
-    padding: 22px;
+    gap: 14px;
+    padding: 18px;
     align-items: center;
     background: color-mix(in srgb, var(--admin-card) 95%, var(--admin-accent) 5%);
+    box-sizing: border-box;
+}
+
+@media (min-width: 480px) {
+    .member-card-body {
+        gap: 18px;
+        padding: 22px;
+    }
 }
 
 .member-card-avatar {
-    width: 72px;
-    height: 72px;
-    border-radius: 18px;
+    width: 64px;
+    height: 64px;
+    min-width: 64px;
+    border-radius: 16px;
     background: color-mix(in srgb, var(--admin-accent-soft) 74%, var(--admin-card));
     color: var(--admin-text);
     font-weight: 700;
     display: grid;
     place-items: center;
-    font-size: 1.4rem;
+    font-size: 1.25rem;
     overflow: hidden;
+    flex-shrink: 0;
+    border: 2px solid color-mix(in srgb, var(--admin-accent-soft) 80%, transparent);
+}
+
+@media (min-width: 480px) {
+    .member-card-avatar {
+        width: 76px;
+        height: 76px;
+        min-width: 76px;
+        border-radius: 18px;
+        font-size: 1.4rem;
+    }
 }
 
 .member-card-avatar img {
@@ -9033,36 +9126,126 @@ body.admin-theme .settings-theme-option input[type="radio"] {
 .member-card-info {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 5px;
+    flex: 1;
+    min-width: 0;
+}
+
+.member-card-name-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    min-width: 0;
 }
 
 .member-card-name {
     font-weight: 700;
-    font-size: 1.2rem;
+    font-size: clamp(1.05rem, 3.5vw, 1.25rem);
     color: var(--admin-text);
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    line-height: 1.25;
+}
+
+.member-verified-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2.5px 8px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: #059669;
+    background: rgba(16, 185, 129, 0.12);
+    border: 1px solid rgba(16, 185, 129, 0.32);
+    white-space: nowrap;
+    flex-shrink: 0;
+    line-height: 1.2;
+    box-shadow: 0 1px 3px rgba(16, 185, 129, 0.08);
+    vertical-align: middle;
+}
+
+.member-verified-badge i {
+    font-size: 0.76rem;
+    color: #10b981;
+}
+
+.dark-mode .member-verified-badge {
+    background: rgba(16, 185, 129, 0.18);
+    border-color: rgba(16, 185, 129, 0.4);
+    color: #34d399;
+}
+
+.dark-mode .member-verified-badge i {
+    color: #34d399;
 }
 
 .member-card-role {
-    font-size: 0.85rem;
+    font-size: 0.835rem;
     color: var(--admin-muted);
     font-weight: 600;
+    word-break: break-word;
 }
 
 .member-card-meta {
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     color: var(--admin-muted);
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 7px;
+    word-break: break-all;
+    overflow-wrap: anywhere;
+    min-width: 0;
+    line-height: 1.35;
+}
+
+.member-card-meta i {
+    flex-shrink: 0;
+    width: 14px;
+    text-align: center;
+    color: var(--admin-accent);
 }
 
 .member-card-footer {
-    padding: 12px 22px;
-    font-size: 0.8rem;
+    padding: 10px 18px;
+    font-size: 0.78rem;
     color: var(--admin-muted);
     text-align: center;
     border-top: 1px solid color-mix(in srgb, var(--admin-border) 72%, transparent);
     background: color-mix(in srgb, var(--admin-card) 92%, var(--admin-accent-soft) 8%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+@media (min-width: 480px) {
+    .member-card-footer {
+        padding: 12px 22px;
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 360px) {
+    .member-card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    .member-card-badge {
+        align-self: flex-start;
+    }
+    .member-card-body {
+        flex-direction: column;
+        text-align: center;
+        align-items: center;
+    }
+    .member-card-meta {
+        justify-content: center;
+    }
 }
 
 @media (prefers-color-scheme: dark) {
@@ -11805,4 +11988,245 @@ body.qb-dragging * {
 .btn-app-save.btn-block {
     width: 100%;
 }
+
+/* ==========================================================================
+   EXECUTIVE ADMIN & EXPERT MOBILE RESPONSIVE SUITE
+   ========================================================================== */
+@media (max-width: 991.98px) {
+    .admin-board {
+        padding: 16px 14px;
+        border-radius: 18px;
+    }
+
+    .admin-hero {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .admin-actions,
+    .admin-hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        width: 100%;
+    }
+
+    .admin-actions .btn,
+    .admin-hero-actions .btn {
+        flex: 1 1 auto;
+        text-align: center;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 767.98px) {
+    /* Fluid Container & Layout */
+    .container-fluid {
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+    }
+
+    .admin-theme .topbar.app-topbar,
+    .expert-simple .topbar.app-topbar {
+        left: 0 !important;
+        width: 100% !important;
+    }
+
+    .admin-board {
+        padding: 14px 10px;
+        border-radius: 16px;
+        margin-bottom: 16px;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.04);
+    }
+
+    .admin-title {
+        font-size: clamp(1.15rem, 4vw, 1.4rem);
+        line-height: 1.25;
+    }
+
+    .admin-sub {
+        font-size: 0.84rem;
+        line-height: 1.35;
+    }
+
+    /* Admin Calendar & Clock Bar */
+    .admin-calendar-bar {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .admin-clock.admin-clock-compact {
+        width: 100%;
+        text-align: center;
+        padding: 12px 10px;
+    }
+
+    .admin-calendar-block.admin-calendar-compact {
+        width: 100%;
+        padding: 12px 10px;
+    }
+
+    .admin-calendar-grid {
+        gap: 2px;
+    }
+
+    .admin-calendar-grid span {
+        height: 28px;
+        font-size: 0.72rem;
+        border-radius: 6px;
+    }
+
+    /* KPI Grid on Mobile */
+    .admin-board .row > [class*="col-"] {
+        padding-left: 5px;
+        padding-right: 5px;
+        margin-bottom: 10px;
+    }
+
+    .admin-kpi {
+        padding: 12px 10px;
+        border-radius: 14px;
+        gap: 8px;
+    }
+
+    .admin-kpi-label {
+        font-size: 0.65rem;
+        letter-spacing: 0.04em;
+    }
+
+    .admin-kpi-value {
+        font-size: clamp(1.2rem, 3.5vw, 1.45rem);
+    }
+
+    .admin-kpi-sub {
+        font-size: 0.68rem;
+    }
+
+    .admin-kpi-icon {
+        width: 34px;
+        height: 34px;
+        font-size: 14px;
+        border-radius: 10px;
+        flex-shrink: 0;
+    }
+
+    /* Admin Panels & Cards */
+    .admin-panel {
+        padding: 14px 12px;
+        border-radius: 14px;
+        margin-bottom: 12px;
+    }
+
+    .admin-panel-title {
+        font-size: 1.05rem;
+    }
+
+    /* Data Tables & Headers */
+    .admin-users-panel-head,
+    .admin-panel-header {
+        flex-direction: column;
+        align-items: stretch !important;
+        gap: 10px;
+    }
+
+    .admin-users-search,
+    .admin-search-box {
+        width: 100% !important;
+        min-width: 100% !important;
+    }
+
+    .admin-users-search .input-group,
+    .admin-search-box .input-group {
+        width: 100% !important;
+        min-width: 100% !important;
+    }
+
+    .table-responsive {
+        border-radius: 10px;
+        border: 1px solid var(--admin-border);
+        margin-bottom: 0.75rem;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .table th, .table td {
+        padding: 10px 8px;
+        font-size: 0.82rem;
+        white-space: nowrap;
+    }
+
+    /* Action Cards for Expert */
+    .expert-action-card {
+        padding: 14px 12px;
+        border-radius: 14px;
+        margin-bottom: 10px;
+    }
+
+    /* Expert & Farmer Chat Interfaces */
+    .farmer-chat-widget {
+        position: fixed !important;
+        left: 8px !important;
+        right: 8px !important;
+        width: auto !important;
+        max-width: 100% !important;
+        top: calc(var(--topbar-height) + 8px) !important;
+    }
+
+    /* Modals for Admin / Expert */
+    .modal-dialog {
+        margin: 0.75rem;
+    }
+
+    .modal-content.admin-modal-content {
+        border-radius: 16px !important;
+    }
+
+    .modal-content.admin-modal-content .modal-body {
+        padding: 16px !important;
+    }
+
+    .modal-content.admin-modal-content .modal-footer {
+        padding: 12px 16px 16px !important;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .modal-content.admin-modal-content .modal-footer .btn {
+        width: 100%;
+        margin: 0 !important;
+    }
+}
+
+@media (max-width: 480px) {
+    /* Touch optimization */
+    .btn-admin,
+    .btn-admin-outline {
+        min-height: 40px;
+        font-size: 0.84rem;
+        padding: 8px 12px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .form-control,
+    .custom-select {
+        font-size: 16px !important;
+        min-height: 42px;
+    }
+
+    .admin-hero-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+
+    .admin-hero-meta .badge {
+        font-size: 0.72rem;
+        padding: 4px 8px;
+    }
+}
+
 
