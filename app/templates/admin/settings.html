@@ -397,6 +397,46 @@
             </div>
         </div>
 
+        <!-- ===============================
+             4. EXPERT SYSTEM OVERRIDE
+        =============================== -->
+        <div class="config-provider-box mb-4">
+            <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom" style="border-color: var(--admin-border) !important;">
+                <div class="d-flex align-items-center gap-2" style="gap: 8px;">
+                    <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(168, 85, 247, 0.15); color: #a855f7; display: grid; place-items: center; font-size: 1.1rem;">
+                        <i class="fas fa-user-tie"></i>
+                    </div>
+                    <div>
+                        <h5 class="mb-0 font-weight-bold" style="color: var(--admin-text);">Smart Expert System AI</h5>
+                        <div class="text-muted small">Override the AI engine specifically for Expert Diagnosis & Chat</div>
+                    </div>
+                </div>
+                <span class="badge badge-secondary px-2.5 py-1" style="font-size: 0.75rem;">Override</span>
+            </div>
+            
+            <div class="form-group mb-3">
+                <label for="expert_provider" class="font-weight-bold mb-1" style="color: var(--admin-text); font-size: 0.9rem;">
+                    Expert System Provider
+                </label>
+                <select class="form-select-dark custom-select" id="expert_provider" name="expert_provider" onchange="updateExpertModels()">
+                    <option value="" {% if not expert_provider %}selected{% endif %}>Use Global System Default (Above)</option>
+                    <option value="groq" {% if expert_provider == "groq" %}selected{% endif %}>Groq (Fast Inference)</option>
+                    <option value="openai" {% if expert_provider == "openai" %}selected{% endif %}>OpenAI (ChatGPT)</option>
+                    <option value="gemini" {% if expert_provider == "gemini" %}selected{% endif %}>Gemini (Google AI)</option>
+                </select>
+            </div>
+            
+            <div class="form-group mb-2" id="expert_model_group" style="{% if not expert_provider %}display: none;{% endif %}">
+                <label for="expert_model" class="font-weight-bold mb-1" style="color: var(--admin-text); font-size: 0.9rem;">
+                    Expert System Model
+                </label>
+                <select class="form-select-dark custom-select" id="expert_model" name="expert_model">
+                    <!-- Options populated by JS -->
+                </select>
+                <input type="hidden" id="saved_expert_model" value="{{ expert_model }}">
+            </div>
+        </div>
+
         <!-- Save Button -->
         <div class="d-flex justify-content-end mt-4">
             <button type="submit" class="btn-save-clean">
@@ -463,6 +503,52 @@ function selectProvider(provider) {
     if (openaiModel) openaiModel.disabled = (provider !== 'openai');
 }
 
+function updateExpertModels() {
+    const provider = document.getElementById('expert_provider').value;
+    const modelGroup = document.getElementById('expert_model_group');
+    const modelSelect = document.getElementById('expert_model');
+    const savedModel = document.getElementById('saved_expert_model').value;
+    
+    if (!provider) {
+        modelGroup.style.display = 'none';
+        return;
+    }
+    
+    modelGroup.style.display = 'block';
+    modelSelect.innerHTML = ''; // Clear
+    
+    let options = [];
+    if (provider === 'groq') {
+        options = [
+            {value: "openai/gpt-oss-20b", text: "GPT-OSS 20B (Groq Fast)"},
+            {value: "qwen/qwen3.8-27b", text: "Qwen 3.8 27B (Groq Fast)"},
+            {value: "llama-3.3-70b-versatile", text: "Llama 3.3 70B (Versatile - Recommended)"},
+            {value: "llama-3.1-8b-instant", text: "Llama 3.1 8B (Instant)"},
+            {value: "mixtral-8x7b-32768", text: "Mixtral 8x7B"}
+        ];
+    } else if (provider === 'openai') {
+        options = [
+            {value: "gpt-4o", text: "GPT-4o (Most Capable)"},
+            {value: "gpt-4o-mini", text: "GPT-4o Mini (Fast & Cost Efficient)"}
+        ];
+    } else if (provider === 'gemini') {
+        options = [
+            {value: "gemini-3.6-flash", text: "Gemini 3.6 Flash (Fast)"},
+            {value: "gemini-3.7-flash", text: "Gemini 3.7 Flash (Latest)"}
+        ];
+    }
+    
+    options.forEach(opt => {
+        const option = document.createElement('option');
+        option.value = opt.value;
+        option.textContent = opt.text;
+        if (opt.value === savedModel) {
+            option.selected = true;
+        }
+        modelSelect.appendChild(option);
+    });
+}
+
 // Initial Selection
 document.addEventListener("DOMContentLoaded", function() {
     const currentModel = "{{ openai_model }}";
@@ -474,8 +560,13 @@ document.addEventListener("DOMContentLoaded", function() {
         defaultProvider = 'gemini';
     }
     
+    // Always respect saved active_provider if set, over heuristics above
+    // (This template gets active_provider from routes, but wait, we didn't pass it!)
+    
     selectProvider(defaultProvider);
+    updateExpertModels();
 });
+
 </script>
 {% endblock %}
 

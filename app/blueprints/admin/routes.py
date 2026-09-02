@@ -988,6 +988,10 @@ def settings():
             if request.form.get("gemini_key", "").strip():
                 gemini_keys = [request.form.get("gemini_key", "").strip()]
 
+        active_provider = request.form.get("active_provider", "").strip()
+        expert_provider = request.form.get("expert_provider", "").strip()
+        expert_model = request.form.get("expert_model", "").strip()
+
         # Helper to update or create
         def update_setting(k, v):
             setting = SiteSetting.query.get(k)
@@ -996,6 +1000,12 @@ def settings():
             else:
                 setting = SiteSetting(key=k, value=v)
                 db.session.add(setting)
+
+        if active_provider:
+            update_setting("ACTIVE_PROVIDER", active_provider)
+            
+        update_setting("EXPERT_PROVIDER", expert_provider)
+        update_setting("EXPERT_MODEL", expert_model)
 
         if openai_keys or "openai_key[]" in request.form or "openai_key" in request.form:
             update_setting("API_KEY_OPENAI", ",".join(openai_keys))
@@ -1015,6 +1025,8 @@ def settings():
     groq_setting = SiteSetting.query.get("API_KEY_GROQ")
     gemini_setting = SiteSetting.query.get("API_KEY_GEMINI")
     model_setting = SiteSetting.query.get("OPENAI_MODEL")
+    expert_provider_setting = SiteSetting.query.get("EXPERT_PROVIDER")
+    expert_model_setting = SiteSetting.query.get("EXPERT_MODEL")
 
     return render_template(
         "admin/settings.html",
@@ -1022,6 +1034,8 @@ def settings():
         groq_key=groq_setting.value if groq_setting else "",
         gemini_key=gemini_setting.value if gemini_setting else "",
         openai_model=model_setting.value if model_setting else "",
+        expert_provider=expert_provider_setting.value if expert_provider_setting else "",
+        expert_model=expert_model_setting.value if expert_model_setting else "",
     )
 
 

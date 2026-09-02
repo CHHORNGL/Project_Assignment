@@ -123,14 +123,26 @@ def _get_openai_client():
     keys_list = []
     base_url = None
     try:
+        db_provider = SiteSetting.query.get("ACTIVE_PROVIDER")
         db_groq = SiteSetting.query.get("API_KEY_GROQ")
         db_openai = SiteSetting.query.get("API_KEY_OPENAI")
-        if db_groq and db_groq.value.strip():
+        
+        provider = db_provider.value.strip() if db_provider else "groq"
+
+        if provider == "groq" and db_groq and db_groq.value.strip():
             keys_list = [k.strip() for k in db_groq.value.split(",") if k.strip()]
             base_url = "https://api.groq.com/openai/v1"
-        elif db_openai and db_openai.value.strip():
+        elif provider == "openai" and db_openai and db_openai.value.strip():
             keys_list = [k.strip() for k in db_openai.value.split(",") if k.strip()]
             base_url = None
+        else:
+            # Fallback if the chosen provider has no keys, try the other
+            if db_groq and db_groq.value.strip():
+                keys_list = [k.strip() for k in db_groq.value.split(",") if k.strip()]
+                base_url = "https://api.groq.com/openai/v1"
+            elif db_openai and db_openai.value.strip():
+                keys_list = [k.strip() for k in db_openai.value.split(",") if k.strip()]
+                base_url = None
     except Exception:
         pass
 

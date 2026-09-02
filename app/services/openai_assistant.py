@@ -33,6 +33,10 @@ DEFAULT_MODEL = "gpt-4o-mini"
 def _get_openai_model():
     from app.models.site_setting import SiteSetting
     try:
+        expert_model = SiteSetting.query.get("EXPERT_MODEL")
+        if expert_model and expert_model.value.strip():
+            return expert_model.value.strip()
+            
         db_model = SiteSetting.query.get("OPENAI_MODEL")
         if db_model and db_model.value.strip():
             return db_model.value.strip()
@@ -88,14 +92,32 @@ def _get_openai_client():
     base_url = None
     
     try:
+        db_provider = SiteSetting.query.get("ACTIVE_PROVIDER")
+        db_expert_provider = SiteSetting.query.get("EXPERT_PROVIDER")
         db_groq = SiteSetting.query.get("API_KEY_GROQ")
         db_openai = SiteSetting.query.get("API_KEY_OPENAI")
-        if db_groq and db_groq.value.strip():
+        
+        # Override with expert provider if it is explicitly set
+        if db_expert_provider and db_expert_provider.value.strip():
+            provider = db_expert_provider.value.strip()
+        else:
+            provider = db_provider.value.strip() if db_provider else "groq"
+
+
+        if provider == "groq" and db_groq and db_groq.value.strip():
             keys_list = [k.strip() for k in db_groq.value.split(",") if k.strip()]
             base_url = "https://api.groq.com/openai/v1"
-        elif db_openai and db_openai.value.strip():
+        elif provider == "openai" and db_openai and db_openai.value.strip():
             keys_list = [k.strip() for k in db_openai.value.split(",") if k.strip()]
             base_url = None
+        else:
+            # Fallback if the chosen provider has no keys, try the other
+            if db_groq and db_groq.value.strip():
+                keys_list = [k.strip() for k in db_groq.value.split(",") if k.strip()]
+                base_url = "https://api.groq.com/openai/v1"
+            elif db_openai and db_openai.value.strip():
+                keys_list = [k.strip() for k in db_openai.value.split(",") if k.strip()]
+                base_url = None
     except Exception:
         pass
 
@@ -145,9 +167,17 @@ def _get_client():
     return None
 
 def _get_model_name():
+    from app.models.site_setting import SiteSetting
+    try:
+        expert_model = SiteSetting.query.get("EXPERT_MODEL")
+        if expert_model and expert_model.value.strip() and "gemini" in expert_model.value.lower():
+            return expert_model.value.strip()
+    except Exception:
+        pass
+        
     if current_user and current_user.is_authenticated and getattr(current_user, 'ai_model', None):
         return current_user.ai_model
-    return os.getenv("GEMINI_MODEL", "gemini-1.5-flash").strip()
+    return os.getenv("GEMINI_MODEL", "gemini-3.6-flash").strip()
 
 
 def _match_crop(message: str) -> Optional[Crop]:
@@ -491,10 +521,34 @@ def generate_assistant_reply(user_message: str) -> Optional[str]:
     )
     user_prompt = user_message
     
-    model_name = _get_model_name()
+    from app.models.site_setting import SiteSetting
+    try:
+        db_provider = SiteSetting.query.get("ACTIVE_PROVIDER")
+        db_expert = SiteSetting.query.get("EXPERT_PROVIDER")
+        provider = db_expert.value.strip() if db_expert and db_expert.value.strip() else (db_provider.value.strip() if db_provider else "groq")
+    except Exception:
+        provider = "groq"
+
     reply_content = None
     
-    if model_name == "original-ai":
+    if provider == "gemini":
+        client = _get_client()
+        if client:
+            model = _get_model_name()
+            try:
+                response = client.models.generate_content(
+                    model=model,
+                    contents=[system_prompt, user_prompt],
+                    config=types.GenerateContentConfig(
+                        temperature=0.3,
+                        max_output_tokens=600,
+                    )
+                )
+                reply_content = response.text if response else ""
+            except Exception as e:
+                current_app.logger.error(f"Error calling Gemini API: {e}")
+                
+    if not reply_content: # fallback or non-gemini provider
         client = _get_openai_client()
         if client:
             model = _get_openai_model()
@@ -509,40 +563,8 @@ def generate_assistant_reply(user_message: str) -> Optional[str]:
                     max_tokens=600,
                 )
                 reply_content = response.choices[0].message.content if response.choices and response.choices[0].message else ""
-            except Exception:
-                pass
-    else:
-        client = _get_client()
-        if not client:
-            client = _get_openai_client()
-            if client:
-                model = _get_openai_model()
-                try:
-                    response = client.chat.completions.create(
-                        model=model,
-                        messages=[
-                            {"role": "system", "content": system_prompt},
-                            {"role": "user", "content": user_prompt},
-                        ],
-                        temperature=0.3,
-                        max_tokens=600,
-                    )
-                    reply_content = response.choices[0].message.content if response.choices and response.choices[0].message else ""
-                except Exception as e:
-                    current_app.logger.error(f"Error calling OpenAI API: {e}")
-        else:
-            try:
-                response = client.models.generate_content(
-                    model=model_name,
-                    contents=[system_prompt, user_prompt],
-                    config=types.GenerateContentConfig(
-                        temperature=0.3,
-                        max_output_tokens=600,
-                    )
-                )
-                reply_content = response.text if response else ""
             except Exception as e:
-                current_app.logger.error(f"Error calling Gemini API: {e}")
+                current_app.logger.error(f"Error calling OpenAI API: {e}")
 
     if reply_content:
         reply_content = reply_content.strip()
