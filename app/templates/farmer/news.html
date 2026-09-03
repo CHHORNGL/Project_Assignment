@@ -1735,7 +1735,7 @@ html[lang="km"] .chronicle-modal-lead-deck {
             <div class="modal-body chronicle-modal-body">
                 <!-- Featured Real Image Showcase -->
                 <div class="chronicle-modal-img-wrapper" id="modal-image-container">
-                    <img id="modal-image" src="" alt="News Image" class="chronicle-modal-img" onerror="this.src='https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=900&auto=format&fit=crop&q=80'">
+                    <img id="modal-image" src="" alt="News Image" class="chronicle-modal-img" onerror="this.src='https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=450&auto=format&fit=crop&q=60'">
                     <div class="chronicle-modal-img-caption">
                         <span id="modal-img-caption-source"><i class="fas fa-camera me-1"></i> Verified Press Photo</span>
                         <span id="modal-img-caption-tag"><i class="fas fa-shield-alt text-success me-1"></i> Authentic Agricultural Dispatch</span>
@@ -1862,91 +1862,91 @@ html[lang="km"] .chronicle-modal-lead-deck {
 
         // 1. Corn / Maize / WASDE
         if (hasWord('\\b(corn|maize|wasde)\\b|ពោត')) {
-            return "https://images.unsplash.com/photo-1551754655-cd27e38d2076?w=900&auto=format&fit=crop&q=80";
+            return "https://images.unsplash.com/photo-1551754655-cd27e38d2076?w=450&auto=format&fit=crop&q=60";
         }
         // 2. Soybean / Oilseeds
         if (hasWord('\\b(soybeans?|soy|oilseeds?)\\b|សណ្តែក')) {
-            return "https://images.unsplash.com/photo-1599940824399-b87987ceb72a?w=900&auto=format&fit=crop&q=80";
+            return "https://images.unsplash.com/photo-1599940824399-b87987ceb72a?w=450&auto=format&fit=crop&q=60";
         }
         // 3. Wheat / Flour / Grain Stocks / Cereal
         if (hasWord('\\b(wheat|cereals?|grains?|flour)\\b|ស្រូវសាលី|ធញ្ញជាតិ')) {
-            return "https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=900&auto=format&fit=crop&q=80";
+            return "https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=450&auto=format&fit=crop&q=60";
         }
         // 4. Pests / Plant Diseases / Fungicide / Blast / Hopper / Rot
         if (hasWord('\\b(pests?|diseases?|fungicides?|fungus|blast|hoppers?|armyworms?|rot|infection|treatments?)\\b|ថ្នាំកសិកម្ម|សត្វល្អិត|ជំងឺ|មមាច|ដង្កូវ|រលួយ')) {
-            return "https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=900&auto=format&fit=crop&q=80";
+            return "https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=450&auto=format&fit=crop&q=60";
         }
         // 5. Rice / Paddy / Jasmine / Phka Rumduol (whole words only, never matches 'price')
         if (hasWord('\\b(rice|paddy|paddies|jasmine|irri|phka rumduol)\\b|ស្រូវ|អង្ករ|ផ្ការំដួល')) {
-            return "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=900&auto=format&fit=crop&q=80";
+            return "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=450&auto=format&fit=crop&q=60";
         }
         // 6. Cassava / Tapioca / Starch
         if (hasWord('\\b(cassava|tapioca)\\b|ដំឡូងមី')) {
-            return "https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=900&auto=format&fit=crop&q=80";
+            return "https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=450&auto=format&fit=crop&q=60";
         }
         // 7. Cashew Nuts
         if (hasWord('\\b(cashews?|cashew nuts?)\\b|ស្វាយចន្ទី')) {
-            return "https://images.unsplash.com/photo-1509358271058-acd22cc93898?w=900&auto=format&fit=crop&q=80";
+            return "https://images.unsplash.com/photo-1509358271058-acd22cc93898?w=450&auto=format&fit=crop&q=60";
         }
         // 8. Vegetables / CamGAP / Greenhouses
         if (hasWord('\\b(vegetables?|tomatoes?|chili|camgap|cabbage|horticulture)\\b|បន្លែ|ម្ទេស|ប៉េងប៉ោះ')) {
-            return "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=900&auto=format&fit=crop&q=80";
+            return "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=450&auto=format&fit=crop&q=60";
         }
         // 9. Fruits / Mango / Banana / Durian
         if (hasWord('\\b(fruits?|mango|mangoes|banana|bananas|durian|longan)\\b|ផ្លែឈើ|ស្វាយ|ចេក|ធុរេន')) {
-            return "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=900&auto=format&fit=crop&q=80";
+            return "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=450&auto=format&fit=crop&q=60";
         }
         // 10. Livestock / Cattle / Cow / Buffalo / Dairy
         if (hasWord('\\b(cows?|cattle|livestock|buffalo|buffalos|dairy|beef|calves)\\b|គោ|ក្របី|សត្វពាហនៈ')) {
-            return "https://images.unsplash.com/photo-1570042225831-d98fa7577f1e?w=900&auto=format&fit=crop&q=80";
+            return "https://images.unsplash.com/photo-1570042225831-d98fa7577f1e?w=450&auto=format&fit=crop&q=60";
         }
         // 11. Poultry / Swine / Pork
         if (hasWord('\\b(poultry|chickens?|ducks?|swine|pigs?|pork)\\b|មាន់|ទា|ជ្រូក')) {
-            return "https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?w=900&auto=format&fit=crop&q=80";
+            return "https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?w=450&auto=format&fit=crop&q=60";
         }
         // 12. Weather / Rain / Monsoon / Storm / Flood / El Niño / La Niña
         if (hasWord('\\b(rains?|rainfall|monsoon|storm|flood|floods|flooding|el ni[ñn]o|la ni[ñn]a|weather|climate)\\b|ភ្លៀង|មូសុង|ព្យុះ|ទឹកជំនន់|អាកាសធាតុ')) {
-            return "https://images.unsplash.com/photo-1514632595-4944383f2737?w=900&auto=format&fit=crop&q=80";
+            return "https://images.unsplash.com/photo-1514632595-4944383f2737?w=450&auto=format&fit=crop&q=60";
         }
         // 13. Drought / Heatwave / Water Shortage
         if (hasWord('\\b(drought|droughts|heatwave|water shortage|arid)\\b|រាំងស្ងួត|ខ្វះទឹក')) {
-            return "https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?w=900&auto=format&fit=crop&q=80";
+            return "https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?w=450&auto=format&fit=crop&q=60";
         }
         // 14. Irrigation / Drip / Canals / Reservoir
         if (hasWord('\\b(irrigation|drip|canals?|reservoirs?|sluice|water gates?)\\b|ស្រោចស្រព|ដំណក់ទឹក|ប្រឡាយ|ទំនប់|ធារាសាស្ត្រ')) {
-            return "https://images.unsplash.com/photo-1563514227147-6d2ff665a6a0?w=900&auto=format&fit=crop&q=80";
+            return "https://images.unsplash.com/photo-1563514227147-6d2ff665a6a0?w=450&auto=format&fit=crop&q=60";
         }
         // 15. Drones / AI / Big Data / Expo (word-boundary ensures 'export' never matches)
         if (hasWord('\\b(drones?|uav|big data|expo|smart farm)\\b|\\b(ai)\\b|ដ្រូន|ពិព័រណ៍')) {
-            return "https://images.unsplash.com/photo-1508614589041-895b88991e3e?w=900&auto=format&fit=crop&q=80";
+            return "https://images.unsplash.com/photo-1508614589041-895b88991e3e?w=450&auto=format&fit=crop&q=60";
         }
         // 16. Banking / Finance / Loans / $500M / ARDB
         if (hasWord('\\b(bank|banking|ardb|loans?|credits?|finance|funds?|investments?|\\$\\d+m?)\\b|ធនាគារ|កម្ចី|ឥណទាន|វិនិយោគ|ថវិកា')) {
-            return "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=900&auto=format&fit=crop&q=80";
+            return "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=450&auto=format&fit=crop&q=60";
         }
         // 17. Agricultural Workers / Labor / Recruitment
         if (hasWord('\\b(workers?|labor|labour|recruitment|employment|jobs?)\\b|ពលករ|កម្មករ|ការងារ|ជ្រើសរើស')) {
-            return "https://images.unsplash.com/photo-1595974482597-4b8da8879bc5?w=900&auto=format&fit=crop&q=80";
+            return "https://images.unsplash.com/photo-1595974482597-4b8da8879bc5?w=450&auto=format&fit=crop&q=60";
         }
         // 18. Trade / Export / Shipping / Logistics
         if (hasWord('\\b(exports?|imports?|trade|shipping|cargo|logistics|pakistan|saudi|israel)\\b|នាំចេញ|នាំចូល|ពាណិជ្ជកម្ម')) {
-            return "https://images.unsplash.com/photo-1578575437130-527eed3abbec?w=900&auto=format&fit=crop&q=80";
+            return "https://images.unsplash.com/photo-1578575437130-527eed3abbec?w=450&auto=format&fit=crop&q=60";
         }
         // 19. Community / Cooperatives / Farmers
         if (hasWord('\\b(farmers?|cooperatives?|community|cfavc|value chains?)\\b|កសិករ|សហគមន៍|សហករណ៍')) {
-            return "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=900&auto=format&fit=crop&q=80";
+            return "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=450&auto=format&fit=crop&q=60";
         }
         // 20. Fertilizer / Soil Health / Nutrients
         if (hasWord('\\b(fertilizer|urea|soil|nutrient|compost|potassium)\\b|ជី|ដី')) {
-            return "https://images.unsplash.com/photo-1585336261022-680e295ce3fe?w=900&auto=format&fit=crop&q=80";
+            return "https://images.unsplash.com/photo-1585336261022-680e295ce3fe?w=450&auto=format&fit=crop&q=60";
         }
 
         // Fallbacks
         const fallbacks = [
-            "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=900&auto=format&fit=crop&q=80",
-            "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=900&auto=format&fit=crop&q=80",
-            "https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=900&auto=format&fit=crop&q=80",
-            "https://images.unsplash.com/photo-1508614589041-895b88991e3e?w=900&auto=format&fit=crop&q=80"
+            "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=450&auto=format&fit=crop&q=60",
+            "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=450&auto=format&fit=crop&q=60",
+            "https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=450&auto=format&fit=crop&q=60",
+            "https://images.unsplash.com/photo-1508614589041-895b88991e3e?w=450&auto=format&fit=crop&q=60"
         ];
         return fallbacks[(index || 0) % fallbacks.length];
     }
@@ -2090,7 +2090,7 @@ html[lang="km"] .chronicle-modal-lead-deck {
 
                 <div>
                     <div class="chronicle-lead-visual" onclick="openArticleModal(0)" style="cursor: pointer;">
-                        <img src="${leadPhoto}" alt="${lead.title}" class="chronicle-lead-img" onerror="this.src='https://images.unsplash.com/photo-1530507629858-e4977d30e9e0?w=900&auto=format&fit=crop&q=80'">
+                        <img src="${leadPhoto}" alt="${lead.title}" class="chronicle-lead-img" loading="lazy" decoding="async" onerror="this.src='https://images.unsplash.com/photo-1530507629858-e4977d30e9e0?w=450&auto=format&fit=crop&q=60'">
                         <div class="chronicle-visual-caption">
                             <span><i class="fas fa-camera me-1"></i> ${leadCategory} Focus</span>
                             <span>${leadSource}</span>
@@ -2127,7 +2127,7 @@ html[lang="km"] .chronicle-modal-lead-deck {
                 const cardHtml = `
                     <article class="chronicle-story-card">
                         <div class="chronicle-card-thumb-wrapper" onclick="openArticleModal(${globalIndex})" style="cursor: pointer;">
-                            <img src="${photo}" alt="${item.title}" class="chronicle-card-thumb" onerror="this.src='https://images.unsplash.com/photo-1530507629858-e4977d30e9e0?w=900&auto=format&fit=crop&q=80'">
+                            <img src="${photo}" alt="${item.title}" class="chronicle-card-thumb" loading="lazy" decoding="async" onerror="this.src='https://images.unsplash.com/photo-1530507629858-e4977d30e9e0?w=450&auto=format&fit=crop&q=60'">
                         </div>
                         <div class="chronicle-card-body">
                             <div class="chronicle-card-header-meta">

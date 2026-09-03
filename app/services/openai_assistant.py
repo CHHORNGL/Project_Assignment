@@ -691,89 +691,89 @@ def _match_news_image(text: str, default_index: int = 0) -> str:
 
     # 1. Corn / Maize / WASDE
     if re.search(r'\b(corn|maize|wasde)\b|ពោត', t):
-        return "https://images.unsplash.com/photo-1551754655-cd27e38d2076?w=900&auto=format&fit=crop&q=80"
+        return "https://images.unsplash.com/photo-1551754655-cd27e38d2076?w=450&auto=format&fit=crop&q=60"
 
     # 2. Soybean / Oilseeds
     if re.search(r'\b(soybeans?|soy|oilseeds?)\b|សណ្តែក', t):
-        return "https://images.unsplash.com/photo-1599940824399-b87987ceb72a?w=900&auto=format&fit=crop&q=80"
+        return "https://images.unsplash.com/photo-1599940824399-b87987ceb72a?w=450&auto=format&fit=crop&q=60"
 
     # 3. Wheat / Flour / Grain Stocks / Cereal
     if re.search(r'\b(wheat|cereals?|grains?|flour)\b|ស្រូវសាលី|ធញ្ញជាតិ', t):
-        return "https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=900&auto=format&fit=crop&q=80"
+        return "https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=450&auto=format&fit=crop&q=60"
 
     # 4. Pests / Plant Diseases / Fungicide / Blast / Hopper / Rot
     if re.search(r'\b(pests?|diseases?|fungicides?|fungus|blast|hoppers?|armyworms?|rot|infection|treatment)\b|ថ្នាំកសិកម្ម|សត្វល្អិត|ជំងឺ|មមាច|ដង្កូវ|រលួយ', t):
-        return "https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=900&auto=format&fit=crop&q=80"
+        return "https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=450&auto=format&fit=crop&q=60"
 
     # 5. Rice / Paddy / Jasmine / Phka Rumduol (whole words only, never matches 'price')
     if re.search(r'\b(rice|paddy|paddies|jasmine|irri|phka rumduol)\b|ស្រូវ|អង្ករ|ផ្ការំដួល', t):
-        return "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=900&auto=format&fit=crop&q=80"
+        return "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=450&auto=format&fit=crop&q=60"
 
     # 6. Cassava / Tapioca / Starch
     if re.search(r'\b(cassava|tapioca)\b|ដំឡូងមី', t):
-        return "https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=900&auto=format&fit=crop&q=80"
+        return "https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=450&auto=format&fit=crop&q=60"
 
     # 7. Cashew Nuts
     if re.search(r'\b(cashews?|cashew nuts?)\b|ស្វាយចន្ទី', t):
-        return "https://images.unsplash.com/photo-1509358271058-acd22cc93898?w=900&auto=format&fit=crop&q=80"
+        return "https://images.unsplash.com/photo-1509358271058-acd22cc93898?w=450&auto=format&fit=crop&q=60"
 
     # 8. Vegetables / CamGAP / Greenhouse / Horticulture
     if re.search(r'\b(vegetables?|tomatoes?|chili|camgap|cabbage|horticulture)\b|បន្លែ|ម្ទេស|ប៉េងប៉ោះ', t):
-        return "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=900&auto=format&fit=crop&q=80"
+        return "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=450&auto=format&fit=crop&q=60"
 
     # 9. Fruits / Mango / Banana / Durian
     if re.search(r'\b(fruits?|mango|mangoes|banana|bananas|durian|longan)\b|ផ្លែឈើ|ស្វាយ|ចេក|ធុរេន', t):
-        return "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=900&auto=format&fit=crop&q=80"
+        return "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=450&auto=format&fit=crop&q=60"
 
     # 10. Livestock / Cattle / Cow / Buffalo / Dairy
     if re.search(r'\b(cows?|cattle|livestock|buffalo|buffalos|dairy|beef|calves)\b|គោ|ក្របី|សត្វពាហនៈ', t):
-        return "https://images.unsplash.com/photo-1570042225831-d98fa7577f1e?w=900&auto=format&fit=crop&q=80"
+        return "https://images.unsplash.com/photo-1570042225831-d98fa7577f1e?w=450&auto=format&fit=crop&q=60"
 
     # 11. Poultry / Swine / Pork
     if re.search(r'\b(poultry|chickens?|ducks?|swine|pigs?|pork)\b|មាន់|ទា|ជ្រូក', t):
-        return "https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?w=900&auto=format&fit=crop&q=80"
+        return "https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?w=450&auto=format&fit=crop&q=60"
 
     # 12. Weather / Rain / Monsoon / Storm / Flood / El Niño / La Niña
     if re.search(r'\b(rains?|rainfall|monsoon|storm|flood|floods|flooding|el ni[ñn]o|la ni[ñn]a|weather|climate)\b|ភ្លៀង|មូសុង|ព្យុះ|ទឹកជំនន់|អាកាសធាតុ', t):
-        return "https://images.unsplash.com/photo-1514632595-4944383f2737?w=900&auto=format&fit=crop&q=80"
+        return "https://images.unsplash.com/photo-1514632595-4944383f2737?w=450&auto=format&fit=crop&q=60"
 
     # 13. Drought / Heatwave / Water Scarcity
     if re.search(r'\b(drought|droughts|heatwave|water shortage|arid)\b|រាំងស្ងួត|ខ្វះទឹក', t):
-        return "https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?w=900&auto=format&fit=crop&q=80"
+        return "https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?w=450&auto=format&fit=crop&q=60"
 
     # 14. Irrigation / Drip / Canals / Water Gates
     if re.search(r'\b(irrigation|drip|canals?|reservoirs?|sluice|water gates?)\b|ស្រោចស្រព|ដំណក់ទឹក|ប្រឡាយ|ទំនប់|ធារាសាស្ត្រ', t):
-        return "https://images.unsplash.com/photo-1563514227147-6d2ff665a6a0?w=900&auto=format&fit=crop&q=80"
+        return "https://images.unsplash.com/photo-1563514227147-6d2ff665a6a0?w=450&auto=format&fit=crop&q=60"
 
     # 15. Drones / High-Tech Agri / Big Data / Expo (must not match 'export')
     if re.search(r'\b(drones?|uav|big data|expo|smart farm)\b|\b(ai)\b|ដ្រូន|ពិព័រណ៍', t):
-        return "https://images.unsplash.com/photo-1508614589041-895b88991e3e?w=900&auto=format&fit=crop&q=80"
+        return "https://images.unsplash.com/photo-1508614589041-895b88991e3e?w=450&auto=format&fit=crop&q=60"
 
     # 16. Banking / Finance / Loans / $500M / ARDB
     if re.search(r'\b(bank|banking|ardb|loans?|credits?|finance|funds?|investments?|\$\d+m?)\b|ធនាគារ|កម្ចី|ឥណទាន|វិនិយោគ|ថវិកា', t):
-        return "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=900&auto=format&fit=crop&q=80"
+        return "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=450&auto=format&fit=crop&q=60"
 
     # 17. Agricultural Workers / Labor / Recruitment / Employment
     if re.search(r'\b(workers?|labor|labour|recruitment|employment|jobs?)\b|ពលករ|កម្មករ|ការងារ|ជ្រើសរើស', t):
-        return "https://images.unsplash.com/photo-1595974482597-4b8da8879bc5?w=900&auto=format&fit=crop&q=80"
+        return "https://images.unsplash.com/photo-1595974482597-4b8da8879bc5?w=450&auto=format&fit=crop&q=60"
 
     # 18. Trade / Export / Shipping / International Logistics
     if re.search(r'\b(exports?|imports?|trade|shipping|cargo|logistics|pakistan|saudi|israel)\b|នាំចេញ|នាំចូល|ពាណិជ្ជកម្ម', t):
-        return "https://images.unsplash.com/photo-1578575437130-527eed3abbec?w=900&auto=format&fit=crop&q=80"
+        return "https://images.unsplash.com/photo-1578575437130-527eed3abbec?w=450&auto=format&fit=crop&q=60"
 
     # 19. Community / Cooperatives / Farmers
     if re.search(r'\b(farmers?|cooperatives?|community|cfavc|value chains?)\b|កសិករ|សហគមន៍|សហករណ៍', t):
-        return "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=900&auto=format&fit=crop&q=80"
+        return "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=450&auto=format&fit=crop&q=60"
 
     # 20. Fertilizer / Soil / Compost
     if re.search(r'\b(fertilizer|urea|soil|nutrient|compost|potassium)\b|ជី|ដី', t):
-        return "https://images.unsplash.com/photo-1585336261022-680e295ce3fe?w=900&auto=format&fit=crop&q=80"
+        return "https://images.unsplash.com/photo-1585336261022-680e295ce3fe?w=450&auto=format&fit=crop&q=60"
 
     fallbacks = [
-        "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=900&auto=format&fit=crop&q=80",
-        "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=900&auto=format&fit=crop&q=80",
-        "https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=900&auto=format&fit=crop&q=80",
-        "https://images.unsplash.com/photo-1508614589041-895b88991e3e?w=900&auto=format&fit=crop&q=80"
+        "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=450&auto=format&fit=crop&q=60",
+        "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=450&auto=format&fit=crop&q=60",
+        "https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=450&auto=format&fit=crop&q=60",
+        "https://images.unsplash.com/photo-1508614589041-895b88991e3e?w=450&auto=format&fit=crop&q=60"
     ]
     return fallbacks[default_index % len(fallbacks)]
 
@@ -958,33 +958,33 @@ def _get_bilingual_agri_news(region="cambodia"):
     en_articles = _get_curated_agri_news(region=region, lang="en")
 
     CAMBODIA_IMAGES = [
-        "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=900&auto=format&fit=crop&q=80",  # 1. Jasmine Rice Field
-        "https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=900&auto=format&fit=crop&q=80",  # 2. Rice Blast & Hopper Inspection
-        "https://images.unsplash.com/photo-1514632595-4944383f2737?w=900&auto=format&fit=crop&q=80",  # 3. Monsoon Rainfall Over Lowlands
-        "https://images.unsplash.com/photo-1508614589041-895b88991e3e?w=900&auto=format&fit=crop&q=80",  # 4. Agricultural Spraying Drone
-        "https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=900&auto=format&fit=crop&q=80",  # 5. Fresh Cassava Roots
-        "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=900&auto=format&fit=crop&q=80",  # 6. Safe CamGAP Vegetables
-        "https://images.unsplash.com/photo-1509358271058-acd22cc93898?w=900&auto=format&fit=crop&q=80",  # 7. Cashew Nuts Harvest
-        "https://images.unsplash.com/photo-1570042225831-d98fa7577f1e?w=900&auto=format&fit=crop&q=80",  # 8. Cattle Livestock Vaccination
-        "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=900&auto=format&fit=crop&q=80",  # 9. Reservoir & Sluice Gates
-        "https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=900&auto=format&fit=crop&q=80",  # 10. CARDI Rice Seeds
-        "https://images.unsplash.com/photo-1530507629858-e4977d30e9e0?w=900&auto=format&fit=crop&q=80",  # 11. Smart Agri Mobile AI App
-        "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=900&auto=format&fit=crop&q=80",  # 12. Fresh Bananas & Mangoes
+        "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=450&auto=format&fit=crop&q=60",  # 1. Jasmine Rice Field
+        "https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=450&auto=format&fit=crop&q=60",  # 2. Rice Blast & Hopper Inspection
+        "https://images.unsplash.com/photo-1514632595-4944383f2737?w=450&auto=format&fit=crop&q=60",  # 3. Monsoon Rainfall Over Lowlands
+        "https://images.unsplash.com/photo-1508614589041-895b88991e3e?w=450&auto=format&fit=crop&q=60",  # 4. Agricultural Spraying Drone
+        "https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=450&auto=format&fit=crop&q=60",  # 5. Fresh Cassava Roots
+        "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=450&auto=format&fit=crop&q=60",  # 6. Safe CamGAP Vegetables
+        "https://images.unsplash.com/photo-1509358271058-acd22cc93898?w=450&auto=format&fit=crop&q=60",  # 7. Cashew Nuts Harvest
+        "https://images.unsplash.com/photo-1570042225831-d98fa7577f1e?w=450&auto=format&fit=crop&q=60",  # 8. Cattle Livestock Vaccination
+        "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=450&auto=format&fit=crop&q=60",  # 9. Reservoir & Sluice Gates
+        "https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=450&auto=format&fit=crop&q=60",  # 10. CARDI Rice Seeds
+        "https://images.unsplash.com/photo-1530507629858-e4977d30e9e0?w=450&auto=format&fit=crop&q=60",  # 11. Smart Agri Mobile AI App
+        "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=450&auto=format&fit=crop&q=60",  # 12. Fresh Bananas & Mangoes
     ]
 
     WORLD_IMAGES = [
-        "https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=900&auto=format&fit=crop&q=80",  # 1. Global Grain Markets (FAO)
-        "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=900&auto=format&fit=crop&q=80",  # 2. Satellite Scouting
-        "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=900&auto=format&fit=crop&q=80",  # 3. IRRI Saline Rice
-        "https://images.unsplash.com/photo-1585336261022-680e295ce3fe?w=900&auto=format&fit=crop&q=80",  # 4. Urea Fertilizer
-        "https://images.unsplash.com/photo-1514632595-4944383f2737?w=900&auto=format&fit=crop&q=80",  # 5. La Niña Monsoon
-        "https://images.unsplash.com/photo-1473081556163-2a17de81fc97?w=900&auto=format&fit=crop&q=80",  # 6. Biocontrol Ladybug
-        "https://images.unsplash.com/photo-1563514227147-6d2ff665a6a0?w=900&auto=format&fit=crop&q=80",  # 7. Solar Drip Irrigation
-        "https://images.unsplash.com/photo-1599940824399-b87987ceb72a?w=900&auto=format&fit=crop&q=80",  # 8. Soybeans Field
-        "https://images.unsplash.com/photo-1546445317-29f4545e9d53?w=900&auto=format&fit=crop&q=80",  # 9. Livestock Biosecurity
-        "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=900&auto=format&fit=crop&q=80",  # 10. Straw & Biofertilizer
-        "https://images.unsplash.com/photo-1516253593875-bd7ba052fbc5?w=900&auto=format&fit=crop&q=80",  # 11. Rice Trade
-        "https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=900&auto=format&fit=crop&q=80",  # 12. Agroforestry Canopy
+        "https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=450&auto=format&fit=crop&q=60",  # 1. Global Grain Markets (FAO)
+        "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=450&auto=format&fit=crop&q=60",  # 2. Satellite Scouting
+        "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=450&auto=format&fit=crop&q=60",  # 3. IRRI Saline Rice
+        "https://images.unsplash.com/photo-1585336261022-680e295ce3fe?w=450&auto=format&fit=crop&q=60",  # 4. Urea Fertilizer
+        "https://images.unsplash.com/photo-1514632595-4944383f2737?w=450&auto=format&fit=crop&q=60",  # 5. La Niña Monsoon
+        "https://images.unsplash.com/photo-1473081556163-2a17de81fc97?w=450&auto=format&fit=crop&q=60",  # 6. Biocontrol Ladybug
+        "https://images.unsplash.com/photo-1563514227147-6d2ff665a6a0?w=450&auto=format&fit=crop&q=60",  # 7. Solar Drip Irrigation
+        "https://images.unsplash.com/photo-1599940824399-b87987ceb72a?w=450&auto=format&fit=crop&q=60",  # 8. Soybeans Field
+        "https://images.unsplash.com/photo-1546445317-29f4545e9d53?w=450&auto=format&fit=crop&q=60",  # 9. Livestock Biosecurity
+        "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=450&auto=format&fit=crop&q=60",  # 10. Straw & Biofertilizer
+        "https://images.unsplash.com/photo-1516253593875-bd7ba052fbc5?w=450&auto=format&fit=crop&q=60",  # 11. Rice Trade
+        "https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=450&auto=format&fit=crop&q=60",  # 12. Agroforestry Canopy
     ]
 
     images_pool = CAMBODIA_IMAGES if region == "cambodia" else WORLD_IMAGES
