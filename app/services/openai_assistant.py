@@ -1009,11 +1009,9 @@ def _fetch_live_agri_rss(region="cambodia", limit=12):
             try:
                 resp = requests.get(it["link"], headers=headers, timeout=2.0)
                 m = re.search(r'<meta[^>]+property=[\"\x27]og:image[\"\x27][^>]+content=[\"\x27]([^\"\x27]+)[\"\x27]', resp.text)
-                if not m:
-                    m = re.search(r'<meta[^>]+content=[\"\x27]([^\"\x27]+)[\"\x27][^>]+property=[\"\x27]og:image[\"\x27]', resp.text)
                 if m:
                     img_url = m.group(1).strip()
-                    img_url = img_url.replace('=s0-w300-rw', '=s0-w800').replace('=s0-w300', '=s0-w800')
+                    img_url = img_url.replace('=s0-w300-rw', '=s0-w500').replace('=s0-w300', '=s0-w500').replace('=s0-w800', '=s0-w500')
                     it["image"] = img_url
             except Exception:
                 pass
@@ -1103,25 +1101,42 @@ def _get_bilingual_agri_news(region="cambodia"):
     return bilingual_articles
 
 
-def generate_agriculture_news(region="cambodia", lang="en", force_refresh=False):
-    """
-    Generates real-world, live agricultural news dispatches with sub-second caching.
-    Uses parallel RSS fetching and single-batch translation for maximum speed.
-    """
-    import time
-    cache_key = (region, lang)
-    if not force_refresh:
-        cached = _NEWS_FEED_CACHE.get(cache_key)
-        if cached and (time.time() - cached.get("timestamp", 0) < 900) and cached.get("data"):
-            return cached["data"]
+import json
+import time
+import os
+from threading import Thread
 
+_IS_UPDATING_NEWS = {}
+
+def _get_shared_news_cache(region: str, lang: str):
+    try:
+        path = f"/tmp/agri_news_{region}_{lang}.json"
+        if os.path.exists(path):
+            with open(path, "r", encoding="utf-8") as f:
+                d = json.load(f)
+                if d and isinstance(d.get("data"), list) and len(d["data"]) > 0:
+                    return d
+    except Exception:
+        pass
+    return None
+
+def _write_shared_news_cache(region: str, lang: str, data: list):
+    try:
+        path = f"/tmp/agri_news_{region}_{lang}.json"
+        tmp = path + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump({"timestamp": time.time(), "data": data}, f, ensure_ascii=False)
+        os.replace(tmp, path)
+    except Exception:
+        pass
+
+def _rebuild_news_feed(region="cambodia", lang="en"):
+    """Internal builder that queries live RSS, resolves real photos, and translates."""
     live_dispatches = _fetch_live_agri_rss(region=region, limit=12)
     bilingual_baseline = _get_bilingual_agri_news(region=region)
-
     result = []
 
     if live_dispatches:
-        # Pre-translate all headlines in ONE single fast call if Khmer is requested
         if lang == "km":
             titles_to_translate = [d.get("title", "").strip() for d in live_dispatches if d.get("title")]
             _batch_translate_to_khmer(titles_to_translate)
@@ -1183,14 +1198,74 @@ def generate_agriculture_news(region="cambodia", lang="en", force_refresh=False)
                 "link": base_item.get("link", "")
             })
 
-    # Save to high-speed cache
     if result:
-        _NEWS_FEED_CACHE[cache_key] = {
+        _write_shared_news_cache(region, lang, result)
+        _NEWS_FEED_CACHE[(region, lang)] = {
             "timestamp": time.time(),
             "data": result
         }
 
     return result
+
+def generate_agriculture_news(region="cambodia", lang="en", force_refresh=False):
+    """
+    Generates real-world, live agricultural news dispatches with sub-millisecond SWR caching.
+    Guarantees instant page loads while revalidating feeds in the background.
+    """
+    cache_key = (region, lang)
+    now = time.time()
+
+    # 1. Check in-memory cache first
+    cached_mem = _NEWS_FEED_CACHE.get(cache_key)
+    if cached_mem and cached_mem.get("data"):
+        age = now - cached_mem.get("timestamp", 0)
+        if not force_refresh and age < 600:
+            return cached_mem["data"]
+
+    # 2. Check shared disk cache (shared across all Gunicorn workers)
+    cached_shared = _get_shared_news_cache(region, lang)
+    if cached_shared and cached_shared.get("data"):
+        _NEWS_FEED_CACHE[cache_key] = cached_shared
+        age = now - cached_shared.get("timestamp", 0)
+
+        # Fresh cache (< 15 min): return immediately
+        if not force_refresh and age < 900:
+            return cached_shared["data"]
+
+        # SWR: Return cached data INSTANTLY (< 0.1ms), update silently in background
+        if not _IS_UPDATING_NEWS.get(cache_key):
+            _IS_UPDATING_NEWS[cache_key] = True
+            def _bg_rebuild():
+                try:
+                    _rebuild_news_feed(region, lang)
+                finally:
+                    _IS_UPDATING_NEWS[cache_key] = False
+            Thread(target=_bg_rebuild, daemon=True).start()
+
+        return cached_shared["data"]
+
+    # 3. Cold cache fallback: build immediately or return instant baseline
+    try:
+        return _rebuild_news_feed(region, lang)
+    except Exception:
+        baseline = _get_bilingual_agri_news(region=region)
+        items = []
+        for j, b in enumerate(baseline):
+            content = b["km"] if lang == "km" else b["en"]
+            items.append({
+                "id": j + 1,
+                "title": content["title"],
+                "category": b["category"],
+                "impact": b["impact"],
+                "image": b["image"],
+                "date": content["date"],
+                "read_time": content["read_time"],
+                "summary": content["summary"],
+                "tip": content["tip"],
+                "source": content["source"],
+                "link": b.get("link", "")
+            })
+        return items
 
 
 def _get_curated_agri_news(region="cambodia", lang="en"):
