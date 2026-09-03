@@ -1836,7 +1836,14 @@ html[lang="km"] .chronicle-modal-lead-deck {
     let currentRegion = "cambodia";
     let activeCategory = "all";
     let searchQuery = "";
-    let rawNewsItems = (initialNews && Array.isArray(initialNews) && initialNews.length > 0) ? initialNews : [];
+    
+    // Client-side cache for instant zero-latency tab switching
+    const regionCache = {
+        cambodia: (initialNews && Array.isArray(initialNews) && initialNews.length > 0) ? initialNews : null,
+        world: null
+    };
+
+    let rawNewsItems = regionCache[currentRegion] || [];
     let currentFiltered = [];
     let isSpeaking = false;
 
@@ -2174,27 +2181,48 @@ html[lang="km"] .chronicle-modal-lead-deck {
         mainContent.fadeIn(200);
     }
 
-    function fetchNews() {
-        $('#chronicle-main-content').hide();
-        $('#chronicle-empty').hide();
-        $('#chronicle-loading').show();
+    function fetchNews(options = {}) {
+        const force = options.force === true;
+
+        // 1. Instant switch if data for this region is already cached in browser session
+        if (!force && regionCache[currentRegion] && regionCache[currentRegion].length > 0) {
+            rawNewsItems = regionCache[currentRegion];
+            $('#chronicle-loading').hide();
+            $('#chronicle-empty').hide();
+            $('#chronicle-main-content').show();
+            updateDepartmentCounts();
+            updateBreakingTicker(rawNewsItems, initialMarquees);
+            renderFeed();
+            return;
+        }
+
+        // 2. Only show full loading skeleton if no items are currently visible
+        if (!rawNewsItems || rawNewsItems.length === 0) {
+            $('#chronicle-main-content').hide();
+            $('#chronicle-empty').hide();
+            $('#chronicle-loading').show();
+        }
+
         $('#refresh-icon').addClass('is-spinning');
         $('#refresh-text').text(currentLang === 'km' ? 'កំពុងទាញយក...' : 'Syncing...');
 
         $.ajax({
             url: "{{ url_for('farmer.api_generate_news') }}",
-            data: { region: currentRegion, lang: currentLang },
+            data: { 
+                region: currentRegion, 
+                lang: currentLang,
+                force: force ? 'true' : 'false'
+            },
             dataType: "json",
-            timeout: 45000,
+            timeout: 30000,
             success: function(res) {
                 $('#chronicle-loading').hide();
                 $('#refresh-icon').removeClass('is-spinning');
                 $('#refresh-text').text(currentLang === 'km' ? 'ធ្វើបច្ចុប្បន្នភាព' : 'Sync Wire');
 
                 if (res && res.news && Array.isArray(res.news) && res.news.length > 0) {
-                rawNewsItems = res.news;
-                } else {
-                    rawNewsItems = [];
+                    rawNewsItems = res.news;
+                    regionCache[currentRegion] = res.news; // Cache in browser!
                 }
                 updateDepartmentCounts();
                 updateBreakingTicker(rawNewsItems, res.marquees || initialMarquees);
@@ -2206,7 +2234,7 @@ html[lang="km"] .chronicle-modal-lead-deck {
                 $('#refresh-icon').removeClass('is-spinning');
                 $('#refresh-text').text(currentLang === 'km' ? 'ធ្វើបច្ចុប្បន្នភាព' : 'Sync Wire');
                 if (!rawNewsItems || rawNewsItems.length === 0) {
-                    rawNewsItems = (initialNews && Array.isArray(initialNews)) ? initialNews : [];
+                    rawNewsItems = regionCache[currentRegion] || (initialNews && Array.isArray(initialNews)) ? initialNews : [];
                 }
                 updateDepartmentCounts();
                 updateBreakingTicker(rawNewsItems, initialMarquees);
@@ -2542,6 +2570,7 @@ html[lang="km"] .chronicle-modal-lead-deck {
 
         // Edition Switchers
         $('#btn-cambodia').on('click', function() {
+            if (currentRegion === "cambodia") return;
             currentRegion = "cambodia";
             $(this).addClass('is-active');
             $('#btn-world').removeClass('is-active');
@@ -2549,10 +2578,11 @@ html[lang="km"] .chronicle-modal-lead-deck {
             activeCategory = "all";
             $('.chronicle-dept-btn').removeClass('is-active');
             $('.chronicle-dept-btn[data-cat="all"]').addClass('is-active');
-            fetchNews();
+            fetchNews({ force: false });
         });
 
         $('#btn-world').on('click', function() {
+            if (currentRegion === "world") return;
             currentRegion = "world";
             $(this).addClass('is-active');
             $('#btn-cambodia').removeClass('is-active');
@@ -2560,12 +2590,12 @@ html[lang="km"] .chronicle-modal-lead-deck {
             activeCategory = "all";
             $('.chronicle-dept-btn').removeClass('is-active');
             $('.chronicle-dept-btn[data-cat="all"]').addClass('is-active');
-            fetchNews();
+            fetchNews({ force: false });
         });
 
-        // Refresh Button
+        // Refresh Button (Bypasses cache for fresh live wires)
         $('#btn-refresh-news').on('click', function() {
-            fetchNews();
+            fetchNews({ force: true });
         });
 
         // Pause / Resume Breaking Wire Ticker

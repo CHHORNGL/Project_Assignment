@@ -642,6 +642,8 @@ _LIVE_RSS_CACHE = {
     "world": {"timestamp": 0, "items": []}
 }
 
+_NEWS_FEED_CACHE = {}
+
 _CATEGORY_TIPS = {
     "Market": {
         "en": "Monitor wholesale commodity prices and farm-gate contracts before selling harvested produce.",
@@ -779,6 +781,40 @@ def _match_news_image(text: str, default_index: int = 0) -> str:
 _KM_NEWS_CACHE = {}
 
 
+def _batch_translate_to_khmer(titles: list) -> dict:
+    """Translates headlines in ONE single fast AI call instead of multiple sequential calls."""
+    import re
+    uncached = [t for t in titles if t and t not in _KM_NEWS_CACHE]
+    if not uncached:
+        return _KM_NEWS_CACHE
+
+    try:
+        from app.services.translator import _get_client
+        client = _get_client()
+        if client:
+            prompt = (
+                "Translate each agricultural headline into clear, natural Khmer.\n"
+                "Output ONLY the translated lines, exactly one line per headline in the same sequential order, no numbering, no bullet points, no commentary:\n"
+                + "\n".join(uncached)
+            )
+            resp = client.chat.completions.create(
+                model="qwen/qwen3.8-27b",
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.1,
+                max_tokens=len(uncached) * 45
+            )
+            if resp and resp.choices:
+                lines = [l.strip() for l in resp.choices[0].message.content.strip().split("\n") if l.strip()]
+                clean_lines = [re.sub(r'^\d+[\.\)]\s*', '', l) for l in lines]
+                for orig, kh in zip(uncached, clean_lines):
+                    if kh and len(kh) > 2:
+                        _KM_NEWS_CACHE[orig] = kh
+    except Exception:
+        pass
+
+    return _KM_NEWS_CACHE
+
+
 def _translate_headline_to_khmer(title: str) -> str:
     if not title:
         return ""
@@ -797,14 +833,14 @@ def _translate_headline_to_khmer(title: str) -> str:
 
 def _fetch_live_agri_rss(region="cambodia", limit=12):
     """
-    Fetches real-world, live agricultural news dispatches directly from verified news publishers,
-    extracting real headlines, real published photos, and direct links.
-    Cached for 10 minutes to guarantee instant loading.
+    Fetches real-world live agricultural news dispatches in parallel across verified feeds.
+    Cached for 10 minutes to guarantee instant response times.
     """
     import requests
     import xml.etree.ElementTree as ET
     import re
     import time
+    from concurrent.futures import ThreadPoolExecutor, as_completed
 
     cached = _LIVE_RSS_CACHE.get(region)
     if cached and (time.time() - cached.get("timestamp", 0) < cached.get("ttl", 600)) and cached.get("items"):
@@ -827,11 +863,11 @@ def _fetch_live_agri_rss(region="cambodia", limit=12):
             ("Google News", "https://news.google.com/rss/search?q=world+agriculture+crop+harvest+commodity+prices&hl=en-US&gl=US&ceid=US:en")
         ]
 
-    for source_name, feed_url in feeds:
+    def _fetch_single(source_name, feed_url):
+        feed_items = []
         try:
-            resp = requests.get(feed_url, headers=headers, timeout=3.0)
+            resp = requests.get(feed_url, headers=headers, timeout=2.5)
             if resp.status_code == 200 and resp.text:
-                # Clean up unescaped ampersands so ParseError is never raised on malformed feeds
                 cleaned_text = re.sub(r'&(?!(?:amp|lt|gt|quot|apos|#\d+|#x[0-9a-fA-F]+);)', '&amp;', resp.text)
                 root = ET.fromstring(cleaned_text.encode('utf-8'))
                 for item in root.findall("./channel/item"):
@@ -843,7 +879,6 @@ def _fetch_live_agri_rss(region="cambodia", limit=12):
                     if not t or not l:
                         continue
 
-                    # Extract real news image directly from RSS tags
                     img = None
                     for c in item:
                         if "enclosure" in c.tag and "image" in c.attrib.get("type", ""):
@@ -858,7 +893,6 @@ def _fetch_live_agri_rss(region="cambodia", limit=12):
                             raw_img = m.group(1)
                             img = re.sub(r"-\d+x\d+(\.[a-zA-Z]+)$", r"\1", raw_img)
 
-                    # Clean Google News titles and extract publisher
                     item_source = source_name
                     if " - " in t:
                         parts = t.rsplit(" - ", 1)
@@ -866,7 +900,6 @@ def _fetch_live_agri_rss(region="cambodia", limit=12):
                         if len(parts) > 1 and parts[1].strip() and source_name == "Google News":
                             item_source = parts[1].strip()
 
-                    # Clean description text
                     clean_desc = ""
                     if desc:
                         clean_desc = re.sub(r"<[^>]+>", "", desc).strip()
@@ -875,27 +908,36 @@ def _fetch_live_agri_rss(region="cambodia", limit=12):
                         if clean_desc.startswith(t):
                             clean_desc = clean_desc[len(t):].strip()
 
-                    # Format published date cleanly
                     clean_date = "Today"
                     if d:
                         dm = re.search(r"(\d{1,2}\s+[A-Za-z]{3}\s+\d{4})", d)
                         clean_date = dm.group(1) if dm else d[:16].strip()
 
-                    if not any(existing["link"] == l for existing in items):
-                        items.append({
-                            "title": t.strip(),
-                            "link": l.strip(),
-                            "image": img,
-                            "source": item_source,
-                            "date": clean_date,
-                            "summary": clean_desc
-                        })
+                    feed_items.append({
+                        "title": t.strip(),
+                        "link": l.strip(),
+                        "image": img,
+                        "source": item_source,
+                        "date": clean_date,
+                        "summary": clean_desc
+                    })
+        except Exception:
+            pass
+        return feed_items
+
+    with ThreadPoolExecutor(max_workers=min(4, len(feeds))) as executor:
+        futures = [executor.submit(_fetch_single, s, u) for s, u in feeds]
+        for f in as_completed(futures):
+            try:
+                for it in f.result():
+                    if not any(existing["link"] == it["link"] for existing in items):
+                        items.append(it)
                     if len(items) >= limit:
                         break
+            except Exception:
+                pass
             if len(items) >= limit:
                 break
-        except Exception:
-            continue
 
     _LIVE_RSS_CACHE[region] = {
         "timestamp": time.time(),
@@ -979,50 +1021,45 @@ def _get_bilingual_agri_news(region="cambodia"):
     return bilingual_articles
 
 
-def generate_agriculture_news(region="cambodia", lang="en"):
+def generate_agriculture_news(region="cambodia", lang="en", force_refresh=False):
     """
-    Generates real-world, live agricultural news dispatches.
-    Extracts real headlines, publisher links, real dates, and real summaries from live wires.
-    Falls back gracefully to curated baseline articles when offline or during partial network failures.
+    Generates real-world, live agricultural news dispatches with sub-second caching.
+    Uses parallel RSS fetching and single-batch translation for maximum speed.
     """
+    import time
+    cache_key = (region, lang)
+    if not force_refresh:
+        cached = _NEWS_FEED_CACHE.get(cache_key)
+        if cached and (time.time() - cached.get("timestamp", 0) < 600) and cached.get("data"):
+            return cached["data"]
+
     live_dispatches = _fetch_live_agri_rss(region=region, limit=12)
     bilingual_baseline = _get_bilingual_agri_news(region=region)
 
-    fallback_images = [
-        "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=900&auto=format&fit=crop&q=80",
-        "https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=900&auto=format&fit=crop&q=80",
-        "https://images.unsplash.com/photo-1514632595-4944383f2737?w=900&auto=format&fit=crop&q=80",
-        "https://images.unsplash.com/photo-1508614589041-895b88991e3e?w=900&auto=format&fit=crop&q=80",
-        "https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=900&auto=format&fit=crop&q=80",
-        "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=900&auto=format&fit=crop&q=80",
-        "https://images.unsplash.com/photo-1509358271058-acd22cc93898?w=900&auto=format&fit=crop&q=80",
-        "https://images.unsplash.com/photo-1570042225831-d98fa7577f1e?w=900&auto=format&fit=crop&q=80",
-        "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=900&auto=format&fit=crop&q=80",
-        "https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=900&auto=format&fit=crop&q=80",
-        "https://images.unsplash.com/photo-1530507629858-e4977d30e9e0?w=900&auto=format&fit=crop&q=80",
-        "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=900&auto=format&fit=crop&q=80",
-    ]
-
     result = []
 
-    # 1. Process all real-world live news dispatches
     if live_dispatches:
+        # Pre-translate all headlines in ONE single fast call if Khmer is requested
+        if lang == "km":
+            titles_to_translate = [d.get("title", "").strip() for d in live_dispatches if d.get("title")]
+            _batch_translate_to_khmer(titles_to_translate)
+
         for i, disp in enumerate(live_dispatches):
             raw_title = disp.get("title", "").strip()
             if not raw_title:
                 continue
 
-            cat, imp = _infer_category_and_impact(raw_title + " " + disp.get("summary", ""))
-            tip_text = _CATEGORY_TIPS.get(cat, _CATEGORY_TIPS["Crops"])[lang]
-            photo = _match_news_image(raw_title + " " + (disp.get("summary") or ""), default_index=i)
-
             raw_summary = disp.get("summary", "").strip()
+            cat, imp = _infer_category_and_impact(raw_title + " " + raw_summary)
+            tip_text = _CATEGORY_TIPS.get(cat, _CATEGORY_TIPS["Crops"])[lang]
+            photo = _match_news_image(raw_title + " " + raw_summary, default_index=i)
+
             if not raw_summary:
                 raw_summary = f"Field intelligence report: {raw_title}. Ongoing developments are being tracked across regional agricultural value chains."
 
             if lang == "km":
-                title_disp = _translate_headline_to_khmer(raw_title)
-                summary_disp = _translate_headline_to_khmer(raw_summary) if len(raw_summary) < 180 else raw_summary
+                title_disp = _KM_NEWS_CACHE.get(raw_title) or _translate_headline_to_khmer(raw_title)
+                summary_disp = raw_summary
                 read_time = "អាន ៣ នាទី"
             else:
                 title_disp = raw_title
@@ -1043,7 +1080,7 @@ def generate_agriculture_news(region="cambodia", lang="en"):
                 "link": disp.get("link", "")
             })
 
-    # 2. If fewer than 12 live dispatches, supplement remaining slots with curated baseline articles
+    # Supplement remaining slots if needed
     needed = 12 - len(result)
     if needed > 0 and bilingual_baseline:
         base_index_start = len(result)
@@ -1063,6 +1100,13 @@ def generate_agriculture_news(region="cambodia", lang="en"):
                 "source": content["source"],
                 "link": base_item.get("link", "")
             })
+
+    # Save to high-speed cache
+    if result:
+        _NEWS_FEED_CACHE[cache_key] = {
+            "timestamp": time.time(),
+            "data": result
+        }
 
     return result
 

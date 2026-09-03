@@ -1504,8 +1504,9 @@ def news():
 def api_generate_news():
     region = request.args.get("region", "cambodia").strip().lower()
     lang = request.args.get("lang", "en").strip().lower()
+    force = request.args.get("force", "false").strip().lower() in ("true", "1")
     from app.services.openai_assistant import generate_agriculture_news
-    news_data = generate_agriculture_news(region=region, lang=lang)
+    news_data = generate_agriculture_news(region=region, lang=lang, force_refresh=force)
 
     marquee_list = []
     try:
