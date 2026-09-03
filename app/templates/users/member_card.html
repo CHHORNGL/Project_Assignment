@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <title>Member Card | {{ member.full_name or member.username }} - AGRI SYSTEM</title>
-    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/logo.svg') }}">
-    <link rel="shortcut icon" type="image/svg+xml" href="{{ url_for('static', filename='img/logo.svg') }}">
-    <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/logo.svg') }}">
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/logo.svg', v=static_version) }}">
+    <link rel="shortcut icon" type="image/svg+xml" href="{{ url_for('static', filename='img/logo.svg', v=static_version) }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/logo.svg', v=static_version) }}">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     {% set runtime = theme_runtime or {} %}
     {% set profile = runtime.get("profile", {}) if runtime else {} %}
@@ -510,7 +510,7 @@
             <div class="member-card-header" style="{% if is_admin_member %}background: linear-gradient(135deg, #b45309, #d97706, #dc2626);{% elif is_expert_member %}background: linear-gradient(135deg, #065f46, #059669, #0284c7);{% endif %}">
                 <div class="member-card-brand">
                     <div class="member-card-logo">
-                        <img src="{{ url_for('static', filename='img/logo.svg') }}"
+                        <img src="{{ url_for('static', filename='img/logo.svg', v=static_version) }}"
                              alt="Logo"
                              class="member-card-logo-img">
                     </div>

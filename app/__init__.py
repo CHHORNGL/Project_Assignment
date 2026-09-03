@@ -342,6 +342,7 @@ def create_app():
                 os.path.join(static_root, "js", "system_status.js"),
                 os.path.join(static_root, "js", "error_pages.js"),
                 os.path.join(static_root, "js", "weather_intelligence.js"),
+                os.path.join(static_root, "img", "logo.svg"),
                 os.path.join(static_root, "sw.js"),
             ]
             mtimes = []

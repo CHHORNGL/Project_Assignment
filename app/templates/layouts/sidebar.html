@@ -620,7 +620,7 @@ body.icon-nav .app-sidebar .nav-link[data-tooltip]:hover::after,
     =============================== -->
     <div class="sidebar-brand-row">
         <a class="sidebar-brand" href="{{ home_url }}" aria-label="Dashboard">
-            <img src="{{ url_for("static", filename="img/logo.svg") }}"
+            <img src="{{ url_for("static", filename="img/logo.svg", v=static_version) }}"
                  alt="Logo"
                  class="sidebar-logo">
             <div class="brand-text-col">

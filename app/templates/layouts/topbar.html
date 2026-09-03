@@ -34,7 +34,7 @@
          BRAND LOGO (farmer routes only)
     =============================== -->
     <a class="topbar-brand" href="{{ url_for('main.index') }}" aria-label="Home">
-        <img src="{{ url_for('static', filename='img/logo.svg') }}"
+        <img src="{{ url_for('static', filename='img/logo.svg', v=static_version) }}"
              alt="Logo"
              class="topbar-brand-logo">
     </a>

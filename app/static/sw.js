@@ -4,7 +4,7 @@
  * Served by Flask at: GET /sw.js
  */
 
-const CACHE_VERSION = "v1";
+const CACHE_VERSION = "v2";
 const CACHE_NAME = `agri-expert-system-${CACHE_VERSION}`;
 
 // Keep this file self-contained and stable. Avoid querystrings in precache.
@@ -60,7 +60,27 @@ self.addEventListener("fetch", (event) => {
         return;
     }
 
-    // Cache-first for static assets (best effort).
+    // Network-first for static images to guarantee instant updates when images are replaced.
+    if (url.pathname.startsWith("/static/img/")) {
+        event.respondWith(
+            (async () => {
+                const cache = await caches.open(CACHE_NAME);
+                try {
+                    const res = await fetch(req);
+                    if (res && res.ok && url.origin === self.location.origin) {
+                        cache.put(req, res.clone()).catch(() => {});
+                    }
+                    return res;
+                } catch (e) {
+                    const cached = await cache.match(req);
+                    return cached || new Response("", { status: 504 });
+                }
+            })()
+        );
+        return;
+    }
+
+    // Cache-first for other static assets (best effort).
     if (url.pathname.startsWith("/static/")) {
         event.respondWith(
             (async () => {

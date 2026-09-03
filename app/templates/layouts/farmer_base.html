@@ -5,9 +5,9 @@
     <title>{% block title %}Ask Expert{% endblock %} | AGRI SYSTEM</title>
 
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/logo.svg') }}">
-    <link rel="shortcut icon" type="image/svg+xml" href="{{ url_for('static', filename='img/logo.svg') }}">
-    <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/logo.svg') }}">
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/logo.svg', v=static_version) }}">
+    <link rel="shortcut icon" type="image/svg+xml" href="{{ url_for('static', filename='img/logo.svg', v=static_version) }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/logo.svg', v=static_version) }}">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -62,7 +62,7 @@
         <div class="farmer-chat-sidebar-header">
             <div class="farmer-chat-brand">
                 <div class="farmer-chat-logo">
-                    <img src="{{ url_for('static', filename='img/logo.svg') }}"
+                    <img src="{{ url_for('static', filename='img/logo.svg', v=static_version) }}"
                          alt="Logo"
                          class="farmer-chat-logo-img">
                     <span>{{ t("farmer_expert") }}</span>

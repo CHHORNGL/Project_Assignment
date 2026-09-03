@@ -30,7 +30,7 @@
         <div class="ai-helper-header">
             <div class="ai-helper-title-wrap">
                 <img class="ai-helper-title-logo"
-                     src="{{ url_for('static', filename='img/logo.svg') }}"
+                     src="{{ url_for('static', filename='img/logo.svg', v=static_version) }}"
                      alt="Logo">
                 <div class="ai-helper-title">
                     {% if current_lang == "km" %}

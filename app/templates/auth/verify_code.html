@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>Verification | AGRI SYSTEM</title>
-    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/logo.svg') }}">
-    <link rel="shortcut icon" type="image/svg+xml" href="{{ url_for('static', filename='img/logo.svg') }}">
-    <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/logo.svg') }}">
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/logo.svg', v=static_version) }}">
+    <link rel="shortcut icon" type="image/svg+xml" href="{{ url_for('static', filename='img/logo.svg', v=static_version) }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/logo.svg', v=static_version) }}">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -109,7 +109,7 @@
         <div class="auth-visual">
             <div class="auth-visual-top">
                 <div class="auth-brand">
-                    <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="Logo" class="auth-brand-logo-img">
+                    <img src="{{ url_for('static', filename='img/logo.svg', v=static_version) }}" alt="Logo" class="auth-brand-logo-img">
                     <span class="auth-brand-sub">Verification</span>
                 </div>
             </div>
