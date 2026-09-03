@@ -31,6 +31,7 @@ services:
     env_file:
       - .env
     volumes:
+      - ./app:/app/app
       - ./uploads:/app/app/static/uploads
     depends_on:
       db:

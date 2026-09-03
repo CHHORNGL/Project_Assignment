@@ -2491,60 +2491,122 @@ html[lang="km"] .chronicle-modal-lead-deck {
         }
     };
 
-    // Text-to-Speech narration
-    window.listenToArticle = function(index) {
-        if (!currentFiltered[index]) return;
-        const item = currentFiltered[index];
+    // Text-to-Speech narration with universal fallback for Mac, PC & mobile
+    let currentAudioPlayer = null;
 
-        if (!('speechSynthesis' in window)) {
-            alert(currentLang === 'km' ? 'កម្មវិធីរុករកនេះមិនគាំទ្រសំឡេងអានទេ' : 'Speech synthesis not supported in this browser');
-            return;
+    function stopAllAudio() {
+        if (currentAudioPlayer) {
+            try {
+                currentAudioPlayer.pause();
+                currentAudioPlayer.currentTime = 0;
+            } catch(e) {}
+            currentAudioPlayer = null;
         }
+        if ('speechSynthesis' in window) {
+            try {
+                window.speechSynthesis.cancel();
+            } catch(e) {}
+        }
+        isSpeaking = false;
+        $('#listen-btn-text').text(currentLang === 'km' ? 'ស្តាប់សំឡេង' : 'Listen to Dispatch');
+        $('#btn-modal-listen i').removeClass('fa-stop fa-spinner fa-spin text-danger').addClass('fa-volume-up');
+    }
+
+    function playAudioStream(text) {
+        stopAllAudio();
+        isSpeaking = true;
+        $('#listen-btn-text').text(currentLang === 'km' ? 'កំពុងរៀបចំសំឡេង...' : 'Loading audio...');
+        $('#btn-modal-listen i').removeClass('fa-volume-up fa-stop text-danger').addClass('fa-spinner fa-spin');
+
+        const ttsUrl = "{{ url_for('farmer.api_tts') }}?lang=" + encodeURIComponent(currentLang === 'km' ? 'km' : 'en') + "&text=" + encodeURIComponent(text);
+        currentAudioPlayer = new Audio(ttsUrl);
+
+        currentAudioPlayer.onplay = function() {
+            $('#listen-btn-text').text(currentLang === 'km' ? 'ផ្អាកការអាន' : 'Stop Audio');
+            $('#btn-modal-listen i').removeClass('fa-spinner fa-spin fa-volume-up').addClass('fa-stop text-danger');
+        };
+
+        currentAudioPlayer.onended = function() {
+            stopAllAudio();
+        };
+
+        currentAudioPlayer.onerror = function(err) {
+            console.warn("TTS audio streaming failed:", err);
+            stopAllAudio();
+        };
+
+        currentAudioPlayer.play().catch(function(err) {
+            console.warn("Audio autoplay blocked or error:", err);
+            stopAllAudio();
+        });
+    }
+
+    window.listenToArticle = function(index) {
+        const pool = currentModalSource || currentFiltered || rawNewsItems;
+        if (!pool || !pool[index]) return;
+        const item = pool[index];
 
         if (isSpeaking) {
-            window.speechSynthesis.cancel();
-            isSpeaking = false;
-            $('#listen-btn-text').text(currentLang === 'km' ? 'ស្តាប់សំឡេង' : 'Listen');
+            stopAllAudio();
             return;
         }
 
-        const utteranceText = `${item.title}. ${item.summary || ''}. ${item.tip ? (currentLang === 'km' ? 'អនុសាសន៍៖ ' + item.tip : 'Recommendation: ' + item.tip) : ''}`;
-        const utterance = new SpeechSynthesisUtterance(utteranceText);
-        utterance.rate = 0.95;
-        utterance.pitch = 1.0;
+        const titleText = (item.title || '').trim();
+        const summaryText = (item.summary || '').trim();
+        const tipText = item.tip ? (currentLang === 'km' ? 'អនុសាសន៍៖ ' + item.tip : 'Recommendation: ' + item.tip) : '';
+        const utteranceText = `${titleText}. ${summaryText}. ${tipText}`.trim();
 
-        if (currentLang === 'km') {
-            utterance.lang = 'km-KH';
-        } else {
-            utterance.lang = 'en-US';
+        if (!utteranceText) return;
+
+        // Detect if native Web Speech API has a Khmer voice installed
+        let hasNativeKhmerVoice = false;
+        if ('speechSynthesis' in window) {
+            try {
+                const voices = window.speechSynthesis.getVoices() || [];
+                hasNativeKhmerVoice = voices.some(v => v.lang && (v.lang.toLowerCase().startsWith('km') || v.lang.toLowerCase().includes('khm')));
+            } catch (e) {
+                hasNativeKhmerVoice = false;
+            }
         }
 
-        utterance.onstart = function() {
-            isSpeaking = true;
-            $('#listen-btn-text').text(currentLang === 'km' ? 'កំពុងអាន...' : 'Speaking...');
-        };
+        // On mobile devices with native Khmer voices (e.g. Android) or when viewing in English:
+        if ((currentLang !== 'km' || hasNativeKhmerVoice) && ('speechSynthesis' in window)) {
+            try {
+                const utterance = new SpeechSynthesisUtterance(utteranceText);
+                utterance.rate = 0.95;
+                utterance.pitch = 1.0;
+                utterance.lang = currentLang === 'km' ? 'km-KH' : 'en-US';
 
-        utterance.onend = function() {
-            isSpeaking = false;
-            $('#listen-btn-text').text(currentLang === 'km' ? 'ស្តាប់សំឡេង' : 'Listen');
-        };
+                utterance.onstart = function() {
+                    isSpeaking = true;
+                    $('#listen-btn-text').text(currentLang === 'km' ? 'ផ្អាកការអាន' : 'Stop Audio');
+                    $('#btn-modal-listen i').removeClass('fa-volume-up fa-spinner fa-spin').addClass('fa-stop text-danger');
+                };
 
-        utterance.onerror = function() {
-            isSpeaking = false;
-            $('#listen-btn-text').text(currentLang === 'km' ? 'ស្តាប់សំឡេង' : 'Listen');
-        };
+                utterance.onend = function() {
+                    stopAllAudio();
+                };
 
-        window.speechSynthesis.cancel();
-        window.speechSynthesis.speak(utterance);
+                utterance.onerror = function(e) {
+                    console.warn("Native SpeechSynthesis error, falling back to server audio stream:", e);
+                    playAudioStream(utteranceText);
+                };
+
+                window.speechSynthesis.cancel();
+                window.speechSynthesis.speak(utterance);
+                return;
+            } catch (err) {
+                console.warn("SpeechSynthesis initialization failed, using stream fallback:", err);
+            }
+        }
+
+        // Universal fallback for MacBook, Windows, Safari, Chrome Desktop, etc.
+        playAudioStream(utteranceText);
     };
 
     // Auto-stop speech when modal is closed
     $('#readingRoomModal').on('hidden.bs.modal', function () {
-        if ('speechSynthesis' in window && isSpeaking) {
-            window.speechSynthesis.cancel();
-            isSpeaking = false;
-            $('#listen-btn-text').text(currentLang === 'km' ? 'ស្តាប់សំឡេង' : 'Listen to Dispatch');
-        }
+        stopAllAudio();
     });
 
     window.resetAllFilters = function() {
