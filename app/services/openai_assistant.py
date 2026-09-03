@@ -642,6 +642,62 @@ _LIVE_RSS_CACHE = {
     "world": {"timestamp": 0, "items": []}
 }
 
+_CATEGORY_TIPS = {
+    "Market": {
+        "en": "Monitor wholesale commodity prices and farm-gate contracts before selling harvested produce.",
+        "km": "តាមដានតម្លៃកសិផលទីផ្សារ និងកិច្ចសន្យាមាត់ស្រែ មុនពេលលក់កសិផលដែលបានប្រមូលផល។"
+    },
+    "Weather": {
+        "en": "Ensure irrigation and field drainage channels are cleared ahead of unexpected precipitation squalls.",
+        "km": "រៀបចំប្រឡាយទឹក និងទ្វារទឹករំដោះចេញពីចំការ មុនពេលមានភ្លៀងធ្លាក់ខ្លាំងមិនរំពឹងទុក។"
+    },
+    "Pests": {
+        "en": "Scout field borders regularly and apply certified treatments at the earliest sign of infestation.",
+        "km": "ត្រួតពិនិត្យស្រែចម្ការជាប្រចាំ និងប្រើប្រាស់ថ្នាំកសិកម្មជីវសាស្ត្រត្រឹមត្រូវនៅពេលឃើញសញ្ញាដំបូង។"
+    },
+    "Tech": {
+        "en": "Adopt precision solar drip or digital diagnostic tools to optimize inputs and reduce production costs.",
+        "km": "ប្រើប្រាស់បច្ចេកវិទ្យាដំណក់ទឹកដើរដោយថាមពលពន្លឺព្រះអាទិត្យ ឬឧបករណ៍ឌីជីថលដើម្បីសន្សំសំចៃថ្លៃដើម។"
+    },
+    "Crops": {
+        "en": "Adhere strictly to Good Agricultural Practices (CamGAP) to ensure top certification and premium prices.",
+        "km": "អនុវត្តតាមស្តង់ដារកសិកម្មល្អ (CamGAP) ដើម្បីទទួលបានវិញ្ញាបនបត្រ និងតម្លៃខ្ពស់បំផុតលើទីផ្សារ។"
+    }
+}
+
+
+def _infer_category_and_impact(text: str):
+    t = text.lower()
+    if any(k in t for k in ["price", "market", "export", "trade", "dollar", "$", "khr", "bank", "loan", "debt", "cost", "tariff", "stock", "ardb", "invest", "finance"]):
+        return "Market", "High"
+    if any(k in t for k in ["weather", "rain", "monsoon", "climate", "storm", "flood", "drought", "heat", "el nino", "la nina", "forecast"]):
+        return "Weather", "Advisory"
+    if any(k in t for k in ["pest", "disease", "fungicide", "fungus", "virus", "bacteria", "hopper", "rot", "swine", "avian", "worm", "treatment", "infect"]):
+        return "Pests", "High"
+    if any(k in t for k in ["tech", "ai", "drone", "solar", "satellite", "data", "digital", "irrigation", "expo", "app", "innovation", "platform"]):
+        return "Tech", "Moderate"
+    return "Crops", "Moderate"
+
+
+_KM_NEWS_CACHE = {}
+
+
+def _translate_headline_to_khmer(title: str) -> str:
+    if not title:
+        return ""
+    if title in _KM_NEWS_CACHE:
+        return _KM_NEWS_CACHE[title]
+    try:
+        from app.services.translator import translate_to_khmer
+        kh = translate_to_khmer(title)
+        if kh and len(kh) > 2 and "error" not in kh.lower():
+            _KM_NEWS_CACHE[title] = kh.strip()
+            return _KM_NEWS_CACHE[title]
+    except Exception:
+        pass
+    return title
+
+
 def _fetch_live_agri_rss(region="cambodia", limit=12):
     """
     Fetches real-world, live agricultural news dispatches directly from verified news publishers,
@@ -654,40 +710,44 @@ def _fetch_live_agri_rss(region="cambodia", limit=12):
     import time
 
     cached = _LIVE_RSS_CACHE.get(region)
-    if cached and (time.time() - cached.get("timestamp", 0) < cached.get("ttl", 600)) and cached.get("items") is not None:
+    if cached and (time.time() - cached.get("timestamp", 0) < cached.get("ttl", 600)) and cached.get("items"):
         return cached["items"][:limit]
 
     items = []
-    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"}
 
     if region == "cambodia":
         feeds = [
             ("Khmer Times", "https://www.khmertimeskh.com/feed/?s=agriculture"),
             ("Khmer Times", "https://www.khmertimeskh.com/feed/?s=rice+export"),
             ("Khmer Times", "https://www.khmertimeskh.com/feed/?s=farming"),
-            ("Google News", "https://news.google.com/rss/search?q=Cambodia+agriculture+OR+rice+OR+cassava&hl=en-US&gl=US&ceid=US:en")
+            ("Google News", "https://news.google.com/rss/search?q=Cambodia+agriculture+OR+rice+OR+farmer&hl=en-US&gl=US&ceid=US:en")
         ]
     else:
         feeds = [
+            ("AgDaily", "https://www.agdaily.com/category/crops/feed/"),
             ("AgDaily", "https://www.agdaily.com/feed/"),
-            ("AgDaily Crops", "https://www.agdaily.com/category/crops/feed/"),
             ("Google News", "https://news.google.com/rss/search?q=world+agriculture+crop+harvest+commodity+prices&hl=en-US&gl=US&ceid=US:en")
         ]
 
     for source_name, feed_url in feeds:
         try:
-            resp = requests.get(feed_url, headers=headers, timeout=2.0)
-            if resp.status_code == 200:
-                root = ET.fromstring(resp.content)
+            resp = requests.get(feed_url, headers=headers, timeout=3.0)
+            if resp.status_code == 200 and resp.text:
+                # Clean up unescaped ampersands so ParseError is never raised on malformed feeds
+                cleaned_text = re.sub(r'&(?!(?:amp|lt|gt|quot|apos|#\d+|#x[0-9a-fA-F]+);)', '&amp;', resp.text)
+                root = ET.fromstring(cleaned_text.encode('utf-8'))
                 for item in root.findall("./channel/item"):
                     t = item.find("title").text if item.find("title") is not None else ""
                     l = item.find("link").text if item.find("link") is not None else ""
                     d = item.find("pubDate").text if item.find("pubDate") is not None else ""
                     desc = item.find("description").text if item.find("description") is not None else ""
 
+                    if not t or not l:
+                        continue
+
                     # Extract real news image directly from RSS tags
                     img = None
-                    # 1. Enclosure / media:content
                     for c in item:
                         if "enclosure" in c.tag and "image" in c.attrib.get("type", ""):
                             img = c.attrib.get("url")
@@ -695,25 +755,43 @@ def _fetch_live_agri_rss(region="cambodia", limit=12):
                         elif "content" in c.tag and "url" in c.attrib:
                             img = c.attrib.get("url")
                             break
-                    # 2. Img tag in description
                     if not img and desc:
                         m = re.search(r"<img[^>]+src=[\"\x27]([^\"\x27]+)[\"\x27]", desc)
                         if m:
                             raw_img = m.group(1)
-                            # Remove thumbnail dimension suffixes to retrieve full-res original photo
                             img = re.sub(r"-\d+x\d+(\.[a-zA-Z]+)$", r"\1", raw_img)
 
-                    # Clean Google News titles
+                    # Clean Google News titles and extract publisher
+                    item_source = source_name
                     if " - " in t:
-                        t = t.rsplit(" - ", 1)[0]
+                        parts = t.rsplit(" - ", 1)
+                        t = parts[0].strip()
+                        if len(parts) > 1 and parts[1].strip() and source_name == "Google News":
+                            item_source = parts[1].strip()
 
-                    if t and l and not any(existing["link"] == l for existing in items):
+                    # Clean description text
+                    clean_desc = ""
+                    if desc:
+                        clean_desc = re.sub(r"<[^>]+>", "", desc).strip()
+                        clean_desc = re.sub(r"The post .* appeared first on .*", "", clean_desc).strip()
+                        clean_desc = clean_desc.replace("&nbsp;", " ").replace("&#39;", "'").replace("&quot;", '"').replace("&amp;", "&").strip()
+                        if clean_desc.startswith(t):
+                            clean_desc = clean_desc[len(t):].strip()
+
+                    # Format published date cleanly
+                    clean_date = "Today"
+                    if d:
+                        dm = re.search(r"(\d{1,2}\s+[A-Za-z]{3}\s+\d{4})", d)
+                        clean_date = dm.group(1) if dm else d[:16].strip()
+
+                    if not any(existing["link"] == l for existing in items):
                         items.append({
                             "title": t.strip(),
                             "link": l.strip(),
                             "image": img,
-                            "source": source_name,
-                            "date": d.strip()
+                            "source": item_source,
+                            "date": clean_date,
+                            "summary": clean_desc
                         })
                     if len(items) >= limit:
                         break
@@ -722,7 +800,6 @@ def _fetch_live_agri_rss(region="cambodia", limit=12):
         except Exception:
             continue
 
-    # Cache results (use 10 min for populated, 3 min if empty to prevent stalling AWS requests)
     _LIVE_RSS_CACHE[region] = {
         "timestamp": time.time(),
         "ttl": 600 if items else 180,
@@ -807,46 +884,89 @@ def _get_bilingual_agri_news(region="cambodia"):
 
 def generate_agriculture_news(region="cambodia", lang="en"):
     """
-    Generates structured, professional agriculture news.
-    Guarantees that switching between Khmer and English displays the EXACT SAME news stories,
-    with 1-to-1 synchronized bilingual headlines, summaries, action tips, and sources.
-    Enriched with real live Google News wire dispatches.
+    Generates real-world, live agricultural news dispatches.
+    Extracts real headlines, publisher links, real dates, and real summaries from live wires.
+    Falls back gracefully to curated baseline articles when offline or during partial network failures.
     """
-    bilingual_feed = _get_bilingual_agri_news(region=region)
-    
-    # Attach real live RSS wire links and real publisher photographs if available
-    live_dispatches = _fetch_live_agri_rss(region=region, limit=len(bilingual_feed))
-    if live_dispatches:
-        for i, item in enumerate(bilingual_feed):
-            if i < len(live_dispatches):
-                disp = live_dispatches[i]
-                if disp.get("link"):
-                    item["link"] = disp["link"]
-                if disp.get("image"):
-                    item["image"] = disp["image"]
-                if disp.get("source") and disp["source"] != "Google News":
-                    item["km"]["source"] = disp["source"]
-                    item["en"]["source"] = disp["source"]
+    live_dispatches = _fetch_live_agri_rss(region=region, limit=12)
+    bilingual_baseline = _get_bilingual_agri_news(region=region)
 
-    # Render into the requested language (strictly preserving identical story ordering)
+    fallback_images = [
+        "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=900&auto=format&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=900&auto=format&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1514632595-4944383f2737?w=900&auto=format&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1508614589041-895b88991e3e?w=900&auto=format&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=900&auto=format&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=900&auto=format&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1509358271058-acd22cc93898?w=900&auto=format&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1570042225831-d98fa7577f1e?w=900&auto=format&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=900&auto=format&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=900&auto=format&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1530507629858-e4977d30e9e0?w=900&auto=format&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=900&auto=format&fit=crop&q=80",
+    ]
+
     result = []
-    for item in bilingual_feed:
-        lang_key = "km" if lang == "km" else "en"
-        content = item[lang_key]
-        result.append({
-            "id": item["id"],
-            "title": content["title"],
-            "category": item["category"],
-            "impact": item["impact"],
-            "image": item["image"],
-            "date": content["date"],
-            "read_time": content["read_time"],
-            "summary": content["summary"],
-            "tip": content["tip"],
-            "source": content["source"],
-            "link": item.get("link", "")
-        })
-    
+
+    # 1. Process all real-world live news dispatches
+    if live_dispatches:
+        for i, disp in enumerate(live_dispatches):
+            raw_title = disp.get("title", "").strip()
+            if not raw_title:
+                continue
+
+            cat, imp = _infer_category_and_impact(raw_title + " " + disp.get("summary", ""))
+            tip_text = _CATEGORY_TIPS.get(cat, _CATEGORY_TIPS["Crops"])[lang]
+            photo = disp.get("image") or fallback_images[i % len(fallback_images)]
+
+            raw_summary = disp.get("summary", "").strip()
+            if not raw_summary:
+                raw_summary = f"Field intelligence report: {raw_title}. Ongoing developments are being tracked across regional agricultural value chains."
+
+            if lang == "km":
+                title_disp = _translate_headline_to_khmer(raw_title)
+                summary_disp = _translate_headline_to_khmer(raw_summary) if len(raw_summary) < 180 else raw_summary
+                read_time = "អាន ៣ នាទី"
+            else:
+                title_disp = raw_title
+                summary_disp = raw_summary
+                read_time = "3 min read"
+
+            result.append({
+                "id": i + 1,
+                "title": title_disp,
+                "category": cat,
+                "impact": imp,
+                "image": photo,
+                "date": disp.get("date", "Today" if lang != "km" else "ថ្ងៃនេះ"),
+                "read_time": read_time,
+                "summary": summary_disp,
+                "tip": tip_text,
+                "source": disp.get("source", "Agri News Wire"),
+                "link": disp.get("link", "")
+            })
+
+    # 2. If fewer than 12 live dispatches, supplement remaining slots with curated baseline articles
+    needed = 12 - len(result)
+    if needed > 0 and bilingual_baseline:
+        base_index_start = len(result)
+        for j in range(min(needed, len(bilingual_baseline))):
+            base_item = bilingual_baseline[j]
+            content = base_item["km"] if lang == "km" else base_item["en"]
+            result.append({
+                "id": base_index_start + j + 1,
+                "title": content["title"],
+                "category": base_item["category"],
+                "impact": base_item["impact"],
+                "image": base_item["image"],
+                "date": content["date"],
+                "read_time": content["read_time"],
+                "summary": content["summary"],
+                "tip": content["tip"],
+                "source": content["source"],
+                "link": base_item.get("link", "")
+            })
+
     return result
 
 

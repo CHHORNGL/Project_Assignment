@@ -109,15 +109,21 @@ def translate_to_khmer(text: str, model_choice: Optional[str] = None) -> Optiona
     # If still no model, check global settings
     if not model_name:
         try:
-            db_model = SiteSetting.query.get("OPENAI_MODEL")
-            if db_model and db_model.value:
-                model_name = db_model.value.strip()
+            db_provider = SiteSetting.query.get("ACTIVE_PROVIDER")
+            provider = db_provider.value.strip() if db_provider else "groq"
+            if provider == "groq":
+                groq_model = SiteSetting.query.get("GROQ_MODEL")
+                model_name = groq_model.value.strip() if groq_model and groq_model.value else "qwen/qwen3.8-27b"
+            else:
+                db_model = SiteSetting.query.get("OPENAI_MODEL")
+                if db_model and db_model.value:
+                    model_name = db_model.value.strip()
         except Exception:
             pass
             
     # Ultimate fallback
     if not model_name or model_name == "original-ai":
-        model_name = os.getenv("OPENAI_TRANSLATE_MODEL", "").strip() or DEFAULT_TRANSLATE_MODEL
+        model_name = os.getenv("OPENAI_TRANSLATE_MODEL", "").strip() or "qwen/qwen3.8-27b"
 
     # 2. If it's a Gemini model, try Gemini API first
     if "gemini" in model_name.lower():
