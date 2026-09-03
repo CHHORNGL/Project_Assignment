@@ -1002,6 +1002,25 @@ def _fetch_live_agri_rss(region="cambodia", limit=12):
             if len(items) >= limit:
                 break
 
+    # Extract real post images concurrently for articles lacking direct enclosure photos
+    missing_imgs = [it for it in items if not it.get("image") and it.get("link")]
+    if missing_imgs:
+        def _resolve_og_image(it):
+            try:
+                resp = requests.get(it["link"], headers=headers, timeout=2.0)
+                m = re.search(r'<meta[^>]+property=[\"\x27]og:image[\"\x27][^>]+content=[\"\x27]([^\"\x27]+)[\"\x27]', resp.text)
+                if not m:
+                    m = re.search(r'<meta[^>]+content=[\"\x27]([^\"\x27]+)[\"\x27][^>]+property=[\"\x27]og:image[\"\x27]', resp.text)
+                if m:
+                    img_url = m.group(1).strip()
+                    img_url = img_url.replace('=s0-w300-rw', '=s0-w800').replace('=s0-w300', '=s0-w800')
+                    it["image"] = img_url
+            except Exception:
+                pass
+
+        with ThreadPoolExecutor(max_workers=min(8, len(missing_imgs))) as img_executor:
+            list(img_executor.map(_resolve_og_image, missing_imgs))
+
     _LIVE_RSS_CACHE[region] = {
         "timestamp": time.time(),
         "ttl": 900 if items else 180,
