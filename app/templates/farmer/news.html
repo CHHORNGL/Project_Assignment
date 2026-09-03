@@ -1832,10 +1832,11 @@ html[lang="km"] .chronicle-modal-lead-deck {
 (function() {
     const currentLang = "{{ current_lang }}";
     const initialMarquees = {{ (marquees_data or []) | tojson }};
+    const initialNews = {{ (initial_news or []) | tojson }};
     let currentRegion = "cambodia";
     let activeCategory = "all";
     let searchQuery = "";
-    let rawNewsItems = [];
+    let rawNewsItems = (initialNews && Array.isArray(initialNews) && initialNews.length > 0) ? initialNews : [];
     let currentFiltered = [];
     let isSpeaking = false;
 
@@ -2171,11 +2172,14 @@ html[lang="km"] .chronicle-modal-lead-deck {
                 updateBreakingTicker(rawNewsItems, res.marquees || initialMarquees);
                 renderFeed();
             },
-            error: function() {
+            error: function(xhr, status, error) {
+                console.warn("News sync error on server/AWS:", status, error);
                 $('#chronicle-loading').hide();
                 $('#refresh-icon').removeClass('is-spinning');
                 $('#refresh-text').text(currentLang === 'km' ? 'ធ្វើបច្ចុប្បន្នភាព' : 'Sync Wire');
-                rawNewsItems = [];
+                if (!rawNewsItems || rawNewsItems.length === 0) {
+                    rawNewsItems = (initialNews && Array.isArray(initialNews)) ? initialNews : [];
+                }
                 updateDepartmentCounts();
                 updateBreakingTicker(rawNewsItems, initialMarquees);
                 renderFeed();
@@ -2498,8 +2502,15 @@ html[lang="km"] .chronicle-modal-lead-deck {
 
     $(document).ready(function() {
         updateLiveDateString();
-        updateBreakingTicker([], initialMarquees);
-        fetchNews();
+        updateBreakingTicker(rawNewsItems, initialMarquees);
+        
+        if (rawNewsItems && rawNewsItems.length > 0) {
+            $('#chronicle-loading').hide();
+            updateDepartmentCounts();
+            renderFeed();
+        } else {
+            fetchNews();
+        }
 
         // Edition Switchers
         $('#btn-cambodia').on('click', function() {

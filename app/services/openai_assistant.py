@@ -654,7 +654,7 @@ def _fetch_live_agri_rss(region="cambodia", limit=12):
     import time
 
     cached = _LIVE_RSS_CACHE.get(region)
-    if cached and (time.time() - cached["timestamp"] < 600) and cached["items"]:
+    if cached and (time.time() - cached.get("timestamp", 0) < cached.get("ttl", 600)) and cached.get("items") is not None:
         return cached["items"][:limit]
 
     items = []
@@ -676,7 +676,7 @@ def _fetch_live_agri_rss(region="cambodia", limit=12):
 
     for source_name, feed_url in feeds:
         try:
-            resp = requests.get(feed_url, headers=headers, timeout=5)
+            resp = requests.get(feed_url, headers=headers, timeout=2.0)
             if resp.status_code == 200:
                 root = ET.fromstring(resp.content)
                 for item in root.findall("./channel/item"):
@@ -722,8 +722,12 @@ def _fetch_live_agri_rss(region="cambodia", limit=12):
         except Exception:
             continue
 
-    if items:
-        _LIVE_RSS_CACHE[region] = {"timestamp": time.time(), "items": items}
+    # Cache results (use 10 min for populated, 3 min if empty to prevent stalling AWS requests)
+    _LIVE_RSS_CACHE[region] = {
+        "timestamp": time.time(),
+        "ttl": 600 if items else 180,
+        "items": items
+    }
 
     return items
 

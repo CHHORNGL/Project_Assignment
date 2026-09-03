@@ -13,7 +13,7 @@ from flask import (
 import re
 import os
 from uuid import uuid4
-from flask_login import current_user
+from flask_login import current_user, login_required
 from sqlalchemy.orm import joinedload
 from werkzeug.utils import secure_filename
 
@@ -1466,43 +1466,62 @@ def detail():
     )
 
 # ---------------------------------------------------------------------------
-# NEWS (AI GENERATED)
+# NEWS (AI GENERATED & CURATED)
 # ---------------------------------------------------------------------------
 @farmer_bp.route("/news")
-@farmer_required
+@login_required
 def news():
-    from app.models.marquee import Marquee
-    active_marquees = Marquee.query.filter_by(is_active=True).order_by(Marquee.sort_order).all()
-    marquee_list = [
-        {
-            "id": m.id,
-            "text": m.text,
-            "text_kh": m.text_kh,
-            "created_at": m.created_at.strftime("%Y-%m-%d") if m.created_at else ""
-        }
-        for m in active_marquees
-    ]
-    return render_template("farmer/news.html", marquees=active_marquees, marquees_data=marquee_list)
+    marquee_list = []
+    active_marquees = []
+    try:
+        from app.models.marquee import Marquee
+        active_marquees = Marquee.query.filter_by(is_active=True).order_by(Marquee.sort_order).all()
+        marquee_list = [
+            {
+                "id": m.id,
+                "text": m.text,
+                "text_kh": m.text_kh,
+                "created_at": m.created_at.strftime("%Y-%m-%d") if m.created_at else ""
+            }
+            for m in active_marquees
+        ]
+    except Exception as e:
+        current_app.logger.warning(f"Marquee loading skipped or table missing: {e}")
+
+    from app.services.openai_assistant import generate_agriculture_news
+    lang = get_current_language()
+    initial_news = generate_agriculture_news(region="cambodia", lang=lang)
+
+    return render_template(
+        "farmer/news.html",
+        marquees=active_marquees,
+        marquees_data=marquee_list,
+        initial_news=initial_news
+    )
 
 @farmer_bp.route("/api/generate_news")
-@farmer_required
+@login_required
 def api_generate_news():
     region = request.args.get("region", "cambodia").strip().lower()
     lang = request.args.get("lang", "en").strip().lower()
     from app.services.openai_assistant import generate_agriculture_news
     news_data = generate_agriculture_news(region=region, lang=lang)
 
-    from app.models.marquee import Marquee
-    active_marquees = Marquee.query.filter_by(is_active=True).order_by(Marquee.sort_order).all()
-    marquee_list = [
-        {
-            "id": m.id,
-            "text": m.text,
-            "text_kh": m.text_kh,
-            "created_at": m.created_at.strftime("%Y-%m-%d") if m.created_at else ""
-        }
-        for m in active_marquees
-    ]
+    marquee_list = []
+    try:
+        from app.models.marquee import Marquee
+        active_marquees = Marquee.query.filter_by(is_active=True).order_by(Marquee.sort_order).all()
+        marquee_list = [
+            {
+                "id": m.id,
+                "text": m.text,
+                "text_kh": m.text_kh,
+                "created_at": m.created_at.strftime("%Y-%m-%d") if m.created_at else ""
+            }
+            for m in active_marquees
+        ]
+    except Exception as e:
+        current_app.logger.warning(f"Marquee loading skipped for API: {e}")
 
     return jsonify({
         "news": news_data,
