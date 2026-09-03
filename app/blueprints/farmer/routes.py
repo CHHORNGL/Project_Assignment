@@ -1529,6 +1529,118 @@ def api_generate_news():
         "marquees": marquee_list
     })
 
+_TTS_CACHE = {}
+
+@farmer_bp.route("/api/tts")
+def api_tts():
+    """Provides universal, natural-sounding Khmer and English audio narration for all devices (including MacBook and PC laptops)."""
+    text = request.args.get("text", "").strip()
+    lang = request.args.get("lang", "km").strip().lower()
+    if not text:
+        return ("No text provided", 400)
+
+    import hashlib
+    import requests
+    import urllib.parse
+    import re
+    from flask import Response
+    from concurrent.futures import ThreadPoolExecutor
+
+    # Normalize language code (e.g. 'km-kh' -> 'km', 'en-us' -> 'en')
+    if lang.startswith("km"):
+        lang = "km"
+    elif lang.startswith("en"):
+        lang = "en"
+
+    cache_key = hashlib.md5(f"{lang}:{text}".encode("utf-8")).hexdigest()
+    if cache_key in _TTS_CACHE:
+        return Response(
+            _TTS_CACHE[cache_key],
+            mimetype="audio/mpeg",
+            headers={
+                "Content-Type": "audio/mpeg",
+                "Accept-Ranges": "bytes",
+                "Cache-Control": "public, max-age=86400",
+                "Content-Length": str(len(_TTS_CACHE[cache_key]))
+            }
+        )
+
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        "Referer": "https://translate.google.com/"
+    }
+
+    # Split text into bite-sized sentence chunks <= 130 characters (Google Translate TTS max is ~180)
+    raw_sentences = re.split(r'(?<=[។\.\n\?\!,;])\s*', text)
+    chunks = []
+    current_chunk = ""
+    for s in raw_sentences:
+        s = s.strip()
+        if not s:
+            continue
+        while len(s) > 130:
+            part = s[:125]
+            sp_idx = part.rfind(" ")
+            if sp_idx > 50:
+                chunks.append(part[:sp_idx].strip())
+                s = s[sp_idx:].strip()
+            else:
+                chunks.append(part)
+                s = s[125:].strip()
+
+        if len(current_chunk) + len(s) + 1 <= 130:
+            current_chunk = (current_chunk + " " + s).strip()
+        else:
+            if current_chunk:
+                chunks.append(current_chunk)
+            current_chunk = s
+    if current_chunk:
+        chunks.append(current_chunk)
+
+    if not chunks:
+        chunks = [text[:125]]
+
+    # Limit to max 5 chunks to keep audio latency sub-second
+    chunks = chunks[:5]
+
+    def _fetch_tts_chunk(chunk_text):
+        try:
+            encoded = urllib.parse.quote(chunk_text)
+            url = f"https://translate.google.com/translate_tts?ie=UTF-8&tl={lang}&client=tw-ob&q={encoded}"
+            resp = requests.get(url, headers=headers, timeout=3.5)
+            if resp.status_code == 200 and resp.content:
+                return resp.content
+        except Exception:
+            pass
+        return None
+
+    with ThreadPoolExecutor(max_workers=min(4, len(chunks))) as executor:
+        chunk_results = list(executor.map(_fetch_tts_chunk, chunks))
+
+    audio_data = bytearray()
+    for res in chunk_results:
+        if res:
+            audio_data.extend(res)
+
+    if audio_data:
+        audio_bytes = bytes(audio_data)
+        if len(_TTS_CACHE) > 200:
+            _TTS_CACHE.pop(next(iter(_TTS_CACHE)))
+        _TTS_CACHE[cache_key] = audio_bytes
+
+        return Response(
+            audio_bytes,
+            mimetype="audio/mpeg",
+            headers={
+                "Content-Type": "audio/mpeg",
+                "Accept-Ranges": "bytes",
+                "Cache-Control": "public, max-age=86400",
+                "Content-Length": str(len(audio_bytes))
+            }
+        )
+
+    return ("Audio narration unavailable", 500)
+
 @farmer_bp.route("/premium/upgrade")
 @farmer_required
 def premium_upgrade():

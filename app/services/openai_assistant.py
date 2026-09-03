@@ -139,10 +139,11 @@ def _get_openai_client():
 
     if not keys_list:
         env_key = os.getenv("OPENAI_API_KEY", "").strip()
-        if env_key:
+        if env_key and not env_key.startswith("sk-your-") and "your-api-key" not in env_key:
             keys_list = [env_key]
         base_url = os.getenv("OPENAI_BASE_URL", "").strip() or None
 
+    keys_list = [k for k in keys_list if k and not k.startswith("sk-your-") and "your-api-key" not in k]
     if not keys_list:
         return None
 
@@ -782,35 +783,95 @@ _KM_NEWS_CACHE = {}
 
 
 def _batch_translate_to_khmer(titles: list) -> dict:
-    """Translates headlines in ONE single fast AI call instead of multiple sequential calls."""
+    """
+    Translates headlines in ONE fast AI call supporting Groq, OpenAI, and Gemini.
+    Uses generous max_tokens and structured numbering to guarantee complete translations.
+    Falls back to fast parallel translation if any headlines remain untranslated.
+    """
     import re
+    import os
+    from concurrent.futures import ThreadPoolExecutor
     uncached = [t for t in titles if t and t not in _KM_NEWS_CACHE]
     if not uncached:
         return _KM_NEWS_CACHE
 
+    prompt = (
+        "You are an expert Cambodian agricultural translator. Translate each numbered agricultural headline into natural, clear Khmer for farmers.\n"
+        "Return ONLY the numbered list with translations, exactly matching the numbering (e.g. '1. ...\\n2. ...'), with NO extra commentary:\n"
+        + "\n".join(f"{i+1}. {t}" for i, t in enumerate(uncached))
+    )
+
+    translated = False
     try:
-        from app.services.translator import _get_client
-        client = _get_client()
-        if client:
-            prompt = (
-                "Translate each agricultural headline into clear, natural Khmer.\n"
-                "Output ONLY the translated lines, exactly one line per headline in the same sequential order, no numbering, no bullet points, no commentary:\n"
-                + "\n".join(uncached)
-            )
-            resp = client.chat.completions.create(
-                model="qwen/qwen3.8-27b",
-                messages=[{"role": "user", "content": prompt}],
-                temperature=0.1,
-                max_tokens=len(uncached) * 45
-            )
-            if resp and resp.choices:
-                lines = [l.strip() for l in resp.choices[0].message.content.strip().split("\n") if l.strip()]
-                clean_lines = [re.sub(r'^\d+[\.\)]\s*', '', l) for l in lines]
-                for orig, kh in zip(uncached, clean_lines):
-                    if kh and len(kh) > 2:
-                        _KM_NEWS_CACHE[orig] = kh
-    except Exception:
-        pass
+        from app.models.site_setting import SiteSetting
+        db_provider = SiteSetting.query.get("ACTIVE_PROVIDER")
+        provider = db_provider.value.strip().lower() if db_provider and db_provider.value else "groq"
+
+        # 1. Gemini
+        if provider == "gemini":
+            from app.services.openai_assistant import _get_client
+            client = _get_client()
+            if client:
+                model_name = os.getenv("GEMINI_MODEL", "gemini-2.5-flash").strip()
+                resp = client.models.generate_content(model=model_name, contents=prompt)
+                if resp and resp.text:
+                    for line in resp.text.strip().split("\n"):
+                        m = re.match(r"^(\d+)[\.\)]\s*(.+)", line.strip())
+                        if m:
+                            idx = int(m.group(1)) - 1
+                            val = m.group(2).strip()
+                            if 0 <= idx < len(uncached) and val:
+                                _KM_NEWS_CACHE[uncached[idx]] = val
+                    translated = True
+
+        # 2. Groq or OpenAI
+        if not translated:
+            from app.services.translator import _get_client
+            client = _get_client()
+            if client:
+                if provider == "openai":
+                    model = "gpt-4o-mini"
+                else:
+                    groq_model_setting = SiteSetting.query.get("GROQ_MODEL")
+                    model = groq_model_setting.value.strip() if groq_model_setting and groq_model_setting.value else "qwen/qwen3.8-27b"
+                    if "llama-3.3" in model:
+                        model = "qwen/qwen3.8-27b"
+
+                resp = client.chat.completions.create(
+                    model=model,
+                    messages=[
+                        {"role": "system", "content": "You are a professional Cambodian agricultural translator."},
+                        {"role": "user", "content": prompt}
+                    ],
+                    temperature=0.1,
+                    max_tokens=max(1500, len(uncached) * 120)
+                )
+                if resp and resp.choices:
+                    content = resp.choices[0].message.content.strip()
+                    for line in content.split("\n"):
+                        m = re.match(r"^(\d+)[\.\)]\s*(.+)", line.strip())
+                        if m:
+                            idx = int(m.group(1)) - 1
+                            val = m.group(2).strip()
+                            if 0 <= idx < len(uncached) and val:
+                                _KM_NEWS_CACHE[uncached[idx]] = val
+                    translated = True
+    except Exception as e:
+        print(f"Batch translation error: {e}")
+
+    # Parallel fallback for any items that were not translated in batch
+    missing = [t for t in uncached if t not in _KM_NEWS_CACHE]
+    if missing:
+        def _fallback_trans(t):
+            try:
+                from app.services.translator import translate_to_khmer
+                kh = translate_to_khmer(t)
+                if kh and len(kh) > 2 and "error" not in kh.lower():
+                    _KM_NEWS_CACHE[t] = kh.strip()
+            except Exception:
+                pass
+        with ThreadPoolExecutor(max_workers=min(4, len(missing))) as executor:
+            list(executor.map(_fallback_trans, missing))
 
     return _KM_NEWS_CACHE
 
@@ -834,7 +895,7 @@ def _translate_headline_to_khmer(title: str) -> str:
 def _fetch_live_agri_rss(region="cambodia", limit=12):
     """
     Fetches real-world live agricultural news dispatches in parallel across verified feeds.
-    Cached for 10 minutes to guarantee instant response times.
+    Cached for 15 minutes to guarantee instant response times.
     """
     import requests
     import xml.etree.ElementTree as ET
@@ -843,24 +904,26 @@ def _fetch_live_agri_rss(region="cambodia", limit=12):
     from concurrent.futures import ThreadPoolExecutor, as_completed
 
     cached = _LIVE_RSS_CACHE.get(region)
-    if cached and (time.time() - cached.get("timestamp", 0) < cached.get("ttl", 600)) and cached.get("items"):
+    if cached and (time.time() - cached.get("timestamp", 0) < cached.get("ttl", 900)) and cached.get("items"):
         return cached["items"][:limit]
 
     items = []
-    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"}
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        "Accept": "application/rss+xml, application/xml, text/xml, */*"
+    }
 
     if region == "cambodia":
         feeds = [
-            ("Khmer Times", "https://www.khmertimeskh.com/feed/?s=agriculture"),
-            ("Khmer Times", "https://www.khmertimeskh.com/feed/?s=rice+export"),
-            ("Khmer Times", "https://www.khmertimeskh.com/feed/?s=farming"),
-            ("Google News", "https://news.google.com/rss/search?q=Cambodia+agriculture+OR+rice+OR+farmer&hl=en-US&gl=US&ceid=US:en")
+            ("Google News", "https://news.google.com/rss/search?q=Cambodia+agriculture+OR+rice+OR+farmer+OR+crops+OR+harvest&hl=en-US&gl=US&ceid=US:en"),
+            ("Google News", "https://news.google.com/rss/search?q=Cambodia+rubber+OR+cassava+OR+cashew+OR+paddy+export&hl=en-US&gl=US&ceid=US:en"),
+            ("Khmer Times", "https://www.khmertimeskh.com/feed/?s=agriculture")
         ]
     else:
         feeds = [
-            ("AgDaily", "https://www.agdaily.com/category/crops/feed/"),
-            ("AgDaily", "https://www.agdaily.com/feed/"),
-            ("Google News", "https://news.google.com/rss/search?q=world+agriculture+crop+harvest+commodity+prices&hl=en-US&gl=US&ceid=US:en")
+            ("Google News", "https://news.google.com/rss/search?q=world+agriculture+OR+grain+OR+wheat+OR+corn+harvest&hl=en-US&gl=US&ceid=US:en"),
+            ("Google News", "https://news.google.com/rss/search?q=global+farming+OR+fertilizer+OR+crop+commodity+prices&hl=en-US&gl=US&ceid=US:en"),
+            ("Google News", "https://news.google.com/rss/search?q=international+agriculture+food+security+FAO&hl=en-US&gl=US&ceid=US:en")
         ]
 
     def _fetch_single(source_name, feed_url):
@@ -941,7 +1004,7 @@ def _fetch_live_agri_rss(region="cambodia", limit=12):
 
     _LIVE_RSS_CACHE[region] = {
         "timestamp": time.time(),
-        "ttl": 600 if items else 180,
+        "ttl": 900 if items else 180,
         "items": items
     }
 
@@ -1030,7 +1093,7 @@ def generate_agriculture_news(region="cambodia", lang="en", force_refresh=False)
     cache_key = (region, lang)
     if not force_refresh:
         cached = _NEWS_FEED_CACHE.get(cache_key)
-        if cached and (time.time() - cached.get("timestamp", 0) < 600) and cached.get("data"):
+        if cached and (time.time() - cached.get("timestamp", 0) < 900) and cached.get("data"):
             return cached["data"]
 
     live_dispatches = _fetch_live_agri_rss(region=region, limit=12)
@@ -1052,7 +1115,7 @@ def generate_agriculture_news(region="cambodia", lang="en", force_refresh=False)
             raw_summary = disp.get("summary", "").strip()
             cat, imp = _infer_category_and_impact(raw_title + " " + raw_summary)
             tip_text = _CATEGORY_TIPS.get(cat, _CATEGORY_TIPS["Crops"])[lang]
-            photo = _match_news_image(raw_title + " " + raw_summary, default_index=i)
+            photo = disp.get("image") if (disp.get("image") and str(disp["image"]).startswith("http")) else _match_news_image(raw_title + " " + raw_summary, default_index=i)
 
             if not raw_summary:
                 raw_summary = f"Field intelligence report: {raw_title}. Ongoing developments are being tracked across regional agricultural value chains."

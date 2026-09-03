@@ -79,10 +79,11 @@ def _get_client() -> Optional[MultiKeyOpenAI]:
 
     if not keys_list:
         env_key = os.getenv("OPENAI_API_KEY", "").strip()
-        if env_key:
+        if env_key and not env_key.startswith("sk-your-") and "your-api-key" not in env_key:
             keys_list = [env_key]
         base_url = os.getenv("OPENAI_BASE_URL", "").strip() or None
 
+    keys_list = [k for k in keys_list if k and not k.startswith("sk-your-") and "your-api-key" not in k]
     if not keys_list:
         return None
 
