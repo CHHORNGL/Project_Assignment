@@ -782,23 +782,48 @@ def _match_news_image(text: str, default_index: int = 0) -> str:
 _KM_NEWS_CACHE = {}
 
 
-def _batch_translate_to_khmer(titles: list) -> dict:
+def _batch_translate_to_khmer(items: list) -> dict:
     """
-    Translates headlines in ONE fast AI call supporting Groq, OpenAI, and Gemini.
-    Uses generous max_tokens and structured numbering to guarantee complete translations.
-    Falls back to fast parallel translation if any headlines remain untranslated.
+    Translates news headlines and summaries into natural, fluent Khmer.
+    Falls back across candidate Groq models (preferred -> qwen3.8-27b -> openai/gpt-oss-120b -> qwen3.6-27b)
+    to guarantee high-availability even during rate limit (429) peaks.
     """
     import re
     import os
     from concurrent.futures import ThreadPoolExecutor
-    uncached = [t for t in titles if t and t not in _KM_NEWS_CACHE]
+
+    if not items:
+        return _KM_NEWS_CACHE
+
+    uncached = []
+    for it in items:
+        if isinstance(it, dict):
+            t = it.get("title", "").strip()
+            s = it.get("summary", "").strip()
+            if t and t not in _KM_NEWS_CACHE:
+                uncached.append({"title": t, "summary": s})
+        elif isinstance(it, str):
+            t = it.strip()
+            if t and t not in _KM_NEWS_CACHE:
+                uncached.append({"title": t, "summary": ""})
+
     if not uncached:
         return _KM_NEWS_CACHE
 
+    lines = []
+    for i, u in enumerate(uncached):
+        t = u["title"]
+        s = u["summary"]
+        if s:
+            lines.append(f"{i+1}. [TITLE]: {t} | [SUMMARY]: {s}")
+        else:
+            lines.append(f"{i+1}. [TITLE]: {t}")
+
     prompt = (
-        "You are an expert Cambodian agricultural translator. Translate each numbered agricultural headline into natural, clear Khmer for farmers.\n"
-        "Return ONLY the numbered list with translations, exactly matching the numbering (e.g. '1. ...\\n2. ...'), with NO extra commentary:\n"
-        + "\n".join(f"{i+1}. {t}" for i, t in enumerate(uncached))
+        "You are an expert Cambodian agricultural translator. Translate each numbered agricultural headline and summary into natural, fluent Khmer for farmers.\n"
+        "Return ONLY the numbered list in this exact format with NO other commentary:\n"
+        "1. [TITLE]: (Khmer title) | [SUMMARY]: (Khmer summary)\n\n"
+        + "\n".join(lines)
     )
 
     translated = False
@@ -816,12 +841,13 @@ def _batch_translate_to_khmer(titles: list) -> dict:
                 resp = client.models.generate_content(model=model_name, contents=prompt)
                 if resp and resp.text:
                     for line in resp.text.strip().split("\n"):
-                        m = re.match(r"^(\d+)[\.\)]\s*(.+)", line.strip())
+                        m = re.match(r"^(\d+)[\.\)]\s*(?:\[TITLE\]:\s*)?(.*?)(?:\s*\|\s*\[SUMMARY\]:\s*(.*))?$", line.strip(), re.IGNORECASE)
                         if m:
                             idx = int(m.group(1)) - 1
-                            val = m.group(2).strip()
-                            if 0 <= idx < len(uncached) and val:
-                                _KM_NEWS_CACHE[uncached[idx]] = val
+                            kh_t = m.group(2).strip() if m.group(2) else ""
+                            kh_s = m.group(3).strip() if m.group(3) else ""
+                            if 0 <= idx < len(uncached) and kh_t:
+                                _KM_NEWS_CACHE[uncached[idx]["title"]] = {"title": kh_t, "summary": kh_s}
                     translated = True
 
         # 2. Groq or OpenAI
@@ -830,44 +856,51 @@ def _batch_translate_to_khmer(titles: list) -> dict:
             client = _get_client()
             if client:
                 if provider == "openai":
-                    model = "gpt-4o-mini"
+                    models_to_try = ["gpt-4o-mini"]
                 else:
                     groq_model_setting = SiteSetting.query.get("GROQ_MODEL")
-                    model = groq_model_setting.value.strip() if groq_model_setting and groq_model_setting.value else "qwen/qwen3.8-27b"
-                    if "llama-3.3" in model:
-                        model = "qwen/qwen3.8-27b"
+                    pref_model = groq_model_setting.value.strip() if groq_model_setting and groq_model_setting.value else "qwen/qwen3.8-27b"
+                    models_to_try = [pref_model, "qwen/qwen3.8-27b", "openai/gpt-oss-120b", "qwen/qwen3.6-27b"]
+                    models_to_try = list(dict.fromkeys(models_to_try))
 
-                resp = client.chat.completions.create(
-                    model=model,
-                    messages=[
-                        {"role": "system", "content": "You are a professional Cambodian agricultural translator."},
-                        {"role": "user", "content": prompt}
-                    ],
-                    temperature=0.1,
-                    max_tokens=max(1500, len(uncached) * 120)
-                )
-                if resp and resp.choices:
-                    content = resp.choices[0].message.content.strip()
-                    for line in content.split("\n"):
-                        m = re.match(r"^(\d+)[\.\)]\s*(.+)", line.strip())
-                        if m:
-                            idx = int(m.group(1)) - 1
-                            val = m.group(2).strip()
-                            if 0 <= idx < len(uncached) and val:
-                                _KM_NEWS_CACHE[uncached[idx]] = val
-                    translated = True
+                for model in models_to_try:
+                    try:
+                        resp = client.chat.completions.create(
+                            model=model,
+                            messages=[
+                                {"role": "system", "content": "You are a professional Cambodian agricultural translator."},
+                                {"role": "user", "content": prompt}
+                            ],
+                            temperature=0.1,
+                            max_tokens=max(1500, len(uncached) * 120)
+                        )
+                        if resp and resp.choices:
+                            content = resp.choices[0].message.content.strip()
+                            content = re.sub(r'<think>.*?</think>', '', content, flags=re.DOTALL).strip()
+                            for line in content.split("\n"):
+                                m = re.match(r"^(\d+)[\.\)]\s*(?:\[TITLE\]:\s*)?(.*?)(?:\s*\|\s*\[SUMMARY\]:\s*(.*))?$", line.strip(), re.IGNORECASE)
+                                if m:
+                                    idx = int(m.group(1)) - 1
+                                    kh_t = m.group(2).strip() if m.group(2) else ""
+                                    kh_s = m.group(3).strip() if m.group(3) else ""
+                                    if 0 <= idx < len(uncached) and kh_t:
+                                        _KM_NEWS_CACHE[uncached[idx]["title"]] = {"title": kh_t, "summary": kh_s}
+                            translated = True
+                            break
+                    except Exception:
+                        continue
     except Exception as e:
         print(f"Batch translation error: {e}")
 
-    # Parallel fallback for any items that were not translated in batch
-    missing = [t for t in uncached if t not in _KM_NEWS_CACHE]
+    # Fallback for any items that were not translated in batch
+    missing = [u["title"] for u in uncached if u["title"] not in _KM_NEWS_CACHE]
     if missing:
         def _fallback_trans(t):
             try:
                 from app.services.translator import translate_to_khmer
                 kh = translate_to_khmer(t)
                 if kh and len(kh) > 2 and "error" not in kh.lower():
-                    _KM_NEWS_CACHE[t] = kh.strip()
+                    _KM_NEWS_CACHE[t] = {"title": kh.strip(), "summary": ""}
             except Exception:
                 pass
         with ThreadPoolExecutor(max_workers=min(4, len(missing))) as executor:
@@ -1130,6 +1163,17 @@ def _write_shared_news_cache(region: str, lang: str, data: list):
     except Exception:
         pass
 
+def _has_khmer_text(text: str) -> bool:
+    import re
+    return bool(re.search(r'[\u1780-\u17FF]', text or ''))
+
+def _is_valid_cache_for_lang(data: list, lang: str) -> bool:
+    if not data or not isinstance(data, list) or len(data) == 0:
+        return False
+    if lang == "km":
+        return any(_has_khmer_text(it.get("title", "")) for it in data)
+    return True
+
 def _rebuild_news_feed(region="cambodia", lang="en"):
     """Internal builder that queries live RSS, resolves real photos, and translates."""
     live_dispatches = _fetch_live_agri_rss(region=region, limit=12)
@@ -1138,8 +1182,7 @@ def _rebuild_news_feed(region="cambodia", lang="en"):
 
     if live_dispatches:
         if lang == "km":
-            titles_to_translate = [d.get("title", "").strip() for d in live_dispatches if d.get("title")]
-            _batch_translate_to_khmer(titles_to_translate)
+            _batch_translate_to_khmer(live_dispatches)
 
         for i, disp in enumerate(live_dispatches):
             raw_title = disp.get("title", "").strip()
@@ -1155,8 +1198,26 @@ def _rebuild_news_feed(region="cambodia", lang="en"):
                 raw_summary = f"Field intelligence report: {raw_title}. Ongoing developments are being tracked across regional agricultural value chains."
 
             if lang == "km":
-                title_disp = _KM_NEWS_CACHE.get(raw_title) or _translate_headline_to_khmer(raw_title)
-                summary_disp = raw_summary
+                cached_km = _KM_NEWS_CACHE.get(raw_title)
+                if isinstance(cached_km, dict):
+                    title_disp = cached_km.get("title") or raw_title
+                    summary_disp = cached_km.get("summary") or raw_summary
+                elif isinstance(cached_km, str):
+                    title_disp = cached_km
+                    summary_disp = raw_summary
+                else:
+                    title_disp = _translate_headline_to_khmer(raw_title)
+                    summary_disp = raw_summary
+
+                # If translation is missing or still in English, fall back to curated Khmer baseline
+                if not _has_khmer_text(title_disp) and bilingual_baseline and i < len(bilingual_baseline):
+                    base_km = bilingual_baseline[i]["km"]
+                    title_disp = base_km["title"]
+                    if not _has_khmer_text(summary_disp):
+                        summary_disp = base_km["summary"]
+                elif not _has_khmer_text(summary_disp) and bilingual_baseline and i < len(bilingual_baseline):
+                    summary_disp = bilingual_baseline[i]["km"]["summary"]
+
                 read_time = "អាន ៣ នាទី"
             else:
                 title_disp = raw_title
@@ -1217,14 +1278,14 @@ def generate_agriculture_news(region="cambodia", lang="en", force_refresh=False)
 
     # 1. Check in-memory cache first
     cached_mem = _NEWS_FEED_CACHE.get(cache_key)
-    if cached_mem and cached_mem.get("data"):
+    if cached_mem and cached_mem.get("data") and _is_valid_cache_for_lang(cached_mem["data"], lang):
         age = now - cached_mem.get("timestamp", 0)
         if not force_refresh and age < 600:
             return cached_mem["data"]
 
     # 2. Check shared disk cache (shared across all Gunicorn workers)
     cached_shared = _get_shared_news_cache(region, lang)
-    if cached_shared and cached_shared.get("data"):
+    if cached_shared and cached_shared.get("data") and _is_valid_cache_for_lang(cached_shared["data"], lang):
         _NEWS_FEED_CACHE[cache_key] = cached_shared
         age = now - cached_shared.get("timestamp", 0)
 

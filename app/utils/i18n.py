@@ -2151,13 +2151,30 @@ def normalize_display_text(value, lang: str | None = None):
 def get_current_language() -> str:
     if hasattr(g, "site_language"):
         return g.site_language
-    lang = DEFAULT_LANGUAGE
-    try:
-        setting = SiteSetting.query.filter_by(key=LANGUAGE_SETTING_KEY).first()
-        if setting and setting.value in TRANSLATIONS:
-            lang = setting.value
-    except Exception:
+
+    from flask import session, request, has_request_context
+    lang = None
+
+    if has_request_context():
+        try:
+            if session and session.get("language") in TRANSLATIONS:
+                lang = session["language"]
+            elif request and request.cookies.get("language") in TRANSLATIONS:
+                lang = request.cookies.get("language")
+        except Exception:
+            pass
+
+    if not lang:
+        try:
+            setting = SiteSetting.query.filter_by(key=LANGUAGE_SETTING_KEY).first()
+            if setting and setting.value in TRANSLATIONS:
+                lang = setting.value
+        except Exception:
+            pass
+
+    if not lang or lang not in TRANSLATIONS:
         lang = DEFAULT_LANGUAGE
+
     g.site_language = lang
     return lang
 
@@ -2166,13 +2183,27 @@ def set_current_language(lang: str) -> str:
     lang = (lang or "").strip().lower()
     if lang not in TRANSLATIONS:
         lang = DEFAULT_LANGUAGE
-    setting = SiteSetting.query.filter_by(key=LANGUAGE_SETTING_KEY).first()
-    if not setting:
-        setting = SiteSetting(key=LANGUAGE_SETTING_KEY, value=lang)
-        db.session.add(setting)
-    else:
-        setting.value = lang
-    db.session.commit()
+
+    from flask import session, has_request_context
+    if has_request_context():
+        try:
+            session["language"] = lang
+        except Exception:
+            pass
+
+    g.site_language = lang
+
+    try:
+        setting = SiteSetting.query.filter_by(key=LANGUAGE_SETTING_KEY).first()
+        if not setting:
+            setting = SiteSetting(key=LANGUAGE_SETTING_KEY, value=lang)
+            db.session.add(setting)
+        else:
+            setting.value = lang
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+
     return lang
 
 
