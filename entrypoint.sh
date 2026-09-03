@@ -3,7 +3,7 @@ set -e
 
 # Wait for PostgreSQL to be ready to accept connections
 echo "⏳ Waiting for PostgreSQL database..."
-until pg_isready -h db -p 5432 -U postgres; do
+until pg_isready -h "${POSTGRES_HOST:-db}" -p 5432 -U "${POSTGRES_USER:-postgres}"; do
   sleep 1
 done
 echo "✅ PostgreSQL database is ready!"

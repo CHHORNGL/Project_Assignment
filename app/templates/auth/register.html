@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>{{ t("auth_create_account")|default("Create Account") }} | AGRI SYSTEM</title>
-    <link rel="icon" type="image/jpeg" href="{{ url_for('static', filename='img/logo.jpg') }}">
-    <link rel="shortcut icon" type="image/jpeg" href="{{ url_for('static', filename='img/logo.jpg') }}">
-    <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/logo.jpg') }}">
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/logo.svg') }}">
+    <link rel="shortcut icon" type="image/svg+xml" href="{{ url_for('static', filename='img/logo.svg') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/logo.svg') }}">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -58,7 +58,7 @@
     <div class="auth-clean-card">
         <div class="auth-card-header">
             <div class="auth-brand-badge">
-                <img src="{{ url_for('static', filename='img/logo.jpg') }}" alt="Agri System" class="auth-clean-logo">
+                <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="Agri System" class="auth-clean-logo">
             </div>
             <h1 class="auth-clean-title">{{ t("auth_create_account")|default("Create Account") }}</h1>
             <p class="auth-clean-subtitle">{{ t("auth_register_sub")|default("Join us today to manage your farm efficiently") }}</p>
