@@ -130,11 +130,13 @@ body.icon-nav {
     transition: all 0.24s ease;
 }
 .app-sidebar .sidebar-logo {
-    width: 44px !important;
-    height: 44px !important;
-    border-radius: 12px !important;
-    object-fit: cover;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    height: 36px !important;
+    width: auto !important;
+    max-width: 120px !important;
+    border-radius: 0 !important;
+    object-fit: contain !important;
+    box-shadow: none !important;
+    background: transparent !important;
     transition: all 0.24s ease;
     flex-shrink: 0;
 }
@@ -147,12 +149,6 @@ body.icon-nav {
     overflow: hidden;
     white-space: nowrap;
     transition: opacity 0.2s ease, max-width 0.24s ease;
-}
-.app-sidebar .brand-main-title {
-    font-weight: 700;
-    font-size: 1.05rem;
-    color: var(--adm-sb-text);
-    line-height: 1.2;
 }
 .app-sidebar .brand-sub-badge {
     font-size: 0.72rem;
@@ -623,12 +619,11 @@ body.icon-nav .app-sidebar .nav-link[data-tooltip]:hover::after,
          BRAND / LOGO
     =============================== -->
     <div class="sidebar-brand-row">
-        <a class="sidebar-brand" href="{{ home_url }}">
+        <a class="sidebar-brand" href="{{ home_url }}" aria-label="Dashboard">
             <img src="{{ url_for("static", filename="img/logo.svg") }}"
-                 alt="Agri Logo"
-                 class="sidebar-logo app-logo-circle">
+                 alt="Logo"
+                 class="sidebar-logo">
             <div class="brand-text-col">
-                <span class="brand-main-title">Agri System</span>
                 <span class="brand-sub-badge">
                     {% if active_side == "admin" %}ADMIN PANEL{% elif active_side == "expert" %}EXPERT PANEL{% else %}FARMER PANEL{% endif %}
                 </span>

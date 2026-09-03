@@ -33,11 +33,10 @@
     <!-- ===============================
          BRAND LOGO (farmer routes only)
     =============================== -->
-    <a class="topbar-brand" href="{{ url_for('main.index') }}">
+    <a class="topbar-brand" href="{{ url_for('main.index') }}" aria-label="Home">
         <img src="{{ url_for('static', filename='img/logo.svg') }}"
-             alt="Agri System"
-             class="topbar-brand-logo app-logo-circle">
-        <span class="topbar-brand-name">AGRI SYSTEM</span>
+             alt="Logo"
+             class="topbar-brand-logo">
     </a>
     {% endif %}
 

@@ -88,10 +88,11 @@ html.dark-mode .page-loader-card {
 }
 
 .page-loader-logo {
-  width: 24px;
   height: 24px;
-  border-radius: 6px;
-  object-fit: cover;
+  width: auto;
+  max-width: 80px;
+  object-fit: contain;
+  border-radius: 0;
 }
 
 .page-loader-title {

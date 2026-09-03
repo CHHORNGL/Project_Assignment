@@ -67,8 +67,18 @@
 }
 
 .sidebar-logo {
-    width: 36px;
     height: 36px;
+    width: auto;
+    max-width: 120px;
+    object-fit: contain;
+    border: none;
+    box-shadow: none;
+    background: transparent;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.sidebar-logo:hover {
+    transform: scale(1.03);
 }
 
 /* =========================================
@@ -520,27 +530,30 @@ input:focus {
 }
 
 .topbar-brand-logo {
-    width: 32px;
     height: 32px;
-    border-radius: 50%;
-    object-fit: cover;
+    width: auto;
+    max-width: 110px;
+    object-fit: contain;
     flex-shrink: 0;
+    border: none;
+    box-shadow: none;
+    background: transparent;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.topbar-brand:hover .topbar-brand-logo {
+    transform: scale(1.04);
 }
 
 .topbar-brand-name {
-    font-size: 0.95rem;
-    font-weight: 800;
-    letter-spacing: 0.04em;
-    color: var(--text-main, #0f172a);
-}
-
-.dark-mode .topbar-brand-name {
-    color: var(--admin-text-dark, #e2e8f0);
+    display: none;
 }
 
 @media (max-width: 767.98px) {
-    .topbar-brand-logo { width: 26px; height: 26px; }
-    .topbar-brand-name { font-size: 0.82rem; letter-spacing: 0.03em; }
+    .topbar-brand-logo {
+        height: 26px;
+        max-width: 90px;
+    }
 }
 
 .icon-btn {
@@ -2231,21 +2244,45 @@ body.farmer-no-sidebar .topbar-divider:first-of-type {
 }
 
 .farmer-dash-logo {
-    font-weight: 700;
-    font-size: 1.1rem;
-    color: var(--text-main);
+    display: none;
 }
 
 .farmer-dash-sub {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: var(--text-muted);
+    font-weight: 700;
+    color: var(--primary, #059669);
 }
 
 .farmer-brand-logo {
-    width: 44px;
-    height: 44px;
+    height: 36px;
+    width: auto;
+    max-width: 120px;
+    object-fit: contain;
+    border: none;
+    box-shadow: none;
+    background: transparent;
+}
+
+.farmer-chat-logo-img {
+    height: 28px;
+    width: auto;
+    max-width: 80px;
+    object-fit: contain;
+    border: none;
+    box-shadow: none;
+    background: transparent;
+}
+
+.member-card-logo-img {
+    height: 32px;
+    width: auto;
+    max-width: 90px;
+    object-fit: contain;
+    border: none;
+    box-shadow: none;
+    background: transparent;
 }
 
 .farmer-dash-brand-text {
@@ -3516,8 +3553,10 @@ body.farmer-no-sidebar .topbar-divider:first-of-type {
 }
 
 .farmer-chat-logo img {
-    width: 32px;
-    height: 32px;
+    height: 30px;
+    width: auto;
+    max-width: 90px;
+    object-fit: contain;
 }
 
 .farmer-chat-brand-sub {
