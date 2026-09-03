@@ -975,18 +975,18 @@ def settings():
         openai_keys = [k.strip() for k in request.form.getlist("openai_key[]") if k.strip()]
         groq_keys = [k.strip() for k in request.form.getlist("groq_key[]") if k.strip()]
         gemini_keys = [k.strip() for k in request.form.getlist("gemini_key[]") if k.strip()]
+        
+        groq_model = request.form.get("groq_model", "").strip()
         openai_model = request.form.get("openai_model", "").strip()
+        gemini_model = request.form.get("gemini_model", "").strip()
 
-        # Fallback to standard input if lists are empty (e.g. JS failed)
-        if not openai_keys:
-            if request.form.get("openai_key", "").strip():
-                openai_keys = [request.form.get("openai_key", "").strip()]
-        if not groq_keys:
-            if request.form.get("groq_key", "").strip():
-                groq_keys = [request.form.get("groq_key", "").strip()]
-        if not gemini_keys:
-            if request.form.get("gemini_key", "").strip():
-                gemini_keys = [request.form.get("gemini_key", "").strip()]
+        # Fallback to standard input if lists are empty
+        if not openai_keys and request.form.get("openai_key", "").strip():
+            openai_keys = [request.form.get("openai_key", "").strip()]
+        if not groq_keys and request.form.get("groq_key", "").strip():
+            groq_keys = [request.form.get("groq_key", "").strip()]
+        if not gemini_keys and request.form.get("gemini_key", "").strip():
+            gemini_keys = [request.form.get("gemini_key", "").strip()]
 
         active_provider = request.form.get("active_provider", "").strip()
         expert_provider = request.form.get("expert_provider", "").strip()
@@ -1007,36 +1007,209 @@ def settings():
         update_setting("EXPERT_PROVIDER", expert_provider)
         update_setting("EXPERT_MODEL", expert_model)
 
-        if openai_keys or "openai_key[]" in request.form or "openai_key" in request.form:
-            update_setting("API_KEY_OPENAI", ",".join(openai_keys))
+        if groq_model:
+            update_setting("GROQ_MODEL", groq_model)
+            # Sync OPENAI_MODEL as groq_model if active provider is groq
+            if active_provider == "groq":
+                update_setting("OPENAI_MODEL", groq_model)
+        if openai_model:
+            update_setting("OPENAI_MODEL", openai_model)
+        if gemini_model:
+            update_setting("GEMINI_MODEL", gemini_model)
+
         if groq_keys or "groq_key[]" in request.form or "groq_key" in request.form:
             update_setting("API_KEY_GROQ", ",".join(groq_keys))
+        if openai_keys or "openai_key[]" in request.form or "openai_key" in request.form:
+            update_setting("API_KEY_OPENAI", ",".join(openai_keys))
         if gemini_keys or "gemini_key[]" in request.form or "gemini_key" in request.form:
             update_setting("API_KEY_GEMINI", ",".join(gemini_keys))
-        if openai_model or "openai_model" in request.form:
-            update_setting("OPENAI_MODEL", openai_model)
 
         db.session.commit()
-        flash("System settings updated successfully.", "success")
+        flash("AI System settings & credentials saved successfully.", "success")
         return redirect(url_for("admin.settings"))
 
     # GET
-    openai_setting = SiteSetting.query.get("API_KEY_OPENAI")
+    active_provider_setting = SiteSetting.query.get("ACTIVE_PROVIDER")
     groq_setting = SiteSetting.query.get("API_KEY_GROQ")
+    openai_setting = SiteSetting.query.get("API_KEY_OPENAI")
     gemini_setting = SiteSetting.query.get("API_KEY_GEMINI")
-    model_setting = SiteSetting.query.get("OPENAI_MODEL")
+    
+    groq_model_setting = SiteSetting.query.get("GROQ_MODEL")
+    openai_model_setting = SiteSetting.query.get("OPENAI_MODEL")
+    gemini_model_setting = SiteSetting.query.get("GEMINI_MODEL")
+    
     expert_provider_setting = SiteSetting.query.get("EXPERT_PROVIDER")
     expert_model_setting = SiteSetting.query.get("EXPERT_MODEL")
 
+    active_provider = active_provider_setting.value.strip() if active_provider_setting and active_provider_setting.value.strip() else "groq"
+    
+    # Resolve groq_model default
+    groq_model = ""
+    if groq_model_setting and groq_model_setting.value.strip():
+        groq_model = groq_model_setting.value.strip()
+    elif openai_model_setting and openai_model_setting.value.strip() and "gpt-4" not in openai_model_setting.value.lower():
+        groq_model = openai_model_setting.value.strip()
+    else:
+        groq_model = "openai/gpt-oss-120b"
+
+    # Resolve openai_model default
+    openai_model = ""
+    if openai_model_setting and openai_model_setting.value.strip() and "gpt" in openai_model_setting.value.lower():
+        openai_model = openai_model_setting.value.strip()
+    else:
+        openai_model = "gpt-4o-mini"
+
+    # Resolve gemini_model default
+    gemini_model = gemini_model_setting.value.strip() if gemini_model_setting and gemini_model_setting.value.strip() else "gemini-2.5-flash"
+
     return render_template(
         "admin/settings.html",
-        openai_key=openai_setting.value if openai_setting else "",
+        active_provider=active_provider,
         groq_key=groq_setting.value if groq_setting else "",
+        openai_key=openai_setting.value if openai_setting else "",
         gemini_key=gemini_setting.value if gemini_setting else "",
-        openai_model=model_setting.value if model_setting else "",
+        groq_model=groq_model,
+        openai_model=openai_model,
+        gemini_model=gemini_model,
         expert_provider=expert_provider_setting.value if expert_provider_setting else "",
         expert_model=expert_model_setting.value if expert_model_setting else "",
     )
+
+
+@admin_bp.route("/api/test_ai_connection", methods=["POST"])
+@login_required
+@permission_required("manage_roles")
+def test_ai_connection():
+    import time
+    data = request.get_json(silent=True) or request.form
+    provider = (data.get("provider") or "groq").strip().lower()
+    api_key = (data.get("api_key") or "").strip()
+    model = (data.get("model") or "").strip()
+
+    # Fallback to saved DB key if not passed
+    if not api_key:
+        setting_map = {
+            "groq": "API_KEY_GROQ",
+            "openai": "API_KEY_OPENAI",
+            "gemini": "API_KEY_GEMINI"
+        }
+        db_key_setting = SiteSetting.query.get(setting_map.get(provider, ""))
+        if db_key_setting and db_key_setting.value:
+            api_key = db_key_setting.value.split(",")[0].strip()
+
+    if not api_key:
+        return jsonify({"success": False, "error": f"No API key provided or saved for {provider.title()}."}), 400
+
+    start_time = time.time()
+    try:
+        if provider == "groq":
+            from openai import OpenAI
+            client = OpenAI(api_key=api_key, base_url="https://api.groq.com/openai/v1", timeout=8.0)
+            chosen_model = model or "openai/gpt-oss-120b"
+            resp = client.chat.completions.create(
+                model=chosen_model,
+                messages=[{"role": "user", "content": "ping"}],
+                max_tokens=2
+            )
+            elapsed = round((time.time() - start_time) * 1000)
+            return jsonify({
+                "success": True,
+                "message": f"Groq Connected! ({elapsed}ms latency • Model: {chosen_model})",
+                "latency_ms": elapsed
+            })
+
+        elif provider == "openai":
+            from openai import OpenAI
+            client = OpenAI(api_key=api_key, timeout=8.0)
+            chosen_model = model or "gpt-4o-mini"
+            resp = client.chat.completions.create(
+                model=chosen_model,
+                messages=[{"role": "user", "content": "ping"}],
+                max_tokens=2
+            )
+            elapsed = round((time.time() - start_time) * 1000)
+            return jsonify({
+                "success": True,
+                "message": f"OpenAI Connected! ({elapsed}ms latency • Model: {chosen_model})",
+                "latency_ms": elapsed
+            })
+
+        elif provider == "gemini":
+            from google import genai
+            client = genai.Client(api_key=api_key)
+            chosen_model = model or "gemini-2.5-flash"
+            resp = client.models.generate_content(
+                model=chosen_model,
+                contents="ping"
+            )
+            elapsed = round((time.time() - start_time) * 1000)
+            return jsonify({
+                "success": True,
+                "message": f"Gemini Connected! ({elapsed}ms latency • Model: {chosen_model})",
+                "latency_ms": elapsed
+            })
+
+        else:
+            return jsonify({"success": False, "error": f"Unknown provider: {provider}"}), 400
+
+    except Exception as e:
+        elapsed = round((time.time() - start_time) * 1000)
+        return jsonify({
+            "success": False,
+            "error": str(e),
+            "latency_ms": elapsed
+        }), 200
+
+
+@admin_bp.route("/api/fetch_provider_models", methods=["POST"])
+@login_required
+@permission_required("manage_roles")
+def fetch_provider_models():
+    data = request.get_json(silent=True) or request.form
+    provider = (data.get("provider") or "groq").strip().lower()
+    api_key = (data.get("api_key") or "").strip()
+
+    if not api_key:
+        setting_map = {
+            "groq": "API_KEY_GROQ",
+            "openai": "API_KEY_OPENAI",
+            "gemini": "API_KEY_GEMINI"
+        }
+        db_key_setting = SiteSetting.query.get(setting_map.get(provider, ""))
+        if db_key_setting and db_key_setting.value:
+            api_key = db_key_setting.value.split(",")[0].strip()
+
+    if not api_key:
+        return jsonify({"success": False, "error": f"Please enter or save an API key for {provider.title()} first."}), 400
+
+    try:
+        if provider == "groq":
+            from openai import OpenAI
+            client = OpenAI(api_key=api_key, base_url="https://api.groq.com/openai/v1", timeout=8.0)
+            resp = client.models.list()
+            model_ids = [m.id for m in resp.data if not m.id.startswith("whisper") and not m.id.startswith("meta-llama/llama-prompt-guard")]
+            if not model_ids:
+                model_ids = [m.id for m in resp.data]
+            return jsonify({"success": True, "models": sorted(model_ids)})
+
+        elif provider == "openai":
+            from openai import OpenAI
+            client = OpenAI(api_key=api_key, timeout=8.0)
+            resp = client.models.list()
+            chat_models = [m.id for m in resp.data if "gpt" in m.id or "o1" in m.id or "o3" in m.id]
+            return jsonify({"success": True, "models": sorted(chat_models or [m.id for m in resp.data][:20])})
+
+        elif provider == "gemini":
+            return jsonify({
+                "success": True,
+                "models": ["gemini-2.5-flash", "gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash"]
+            })
+
+        else:
+            return jsonify({"success": False, "error": f"Unknown provider: {provider}"}), 400
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 200
 
 
 @admin_bp.route("/translations/backups", methods=["GET"])
@@ -1666,6 +1839,12 @@ def create_role():
 
     new_role = Role(name=normalized, route_type=base_route)
     db.session.add(new_role)
+    
+    # Auto-fill permissions by cloning from the base route's core role
+    base_role = Role.query.filter_by(name=base_route).first()
+    if base_role:
+        for perm in base_role.permissions:
+            new_role.permissions.append(perm)
 
     db.session.add(
         AuditLog(
@@ -1761,10 +1940,31 @@ def manage_role_permissions(role_id):
         flash("Permissions updated.", "success")
         return redirect(url_for("admin.roles"))
 
+    grouped_permissions = {}
+    for perm in permissions:
+        c = perm.code.lower()
+        if "dashboard" in c: group = "Dashboard"
+        elif "user" in c: group = "User Management"
+        elif "role" in c or "permission" in c: group = "Roles & Access"
+        elif "crop" in c: group = "Agriculture (Crops)"
+        elif "disease" in c: group = "Agriculture (Diseases)"
+        elif "diagnos" in c: group = "Diagnosis System"
+        elif "chat" in c: group = "Expert Chat & Communication"
+        elif "report" in c: group = "Reports & Analytics"
+        elif "setting" in c or "system" in c: group = "System Configuration"
+        else:
+            parts = c.split('_', 1)
+            group = parts[1].replace('_', ' ').title() if len(parts) > 1 else "General Operations"
+
+        if group not in grouped_permissions:
+            grouped_permissions[group] = []
+        grouped_permissions[group].append(perm)
+
     return render_template(
         "admin/manage_permissions.html",
         role=role,
-        permissions=permissions
+        permissions=permissions,
+        grouped_permissions=grouped_permissions
     )
 
 

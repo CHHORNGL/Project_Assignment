@@ -1,91 +1,178 @@
 {% extends "layouts/base.html" %}
-{% block title %}System Configuration - Admin{% endblock %}
+{% block title %}System Configuration & AI Engine - Admin{% endblock %}
 {% set body_class = "admin-theme" %}
 
 {% block content %}
 <style>
 /* ==========================================================================
-   SYSTEM CONFIGURATION - DARK MODE & RESPONSIVE ENGINE
+   SYSTEM CONFIGURATION & AI ENGINE - 3-STEP CONTROL CENTER
    ========================================================================== */
-.config-tabs-wrapper {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
+.config-container {
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.step-card {
+    background: var(--admin-card, #ffffff);
+    border: 1px solid var(--admin-border, #e2e8f0);
+    border-radius: 16px;
+    padding: 1.75rem;
+    margin-bottom: 1.75rem;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.04);
+    transition: all 0.25s ease;
+}
+
+.dark-mode .step-card {
+    background: #18181b;
+    border-color: #27272a;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+}
+
+.step-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.76rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.step-badge-1 { background: rgba(59, 130, 246, 0.12); color: #3b82f6; }
+.step-badge-2 { background: rgba(249, 115, 22, 0.12); color: #f97316; }
+.step-badge-3 { background: rgba(168, 85, 247, 0.12); color: #a855f7; }
+
+.step-title {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--admin-text, #0f172a);
+    margin: 0.5rem 0 0.25rem;
+}
+
+.dark-mode .step-title { color: #f8fafc; }
+
+.step-subtitle {
+    font-size: 0.9rem;
+    color: var(--admin-muted, #64748b);
     margin-bottom: 1.25rem;
 }
 
-.provider-tab-btn {
+/* Step 1: Provider Selection Cards */
+.provider-routing-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+}
+
+.provider-radio-card {
+    border: 2px solid var(--admin-border, #e2e8f0);
+    border-radius: 14px;
+    padding: 1.25rem;
+    cursor: pointer;
+    background: var(--admin-bg, #f8fafc);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    user-select: none;
+}
+
+.dark-mode .provider-radio-card {
+    background: #09090b;
+    border-color: #27272a;
+}
+
+.provider-radio-card:hover {
+    border-color: #94a3b8;
+    transform: translateY(-2px);
+}
+
+.provider-radio-card.is-selected {
+    border-color: #3b82f6 !important;
+    background: rgba(59, 130, 246, 0.04) !important;
+    box-shadow: 0 0 0 1px #3b82f6, 0 6px 20px rgba(59, 130, 246, 0.12);
+}
+
+.dark-mode .provider-radio-card.is-selected {
+    background: rgba(59, 130, 246, 0.08) !important;
+}
+
+.card-check-pill {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid #cbd5e1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    color: transparent;
+    transition: all 0.2s ease;
+}
+
+.provider-radio-card.is-selected .card-check-pill {
+    background: #3b82f6;
+    border-color: #3b82f6;
+    color: #ffffff;
+}
+
+/* Step 2: Provider Nav Tabs */
+.engine-tabs-nav {
+    display: flex;
+    gap: 8px;
+    border-bottom: 2px solid var(--admin-border, #e2e8f0);
+    padding-bottom: 0.75rem;
+    margin-bottom: 1.5rem;
+    overflow-x: auto;
+}
+
+.dark-mode .engine-tabs-nav {
+    border-color: #27272a;
+}
+
+.engine-tab-btn {
     display: inline-flex;
     align-items: center;
     gap: 8px;
     padding: 10px 18px;
-    border-radius: 12px;
+    border-radius: 10px;
+    border: none;
+    font-size: 0.9rem;
     font-weight: 700;
-    font-size: 0.88rem;
-    color: var(--admin-muted);
-    background: var(--admin-card);
-    border: 1px solid var(--admin-border);
+    background: transparent;
+    color: var(--admin-muted, #64748b);
     cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    text-decoration: none !important;
-    user-select: none;
+    transition: all 0.15s ease;
 }
 
-.dark-mode .provider-tab-btn {
-    background: #18181b;
-    border-color: #27272a;
-    color: #a1a1aa;
+.engine-tab-btn:hover {
+    color: var(--admin-text, #0f172a);
+    background: rgba(0, 0, 0, 0.04);
 }
 
-.provider-tab-btn:hover {
-    color: var(--admin-text);
-    border-color: var(--admin-accent);
-    transform: translateY(-1px);
+.dark-mode .engine-tab-btn:hover {
+    color: #f1f5f9;
+    background: rgba(255, 255, 255, 0.04);
 }
 
-.provider-tab-btn.is-active {
+.engine-tab-btn.is-active {
     color: #ffffff !important;
 }
 
-.provider-tab-btn.is-active.tab-groq {
-    background: linear-gradient(135deg, #f97316, #ea580c) !important;
-    border-color: #ea580c !important;
-    box-shadow: 0 4px 14px rgba(249, 115, 22, 0.35);
-}
+.engine-tab-btn.is-active.tab-groq { background: #ea580c !important; box-shadow: 0 4px 12px rgba(234, 88, 12, 0.3); }
+.engine-tab-btn.is-active.tab-openai { background: #059669 !important; box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3); }
+.engine-tab-btn.is-active.tab-gemini { background: #2563eb !important; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); }
 
-.provider-tab-btn.is-active.tab-openai {
-    background: linear-gradient(135deg, #10b981, #059669) !important;
-    border-color: #059669 !important;
-    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
-}
-
-.provider-tab-btn.is-active.tab-gemini {
-    background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
-    border-color: #2563eb !important;
-    box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35);
-}
-
-.config-provider-box {
-    background: var(--admin-card);
-    border: 1px solid var(--admin-border);
-    border-radius: 18px;
-    padding: 1.5rem;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
-}
-
-.dark-mode .config-provider-box {
-    background: #18181b;
-    border-color: #27272a;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
-}
-
+/* Input styling */
 .admin-input-group {
     display: flex;
     align-items: center;
     border-radius: 10px;
-    border: 1px solid var(--admin-border);
-    background: var(--admin-bg);
-    overflow: hidden;
+    border: 1px solid var(--admin-border, #e2e8f0);
+    background: var(--admin-bg, #f8fafc);
     margin-bottom: 0.65rem;
     transition: border-color 0.2s, box-shadow 0.2s;
 }
@@ -96,8 +183,8 @@
 }
 
 .admin-input-group:focus-within {
-    border-color: var(--admin-accent);
-    box-shadow: 0 0 0 3px rgba(78, 115, 223, 0.15);
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 
 .admin-input-field {
@@ -106,26 +193,19 @@
     background: transparent;
     padding: 10px 14px;
     font-size: 0.92rem;
-    color: var(--admin-text);
+    color: var(--admin-text, #0f172a);
     outline: none;
     font-family: monospace;
     min-height: 42px;
 }
 
-.dark-mode .admin-input-field {
-    color: #f1f5f9;
-}
-
-.admin-input-field::placeholder {
-    color: var(--admin-muted);
-    opacity: 0.6;
-}
+.dark-mode .admin-input-field { color: #f1f5f9; }
 
 .admin-input-btn {
     border: none;
     background: transparent;
     padding: 10px 14px;
-    color: var(--admin-muted);
+    color: var(--admin-muted, #64748b);
     cursor: pointer;
     transition: color 0.15s, background-color 0.15s;
     display: flex;
@@ -139,14 +219,14 @@
 }
 
 .admin-input-btn.btn-eye:hover {
-    color: var(--admin-accent);
-    background: rgba(78, 115, 223, 0.08);
+    color: #3b82f6;
+    background: rgba(59, 130, 246, 0.08);
 }
 
 .form-select-dark {
-    background-color: var(--admin-bg) !important;
-    border-color: var(--admin-border) !important;
-    color: var(--admin-text) !important;
+    background-color: var(--admin-bg, #f8fafc) !important;
+    border-color: var(--admin-border, #e2e8f0) !important;
+    color: var(--admin-text, #0f172a) !important;
     border-radius: 10px !important;
     padding: 10px 14px !important;
     font-size: 0.95rem !important;
@@ -160,42 +240,88 @@
     color: #f1f5f9 !important;
 }
 
-.form-select-dark option {
-    background-color: var(--admin-card);
-    color: var(--admin-text);
+/* Test Connection Alert Box */
+.test-result-box {
+    display: none;
+    border-radius: 10px;
+    padding: 10px 16px;
+    font-size: 0.88rem;
+    margin-top: 12px;
+    animation: fadeIn 0.25s ease;
 }
 
-.dark-mode .form-select-dark option {
-    background-color: #18181b;
-    color: #f1f5f9;
+.test-result-box.is-success {
+    background: rgba(16, 185, 129, 0.12);
+    border: 1px solid #10b981;
+    color: #059669;
 }
 
-.smooth-fade {
-    animation: smoothFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+.test-result-box.is-error {
+    background: rgba(239, 68, 68, 0.12);
+    border: 1px solid #ef4444;
+    color: #dc2626;
 }
 
-@keyframes smoothFadeIn {
-    from { 
-        opacity: 0; 
-        transform: translateY(-6px); 
-    }
-    to { 
-        opacity: 1; 
-        transform: translateY(0); 
-    }
+/* Sticky Action Bar */
+.sticky-save-bar {
+    position: sticky;
+    bottom: 24px;
+    background: var(--admin-card, #ffffff);
+    border: 1px solid var(--admin-border, #e2e8f0);
+    border-radius: 14px;
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+    z-index: 100;
+    backdrop-filter: blur(8px);
+}
+
+.dark-mode .sticky-save-bar {
+    background: rgba(24, 24, 27, 0.92);
+    border-color: #27272a;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+}
+
+.btn-save-master {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: #ffffff;
+    border: none;
+    border-radius: 10px;
+    padding: 12px 28px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+}
+
+.btn-save-master:hover {
+    background: linear-gradient(135deg, #1d4ed8, #1e40af);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.45);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 </style>
 
-<div class="admin-board">
+<div class="admin-board config-container">
 
     <!-- Header -->
     <div class="admin-hero mb-4">
         <div>
             <div class="admin-title">
-                <i class="fas fa-cogs text-primary mr-2"></i>System Configuration &amp; AI Engine
+                <i class="fas fa-microchip text-primary mr-2"></i>System Configuration &amp; AI Engine
             </div>
             <div class="admin-sub">
-                Manage global AI engine providers, API security tokens, and inference model configurations
+                Step-by-step orchestrator for Global AI Routing, Provider API Key Pools, and Smart Feature Overrides
             </div>
         </div>
         <div class="admin-actions">
@@ -208,247 +334,358 @@
         </div>
     </div>
 
-    <!-- Provider Selection Tabs -->
-    <div class="config-tabs-wrapper">
-        <button type="button" class="provider-tab-btn tab-groq" id="tab_groq" onclick="selectProvider('groq')">
-            <i class="fas fa-bolt"></i>
-            <span>Groq (Fast Inference)</span>
-            {% if groq_key %}<span class="badge badge-warning badge-pill ml-1">Active</span>{% endif %}
-        </button>
-        <button type="button" class="provider-tab-btn tab-openai" id="tab_openai" onclick="selectProvider('openai')">
-            <i class="fas fa-brain"></i>
-            <span>OpenAI (ChatGPT)</span>
-            {% if openai_key %}<span class="badge badge-success badge-pill ml-1">Active</span>{% endif %}
-        </button>
-        <button type="button" class="provider-tab-btn tab-gemini" id="tab_gemini" onclick="selectProvider('gemini')">
-            <i class="fas fa-camera"></i>
-            <span>Gemini (Vision Scan)</span>
-            {% if gemini_key %}<span class="badge badge-primary badge-pill ml-1">Active</span>{% endif %}
-        </button>
-    </div>
-
-    <form action="{{ url_for('admin.settings') }}" method="POST" id="configForm">
+    <form action="{{ url_for('admin.settings') }}" method="POST" id="aiConfigForm">
         
-        <!-- Hidden provider select for backwards compatibility -->
-        <input type="hidden" name="active_provider" id="active_provider_input" value="groq">
+        <!-- Hidden input for selected active provider -->
+        <input type="hidden" name="active_provider" id="active_provider_input" value="{{ active_provider or 'groq' }}">
 
-        <!-- ===============================
-             1. GROQ SECTION
-        =============================== -->
-        <div id="groq_section" class="config-provider-box smooth-fade mb-4" style="display: none;">
-            <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom" style="border-color: var(--admin-border) !important;">
-                <div class="d-flex align-items-center gap-2" style="gap: 8px;">
-                    <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(249, 115, 22, 0.15); color: #f97316; display: grid; place-items: center; font-size: 1.1rem;">
-                        <i class="fas fa-bolt"></i>
-                    </div>
-                    <div>
-                        <h5 class="mb-0 font-weight-bold" style="color: var(--admin-text);">Groq Inference Engine</h5>
-                        <div class="text-muted small">High-throughput, ultra low-latency Llama &amp; Mixtral models</div>
-                    </div>
-                </div>
-                <span class="badge badge-warning px-2.5 py-1" style="font-size: 0.75rem;">Llama / Mixtral</span>
+        <!-- ====================================================================
+             STEP 1: GLOBAL AI ROUTING (PRIMARY ENGINE)
+             ==================================================================== -->
+        <div class="step-card">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="step-badge step-badge-1"><i class="fas fa-route"></i> Step 1 of 3</span>
+                <span class="text-muted small">Global System Default</span>
             </div>
-            
-            <div class="form-group mb-4">
-                <label for="groq_model" class="font-weight-bold mb-1" style="color: var(--admin-text); font-size: 0.9rem;">
-                    Primary Groq Model
-                </label>
-                <select class="form-select-dark custom-select" id="groq_model" name="openai_model">
-                    <option value="openai/gpt-oss-20b" {% if openai_model == "openai/gpt-oss-20b" %}selected{% endif %}>GPT-OSS 20B (Groq Fast)</option>
-                    <option value="qwen/qwen3.8-27b" {% if openai_model == "qwen/qwen3.8-27b" %}selected{% endif %}>Qwen 3.8 27B (Groq Fast)</option>
-                    <option value="llama-3.3-70b-versatile" {% if openai_model == "llama-3.3-70b-versatile" or not openai_model %}selected{% endif %}>Llama 3.3 70B (Versatile - Recommended)</option>
-                    <option value="llama-3.1-8b-instant" {% if openai_model == "llama-3.1-8b-instant" %}selected{% endif %}>Llama 3.1 8B (Instant)</option>
-                    <option value="mixtral-8x7b-32768" {% if openai_model == "mixtral-8x7b-32768" %}selected{% endif %}>Mixtral 8x7B</option>
-                </select>
-            </div>
+            <h2 class="step-title">Primary AI Engine Selection</h2>
+            <p class="step-subtitle">
+                Select the primary engine used across the application for the AI Translator, General Chatbot, and Default System Tasks.
+            </p>
 
-            <div class="form-group mb-2">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <label class="font-weight-bold mb-0" style="color: var(--admin-text); font-size: 0.9rem;">
-                        Groq API Key Pool (Load-Balanced)
-                    </label>
-                    <span class="text-muted small">Keys are automatically rotated to prevent rate limits</span>
-                </div>
-                <div id="groq_keys_container">
-                    {% set groq_keys_list = (groq_key or '').split(',') %}
-                    {% for key in groq_keys_list %}
-                        {% if key.strip() %}
-                        <div class="admin-input-group">
-                            <input type="password" class="admin-input-field" name="groq_key[]" value="{{ key.strip() }}" placeholder="gsk_...">
-                            <button class="admin-input-btn btn-eye" type="button" onclick="toggleKeyVisibility(this)" title="Show/Hide Key"><i class="fas fa-eye"></i></button>
-                            <button class="admin-input-btn" type="button" onclick="this.closest('.admin-input-group').remove()" title="Remove Key"><i class="fas fa-trash"></i></button>
+            <div class="provider-routing-grid">
+                <!-- 1. Groq Card -->
+                <div class="provider-radio-card {% if active_provider == 'groq' %}is-selected{% endif %}" 
+                     id="card_groq" onclick="setPrimaryProvider('groq')">
+                    <div class="card-check-pill"><i class="fas fa-check"></i></div>
+                    <div class="d-flex align-items-center gap-2 mb-2" style="gap: 10px;">
+                        <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(249, 115, 22, 0.15); color: #f97316; display: grid; place-items: center; font-size: 1.25rem;">
+                            <i class="fas fa-bolt"></i>
                         </div>
-                        {% endif %}
-                    {% endfor %}
-                    <!-- Always show at least one input if empty -->
-                    <div class="admin-input-group">
-                        <input type="password" class="admin-input-field" name="groq_key[]" placeholder="gsk_...">
-                        <button class="admin-input-btn btn-eye" type="button" onclick="toggleKeyVisibility(this)" title="Show/Hide Key"><i class="fas fa-eye"></i></button>
-                        <button class="admin-input-btn" type="button" onclick="this.closest('.admin-input-group').remove()" title="Remove Key"><i class="fas fa-trash"></i></button>
+                        <div>
+                            <h5 class="mb-0 font-weight-bold" style="color: var(--admin-text);">Groq Inference</h5>
+                            <span class="badge badge-warning px-2 py-0.5" style="font-size: 0.7rem;">Ultra-Fast LPU</span>
+                        </div>
+                    </div>
+                    <p class="text-muted small mb-2" style="line-height: 1.4;">
+                        Hardware-accelerated speed. Ideal for real-time translation, assistant responses, and high throughput.
+                    </p>
+                    <div class="d-flex align-items-center justify-content-between pt-2 border-top" style="border-color: var(--admin-border) !important;">
+                        <span class="small font-weight-bold" style="color: #ea580c;">Model: <span id="label_groq_model">{{ groq_model or 'openai/gpt-oss-120b' }}</span></span>
+                        <span class="text-muted small">{% if groq_key %}<i class="fas fa-check-circle text-success mr-1"></i>Keys Configured{% else %}<i class="fas fa-exclamation-circle text-warning mr-1"></i>No Keys{% endif %}</span>
                     </div>
                 </div>
-                <button type="button" class="btn btn-sm btn-admin-outline mt-2" onclick="addAdminKeyField('groq_keys_container', 'groq_key[]', 'gsk_...')">
-                    <i class="fas fa-plus mr-1"></i> Add Another Groq Key
+
+                <!-- 2. OpenAI Card -->
+                <div class="provider-radio-card {% if active_provider == 'openai' %}is-selected{% endif %}" 
+                     id="card_openai" onclick="setPrimaryProvider('openai')">
+                    <div class="card-check-pill"><i class="fas fa-check"></i></div>
+                    <div class="d-flex align-items-center gap-2 mb-2" style="gap: 10px;">
+                        <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(16, 185, 129, 0.15); color: #10b981; display: grid; place-items: center; font-size: 1.25rem;">
+                            <i class="fas fa-brain"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-0 font-weight-bold" style="color: var(--admin-text);">OpenAI ChatGPT</h5>
+                            <span class="badge badge-success px-2 py-0.5" style="font-size: 0.7rem;">Deep Reasoning</span>
+                        </div>
+                    </div>
+                    <p class="text-muted small mb-2" style="line-height: 1.4;">
+                        Industry standard GPT-4o models. Best-in-class multi-turn reasoning and nuanced language interpretation.
+                    </p>
+                    <div class="d-flex align-items-center justify-content-between pt-2 border-top" style="border-color: var(--admin-border) !important;">
+                        <span class="small font-weight-bold" style="color: #059669;">Model: <span id="label_openai_model">{{ openai_model or 'gpt-4o-mini' }}</span></span>
+                        <span class="text-muted small">{% if openai_key %}<i class="fas fa-check-circle text-success mr-1"></i>Keys Configured{% else %}<i class="fas fa-exclamation-circle text-warning mr-1"></i>No Keys{% endif %}</span>
+                    </div>
+                </div>
+
+                <!-- 3. Google Gemini Card -->
+                <div class="provider-radio-card {% if active_provider == 'gemini' %}is-selected{% endif %}" 
+                     id="card_gemini" onclick="setPrimaryProvider('gemini')">
+                    <div class="card-check-pill"><i class="fas fa-check"></i></div>
+                    <div class="d-flex align-items-center gap-2 mb-2" style="gap: 10px;">
+                        <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(59, 130, 246, 0.15); color: #3b82f6; display: grid; place-items: center; font-size: 1.25rem;">
+                            <i class="fas fa-camera"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-0 font-weight-bold" style="color: var(--admin-text);">Google Gemini</h5>
+                            <span class="badge badge-primary px-2 py-0.5" style="font-size: 0.7rem;">Multimodal Vision</span>
+                        </div>
+                    </div>
+                    <p class="text-muted small mb-2" style="line-height: 1.4;">
+                        Google's multimodal engine. Powers disease image analysis, visual scans, and long-context processing.
+                    </p>
+                    <div class="d-flex align-items-center justify-content-between pt-2 border-top" style="border-color: var(--admin-border) !important;">
+                        <span class="small font-weight-bold" style="color: #2563eb;">Model: <span id="label_gemini_model">{{ gemini_model or 'gemini-2.5-flash' }}</span></span>
+                        <span class="text-muted small">{% if gemini_key %}<i class="fas fa-check-circle text-success mr-1"></i>Keys Configured{% else %}<i class="fas fa-exclamation-circle text-warning mr-1"></i>No Keys{% endif %}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ====================================================================
+             STEP 2: ENGINE VAULT & CREDENTIALS (MODEL + API KEY POOL)
+             ==================================================================== -->
+        <div class="step-card">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="step-badge step-badge-2"><i class="fas fa-key"></i> Step 2 of 3</span>
+                <span class="text-muted small">Credentials &amp; Model Specs</span>
+            </div>
+            <h2 class="step-title">Provider Engines &amp; Key Vault</h2>
+            <p class="step-subtitle">
+                Configure models and API key pools for each provider. All configurations are preserved simultaneously so you can change primary routing anytime.
+            </p>
+
+            <!-- Provider Sub-Tabs -->
+            <div class="engine-tabs-nav">
+                <button type="button" class="engine-tab-btn tab-groq is-active" id="btn_panel_groq" onclick="showEnginePanel('groq')">
+                    <i class="fas fa-bolt"></i> Groq Configuration
+                </button>
+                <button type="button" class="engine-tab-btn tab-openai" id="btn_panel_openai" onclick="showEnginePanel('openai')">
+                    <i class="fas fa-brain"></i> OpenAI Configuration
+                </button>
+                <button type="button" class="engine-tab-btn tab-gemini" id="btn_panel_gemini" onclick="showEnginePanel('gemini')">
+                    <i class="fas fa-camera"></i> Google Gemini Configuration
                 </button>
             </div>
-        </div>
 
-        <!-- ===============================
-             2. OPENAI SECTION
-        =============================== -->
-        <div id="openai_section" class="config-provider-box smooth-fade mb-4" style="display: none;">
-            <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom" style="border-color: var(--admin-border) !important;">
-                <div class="d-flex align-items-center gap-2" style="gap: 8px;">
-                    <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(16, 185, 129, 0.15); color: #10b981; display: grid; place-items: center; font-size: 1.1rem;">
-                        <i class="fas fa-brain"></i>
+            <!-- Panel 1: Groq Engine -->
+            <div id="panel_groq" class="engine-config-panel">
+                <div class="form-group mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label for="groq_model_select" class="font-weight-bold mb-0" style="color: var(--admin-text); font-size: 0.9rem;">
+                            Groq Inference Model
+                        </label>
+                        <button type="button" class="btn btn-sm btn-link text-primary p-0" onclick="fetchLiveModels('groq')">
+                            <i class="fas fa-sync-alt mr-1" id="spin_groq"></i> Fetch Live Models from Groq
+                        </button>
                     </div>
-                    <div>
-                        <h5 class="mb-0 font-weight-bold" style="color: var(--admin-text);">OpenAI ChatGPT Engine</h5>
-                        <div class="text-muted small">GPT-4o &amp; GPT-4o Mini natural language capabilities</div>
-                    </div>
+                    <select class="form-select-dark custom-select" id="groq_model_select" name="groq_model" onchange="syncModelLabel('groq', this.value)">
+                        <option value="openai/gpt-oss-120b" {% if groq_model == 'openai/gpt-oss-120b' %}selected{% endif %}>openai/gpt-oss-120b (High Capacity - Recommended)</option>
+                        <option value="openai/gpt-oss-20b" {% if groq_model == 'openai/gpt-oss-20b' %}selected{% endif %}>openai/gpt-oss-20b (Ultra-Fast)</option>
+                        <option value="qwen/qwen3.8-27b" {% if groq_model == 'qwen/qwen3.8-27b' %}selected{% endif %}>qwen/qwen3.8-27b (Fast Qwen)</option>
+                        <option value="groq/compound" {% if groq_model == 'groq/compound' %}selected{% endif %}>groq/compound</option>
+                        <option value="groq/compound-mini" {% if groq_model == 'groq/compound-mini' %}selected{% endif %}>groq/compound-mini</option>
+                        {% if groq_model and groq_model not in ['openai/gpt-oss-120b', 'openai/gpt-oss-20b', 'qwen/qwen3.8-27b', 'groq/compound', 'groq/compound-mini'] %}
+                        <option value="{{ groq_model }}" selected>{{ groq_model }} (Custom)</option>
+                        {% endif %}
+                    </select>
                 </div>
-                <span class="badge badge-success px-2.5 py-1" style="font-size: 0.75rem;">GPT-4o</span>
-            </div>
-            
-            <div class="form-group mb-4">
-                <label for="openai_model_select" class="font-weight-bold mb-1" style="color: var(--admin-text); font-size: 0.9rem;">
-                    Primary OpenAI Model
-                </label>
-                <select class="form-select-dark custom-select" id="openai_model_select" name="openai_model" disabled>
-                    <option value="gpt-4o" {% if openai_model == "gpt-4o" %}selected{% endif %}>GPT-4o (Most Capable)</option>
-                    <option value="gpt-4o-mini" {% if openai_model == "gpt-4o-mini" %}selected{% endif %}>GPT-4o Mini (Fast &amp; Cost Efficient)</option>
-                </select>
-            </div>
 
-            <div class="form-group mb-2">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <label class="font-weight-bold mb-0" style="color: var(--admin-text); font-size: 0.9rem;">
-                        OpenAI API Key Pool
-                    </label>
-                    <span class="text-muted small">Keys are automatically rotated</span>
-                </div>
-                <div id="openai_keys_container">
-                    {% set openai_keys_list = (openai_key or '').split(',') %}
-                    {% for key in openai_keys_list %}
-                        {% if key.strip() %}
+                <div class="form-group mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label class="font-weight-bold mb-0" style="color: var(--admin-text); font-size: 0.9rem;">
+                            Groq API Key Pool (Load-Balanced)
+                        </label>
+                        <span class="text-muted small"><i class="fas fa-random mr-1"></i>Rotated on each request</span>
+                    </div>
+                    <div id="groq_keys_container">
+                        {% set groq_keys_list = (groq_key or '').split(',') %}
+                        {% for key in groq_keys_list %}
+                            {% if key.strip() %}
+                            <div class="admin-input-group">
+                                <input type="password" class="admin-input-field groq-key-input" name="groq_key[]" value="{{ key.strip() }}" placeholder="gsk_...">
+                                <button class="admin-input-btn btn-eye" type="button" onclick="toggleKeyVisibility(this)" title="Show/Hide"><i class="fas fa-eye"></i></button>
+                                <button class="admin-input-btn" type="button" onclick="this.closest('.admin-input-group').remove()" title="Remove Key"><i class="fas fa-trash"></i></button>
+                            </div>
+                            {% endif %}
+                        {% endfor %}
                         <div class="admin-input-group">
-                            <input type="password" class="admin-input-field" name="openai_key[]" value="{{ key.strip() }}" placeholder="sk-...">
-                            <button class="admin-input-btn btn-eye" type="button" onclick="toggleKeyVisibility(this)" title="Show/Hide Key"><i class="fas fa-eye"></i></button>
+                            <input type="password" class="admin-input-field groq-key-input" name="groq_key[]" placeholder="gsk_...">
+                            <button class="admin-input-btn btn-eye" type="button" onclick="toggleKeyVisibility(this)" title="Show/Hide"><i class="fas fa-eye"></i></button>
                             <button class="admin-input-btn" type="button" onclick="this.closest('.admin-input-group').remove()" title="Remove Key"><i class="fas fa-trash"></i></button>
                         </div>
-                        {% endif %}
-                    {% endfor %}
-                    <div class="admin-input-group">
-                        <input type="password" class="admin-input-field" name="openai_key[]" placeholder="sk-...">
-                        <button class="admin-input-btn btn-eye" type="button" onclick="toggleKeyVisibility(this)" title="Show/Hide Key"><i class="fas fa-eye"></i></button>
-                        <button class="admin-input-btn" type="button" onclick="this.closest('.admin-input-group').remove()" title="Remove Key"><i class="fas fa-trash"></i></button>
                     </div>
+                    <button type="button" class="btn btn-sm btn-admin-outline mt-1" onclick="addAdminKeyField('groq_keys_container', 'groq_key[]', 'gsk_...', 'groq-key-input')">
+                        <i class="fas fa-plus mr-1"></i> Add Another Groq Key
+                    </button>
                 </div>
-                <button type="button" class="btn btn-sm btn-admin-outline mt-2" onclick="addAdminKeyField('openai_keys_container', 'openai_key[]', 'sk-...')">
-                    <i class="fas fa-plus mr-1"></i> Add Another OpenAI Key
-                </button>
-            </div>
-        </div>
 
-        <!-- ===============================
-             3. GEMINI SECTION
-        =============================== -->
-        <div id="gemini_section" class="config-provider-box smooth-fade mb-4" style="display: none;">
-            <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom" style="border-color: var(--admin-border) !important;">
-                <div class="d-flex align-items-center gap-2" style="gap: 8px;">
-                    <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(59, 130, 246, 0.15); color: #3b82f6; display: grid; place-items: center; font-size: 1.1rem;">
-                        <i class="fas fa-camera"></i>
-                    </div>
-                    <div>
-                        <h5 class="mb-0 font-weight-bold" style="color: var(--admin-text);">Google Gemini Vision Engine</h5>
-                        <div class="text-muted small">Powers plant disease diagnostic scans and multimodal analysis</div>
-                    </div>
+                <!-- Test Connection Bar -->
+                <div class="d-flex align-items-center gap-2 pt-3 border-top" style="border-color: var(--admin-border) !important; gap: 10px;">
+                    <button type="button" class="btn btn-sm btn-admin-outline" onclick="testConnection('groq')">
+                        <i class="fas fa-bolt text-warning mr-1" id="test_spin_groq"></i> Test Groq Connection
+                    </button>
+                    <span class="text-muted small">Verify key validity and ping time</span>
                 </div>
-                <span class="badge badge-primary px-2.5 py-1" style="font-size: 0.75rem;">Vision AI</span>
+                <div id="test_result_groq" class="test-result-box"></div>
             </div>
-            
-            <div class="form-group mb-2">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <label class="font-weight-bold mb-0" style="color: var(--admin-text); font-size: 0.9rem;">
-                        Gemini API Key Pool
-                    </label>
-                    <span class="text-muted small">Keys for Google Cloud AI / Gemini Vision</span>
+
+            <!-- Panel 2: OpenAI Engine -->
+            <div id="panel_openai" class="engine-config-panel" style="display: none;">
+                <div class="form-group mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label for="openai_model_select" class="font-weight-bold mb-0" style="color: var(--admin-text); font-size: 0.9rem;">
+                            OpenAI Model
+                        </label>
+                        <button type="button" class="btn btn-sm btn-link text-primary p-0" onclick="fetchLiveModels('openai')">
+                            <i class="fas fa-sync-alt mr-1" id="spin_openai"></i> Fetch Live Models from OpenAI
+                        </button>
+                    </div>
+                    <select class="form-select-dark custom-select" id="openai_model_select" name="openai_model" onchange="syncModelLabel('openai', this.value)">
+                        <option value="gpt-4o-mini" {% if openai_model == 'gpt-4o-mini' %}selected{% endif %}>gpt-4o-mini (Fast, Intelligent &amp; Cost-Efficient - Recommended)</option>
+                        <option value="gpt-4o" {% if openai_model == 'gpt-4o' %}selected{% endif %}>gpt-4o (Most Capable Flagship)</option>
+                        <option value="gpt-3.5-turbo" {% if openai_model == 'gpt-3.5-turbo' %}selected{% endif %}>gpt-3.5-turbo</option>
+                        {% if openai_model and openai_model not in ['gpt-4o-mini', 'gpt-4o', 'gpt-3.5-turbo'] %}
+                        <option value="{{ openai_model }}" selected>{{ openai_model }} (Custom)</option>
+                        {% endif %}
+                    </select>
                 </div>
-                <div id="gemini_keys_container">
-                    {% set gemini_keys_list = (gemini_key or '').split(',') %}
-                    {% for key in gemini_keys_list %}
-                        {% if key.strip() %}
+
+                <div class="form-group mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label class="font-weight-bold mb-0" style="color: var(--admin-text); font-size: 0.9rem;">
+                            OpenAI API Key Pool
+                        </label>
+                        <span class="text-muted small"><i class="fas fa-random mr-1"></i>Rotated on each request</span>
+                    </div>
+                    <div id="openai_keys_container">
+                        {% set openai_keys_list = (openai_key or '').split(',') %}
+                        {% for key in openai_keys_list %}
+                            {% if key.strip() %}
+                            <div class="admin-input-group">
+                                <input type="password" class="admin-input-field openai-key-input" name="openai_key[]" value="{{ key.strip() }}" placeholder="sk-...">
+                                <button class="admin-input-btn btn-eye" type="button" onclick="toggleKeyVisibility(this)" title="Show/Hide"><i class="fas fa-eye"></i></button>
+                                <button class="admin-input-btn" type="button" onclick="this.closest('.admin-input-group').remove()" title="Remove Key"><i class="fas fa-trash"></i></button>
+                            </div>
+                            {% endif %}
+                        {% endfor %}
                         <div class="admin-input-group">
-                            <input type="password" class="admin-input-field" name="gemini_key[]" value="{{ key.strip() }}" placeholder="AIza...">
-                            <button class="admin-input-btn btn-eye" type="button" onclick="toggleKeyVisibility(this)" title="Show/Hide Key"><i class="fas fa-eye"></i></button>
+                            <input type="password" class="admin-input-field openai-key-input" name="openai_key[]" placeholder="sk-...">
+                            <button class="admin-input-btn btn-eye" type="button" onclick="toggleKeyVisibility(this)" title="Show/Hide"><i class="fas fa-eye"></i></button>
                             <button class="admin-input-btn" type="button" onclick="this.closest('.admin-input-group').remove()" title="Remove Key"><i class="fas fa-trash"></i></button>
                         </div>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-admin-outline mt-1" onclick="addAdminKeyField('openai_keys_container', 'openai_key[]', 'sk-...', 'openai-key-input')">
+                        <i class="fas fa-plus mr-1"></i> Add Another OpenAI Key
+                    </button>
+                </div>
+
+                <!-- Test Connection Bar -->
+                <div class="d-flex align-items-center gap-2 pt-3 border-top" style="border-color: var(--admin-border) !important; gap: 10px;">
+                    <button type="button" class="btn btn-sm btn-admin-outline" onclick="testConnection('openai')">
+                        <i class="fas fa-brain text-success mr-1" id="test_spin_openai"></i> Test OpenAI Connection
+                    </button>
+                    <span class="text-muted small">Verify key validity and ping time</span>
+                </div>
+                <div id="test_result_openai" class="test-result-box"></div>
+            </div>
+
+            <!-- Panel 3: Google Gemini Engine -->
+            <div id="panel_gemini" class="engine-config-panel" style="display: none;">
+                <div class="form-group mb-4">
+                    <label for="gemini_model_select" class="font-weight-bold mb-1" style="color: var(--admin-text); font-size: 0.9rem;">
+                        Google Gemini Model
+                    </label>
+                    <select class="form-select-dark custom-select" id="gemini_model_select" name="gemini_model" onchange="syncModelLabel('gemini', this.value)">
+                        <option value="gemini-2.5-flash" {% if gemini_model == 'gemini-2.5-flash' %}selected{% endif %}>gemini-2.5-flash (Fast Multimodal - Recommended)</option>
+                        <option value="gemini-1.5-flash" {% if gemini_model == 'gemini-1.5-flash' %}selected{% endif %}>gemini-1.5-flash (High Speed)</option>
+                        <option value="gemini-1.5-pro" {% if gemini_model == 'gemini-1.5-pro' %}selected{% endif %}>gemini-1.5-pro (Deep Multimodal Reasoning)</option>
+                        {% if gemini_model and gemini_model not in ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'] %}
+                        <option value="{{ gemini_model }}" selected>{{ gemini_model }} (Custom)</option>
                         {% endif %}
-                    {% endfor %}
-                    <div class="admin-input-group">
-                        <input type="password" class="admin-input-field" name="gemini_key[]" placeholder="AIza...">
-                        <button class="admin-input-btn btn-eye" type="button" onclick="toggleKeyVisibility(this)" title="Show/Hide Key"><i class="fas fa-eye"></i></button>
-                        <button class="admin-input-btn" type="button" onclick="this.closest('.admin-input-group').remove()" title="Remove Key"><i class="fas fa-trash"></i></button>
-                    </div>
+                    </select>
                 </div>
-                <button type="button" class="btn btn-sm btn-admin-outline mt-2" onclick="addAdminKeyField('gemini_keys_container', 'gemini_key[]', 'AIza...')">
-                    <i class="fas fa-plus mr-1"></i> Add Another Gemini Key
-                </button>
+
+                <div class="form-group mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label class="font-weight-bold mb-0" style="color: var(--admin-text); font-size: 0.9rem;">
+                            Gemini API Key Pool (Vision &amp; Scans)
+                        </label>
+                        <span class="text-muted small">Google Cloud AI Studio key</span>
+                    </div>
+                    <div id="gemini_keys_container">
+                        {% set gemini_keys_list = (gemini_key or '').split(',') %}
+                        {% for key in gemini_keys_list %}
+                            {% if key.strip() %}
+                            <div class="admin-input-group">
+                                <input type="password" class="admin-input-field gemini-key-input" name="gemini_key[]" value="{{ key.strip() }}" placeholder="AIza...">
+                                <button class="admin-input-btn btn-eye" type="button" onclick="toggleKeyVisibility(this)" title="Show/Hide"><i class="fas fa-eye"></i></button>
+                                <button class="admin-input-btn" type="button" onclick="this.closest('.admin-input-group').remove()" title="Remove Key"><i class="fas fa-trash"></i></button>
+                            </div>
+                            {% endif %}
+                        {% endfor %}
+                        <div class="admin-input-group">
+                            <input type="password" class="admin-input-field gemini-key-input" name="gemini_key[]" placeholder="AIza...">
+                            <button class="admin-input-btn btn-eye" type="button" onclick="toggleKeyVisibility(this)" title="Show/Hide"><i class="fas fa-eye"></i></button>
+                            <button class="admin-input-btn" type="button" onclick="this.closest('.admin-input-group').remove()" title="Remove Key"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-admin-outline mt-1" onclick="addAdminKeyField('gemini_keys_container', 'gemini_key[]', 'AIza...', 'gemini-key-input')">
+                        <i class="fas fa-plus mr-1"></i> Add Another Gemini Key
+                    </button>
+                </div>
+
+                <!-- Test Connection Bar -->
+                <div class="d-flex align-items-center gap-2 pt-3 border-top" style="border-color: var(--admin-border) !important; gap: 10px;">
+                    <button type="button" class="btn btn-sm btn-admin-outline" onclick="testConnection('gemini')">
+                        <i class="fas fa-camera text-primary mr-1" id="test_spin_gemini"></i> Test Gemini Connection
+                    </button>
+                    <span class="text-muted small">Verify key validity and ping time</span>
+                </div>
+                <div id="test_result_gemini" class="test-result-box"></div>
             </div>
         </div>
 
-        <!-- ===============================
-             4. EXPERT SYSTEM OVERRIDE
-        =============================== -->
-        <div class="config-provider-box mb-4">
-            <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom" style="border-color: var(--admin-border) !important;">
-                <div class="d-flex align-items-center gap-2" style="gap: 8px;">
-                    <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(168, 85, 247, 0.15); color: #a855f7; display: grid; place-items: center; font-size: 1.1rem;">
-                        <i class="fas fa-user-tie"></i>
-                    </div>
-                    <div>
-                        <h5 class="mb-0 font-weight-bold" style="color: var(--admin-text);">Smart Expert System AI</h5>
-                        <div class="text-muted small">Override the AI engine specifically for Expert Diagnosis & Chat</div>
-                    </div>
+        <!-- ====================================================================
+             STEP 3: SMART EXPERT SYSTEM OVERRIDE (CHAT & NEWS & DIAGNOSIS)
+             ==================================================================== -->
+        <div class="step-card">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="step-badge step-badge-3"><i class="fas fa-user-tie"></i> Step 3 of 3</span>
+                <span class="text-muted small">Domain Specific Routing</span>
+            </div>
+            <h2 class="step-title">Smart Expert System AI Override</h2>
+            <p class="step-subtitle">
+                Specifically override the AI engine for the Agricultural Expert Chatbot, Diagnosis Consultation, and Farmer News Wire.
+            </p>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="expert_provider" class="font-weight-bold mb-1" style="color: var(--admin-text); font-size: 0.9rem;">
+                        Expert Override Engine
+                    </label>
+                    <select class="form-select-dark custom-select" id="expert_provider" name="expert_provider" onchange="updateExpertModels()">
+                        <option value="" {% if not expert_provider %}selected{% endif %}>Use Global System Default (Recommended)</option>
+                        <option value="groq" {% if expert_provider == "groq" %}selected{% endif %}>Groq (Fast Inference)</option>
+                        <option value="openai" {% if expert_provider == "openai" %}selected{% endif %}>OpenAI (ChatGPT)</option>
+                        <option value="gemini" {% if expert_provider == "gemini" %}selected{% endif %}>Google Gemini (Google AI)</option>
+                    </select>
                 </div>
-                <span class="badge badge-secondary px-2.5 py-1" style="font-size: 0.75rem;">Override</span>
+
+                <div class="col-md-6 mb-3" id="expert_model_group" style="{% if not expert_provider %}display: none;{% endif %}">
+                    <label for="expert_model" class="font-weight-bold mb-1" style="color: var(--admin-text); font-size: 0.9rem;">
+                        Expert System Model
+                    </label>
+                    <select class="form-select-dark custom-select" id="expert_model" name="expert_model">
+                        <!-- Populated by JS -->
+                    </select>
+                    <input type="hidden" id="saved_expert_model" value="{{ expert_model }}">
+                </div>
             </div>
-            
-            <div class="form-group mb-3">
-                <label for="expert_provider" class="font-weight-bold mb-1" style="color: var(--admin-text); font-size: 0.9rem;">
-                    Expert System Provider
-                </label>
-                <select class="form-select-dark custom-select" id="expert_provider" name="expert_provider" onchange="updateExpertModels()">
-                    <option value="" {% if not expert_provider %}selected{% endif %}>Use Global System Default (Above)</option>
-                    <option value="groq" {% if expert_provider == "groq" %}selected{% endif %}>Groq (Fast Inference)</option>
-                    <option value="openai" {% if expert_provider == "openai" %}selected{% endif %}>OpenAI (ChatGPT)</option>
-                    <option value="gemini" {% if expert_provider == "gemini" %}selected{% endif %}>Gemini (Google AI)</option>
-                </select>
-            </div>
-            
-            <div class="form-group mb-2" id="expert_model_group" style="{% if not expert_provider %}display: none;{% endif %}">
-                <label for="expert_model" class="font-weight-bold mb-1" style="color: var(--admin-text); font-size: 0.9rem;">
-                    Expert System Model
-                </label>
-                <select class="form-select-dark custom-select" id="expert_model" name="expert_model">
-                    <!-- Options populated by JS -->
-                </select>
-                <input type="hidden" id="saved_expert_model" value="{{ expert_model }}">
+
+            <div class="alert alert-light border mt-2 mb-0 d-flex align-items-start gap-2" style="background: var(--admin-bg); border-color: var(--admin-border) !important; font-size: 0.85rem; gap: 8px;">
+                <i class="fas fa-info-circle text-primary mt-1"></i>
+                <div>
+                    <strong>Pro-Tip:</strong> Leaving this set to <em>"Use Global System Default"</em> ensures your entire platform stays uniformly synchronized with the Primary Engine chosen in Step 1.
+                </div>
             </div>
         </div>
 
-        <!-- Save Button -->
-        <div class="d-flex justify-content-end mt-4">
-            <button type="submit" class="btn-save-clean">
-                <i class="fas fa-check-circle"></i>
-                <span>Save System Configuration</span>
+        <!-- Sticky Save Action Bar -->
+        <div class="sticky-save-bar">
+            <div>
+                <strong>System Configuration Ready</strong>
+                <div class="text-muted small">Changes take effect immediately across all user sessions upon saving.</div>
+            </div>
+            <button type="submit" class="btn-save-master">
+                <i class="fas fa-save"></i> Save All AI Configurations
             </button>
         </div>
-    </form>
 
+    </form>
 </div>
 
 <script>
+// Key Visibility Toggle
 function toggleKeyVisibility(btn) {
     const group = btn.closest('.admin-input-group');
     const input = group ? group.querySelector('.admin-input-field') : null;
@@ -462,47 +699,52 @@ function toggleKeyVisibility(btn) {
     }
 }
 
-function addAdminKeyField(containerId, inputName, placeholder) {
+// Add New Key Input Field
+function addAdminKeyField(containerId, inputName, placeholder, extraClass) {
     const container = document.getElementById(containerId);
     if (!container) return;
     const div = document.createElement('div');
-    div.className = 'admin-input-group smooth-fade';
-    div.innerHTML = `<input type="password" class="admin-input-field" name="${inputName}" placeholder="${placeholder}">
-                     <button class="admin-input-btn btn-eye" type="button" onclick="toggleKeyVisibility(this)" title="Show/Hide Key"><i class="fas fa-eye"></i></button>
-                     <button class="admin-input-btn" type="button" onclick="this.closest('.admin-input-group').remove()" title="Remove Key"><i class="fas fa-trash"></i></button>`;
+    div.className = 'admin-input-group';
+    div.innerHTML = `
+        <input type="password" class="admin-input-field ${extraClass || ''}" name="${inputName}" placeholder="${placeholder}">
+        <button class="admin-input-btn btn-eye" type="button" onclick="toggleKeyVisibility(this)" title="Show/Hide"><i class="fas fa-eye"></i></button>
+        <button class="admin-input-btn" type="button" onclick="this.closest('.admin-input-group').remove()" title="Remove Key"><i class="fas fa-trash"></i></button>
+    `;
     container.appendChild(div);
+    div.querySelector('input').focus();
 }
 
-function selectProvider(provider) {
-    const groqSection = document.getElementById('groq_section');
-    const openaiSection = document.getElementById('openai_section');
-    const geminiSection = document.getElementById('gemini_section');
-    const activeInput = document.getElementById('active_provider_input');
+// Step 1: Set Primary Provider
+function setPrimaryProvider(provider) {
+    document.getElementById('active_provider_input').value = provider;
     
-    const tabGroq = document.getElementById('tab_groq');
-    const tabOpenai = document.getElementById('tab_openai');
-    const tabGemini = document.getElementById('tab_gemini');
-    
-    const groqModel = document.getElementById('groq_model');
-    const openaiModel = document.getElementById('openai_model_select');
-    
-    // Toggle Tab Active Classes
-    tabGroq.classList.toggle('is-active', provider === 'groq');
-    tabOpenai.classList.toggle('is-active', provider === 'openai');
-    tabGemini.classList.toggle('is-active', provider === 'gemini');
-    
-    // Reset visibility
-    groqSection.style.display = (provider === 'groq') ? 'block' : 'none';
-    openaiSection.style.display = (provider === 'openai') ? 'block' : 'none';
-    geminiSection.style.display = (provider === 'gemini') ? 'block' : 'none';
-    
-    if (activeInput) activeInput.value = provider;
-    
-    // Enable/disable appropriate model inputs
-    if (groqModel) groqModel.disabled = (provider !== 'groq');
-    if (openaiModel) openaiModel.disabled = (provider !== 'openai');
+    // Highlight selected card
+    document.querySelectorAll('.provider-radio-card').forEach(card => card.classList.remove('is-selected'));
+    const targetCard = document.getElementById('card_' + provider);
+    if (targetCard) targetCard.classList.add('is-selected');
+
+    // Automatically navigate Step 2 sub-panel to match
+    showEnginePanel(provider);
 }
 
+// Step 2: Show Engine Panel
+function showEnginePanel(provider) {
+    document.querySelectorAll('.engine-config-panel').forEach(p => p.style.display = 'none');
+    document.querySelectorAll('.engine-tab-btn').forEach(b => b.classList.remove('is-active'));
+    
+    const panel = document.getElementById('panel_' + provider);
+    const btn = document.getElementById('btn_panel_' + provider);
+    if (panel) panel.style.display = 'block';
+    if (btn) btn.classList.add('is-active');
+}
+
+// Sync model labels on Step 1 cards
+function syncModelLabel(provider, modelValue) {
+    const label = document.getElementById('label_' + provider + '_model');
+    if (label) label.textContent = modelValue;
+}
+
+// Step 3: Update Expert Models
 function updateExpertModels() {
     const provider = document.getElementById('expert_provider').value;
     const modelGroup = document.getElementById('expert_model_group');
@@ -515,58 +757,139 @@ function updateExpertModels() {
     }
     
     modelGroup.style.display = 'block';
-    modelSelect.innerHTML = ''; // Clear
+    modelSelect.innerHTML = '';
     
     let options = [];
     if (provider === 'groq') {
         options = [
-            {value: "openai/gpt-oss-20b", text: "GPT-OSS 20B (Groq Fast)"},
-            {value: "qwen/qwen3.8-27b", text: "Qwen 3.8 27B (Groq Fast)"},
-            {value: "llama-3.3-70b-versatile", text: "Llama 3.3 70B (Versatile - Recommended)"},
-            {value: "llama-3.1-8b-instant", text: "Llama 3.1 8B (Instant)"},
-            {value: "mixtral-8x7b-32768", text: "Mixtral 8x7B"}
+            {value: "openai/gpt-oss-120b", text: "openai/gpt-oss-120b (Recommended)"},
+            {value: "openai/gpt-oss-20b", text: "openai/gpt-oss-20b (Fast)"},
+            {value: "qwen/qwen3.8-27b", text: "qwen/qwen3.8-27b"},
+            {value: "groq/compound", text: "groq/compound"}
         ];
     } else if (provider === 'openai') {
         options = [
-            {value: "gpt-4o", text: "GPT-4o (Most Capable)"},
-            {value: "gpt-4o-mini", text: "GPT-4o Mini (Fast & Cost Efficient)"}
+            {value: "gpt-4o-mini", text: "gpt-4o-mini (Fast & Cost Efficient - Recommended)"},
+            {value: "gpt-4o", text: "gpt-4o (Most Capable)"}
         ];
     } else if (provider === 'gemini') {
         options = [
-            {value: "gemini-3.6-flash", text: "Gemini 3.6 Flash (Fast)"},
-            {value: "gemini-3.7-flash", text: "Gemini 3.7 Flash (Latest)"}
+            {value: "gemini-2.5-flash", text: "gemini-2.5-flash (Recommended)"},
+            {value: "gemini-1.5-flash", text: "gemini-1.5-flash"},
+            {value: "gemini-1.5-pro", text: "gemini-1.5-pro"}
         ];
     }
     
+    let matched = false;
     options.forEach(opt => {
         const option = document.createElement('option');
         option.value = opt.value;
         option.textContent = opt.text;
         if (opt.value === savedModel) {
             option.selected = true;
+            matched = true;
         }
         modelSelect.appendChild(option);
     });
+
+    if (!matched && savedModel && savedModel.trim()) {
+        const customOpt = document.createElement('option');
+        customOpt.value = savedModel;
+        customOpt.textContent = savedModel + ' (Custom)';
+        customOpt.selected = true;
+        modelSelect.appendChild(customOpt);
+    }
 }
 
-// Initial Selection
+// Fetch Live Models AJAX
+function fetchLiveModels(provider) {
+    const spin = document.getElementById('spin_' + provider);
+    if (spin) spin.classList.add('fa-spin');
+
+    // Get current first key if typed
+    let keyInput = document.querySelector('.' + provider + '-key-input');
+    let apiKey = keyInput ? keyInput.value.trim() : '';
+
+    fetch("{{ url_for('admin.fetch_provider_models') }}", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ provider: provider, api_key: apiKey })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (spin) spin.classList.remove('fa-spin');
+        if (data.success && data.models && data.models.length > 0) {
+            const select = document.getElementById(provider + '_model_select');
+            if (select) {
+                const currentVal = select.value;
+                select.innerHTML = '';
+                data.models.forEach(m => {
+                    const opt = document.createElement('option');
+                    opt.value = m;
+                    opt.textContent = m;
+                    if (m === currentVal) opt.selected = true;
+                    select.appendChild(opt);
+                });
+                syncModelLabel(provider, select.value);
+                alert('Successfully fetched ' + data.models.length + ' live models for ' + provider.toUpperCase() + '!');
+            }
+        } else {
+            alert('Failed to fetch models: ' + (data.error || 'Check your API key.'));
+        }
+    })
+    .catch(err => {
+        if (spin) spin.classList.remove('fa-spin');
+        alert('Network error while fetching models: ' + err);
+    });
+}
+
+// Test Connection AJAX
+function testConnection(provider) {
+    const resultBox = document.getElementById('test_result_' + provider);
+    const spin = document.getElementById('test_spin_' + provider);
+    
+    // Grab first non-empty key from inputs
+    let keys = [];
+    document.querySelectorAll('.' + provider + '-key-input').forEach(inp => {
+        if (inp.value.trim()) keys.push(inp.value.trim());
+    });
+    const apiKey = keys.length > 0 ? keys[0] : '';
+
+    const modelSelect = document.getElementById(provider + '_model_select');
+    const model = modelSelect ? modelSelect.value : '';
+
+    resultBox.style.display = 'block';
+    resultBox.className = 'test-result-box';
+    resultBox.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Testing live connection to ' + provider.toUpperCase() + '...';
+
+    fetch("{{ url_for('admin.test_ai_connection') }}", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            provider: provider,
+            api_key: apiKey,
+            model: model
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            resultBox.className = 'test-result-box is-success';
+            resultBox.innerHTML = '<i class="fas fa-check-circle mr-1"></i> <strong>' + data.message + '</strong>';
+        } else {
+            resultBox.className = 'test-result-box is-error';
+            resultBox.innerHTML = '<i class="fas fa-times-circle mr-1"></i> <strong>Connection Failed:</strong> ' + (data.error || 'Invalid credentials or model.');
+        }
+    })
+    .catch(err => {
+        resultBox.className = 'test-result-box is-error';
+        resultBox.innerHTML = '<i class="fas fa-exclamation-triangle mr-1"></i> <strong>Error:</strong> ' + err;
+    });
+}
+
+// Initialize on DOM Ready
 document.addEventListener("DOMContentLoaded", function() {
-    const currentModel = "{{ openai_model }}";
-    let defaultProvider = 'groq';
-    
-    if (currentModel.includes('gpt')) {
-        defaultProvider = 'openai';
-    } else if ("{{ gemini_key }}" !== "" && !currentModel) {
-        defaultProvider = 'gemini';
-    }
-    
-    // Always respect saved active_provider if set, over heuristics above
-    // (This template gets active_provider from routes, but wait, we didn't pass it!)
-    
-    selectProvider(defaultProvider);
     updateExpertModels();
 });
-
 </script>
 {% endblock %}
-

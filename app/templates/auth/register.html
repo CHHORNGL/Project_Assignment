@@ -67,6 +67,21 @@
         <form method="POST" action="" class="auth-clean-form">
             {{ form.hidden_tag() }}
 
+            <div style="background: var(--auth-input-bg, #f8fafc); border: 1px solid var(--auth-input-border, #cbd5e1); border-radius: 12px; padding: 16px; margin-bottom: 24px; display: flex; align-items: flex-start; gap: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+                <div style="background: rgba(245, 158, 11, 0.15); color: #d97706; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 0.85rem;">
+                    <i class="fas fa-info"></i>
+                </div>
+                <div style="font-size: 0.85rem; color: var(--auth-panel-muted, #64748b); line-height: 1.5;">
+                    {% if current_lang == 'km' %}
+                    <strong style="color: var(--auth-panel-text, #0f172a); display: block; margin-bottom: 4px;">សេចក្តីជូនដំណឹងសំខាន់</strong>
+                    លេខកូដផ្ទៀងផ្ទាត់ (OTP) នឹងត្រូវបានផ្ញើទៅកាន់អ៊ីមែលរបស់អ្នកដោយស្វ័យប្រវត្តិ។ ប្រសិនបើអ្នកមិនឃើញវានៅក្នុងប្រអប់សារ (Inbox) ទេ សូមពិនិត្យមើលក្នុង <strong>Spam ឬ Junk</strong> របស់អ្នក។
+                    {% else %}
+                    <strong style="color: var(--auth-panel-text, #0f172a); display: block; margin-bottom: 4px;">Important Notice</strong>
+                    The OTP verification code is sent to your email automatically. If it doesn't appear in your Inbox, please check your <strong>Gmail Spam or Junk folder</strong>.
+                    {% endif %}
+                </div>
+            </div>
+
             <div class="auth-form-group">
                 <label for="name" class="auth-form-label">{{ form.full_name.label.text }}</label>
                 <div class="auth-input-box">

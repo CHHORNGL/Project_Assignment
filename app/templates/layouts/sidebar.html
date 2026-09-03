@@ -932,18 +932,6 @@ body.icon-nav .app-sidebar .nav-link[data-tooltip]:hover::after,
         </a>
     </li>
 
-    {% set rule_history_url = url_for("farmer.rule_inference_history") %}
-    <li class="nav-item">
-        <a class="nav-link {% if path.startswith(rule_history_url) %}active{% endif %}"
-           href="{{ rule_history_url }}"
-           data-tooltip="{{ t("rule_history") }}"
-           aria-label="{{ t("rule_history") }}">
-            <span class="nav-icon"><i class="far fa-clock"></i></span>
-            <span class="nav-label">{{ t("rule_history") }}</span>
-            <span class="nav-chevron"><i class="fas fa-chevron-right"></i></span>
-        </a>
-    </li>
-
     <li class="nav-item">
         <a class="nav-link {% if path.startswith("/farmer/chat") or path.startswith("/farmer/history/ai") %}active{% endif %}"
            href="{{ url_for("farmer.chat") }}"
@@ -951,6 +939,17 @@ body.icon-nav .app-sidebar .nav-link[data-tooltip]:hover::after,
            aria-label="{{ t("ask_expert") }}">
             <span class="nav-icon"><i class="far fa-comments"></i></span>
             <span class="nav-label">{{ t("ask_expert") }}</span>
+            <span class="nav-chevron"><i class="fas fa-chevron-right"></i></span>
+        </a>
+    </li>
+
+    <li class="nav-item">
+        <a class="nav-link {% if path == url_for("farmer.news") %}active{% endif %}"
+           href="{{ url_for("farmer.news") }}"
+           data-tooltip="{{ t("agriculture_news", default="News") }}"
+           aria-label="{{ t("agriculture_news", default="News") }}">
+            <span class="nav-icon"><i class="far fa-newspaper"></i></span>
+            <span class="nav-label">{{ t("agriculture_news", default="News") }}</span>
             <span class="nav-chevron"><i class="fas fa-chevron-right"></i></span>
         </a>
     </li>

@@ -27,20 +27,19 @@
         <a href="{{ url_for('farmer.diagnosis_history') }}"
            class="{% if path.startswith('/farmer/diagnoses') or path.startswith('/farmer/result') %}active{% endif %}">
             <i class="far fa-file-alt"></i>
-            <span>{{ t("diagnoses_label") }}</span>
-        </a>
-
-        {% set rule_history_url = url_for('farmer.rule_inference_history') %}
-        <a href="{{ rule_history_url }}"
-           class="{% if path.startswith(rule_history_url) %}active{% endif %}">
-            <i class="far fa-clock"></i>
-            <span>{{ t("rule_history") }}</span>
+            <span>{% if current_lang == 'km' %}ប្រវត្តិរោគវិនិច្ឆ័យ{% else %}History Diagnosed{% endif %}</span>
         </a>
 
         <a href="{{ url_for('farmer.chat') }}"
            class="{% if path.startswith('/farmer/chat') or path.startswith('/farmer/history/ai') %}active{% endif %}">
             <i class="far fa-comments"></i>
             <span>{{ t("ask_expert") }}</span>
+        </a>
+
+        <a href="{{ url_for('farmer.news') }}"
+           class="{% if path == url_for('farmer.news') %}active{% endif %}">
+            <i class="far fa-newspaper"></i>
+            <span>{{ t("agriculture_news") }}</span>
         </a>
 
         <a href="{{ url_for('farmer.detail') }}"

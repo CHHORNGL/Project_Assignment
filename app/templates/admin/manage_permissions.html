@@ -34,26 +34,35 @@
                 </button>
             </div>
 
-            <div class="permissions-list">
-                {% for perm in permissions %}
-                <label class="permission-row" for="perm_{{ perm.id }}">
-                    <div class="permission-info">
-                        <div class="permission-code">{{ perm.code }}</div>
-                        <div class="permission-desc">{{ perm.name }}</div>
+            <div class="permissions-grouped">
+                {% for group_name, perms in grouped_permissions.items() %}
+                <div class="permission-group mb-4">
+                    <h6 class="group-title mb-3" style="font-weight: 700; color: var(--admin-accent); text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.85rem; border-bottom: 2px solid var(--admin-border); padding-bottom: 8px;">
+                        <i class="fas fa-layer-group mr-2"></i>{{ group_name }}
+                    </h6>
+                    <div class="permissions-list">
+                        {% for perm in perms %}
+                        <label class="permission-row" for="perm_{{ perm.id }}">
+                            <div class="permission-info">
+                                <div class="permission-code">{{ perm.code }}</div>
+                                <div class="permission-desc">{{ perm.name }}</div>
+                            </div>
+                            
+                            <div class="pure-toggle">
+                                <input type="checkbox"
+                                       class="pure-toggle-input"
+                                       id="perm_{{ perm.id }}"
+                                       name="permissions"
+                                       value="{{ perm.id }}"
+                                       {% if perm in role.permissions %}checked{% endif %}>
+                                <div class="pure-toggle-bg">
+                                    <div class="pure-toggle-knob"></div>
+                                </div>
+                            </div>
+                        </label>
+                        {% endfor %}
                     </div>
-                    
-                    <div class="pure-toggle">
-                        <input type="checkbox"
-                               class="pure-toggle-input"
-                               id="perm_{{ perm.id }}"
-                               name="permissions"
-                               value="{{ perm.id }}"
-                               {% if perm in role.permissions %}checked{% endif %}>
-                        <div class="pure-toggle-bg">
-                            <div class="pure-toggle-knob"></div>
-                        </div>
-                    </div>
-                </label>
+                </div>
                 {% endfor %}
             </div>
 

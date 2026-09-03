@@ -71,7 +71,7 @@
 .hero-marquee-content {
     display: inline-flex;
     white-space: nowrap;
-    animation: smoothMarquee 32s linear infinite;
+    animation: smoothMarquee 120s linear infinite;
 }
 .hero-announcement-strip:hover .hero-marquee-content,
 .hero-marquee-content.is-paused {
@@ -566,6 +566,15 @@ document.addEventListener("DOMContentLoaded", function() {
     const pauseIcon = document.getElementById("marqueePauseIcon");
     const dismissBtn = document.getElementById("btnCorpDismiss");
     const banner = document.getElementById("corpAnnouncementBar");
+
+    if (marqueeContent) {
+        // Ensure steady, calm reading speed (~40px/sec, minimum 110 seconds)
+        const scrollW = marqueeContent.scrollWidth;
+        if (scrollW > 0) {
+            const calmDuration = Math.max(110, Math.round(scrollW / 40));
+            marqueeContent.style.animationDuration = calmDuration + "s";
+        }
+    }
 
     if (pauseBtn && marqueeContent) {
         let isPaused = false;

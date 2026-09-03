@@ -11888,17 +11888,21 @@ body.qb-dragging * {
 
 /* =========================================
    MODAL Z-INDEX & OVERLAY FIX
-   (Ensure modals appear strictly above backdrop and layouts)
+   (Ensure modals appear strictly above backdrop, fixed navbars, and layouts)
 ========================================= */
 .modal-backdrop {
-    z-index: 1040 !important;
+    z-index: 10490 !important;
 }
 .modal {
-    z-index: 1050 !important;
+    z-index: 10500 !important;
 }
 .modal-dialog {
-    z-index: 1060 !important;
+    z-index: 10510 !important;
     position: relative !important;
+}
+
+body.modal-open .farmer-topnav {
+    z-index: 1000 !important;
 }
 
 

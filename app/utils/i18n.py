@@ -104,7 +104,7 @@ TRANSLATIONS = {
         "recent_activity": "Recent activity",
         "no_recent_activity": "No recent activity logged.",
         "operations_volume": "Operations volume",
-        "diagnoses_label": "Diagnoses",
+        "diagnoses_label": "History Diagnosed",
         "chats_label": "Chats",
         "actions": "Actions",
         "active": "Active",
@@ -766,7 +766,7 @@ TRANSLATIONS = {
         "no_recent_activity": "មិនមានសកម្មភាពថ្មីៗទេ។",
         "no_diseases_found": "មិនមានជំងឺទេ។",
         "operations_volume": "បរិមាណប្រតិបត្តិការ",
-        "diagnoses_label": "រោគវិនិច្ឆ័យ",
+        "diagnoses_label": "ប្រវត្តិរោគវិនិច្ឆ័យ",
         "chats_label": "ជជែក",
         "light": "ភ្លឺ",
         "dark": "ងងឹត",
@@ -2213,11 +2213,13 @@ TRANSLATIONS["en"].update({
     "instant_scan_sub": "Scan crop image and diagnose immediately using API + database rules.",
     "instant_scan_cta": "Instant Scan",
     "scan_auto_submitting": "Submitting diagnosis automatically...",
+    "agriculture_news": "News",
 })
 
 TRANSLATIONS["km"].update({
     "instant_scan_title": "ស្កេនវិនិច្ឆ័យភ្លាមៗ",
     "instant_scan_sub": "ស្កេនរូបដំណាំ ហើយវិនិច្ឆ័យភ្លាមៗដោយប្រើ API និងទិន្នន័យក្នុង Database។",
+    "agriculture_news": "ព័ត៌មាន",
     "instant_scan_cta": "ស្កេនភ្លាមៗ",
     "scan_auto_submitting": "កំពុងបញ្ជូនការវិនិច្ឆ័យដោយស្វ័យប្រវត្តិ...",
 })

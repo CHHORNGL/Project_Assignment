@@ -1465,6 +1465,50 @@ def detail():
         team=PROJECT_TEAM,
     )
 
+# ---------------------------------------------------------------------------
+# NEWS (AI GENERATED)
+# ---------------------------------------------------------------------------
+@farmer_bp.route("/news")
+@farmer_required
+def news():
+    from app.models.marquee import Marquee
+    active_marquees = Marquee.query.filter_by(is_active=True).order_by(Marquee.sort_order).all()
+    marquee_list = [
+        {
+            "id": m.id,
+            "text": m.text,
+            "text_kh": m.text_kh,
+            "created_at": m.created_at.strftime("%Y-%m-%d") if m.created_at else ""
+        }
+        for m in active_marquees
+    ]
+    return render_template("farmer/news.html", marquees=active_marquees, marquees_data=marquee_list)
+
+@farmer_bp.route("/api/generate_news")
+@farmer_required
+def api_generate_news():
+    region = request.args.get("region", "cambodia").strip().lower()
+    lang = request.args.get("lang", "en").strip().lower()
+    from app.services.openai_assistant import generate_agriculture_news
+    news_data = generate_agriculture_news(region=region, lang=lang)
+
+    from app.models.marquee import Marquee
+    active_marquees = Marquee.query.filter_by(is_active=True).order_by(Marquee.sort_order).all()
+    marquee_list = [
+        {
+            "id": m.id,
+            "text": m.text,
+            "text_kh": m.text_kh,
+            "created_at": m.created_at.strftime("%Y-%m-%d") if m.created_at else ""
+        }
+        for m in active_marquees
+    ]
+
+    return jsonify({
+        "news": news_data,
+        "marquees": marquee_list
+    })
+
 @farmer_bp.route("/premium/upgrade")
 @farmer_required
 def premium_upgrade():

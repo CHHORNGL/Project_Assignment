@@ -1,0 +1,2565 @@
+{% extends "layouts/farmer_shell.html" %}
+{% block title %}{% if current_lang == 'km' %}សារព័ត៌មានកសិកម្ម | The Agri Chronicle{% else %}The Agri Chronicle | Agricultural Intelligence & News{% endif %} | AGRI SYSTEM{% endblock %}
+
+{% block content %}
+<!-- Google Fonts for World-Famous News Editorial Typography -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;0,6..72,700;1,6..72,400&family=Inter:wght@400;500;600;700;800&family=Kantumruy+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+/* ==========================================================================
+   THE AGRI CHRONICLE — EDITORIAL NEWSPAPER DESIGN SYSTEM
+   Inspired by The New York Times, Reuters, The Guardian, Financial Times
+   ========================================================================== */
+:root {
+    --news-paper: #f8fafc;
+    --news-card-bg: #ffffff;
+    --news-border: #e2e8f0;
+    --news-border-strong: #cbd5e1;
+    --news-border-dark: #0f172a;
+    --news-ink: #0f172a;
+    --news-ink-muted: #475569;
+    --news-ink-subtle: #64748b;
+    --news-ink-light: #94a3b8;
+    
+    /* Editorial Accent Palette — Classic, prestigious, professional */
+    --news-editorial-crimson: #991b1b;
+    --news-editorial-crimson-bg: rgba(153, 27, 27, 0.07);
+    --news-forest-emerald: #065f46;
+    --news-forest-emerald-bg: rgba(6, 95, 70, 0.08);
+    --news-brass-amber: #b45309;
+    --news-brass-amber-bg: rgba(180, 83, 9, 0.08);
+    --news-marine-blue: #0369a1;
+    --news-marine-blue-bg: rgba(3, 105, 161, 0.08);
+    --news-indigo-tech: #4338ca;
+    --news-indigo-tech-bg: rgba(67, 56, 202, 0.08);
+    
+    --news-shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.04);
+    --news-shadow-md: 0 4px 16px rgba(15, 23, 42, 0.05);
+    --news-shadow-lg: 0 12px 32px rgba(15, 23, 42, 0.08);
+
+    --news-font-serif: 'Newsreader', 'Georgia', 'Times New Roman', serif;
+    --news-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --news-font-kh: 'Kantumruy Pro', 'Noto Sans Khmer', var(--news-font-sans);
+}
+
+.dark-mode {
+    --news-paper: #0b0f17;
+    --news-card-bg: #151d2a;
+    --news-border: rgba(255, 255, 255, 0.08);
+    --news-border-strong: rgba(255, 255, 255, 0.16);
+    --news-border-dark: rgba(255, 255, 255, 0.85);
+    --news-ink: #f8fafc;
+    --news-ink-muted: #94a3b8;
+    --news-ink-subtle: #64748b;
+    --news-ink-light: #475569;
+    
+    --news-editorial-crimson: #f87171;
+    --news-editorial-crimson-bg: rgba(248, 113, 113, 0.14);
+    --news-forest-emerald: #34d399;
+    --news-forest-emerald-bg: rgba(52, 211, 153, 0.14);
+    --news-brass-amber: #fbbf24;
+    --news-brass-amber-bg: rgba(251, 191, 36, 0.14);
+    --news-marine-blue: #38bdf8;
+    --news-marine-blue-bg: rgba(56, 189, 248, 0.14);
+    --news-indigo-tech: #818cf8;
+    --news-indigo-tech-bg: rgba(129, 140, 248, 0.14);
+    
+    --news-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+    --news-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+    --news-shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.6);
+}
+
+/* Base Wrapper */
+.news-page-wrapper {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 24px 16px 60px;
+    color: var(--news-ink);
+}
+
+/* ==========================================================================
+   MASTHEAD & UTILITY BAR (NEWSPAPER FRONT PAGE HEADER)
+   ========================================================================== */
+.chronicle-masthead {
+    margin-bottom: 24px;
+}
+
+.chronicle-utility-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 8px 4px;
+    border-bottom: 1px solid var(--news-border);
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--news-ink-muted);
+}
+
+.chronicle-utility-left,
+.chronicle-utility-right {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.chronicle-edition-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--news-editorial-crimson-bg);
+    color: var(--news-editorial-crimson);
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 3px 9px;
+    border-radius: 4px;
+}
+
+.chronicle-live-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--news-editorial-crimson);
+    font-weight: 700;
+    font-size: 0.74rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.chronicle-pulse-dot {
+    width: 7px;
+    height: 7px;
+    background: var(--news-editorial-crimson);
+    border-radius: 50%;
+    animation: chroniclePulse 1.8s infinite ease-in-out;
+}
+
+@keyframes chroniclePulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.4); opacity: 0.35; }
+}
+
+/* Main Brand Masthead */
+.chronicle-brand-box {
+    text-align: center;
+    padding: 24px 0 16px;
+    position: relative;
+}
+
+.chronicle-title {
+    font-family: var(--news-font-serif);
+    font-size: clamp(2rem, 4.5vw, 3.2rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    color: var(--news-ink);
+    margin: 0;
+    text-transform: uppercase;
+}
+
+html[lang="km"] .chronicle-title {
+    font-family: var(--news-font-kh);
+    font-size: clamp(1.8rem, 3.8vw, 2.7rem);
+    letter-spacing: normal;
+    text-transform: none;
+    font-weight: 700;
+}
+
+.chronicle-subtitle-latin {
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--news-ink-subtle);
+    margin-top: 4px;
+}
+
+.chronicle-motto {
+    font-size: 0.85rem;
+    color: var(--news-ink-muted);
+    margin-top: 6px;
+    font-style: italic;
+    font-family: var(--news-font-serif);
+}
+
+html[lang="km"] .chronicle-motto {
+    font-family: var(--news-font-kh);
+    font-style: normal;
+    font-size: 0.88rem;
+}
+
+.chronicle-double-rule {
+    border-top: 3px double var(--news-border-strong);
+    border-bottom: 1px solid var(--news-border);
+    padding: 3px 0;
+    margin: 12px 0 16px;
+}
+
+/* ==========================================================================
+   BREAKING NEWS & COMMODITY TICKER
+   ========================================================================== */
+.chronicle-ticker-bar {
+    display: flex;
+    align-items: center;
+    background: var(--news-card-bg);
+    border: 1px solid var(--news-border);
+    border-radius: 8px;
+    padding: 6px 12px;
+    margin-bottom: 20px;
+    box-shadow: var(--news-shadow-sm);
+    overflow: hidden;
+}
+
+.chronicle-ticker-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #ffffff;
+    background: var(--news-editorial-crimson);
+    padding: 4px 10px;
+    border-radius: 4px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-right: 14px;
+}
+
+.chronicle-ticker-track {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    white-space: nowrap;
+    overflow: hidden;
+    width: 100%;
+    position: relative;
+}
+
+.chronicle-ticker-content {
+    display: inline-flex;
+    align-items: center;
+    gap: 24px;
+    animation: tickerSlide 120s linear infinite;
+}
+
+.chronicle-ticker-content:hover {
+    animation-play-state: paused;
+}
+
+.chronicle-ticker-item {
+    font-size: 0.82rem;
+    color: var(--news-ink-muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.chronicle-ticker-clickable {
+    cursor: pointer;
+    border-radius: 4px;
+    padding: 3px 6px;
+    transition: all 0.15s ease-in-out;
+}
+
+.chronicle-ticker-clickable:hover {
+    background: rgba(185, 28, 28, 0.08);
+    color: var(--news-editorial-crimson);
+}
+
+.chronicle-ticker-clickable:hover strong {
+    color: var(--news-editorial-crimson);
+}
+
+.chronicle-ticker-badge-urgent {
+    background: #dc2626;
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 0.65rem;
+    padding: 2px 6px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.chronicle-ticker-badge-advisory {
+    background: #d97706;
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 0.65rem;
+    padding: 2px 6px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.chronicle-ticker-badge-notice {
+    background: #2563eb;
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 0.65rem;
+    padding: 2px 6px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.chronicle-ticker-item strong {
+    color: var(--news-ink);
+}
+
+.chronicle-ticker-up {
+    color: #16a34a;
+    font-weight: 700;
+}
+
+.chronicle-ticker-down {
+    color: #dc2626;
+    font-weight: 700;
+}
+
+@keyframes tickerSlide {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+
+/* ==========================================================================
+   CONTROLS & EDITORIAL DEPARTMENT TABS
+   ========================================================================== */
+.chronicle-control-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    background: var(--news-card-bg);
+    border: 1px solid var(--news-border);
+    border-radius: 12px;
+    padding: 10px 14px;
+    margin-bottom: 24px;
+    box-shadow: var(--news-shadow-sm);
+}
+
+.chronicle-edition-toggle {
+    display: inline-flex;
+    background: var(--news-paper);
+    border: 1px solid var(--news-border);
+    border-radius: 8px;
+    padding: 3px;
+    gap: 3px;
+}
+
+.chronicle-edition-btn {
+    border: none;
+    background: transparent;
+    color: var(--news-ink-muted);
+    font-size: 0.84rem;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.chronicle-edition-btn:hover {
+    color: var(--news-ink);
+}
+
+.chronicle-edition-btn.is-active {
+    background: var(--news-card-bg);
+    color: var(--news-ink);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    font-weight: 700;
+}
+
+.chronicle-search-box {
+    position: relative;
+    min-width: 260px;
+    flex: 1;
+    max-width: 360px;
+}
+
+.chronicle-search-box input {
+    width: 100%;
+    padding: 7px 12px 7px 34px;
+    border-radius: 8px;
+    border: 1px solid var(--news-border);
+    background: var(--news-paper);
+    color: var(--news-ink);
+    font-size: 0.85rem;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.chronicle-search-box input:focus {
+    border-color: var(--news-ink);
+    background: var(--news-card-bg);
+    box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.08);
+}
+
+.chronicle-search-box i {
+    position: absolute;
+    left: 11px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--news-ink-subtle);
+    font-size: 0.85rem;
+    pointer-events: none;
+}
+
+.chronicle-sync-btn {
+    border: 1px solid var(--news-border);
+    background: var(--news-card-bg);
+    color: var(--news-ink);
+    font-size: 0.84rem;
+    font-weight: 600;
+    padding: 7px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.chronicle-sync-btn:hover {
+    border-color: var(--news-ink);
+    background: var(--news-paper);
+}
+
+.chronicle-sync-btn i.is-spinning {
+    animation: spinRefresh 0.8s linear infinite;
+}
+
+@keyframes spinRefresh {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Department Category Navigation */
+.chronicle-departments {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+    margin-bottom: 24px;
+    scrollbar-width: none;
+    border-bottom: 1px solid var(--news-border);
+}
+
+.chronicle-departments::-webkit-scrollbar { display: none; }
+
+.chronicle-dept-btn {
+    border: none;
+    background: transparent;
+    color: var(--news-ink-muted);
+    font-size: 0.86rem;
+    font-weight: 600;
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.18s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+}
+
+.chronicle-dept-btn:hover {
+    color: var(--news-ink);
+    background: var(--news-card-bg);
+}
+
+.chronicle-dept-btn.is-active {
+    color: var(--news-ink);
+    background: var(--news-card-bg);
+    font-weight: 700;
+    box-shadow: var(--news-shadow-sm);
+}
+
+.chronicle-dept-btn.is-active::after {
+    content: '';
+    position: absolute;
+    bottom: -7px;
+    left: 14px;
+    right: 14px;
+    height: 2px;
+    background: var(--news-ink);
+    border-radius: 2px;
+}
+
+/* ==========================================================================
+   FRONT PAGE GRID & LEAD HERO STORY
+   ========================================================================== */
+.chronicle-lead-hero {
+    background: var(--news-card-bg);
+    border: 1px solid var(--news-border);
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 30px;
+    box-shadow: var(--news-shadow-md);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+}
+
+.chronicle-lead-hero:hover {
+    box-shadow: var(--news-shadow-lg);
+}
+
+.chronicle-lead-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 32px;
+    align-items: center;
+}
+
+@media (max-width: 991px) {
+    .chronicle-lead-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+}
+
+.chronicle-kicker-tag {
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 10px;
+}
+
+.kicker-lead {
+    background: var(--news-editorial-crimson-bg);
+    color: var(--news-editorial-crimson);
+}
+
+.kicker-market {
+    background: var(--news-brass-amber-bg);
+    color: var(--news-brass-amber);
+}
+
+.kicker-pests {
+    background: var(--news-editorial-crimson-bg);
+    color: var(--news-editorial-crimson);
+}
+
+.kicker-weather {
+    background: var(--news-marine-blue-bg);
+    color: var(--news-marine-blue);
+}
+
+.kicker-tech {
+    background: var(--news-indigo-tech-bg);
+    color: var(--news-indigo-tech);
+}
+
+.kicker-crops {
+    background: var(--news-forest-emerald-bg);
+    color: var(--news-forest-emerald);
+}
+
+.chronicle-lead-title {
+    font-family: var(--news-font-serif);
+    font-size: clamp(1.45rem, 2.2vw, 2.1rem);
+    font-weight: 700;
+    line-height: 1.25;
+    color: var(--news-ink);
+    margin-bottom: 14px;
+    cursor: pointer;
+    transition: color 0.18s ease;
+}
+
+html[lang="km"] .chronicle-lead-title {
+    font-family: var(--news-font-kh);
+    font-size: clamp(1.35rem, 2vw, 1.8rem);
+    line-height: 1.45;
+}
+
+.chronicle-lead-title:hover {
+    color: var(--news-editorial-crimson);
+}
+
+.chronicle-lead-deck {
+    font-size: 0.98rem;
+    line-height: 1.68;
+    color: var(--news-ink-muted);
+    margin-bottom: 18px;
+}
+
+/* Farmer Advisory Pull-Quote */
+.chronicle-advisory-box {
+    background: var(--news-forest-emerald-bg);
+    border-left: 3px solid var(--news-forest-emerald);
+    border-radius: 0 8px 8px 0;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    font-size: 0.88rem;
+    color: var(--news-ink);
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.chronicle-advisory-box i {
+    color: var(--news-forest-emerald);
+    margin-top: 3px;
+    font-size: 1rem;
+}
+
+.chronicle-byline {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    font-size: 0.8rem;
+    color: var(--news-ink-subtle);
+    border-top: 1px solid var(--news-border);
+    padding-top: 14px;
+    margin-top: 4px;
+}
+
+.chronicle-byline strong {
+    color: var(--news-ink);
+}
+
+.chronicle-lead-visual {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--news-shadow-md);
+    background: #0f172a;
+    aspect-ratio: 16 / 10;
+}
+
+.chronicle-lead-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.4s ease;
+}
+
+.chronicle-lead-visual:hover .chronicle-lead-img {
+    transform: scale(1.03);
+}
+
+.chronicle-visual-caption {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, rgba(15, 23, 42, 0.88) 0%, transparent 100%);
+    color: #ffffff;
+    font-size: 0.76rem;
+    padding: 20px 14px 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Read / Share Buttons */
+.chronicle-btn-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+}
+
+.chronicle-primary-btn {
+    background: var(--news-ink);
+    color: #ffffff;
+    border: 1px solid var(--news-ink);
+    font-size: 0.84rem;
+    font-weight: 600;
+    padding: 8px 18px;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dark-mode .chronicle-primary-btn {
+    background: var(--news-card-bg);
+    color: var(--news-ink);
+    border-color: var(--news-border-strong);
+}
+
+.chronicle-primary-btn:hover {
+    background: var(--news-editorial-crimson);
+    border-color: var(--news-editorial-crimson);
+    color: #ffffff;
+}
+
+.chronicle-subtle-btn {
+    background: var(--news-card-bg);
+    border: 1px solid var(--news-border);
+    color: var(--news-ink-muted);
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 8px 14px;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.chronicle-subtle-btn:hover {
+    color: var(--news-ink);
+    border-color: var(--news-ink);
+}
+
+/* ==========================================================================
+   2-COLUMN EDITORIAL FRONT PAGE (STORIES DESK + SIDE WIRE)
+   ========================================================================== */
+.chronicle-front-columns {
+    display: grid;
+    grid-template-columns: 2.1fr 1fr;
+    gap: 28px;
+}
+
+@media (max-width: 991px) {
+    .chronicle-front-columns {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Stories Sub-Grid */
+.chronicle-stories-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+@media (max-width: 767px) {
+    .chronicle-stories-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.chronicle-story-card {
+    background: var(--news-card-bg);
+    border: 1px solid var(--news-border);
+    border-radius: 14px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--news-shadow-sm);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    position: relative;
+}
+
+.chronicle-story-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--news-shadow-md);
+    border-color: var(--news-border-strong);
+}
+
+.chronicle-card-thumb {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    background: #0f172a;
+    display: block;
+    transition: transform 0.3s ease;
+}
+
+.chronicle-card-thumb-wrapper {
+    position: relative;
+    overflow: hidden;
+}
+
+.chronicle-story-card:hover .chronicle-card-thumb {
+    transform: scale(1.04);
+}
+
+.chronicle-card-body {
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.chronicle-card-header-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.chronicle-card-title {
+    font-family: var(--news-font-serif);
+    font-size: 1.15rem;
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--news-ink);
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: color 0.18s ease;
+}
+
+html[lang="km"] .chronicle-card-title {
+    font-family: var(--news-font-kh);
+    font-size: 1.06rem;
+    line-height: 1.5;
+}
+
+.chronicle-card-title:hover {
+    color: var(--news-editorial-crimson);
+}
+
+.chronicle-card-summary {
+    font-size: 0.88rem;
+    line-height: 1.6;
+    color: var(--news-ink-muted);
+    margin-bottom: 14px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.chronicle-card-tip {
+    background: var(--news-paper);
+    border-left: 3px solid var(--news-brass-amber);
+    padding: 8px 12px;
+    border-radius: 0 6px 6px 0;
+    font-size: 0.82rem;
+    color: var(--news-ink);
+    margin-top: auto;
+    margin-bottom: 14px;
+    line-height: 1.45;
+}
+
+.chronicle-card-tip strong {
+    color: var(--news-brass-amber);
+}
+
+.chronicle-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px solid var(--news-border);
+    padding-top: 10px;
+    margin-top: 6px;
+    font-size: 0.78rem;
+    color: var(--news-ink-subtle);
+}
+
+.chronicle-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* ==========================================================================
+   SIDEBAR: REAL-TIME WIRE, COMMODITY INDEX & AGRO CHECKLIST
+   ========================================================================== */
+.chronicle-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.chronicle-side-widget {
+    background: var(--news-card-bg);
+    border: 1px solid var(--news-border);
+    border-radius: 14px;
+    padding: 20px;
+    box-shadow: var(--news-shadow-sm);
+}
+
+.chronicle-widget-title {
+    font-size: 0.92rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--news-ink);
+    border-bottom: 2px solid var(--news-border-strong);
+    padding-bottom: 10px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.chronicle-widget-title i {
+    color: var(--news-editorial-crimson);
+}
+
+/* Timeline Wire */
+.chronicle-wire-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.chronicle-wire-item {
+    position: relative;
+    padding-left: 16px;
+    border-left: 2px solid var(--news-border);
+    transition: border-color 0.2s ease;
+}
+
+.chronicle-wire-item:hover {
+    border-color: var(--news-editorial-crimson);
+}
+
+.chronicle-wire-time {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--news-editorial-crimson);
+    margin-bottom: 2px;
+}
+
+.chronicle-wire-text {
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: var(--news-ink);
+    line-height: 1.4;
+    cursor: pointer;
+    margin: 0;
+}
+
+.chronicle-wire-text:hover {
+    text-decoration: underline;
+}
+
+/* Commodity Table Widget */
+.chronicle-commodity-table {
+    width: 100%;
+    font-size: 0.82rem;
+    border-collapse: collapse;
+}
+
+.chronicle-commodity-table tr {
+    border-bottom: 1px solid var(--news-border);
+}
+
+.chronicle-commodity-table tr:last-child {
+    border-bottom: none;
+}
+
+.chronicle-commodity-table td {
+    padding: 8px 4px;
+    color: var(--news-ink);
+}
+
+.chronicle-commodity-table td.text-right {
+    text-align: right;
+    font-weight: 700;
+}
+
+/* Checklist Widget */
+.chronicle-check-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 0.84rem;
+    color: var(--news-ink-muted);
+    margin-bottom: 12px;
+    line-height: 1.45;
+}
+
+.chronicle-check-item i {
+    color: var(--news-forest-emerald);
+    margin-top: 3px;
+    flex-shrink: 0;
+}
+
+/* ==========================================================================
+   SHIMMER SKELETON & EMPTY STATES
+   ========================================================================== */
+.chronicle-skeleton-card {
+    background: var(--news-card-bg);
+    border: 1px solid var(--news-border);
+    border-radius: 14px;
+    padding: 22px;
+    overflow: hidden;
+}
+
+.chronicle-skeleton-line {
+    background: rgba(148, 163, 184, 0.16);
+    border-radius: 6px;
+    animation: chronicleShimmer 1.5s infinite ease-in-out;
+}
+
+@keyframes chronicleShimmer {
+    0%, 100% { opacity: 0.35; }
+    50% { opacity: 0.85; }
+}
+
+.chronicle-empty-state {
+    text-align: center;
+    padding: 56px 24px;
+    background: var(--news-card-bg);
+    border: 1px solid var(--news-border);
+    border-radius: 16px;
+}
+
+.chronicle-empty-state i {
+    font-size: 3rem;
+    color: var(--news-ink-subtle);
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+/* ==========================================================================
+   FULL STORY READING MODAL
+   ========================================================================== */
+/* ==========================================================================
+   FULL STORY EDITORIAL READING ROOM MODAL (EXECUTIVE UI)
+   ========================================================================== */
+.modal.chronicle-modal {
+    z-index: 10600 !important;
+}
+
+.modal.chronicle-modal .modal-dialog {
+    max-width: 900px;
+    margin: 2rem auto;
+    z-index: 10610 !important;
+}
+
+body.modal-open .farmer-topnav {
+    z-index: 1000 !important;
+}
+
+body.modal-open .topbar {
+    z-index: 999 !important;
+}
+
+.modal-backdrop.show {
+    z-index: 10550 !important;
+}
+
+.chronicle-modal .modal-content {
+    background: var(--news-card-bg);
+    border: 1px solid var(--news-border);
+    border-radius: 20px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    color: var(--news-ink);
+    overflow: hidden;
+}
+
+.chronicle-modal .modal-header {
+    background: var(--news-lead-bg);
+    border-bottom: 1px solid var(--news-border);
+    padding: 22px 28px 18px;
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.chronicle-modal-header-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.chronicle-modal-impact-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.impact-badge-high {
+    background: #fee2e2;
+    color: #b91c1c;
+    border: 1px solid #fca5a5;
+}
+
+.impact-badge-advisory {
+    background: #fef3c7;
+    color: #b45309;
+    border: 1px solid #fde68a;
+}
+
+.impact-badge-moderate {
+    background: #e0e7ff;
+    color: #4338ca;
+    border: 1px solid #c7d2fe;
+}
+
+.chronicle-modal-close-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 1px solid var(--news-border);
+    background: var(--news-card-bg);
+    color: var(--news-muted);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    box-shadow: var(--news-shadow-sm);
+}
+
+.chronicle-modal-close-btn:hover {
+    background: #fee2e2;
+    color: #dc2626;
+    border-color: #fca5a5;
+    transform: rotate(90deg);
+}
+
+.chronicle-modal-title {
+    font-family: var(--news-font-serif);
+    font-size: clamp(1.35rem, 2.2vw, 1.85rem);
+    font-weight: 800;
+    line-height: 1.35;
+    color: var(--news-ink);
+    margin: 0;
+}
+
+html[lang="km"] .chronicle-modal-title {
+    font-family: var(--news-font-kh);
+    font-size: clamp(1.25rem, 2vw, 1.6rem);
+    line-height: 1.55;
+}
+
+.chronicle-modal-byline-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 12px 28px;
+    background: rgba(0, 0, 0, 0.02);
+    border-bottom: 1px solid var(--news-border);
+    font-size: 0.85rem;
+    color: var(--news-muted);
+}
+
+.chronicle-modal-source-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--news-card-bg);
+    border: 1px solid var(--news-border);
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-weight: 600;
+    color: var(--news-ink);
+}
+
+.chronicle-modal-body {
+    padding: 24px 28px;
+    font-size: 1.05rem;
+    line-height: 1.8;
+    color: var(--news-ink);
+}
+
+.chronicle-modal-img-wrapper {
+    position: relative;
+    border-radius: 14px;
+    overflow: hidden;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    background: #1e293b;
+    max-height: 420px;
+}
+
+.chronicle-modal-img {
+    width: 100%;
+    max-height: 420px;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.3s ease;
+}
+
+.chronicle-modal-img-caption {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 10px 16px;
+    background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.85) 100%);
+    color: #f8fafc;
+    font-size: 0.82rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.chronicle-modal-toolbar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 12px 16px;
+    background: rgba(16, 185, 129, 0.05);
+    border: 1px solid rgba(16, 185, 129, 0.18);
+    border-radius: 12px;
+    margin-bottom: 24px;
+}
+
+.chronicle-modal-lead-deck {
+    font-size: 1.15rem;
+    font-weight: 500;
+    line-height: 1.75;
+    color: var(--news-ink);
+    border-left: 4px solid var(--news-accent);
+    padding-left: 18px;
+    margin-bottom: 22px;
+    background: rgba(0, 0, 0, 0.015);
+    padding-top: 10px;
+    padding-bottom: 10px;
+    border-radius: 0 10px 10px 0;
+}
+
+html[lang="km"] .chronicle-modal-lead-deck {
+    font-size: 1.05rem;
+    line-height: 1.85;
+}
+
+.chronicle-modal-intel-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin: 24px 0;
+}
+
+.chronicle-intel-cell {
+    background: var(--news-lead-bg);
+    border: 1px solid var(--news-border);
+    border-radius: 12px;
+    padding: 12px 14px;
+    text-align: center;
+}
+
+.chronicle-intel-cell .cell-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 700;
+    color: var(--news-muted);
+    margin-bottom: 4px;
+}
+
+.chronicle-intel-cell .cell-val {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--news-ink);
+}
+
+.chronicle-modal-advisory-card {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(245, 158, 11, 0.02) 100%);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    border-left: 5px solid #f59e0b;
+    border-radius: 14px;
+    padding: 18px 20px;
+    margin-bottom: 24px;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+}
+
+.chronicle-modal-advisory-card i {
+    font-size: 1.5rem;
+    color: #f59e0b;
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.chronicle-modal-advisory-title {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: #b45309;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 6px;
+}
+
+.chronicle-modal-advisory-text {
+    font-size: 0.98rem;
+    line-height: 1.6;
+    color: var(--news-ink);
+    margin: 0;
+}
+
+.chronicle-modal .modal-footer {
+    border-top: 1px solid var(--news-border);
+    padding: 16px 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--news-lead-bg);
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.chronicle-modal-nav-btns {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Mobile & Tablet Responsive Queries */
+@media (max-width: 768px) {
+    .chronicle-modal .modal-dialog {
+        margin: 0.5rem;
+        max-width: calc(100% - 1rem);
+    }
+    .chronicle-modal .modal-header {
+        padding: 16px;
+    }
+    .chronicle-modal-byline-bar {
+        padding: 10px 16px;
+    }
+    .chronicle-modal-body {
+        padding: 16px;
+        font-size: 0.98rem;
+    }
+    .chronicle-modal .modal-footer {
+        padding: 14px 16px;
+        flex-direction: column-reverse;
+        align-items: stretch;
+    }
+    .chronicle-modal-nav-btns {
+        justify-content: space-between;
+        width: 100%;
+    }
+    .chronicle-modal-intel-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+    .chronicle-modal-img {
+        max-height: 240px;
+    }
+}
+</style>
+
+<div class="news-page-wrapper">
+    <!-- ====================================================================
+         1. NEWSPAPER MASTHEAD
+         ==================================================================== -->
+    <header class="chronicle-masthead">
+        <!-- Top Utility Strip -->
+        <div class="chronicle-utility-bar">
+            <div class="chronicle-utility-left">
+                <span id="chronicle-live-date">
+                    <i class="far fa-calendar-alt me-1"></i> <span id="current-date-str">Loading date...</span>
+                </span>
+                <span class="d-none d-md-inline text-muted">•</span>
+                <span class="chronicle-edition-badge">
+                    <i class="fas fa-satellite-dish"></i>
+                    <span id="edition-badge-text">{% if current_lang == 'km' %}ការិយាល័យកម្ពុជា{% else %}Cambodia Dispatch{% endif %}</span>
+                </span>
+            </div>
+
+            <div class="chronicle-utility-right">
+                <span class="d-none d-sm-inline-flex align-items-center gap-1 text-muted">
+                    <i class="fas fa-cloud-sun text-warning"></i>
+                    <span>Agro-Zone 31°C • Humidity 74%</span>
+                </span>
+                <span class="chronicle-live-indicator">
+                    <span class="chronicle-pulse-dot"></span>
+                    <span>{% if current_lang == 'km' %}ទិន្នន័យផ្ទាល់{% else %}Live Wire{% endif %}</span>
+                </span>
+            </div>
+        </div>
+
+        <!-- Main Publication Brand Name -->
+        <div class="chronicle-brand-box">
+            <h1 class="chronicle-title">
+                {% if current_lang == 'km' %}
+                សារព័ត៌មានកសិកម្មឌីជីថល
+                {% else %}
+                The Agri Chronicle
+                {% endif %}
+            </h1>
+            <div class="chronicle-subtitle-latin">The Agricultural Intelligence & Agronomy Dispatch</div>
+            <div class="chronicle-motto">
+                {% if current_lang == 'km' %}
+                « ផ្ដល់ព័ត៌មានជាក់លាក់ វិទ្យាសាស្ត្រដំណាំ បច្ចេកវិទ្យាទំនើប និងសេដ្ឋកិច្ចទីផ្សារសម្រាប់កសិករខ្មែរ »
+                {% else %}
+                "Verified Intelligence, Crop Science, Climate Resilience & Market Economics for Empowered Farmers"
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Classic Double Hairline Newspaper Rule -->
+        <div class="chronicle-double-rule"></div>
+
+        <!-- Breaking Ticker / Market Ticker -->
+        <div class="chronicle-ticker-bar">
+            <div class="chronicle-ticker-label">
+                <i class="fas fa-bolt"></i>
+                <span>{% if current_lang == 'km' %}ដំណឹងបន្ទាន់{% else %}Breaking Wire{% endif %}</span>
+            </div>
+            <div class="chronicle-ticker-track">
+                <div class="chronicle-ticker-content" id="chronicle-ticker-items">
+                    <div class="chronicle-ticker-item">
+                        <strong>🌾 Phka Rumduol Jasmine:</strong> $865/MT <span class="chronicle-ticker-up">▲ +2.1%</span>
+                    </div>
+                    <div class="chronicle-ticker-item">•</div>
+                    <div class="chronicle-ticker-item">
+                        <strong>🌧️ Monsoon Alert:</strong> Moderate-to-heavy showers over Lowland Plains & Tonle Sap
+                    </div>
+                    <div class="chronicle-ticker-item">•</div>
+                    <div class="chronicle-ticker-item">
+                        <strong>🥔 Fresh Cassava Root:</strong> 380 KHR/kg <span class="chronicle-ticker-up">▲ +3.2%</span>
+                    </div>
+                </div>
+            </div>
+            <button type="button" class="btn btn-sm btn-link text-muted p-0" id="btn-toggle-ticker-pause" title="{% if current_lang == 'km' %}ផ្អាក / បន្តរមូរ{% else %}Pause / Resume Scrolling{% endif %}" style="flex-shrink: 0; outline: none; margin-left: 10px; cursor: pointer;">
+                <i class="fas fa-pause" id="ticker-pause-icon"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- ====================================================================
+         2. EDITORIAL CONTROLS (EDITION SWITCHER + SEARCH + SYNC)
+         ==================================================================== -->
+    <section class="chronicle-control-bar">
+        <!-- Edition Toggle -->
+        <div class="chronicle-edition-toggle" role="group" aria-label="Edition Switcher">
+            <button type="button" class="chronicle-edition-btn is-active" id="btn-cambodia">
+                <span>🇰🇭</span>
+                <span>{% if current_lang == 'km' %}កម្ពុជា (Cambodia){% else %}Cambodia Edition{% endif %}</span>
+            </button>
+            <button type="button" class="chronicle-edition-btn" id="btn-world">
+                <span>🌐</span>
+                <span>{% if current_lang == 'km' %}សកលលោក (World){% else %}Global Wire{% endif %}</span>
+            </button>
+        </div>
+
+        <!-- Real-Time Search -->
+        <div class="chronicle-search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="chronicle-search-input" placeholder="{% if current_lang == 'km' %}ស្វែងរកព័ត៌មាន ដំណាំ ជំងឺ ទីផ្សារ...{% else %}Search headlines, crops, pests, prices...{% endif %}" autocomplete="off">
+        </div>
+
+        <!-- Action Tools -->
+        <div class="d-flex align-items-center gap-2">
+            <button type="button" class="chronicle-sync-btn" id="btn-refresh-news" title="Fetch latest news feed">
+                <i class="fas fa-sync-alt" id="refresh-icon"></i>
+                <span id="refresh-text">{% if current_lang == 'km' %}ធ្វើបច្ចុប្បន្នភាព{% else %}Sync Wire{% endif %}</span>
+            </button>
+        </div>
+    </section>
+
+    <!-- ====================================================================
+         3. NEWSPAPER DEPARTMENTS (CATEGORY BAR)
+         ==================================================================== -->
+    <nav class="chronicle-departments" aria-label="Newspaper Sections">
+        <button type="button" class="chronicle-dept-btn is-active" data-cat="all">
+            <i class="fas fa-newspaper"></i>
+            <span>{% if current_lang == 'km' %}ទំព័រមុខ (ទាំងអស់){% else %}Front Page (All){% endif %}</span>
+            <span class="badge badge-light ml-1 font-weight-normal" id="dept-count-all">12</span>
+        </button>
+        <button type="button" class="chronicle-dept-btn" data-cat="crops">
+            <i class="fas fa-seedling"></i>
+            <span>{% if current_lang == 'km' %}ដំណាំ និងការប្រមូលផល{% else %}Crops & Harvest{% endif %}</span>
+            <span class="badge badge-light ml-1 font-weight-normal" id="dept-count-crops"></span>
+        </button>
+        <button type="button" class="chronicle-dept-btn" data-cat="market">
+            <i class="fas fa-chart-line"></i>
+            <span>{% if current_lang == 'km' %}ទីផ្សារ និងតម្លៃ{% else %}Markets & Prices{% endif %}</span>
+            <span class="badge badge-light ml-1 font-weight-normal" id="dept-count-market"></span>
+        </button>
+        <button type="button" class="chronicle-dept-btn" data-cat="weather">
+            <i class="fas fa-cloud-sun-rain"></i>
+            <span>{% if current_lang == 'km' %}ឧតុនិយម និងអាកាសធាតុ{% else %}Climate & Weather{% endif %}</span>
+            <span class="badge badge-light ml-1 font-weight-normal" id="dept-count-weather"></span>
+        </button>
+        <button type="button" class="chronicle-dept-btn" data-cat="pests">
+            <i class="fas fa-shield-virus"></i>
+            <span>{% if current_lang == 'km' %}សត្វល្អិត និងជំងឺដំណាំ{% else %}Pests & Crop Health{% endif %}</span>
+            <span class="badge badge-light ml-1 font-weight-normal" id="dept-count-pests"></span>
+        </button>
+        <button type="button" class="chronicle-dept-btn" data-cat="tech">
+            <i class="fas fa-microchip"></i>
+            <span>{% if current_lang == 'km' %}បច្ចេកវិទ្យាកសិកម្ម{% else %}AgriTech & Innovation{% endif %}</span>
+            <span class="badge badge-light ml-1 font-weight-normal" id="dept-count-tech"></span>
+        </button>
+    </nav>
+
+    <!-- ====================================================================
+         4. SKELETON LOADING STATE
+         ==================================================================== -->
+    <div id="chronicle-loading" class="mb-4">
+        <div class="chronicle-lead-hero mb-4">
+            <div class="chronicle-lead-grid">
+                <div>
+                    <div class="chronicle-skeleton-line mb-3" style="width: 140px; height: 22px;"></div>
+                    <div class="chronicle-skeleton-line mb-3" style="width: 90%; height: 36px;"></div>
+                    <div class="chronicle-skeleton-line mb-2" style="width: 100%; height: 18px;"></div>
+                    <div class="chronicle-skeleton-line mb-4" style="width: 80%; height: 18px;"></div>
+                    <div class="chronicle-skeleton-line mb-4" style="width: 100%; height: 50px; border-radius: 8px;"></div>
+                    <div class="chronicle-skeleton-line" style="width: 45%; height: 16px;"></div>
+                </div>
+                <div>
+                    <div class="chronicle-skeleton-line" style="width: 100%; height: 240px; border-radius: 12px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <div class="chronicle-skeleton-card">
+                    <div class="chronicle-skeleton-line mb-3" style="width: 100%; height: 150px;"></div>
+                    <div class="chronicle-skeleton-line mb-2" style="width: 85%; height: 20px;"></div>
+                    <div class="chronicle-skeleton-line" style="width: 60%; height: 14px;"></div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="chronicle-skeleton-card">
+                    <div class="chronicle-skeleton-line mb-3" style="width: 100%; height: 150px;"></div>
+                    <div class="chronicle-skeleton-line mb-2" style="width: 85%; height: 20px;"></div>
+                    <div class="chronicle-skeleton-line" style="width: 60%; height: 14px;"></div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="chronicle-skeleton-card">
+                    <div class="chronicle-skeleton-line mb-3" style="width: 100%; height: 150px;"></div>
+                    <div class="chronicle-skeleton-line mb-2" style="width: 85%; height: 20px;"></div>
+                    <div class="chronicle-skeleton-line" style="width: 60%; height: 14px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====================================================================
+         5. MAIN CONTENT DISPLAY (LEAD HERO + 2-COLUMN NEWSPAPER FRONT PAGE)
+         ==================================================================== -->
+    <main id="chronicle-main-content" style="display: none;">
+        <!-- Lead Headline Feature (Top Story) -->
+        <article class="chronicle-lead-hero" id="chronicle-lead-hero-container">
+            <!-- Injected by JavaScript -->
+        </article>
+
+        <!-- Front Page 2-Column Layout -->
+        <div class="chronicle-front-columns">
+            <!-- Left Column: Curated Stories Desk -->
+            <section class="chronicle-stories-desk">
+                <div class="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2">
+                    <h2 class="h5 m-0 font-weight-bold" style="font-family: var(--news-font-serif);">
+                        {% if current_lang == 'km' %}អត្ថបទសារព័ត៌មានសំខាន់ៗ{% else %}Dispatches & Field Reports{% endif %}
+                    </h2>
+                    <span class="text-muted small" id="story-count-badge">0 articles</span>
+                </div>
+
+                <div class="chronicle-stories-grid" id="chronicle-secondary-stories">
+                    <!-- Injected by JavaScript -->
+                </div>
+            </section>
+
+            <!-- Right Column: The Agricultural Wire & Market Watch -->
+            <aside class="chronicle-sidebar">
+                <!-- 1. Real-Time News Wire -->
+                <div class="chronicle-side-widget">
+                    <div class="chronicle-widget-title">
+                        <span><i class="fas fa-rss me-1"></i> {% if current_lang == 'km' %}ខ្សែព័ត៌មានទាន់ហេតុការណ៍{% else %}Real-Time Wire{% endif %}</span>
+                        <span class="badge badge-light border">Live</span>
+                    </div>
+                    <ul class="chronicle-wire-list" id="chronicle-wire-list">
+                        <!-- Injected by JavaScript -->
+                    </ul>
+                </div>
+
+                <!-- 2. Commodity Price Index -->
+                <div class="chronicle-side-widget">
+                    <div class="chronicle-widget-title">
+                        <span><i class="fas fa-chart-bar me-1"></i> {% if current_lang == 'km' %}សន្ទស្សន៍តម្លៃកសិផល{% else %}Agri Commodity Watch{% endif %}</span>
+                        <span class="badge badge-light border">KHR / USD</span>
+                    </div>
+                    <table class="chronicle-commodity-table">
+                        <tbody>
+                            <tr>
+                                <td><strong>🌾 Phka Rumduol Rice</strong><br><small class="text-muted">Export Grade A</small></td>
+                                <td class="text-right">$865 / MT<br><small class="chronicle-ticker-up">▲ +2.1%</small></td>
+                            </tr>
+                            <tr>
+                                <td><strong>🌾 Wet Paddy (IR504)</strong><br><small class="text-muted">Farm Gate Battambang</small></td>
+                                <td class="text-right">1,020 KHR/kg<br><small class="chronicle-ticker-up">▲ +1.5%</small></td>
+                            </tr>
+                            <tr>
+                                <td><strong>🥔 Fresh Cassava Root</strong><br><small class="text-muted">Starch Standard 30%</small></td>
+                                <td class="text-right">380 KHR/kg<br><small class="chronicle-ticker-up">▲ +3.2%</small></td>
+                            </tr>
+                            <tr>
+                                <td><strong>🌽 Yellow Maize</strong><br><small class="text-muted">Feed Mill Spec</small></td>
+                                <td class="text-right">950 KHR/kg<br><small class="text-muted">● Stable</small></td>
+                            </tr>
+                            <tr>
+                                <td><strong>🌶️ Red Bird Chili</strong><br><small class="text-muted">Wholesale Market</small></td>
+                                <td class="text-right">4,500 KHR/kg<br><small class="chronicle-ticker-down">▼ -1.8%</small></td>
+                            </tr>
+                            <tr>
+                                <td><strong>🧪 Urea 46-0-0</strong><br><small class="text-muted">Import Wholesale</small></td>
+                                <td class="text-right">$340 / MT<br><small class="chronicle-ticker-down">▼ -0.8%</small></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 3. Seasonal Agronomy Checklist -->
+                <div class="chronicle-side-widget">
+                    <div class="chronicle-widget-title">
+                        <span><i class="fas fa-clipboard-check me-1"></i> {% if current_lang == 'km' %}អនុសាសន៍ប្រចាំសប្តាហ៍{% else %}Weekly Field Action{% endif %}</span>
+                    </div>
+                    <div class="chronicle-check-item">
+                        <i class="fas fa-check-circle"></i>
+                        <div>
+                            <strong>{% if current_lang == 'km' %}ត្រួតពិនិត្យប្រឡាយទឹក{% else %}Clear Field Canals{% endif %}</strong>
+                            <div class="text-muted small">{% if current_lang == 'km' %}រំដោះទឹកចេញពីក្បាលដីបន្លែដើម្បីការពារការរលួយឫស។{% else %}Ensure rapid drainage after sudden monsoon squalls.{% endif %}</div>
+                        </div>
+                    </div>
+                    <div class="chronicle-check-item">
+                        <i class="fas fa-check-circle"></i>
+                        <div>
+                            <strong>{% if current_lang == 'km' %}អង្កេតសត្វល្អិត{% else %}Scout Field Borders{% endif %}</strong>
+                            <div class="text-muted small">{% if current_lang == 'km' %}ត្រួតពិនិត្យវត្តមានមមាចត្នោត ២ ដងក្នុងមួយសប្តាហ៍។{% else %}Inspect tillering rice for hopper eggs and leaf blast.{% endif %}</div>
+                        </div>
+                    </div>
+                    <div class="chronicle-check-item">
+                        <i class="fas fa-check-circle"></i>
+                        <div>
+                            <strong>{% if current_lang == 'km' %}ការកត់ត្រា GAP{% else %}Record Farm Inputs{% endif %}</strong>
+                            <div class="text-muted small">{% if current_lang == 'km' %}កត់ត្រាការប្រើប្រាស់ជី និងថ្នាំដើម្បីត្រៀមលក់កិច្ចសន្យា។{% else %}Log chemical application intervals for market certification.{% endif %}</div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <!-- ====================================================================
+         6. EMPTY STATE (FILTER NOT FOUND)
+         ==================================================================== -->
+    <div id="chronicle-empty" class="chronicle-empty-state" style="display: none;">
+        <i class="far fa-newspaper"></i>
+        <h3 class="h5 font-weight-bold">
+            {% if current_lang == 'km' %}មិនមានព័ត៌មានដែលត្រូវគ្នានឹងការស្វែងរកទេ{% else %}No dispatches found matching your filter{% endif %}
+        </h3>
+        <p class="text-muted" style="max-width: 440px; margin: 0 auto 20px;">
+            {% if current_lang == 'km' %}សូមសាកល្បងផ្លាស់ប្តូរពាក្យគន្លឹះ ឬជ្រើសរើសផ្នែកព័ត៌មានផ្សេងទៀត។{% else %}Try searching with different terms or reset your department filter to view the latest wire.{% endif %}
+        </p>
+        <button type="button" class="chronicle-primary-btn mx-auto" onclick="resetAllFilters();">
+            <i class="fas fa-undo"></i>
+            <span>{% if current_lang == 'km' %}បង្ហាញព័ត៌មានទាំងអស់{% else %}Show All News{% endif %}</span>
+        </button>
+    </div>
+</div>
+
+<!-- ====================================================================
+     7. EDITORIAL READING ROOM MODAL (FULL ARTICLE VIEW)
+     ==================================================================== -->
+<div class="modal fade chronicle-modal" id="readingRoomModal" tabindex="-1" role="dialog" aria-labelledby="readingRoomModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable" role="document">
+        <div class="modal-content">
+            <!-- Professional Editorial Header -->
+            <div class="modal-header">
+                <div style="flex: 1; min-width: 0;">
+                    <div class="chronicle-modal-header-meta">
+                        <span id="modal-kicker" class="chronicle-kicker-tag kicker-crops">
+                            <i class="fas fa-seedling"></i> Crops
+                        </span>
+                        <span id="modal-impact-badge" class="chronicle-modal-impact-badge impact-badge-high">
+                            <i class="fas fa-bolt"></i> HIGH IMPACT
+                        </span>
+                        <span id="modal-region-badge" class="badge rounded-pill bg-white text-dark border">
+                            <i class="fas fa-globe-asia text-primary me-1"></i> Cambodia Wire
+                        </span>
+                    </div>
+                    <h2 class="chronicle-modal-title" id="modal-title">Article Headline</h2>
+                </div>
+                <button type="button" class="chronicle-modal-close-btn" data-dismiss="modal" data-bs-dismiss="modal" onclick="$('#readingRoomModal').modal('hide');" aria-label="Close" title="Close dispatch">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- Byline Strip -->
+            <div class="chronicle-modal-byline-bar">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="chronicle-modal-source-pill">
+                        <i class="fas fa-check-circle text-success"></i>
+                        <span id="modal-source">MAFF Intelligence Desk</span>
+                    </span>
+                    <span class="text-muted">•</span>
+                    <span id="modal-date"><i class="far fa-clock me-1"></i> Today</span>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <span id="modal-readtime"><i class="far fa-eye me-1"></i> 3 min read</span>
+                </div>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="modal-body chronicle-modal-body">
+                <!-- Featured Real Image Showcase -->
+                <div class="chronicle-modal-img-wrapper" id="modal-image-container">
+                    <img id="modal-image" src="" alt="News Image" class="chronicle-modal-img" onerror="this.src='https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=900&auto=format&fit=crop&q=80'">
+                    <div class="chronicle-modal-img-caption">
+                        <span id="modal-img-caption-source"><i class="fas fa-camera me-1"></i> Verified Press Photo</span>
+                        <span id="modal-img-caption-tag"><i class="fas fa-shield-alt text-success me-1"></i> Authentic Agricultural Dispatch</span>
+                    </div>
+                </div>
+
+                <!-- Quick Action Toolbar -->
+                <div class="chronicle-modal-toolbar">
+                    <button type="button" class="chronicle-primary-btn btn-sm py-2 px-3" id="btn-modal-listen" title="Listen to article">
+                        <i class="fas fa-volume-up"></i>
+                        <span id="listen-btn-text">{% if current_lang == 'km' %}ស្តាប់សំឡេង{% else %}Listen to Dispatch{% endif %}</span>
+                    </button>
+                    <button type="button" class="chronicle-subtle-btn btn-sm py-2 px-3" id="btn-modal-share" title="Share or Copy Summary">
+                        <i class="far fa-share-square"></i>
+                        <span>{% if current_lang == 'km' %}ចែករំលែក{% else %}Share Article{% endif %}</span>
+                    </button>
+                    <a href="#" target="_blank" rel="noopener noreferrer" class="chronicle-subtle-btn btn-sm py-2 px-3" id="btn-modal-link" style="display: none; text-decoration: none;" title="Open original news dispatch">
+                        <i class="fas fa-external-link-alt text-primary"></i>
+                        <span>{% if current_lang == 'km' %}អានប្រភពដើម{% else %}View Publisher Story{% endif %}</span>
+                    </a>
+                </div>
+
+                <!-- Executive Lead Summary Deck -->
+                <div class="chronicle-modal-lead-deck" id="modal-lead-deck">
+                    <!-- Injected by JavaScript -->
+                </div>
+
+                <!-- Agronomist Action Advisory Protocol (Special Highlight Box) -->
+                <div class="chronicle-modal-advisory-card" id="modal-tip-container">
+                    <i class="fas fa-lightbulb"></i>
+                    <div>
+                        <div class="chronicle-modal-advisory-title">
+                            {% if current_lang == 'km' %}អនុសាសន៍អ្នកជំនាញកសិកម្ម (Agronomist Action Protocol){% else %}Agronomist Action Protocol (Field Advisory){% endif %}
+                        </div>
+                        <p class="chronicle-modal-advisory-text" id="modal-tip-text">...</p>
+                    </div>
+                </div>
+
+                <!-- Field Intelligence Context Matrix -->
+                <div class="chronicle-modal-intel-grid">
+                    <div class="chronicle-intel-cell">
+                        <div class="cell-label">{% if current_lang == 'km' %}វិស័យដំណាំ / ប្រធានបទ{% else %}Sector / Department{% endif %}</div>
+                        <div class="cell-val" id="modal-intel-sector">Crops</div>
+                    </div>
+                    <div class="chronicle-intel-cell">
+                        <div class="cell-label">{% if current_lang == 'km' %}កម្រិតសារៈសំខាន់{% else %}Impact Rating{% endif %}</div>
+                        <div class="cell-val" id="modal-intel-impact">High Priority</div>
+                    </div>
+                    <div class="chronicle-intel-cell">
+                        <div class="cell-label">{% if current_lang == 'km' %}ស្ថាប័នផ្ទៀងផ្ទាត់{% else %}Authority Verification{% endif %}</div>
+                        <div class="cell-val" id="modal-intel-authority">Verified Wire</div>
+                    </div>
+                </div>
+
+                <!-- Editorial Assurance Note -->
+                <div class="text-muted small border-top pt-3 mt-4" style="line-height: 1.6;">
+                    <i class="fas fa-info-circle me-1 text-primary"></i>
+                    {% if current_lang == 'km' %}
+                    ព័ត៌មាន និងអនុសាសន៍បច្ចេកទេសកសិកម្មនេះ ត្រូវបានផ្ទៀងផ្ទាត់ដោយប្រព័ន្ធ AI និងទិន្នន័យជាក់ស្តែងពីស្ថាប័នកសិកម្មផ្លូវការ ដើម្បីគាំទ្រដល់ការសម្រេចចិត្តប្រកបដោយទំនុកចិត្ត និងទិន្នផលខ្ពស់។
+                    {% else %}
+                    This agricultural briefing and field advisory have been validated using real-time market data and authoritative agronomist directives to empower smallholders and agribusinesses with high-confidence decision support.
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Modal Footer with Next / Previous Dispatch Nav -->
+            <div class="modal-footer chronicle-modal-footer">
+                <div class="chronicle-modal-nav-btns">
+                    <button type="button" class="chronicle-subtle-btn btn-sm" id="btn-modal-prev" onclick="navigateArticleModal(-1)" title="Previous Story">
+                        <i class="fas fa-chevron-left me-1"></i>
+                        <span>{% if current_lang == 'km' %}មុន{% else %}Previous{% endif %}</span>
+                    </button>
+                    <button type="button" class="chronicle-subtle-btn btn-sm" id="btn-modal-next" onclick="navigateArticleModal(1)" title="Next Story">
+                        <span>{% if current_lang == 'km' %}បន្ទាប់{% else %}Next{% endif %}</span>
+                        <i class="fas fa-chevron-right ms-1"></i>
+                    </button>
+                </div>
+
+                <button type="button" class="chronicle-primary-btn" data-dismiss="modal" data-bs-dismiss="modal" onclick="$('#readingRoomModal').modal('hide');">
+                    <i class="fas fa-times me-1"></i>
+                    {% if current_lang == 'km' %}បិទអត្ថបទ{% else %}Close Dispatch{% endif %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- ====================================================================
+     8. JAVASCRIPT CONTROLLER & REAL-TIME WIRE ENGINE
+     ==================================================================== -->
+<script>
+(function() {
+    const currentLang = "{{ current_lang }}";
+    const initialMarquees = {{ (marquees_data or []) | tojson }};
+    let currentRegion = "cambodia";
+    let activeCategory = "all";
+    let searchQuery = "";
+    let rawNewsItems = [];
+    let currentFiltered = [];
+    let isSpeaking = false;
+
+    // Context-aware photographic matcher that displays real authentic images directly supporting the news text
+    function getArticlePhoto(item, index) {
+        if (item && item.image && item.image.trim()) {
+            return item.image;
+        }
+        const text = ((item && item.title ? item.title : '') + ' ' + (item && item.summary ? item.summary : '')).toLowerCase();
+        
+        // Exact semantic matching based on keywords in title/summary
+        if (text.includes("cow") || text.includes("cattle") || text.includes("livestock") || text.includes("buffal") || text.includes("គោ") || text.includes("ក្របី") || text.includes("វ៉ាក់សាំង") || text.includes("សត្វពាហនៈ")) {
+            return "https://images.unsplash.com/photo-1570042225831-d98fa7577f1e?w=900&auto=format&fit=crop&q=80";
+        }
+        if (text.includes("cassava") || text.includes("tapioca") || text.includes("ដំឡូងមី")) {
+            return "https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=900&auto=format&fit=crop&q=80";
+        }
+        if (text.includes("cashew") || text.includes("ស្វាយចន្ទី")) {
+            return "https://images.unsplash.com/photo-1509358271058-acd22cc93898?w=900&auto=format&fit=crop&q=80";
+        }
+        if (text.includes("drone") || text.includes("ដ្រូន")) {
+            return "https://images.unsplash.com/photo-1508614589041-895b88991e3e?w=900&auto=format&fit=crop&q=80";
+        }
+        if (text.includes("vegetable") || text.includes("chili") || text.includes("tomato") || text.includes("បន្លែ") || text.includes("ម្ទេស") || text.includes("camgap")) {
+            return "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=900&auto=format&fit=crop&q=80";
+        }
+        if (text.includes("banana") || text.includes("mango") || text.includes("ចេក") || text.includes("ស្វាយ") || text.includes("ផ្លែឈើ")) {
+            return "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=900&auto=format&fit=crop&q=80";
+        }
+        if (text.includes("reservoir") || text.includes("sluice") || text.includes("tonle sap") || text.includes("ទំនប់") || text.includes("ទន្លេសាប") || text.includes("ធារាសាស្ត្រ") || text.includes("ប្រឡាយ")) {
+            return "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=900&auto=format&fit=crop&q=80";
+        }
+        if (text.includes("app") || text.includes("phone") || text.includes("digital") || text.includes("ទូរស័ព្ទ") || text.includes("ឌីជីថល") || text.includes("ai")) {
+            return "https://images.unsplash.com/photo-1530507629858-e4977d30e9e0?w=900&auto=format&fit=crop&q=80";
+        }
+        if (text.includes("satellite") || text.includes("hyperspectral") || text.includes("orbit") || text.includes("ផ្កាយរណប")) {
+            return "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=900&auto=format&fit=crop&q=80";
+        }
+        if (text.includes("drip") || text.includes("irrigation") || text.includes("ដំណក់ទឹក")) {
+            return "https://images.unsplash.com/photo-1563514227147-6d2ff665a6a0?w=900&auto=format&fit=crop&q=80";
+        }
+        if (text.includes("soybean") || text.includes("oilseed") || text.includes("សណ្តែក")) {
+            return "https://images.unsplash.com/photo-1599940824399-b87987ceb72a?w=900&auto=format&fit=crop&q=80";
+        }
+        if (text.includes("wheat") || text.includes("grain") || text.includes("cereal") || text.includes("corn") || text.includes("ស្រូវសាលី") || text.includes("ធញ្ញជាតិ") || text.includes("ពោត")) {
+            return "https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=900&auto=format&fit=crop&q=80";
+        }
+        if (text.includes("fertilizer") || text.includes("urea") || text.includes("potassium") || text.includes("ជី")) {
+            return "https://images.unsplash.com/photo-1585336261022-680e295ce3fe?w=900&auto=format&fit=crop&q=80";
+        }
+        if (text.includes("rain") || text.includes("monsoon") || text.includes("weather") || text.includes("storm") || text.includes("ភ្លៀង") || text.includes("មូសុង") || text.includes("អាកាសធាតុ") || text.includes("la niña")) {
+            return "https://images.unsplash.com/photo-1514632595-4944383f2737?w=900&auto=format&fit=crop&q=80";
+        }
+        if (text.includes("biocontrol") || text.includes("parasitoid") || text.includes("predator") || text.includes("ladybug") || text.includes("ជីវសាស្រ្ត")) {
+            return "https://images.unsplash.com/photo-1473081556163-2a17de81fc97?w=900&auto=format&fit=crop&q=80";
+        }
+        if (text.includes("pest") || text.includes("blast") || text.includes("hopper") || text.includes("disease") || text.includes("រលួយ") || text.includes("មមាច") || text.includes("ជំងឺ")) {
+            return "https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=900&auto=format&fit=crop&q=80";
+        }
+        if (text.includes("seed") || text.includes("panicle") || text.includes("ពូជ") || text.includes("cardi")) {
+            return "https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=900&auto=format&fit=crop&q=80";
+        }
+        if (text.includes("rice") || text.includes("paddy") || text.includes("jasmine") || text.includes("rumduol") || text.includes("ស្រូវ") || text.includes("អង្ករ")) {
+            return "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=900&auto=format&fit=crop&q=80";
+        }
+        if (text.includes("shade") || text.includes("tree") || text.includes("agroforestry") || text.includes("forest") || text.includes("ម្លប់") || text.includes("កាហ្វេ")) {
+            return "https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=900&auto=format&fit=crop&q=80";
+        }
+        
+        // Default fallback by index
+        const fallbackList = [
+            "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=900&auto=format&fit=crop&q=80",
+            "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=900&auto=format&fit=crop&q=80",
+            "https://images.unsplash.com/photo-1508614589041-895b88991e3e?w=900&auto=format&fit=crop&q=80",
+            "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=900&auto=format&fit=crop&q=80"
+        ];
+        return fallbackList[(index || 0) % fallbackList.length];
+    }
+
+    function getKickerClass(cat) {
+        if (!cat) return "kicker-crops";
+        const c = cat.toLowerCase();
+        if (c.includes("market") || c.includes("price") || c.includes("ទីផ្សារ")) return "kicker-market";
+        if (c.includes("pest") || c.includes("disease") || c.includes("ជំងឺ")) return "kicker-pests";
+        if (c.includes("weather") || c.includes("rain") || c.includes("អាកាសធាតុ")) return "kicker-weather";
+        if (c.includes("tech") || c.includes("drone") || c.includes("បច្ចេកវិទ្យា")) return "kicker-tech";
+        return "kicker-crops";
+    }
+
+    function getKickerIcon(cat) {
+        if (!cat) return "fa-seedling";
+        const c = cat.toLowerCase();
+        if (c.includes("market") || c.includes("price") || c.includes("ទីផ្សារ")) return "fa-chart-line";
+        if (c.includes("pest") || c.includes("disease") || c.includes("ជំងឺ")) return "fa-shield-virus";
+        if (c.includes("weather") || c.includes("rain") || c.includes("អាកាសធាតុ")) return "fa-cloud-sun-rain";
+        if (c.includes("tech") || c.includes("drone") || c.includes("បច្ចេកវិទ្យា")) return "fa-microchip";
+        return "fa-seedling";
+    }
+
+    function updateLiveDateString() {
+        const now = new Date();
+        const optionsEn = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        if (currentLang === 'km') {
+            const monthsKm = ["មករា", "កុម្ភៈ", "មីនា", "មេសា", "ឧសភា", "មិថុនា", "កក្កដា", "សីហា", "កញ្ញា", "តុលា", "វិច្ឆិកា", "ធ្នូ"];
+            const daysKm = ["អាទិត្យ", "ចន្ទ", "អង្គារ", "ពុធ", "ព្រហស្បតិ៍", "សុក្រ", "សៅរ៍"];
+            const str = `ថ្ងៃ${daysKm[now.getDay()]} ទី${now.getDate()} ខែ${monthsKm[now.getMonth()]} ឆ្នាំ${now.getFullYear()}`;
+            $('#current-date-str').text(str);
+        } else {
+            $('#current-date-str').text(now.toLocaleDateString('en-US', optionsEn));
+        }
+    }
+
+    function renderFeed() {
+        const leadContainer = $('#chronicle-lead-hero-container');
+        const secondaryGrid = $('#chronicle-secondary-stories');
+        const wireList = $('#chronicle-wire-list');
+        const mainContent = $('#chronicle-main-content');
+        const emptyState = $('#chronicle-empty');
+
+        leadContainer.empty();
+        secondaryGrid.empty();
+        wireList.empty();
+
+        // 1. Filter by category
+        let filtered = rawNewsItems;
+        if (activeCategory !== "all") {
+            filtered = filtered.filter(item => {
+                const cat = (item.category || "").toLowerCase();
+                if (activeCategory === "market") return cat.includes("market") || cat.includes("price") || cat.includes("ទីផ្សារ");
+                if (activeCategory === "pests") return cat.includes("pest") || cat.includes("disease") || cat.includes("ជំងឺ");
+                if (activeCategory === "weather") return cat.includes("weather") || cat.includes("rain") || cat.includes("អាកាសធាតុ");
+                if (activeCategory === "tech") return cat.includes("tech") || cat.includes("drone") || cat.includes("បច្ចេកវិទ្យា");
+                if (activeCategory === "crops") return cat.includes("crop") || cat.includes("harvest") || cat.includes("ដំណាំ");
+                return true;
+            });
+        }
+
+        // 2. Filter by search query
+        if (searchQuery.trim().length > 0) {
+            const q = searchQuery.toLowerCase().trim();
+            filtered = filtered.filter(item => {
+                const title = (item.title || "").toLowerCase();
+                const summary = (item.summary || "").toLowerCase();
+                const tip = (item.tip || "").toLowerCase();
+                const cat = (item.category || "").toLowerCase();
+                return title.includes(q) || summary.includes(q) || tip.includes(q) || cat.includes(q);
+            });
+        }
+
+        currentFiltered = filtered;
+
+        if (filtered.length === 0) {
+            mainContent.hide();
+            emptyState.fadeIn(200);
+            return;
+        }
+
+        emptyState.hide();
+        $('#story-count-badge').text(`${filtered.length} ${currentLang === 'km' ? 'អត្ថបទ' : 'dispatches'}`);
+
+        // Lead Hero Story (Item 0)
+        const lead = filtered[0];
+        const leadKickerClass = getKickerClass(lead.category);
+        const leadKickerIcon = getKickerIcon(lead.category);
+        const leadPhoto = getArticlePhoto(lead, 0);
+        const leadCategory = lead.category || (currentLang === 'km' ? 'ដំណាំ' : 'Crops');
+        const leadDate = lead.date || (currentLang === 'km' ? 'ថ្ងៃនេះ' : 'Today');
+        const leadReadTime = lead.read_time || (currentLang === 'km' ? 'អាន ៣ នាទី' : '3 min read');
+        const leadSource = lead.source || (currentLang === 'km' ? 'ក្រសួងកសិកម្ម រុក្ខាប្រមាញ់ និងនេសាទ' : 'MAFF Intelligence Wire');
+
+        let leadTipHtml = "";
+        if (lead.tip) {
+            leadTipHtml = `
+                <div class="chronicle-advisory-box">
+                    <i class="fas fa-lightbulb"></i>
+                    <div>
+                        <strong>${currentLang === 'km' ? 'អនុសាសន៍អ្នកជំនាញកសិកម្ម៖' : 'Agronomist Action Advisory:'}</strong> ${lead.tip}
+                    </div>
+                </div>
+            `;
+        }
+
+        leadContainer.html(`
+            <div class="chronicle-lead-grid">
+                <div>
+                    <span class="chronicle-kicker-tag ${leadKickerClass}">
+                        <i class="fas ${leadKickerIcon}"></i> ${leadCategory} • ${currentLang === 'km' ? 'ទំព័រមុខសំខាន់' : 'LEAD STORY'}
+                    </span>
+                    <h2 class="chronicle-lead-title" onclick="openArticleModal(0)">${lead.title}</h2>
+                    <p class="chronicle-lead-deck">${lead.summary || ''}</p>
+                    ${leadTipHtml}
+
+                    <div class="chronicle-byline">
+                        <span><strong>By:</strong> ${leadSource}</span>
+                        <span>•</span>
+                        <span><i class="far fa-clock me-1"></i> ${leadDate}</span>
+                        <span>•</span>
+                        <span><i class="far fa-eye me-1"></i> ${leadReadTime}</span>
+                    </div>
+
+                    <div class="chronicle-btn-group">
+                        <button type="button" class="chronicle-primary-btn" onclick="openArticleModal(0)">
+                            <span>${currentLang === 'km' ? 'អានអត្ថបទពេញលេញ' : 'Read Full Dispatch'}</span>
+                            <i class="fas fa-arrow-right"></i>
+                        </button>
+                        <button type="button" class="chronicle-subtle-btn" onclick="shareArticle(0)">
+                            <i class="far fa-share-square"></i>
+                            <span>${currentLang === 'km' ? 'ចែករំលែក' : 'Share'}</span>
+                        </button>
+                        <button type="button" class="chronicle-subtle-btn" onclick="listenToArticle(0)">
+                            <i class="fas fa-volume-up text-primary"></i>
+                            <span>${currentLang === 'km' ? 'ស្តាប់' : 'Listen'}</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="chronicle-lead-visual" onclick="openArticleModal(0)" style="cursor: pointer;">
+                        <img src="${leadPhoto}" alt="${lead.title}" class="chronicle-lead-img" onerror="this.src='https://images.unsplash.com/photo-1530507629858-e4977d30e9e0?w=900&auto=format&fit=crop&q=80'">
+                        <div class="chronicle-visual-caption">
+                            <span><i class="fas fa-camera me-1"></i> ${leadCategory} Focus</span>
+                            <span>${leadSource}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `);
+
+        // Secondary Stories (Items 1..N)
+        const secondaryStories = filtered.slice(1);
+        if (secondaryStories.length === 0) {
+            secondaryGrid.html(`<div class="col-12 text-muted small py-3">${currentLang === 'km' ? 'មិនមានអត្ថបទបន្ទាប់បន្សំទៀតទេក្នុងផ្នែកនេះ។' : 'No further secondary dispatches in this category.'}</div>`);
+        } else {
+            secondaryStories.forEach((item, idx) => {
+                const globalIndex = idx + 1;
+                const catClass = getKickerClass(item.category);
+                const catIcon = getKickerIcon(item.category);
+                const photo = getArticlePhoto(item, globalIndex);
+                const itemCat = item.category || (currentLang === 'km' ? 'ដំណាំ' : 'Crops');
+                const itemDate = item.date || (currentLang === 'km' ? 'ថ្មីៗ' : 'Recent');
+                const itemReadTime = item.read_time || (currentLang === 'km' ? 'អាន ៣ នាទី' : '3 min read');
+                const itemSource = item.source || (currentLang === 'km' ? 'ប្រភពផ្លូវការ' : 'Agri Intelligence');
+
+                let tipSnippet = "";
+                if (item.tip) {
+                    tipSnippet = `
+                        <div class="chronicle-card-tip">
+                            <strong>💡 ${currentLang === 'km' ? 'គន្លឹះ៖' : 'Tip:'}</strong> ${item.tip}
+                        </div>
+                    `;
+                }
+
+                const cardHtml = `
+                    <article class="chronicle-story-card">
+                        <div class="chronicle-card-thumb-wrapper" onclick="openArticleModal(${globalIndex})" style="cursor: pointer;">
+                            <img src="${photo}" alt="${item.title}" class="chronicle-card-thumb" onerror="this.src='https://images.unsplash.com/photo-1530507629858-e4977d30e9e0?w=900&auto=format&fit=crop&q=80'">
+                        </div>
+                        <div class="chronicle-card-body">
+                            <div class="chronicle-card-header-meta">
+                                <span class="chronicle-kicker-tag ${catClass}">
+                                    <i class="fas ${catIcon}"></i> ${itemCat}
+                                </span>
+                                <span class="text-muted small"><i class="far fa-clock me-1"></i> ${itemDate}</span>
+                            </div>
+
+                            <h3 class="chronicle-card-title" onclick="openArticleModal(${globalIndex})">${item.title}</h3>
+                            <p class="chronicle-card-summary">${item.summary || ''}</p>
+
+                            ${tipSnippet}
+
+                            <div class="chronicle-card-footer">
+                                <div>
+                                    <span>${itemSource}</span> • <span>${itemReadTime}</span>
+                                </div>
+                                <div class="chronicle-card-actions">
+                                    <button type="button" class="btn btn-sm btn-link text-muted p-0" title="Listen" onclick="listenToArticle(${globalIndex})">
+                                        <i class="fas fa-volume-up"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-link text-muted p-0" title="Share" onclick="shareArticle(${globalIndex})">
+                                        <i class="far fa-share-square"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-dark rounded-pill px-2 py-0 ms-1 d-inline-flex align-items-center gap-1" style="font-size: 0.76rem; font-weight: 600;" onclick="openArticleModal(${globalIndex})" title="${currentLang === 'km' ? 'អានអត្ថបទពេញលេញ' : 'Read Full Dispatch'}">
+                                        <span>${currentLang === 'km' ? 'អាន' : 'Read'}</span>
+                                        <i class="fas fa-arrow-right" style="font-size: 0.68rem;"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+                `;
+                secondaryGrid.append(cardHtml);
+            });
+        }
+
+        // Side Real-Time Wire Feed
+        filtered.forEach((item, idx) => {
+            const timeAgo = idx === 0 ? "Just now" : (idx === 1 ? "18m ago" : (idx === 2 ? "45m ago" : `${idx}h ago`));
+            const wireItem = $(`
+                <li class="chronicle-wire-item">
+                    <div class="chronicle-wire-time">${timeAgo} • ${item.category || 'Wire'}</div>
+                    <p class="chronicle-wire-text" onclick="openArticleModal(${idx})">${item.title}</p>
+                </li>
+            `);
+            wireList.append(wireItem);
+        });
+
+        mainContent.fadeIn(200);
+    }
+
+    function fetchNews() {
+        $('#chronicle-main-content').hide();
+        $('#chronicle-empty').hide();
+        $('#chronicle-loading').show();
+        $('#refresh-icon').addClass('is-spinning');
+        $('#refresh-text').text(currentLang === 'km' ? 'កំពុងទាញយក...' : 'Syncing...');
+
+        $.ajax({
+            url: "{{ url_for('farmer.api_generate_news') }}",
+            data: { region: currentRegion, lang: currentLang },
+            dataType: "json",
+            timeout: 45000,
+            success: function(res) {
+                $('#chronicle-loading').hide();
+                $('#refresh-icon').removeClass('is-spinning');
+                $('#refresh-text').text(currentLang === 'km' ? 'ធ្វើបច្ចុប្បន្នភាព' : 'Sync Wire');
+
+                if (res && res.news && Array.isArray(res.news) && res.news.length > 0) {
+                rawNewsItems = res.news;
+                } else {
+                    rawNewsItems = [];
+                }
+                updateDepartmentCounts();
+                updateBreakingTicker(rawNewsItems, res.marquees || initialMarquees);
+                renderFeed();
+            },
+            error: function() {
+                $('#chronicle-loading').hide();
+                $('#refresh-icon').removeClass('is-spinning');
+                $('#refresh-text').text(currentLang === 'km' ? 'ធ្វើបច្ចុប្បន្នភាព' : 'Sync Wire');
+                rawNewsItems = [];
+                updateDepartmentCounts();
+                updateBreakingTicker(rawNewsItems, initialMarquees);
+                renderFeed();
+            }
+        });
+    }
+
+    function updateBreakingTicker(newsItems, marquees) {
+        const tickerContainer = $('#chronicle-ticker-items');
+        if (!tickerContainer.length) return;
+
+        const items = [];
+
+        // 1. Official announcements from database marquees
+        if (marquees && marquees.length > 0) {
+            marquees.forEach(m => {
+                const text = (currentLang === 'km' && m.text_kh) ? m.text_kh : m.text;
+                if (text && text.trim()) {
+                    const cleanText = text.trim().split(/\.|\n|সুতরাং/)[0];
+                    items.push(`
+                        <div class="chronicle-ticker-item">
+                            <span class="chronicle-ticker-badge-notice">
+                                <i class="fas fa-bullhorn"></i> ${currentLang === 'km' ? 'សេចក្តីជូនដំណឹង' : 'NOTICE'}
+                            </span>
+                            <strong>AGRI SYSTEM:</strong>
+                            <span>${cleanText}</span>
+                        </div>
+                    `);
+                }
+            });
+        }
+
+        // 2. High-Importance & Advisory News Dispatches from current feed
+        if (newsItems && newsItems.length > 0) {
+            let highPriority = newsItems.map((item, idx) => ({ item, idx }))
+                .filter(({ item }) => {
+                    const imp = (item.impact || "").toLowerCase();
+                    const cat = (item.category || "").toLowerCase();
+                    return imp === 'high' || imp === 'advisory' || cat.includes('weather') || cat.includes('pest') || cat.includes('អាកាសធាតុ') || cat.includes('ជំងឺ');
+                });
+
+            if (highPriority.length < 3) {
+                highPriority = newsItems.slice(0, 4).map((item, idx) => ({ item, idx }));
+            }
+
+            highPriority.slice(0, 5).forEach(({ item, idx }) => {
+                const cat = item.category || 'Wire';
+                const imp = (item.impact || 'High').toLowerCase();
+                const badgeClass = imp === 'high' ? 'chronicle-ticker-badge-urgent' : 'chronicle-ticker-badge-advisory';
+                const badgeLabel = imp === 'high' ? (currentLang === 'km' ? '⚡ បន្ទាន់' : '⚡ BREAKING') : (currentLang === 'km' ? '🛡️ ការណែនាំ' : 'ADVISORY');
+                const catIcon = getKickerIcon(cat);
+
+                items.push(`
+                    <div class="chronicle-ticker-item chronicle-ticker-clickable" onclick="openArticleByGlobalIndex(${idx})" title="${currentLang === 'km' ? 'ចុចដើម្បីអានព័ត៌មានលម្អិត' : 'Click to read full bulletin'}">
+                        <span class="${badgeClass}">${badgeLabel}</span>
+                        <strong><i class="fas ${catIcon} me-1"></i>${item.source || 'Wire'}:</strong>
+                        <span>${item.title}</span>
+                    </div>
+                `);
+            });
+        }
+
+        // 3. Live Agricultural Commodity Prices matching current region
+        if (currentRegion === 'cambodia') {
+            items.push(`
+                <div class="chronicle-ticker-item">
+                    <strong>🌾 ${currentLang === 'km' ? 'ស្រូវផ្ការំដួល' : 'Phka Rumduol'}:</strong> $865/MT <span class="chronicle-ticker-up">▲ +2.1%</span>
+                </div>
+            `);
+            items.push(`
+                <div class="chronicle-ticker-item">
+                    <strong>🥔 ${currentLang === 'km' ? 'ដំឡូងមីស្រស់' : 'Fresh Cassava'}:</strong> 380 KHR/kg <span class="chronicle-ticker-up">▲ +3.2%</span>
+                </div>
+            `);
+            items.push(`
+                <div class="chronicle-ticker-item">
+                    <strong>🥜 ${currentLang === 'km' ? 'គ្រាប់ស្វាយចន្ទី' : 'Cashew Nut'}:</strong> 5,200 KHR/kg <span class="chronicle-ticker-up">▲ +1.8%</span>
+                </div>
+            `);
+            items.push(`
+                <div class="chronicle-ticker-item">
+                    <strong>🌽 ${currentLang === 'km' ? 'ពោតក្រហម' : 'Yellow Corn'}:</strong> 950 KHR/kg <span class="text-muted">● Stable</span>
+                </div>
+            `);
+        } else {
+            items.push(`
+                <div class="chronicle-ticker-item">
+                    <strong>🌾 ${currentLang === 'km' ? 'ស្រូវសាលីសកល' : 'Global Wheat Index'}:</strong> $228/MT <span class="chronicle-ticker-up">▲ +1.4%</span>
+                </div>
+            `);
+            items.push(`
+                <div class="chronicle-ticker-item">
+                    <strong>🧪 ${currentLang === 'km' ? 'សន្ទស្សន៍ជីអ៊ុយរ៉េ' : 'Urea Fertilizer'}:</strong> $340/MT <span class="chronicle-ticker-down">▼ -0.8%</span>
+                </div>
+            `);
+            items.push(`
+                <div class="chronicle-ticker-item">
+                    <strong>🫘 ${currentLang === 'km' ? 'សណ្តែកសៀង' : 'Soybean Meal'}:</strong> $325/MT <span class="chronicle-ticker-up">▲ +0.9%</span>
+                </div>
+            `);
+            items.push(`
+                <div class="chronicle-ticker-item">
+                    <strong>🌽 ${currentLang === 'km' ? 'ពោត Chicago' : 'Corn Futures'}:</strong> $4.15/bu <span class="text-muted">● Stable</span>
+                </div>
+            `);
+        }
+
+        const separator = `<div class="chronicle-ticker-item text-muted">•</div>`;
+        const contentHtml = items.join(separator);
+        tickerContainer.html(contentHtml + separator + contentHtml);
+    }
+
+    function updateDepartmentCounts() {
+        const counts = { all: rawNewsItems.length, crops: 0, market: 0, weather: 0, pests: 0, tech: 0 };
+        rawNewsItems.forEach(item => {
+            const cat = (item.category || "").toLowerCase();
+            if (cat.includes("crop") || cat.includes("harvest") || cat.includes("ដំណាំ")) counts.crops++;
+            else if (cat.includes("market") || cat.includes("price") || cat.includes("ទីផ្សារ")) counts.market++;
+            else if (cat.includes("weather") || cat.includes("rain") || cat.includes("អាកាសធាតុ") || cat.includes("climate")) counts.weather++;
+            else if (cat.includes("pest") || cat.includes("disease") || cat.includes("ជំងឺ")) counts.pests++;
+            else if (cat.includes("tech") || cat.includes("drone") || cat.includes("បច្ចេកវិទ្យា")) counts.tech++;
+            else counts.crops++;
+        });
+
+        $('#dept-count-all').text(counts.all || 0);
+        $('#dept-count-crops').text(counts.crops || 0);
+        $('#dept-count-market').text(counts.market || 0);
+        $('#dept-count-weather').text(counts.weather || 0);
+        $('#dept-count-pests').text(counts.pests || 0);
+        $('#dept-count-tech').text(counts.tech || 0);
+    }
+
+    // Modal Reading Room Controller
+    let currentModalIndex = 0;
+    let currentModalSource = null;
+
+    window.openArticleModal = function(index, sourceArray) {
+        const pool = (sourceArray && Array.isArray(sourceArray)) ? sourceArray : currentFiltered;
+        if (!pool || !pool[index]) return;
+        const item = pool[index];
+        currentModalIndex = index;
+        currentModalSource = pool;
+
+        const cat = item.category || (currentLang === 'km' ? 'ដំណាំ' : 'Crops');
+        const kickerClass = getKickerClass(cat);
+        const kickerIcon = getKickerIcon(cat);
+
+        // 1. Department Wire Badge
+        $('#modal-kicker').attr('class', `chronicle-kicker-tag ${kickerClass}`)
+                          .html(`<i class="fas ${kickerIcon}"></i> ${cat}`);
+
+        // 2. Impact Urgency Badge
+        const imp = (item.impact || 'Moderate').toLowerCase();
+        let impactClass = 'impact-badge-moderate';
+        let impactIcon = 'fa-info-circle';
+        let impactLabel = currentLang === 'km' ? 'កម្រិតមធ្យម' : 'Moderate';
+        if (imp === 'high') {
+            impactClass = 'impact-badge-high';
+            impactIcon = 'fa-bolt';
+            impactLabel = currentLang === 'km' ? '⚡ បន្ទាន់ / សំខាន់ខ្ពស់' : '⚡ HIGH IMPACT';
+        } else if (imp === 'advisory') {
+            impactClass = 'impact-badge-advisory';
+            impactIcon = 'fa-shield-alt';
+            impactLabel = currentLang === 'km' ? '🛡️ ការណែនាំបច្ចេកទេស' : '🛡️ ACTION ADVISORY';
+        }
+        $('#modal-impact-badge').attr('class', `chronicle-modal-impact-badge ${impactClass}`)
+                                .html(`<i class="fas ${impactIcon}"></i> ${impactLabel}`);
+
+        // 3. Region Origin Badge
+        const regLabel = currentRegion === 'cambodia'
+            ? (currentLang === 'km' ? '🇰🇭 ការិយាល័យកម្ពុជា' : '🇰🇭 Cambodia Wire')
+            : (currentLang === 'km' ? '🌐 ការិយាល័យសកល' : '🌐 Global Wire');
+        $('#modal-region-badge').html(`<i class="fas fa-globe-asia text-primary me-1"></i> ${regLabel}`);
+
+        // 4. Headline & Author Byline
+        $('#modal-title').text(item.title);
+        $('#modal-source').text(item.source || 'Agriculture Intelligence');
+        $('#modal-date').html(`<i class="far fa-clock me-1"></i> ${item.date || 'Today'}`);
+        $('#modal-readtime').html(`<i class="far fa-eye me-1"></i> ${item.read_time || '3 min read'}`);
+
+        // 5. Featured Press Image Showcase
+        const photoUrl = getArticlePhoto(item, index);
+        $('#modal-image').attr('src', photoUrl);
+        $('#modal-img-caption-source').html(`<i class="fas fa-camera me-1"></i> ${item.source || 'Press Photo Wire'}`);
+
+        // 6. Executive Lead Deck (Summary)
+        const summaryText = item.summary || item.content || '';
+        $('#modal-lead-deck').text(summaryText);
+
+        // 7. Agronomist Advisory Card
+        if (item.tip && item.tip.trim()) {
+            $('#modal-tip-container').show();
+            $('#modal-tip-text').text(item.tip);
+        } else {
+            $('#modal-tip-container').hide();
+        }
+
+        // 8. Field Intelligence Matrix
+        $('#modal-intel-sector').text(cat);
+        $('#modal-intel-impact').text(impactLabel);
+        $('#modal-intel-authority').text(item.source || 'Verified Authority');
+
+        // 9. Previous / Next Dispatch Buttons
+        $('#btn-modal-prev').prop('disabled', index <= 0);
+        $('#btn-modal-next').prop('disabled', index >= pool.length - 1);
+
+        // 10. Interactive Buttons
+        $('#btn-modal-share').off('click').on('click', function() {
+            shareArticle(index);
+        });
+
+        $('#btn-modal-listen').off('click').on('click', function() {
+            listenToArticle(index);
+        });
+
+        if (item.link && item.link.trim()) {
+            $('#btn-modal-link').attr('href', item.link).show();
+        } else {
+            $('#btn-modal-link').hide();
+        }
+
+        $('#readingRoomModal').modal('show');
+    };
+
+    window.navigateArticleModal = function(direction) {
+        const pool = currentModalSource || currentFiltered;
+        const nextIndex = currentModalIndex + direction;
+        if (pool && nextIndex >= 0 && nextIndex < pool.length) {
+            window.openArticleModal(nextIndex, pool);
+        }
+    };
+
+    window.openArticleByGlobalIndex = function(index) {
+        window.openArticleModal(index, rawNewsItems);
+    };
+
+    // Quick Share handler
+    window.shareArticle = function(index) {
+        if (!currentFiltered[index]) return;
+        const item = currentFiltered[index];
+        const text = `${item.title}\n\n${item.summary || ''}\n\n💡 Tip: ${item.tip || ''}\n(Source: ${item.source || 'Agri System'})`;
+        
+        if (navigator.share) {
+            navigator.share({
+                title: item.title,
+                text: text,
+                url: window.location.href
+            }).catch(() => {});
+        } else if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert(currentLang === 'km' ? 'បានចម្លងចំណងជើង និងសេចក្តីសង្ខេប!' : 'Article headline & summary copied to clipboard!');
+            });
+        }
+    };
+
+    // Text-to-Speech narration
+    window.listenToArticle = function(index) {
+        if (!currentFiltered[index]) return;
+        const item = currentFiltered[index];
+
+        if (!('speechSynthesis' in window)) {
+            alert(currentLang === 'km' ? 'កម្មវិធីរុករកនេះមិនគាំទ្រសំឡេងអានទេ' : 'Speech synthesis not supported in this browser');
+            return;
+        }
+
+        if (isSpeaking) {
+            window.speechSynthesis.cancel();
+            isSpeaking = false;
+            $('#listen-btn-text').text(currentLang === 'km' ? 'ស្តាប់សំឡេង' : 'Listen');
+            return;
+        }
+
+        const utteranceText = `${item.title}. ${item.summary || ''}. ${item.tip ? (currentLang === 'km' ? 'អនុសាសន៍៖ ' + item.tip : 'Recommendation: ' + item.tip) : ''}`;
+        const utterance = new SpeechSynthesisUtterance(utteranceText);
+        utterance.rate = 0.95;
+        utterance.pitch = 1.0;
+
+        if (currentLang === 'km') {
+            utterance.lang = 'km-KH';
+        } else {
+            utterance.lang = 'en-US';
+        }
+
+        utterance.onstart = function() {
+            isSpeaking = true;
+            $('#listen-btn-text').text(currentLang === 'km' ? 'កំពុងអាន...' : 'Speaking...');
+        };
+
+        utterance.onend = function() {
+            isSpeaking = false;
+            $('#listen-btn-text').text(currentLang === 'km' ? 'ស្តាប់សំឡេង' : 'Listen');
+        };
+
+        utterance.onerror = function() {
+            isSpeaking = false;
+            $('#listen-btn-text').text(currentLang === 'km' ? 'ស្តាប់សំឡេង' : 'Listen');
+        };
+
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utterance);
+    };
+
+    // Auto-stop speech when modal is closed
+    $('#readingRoomModal').on('hidden.bs.modal', function () {
+        if ('speechSynthesis' in window && isSpeaking) {
+            window.speechSynthesis.cancel();
+            isSpeaking = false;
+            $('#listen-btn-text').text(currentLang === 'km' ? 'ស្តាប់សំឡេង' : 'Listen to Dispatch');
+        }
+    });
+
+    window.resetAllFilters = function() {
+        activeCategory = "all";
+        searchQuery = "";
+        $('#chronicle-search-input').val('');
+        $('.chronicle-dept-btn').removeClass('is-active');
+        $('.chronicle-dept-btn[data-cat="all"]').addClass('is-active');
+        renderFeed();
+    };
+
+    $(document).ready(function() {
+        updateLiveDateString();
+        updateBreakingTicker([], initialMarquees);
+        fetchNews();
+
+        // Edition Switchers
+        $('#btn-cambodia').on('click', function() {
+            currentRegion = "cambodia";
+            $(this).addClass('is-active');
+            $('#btn-world').removeClass('is-active');
+            $('#edition-badge-text').text(currentLang === 'km' ? 'ការិយាល័យកម្ពុជា' : 'Cambodia Dispatch');
+            activeCategory = "all";
+            $('.chronicle-dept-btn').removeClass('is-active');
+            $('.chronicle-dept-btn[data-cat="all"]').addClass('is-active');
+            fetchNews();
+        });
+
+        $('#btn-world').on('click', function() {
+            currentRegion = "world";
+            $(this).addClass('is-active');
+            $('#btn-cambodia').removeClass('is-active');
+            $('#edition-badge-text').text(currentLang === 'km' ? 'ការិយាល័យអន្តរជាតិ' : 'Global Wire');
+            activeCategory = "all";
+            $('.chronicle-dept-btn').removeClass('is-active');
+            $('.chronicle-dept-btn[data-cat="all"]').addClass('is-active');
+            fetchNews();
+        });
+
+        // Refresh Button
+        $('#btn-refresh-news').on('click', function() {
+            fetchNews();
+        });
+
+        // Pause / Resume Breaking Wire Ticker
+        let isTickerPaused = false;
+        $('#btn-toggle-ticker-pause').on('click', function() {
+            isTickerPaused = !isTickerPaused;
+            if (isTickerPaused) {
+                $('#chronicle-ticker-items').css('animation-play-state', 'paused');
+                $('#ticker-pause-icon').removeClass('fa-pause').addClass('fa-play text-primary');
+            } else {
+                $('#chronicle-ticker-items').css('animation-play-state', 'running');
+                $('#ticker-pause-icon').removeClass('fa-play text-primary').addClass('fa-pause');
+            }
+        });
+
+        // Search Input
+        let searchTimeout;
+        $('#chronicle-search-input').on('input', function() {
+            clearTimeout(searchTimeout);
+            searchQuery = $(this).val();
+            searchTimeout = setTimeout(function() {
+                renderFeed();
+            }, 180);
+        });
+
+        // Department Section Clicks
+        $('.chronicle-dept-btn').on('click', function() {
+            $('.chronicle-dept-btn').removeClass('is-active');
+            $(this).addClass('is-active');
+            activeCategory = $(this).data('cat') || "all";
+            renderFeed();
+        });
+    });
+})();
+</script>
+{% endblock %}

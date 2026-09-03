@@ -93,13 +93,13 @@
                     <span class="nav-label">{{ t("new_diagnosis") }}</span>
                     <span class="nav-chevron"><i class="fas fa-chevron-right"></i></span>
                 </a>
-                <a class="farmer-nav-link sub-link {% if path == url_for('farmer.rule_inference_history') %}active{% endif %}"
-                   href="{{ url_for('farmer.rule_inference_history') }}"
-                   aria-current="{% if path == url_for('farmer.rule_inference_history') %}page{% else %}false{% endif %}"
-                   data-tooltip="{{ t('rule_history') }}"
-                   aria-label="{{ t('rule_history') }}">
-                    <span class="nav-icon"><i class="far fa-clock"></i></span>
-                    <span class="nav-label">{{ t("rule_history") }}</span>
+                <a class="farmer-nav-link {% if path.startswith('/farmer/diagnoses') or path.startswith('/farmer/result') %}active{% endif %}"
+                   href="{{ url_for('farmer.diagnosis_history') }}"
+                   aria-current="{% if path.startswith('/farmer/diagnoses') or path.startswith('/farmer/result') %}page{% else %}false{% endif %}"
+                   data-tooltip="{{ t('diagnoses_label') }}"
+                   aria-label="{{ t('diagnoses_label') }}">
+                    <span class="nav-icon"><i class="far fa-file-alt"></i></span>
+                    <span class="nav-label">{{ t("diagnoses_label") }}</span>
                     <span class="nav-chevron"><i class="fas fa-chevron-right"></i></span>
                 </a>
                 <a class="farmer-nav-link {% if path.startswith('/farmer/chat') %}active{% endif %}"
@@ -109,6 +109,15 @@
                    aria-label="{{ t('ask_expert') }}">
                     <span class="nav-icon"><i class="far fa-comments"></i></span>
                     <span class="nav-label">{{ t("ask_expert") }}</span>
+                    <span class="nav-chevron"><i class="fas fa-chevron-right"></i></span>
+                </a>
+                <a class="farmer-nav-link {% if path == url_for('farmer.news') %}active{% endif %}"
+                   href="{{ url_for('farmer.news') }}"
+                   aria-current="{% if path == url_for('farmer.news') %}page{% else %}false{% endif %}"
+                   data-tooltip="{{ t('agriculture_news', default='News') }}"
+                   aria-label="{{ t('agriculture_news', default='News') }}">
+                    <span class="nav-icon"><i class="far fa-newspaper"></i></span>
+                    <span class="nav-label">{{ t("agriculture_news", default="News") }}</span>
                     <span class="nav-chevron"><i class="fas fa-chevron-right"></i></span>
                 </a>
             </nav>
