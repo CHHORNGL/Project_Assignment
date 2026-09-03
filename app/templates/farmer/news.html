@@ -1842,78 +1842,106 @@ html[lang="km"] .chronicle-modal-lead-deck {
 
     // Context-aware photographic matcher that displays real authentic images directly supporting the news text
     function getArticlePhoto(item, index) {
-        if (item && item.image && item.image.trim()) {
+        // 1. If backend already assigned a high-quality topic photo, use it
+        if (item && item.image && item.image.trim() && item.image.startsWith("http")) {
             return item.image;
         }
+
         const text = ((item && item.title ? item.title : '') + ' ' + (item && item.summary ? item.summary : '')).toLowerCase();
-        
-        // Exact semantic matching based on keywords in title/summary
-        if (text.includes("cow") || text.includes("cattle") || text.includes("livestock") || text.includes("buffal") || text.includes("គោ") || text.includes("ក្របី") || text.includes("វ៉ាក់សាំង") || text.includes("សត្វពាហនៈ")) {
-            return "https://images.unsplash.com/photo-1570042225831-d98fa7577f1e?w=900&auto=format&fit=crop&q=80";
+
+        function hasWord(pattern) {
+            return new RegExp(pattern, 'i').test(text);
         }
-        if (text.includes("cassava") || text.includes("tapioca") || text.includes("ដំឡូងមី")) {
-            return "https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=900&auto=format&fit=crop&q=80";
+
+        // 1. Corn / Maize / WASDE
+        if (hasWord('\\b(corn|maize|wasde)\\b|ពោត')) {
+            return "https://images.unsplash.com/photo-1551754655-cd27e38d2076?w=900&auto=format&fit=crop&q=80";
         }
-        if (text.includes("cashew") || text.includes("ស្វាយចន្ទី")) {
-            return "https://images.unsplash.com/photo-1509358271058-acd22cc93898?w=900&auto=format&fit=crop&q=80";
-        }
-        if (text.includes("drone") || text.includes("ដ្រូន")) {
-            return "https://images.unsplash.com/photo-1508614589041-895b88991e3e?w=900&auto=format&fit=crop&q=80";
-        }
-        if (text.includes("vegetable") || text.includes("chili") || text.includes("tomato") || text.includes("បន្លែ") || text.includes("ម្ទេស") || text.includes("camgap")) {
-            return "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=900&auto=format&fit=crop&q=80";
-        }
-        if (text.includes("banana") || text.includes("mango") || text.includes("ចេក") || text.includes("ស្វាយ") || text.includes("ផ្លែឈើ")) {
-            return "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=900&auto=format&fit=crop&q=80";
-        }
-        if (text.includes("reservoir") || text.includes("sluice") || text.includes("tonle sap") || text.includes("ទំនប់") || text.includes("ទន្លេសាប") || text.includes("ធារាសាស្ត្រ") || text.includes("ប្រឡាយ")) {
-            return "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=900&auto=format&fit=crop&q=80";
-        }
-        if (text.includes("app") || text.includes("phone") || text.includes("digital") || text.includes("ទូរស័ព្ទ") || text.includes("ឌីជីថល") || text.includes("ai")) {
-            return "https://images.unsplash.com/photo-1530507629858-e4977d30e9e0?w=900&auto=format&fit=crop&q=80";
-        }
-        if (text.includes("satellite") || text.includes("hyperspectral") || text.includes("orbit") || text.includes("ផ្កាយរណប")) {
-            return "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=900&auto=format&fit=crop&q=80";
-        }
-        if (text.includes("drip") || text.includes("irrigation") || text.includes("ដំណក់ទឹក")) {
-            return "https://images.unsplash.com/photo-1563514227147-6d2ff665a6a0?w=900&auto=format&fit=crop&q=80";
-        }
-        if (text.includes("soybean") || text.includes("oilseed") || text.includes("សណ្តែក")) {
+        // 2. Soybean / Oilseeds
+        if (hasWord('\\b(soybeans?|soy|oilseeds?)\\b|សណ្តែក')) {
             return "https://images.unsplash.com/photo-1599940824399-b87987ceb72a?w=900&auto=format&fit=crop&q=80";
         }
-        if (text.includes("wheat") || text.includes("grain") || text.includes("cereal") || text.includes("corn") || text.includes("ស្រូវសាលី") || text.includes("ធញ្ញជាតិ") || text.includes("ពោត")) {
+        // 3. Wheat / Flour / Grain Stocks / Cereal
+        if (hasWord('\\b(wheat|cereals?|grains?|flour)\\b|ស្រូវសាលី|ធញ្ញជាតិ')) {
             return "https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=900&auto=format&fit=crop&q=80";
         }
-        if (text.includes("fertilizer") || text.includes("urea") || text.includes("potassium") || text.includes("ជី")) {
-            return "https://images.unsplash.com/photo-1585336261022-680e295ce3fe?w=900&auto=format&fit=crop&q=80";
-        }
-        if (text.includes("rain") || text.includes("monsoon") || text.includes("weather") || text.includes("storm") || text.includes("ភ្លៀង") || text.includes("មូសុង") || text.includes("អាកាសធាតុ") || text.includes("la niña")) {
-            return "https://images.unsplash.com/photo-1514632595-4944383f2737?w=900&auto=format&fit=crop&q=80";
-        }
-        if (text.includes("biocontrol") || text.includes("parasitoid") || text.includes("predator") || text.includes("ladybug") || text.includes("ជីវសាស្រ្ត")) {
-            return "https://images.unsplash.com/photo-1473081556163-2a17de81fc97?w=900&auto=format&fit=crop&q=80";
-        }
-        if (text.includes("pest") || text.includes("blast") || text.includes("hopper") || text.includes("disease") || text.includes("រលួយ") || text.includes("មមាច") || text.includes("ជំងឺ")) {
+        // 4. Pests / Plant Diseases / Fungicide / Blast / Hopper / Rot
+        if (hasWord('\\b(pests?|diseases?|fungicides?|fungus|blast|hoppers?|armyworms?|rot|infection|treatments?)\\b|ថ្នាំកសិកម្ម|សត្វល្អិត|ជំងឺ|មមាច|ដង្កូវ|រលួយ')) {
             return "https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=900&auto=format&fit=crop&q=80";
         }
-        if (text.includes("seed") || text.includes("panicle") || text.includes("ពូជ") || text.includes("cardi")) {
-            return "https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=900&auto=format&fit=crop&q=80";
-        }
-        if (text.includes("rice") || text.includes("paddy") || text.includes("jasmine") || text.includes("rumduol") || text.includes("ស្រូវ") || text.includes("អង្ករ")) {
+        // 5. Rice / Paddy / Jasmine / Phka Rumduol (whole words only, never matches 'price')
+        if (hasWord('\\b(rice|paddy|paddies|jasmine|irri|phka rumduol)\\b|ស្រូវ|អង្ករ|ផ្ការំដួល')) {
             return "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=900&auto=format&fit=crop&q=80";
         }
-        if (text.includes("shade") || text.includes("tree") || text.includes("agroforestry") || text.includes("forest") || text.includes("ម្លប់") || text.includes("កាហ្វេ")) {
-            return "https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=900&auto=format&fit=crop&q=80";
+        // 6. Cassava / Tapioca / Starch
+        if (hasWord('\\b(cassava|tapioca)\\b|ដំឡូងមី')) {
+            return "https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=900&auto=format&fit=crop&q=80";
         }
-        
-        // Default fallback by index
-        const fallbackList = [
+        // 7. Cashew Nuts
+        if (hasWord('\\b(cashews?|cashew nuts?)\\b|ស្វាយចន្ទី')) {
+            return "https://images.unsplash.com/photo-1509358271058-acd22cc93898?w=900&auto=format&fit=crop&q=80";
+        }
+        // 8. Vegetables / CamGAP / Greenhouses
+        if (hasWord('\\b(vegetables?|tomatoes?|chili|camgap|cabbage|horticulture)\\b|បន្លែ|ម្ទេស|ប៉េងប៉ោះ')) {
+            return "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=900&auto=format&fit=crop&q=80";
+        }
+        // 9. Fruits / Mango / Banana / Durian
+        if (hasWord('\\b(fruits?|mango|mangoes|banana|bananas|durian|longan)\\b|ផ្លែឈើ|ស្វាយ|ចេក|ធុរេន')) {
+            return "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=900&auto=format&fit=crop&q=80";
+        }
+        // 10. Livestock / Cattle / Cow / Buffalo / Dairy
+        if (hasWord('\\b(cows?|cattle|livestock|buffalo|buffalos|dairy|beef|calves)\\b|គោ|ក្របី|សត្វពាហនៈ')) {
+            return "https://images.unsplash.com/photo-1570042225831-d98fa7577f1e?w=900&auto=format&fit=crop&q=80";
+        }
+        // 11. Poultry / Swine / Pork
+        if (hasWord('\\b(poultry|chickens?|ducks?|swine|pigs?|pork)\\b|មាន់|ទា|ជ្រូក')) {
+            return "https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?w=900&auto=format&fit=crop&q=80";
+        }
+        // 12. Weather / Rain / Monsoon / Storm / Flood / El Niño / La Niña
+        if (hasWord('\\b(rains?|rainfall|monsoon|storm|flood|floods|flooding|el ni[ñn]o|la ni[ñn]a|weather|climate)\\b|ភ្លៀង|មូសុង|ព្យុះ|ទឹកជំនន់|អាកាសធាតុ')) {
+            return "https://images.unsplash.com/photo-1514632595-4944383f2737?w=900&auto=format&fit=crop&q=80";
+        }
+        // 13. Drought / Heatwave / Water Shortage
+        if (hasWord('\\b(drought|droughts|heatwave|water shortage|arid)\\b|រាំងស្ងួត|ខ្វះទឹក')) {
+            return "https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?w=900&auto=format&fit=crop&q=80";
+        }
+        // 14. Irrigation / Drip / Canals / Reservoir
+        if (hasWord('\\b(irrigation|drip|canals?|reservoirs?|sluice|water gates?)\\b|ស្រោចស្រព|ដំណក់ទឹក|ប្រឡាយ|ទំនប់|ធារាសាស្ត្រ')) {
+            return "https://images.unsplash.com/photo-1563514227147-6d2ff665a6a0?w=900&auto=format&fit=crop&q=80";
+        }
+        // 15. Drones / AI / Big Data / Expo (word-boundary ensures 'export' never matches)
+        if (hasWord('\\b(drones?|uav|big data|expo|smart farm)\\b|\\b(ai)\\b|ដ្រូន|ពិព័រណ៍')) {
+            return "https://images.unsplash.com/photo-1508614589041-895b88991e3e?w=900&auto=format&fit=crop&q=80";
+        }
+        // 16. Banking / Finance / Loans / $500M / ARDB
+        if (hasWord('\\b(bank|banking|ardb|loans?|credits?|finance|funds?|investments?|\\$\\d+m?)\\b|ធនាគារ|កម្ចី|ឥណទាន|វិនិយោគ|ថវិកា')) {
+            return "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=900&auto=format&fit=crop&q=80";
+        }
+        // 17. Agricultural Workers / Labor / Recruitment
+        if (hasWord('\\b(workers?|labor|labour|recruitment|employment|jobs?)\\b|ពលករ|កម្មករ|ការងារ|ជ្រើសរើស')) {
+            return "https://images.unsplash.com/photo-1595974482597-4b8da8879bc5?w=900&auto=format&fit=crop&q=80";
+        }
+        // 18. Trade / Export / Shipping / Logistics
+        if (hasWord('\\b(exports?|imports?|trade|shipping|cargo|logistics|pakistan|saudi|israel)\\b|នាំចេញ|នាំចូល|ពាណិជ្ជកម្ម')) {
+            return "https://images.unsplash.com/photo-1578575437130-527eed3abbec?w=900&auto=format&fit=crop&q=80";
+        }
+        // 19. Community / Cooperatives / Farmers
+        if (hasWord('\\b(farmers?|cooperatives?|community|cfavc|value chains?)\\b|កសិករ|សហគមន៍|សហករណ៍')) {
+            return "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=900&auto=format&fit=crop&q=80";
+        }
+        // 20. Fertilizer / Soil Health / Nutrients
+        if (hasWord('\\b(fertilizer|urea|soil|nutrient|compost|potassium)\\b|ជី|ដី')) {
+            return "https://images.unsplash.com/photo-1585336261022-680e295ce3fe?w=900&auto=format&fit=crop&q=80";
+        }
+
+        // Fallbacks
+        const fallbacks = [
             "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=900&auto=format&fit=crop&q=80",
             "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=900&auto=format&fit=crop&q=80",
-            "https://images.unsplash.com/photo-1508614589041-895b88991e3e?w=900&auto=format&fit=crop&q=80",
-            "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=900&auto=format&fit=crop&q=80"
+            "https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=900&auto=format&fit=crop&q=80",
+            "https://images.unsplash.com/photo-1508614589041-895b88991e3e?w=900&auto=format&fit=crop&q=80"
         ];
-        return fallbackList[(index || 0) % fallbackList.length];
+        return fallbacks[(index || 0) % fallbacks.length];
     }
 
     function getKickerClass(cat) {

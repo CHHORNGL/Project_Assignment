@@ -163,6 +163,20 @@ def translate_to_khmer(text: str, model_choice: Optional[str] = None) -> Optiona
     if not client:
         return None
 
+    # Ensure model_name is compatible with OpenAI / Groq provider
+    if not model_name or "gemini" in model_name.lower():
+        try:
+            db_provider = SiteSetting.query.get("ACTIVE_PROVIDER")
+            provider = db_provider.value.strip() if db_provider else "groq"
+            if provider == "groq":
+                groq_model = SiteSetting.query.get("GROQ_MODEL")
+                model_name = groq_model.value.strip() if groq_model and groq_model.value else "qwen/qwen3.8-27b"
+            else:
+                db_model = SiteSetting.query.get("OPENAI_MODEL")
+                model_name = db_model.value.strip() if db_model and db_model.value else DEFAULT_TRANSLATE_MODEL
+        except Exception:
+            model_name = "qwen/qwen3.8-27b"
+
     system_prompt = (
         "Translate the user's text into Khmer. "
         "Preserve technical terms and crop/disease names if they are already Khmer. "
