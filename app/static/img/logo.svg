@@ -1,61 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400" role="img" aria-labelledby="title desc">
-  <title id="title">AGE Multicolor Logo</title>
-  <desc id="desc">Clean professional AGE monogram using a vibrant blue, cyan, purple, pink, orange and yellow gradient palette.</desc>
-
-  <defs>
-    <linearGradient id="aMain" x1="0%" y1="100%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#7C2CFF"/>
-      <stop offset="28%" stop-color="#E62AFF"/>
-      <stop offset="55%" stop-color="#168BFF"/>
-      <stop offset="100%" stop-color="#29D7FF"/>
-    </linearGradient>
-    <linearGradient id="aRibbon" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#7C2CFF"/>
-      <stop offset="25%" stop-color="#FF3AAE"/>
-      <stop offset="48%" stop-color="#FF8A2A"/>
-      <stop offset="67%" stop-color="#FFD33D"/>
-      <stop offset="100%" stop-color="#12BFFF"/>
-    </linearGradient>
-    <linearGradient id="gOuter" x1="0%" y1="20%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#315BFF"/>
-      <stop offset="35%" stop-color="#1ED5FF"/>
-      <stop offset="68%" stop-color="#6D32FF"/>
-      <stop offset="100%" stop-color="#FF2E9A"/>
-    </linearGradient>
-    <linearGradient id="gInner" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#1EDBFF"/>
-      <stop offset="42%" stop-color="#2875FF"/>
-      <stop offset="72%" stop-color="#8C32FF"/>
-      <stop offset="100%" stop-color="#FF3C63"/>
-    </linearGradient>
-    <linearGradient id="eTop" x1="0%" y1="100%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#187DFF"/>
-      <stop offset="45%" stop-color="#16D4FF"/>
-      <stop offset="78%" stop-color="#71DF55"/>
-      <stop offset="100%" stop-color="#FFD928"/>
-    </linearGradient>
-    <linearGradient id="eMid" x1="0%" y1="100%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#7A2BFF"/>
-      <stop offset="40%" stop-color="#E72AFF"/>
-      <stop offset="75%" stop-color="#FF5757"/>
-      <stop offset="100%" stop-color="#FFBC35"/>
-    </linearGradient>
-    <linearGradient id="eBottom" x1="0%" y1="100%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#7D35FF"/>
-      <stop offset="35%" stop-color="#315BFF"/>
-      <stop offset="70%" stop-color="#16CFFF"/>
-      <stop offset="100%" stop-color="#44E8D1"/>
-    </linearGradient>
-  </defs>
-
-  <path fill="url(#aMain)" d="M78 320 L270 56 Q284 36 298 56 L476 320 L382 320 L319 222 L250 222 L195 320 Z M285 135 L230 206 L337 206 Z"/>
-  <path fill="url(#aRibbon)" d="M34 330 Q182 186 340 176 Q425 171 520 222 Q424 193 326 208 Q186 231 90 330 Z"/>
-
-  <path fill="url(#gOuter)" d="M680 106 Q620 73 555 73 Q443 73 391 151 Q356 203 391 257 Q435 326 542 326 Q613 326 675 282 L675 191 L540 191 L507 242 L603 242 L603 250 Q574 271 539 271 Q476 271 450 233 Q430 203 451 170 Q479 126 544 126 Q601 126 638 151 Z"/>
-  <path fill="url(#gInner)" d="M505 176 Q530 146 574 146 Q610 146 641 164 L617 194 Q598 181 572 181 Q543 181 526 199 Q510 216 516 236 Q522 256 546 264 L568 226 L632 226 L632 258 Q595 285 545 285 Q487 285 465 246 Q448 215 468 190 Q483 174 505 176 Z" opacity=".8"/>
-
-  <path fill="url(#eTop)" d="M734 79 L1120 79 L1067 139 L828 139 L828 178 L1056 178 L1003 236 L828 236 L828 267 L1124 267 L1068 327 L734 327 Z"/>
-  <path fill="url(#eTop)" d="M742 79 L1128 79 L1080 132 L791 132 Z" opacity=".95"/>
-  <path fill="url(#eMid)" d="M742 178 L1070 178 L1019 232 L791 232 Z" opacity=".95"/>
-  <path fill="url(#eBottom)" d="M742 267 L1120 267 L1071 320 L791 320 Z" opacity=".95"/>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="256px" height="257px" viewBox="0 0 256 257" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" preserveAspectRatio="xMidYMid">
+    <title>JWT</title>
+    <g>
+				<polygon fill="#FFFFFF" points="147.386158 69.0712136 147.129388 -1.0975284e-14 108.613842 -1.0975284e-14 108.870612 69.0712136 128.128385 95.5185557"></polygon>
+				<polygon fill="#FFFFFF" points="108.870612 187.442327 108.870612 256.770311 147.386158 256.770311 147.386158 187.442327 128.128385 160.994985"></polygon>
+				<polygon fill="#00F2E6" points="147.386158 187.442327 187.955868 243.418255 219.025075 220.822467 178.455366 164.84654 147.386158 154.832497"></polygon>
+				<polygon fill="#00F2E6" points="108.870612 69.0712136 68.0441324 13.0952859 36.9749248 35.6910732 77.5446339 91.667001 108.870612 101.681043"></polygon>
+				<polygon fill="#00B9F1" points="77.5446339 91.667001 11.8114343 70.3550652 3.70594005e-15 106.816449 65.7331996 128.385155 96.8024072 118.114343"></polygon>
+				<polygon fill="#00B9F1" points="159.197593 138.399198 178.455366 164.84654 244.188566 186.158475 256 149.697091 190.2668 128.385155"></polygon>
+				<polygon fill="#D63AFF" points="190.2668 128.385155 256 106.816449 244.188566 70.3550652 178.455366 91.667001 159.197593 118.114343"></polygon>
+				<polygon fill="#D63AFF" points="65.7331996 128.385155 3.70594005e-15 149.697091 11.8114343 186.158475 77.5446339 164.84654 96.8024072 138.399198"></polygon>
+				<polygon fill="#FB015B" points="77.5446339 164.84654 36.9749248 220.822467 68.0441324 243.418255 108.870612 187.442327 108.870612 154.832497"></polygon>
+				<polygon fill="#FB015B" points="178.455366 91.667001 219.025075 35.6910732 187.955868 13.0952859 147.386158 69.0712136 147.386158 101.681043"></polygon>
+    </g>
 </svg>
