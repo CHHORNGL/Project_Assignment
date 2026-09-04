@@ -1546,34 +1546,48 @@ html.dark-mode .news-page-wrapper,
 /* 1. Primary Action & Active Buttons (High-contrast dark text on mint green) */
 html.dark-mode .chronicle-primary-btn,
 .dark-mode .chronicle-primary-btn,
+html.dark-mode .chronicle-primary-btn,
+.dark-mode .chronicle-primary-btn {
+    background: linear-gradient(135deg, #059669, #047857) !important;
+    border: 1px solid rgba(52, 211, 153, 0.3) !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25) !important;
+}
+
+html.dark-mode .chronicle-primary-btn:hover,
+.dark-mode .chronicle-primary-btn:hover {
+    background: linear-gradient(135deg, #10b981, #059669) !important;
+    color: #ffffff !important;
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35) !important;
+}
+
 html.dark-mode .chronicle-edition-btn.is-active,
 .dark-mode .chronicle-edition-btn.is-active,
 html.dark-mode .chronicle-dept-btn.is-active,
 .dark-mode .chronicle-dept-btn.is-active {
-    background: #34d399 !important;
-    border-color: #34d399 !important;
-    color: #06251b !important;
-    font-weight: 800 !important;
-    box-shadow: 0 4px 14px rgba(52, 211, 153, 0.3) !important;
+    background: rgba(16, 185, 129, 0.18) !important;
+    border-color: rgba(52, 211, 153, 0.5) !important;
+    color: #a7f3d0 !important;
+    font-weight: 700 !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
 }
 
-html.dark-mode .chronicle-primary-btn:hover,
-.dark-mode .chronicle-primary-btn:hover,
 html.dark-mode .chronicle-edition-btn.is-active:hover,
 .dark-mode .chronicle-edition-btn.is-active:hover,
 html.dark-mode .chronicle-dept-btn.is-active:hover,
 .dark-mode .chronicle-dept-btn.is-active:hover {
-    background: #6ee7b7 !important;
-    border-color: #6ee7b7 !important;
-    color: #06251b !important;
+    background: rgba(16, 185, 129, 0.28) !important;
+    border-color: rgba(52, 211, 153, 0.7) !important;
+    color: #ffffff !important;
 }
 
 html.dark-mode .chronicle-dept-btn.is-active .badge,
 .dark-mode .chronicle-dept-btn.is-active .badge {
-    background: rgba(6, 37, 27, 0.25) !important;
-    color: #06251b !important;
-    font-weight: 800 !important;
-    border: none !important;
+    background: rgba(16, 185, 129, 0.25) !important;
+    color: #34d399 !important;
+    font-weight: 700 !important;
+    border: 1px solid rgba(52, 211, 153, 0.4) !important;
 }
 
 /* Inactive Department Pills & Badges in Dark Mode */
@@ -1866,9 +1880,9 @@ html.dark-mode .chronicle-card-actions .btn-outline-dark,
 
 html.dark-mode .chronicle-card-actions .btn-outline-dark:hover,
 .dark-mode .chronicle-card-actions .btn-outline-dark:hover {
-    background: #34d399 !important;
-    color: #06251b !important;
-    border-color: #34d399 !important;
+    background: #059669 !important;
+    color: #ffffff !important;
+    border-color: #059669 !important;
 }
 
 html.dark-mode .chronicle-card-actions .btn-link,

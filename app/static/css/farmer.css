@@ -77,6 +77,7 @@
 
     background: var(--farmer-bg);
     color: var(--text-main);
+    transition: background-color 0.25s ease, color 0.2s ease;
 }
 
 .dark-mode .farmer-dash-theme {
@@ -351,11 +352,15 @@
 }
 
 .dark-mode .fm-btn-primary {
-    color: #06251b;
+    background: #059669;
+    border-color: #059669;
+    color: #ffffff;
 }
 
 .dark-mode .fm-btn-primary:hover {
-    color: #06251b;
+    background: #10b981;
+    border-color: #10b981;
+    color: #ffffff;
 }
 
 .fm-btn-secondary {
@@ -1835,6 +1840,12 @@ html.dark-mode .fm-team-member .fm-team-avatar {
     background: var(--primary);
     border-color: var(--primary);
     color: #ffffff;
+}
+
+.dark-mode .fm-chip.is-selected {
+    background: rgba(16, 185, 129, 0.16);
+    border-color: rgba(52, 211, 153, 0.5);
+    color: #a7f3d0;
 }
 
 .fm-chip.is-selected::before {

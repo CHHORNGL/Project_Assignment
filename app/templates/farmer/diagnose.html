@@ -4,8 +4,8 @@
 {% block head %}
 <style>
 /* ==========================================================================
-   NEW DIAGNOSIS STUDIO — MODERN AGRICULTURAL CLINICAL DESIGN SYSTEM
-   Professional, clean, high-contrast, responsive diagnostic workflow
+   NEW DIAGNOSIS STUDIO — EYE-COMFORT CLINICAL DESIGN SYSTEM
+   Soft, soothing, low-glare dark mode with smooth visual transitions
    ========================================================================== */
 
 :root {
@@ -26,23 +26,57 @@
     --diag-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
 }
 
+/* ==========================================================================
+   EYE-COMFORT DARK MODE — ZERO GLARE / ZERO EYE STRAIN
+   - Warm, restful charcoal surfaces (#131715 / #191e1b) instead of stark pitch-black
+   - Calm, organic emerald tones instead of blinding neon green
+   - Translucent tinted pills (#a7f3d0 on soft emerald glass) instead of solid neon
+   - Glare-free off-white text (#e2e8f0, ~88% luminance)
+   ========================================================================== */
 html.dark-mode,
 .dark-mode {
-    --diag-primary: #34d399;
-    --diag-primary-hover: #10b981;
-    --diag-primary-light: rgba(52, 211, 153, 0.12);
-    --diag-primary-ring: rgba(52, 211, 153, 0.25);
-    --diag-card-bg: #181b19;
-    --diag-surface: #121513;
-    --diag-surface-subtle: #1f2420;
-    --diag-border: #2c322d;
-    --diag-border-strong: #3f4740;
-    --diag-ink: #f3f4f6;
-    --diag-ink-muted: #9ca3af;
-    --diag-ink-subtle: #6b7280;
-    --diag-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
-    --diag-shadow-md: 0 4px 8px rgba(0, 0, 0, 0.45);
-    --diag-shadow-lg: 0 12px 20px rgba(0, 0, 0, 0.6);
+    --diag-primary: #10b981;
+    --diag-primary-hover: #059669;
+    --diag-primary-light: rgba(16, 185, 129, 0.12);
+    --diag-primary-ring: rgba(16, 185, 129, 0.22);
+    --diag-primary-glow: rgba(16, 185, 129, 0.15);
+
+    --diag-card-bg: #191e1b;
+    --diag-surface: #141715;
+    --diag-surface-subtle: #1e2420;
+    --diag-border: #28322a;
+    --diag-border-strong: #354238;
+
+    --diag-ink: #e2e8f0;
+    --diag-ink-muted: #94a3b8;
+    --diag-ink-subtle: #64748b;
+
+    --diag-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.25);
+    --diag-shadow-md: 0 4px 8px rgba(0, 0, 0, 0.35);
+    --diag-shadow-lg: 0 10px 18px rgba(0, 0, 0, 0.45);
+}
+
+/* Silky-smooth cross-fade transition on mode switch to prevent eye shock */
+.diag-page-container,
+.diag-page-container *,
+.diag-card,
+.diag-stepper-wrapper,
+.diag-step-indicator,
+.diag-step-item,
+.diag-crop-tile,
+.diag-chip,
+.diag-summary-card,
+.diag-submit-btn,
+.diag-search-input,
+.diag-textarea,
+.diag-dropzone,
+.diag-active-crop-banner,
+.diag-live-engine-card,
+.diag-filter-pill {
+    transition: background-color 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                border-color 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Base Page Wrapper */
@@ -101,9 +135,9 @@ html[lang="km"] .diag-crop-name {
 
 html.dark-mode .diag-eyebrow-pill,
 .dark-mode .diag-eyebrow-pill {
-    color: #34d399;
-    background: rgba(52, 211, 153, 0.12);
-    border-color: rgba(52, 211, 153, 0.3);
+    color: #6ee7b7 !important;
+    background: rgba(16, 185, 129, 0.12) !important;
+    border-color: rgba(52, 211, 153, 0.25) !important;
 }
 
 .diag-main-title {
@@ -139,7 +173,6 @@ html.dark-mode .diag-eyebrow-pill,
     font-size: 0.85rem;
     font-weight: 600;
     text-decoration: none;
-    transition: all 0.18s ease;
     border: 1px solid var(--diag-border);
     background: var(--diag-card-bg);
     color: var(--diag-ink-muted);
@@ -150,6 +183,20 @@ html.dark-mode .diag-eyebrow-pill,
     border-color: var(--diag-border-strong);
     background: var(--diag-surface-subtle);
     text-decoration: none;
+}
+
+html.dark-mode .diag-head-btn,
+.dark-mode .diag-head-btn {
+    background: #191e1b;
+    border-color: #28322a;
+    color: #94a3b8;
+}
+
+html.dark-mode .diag-head-btn:hover,
+.dark-mode .diag-head-btn:hover {
+    background: #232a25;
+    border-color: #36443a;
+    color: #e2e8f0;
 }
 
 /* ==========================================================================
@@ -185,7 +232,6 @@ html.dark-mode .diag-eyebrow-pill,
     user-select: none;
     padding: 0.5rem 0.75rem;
     border-radius: 0.6rem;
-    transition: background-color 0.18s ease;
 }
 
 .diag-step-item:hover {
@@ -205,7 +251,6 @@ html.dark-mode .diag-eyebrow-pill,
     border: 2px solid var(--diag-border-strong);
     background: var(--diag-surface-subtle);
     color: var(--diag-ink-subtle);
-    transition: all 0.2s ease;
 }
 
 .diag-step-text {
@@ -228,7 +273,7 @@ html.dark-mode .diag-eyebrow-pill,
     line-height: 1.25;
 }
 
-/* Active and Completed States */
+/* Stepper: Active & Completed States (Eye-Friendly) */
 .diag-step-item.is-active .diag-step-indicator {
     background: var(--diag-primary);
     border-color: var(--diag-primary);
@@ -238,14 +283,20 @@ html.dark-mode .diag-eyebrow-pill,
 
 html.dark-mode .diag-step-item.is-active .diag-step-indicator,
 .dark-mode .diag-step-item.is-active .diag-step-indicator {
-    background: #34d399;
-    border-color: #34d399;
-    color: #06251b !important;
-    font-weight: 800;
+    background: #059669 !important;
+    border-color: #10b981 !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25) !important;
 }
 
 .diag-step-item.is-active .diag-step-order {
     color: var(--diag-primary);
+}
+
+html.dark-mode .diag-step-item.is-active .diag-step-order,
+.dark-mode .diag-step-item.is-active .diag-step-order {
+    color: #34d399 !important;
 }
 
 .diag-step-item.is-completed .diag-step-indicator {
@@ -256,21 +307,30 @@ html.dark-mode .diag-step-item.is-active .diag-step-indicator,
 
 html.dark-mode .diag-step-item.is-completed .diag-step-indicator,
 .dark-mode .diag-step-item.is-completed .diag-step-indicator {
-    color: #34d399;
-    border-color: #34d399;
-    background: rgba(52, 211, 153, 0.15);
+    color: #34d399 !important;
+    border-color: rgba(52, 211, 153, 0.4) !important;
+    background: rgba(16, 185, 129, 0.12) !important;
 }
 
-/* Connector Line */
+/* Stepper Connector Line */
 .diag-step-connector {
     flex: 0 0 2.5rem;
     height: 2px;
     background: var(--diag-border);
-    transition: background-color 0.2s ease;
 }
 
 .diag-step-item.is-completed + .diag-step-connector {
     background: var(--diag-primary);
+}
+
+html.dark-mode .diag-step-connector,
+.dark-mode .diag-step-connector {
+    background: #28322a;
+}
+
+html.dark-mode .diag-step-item.is-completed + .diag-step-connector,
+.dark-mode .diag-step-item.is-completed + .diag-step-connector {
+    background: #059669 !important;
 }
 
 /* ==========================================================================
@@ -304,12 +364,7 @@ html.dark-mode .diag-step-item.is-completed .diag-step-indicator,
     border-radius: 1rem;
     padding: 1.5rem;
     box-shadow: var(--diag-shadow-sm);
-    transition: border-color 0.18s ease, box-shadow 0.18s ease;
     position: relative;
-}
-
-.diag-card:focus-within {
-    border-color: var(--diag-border-strong);
 }
 
 .diag-card-head {
@@ -345,9 +400,9 @@ html.dark-mode .diag-step-item.is-completed .diag-step-indicator,
 
 html.dark-mode .diag-card-number,
 .dark-mode .diag-card-number {
-    color: #34d399;
-    background: rgba(52, 211, 153, 0.15);
-    border-color: rgba(52, 211, 153, 0.3);
+    color: #6ee7b7 !important;
+    background: rgba(16, 185, 129, 0.12) !important;
+    border-color: rgba(52, 211, 153, 0.25) !important;
 }
 
 .diag-card-title {
@@ -390,6 +445,12 @@ html.dark-mode .diag-card-number,
     margin-bottom: 1.25rem;
 }
 
+html.dark-mode .diag-active-crop-banner,
+.dark-mode .diag-active-crop-banner {
+    background: rgba(16, 185, 129, 0.08) !important;
+    border-color: rgba(52, 211, 153, 0.22) !important;
+}
+
 .diag-active-crop-info {
     display: flex;
     align-items: center;
@@ -416,7 +477,7 @@ html.dark-mode .diag-card-number,
 
 html.dark-mode .diag-active-crop-text span,
 .dark-mode .diag-active-crop-text span {
-    color: #34d399;
+    color: #6ee7b7 !important;
 }
 
 .diag-change-crop-btn {
@@ -428,7 +489,6 @@ html.dark-mode .diag-active-crop-text span,
     background: var(--diag-card-bg);
     color: var(--diag-primary);
     cursor: pointer;
-    transition: all 0.15s ease;
 }
 
 .diag-change-crop-btn:hover {
@@ -438,14 +498,16 @@ html.dark-mode .diag-active-crop-text span,
 
 html.dark-mode .diag-change-crop-btn,
 .dark-mode .diag-change-crop-btn {
-    color: #34d399;
-    border-color: #34d399;
+    color: #a7f3d0 !important;
+    border-color: rgba(52, 211, 153, 0.35) !important;
+    background: #191e1b !important;
 }
 
 html.dark-mode .diag-change-crop-btn:hover,
 .dark-mode .diag-change-crop-btn:hover {
-    background: #34d399;
-    color: #06251b !important;
+    background: #059669 !important;
+    border-color: #059669 !important;
+    color: #ffffff !important;
 }
 
 /* Crop Controls: Search & Category Filter Pills */
@@ -480,7 +542,6 @@ html.dark-mode .diag-change-crop-btn:hover,
     border-radius: 0.65rem;
     font-size: 0.88rem;
     color: var(--diag-ink);
-    transition: all 0.15s ease;
 }
 
 .diag-search-input:focus {
@@ -488,6 +549,20 @@ html.dark-mode .diag-change-crop-btn:hover,
     border-color: var(--diag-primary);
     background: var(--diag-card-bg);
     box-shadow: 0 0 0 3px var(--diag-primary-ring);
+}
+
+html.dark-mode .diag-search-input,
+.dark-mode .diag-search-input {
+    background: #141715 !important;
+    border-color: #28322a !important;
+    color: #e2e8f0 !important;
+}
+
+html.dark-mode .diag-search-input:focus,
+.dark-mode .diag-search-input:focus {
+    background: #191e1b !important;
+    border-color: #059669 !important;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2) !important;
 }
 
 .diag-search-clear {
@@ -524,7 +599,6 @@ html.dark-mode .diag-change-crop-btn:hover,
     background: var(--diag-surface);
     color: var(--diag-ink-muted);
     cursor: pointer;
-    transition: all 0.14s ease;
 }
 
 .diag-filter-pill:hover {
@@ -540,11 +614,27 @@ html.dark-mode .diag-change-crop-btn:hover,
     font-weight: 700;
 }
 
+/* Filter pills: Eye-friendly dark mode */
+html.dark-mode .diag-filter-pill,
+.dark-mode .diag-filter-pill {
+    background: #141715;
+    border-color: #28322a;
+    color: #94a3b8;
+}
+
+html.dark-mode .diag-filter-pill:hover,
+.dark-mode .diag-filter-pill:hover {
+    background: #1e2420;
+    color: #e2e8f0;
+    border-color: #354238;
+}
+
 html.dark-mode .diag-filter-pill.is-active,
 .dark-mode .diag-filter-pill.is-active {
-    background: #34d399;
-    border-color: #34d399;
-    color: #06251b !important;
+    background: rgba(16, 185, 129, 0.18) !important;
+    border-color: rgba(52, 211, 153, 0.5) !important;
+    color: #a7f3d0 !important;
+    font-weight: 700 !important;
 }
 
 /* Crop Grid Cards */
@@ -566,7 +656,6 @@ html.dark-mode .diag-filter-pill.is-active,
     border: 1.5px solid var(--diag-border);
     cursor: pointer;
     text-align: center;
-    transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
     outline: none;
 }
 
@@ -588,15 +677,30 @@ html.dark-mode .diag-filter-pill.is-active,
     box-shadow: 0 0 0 1px var(--diag-primary);
 }
 
+/* Crop card: Eye-friendly dark mode */
+html.dark-mode .diag-crop-tile,
+.dark-mode .diag-crop-tile {
+    background: #141715;
+    border-color: #28322a;
+}
+
+html.dark-mode .diag-crop-tile:hover,
+.dark-mode .diag-crop-tile:hover {
+    background: #1c221e;
+    border-color: rgba(52, 211, 153, 0.4);
+}
+
+html.dark-mode .diag-crop-tile.is-selected,
+.dark-mode .diag-crop-tile.is-selected {
+    background: rgba(16, 185, 129, 0.12) !important;
+    border-color: rgba(52, 211, 153, 0.55) !important;
+    box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.3) !important;
+}
+
 .diag-crop-emoji {
     font-size: 2.2rem;
     line-height: 1;
     margin-bottom: 0.5rem;
-    transition: transform 0.18s ease;
-}
-
-.diag-crop-tile:hover .diag-crop-emoji {
-    transform: scale(1.1);
 }
 
 .diag-crop-name {
@@ -629,8 +733,8 @@ html.dark-mode .diag-filter-pill.is-active,
 
 html.dark-mode .diag-crop-check,
 .dark-mode .diag-crop-check {
-    background: #34d399;
-    color: #06251b !important;
+    background: #059669 !important;
+    color: #ffffff !important;
 }
 
 .diag-crop-tile.is-selected .diag-crop-check {
@@ -658,6 +762,12 @@ html.dark-mode .diag-crop-check,
     margin-bottom: 1.25rem;
 }
 
+html.dark-mode .diag-selected-ribbon,
+.dark-mode .diag-selected-ribbon {
+    background: #141715;
+    border-color: #28322a;
+}
+
 .diag-selected-tags {
     display: flex;
     flex-wrap: wrap;
@@ -678,6 +788,13 @@ html.dark-mode .diag-crop-check,
     color: var(--diag-ink);
 }
 
+html.dark-mode .diag-active-symptom-tag,
+.dark-mode .diag-active-symptom-tag {
+    background: rgba(16, 185, 129, 0.12);
+    border-color: rgba(52, 211, 153, 0.4);
+    color: #a7f3d0;
+}
+
 .diag-active-symptom-tag .remove-btn {
     background: none;
     border: none;
@@ -695,7 +812,7 @@ html.dark-mode .diag-crop-check,
 .diag-clear-all-btn {
     background: none;
     border: none;
-    color: #ef4444;
+    color: #f87171;
     font-size: 0.78rem;
     font-weight: 700;
     cursor: pointer;
@@ -713,11 +830,16 @@ html.dark-mode .diag-crop-check,
     border-radius: 0.75rem;
     background: var(--diag-surface);
     overflow: hidden;
-    transition: border-color 0.15s ease;
 }
 
 .diag-category-group:last-child {
     margin-bottom: 0;
+}
+
+html.dark-mode .diag-category-group,
+.dark-mode .diag-category-group {
+    background: #141715;
+    border-color: #28322a;
 }
 
 .diag-category-header {
@@ -734,11 +856,21 @@ html.dark-mode .diag-crop-check,
     font-weight: 700;
     color: var(--diag-ink);
     text-align: left;
-    transition: background-color 0.15s ease;
 }
 
 .diag-category-header:hover {
     background: var(--diag-surface-subtle);
+}
+
+html.dark-mode .diag-category-header,
+.dark-mode .diag-category-header {
+    background: #191e1b;
+    border-bottom-color: #28322a;
+}
+
+html.dark-mode .diag-category-header:hover,
+.dark-mode .diag-category-header:hover {
+    background: #1e2420;
 }
 
 .diag-category-header-title {
@@ -775,10 +907,18 @@ html.dark-mode .diag-crop-check,
     border-color: var(--diag-primary);
 }
 
+html.dark-mode .diag-category-badge,
+.dark-mode .diag-category-badge {
+    background: #141715;
+    border-color: #28322a;
+    color: #94a3b8;
+}
+
 html.dark-mode .diag-category-badge.has-selected,
 .dark-mode .diag-category-badge.has-selected {
-    background: #34d399;
-    color: #06251b !important;
+    background: rgba(16, 185, 129, 0.2) !important;
+    color: #a7f3d0 !important;
+    border-color: rgba(52, 211, 153, 0.45) !important;
 }
 
 .diag-category-caret {
@@ -798,7 +938,9 @@ html.dark-mode .diag-category-badge.has-selected,
     gap: 0.55rem;
 }
 
-/* Symptom Chips */
+/* ==========================================================================
+   SYMPTOM CHIPS — EYE-COMFORT DESIGN
+   ========================================================================== */
 .diag-chip {
     display: inline-flex;
     align-items: center;
@@ -813,7 +955,6 @@ html.dark-mode .diag-category-badge.has-selected,
     cursor: pointer;
     user-select: none;
     outline: none;
-    transition: all 0.15s ease;
     line-height: 1.3;
 }
 
@@ -845,14 +986,33 @@ html.dark-mode .diag-category-badge.has-selected,
     display: inline-block;
 }
 
-/* High Contrast Dark Mode for Chips */
+/* Symptom chips: Eye-friendly dark mode (Soft emerald tint, no neon glare!) */
+html.dark-mode .diag-chip,
+.dark-mode .diag-chip {
+    background: #191e1b;
+    border-color: #2e3831;
+    color: #d1d5db;
+}
+
+html.dark-mode .diag-chip:hover,
+.dark-mode .diag-chip:hover {
+    background: #1e2420;
+    border-color: rgba(52, 211, 153, 0.4);
+    color: #ffffff;
+}
+
 html.dark-mode .diag-chip.is-selected,
 .dark-mode .diag-chip.is-selected {
-    background: #34d399 !important;
-    border-color: #34d399 !important;
-    color: #06251b !important;
-    font-weight: 800 !important;
-    box-shadow: 0 2px 8px rgba(52, 211, 153, 0.25);
+    background: rgba(16, 185, 129, 0.15) !important;
+    border-color: rgba(52, 211, 153, 0.5) !important;
+    color: #a7f3d0 !important;
+    font-weight: 700 !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25) !important;
+}
+
+html.dark-mode .diag-chip.is-selected .diag-chip-check,
+.dark-mode .diag-chip.is-selected .diag-chip-check {
+    color: #34d399 !important;
 }
 
 /* ==========================================================================
@@ -870,7 +1030,6 @@ html.dark-mode .diag-chip.is-selected,
     justify-content: center;
     text-align: center;
     cursor: pointer;
-    transition: all 0.18s ease;
     margin-bottom: 1.25rem;
 }
 
@@ -878,6 +1037,20 @@ html.dark-mode .diag-chip.is-selected,
 .diag-dropzone.is-dragover {
     border-color: var(--diag-primary);
     background: var(--diag-primary-light);
+}
+
+html.dark-mode .diag-dropzone,
+.dark-mode .diag-dropzone {
+    background: #141715;
+    border-color: #2e3831;
+}
+
+html.dark-mode .diag-dropzone:hover,
+.dark-mode .diag-dropzone:hover,
+html.dark-mode .diag-dropzone.is-dragover,
+.dark-mode .diag-dropzone.is-dragover {
+    background: rgba(16, 185, 129, 0.08);
+    border-color: rgba(52, 211, 153, 0.45);
 }
 
 .diag-dropzone-icon {
@@ -893,6 +1066,13 @@ html.dark-mode .diag-chip.is-selected,
     color: var(--diag-primary);
     margin-bottom: 0.75rem;
     box-shadow: var(--diag-shadow-sm);
+}
+
+html.dark-mode .diag-dropzone-icon,
+.dark-mode .diag-dropzone-icon {
+    background: #191e1b;
+    border-color: #28322a;
+    color: #34d399;
 }
 
 .diag-dropzone-title {
@@ -921,6 +1101,13 @@ html.dark-mode .diag-chip.is-selected,
     color: var(--diag-ink);
 }
 
+html.dark-mode .diag-dropzone-btn,
+.dark-mode .diag-dropzone-btn {
+    background: #191e1b;
+    border-color: #2e3831;
+    color: #e2e8f0;
+}
+
 /* Image Previews Gallery */
 .diag-thumb-gallery {
     display: grid;
@@ -937,6 +1124,12 @@ html.dark-mode .diag-chip.is-selected,
     background: var(--diag-surface);
     display: flex;
     flex-direction: column;
+}
+
+html.dark-mode .diag-thumb-card,
+.dark-mode .diag-thumb-card {
+    background: #141715;
+    border-color: #28322a;
 }
 
 .diag-thumb-img {
@@ -969,7 +1162,6 @@ html.dark-mode .diag-chip.is-selected,
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: background 0.15s ease;
 }
 
 .diag-thumb-remove:hover {
@@ -996,7 +1188,6 @@ html.dark-mode .diag-chip.is-selected,
     resize: vertical;
     min-height: 90px;
     line-height: 1.5;
-    transition: all 0.15s ease;
 }
 
 .diag-textarea:focus {
@@ -1004,6 +1195,20 @@ html.dark-mode .diag-chip.is-selected,
     border-color: var(--diag-primary);
     background: var(--diag-card-bg);
     box-shadow: 0 0 0 3px var(--diag-primary-ring);
+}
+
+html.dark-mode .diag-textarea,
+.dark-mode .diag-textarea {
+    background: #141715;
+    border-color: #28322a;
+    color: #e2e8f0;
+}
+
+html.dark-mode .diag-textarea:focus,
+.dark-mode .diag-textarea:focus {
+    background: #191e1b;
+    border-color: #059669;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
 }
 
 /* ==========================================================================
@@ -1050,13 +1255,6 @@ html.dark-mode .diag-chip.is-selected,
     border-radius: 50%;
     background: var(--diag-primary);
     box-shadow: 0 0 0 3px var(--diag-primary-ring);
-    animation: diagPulse 2s infinite;
-}
-
-@keyframes diagPulse {
-    0% { transform: scale(0.95); box-shadow: 0 0 0 0 var(--diag-primary-ring); }
-    70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(5, 150, 105, 0); }
-    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(5, 150, 105, 0); }
 }
 
 /* Summary Row: Target Crop */
@@ -1081,6 +1279,12 @@ html.dark-mode .diag-chip.is-selected,
     background: var(--diag-surface);
     border: 1px solid var(--diag-border);
     border-radius: 0.65rem;
+}
+
+html.dark-mode .diag-summary-crop-box,
+.dark-mode .diag-summary-crop-box {
+    background: #141715;
+    border-color: #28322a;
 }
 
 .diag-summary-crop-emoji {
@@ -1113,6 +1317,12 @@ html.dark-mode .diag-chip.is-selected,
     margin-top: 0.35rem;
 }
 
+html.dark-mode .diag-summary-symptoms-list,
+.dark-mode .diag-summary-symptoms-list {
+    background: #141715;
+    border-color: #28322a;
+}
+
 .diag-side-tag {
     display: inline-flex;
     align-items: center;
@@ -1126,6 +1336,13 @@ html.dark-mode .diag-chip.is-selected,
     color: var(--diag-ink);
 }
 
+html.dark-mode .diag-side-tag,
+.dark-mode .diag-side-tag {
+    background: #1e2420;
+    border-color: #2e3831;
+    color: #e2e8f0;
+}
+
 .diag-side-tag i {
     cursor: pointer;
     font-size: 0.7rem;
@@ -1136,14 +1353,20 @@ html.dark-mode .diag-chip.is-selected,
     color: #ef4444;
 }
 
-/* Live Rule Engine Match Box */
+/* Live Rule Engine Match Box (Eye-Comfort) */
 .diag-live-engine-card {
     padding: 1rem;
     border-radius: 0.75rem;
     background: var(--diag-primary-light);
     border: 1px solid var(--diag-primary-ring);
     margin-bottom: 1.5rem;
-    transition: all 0.2s ease;
+}
+
+html.dark-mode .diag-live-engine-card,
+.dark-mode .diag-live-engine-card {
+    background: rgba(16, 185, 129, 0.07) !important;
+    border: 1px solid rgba(52, 211, 153, 0.2) !important;
+    border-left: 3px solid #10b981 !important;
 }
 
 .diag-live-engine-head {
@@ -1166,7 +1389,7 @@ html.dark-mode .diag-chip.is-selected,
 
 html.dark-mode .diag-live-engine-label,
 .dark-mode .diag-live-engine-label {
-    color: #34d399;
+    color: #6ee7b7 !important;
 }
 
 .diag-confidence-badge {
@@ -1181,8 +1404,9 @@ html.dark-mode .diag-live-engine-label,
 
 html.dark-mode .diag-confidence-badge,
 .dark-mode .diag-confidence-badge {
-    color: #34d399;
-    background: #181b19;
+    color: #a7f3d0 !important;
+    background: #141715 !important;
+    border-color: rgba(52, 211, 153, 0.35) !important;
 }
 
 .diag-live-prediction-name {
@@ -1202,6 +1426,11 @@ html.dark-mode .diag-confidence-badge,
     margin-bottom: 0.5rem;
 }
 
+html.dark-mode .diag-confidence-bar-bg,
+.dark-mode .diag-confidence-bar-bg {
+    background: #232c25 !important;
+}
+
 .diag-confidence-bar-fill {
     height: 100%;
     width: 0%;
@@ -1212,7 +1441,7 @@ html.dark-mode .diag-confidence-badge,
 
 html.dark-mode .diag-confidence-bar-fill,
 .dark-mode .diag-confidence-bar-fill {
-    background: linear-gradient(90deg, #34d399, #10b981);
+    background: linear-gradient(90deg, #059669, #10b981) !important;
 }
 
 .diag-live-engine-desc {
@@ -1222,7 +1451,9 @@ html.dark-mode .diag-confidence-bar-fill,
     line-height: 1.4;
 }
 
-/* Primary Submit Button */
+/* ==========================================================================
+   PRIMARY SUBMIT BUTTON — EYE-FRIENDLY DEEP EMERALD
+   ========================================================================== */
 .diag-submit-btn {
     display: flex;
     align-items: center;
@@ -1237,7 +1468,6 @@ html.dark-mode .diag-confidence-bar-fill,
     font-size: 1rem;
     font-weight: 800;
     cursor: pointer;
-    transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
     box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
 }
 
@@ -1254,20 +1484,21 @@ html.dark-mode .diag-confidence-bar-fill,
     transform: none;
 }
 
-/* High contrast dark mode submit button */
+/* Eye-comfort dark mode submit button (Deep emerald, white text, no neon glare!) */
 html.dark-mode .diag-submit-btn,
 .dark-mode .diag-submit-btn {
-    background: #34d399;
-    color: #06251b !important;
-    font-weight: 800 !important;
-    box-shadow: 0 4px 14px rgba(52, 211, 153, 0.3);
+    background: linear-gradient(135deg, #059669, #047857) !important;
+    border: 1px solid rgba(52, 211, 153, 0.3) !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25) !important;
 }
 
 html.dark-mode .diag-submit-btn:hover:not(:disabled),
 .dark-mode .diag-submit-btn:hover:not(:disabled) {
-    background: #10b981;
-    color: #06251b !important;
-    box-shadow: 0 6px 18px rgba(52, 211, 153, 0.45);
+    background: linear-gradient(135deg, #10b981, #059669) !important;
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35) !important;
+    color: #ffffff !important;
 }
 
 .diag-trust-note {
@@ -1316,7 +1547,6 @@ html.dark-mode .diag-submit-btn:hover:not(:disabled),
     border: 1px solid var(--diag-border);
     text-decoration: none;
     color: inherit;
-    transition: all 0.14s ease;
 }
 
 .diag-history-item:hover {
@@ -1324,6 +1554,18 @@ html.dark-mode .diag-submit-btn:hover:not(:disabled),
     background: var(--diag-surface-subtle);
     text-decoration: none;
     transform: translateX(2px);
+}
+
+html.dark-mode .diag-history-item,
+.dark-mode .diag-history-item {
+    background: #141715;
+    border-color: #28322a;
+}
+
+html.dark-mode .diag-history-item:hover,
+.dark-mode .diag-history-item:hover {
+    background: #1e2420;
+    border-color: rgba(52, 211, 153, 0.4);
 }
 
 .diag-history-item-left strong {
@@ -1348,8 +1590,8 @@ html.dark-mode .diag-submit-btn:hover:not(:disabled),
 
 html.dark-mode .diag-history-badge,
 .dark-mode .diag-history-badge {
-    color: #34d399;
-    background: rgba(52, 211, 153, 0.15);
+    color: #6ee7b7;
+    background: rgba(16, 185, 129, 0.12);
 }
 
 /* ==========================================================================
@@ -1409,7 +1651,7 @@ html.dark-mode .diag-history-badge,
 
 html.dark-mode .diag-mobile-prediction,
 .dark-mode .diag-mobile-prediction {
-    color: #34d399;
+    color: #6ee7b7;
 }
 </style>
 {% endblock %}
@@ -1784,7 +2026,7 @@ html.dark-mode .diag-mobile-prediction,
                         </div>
                     </div>
 
-                    {# Live AI / Rule Engine Real-Time Match Card #}
+                    {# Live AI / Rule Engine Real-Time Match Card (Eye-Friendly) #}
                     <div class="diag-live-engine-card" id="side-live-engine-card">
                         <div class="diag-live-engine-head">
                             <span class="diag-live-engine-label">
@@ -1804,7 +2046,7 @@ html.dark-mode .diag-mobile-prediction,
                         </p>
                     </div>
 
-                    {# Action Commit Button #}
+                    {# Action Commit Button (Deep Emerald, White Text) #}
                     <button type="button" class="diag-submit-btn fm-btn fm-btn-primary" id="btn-submit" disabled>
                         <i class="fas fa-stethoscope"></i>
                         <span>{{ t("diagnose_now") }}</span>
