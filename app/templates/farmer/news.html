@@ -5,58 +5,90 @@
 <!-- Google Fonts for World-Famous News Editorial Typography -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;0,6..72,700;1,6..72,400&family=Inter:wght@400;500;600;700;800&family=Kantumruy+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Kantumruy+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
 
 <style>
 /* ==========================================================================
-   THE AGRI CHRONICLE — EDITORIAL NEWSPAPER DESIGN SYSTEM
-   Inspired by The New York Times, Reuters, The Guardian, Financial Times
+   THE AGRI CHRONICLE — MODERN AGRICULTURAL EDITORIAL DESIGN SYSTEM
+   Professional, clean, high-contrast, responsive editorial newsfeed
+   Seamlessly integrated with the emerald / dark-mode theme of AGRI SYSTEM
    ========================================================================== */
 :root {
+    /* Base Surfaces */
     --news-paper: #f8fafc;
     --news-card-bg: #ffffff;
+    --news-card-hover: #f8fafc;
+    --news-lead-bg: #ffffff;
+    --news-surface-subtle: #f1f5f9;
     --news-border: #e2e8f0;
     --news-border-strong: #cbd5e1;
     --news-border-dark: #0f172a;
+    
+    /* Typography / Ink */
     --news-ink: #0f172a;
     --news-ink-muted: #475569;
     --news-ink-subtle: #64748b;
     --news-ink-light: #94a3b8;
     
-    /* Editorial Accent Palette — Classic, prestigious, professional */
-    --news-editorial-crimson: #991b1b;
-    --news-editorial-crimson-bg: rgba(153, 27, 27, 0.07);
-    --news-forest-emerald: #065f46;
-    --news-forest-emerald-bg: rgba(6, 95, 70, 0.08);
-    --news-brass-amber: #b45309;
-    --news-brass-amber-bg: rgba(180, 83, 9, 0.08);
-    --news-marine-blue: #0369a1;
-    --news-marine-blue-bg: rgba(3, 105, 161, 0.08);
-    --news-indigo-tech: #4338ca;
-    --news-indigo-tech-bg: rgba(67, 56, 202, 0.08);
+    /* Agricultural Emerald Palette (Synchronized with farmer.css) */
+    --news-primary: #059669;
+    --news-primary-hover: #047857;
+    --news-primary-dark: #065f46;
+    --news-primary-soft: #ecfdf5;
+    --news-primary-ring: rgba(5, 150, 105, 0.16);
+    --news-primary-line: rgba(5, 150, 105, 0.25);
+    --news-accent: #10b981;
     
-    --news-shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.04);
-    --news-shadow-md: 0 4px 16px rgba(15, 23, 42, 0.05);
-    --news-shadow-lg: 0 12px 32px rgba(15, 23, 42, 0.08);
+    /* Category Colors & Status Pills */
+    --news-editorial-crimson: #dc2626;
+    --news-editorial-crimson-bg: #fef2f2;
+    --news-forest-emerald: #059669;
+    --news-forest-emerald-bg: #ecfdf5;
+    --news-brass-amber: #d97706;
+    --news-brass-amber-bg: #fffbeb;
+    --news-marine-blue: #0284c7;
+    --news-marine-blue-bg: #f0f9ff;
+    --news-indigo-tech: #4f46e5;
+    --news-indigo-tech-bg: #eef2ff;
+    
+    /* Elevation & Shadows */
+    --news-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.05);
+    --news-shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.06), 0 10px 18px -4px rgba(15, 23, 42, 0.08);
+    --news-shadow-lg: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 20px 32px -10px rgba(15, 23, 42, 0.12);
 
-    --news-font-serif: 'Newsreader', 'Georgia', 'Times New Roman', serif;
+    /* Clean Modern Typography */
     --news-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --news-font-serif: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     --news-font-kh: 'Kantumruy Pro', 'Noto Sans Khmer', var(--news-font-sans);
 }
 
+/* Dark Mode Tokens — Synchronized with .dark-mode .farmer-dash-theme */
+html.dark-mode,
 .dark-mode {
-    --news-paper: #0b0f17;
-    --news-card-bg: #151d2a;
-    --news-border: rgba(255, 255, 255, 0.08);
-    --news-border-strong: rgba(255, 255, 255, 0.16);
-    --news-border-dark: rgba(255, 255, 255, 0.85);
-    --news-ink: #f8fafc;
-    --news-ink-muted: #94a3b8;
-    --news-ink-subtle: #64748b;
-    --news-ink-light: #475569;
+    --news-paper: #0f1210;
+    --news-card-bg: #181b19;
+    --news-card-hover: #1f2420;
+    --news-lead-bg: #181b19;
+    --news-surface-subtle: #1f2320;
+    --news-border: #2c322d;
+    --news-border-strong: #3a423b;
+    --news-border-dark: #6ee7b7;
+    
+    --news-ink: #f3f4f6;
+    --news-ink-muted: #9ca3af;
+    --news-ink-subtle: #6b7280;
+    --news-ink-light: #4b5563;
+    
+    --news-primary: #34d399;
+    --news-primary-hover: #6ee7b7;
+    --news-primary-dark: #a7f3d0;
+    --news-primary-soft: rgba(52, 211, 153, 0.12);
+    --news-primary-ring: rgba(52, 211, 153, 0.25);
+    --news-primary-line: rgba(52, 211, 153, 0.3);
+    --news-accent: #6ee7b7;
     
     --news-editorial-crimson: #f87171;
-    --news-editorial-crimson-bg: rgba(248, 113, 113, 0.14);
+    --news-editorial-crimson-bg: rgba(239, 68, 68, 0.14);
     --news-forest-emerald: #34d399;
     --news-forest-emerald-bg: rgba(52, 211, 153, 0.14);
     --news-brass-amber: #fbbf24;
@@ -66,21 +98,50 @@
     --news-indigo-tech: #818cf8;
     --news-indigo-tech-bg: rgba(129, 140, 248, 0.14);
     
-    --news-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
-    --news-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
-    --news-shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.6);
+    --news-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+    --news-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.45);
+    --news-shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.65);
 }
 
 /* Base Wrapper */
 .news-page-wrapper {
     max-width: 1240px;
     margin: 0 auto;
-    padding: 24px 16px 60px;
+    padding: 20px 16px 60px;
     color: var(--news-ink);
 }
 
+/* Khmer Typography Enforcements */
+html[lang="km"],
+html[lang="km"] * {
+    letter-spacing: normal !important;
+}
+
+html[lang="km"] .news-page-wrapper,
+html[lang="km"] .chronicle-title,
+html[lang="km"] .chronicle-brand-tag,
+html[lang="km"] .chronicle-motto,
+html[lang="km"] .chronicle-ticker-item,
+html[lang="km"] .chronicle-edition-btn,
+html[lang="km"] .chronicle-dept-btn,
+html[lang="km"] .chronicle-lead-title,
+html[lang="km"] .chronicle-lead-deck,
+html[lang="km"] .chronicle-card-title,
+html[lang="km"] .chronicle-card-summary,
+html[lang="km"] .chronicle-card-tip,
+html[lang="km"] .chronicle-wire-text,
+html[lang="km"] .chronicle-modal-title,
+html[lang="km"] .chronicle-modal-lead-deck,
+html[lang="km"] .chronicle-modal-body,
+html[lang="km"] .chronicle-modal-advisory-text {
+    font-family: var(--news-font-kh) !important;
+    letter-spacing: normal !important;
+    text-transform: none !important;
+    line-height: 1.65;
+}
+
 /* ==========================================================================
-   MASTHEAD & UTILITY BAR (NEWSPAPER FRONT PAGE HEADER)
+   MASTHEAD & UTILITY BAR (CLEAN EDITORIAL HEADER)
    ========================================================================== */
 .chronicle-masthead {
     margin-bottom: 24px;
@@ -92,9 +153,9 @@
     justify-content: space-between;
     flex-wrap: wrap;
     gap: 12px;
-    padding: 8px 4px;
+    padding: 10px 4px;
     border-bottom: 1px solid var(--news-border);
-    font-size: 0.8rem;
+    font-size: 0.82rem;
     font-weight: 500;
     color: var(--news-ink-muted);
 }
@@ -103,7 +164,7 @@
 .chronicle-utility-right {
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 12px;
     flex-wrap: wrap;
 }
 
@@ -111,94 +172,115 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    background: var(--news-editorial-crimson-bg);
-    color: var(--news-editorial-crimson);
-    font-size: 0.72rem;
+    background: var(--news-primary-soft);
+    color: var(--news-primary);
+    border: 1px solid var(--news-primary-line);
+    font-size: 0.74rem;
     font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    padding: 3px 9px;
-    border-radius: 4px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    transition: all 0.2s ease;
 }
 
 .chronicle-live-indicator {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    color: var(--news-editorial-crimson);
+    color: var(--news-primary);
     font-weight: 700;
     font-size: 0.74rem;
+    letter-spacing: 0.04em;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
 }
 
 .chronicle-pulse-dot {
-    width: 7px;
-    height: 7px;
-    background: var(--news-editorial-crimson);
+    width: 8px;
+    height: 8px;
+    background: var(--news-primary);
     border-radius: 50%;
-    animation: chroniclePulse 1.8s infinite ease-in-out;
+    box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.7);
+    animation: chroniclePulse 2s infinite ease-in-out;
 }
 
 @keyframes chroniclePulse {
-    0%, 100% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.4); opacity: 0.35; }
+    0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.7);
+    }
+    70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 8px rgba(5, 150, 105, 0);
+    }
+    100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(5, 150, 105, 0);
+    }
 }
 
-/* Main Brand Masthead */
+/* Main Brand Header */
 .chronicle-brand-box {
     text-align: center;
     padding: 24px 0 16px;
     position: relative;
 }
 
-.chronicle-title {
-    font-family: var(--news-font-serif);
-    font-size: clamp(2rem, 4.5vw, 3.2rem);
+.chronicle-brand-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--news-primary-soft);
+    color: var(--news-primary);
+    font-size: 0.78rem;
     font-weight: 700;
-    letter-spacing: -0.02em;
-    line-height: 1.1;
+    padding: 4px 12px;
+    border-radius: 999px;
+    margin-bottom: 10px;
+    border: 1px solid var(--news-primary-line);
+}
+
+.chronicle-title {
+    font-family: var(--news-font-sans);
+    font-size: clamp(1.85rem, 3.6vw, 2.6rem);
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    line-height: 1.15;
     color: var(--news-ink);
-    margin: 0;
-    text-transform: uppercase;
+    margin: 0 0 8px;
 }
 
 html[lang="km"] .chronicle-title {
     font-family: var(--news-font-kh);
-    font-size: clamp(1.8rem, 3.8vw, 2.7rem);
+    font-size: clamp(1.65rem, 3.2vw, 2.3rem);
     letter-spacing: normal;
-    text-transform: none;
-    font-weight: 700;
+    font-weight: 800;
 }
 
 .chronicle-subtitle-latin {
-    font-size: 0.78rem;
-    font-weight: 600;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--news-ink-subtle);
-    margin-top: 4px;
+    display: none; /* Replaced by clean brand tag for uncluttered modern design */
 }
 
 .chronicle-motto {
-    font-size: 0.85rem;
+    font-size: 0.92rem;
     color: var(--news-ink-muted);
-    margin-top: 6px;
-    font-style: italic;
-    font-family: var(--news-font-serif);
+    max-width: 660px;
+    margin: 0 auto;
+    line-height: 1.6;
+    font-weight: 400;
 }
 
 html[lang="km"] .chronicle-motto {
     font-family: var(--news-font-kh);
-    font-style: normal;
-    font-size: 0.88rem;
+    font-size: 0.94rem;
+    line-height: 1.7;
 }
 
+/* Modern Hairline Gradient Divider */
 .chronicle-double-rule {
-    border-top: 3px double var(--news-border-strong);
-    border-bottom: 1px solid var(--news-border);
-    padding: 3px 0;
-    margin: 12px 0 16px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, var(--news-border-strong) 25%, var(--news-primary-line) 50%, var(--news-border-strong) 75%, transparent 100%);
+    border: none;
+    margin: 18px 0 20px;
+    padding: 0;
 }
 
 /* ==========================================================================
@@ -209,9 +291,9 @@ html[lang="km"] .chronicle-motto {
     align-items: center;
     background: var(--news-card-bg);
     border: 1px solid var(--news-border);
-    border-radius: 8px;
-    padding: 6px 12px;
-    margin-bottom: 20px;
+    border-radius: 12px;
+    padding: 8px 14px;
+    margin-bottom: 22px;
     box-shadow: var(--news-shadow-sm);
     overflow: hidden;
 }
@@ -222,15 +304,16 @@ html[lang="km"] .chronicle-motto {
     gap: 6px;
     font-size: 0.72rem;
     font-weight: 800;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.05em;
     text-transform: uppercase;
     color: #ffffff;
-    background: var(--news-editorial-crimson);
-    padding: 4px 10px;
-    border-radius: 4px;
+    background: linear-gradient(135deg, var(--news-primary), var(--news-primary-dark));
+    padding: 5px 11px;
+    border-radius: 6px;
     white-space: nowrap;
     flex-shrink: 0;
     margin-right: 14px;
+    box-shadow: 0 2px 6px rgba(5, 150, 105, 0.25);
 }
 
 .chronicle-ticker-track {
@@ -255,7 +338,7 @@ html[lang="km"] .chronicle-motto {
 }
 
 .chronicle-ticker-item {
-    font-size: 0.82rem;
+    font-size: 0.84rem;
     color: var(--news-ink-muted);
     display: inline-flex;
     align-items: center;
@@ -264,18 +347,18 @@ html[lang="km"] .chronicle-motto {
 
 .chronicle-ticker-clickable {
     cursor: pointer;
-    border-radius: 4px;
-    padding: 3px 6px;
+    border-radius: 6px;
+    padding: 4px 8px;
     transition: all 0.15s ease-in-out;
 }
 
 .chronicle-ticker-clickable:hover {
-    background: rgba(185, 28, 28, 0.08);
-    color: var(--news-editorial-crimson);
+    background: var(--news-surface-subtle);
+    color: var(--news-primary);
 }
 
 .chronicle-ticker-clickable:hover strong {
-    color: var(--news-editorial-crimson);
+    color: var(--news-primary);
 }
 
 .chronicle-ticker-badge-urgent {
@@ -283,8 +366,8 @@ html[lang="km"] .chronicle-motto {
     color: #ffffff;
     font-weight: 700;
     font-size: 0.65rem;
-    padding: 2px 6px;
-    border-radius: 3px;
+    padding: 2px 7px;
+    border-radius: 4px;
     text-transform: uppercase;
     letter-spacing: 0.04em;
     display: inline-flex;
@@ -297,8 +380,8 @@ html[lang="km"] .chronicle-motto {
     color: #ffffff;
     font-weight: 700;
     font-size: 0.65rem;
-    padding: 2px 6px;
-    border-radius: 3px;
+    padding: 2px 7px;
+    border-radius: 4px;
     text-transform: uppercase;
     letter-spacing: 0.04em;
     display: inline-flex;
@@ -311,8 +394,8 @@ html[lang="km"] .chronicle-motto {
     color: #ffffff;
     font-weight: 700;
     font-size: 0.65rem;
-    padding: 2px 6px;
-    border-radius: 3px;
+    padding: 2px 7px;
+    border-radius: 4px;
     text-transform: uppercase;
     letter-spacing: 0.04em;
     display: inline-flex;
@@ -325,12 +408,12 @@ html[lang="km"] .chronicle-motto {
 }
 
 .chronicle-ticker-up {
-    color: #16a34a;
+    color: #10b981;
     font-weight: 700;
 }
 
 .chronicle-ticker-down {
-    color: #dc2626;
+    color: #ef4444;
     font-weight: 700;
 }
 
@@ -350,17 +433,17 @@ html[lang="km"] .chronicle-motto {
     gap: 12px;
     background: var(--news-card-bg);
     border: 1px solid var(--news-border);
-    border-radius: 12px;
-    padding: 10px 14px;
-    margin-bottom: 24px;
+    border-radius: 14px;
+    padding: 10px 16px;
+    margin-bottom: 22px;
     box-shadow: var(--news-shadow-sm);
 }
 
 .chronicle-edition-toggle {
     display: inline-flex;
-    background: var(--news-paper);
+    background: var(--news-surface-subtle);
     border: 1px solid var(--news-border);
-    border-radius: 8px;
+    border-radius: 10px;
     padding: 3px;
     gap: 3px;
 }
@@ -372,7 +455,7 @@ html[lang="km"] .chronicle-motto {
     font-size: 0.84rem;
     font-weight: 600;
     padding: 6px 14px;
-    border-radius: 6px;
+    border-radius: 8px;
     cursor: pointer;
     transition: all 0.2s ease;
     display: inline-flex;
@@ -385,9 +468,9 @@ html[lang="km"] .chronicle-motto {
 }
 
 .chronicle-edition-btn.is-active {
-    background: var(--news-card-bg);
-    color: var(--news-ink);
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    background: var(--news-primary);
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(5, 150, 105, 0.25);
     font-weight: 700;
 }
 
@@ -395,30 +478,30 @@ html[lang="km"] .chronicle-motto {
     position: relative;
     min-width: 260px;
     flex: 1;
-    max-width: 360px;
+    max-width: 380px;
 }
 
 .chronicle-search-box input {
     width: 100%;
-    padding: 7px 12px 7px 34px;
-    border-radius: 8px;
+    padding: 8px 14px 8px 38px;
+    border-radius: 10px;
     border: 1px solid var(--news-border);
     background: var(--news-paper);
     color: var(--news-ink);
-    font-size: 0.85rem;
+    font-size: 0.86rem;
     outline: none;
     transition: all 0.2s ease;
 }
 
 .chronicle-search-box input:focus {
-    border-color: var(--news-ink);
+    border-color: var(--news-primary);
     background: var(--news-card-bg);
-    box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.08);
+    box-shadow: 0 0 0 3px var(--news-primary-ring);
 }
 
 .chronicle-search-box i {
     position: absolute;
-    left: 11px;
+    left: 13px;
     top: 50%;
     transform: translateY(-50%);
     color: var(--news-ink-subtle);
@@ -428,12 +511,12 @@ html[lang="km"] .chronicle-motto {
 
 .chronicle-sync-btn {
     border: 1px solid var(--news-border);
-    background: var(--news-card-bg);
+    background: var(--news-paper);
     color: var(--news-ink);
     font-size: 0.84rem;
     font-weight: 600;
-    padding: 7px 16px;
-    border-radius: 8px;
+    padding: 8px 16px;
+    border-radius: 10px;
     cursor: pointer;
     transition: all 0.2s ease;
     display: inline-flex;
@@ -442,8 +525,9 @@ html[lang="km"] .chronicle-motto {
 }
 
 .chronicle-sync-btn:hover {
-    border-color: var(--news-ink);
-    background: var(--news-paper);
+    border-color: var(--news-primary);
+    color: var(--news-primary);
+    background: var(--news-primary-soft);
 }
 
 .chronicle-sync-btn i.is-spinning {
@@ -461,52 +545,55 @@ html[lang="km"] .chronicle-motto {
     align-items: center;
     gap: 8px;
     overflow-x: auto;
-    padding-bottom: 6px;
+    padding-bottom: 8px;
     margin-bottom: 24px;
     scrollbar-width: none;
-    border-bottom: 1px solid var(--news-border);
 }
 
 .chronicle-departments::-webkit-scrollbar { display: none; }
 
 .chronicle-dept-btn {
-    border: none;
-    background: transparent;
+    border: 1px solid var(--news-border);
+    background: var(--news-card-bg);
     color: var(--news-ink-muted);
-    font-size: 0.86rem;
+    font-size: 0.85rem;
     font-weight: 600;
-    padding: 8px 14px;
-    border-radius: 6px;
+    padding: 8px 16px;
+    border-radius: 999px;
     cursor: pointer;
     white-space: nowrap;
-    transition: all 0.18s ease;
+    transition: all 0.2s ease;
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    position: relative;
+    box-shadow: var(--news-shadow-sm);
 }
 
 .chronicle-dept-btn:hover {
     color: var(--news-ink);
-    background: var(--news-card-bg);
+    background: var(--news-surface-subtle);
+    border-color: var(--news-border-strong);
 }
 
 .chronicle-dept-btn.is-active {
-    color: var(--news-ink);
-    background: var(--news-card-bg);
+    color: #ffffff !important;
+    background: var(--news-primary);
+    border-color: var(--news-primary);
     font-weight: 700;
-    box-shadow: var(--news-shadow-sm);
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.28);
 }
 
-.chronicle-dept-btn.is-active::after {
-    content: '';
-    position: absolute;
-    bottom: -7px;
-    left: 14px;
-    right: 14px;
-    height: 2px;
-    background: var(--news-ink);
-    border-radius: 2px;
+.chronicle-dept-btn .badge {
+    font-size: 0.74rem;
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: var(--news-surface-subtle);
+    color: var(--news-ink-muted);
+}
+
+.chronicle-dept-btn.is-active .badge {
+    background: rgba(255, 255, 255, 0.25);
+    color: #ffffff;
 }
 
 /* ==========================================================================
@@ -515,16 +602,17 @@ html[lang="km"] .chronicle-motto {
 .chronicle-lead-hero {
     background: var(--news-card-bg);
     border: 1px solid var(--news-border);
-    border-radius: 16px;
+    border-radius: 18px;
     padding: 28px;
     margin-bottom: 30px;
     box-shadow: var(--news-shadow-md);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
     position: relative;
 }
 
 .chronicle-lead-hero:hover {
     box-shadow: var(--news-shadow-lg);
+    border-color: var(--news-primary-line);
 }
 
 .chronicle-lead-grid {
@@ -537,21 +625,21 @@ html[lang="km"] .chronicle-motto {
 @media (max-width: 991px) {
     .chronicle-lead-grid {
         grid-template-columns: 1fr;
-        gap: 20px;
+        gap: 22px;
     }
 }
 
 .chronicle-kicker-tag {
     font-size: 0.72rem;
     font-weight: 800;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.05em;
     text-transform: uppercase;
-    padding: 3px 8px;
-    border-radius: 4px;
+    padding: 4px 10px;
+    border-radius: 6px;
     display: inline-flex;
     align-items: center;
-    gap: 5px;
-    margin-bottom: 10px;
+    gap: 6px;
+    margin-bottom: 12px;
 }
 
 .kicker-lead {
@@ -585,51 +673,53 @@ html[lang="km"] .chronicle-motto {
 }
 
 .chronicle-lead-title {
-    font-family: var(--news-font-serif);
-    font-size: clamp(1.45rem, 2.2vw, 2.1rem);
-    font-weight: 700;
-    line-height: 1.25;
+    font-family: var(--news-font-sans);
+    font-size: clamp(1.4rem, 2.2vw, 1.85rem);
+    font-weight: 800;
+    line-height: 1.35;
     color: var(--news-ink);
-    margin-bottom: 14px;
+    margin: 0 0 12px;
     cursor: pointer;
     transition: color 0.18s ease;
 }
 
 html[lang="km"] .chronicle-lead-title {
     font-family: var(--news-font-kh);
-    font-size: clamp(1.35rem, 2vw, 1.8rem);
-    line-height: 1.45;
+    font-size: clamp(1.3rem, 2vw, 1.7rem);
+    line-height: 1.5;
 }
 
 .chronicle-lead-title:hover {
-    color: var(--news-editorial-crimson);
+    color: var(--news-primary);
 }
 
 .chronicle-lead-deck {
     font-size: 0.98rem;
-    line-height: 1.68;
+    line-height: 1.7;
     color: var(--news-ink-muted);
     margin-bottom: 18px;
 }
 
 /* Farmer Advisory Pull-Quote */
 .chronicle-advisory-box {
-    background: var(--news-forest-emerald-bg);
-    border-left: 3px solid var(--news-forest-emerald);
-    border-radius: 0 8px 8px 0;
+    background: var(--news-primary-soft);
+    border-left: 4px solid var(--news-primary);
+    border-radius: 0 10px 10px 0;
     padding: 12px 16px;
-    margin-bottom: 20px;
+    margin-bottom: 18px;
     font-size: 0.88rem;
     color: var(--news-ink);
     display: flex;
     align-items: flex-start;
     gap: 10px;
+    line-height: 1.55;
 }
 
 .chronicle-advisory-box i {
-    color: var(--news-forest-emerald);
+    color: var(--news-primary);
     margin-top: 3px;
     font-size: 1rem;
+    flex-shrink: 0;
 }
 
 .chronicle-byline {
@@ -637,11 +727,11 @@ html[lang="km"] .chronicle-lead-title {
     align-items: center;
     gap: 12px;
     flex-wrap: wrap;
-    font-size: 0.8rem;
+    font-size: 0.82rem;
     color: var(--news-ink-subtle);
     border-top: 1px solid var(--news-border);
     padding-top: 14px;
-    margin-top: 4px;
+    margin-top: 6px;
 }
 
 .chronicle-byline strong {
@@ -650,7 +740,7 @@ html[lang="km"] .chronicle-lead-title {
 
 .chronicle-lead-visual {
     position: relative;
-    border-radius: 12px;
+    border-radius: 14px;
     overflow: hidden;
     box-shadow: var(--news-shadow-md);
     background: #0f172a;
@@ -676,8 +766,8 @@ html[lang="km"] .chronicle-lead-title {
     right: 0;
     background: linear-gradient(to top, rgba(15, 23, 42, 0.88) 0%, transparent 100%);
     color: #ffffff;
-    font-size: 0.76rem;
-    padding: 20px 14px 8px;
+    font-size: 0.78rem;
+    padding: 22px 16px 10px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -687,48 +777,45 @@ html[lang="km"] .chronicle-lead-title {
 .chronicle-btn-group {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     flex-wrap: wrap;
     margin-top: 16px;
 }
 
 .chronicle-primary-btn {
-    background: var(--news-ink);
+    background: var(--news-primary);
     color: #ffffff;
-    border: 1px solid var(--news-ink);
-    font-size: 0.84rem;
-    font-weight: 600;
+    border: 1px solid var(--news-primary);
+    font-size: 0.86rem;
+    font-weight: 700;
     padding: 8px 18px;
-    border-radius: 7px;
+    border-radius: 9px;
     cursor: pointer;
     transition: all 0.2s ease;
     display: inline-flex;
     align-items: center;
     gap: 8px;
-}
-
-.dark-mode .chronicle-primary-btn {
-    background: var(--news-card-bg);
-    color: var(--news-ink);
-    border-color: var(--news-border-strong);
+    box-shadow: 0 2px 6px rgba(5, 150, 105, 0.2);
 }
 
 .chronicle-primary-btn:hover {
-    background: var(--news-editorial-crimson);
-    border-color: var(--news-editorial-crimson);
+    background: var(--news-primary-hover);
+    border-color: var(--news-primary-hover);
     color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
 }
 
 .chronicle-subtle-btn {
     background: var(--news-card-bg);
     border: 1px solid var(--news-border);
     color: var(--news-ink-muted);
-    font-size: 0.82rem;
+    font-size: 0.84rem;
     font-weight: 600;
     padding: 8px 14px;
-    border-radius: 7px;
+    border-radius: 9px;
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: all 0.18s ease;
     display: inline-flex;
     align-items: center;
     gap: 6px;
@@ -736,7 +823,8 @@ html[lang="km"] .chronicle-lead-title {
 
 .chronicle-subtle-btn:hover {
     color: var(--news-ink);
-    border-color: var(--news-ink);
+    border-color: var(--news-border-strong);
+    background: var(--news-surface-subtle);
 }
 
 /* ==========================================================================
@@ -752,6 +840,20 @@ html[lang="km"] .chronicle-lead-title {
     .chronicle-front-columns {
         grid-template-columns: 1fr;
     }
+}
+
+.chronicle-section-heading {
+    font-family: var(--news-font-sans);
+    font-size: 1.15rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    color: var(--news-ink);
+}
+
+html[lang="km"] .chronicle-section-heading {
+    font-family: var(--news-font-kh);
+    font-size: 1.1rem;
+    letter-spacing: normal;
 }
 
 /* Stories Sub-Grid */
@@ -770,19 +872,19 @@ html[lang="km"] .chronicle-lead-title {
 .chronicle-story-card {
     background: var(--news-card-bg);
     border: 1px solid var(--news-border);
-    border-radius: 14px;
+    border-radius: 16px;
     overflow: hidden;
     display: flex;
     flex-direction: column;
     box-shadow: var(--news-shadow-sm);
-    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
     position: relative;
 }
 
 .chronicle-story-card:hover {
-    transform: translateY(-3px);
+    transform: translateY(-4px);
     box-shadow: var(--news-shadow-md);
-    border-color: var(--news-border-strong);
+    border-color: var(--news-primary-line);
 }
 
 .chronicle-card-thumb {
@@ -791,7 +893,7 @@ html[lang="km"] .chronicle-lead-title {
     object-fit: cover;
     background: #0f172a;
     display: block;
-    transition: transform 0.3s ease;
+    transition: transform 0.35s ease;
 }
 
 .chronicle-card-thumb-wrapper {
@@ -819,10 +921,10 @@ html[lang="km"] .chronicle-lead-title {
 }
 
 .chronicle-card-title {
-    font-family: var(--news-font-serif);
-    font-size: 1.15rem;
+    font-family: var(--news-font-sans);
+    font-size: 1.08rem;
     font-weight: 700;
-    line-height: 1.35;
+    line-height: 1.4;
     color: var(--news-ink);
     margin-bottom: 8px;
     cursor: pointer;
@@ -831,19 +933,19 @@ html[lang="km"] .chronicle-lead-title {
 
 html[lang="km"] .chronicle-card-title {
     font-family: var(--news-font-kh);
-    font-size: 1.06rem;
+    font-size: 1.02rem;
     line-height: 1.5;
 }
 
 .chronicle-card-title:hover {
-    color: var(--news-editorial-crimson);
+    color: var(--news-primary);
 }
 
 .chronicle-card-summary {
-    font-size: 0.88rem;
+    font-size: 0.86rem;
     line-height: 1.6;
     color: var(--news-ink-muted);
-    margin-bottom: 14px;
+    margin-bottom: 12px;
     display: -webkit-box;
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
@@ -851,7 +953,7 @@ html[lang="km"] .chronicle-card-title {
 }
 
 .chronicle-card-tip {
-    background: var(--news-paper);
+    background: var(--news-brass-amber-bg);
     border-left: 3px solid var(--news-brass-amber);
     padding: 8px 12px;
     border-radius: 0 6px 6px 0;
@@ -871,8 +973,8 @@ html[lang="km"] .chronicle-card-title {
     align-items: center;
     justify-content: space-between;
     border-top: 1px solid var(--news-border);
-    padding-top: 10px;
-    margin-top: 6px;
+    padding-top: 12px;
+    margin-top: 8px;
     font-size: 0.78rem;
     color: var(--news-ink-subtle);
 }
@@ -880,7 +982,34 @@ html[lang="km"] .chronicle-card-title {
 .chronicle-card-actions {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
+}
+
+.chronicle-card-actions .btn-link {
+    color: var(--news-ink-subtle);
+    font-size: 0.88rem;
+    transition: color 0.2s ease;
+}
+
+.chronicle-card-actions .btn-link:hover {
+    color: var(--news-primary);
+}
+
+.chronicle-card-actions .btn-outline-dark {
+    border-color: var(--news-border);
+    color: var(--news-primary);
+    background: var(--news-primary-soft);
+    font-size: 0.76rem;
+    font-weight: 700;
+    padding: 3px 10px !important;
+    border-radius: 999px;
+    transition: all 0.2s ease;
+}
+
+.chronicle-card-actions .btn-outline-dark:hover {
+    background: var(--news-primary);
+    color: #ffffff;
+    border-color: var(--news-primary);
 }
 
 /* ==========================================================================
@@ -889,33 +1018,60 @@ html[lang="km"] .chronicle-card-title {
 .chronicle-sidebar {
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: 22px;
 }
 
 .chronicle-side-widget {
     background: var(--news-card-bg);
     border: 1px solid var(--news-border);
-    border-radius: 14px;
+    border-radius: 16px;
     padding: 20px;
     box-shadow: var(--news-shadow-sm);
 }
 
 .chronicle-widget-title {
-    font-size: 0.92rem;
+    font-size: 0.88rem;
     font-weight: 800;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.04em;
     text-transform: uppercase;
     color: var(--news-ink);
-    border-bottom: 2px solid var(--news-border-strong);
-    padding-bottom: 10px;
-    margin-bottom: 16px;
+    border-bottom: 1px solid var(--news-border);
+    padding-bottom: 12px;
+    margin-bottom: 14px;
     display: flex;
     align-items: center;
     justify-content: space-between;
 }
 
 .chronicle-widget-title i {
-    color: var(--news-editorial-crimson);
+    color: var(--news-primary);
+}
+
+.chronicle-pill-tag {
+    display: inline-flex;
+    align-items: center;
+    background: var(--news-surface-subtle);
+    color: var(--news-ink-muted);
+    border: 1px solid var(--news-border);
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.chronicle-modal-region-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--news-card-bg);
+    color: var(--news-ink);
+    border: 1px solid var(--news-border);
+    font-size: 0.74rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 999px;
 }
 
 /* Timeline Wire */
@@ -930,39 +1086,41 @@ html[lang="km"] .chronicle-card-title {
 
 .chronicle-wire-item {
     position: relative;
-    padding-left: 16px;
+    padding-left: 14px;
     border-left: 2px solid var(--news-border);
     transition: border-color 0.2s ease;
 }
 
 .chronicle-wire-item:hover {
-    border-color: var(--news-editorial-crimson);
+    border-color: var(--news-primary);
 }
 
 .chronicle-wire-time {
     font-size: 0.72rem;
     font-weight: 700;
-    color: var(--news-editorial-crimson);
-    margin-bottom: 2px;
+    color: var(--news-primary);
+    margin-bottom: 3px;
 }
 
 .chronicle-wire-text {
-    font-size: 0.84rem;
+    font-size: 0.85rem;
     font-weight: 600;
     color: var(--news-ink);
-    line-height: 1.4;
+    line-height: 1.45;
     cursor: pointer;
     margin: 0;
+    transition: color 0.18s ease;
 }
 
 .chronicle-wire-text:hover {
-    text-decoration: underline;
+    color: var(--news-primary);
+    text-decoration: none;
 }
 
 /* Commodity Table Widget */
 .chronicle-commodity-table {
     width: 100%;
-    font-size: 0.82rem;
+    font-size: 0.84rem;
     border-collapse: collapse;
 }
 
@@ -975,7 +1133,7 @@ html[lang="km"] .chronicle-card-title {
 }
 
 .chronicle-commodity-table td {
-    padding: 8px 4px;
+    padding: 9px 4px;
     color: var(--news-ink);
 }
 
@@ -995,9 +1153,14 @@ html[lang="km"] .chronicle-card-title {
     line-height: 1.45;
 }
 
+.chronicle-check-item:last-child {
+    margin-bottom: 0;
+}
+
 .chronicle-check-item i {
-    color: var(--news-forest-emerald);
+    color: var(--news-primary);
     margin-top: 3px;
+    font-size: 0.95rem;
     flex-shrink: 0;
 }
 
@@ -1007,7 +1170,7 @@ html[lang="km"] .chronicle-card-title {
 .chronicle-skeleton-card {
     background: var(--news-card-bg);
     border: 1px solid var(--news-border);
-    border-radius: 14px;
+    border-radius: 16px;
     padding: 22px;
     overflow: hidden;
 }
@@ -1028,7 +1191,8 @@ html[lang="km"] .chronicle-card-title {
     padding: 56px 24px;
     background: var(--news-card-bg);
     border: 1px solid var(--news-border);
-    border-radius: 16px;
+    border-radius: 18px;
+    box-shadow: var(--news-shadow-sm);
 }
 
 .chronicle-empty-state i {
@@ -1039,9 +1203,6 @@ html[lang="km"] .chronicle-card-title {
 }
 
 /* ==========================================================================
-   FULL STORY READING MODAL
-   ========================================================================== */
-/* ==========================================================================
    FULL STORY EDITORIAL READING ROOM MODAL (EXECUTIVE UI)
    ========================================================================== */
 .modal.chronicle-modal {
@@ -1049,7 +1210,7 @@ html[lang="km"] .chronicle-card-title {
 }
 
 .modal.chronicle-modal .modal-dialog {
-    max-width: 900px;
+    max-width: 860px;
     margin: 2rem auto;
     z-index: 10610 !important;
 }
@@ -1070,13 +1231,13 @@ body.modal-open .topbar {
     background: var(--news-card-bg);
     border: 1px solid var(--news-border);
     border-radius: 20px;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    box-shadow: var(--news-shadow-lg);
     color: var(--news-ink);
     overflow: hidden;
 }
 
 .chronicle-modal .modal-header {
-    background: var(--news-lead-bg);
+    background: var(--news-surface-subtle);
     border-bottom: 1px solid var(--news-border);
     padding: 22px 28px 18px;
     position: relative;
@@ -1098,10 +1259,10 @@ body.modal-open .topbar {
     display: inline-flex;
     align-items: center;
     gap: 5px;
-    font-size: 0.75rem;
+    font-size: 0.74rem;
     font-weight: 700;
     padding: 3px 10px;
-    border-radius: 20px;
+    border-radius: 999px;
     text-transform: uppercase;
     letter-spacing: 0.04em;
 }
@@ -1125,16 +1286,16 @@ body.modal-open .topbar {
 }
 
 .chronicle-modal-close-btn {
-    width: 38px;
-    height: 38px;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
     border: 1px solid var(--news-border);
     background: var(--news-card-bg);
-    color: var(--news-muted);
+    color: var(--news-ink-muted);
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.1rem;
+    font-size: 1rem;
     cursor: pointer;
     transition: all 0.2s ease;
     flex-shrink: 0;
@@ -1149,8 +1310,8 @@ body.modal-open .topbar {
 }
 
 .chronicle-modal-title {
-    font-family: var(--news-font-serif);
-    font-size: clamp(1.35rem, 2.2vw, 1.85rem);
+    font-family: var(--news-font-sans);
+    font-size: clamp(1.3rem, 2.2vw, 1.75rem);
     font-weight: 800;
     line-height: 1.35;
     color: var(--news-ink);
@@ -1159,7 +1320,7 @@ body.modal-open .topbar {
 
 html[lang="km"] .chronicle-modal-title {
     font-family: var(--news-font-kh);
-    font-size: clamp(1.25rem, 2vw, 1.6rem);
+    font-size: clamp(1.2rem, 2vw, 1.55rem);
     line-height: 1.55;
 }
 
@@ -1170,10 +1331,10 @@ html[lang="km"] .chronicle-modal-title {
     flex-wrap: wrap;
     gap: 12px;
     padding: 12px 28px;
-    background: rgba(0, 0, 0, 0.02);
+    background: var(--news-surface-subtle);
     border-bottom: 1px solid var(--news-border);
-    font-size: 0.85rem;
-    color: var(--news-muted);
+    font-size: 0.84rem;
+    color: var(--news-ink-subtle);
 }
 
 .chronicle-modal-source-pill {
@@ -1190,7 +1351,7 @@ html[lang="km"] .chronicle-modal-title {
 
 .chronicle-modal-body {
     padding: 24px 28px;
-    font-size: 1.05rem;
+    font-size: 1rem;
     line-height: 1.8;
     color: var(--news-ink);
 }
@@ -1200,14 +1361,14 @@ html[lang="km"] .chronicle-modal-title {
     border-radius: 14px;
     overflow: hidden;
     margin-bottom: 24px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    box-shadow: var(--news-shadow-md);
     background: #1e293b;
-    max-height: 420px;
+    max-height: 400px;
 }
 
 .chronicle-modal-img {
     width: 100%;
-    max-height: 420px;
+    max-height: 400px;
     object-fit: cover;
     display: block;
     transition: transform 0.3s ease;
@@ -1218,7 +1379,7 @@ html[lang="km"] .chronicle-modal-title {
     bottom: 0;
     left: 0;
     right: 0;
-    padding: 10px 16px;
+    padding: 12px 18px;
     background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.85) 100%);
     color: #f8fafc;
     font-size: 0.82rem;
@@ -1232,30 +1393,30 @@ html[lang="km"] .chronicle-modal-title {
     align-items: center;
     flex-wrap: wrap;
     gap: 10px;
-    padding: 12px 16px;
-    background: rgba(16, 185, 129, 0.05);
-    border: 1px solid rgba(16, 185, 129, 0.18);
+    padding: 10px 14px;
+    background: var(--news-surface-subtle);
+    border: 1px solid var(--news-border);
     border-radius: 12px;
     margin-bottom: 24px;
 }
 
 .chronicle-modal-lead-deck {
-    font-size: 1.15rem;
+    font-size: 1.08rem;
     font-weight: 500;
     line-height: 1.75;
     color: var(--news-ink);
-    border-left: 4px solid var(--news-accent);
+    border-left: 4px solid var(--news-primary);
     padding-left: 18px;
     margin-bottom: 22px;
-    background: rgba(0, 0, 0, 0.015);
+    background: var(--news-surface-subtle);
     padding-top: 10px;
     padding-bottom: 10px;
     border-radius: 0 10px 10px 0;
 }
 
 html[lang="km"] .chronicle-modal-lead-deck {
-    font-size: 1.05rem;
-    line-height: 1.85;
+    font-size: 1.02rem;
+    line-height: 1.8;
 }
 
 .chronicle-modal-intel-grid {
@@ -1266,7 +1427,7 @@ html[lang="km"] .chronicle-modal-lead-deck {
 }
 
 .chronicle-intel-cell {
-    background: var(--news-lead-bg);
+    background: var(--news-surface-subtle);
     border: 1px solid var(--news-border);
     border-radius: 12px;
     padding: 12px 14px;
@@ -1276,9 +1437,9 @@ html[lang="km"] .chronicle-modal-lead-deck {
 .chronicle-intel-cell .cell-label {
     font-size: 0.72rem;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.05em;
     font-weight: 700;
-    color: var(--news-muted);
+    color: var(--news-ink-subtle);
     margin-bottom: 4px;
 }
 
@@ -1289,9 +1450,9 @@ html[lang="km"] .chronicle-modal-lead-deck {
 }
 
 .chronicle-modal-advisory-card {
-    background: linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(245, 158, 11, 0.02) 100%);
-    border: 1px solid rgba(245, 158, 11, 0.3);
-    border-left: 5px solid #f59e0b;
+    background: var(--news-brass-amber-bg);
+    border: 1px solid rgba(217, 119, 6, 0.25);
+    border-left: 5px solid var(--news-brass-amber);
     border-radius: 14px;
     padding: 18px 20px;
     margin-bottom: 24px;
@@ -1301,23 +1462,23 @@ html[lang="km"] .chronicle-modal-lead-deck {
 }
 
 .chronicle-modal-advisory-card i {
-    font-size: 1.5rem;
-    color: #f59e0b;
+    font-size: 1.4rem;
+    color: var(--news-brass-amber);
     margin-top: 2px;
     flex-shrink: 0;
 }
 
 .chronicle-modal-advisory-title {
-    font-size: 0.95rem;
+    font-size: 0.92rem;
     font-weight: 800;
-    color: #b45309;
+    color: var(--news-brass-amber);
     text-transform: uppercase;
     letter-spacing: 0.04em;
     margin-bottom: 6px;
 }
 
 .chronicle-modal-advisory-text {
-    font-size: 0.98rem;
+    font-size: 0.95rem;
     line-height: 1.6;
     color: var(--news-ink);
     margin: 0;
@@ -1329,7 +1490,7 @@ html[lang="km"] .chronicle-modal-lead-deck {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: var(--news-lead-bg);
+    background: var(--news-surface-subtle);
     flex-wrap: wrap;
     gap: 12px;
 }
@@ -1354,7 +1515,7 @@ html[lang="km"] .chronicle-modal-lead-deck {
     }
     .chronicle-modal-body {
         padding: 16px;
-        font-size: 0.98rem;
+        font-size: 0.96rem;
     }
     .chronicle-modal .modal-footer {
         padding: 14px 16px;
@@ -1373,11 +1534,79 @@ html[lang="km"] .chronicle-modal-lead-deck {
         max-height: 240px;
     }
 }
+
+/* Dark Mode Refinements for Badges, Modals & Advisory Blocks */
+html.dark-mode .impact-badge-high,
+.dark-mode .impact-badge-high {
+    background: rgba(239, 68, 68, 0.16);
+    color: #fca5a5;
+    border-color: rgba(239, 68, 68, 0.35);
+}
+
+html.dark-mode .impact-badge-advisory,
+.dark-mode .impact-badge-advisory {
+    background: rgba(245, 158, 11, 0.16);
+    color: #fde68a;
+    border-color: rgba(245, 158, 11, 0.35);
+}
+
+html.dark-mode .impact-badge-moderate,
+.dark-mode .impact-badge-moderate {
+    background: rgba(99, 102, 241, 0.16);
+    color: #c7d2fe;
+    border-color: rgba(99, 102, 241, 0.35);
+}
+
+html.dark-mode .chronicle-modal-close-btn:hover,
+.dark-mode .chronicle-modal-close-btn:hover {
+    background: rgba(239, 68, 68, 0.2);
+    color: #f87171;
+    border-color: rgba(239, 68, 68, 0.4);
+}
+
+html.dark-mode .chronicle-modal-advisory-card,
+.dark-mode .chronicle-modal-advisory-card {
+    background: rgba(245, 158, 11, 0.1);
+    border-color: rgba(245, 158, 11, 0.25);
+    border-left-color: #fbbf24;
+}
+
+html.dark-mode .chronicle-modal-advisory-title,
+.dark-mode .chronicle-modal-advisory-title {
+    color: #fbbf24;
+}
+
+html.dark-mode .chronicle-card-tip,
+.dark-mode .chronicle-card-tip {
+    background: rgba(245, 158, 11, 0.1);
+    border-left-color: #fbbf24;
+}
+
+html.dark-mode .chronicle-card-tip strong,
+.dark-mode .chronicle-card-tip strong {
+    color: #fbbf24;
+}
+
+html.dark-mode .chronicle-advisory-box,
+.dark-mode .chronicle-advisory-box {
+    background: rgba(52, 211, 153, 0.12);
+    border-left-color: #34d399;
+}
+
+html.dark-mode .chronicle-advisory-box i,
+.dark-mode .chronicle-advisory-box i {
+    color: #34d399;
+}
+
+html.dark-mode .chronicle-card-actions .btn-outline-dark:hover,
+.dark-mode .chronicle-card-actions .btn-outline-dark:hover {
+    color: #0f1210;
+}
 </style>
 
 <div class="news-page-wrapper">
     <!-- ====================================================================
-         1. NEWSPAPER MASTHEAD
+         1. EDITORIAL MASTHEAD & WIRE HEADER
          ==================================================================== -->
     <header class="chronicle-masthead">
         <!-- Top Utility Strip -->
@@ -1407,6 +1636,10 @@ html[lang="km"] .chronicle-modal-lead-deck {
 
         <!-- Main Publication Brand Name -->
         <div class="chronicle-brand-box">
+            <div class="chronicle-brand-tag">
+                <i class="fas fa-leaf text-success me-1"></i>
+                {% if current_lang == 'km' %}មជ្ឈមណ្ឌលព័ត៌មាន និងវិទ្យាសាស្ត្រកសិកម្មឌីជីថល{% else %}Agricultural Intelligence & Agronomy Desk{% endif %}
+            </div>
             <h1 class="chronicle-title">
                 {% if current_lang == 'km' %}
                 សារព័ត៌មានកសិកម្មឌីជីថល
@@ -1414,17 +1647,16 @@ html[lang="km"] .chronicle-modal-lead-deck {
                 The Agri Chronicle
                 {% endif %}
             </h1>
-            <div class="chronicle-subtitle-latin">The Agricultural Intelligence & Agronomy Dispatch</div>
             <div class="chronicle-motto">
                 {% if current_lang == 'km' %}
-                « ផ្ដល់ព័ត៌មានជាក់លាក់ វិទ្យាសាស្ត្រដំណាំ បច្ចេកវិទ្យាទំនើប និងសេដ្ឋកិច្ចទីផ្សារសម្រាប់កសិករខ្មែរ »
+                ផ្ដល់ព័ត៌មានជាក់លាក់ វិទ្យាសាស្ត្រដំណាំ បច្ចេកវិទ្យាទំនើប និងតម្លៃទីផ្សារសម្រាប់កសិករខ្មែរ
                 {% else %}
-                "Verified Intelligence, Crop Science, Climate Resilience & Market Economics for Empowered Farmers"
+                Verified intelligence, crop science, climate resilience and commodity economics for empowered farmers
                 {% endif %}
             </div>
         </div>
 
-        <!-- Classic Double Hairline Newspaper Rule -->
+        <!-- Modern Hairline Divider -->
         <div class="chronicle-double-rule"></div>
 
         <!-- Breaking Ticker / Market Ticker -->
@@ -1580,7 +1812,7 @@ html[lang="km"] .chronicle-modal-lead-deck {
             <!-- Left Column: Curated Stories Desk -->
             <section class="chronicle-stories-desk">
                 <div class="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2">
-                    <h2 class="h5 m-0 font-weight-bold" style="font-family: var(--news-font-serif);">
+                    <h2 class="h5 m-0 font-weight-bold chronicle-section-heading">
                         {% if current_lang == 'km' %}អត្ថបទសារព័ត៌មានសំខាន់ៗ{% else %}Dispatches & Field Reports{% endif %}
                     </h2>
                     <span class="text-muted small" id="story-count-badge">0 articles</span>
@@ -1597,7 +1829,7 @@ html[lang="km"] .chronicle-modal-lead-deck {
                 <div class="chronicle-side-widget">
                     <div class="chronicle-widget-title">
                         <span><i class="fas fa-rss me-1"></i> {% if current_lang == 'km' %}ខ្សែព័ត៌មានទាន់ហេតុការណ៍{% else %}Real-Time Wire{% endif %}</span>
-                        <span class="badge badge-light border">Live</span>
+                        <span class="chronicle-pill-tag">Live</span>
                     </div>
                     <ul class="chronicle-wire-list" id="chronicle-wire-list">
                         <!-- Injected by JavaScript -->
@@ -1608,7 +1840,7 @@ html[lang="km"] .chronicle-modal-lead-deck {
                 <div class="chronicle-side-widget">
                     <div class="chronicle-widget-title">
                         <span><i class="fas fa-chart-bar me-1"></i> {% if current_lang == 'km' %}សន្ទស្សន៍តម្លៃកសិផល{% else %}Agri Commodity Watch{% endif %}</span>
-                        <span class="badge badge-light border">KHR / USD</span>
+                        <span class="chronicle-pill-tag">KHR / USD</span>
                     </div>
                     <table class="chronicle-commodity-table">
                         <tbody>
@@ -1705,7 +1937,7 @@ html[lang="km"] .chronicle-modal-lead-deck {
                         <span id="modal-impact-badge" class="chronicle-modal-impact-badge impact-badge-high">
                             <i class="fas fa-bolt"></i> HIGH IMPACT
                         </span>
-                        <span id="modal-region-badge" class="badge rounded-pill bg-white text-dark border">
+                        <span id="modal-region-badge" class="chronicle-modal-region-pill">
                             <i class="fas fa-globe-asia text-primary me-1"></i> Cambodia Wire
                         </span>
                     </div>
