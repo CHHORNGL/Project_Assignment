@@ -504,10 +504,11 @@
         <!-- The Executive Member Card -->
         {% set is_admin_member = member.has_role('admin') %}
         {% set is_expert_member = member.has_role('expert') %}
+        {% set is_premium_member = member.is_premium %}
         
         <div class="executive-member-card">
             <!-- Header -->
-            <div class="member-card-header" style="{% if is_admin_member %}background: linear-gradient(135deg, #b45309, #d97706, #dc2626);{% elif is_expert_member %}background: linear-gradient(135deg, #065f46, #059669, #0284c7);{% endif %}">
+            <div class="member-card-header" style="{% if is_admin_member %}background: linear-gradient(135deg, #b45309, #d97706, #dc2626);{% elif is_expert_member %}background: linear-gradient(135deg, #065f46, #059669, #0284c7);{% elif is_premium_member %}background: linear-gradient(135deg, #7c3aed, #CF6DFC, #9b72cb);{% endif %}">
                 <div class="member-card-brand">
                     <div class="member-card-logo">
                         <img src="{{ url_for('static', filename='img/logo.svg', v=static_version) }}"
@@ -521,17 +522,21 @@
                                 Executive Administrative Pass
                             {% elif is_expert_member %}
                                 Certified Diagnostic Credential
+                            {% elif is_premium_member %}
+                                VIP Pro Subscriber Pass
                             {% else %}
                                 Project Member Card
                             {% endif %}
                         </div>
                     </div>
                 </div>
-                <span class="member-card-badge" style="{% if is_admin_member %}background: #fef3c7; color: #92400e; border: 1px solid #f59e0b;{% elif is_expert_member %}background: #d1fae5; color: #065f46; border: 1px solid #10b981;{% endif %}">
+                <span class="member-card-badge" style="{% if is_admin_member %}background: #fef3c7; color: #92400e; border: 1px solid #f59e0b;{% elif is_expert_member %}background: #d1fae5; color: #065f46; border: 1px solid #10b981;{% elif is_premium_member %}background: rgba(207, 109, 252, 0.2); color: #CF6DFC; border: 1px solid #CF6DFC;{% endif %}">
                     {% if is_admin_member %}
                         <i class="fas fa-shield-alt mr-1"></i> {{ rep_label }}
                     {% elif is_expert_member %}
                         <i class="fas fa-certificate mr-1"></i> {{ rep_label }}
+                    {% elif is_premium_member %}
+                        <i class="fas fa-crown mr-1"></i> {{ rep_label }}
                     {% else %}
                         {{ rep_label }}
                     {% endif %}
@@ -540,7 +545,7 @@
 
             <!-- Body -->
             <div class="member-card-body">
-                <div class="member-card-avatar" style="{% if is_admin_member %}border-color: #f59e0b; box-shadow: 0 0 16px rgba(245, 158, 11, 0.4);{% elif is_expert_member %}border-color: #10b981; box-shadow: 0 0 16px rgba(16, 185, 129, 0.4);{% endif %}">
+                <div class="member-card-avatar" style="{% if is_admin_member %}border-color: #f59e0b; box-shadow: 0 0 16px rgba(245, 158, 11, 0.4);{% elif is_expert_member %}border-color: #10b981; box-shadow: 0 0 16px rgba(16, 185, 129, 0.4);{% elif is_premium_member %}border-color: #CF6DFC; box-shadow: 0 0 18px rgba(207, 109, 252, 0.45);{% endif %}">
                     {% if member.avatar_data or member.avatar_path %}
                         <img src="{{ avatar_url(member) }}"
                              alt="{{ member.full_name or member.username }}">
@@ -557,8 +562,8 @@
                         </span>
                     </div>
                     {% if role_names %}
-                    <div class="member-card-role-pill" style="{% if is_admin_member %}color: #d97706; background: rgba(245, 158, 11, 0.12);{% elif is_expert_member %}color: #059669; background: rgba(16, 185, 129, 0.12);{% endif %}">
-                        <i class="{% if is_admin_member %}fas fa-crown{% elif is_expert_member %}fas fa-award{% else %}fas fa-id-badge{% endif %}"></i>
+                    <div class="member-card-role-pill" style="{% if is_admin_member %}color: #d97706; background: rgba(245, 158, 11, 0.12);{% elif is_expert_member %}color: #059669; background: rgba(16, 185, 129, 0.12);{% elif is_premium_member %}color: #CF6DFC; background: rgba(207, 109, 252, 0.12);{% endif %}">
+                        <i class="{% if is_admin_member %}fas fa-crown{% elif is_expert_member %}fas fa-award{% elif is_premium_member %}fas fa-crown{% else %}fas fa-id-badge{% endif %}"></i>
                         <span>{{ role_names }}</span>
                     </div>
                     {% endif %}
@@ -575,19 +580,21 @@
 
             <!-- Verification Ribbon -->
             <div class="member-card-verification-row">
-                <div class="verification-tag" style="{% if is_admin_member %}color: #d97706;{% elif is_expert_member %}color: #059669;{% endif %}">
-                    <i class="{% if is_admin_member %}fas fa-shield-check{% elif is_expert_member %}fas fa-certificate{% else %}fas fa-check-circle{% endif %}"></i>
+                <div class="verification-tag" style="{% if is_admin_member %}color: #d97706;{% elif is_expert_member %}color: #059669;{% elif is_premium_member %}color: #CF6DFC;{% endif %}">
+                    <i class="{% if is_admin_member %}fas fa-shield-check{% elif is_expert_member %}fas fa-certificate{% elif is_premium_member %}fas fa-crown{% else %}fas fa-check-circle{% endif %}"></i>
                     <span>
                         {% if is_admin_member %}
                             Level 4 Root Authority Verified
                         {% elif is_expert_member %}
                             Level 3 Diagnostic Authority Verified
+                        {% elif is_premium_member %}
+                            Active VIP Pro Subscriber
                         {% else %}
                             Verified Representative
                         {% endif %}
                     </span>
                 </div>
-                <div>ID: #AGRI-{% if is_admin_member %}ADM{% elif is_expert_member %}EXP{% else %}REP{% endif %}-{{ "%04d"|format(member.id) }}</div>
+                <div>ID: #AGRI-{% if is_admin_member %}ADM{% elif is_expert_member %}EXP{% elif is_premium_member %}VIP{% else %}REP{% endif %}-{{ "%04d"|format(member.id) }}</div>
             </div>
 
             <!-- Footer -->

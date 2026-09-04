@@ -560,7 +560,7 @@
                 </span>
 
                 {% if current_user.is_authenticated %}
-                <div style="{% if current_user.is_premium %}background: linear-gradient(45deg, #4285f4, #9b72cb, #d96570); padding: 2px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;{% endif %}">
+                <div style="{% if current_user.is_premium %}background: linear-gradient(135deg, #CF6DFC, #FFE082, #BDB96A); padding: 2px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 0 10px rgba(207, 109, 252, 0.4);{% endif %}">
                     <img class="img-profile rounded-circle"
                          src="{{ avatar_url(current_user) }}"
                          style="width:36px;height:36px;object-fit:cover;{% if current_user.is_premium %}border: 2px solid white;{% endif %}">
@@ -578,7 +578,7 @@
                  aria-labelledby="userDropdown">
                 <div class="user-dropdown-header">
                     {% if current_user.is_authenticated %}
-                    <div style="{% if current_user.is_premium %}background: linear-gradient(45deg, #4285f4, #9b72cb, #d96570); padding: 3px; border-radius: 50%; box-shadow: 0 4px 15px rgba(155, 114, 203, 0.4); display: inline-block;{% endif %}">
+                    <div style="{% if current_user.is_premium %}background: linear-gradient(135deg, #CF6DFC, #FFE082, #BDB96A); padding: 3px; border-radius: 50%; box-shadow: 0 4px 15px rgba(207, 109, 252, 0.4); display: inline-block;{% endif %}">
                         <img src="{{ avatar_url(current_user) }}"
                              alt="{{ current_user.username }}"
                              class="user-dropdown-avatar"

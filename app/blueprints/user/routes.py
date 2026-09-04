@@ -55,6 +55,8 @@ def _representative_label(user: User):
     if user.has_role("expert"):
         roles.append("Expert")
     if not roles:
+        if getattr(user, "is_premium", False):
+            return "VIP Pro Member"
         return None
     return f"{' & '.join(roles)} Representative"
 

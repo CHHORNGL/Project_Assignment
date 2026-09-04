@@ -211,12 +211,236 @@
     100% { background-position: 0% 50%; }
 }
 
+/* ==========================================================================
+   PREMIUM VIP SUBSCRIBER SMOOTH SVG ANIMATION SUITE
+   ========================================================================== */
+.premium-avatar-grand-stage {
+    position: relative;
+    width: 140px;
+    height: 140px;
+    display: grid;
+    place-items: center;
+    margin: 8px 0 4px;
+}
+
+/* Floating Crown SVG above avatar */
+.premium-floating-crown {
+    position: absolute;
+    top: -18px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 5;
+    pointer-events: none;
+    filter: drop-shadow(0 4px 8px rgba(207, 109, 252, 0.45));
+    animation: smoothCrownFloat 3.8s ease-in-out infinite alternate;
+    will-change: transform;
+}
+
+@keyframes smoothCrownFloat {
+    0% { transform: translate(-50%, 0px) scale(1); }
+    100% { transform: translate(-50%, -6px) scale(1.05); }
+}
+
+.crown-twinkle-glint {
+    transform-origin: 24px 6px;
+    animation: smoothCrownGlint 3.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    will-change: transform, opacity;
+}
+
+@keyframes smoothCrownGlint {
+    0%, 65%, 100% { transform: scale(0); opacity: 0; }
+    75% { transform: scale(1.3) rotate(45deg); opacity: 1; }
+    85% { transform: scale(0.9) rotate(90deg); opacity: 0.8; }
+}
+
+/* Smooth Rotating SVG Halo Aura */
+.premium-halo-svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.aura-spin-cw {
+    transform-origin: 72px 72px;
+    animation: smoothSpinCW 16s linear infinite;
+    will-change: transform;
+}
+
+@keyframes smoothSpinCW {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.aura-spin-ccw {
+    transform-origin: 72px 72px;
+    animation: smoothSpinCCW 22s linear infinite;
+    will-change: transform;
+}
+
+@keyframes smoothSpinCCW {
+    from { transform: rotate(360deg); }
+    to { transform: rotate(0deg); }
+}
+
+.aura-breathe {
+    transform-origin: 72px 72px;
+    animation: smoothAuraBreathe 3.6s ease-in-out infinite alternate;
+    will-change: transform, opacity;
+}
+
+@keyframes smoothAuraBreathe {
+    0% { transform: scale(0.96); opacity: 0.35; stroke-width: 3.5; }
+    100% { transform: scale(1.04); opacity: 0.75; stroke-width: 5.5; }
+}
+
+.stardust-blink {
+    animation: smoothStarBlink 2.6s ease-in-out infinite alternate;
+}
+
+.stardust-blink.delay-1 {
+    animation-delay: 1.3s;
+}
+
+@keyframes smoothStarBlink {
+    0% { opacity: 0.25; transform: scale(0.7); }
+    100% { opacity: 1; transform: scale(1.4); }
+}
+
 /* 3. PREMIUM USER AURA RING */
 .avatar-box-premium {
-    background: linear-gradient(45deg, #4285f4, #9b72cb, #d96570);
-    padding: 4px;
-    box-shadow: 0 8px 24px rgba(155, 114, 203, 0.4);
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    padding: 3.5px;
+    position: relative;
+    z-index: 3;
+    background: linear-gradient(135deg, #CF6DFC, #BDB96A, #FDFBD5, #C1BFFF, #CF6DFC);
+    background-size: 300% 300%;
+    animation: smoothGradShift 8s ease infinite;
+    box-shadow: 0 0 28px rgba(207, 109, 252, 0.45), 0 8px 24px rgba(0, 0, 0, 0.2);
     border: none;
+}
+
+@keyframes smoothGradShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Bottom Right VIP Crest */
+.premium-bottom-crest {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    z-index: 4;
+    filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.3));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: smoothCrestPulse 3s ease-in-out infinite alternate;
+    will-change: transform;
+}
+
+@keyframes smoothCrestPulse {
+    0% { transform: scale(1); }
+    100% { transform: scale(1.08); }
+}
+
+/* Name Crown SVG */
+.premium-name-crown-svg {
+    display: inline-flex;
+    align-items: center;
+    animation: smoothNameCrownBob 3.5s ease-in-out infinite alternate;
+    will-change: transform;
+}
+
+@keyframes smoothNameCrownBob {
+    0% { transform: translateY(0px) rotate(0deg); }
+    100% { transform: translateY(-2px) rotate(3deg); }
+}
+
+/* Premium VIP Badge */
+.premium-vip-badge {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 14px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    color: #4a2800;
+    background: linear-gradient(135deg, #FDFBD5 0%, #FFE082 45%, #C1BFFF 100%);
+    border: 1px solid rgba(207, 109, 252, 0.45);
+    box-shadow: 0 4px 14px rgba(207, 109, 252, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    overflow: hidden;
+    cursor: default;
+}
+
+.dark-mode .premium-vip-badge {
+    color: #FDFBD5;
+    background: linear-gradient(135deg, rgba(207, 109, 252, 0.25) 0%, rgba(189, 185, 106, 0.22) 50%, rgba(193, 191, 255, 0.18) 100%);
+    border-color: rgba(207, 109, 252, 0.6);
+    box-shadow: 0 4px 18px rgba(207, 109, 252, 0.35), inset 0 1px 0 rgba(253, 251, 213, 0.3);
+}
+
+.premium-badge-shimmer-wrap {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 60px;
+    height: 100%;
+    pointer-events: none;
+    animation: smoothBadgeSweep 3.6s ease-in-out infinite;
+    will-change: transform;
+}
+
+.badge-shimmer-beam {
+    width: 100%;
+    height: 100%;
+}
+
+@keyframes smoothBadgeSweep {
+    0% { transform: translateX(-80px) skewX(-20deg); }
+    32%, 100% { transform: translateX(240px) skewX(-20deg); }
+}
+
+.badge-vip-pulse-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #10b981;
+    box-shadow: 0 0 8px #10b981;
+    animation: smoothDotPing 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes smoothDotPing {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.35); opacity: 0.65; }
+}
+
+.badge-clearance-premium {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #ffffff;
+    background: linear-gradient(135deg, #CF6DFC, #9333ea);
+    box-shadow: 0 2px 10px rgba(207, 109, 252, 0.35);
+    letter-spacing: 0.04em;
+}
+
+.dark-mode .badge-clearance-premium {
+    background: linear-gradient(135deg, rgba(207, 109, 252, 0.4), rgba(147, 51, 234, 0.3));
+    border: 1px solid rgba(207, 109, 252, 0.5);
 }
 
 /* 4. STANDARD USER AURA */
@@ -403,6 +627,69 @@
     color: #e2e8f0;
 }
 
+/* Premium Credentials Card Enhancements */
+.premium-credentials-card {
+    border-color: rgba(207, 109, 252, 0.45) !important;
+    box-shadow: 0 10px 30px rgba(207, 109, 252, 0.15) !important;
+    position: relative;
+    overflow: hidden;
+}
+
+.dark-mode .premium-credentials-card {
+    border-color: rgba(207, 109, 252, 0.5) !important;
+    box-shadow: 0 10px 32px rgba(207, 109, 252, 0.25) !important;
+}
+
+.credentials-svg-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.65;
+}
+
+.guilloche-svg {
+    width: 100%;
+    height: 100%;
+}
+
+.wave-layer-1 {
+    animation: smoothWaveDrift 14s ease-in-out infinite alternate;
+}
+
+.wave-layer-2 {
+    animation: smoothWaveDrift 18s ease-in-out infinite alternate-reverse;
+}
+
+@keyframes smoothWaveDrift {
+    0% { transform: translateY(0px) scaleY(1); }
+    100% { transform: translateY(-12px) scaleY(1.08); }
+}
+
+.credentials-id-tag-premium {
+    color: #CF6DFC !important;
+    background: rgba(207, 109, 252, 0.15) !important;
+    border: 1px solid rgba(207, 109, 252, 0.35) !important;
+}
+
+.status-tag-premium {
+    color: #CF6DFC !important;
+    font-weight: 800;
+}
+
+.capability-pill-premium {
+    background: rgba(207, 109, 252, 0.08) !important;
+    border-color: rgba(207, 109, 252, 0.3) !important;
+}
+
+.dark-mode .capability-pill-premium {
+    background: rgba(207, 109, 252, 0.15) !important;
+    border-color: rgba(207, 109, 252, 0.4) !important;
+}
+
 .digital-pass-preview-box {
     display: flex;
     align-items: center;
@@ -509,7 +796,123 @@
         <!-- AVATAR UPLOAD & AURA HEADER -->
         <div class="avatar-container">
             <label for="avatar-input-file" style="cursor: pointer; position: relative;">
-                <div class="avatar-image-box {% if is_admin %}avatar-box-admin{% elif is_expert %}avatar-box-expert{% elif is_premium %}avatar-box-premium{% else %}avatar-box-standard{% endif %}">
+                {% if is_premium and not is_admin and not is_expert %}
+                <div class="premium-avatar-grand-stage">
+                    <!-- Floating Crown SVG Crest Above Avatar -->
+                    <div class="premium-floating-crown" aria-hidden="true">
+                        <svg class="crown-svg" viewBox="0 0 48 36" width="38" height="28">
+                            <defs>
+                                <linearGradient id="crownGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#FFF8E1" />
+                                    <stop offset="25%" stop-color="#FDD835" />
+                                    <stop offset="65%" stop-color="#CF6DFC" />
+                                    <stop offset="100%" stop-color="#C1BFFF" />
+                                </linearGradient>
+                                <filter id="crownGlow" x="-20%" y="-20%" width="140%" height="140%">
+                                    <feGaussianBlur stdDeviation="1.5" result="glow" />
+                                    <feMerge>
+                                        <feMergeNode in="glow" />
+                                        <feMergeNode in="SourceGraphic" />
+                                    </feMerge>
+                                </filter>
+                            </defs>
+                            <!-- Crown Body with smooth faceted cuts -->
+                            <path d="M4 28 L44 28 L40 10 L29 20 L24 6 L19 20 L8 10 Z" fill="url(#crownGrad)" filter="url(#crownGlow)"/>
+                            <!-- Crown Base Trim -->
+                            <rect x="5" y="26" width="38" height="3" rx="1.5" fill="#FFE082" />
+                            <!-- Gemstones -->
+                            <circle cx="24" cy="6" r="2.2" fill="#FFFFFF" />
+                            <circle cx="8" cy="10" r="1.8" fill="#CF6DFC" />
+                            <circle cx="40" cy="10" r="1.8" fill="#CF6DFC" />
+                            <circle cx="19" cy="20" r="1.2" fill="#FDFBD5" />
+                            <circle cx="29" cy="20" r="1.2" fill="#FDFBD5" />
+                            <!-- Starburst Twinkle Glint on Crown -->
+                            <g class="crown-twinkle-glint">
+                                <path d="M24 0 L25.5 4.5 L30 6 L25.5 7.5 L24 12 L22.5 7.5 L18 6 L22.5 4.5 Z" fill="#FFFFFF" opacity="0.95"/>
+                            </g>
+                        </svg>
+                    </div>
+
+                    <!-- The Smooth Animated Rotating SVG Halo Aura -->
+                    <svg class="premium-halo-svg" viewBox="0 0 144 144" aria-hidden="true">
+                        <defs>
+                            <linearGradient id="auraGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#CF6DFC" stop-opacity="1" />
+                                <stop offset="25%" stop-color="#FDFBD5" stop-opacity="0.9" />
+                                <stop offset="50%" stop-color="#BDB96A" stop-opacity="1" />
+                                <stop offset="75%" stop-color="#C1BFFF" stop-opacity="0.9" />
+                                <stop offset="100%" stop-color="#CF6DFC" stop-opacity="1" />
+                            </linearGradient>
+
+                            <linearGradient id="auraGrad2" x1="100%" y1="0%" x2="0%" y2="100%">
+                                <stop offset="0%" stop-color="#FFE082" stop-opacity="0.85" />
+                                <stop offset="40%" stop-color="#CF6DFC" stop-opacity="0.6" />
+                                <stop offset="70%" stop-color="#C1BFFF" stop-opacity="0.9" />
+                                <stop offset="100%" stop-color="#FDFBD5" stop-opacity="0.75" />
+                            </linearGradient>
+
+                            <filter id="softGlow" x="-30%" y="-30%" width="160%" height="160%">
+                                <feGaussianBlur stdDeviation="3.2" result="blur" />
+                                <feMerge>
+                                    <feMergeNode in="blur" />
+                                    <feMergeNode in="SourceGraphic" />
+                                </feMerge>
+                            </filter>
+                        </defs>
+
+                        <!-- Ambient Breathing Glow Circle -->
+                        <circle cx="72" cy="72" r="54" fill="none" stroke="url(#auraGrad1)" stroke-width="4" filter="url(#softGlow)" opacity="0.4" class="aura-breathe"/>
+
+                        <!-- Outer Dynamic Dashed Orbit Ring (Clockwise) -->
+                        <g class="aura-spin-cw">
+                            <circle cx="72" cy="72" r="62" fill="none" stroke="url(#auraGrad1)" stroke-width="2.2" stroke-dasharray="16 22 28 20" stroke-linecap="round"/>
+                            <!-- Celestial Orbit Diamonds / Stars -->
+                            <polygon points="72,8 74,12 72,16 70,12" fill="#FDFBD5" />
+                            <polygon points="136,72 132,74 128,72 132,70" fill="#CF6DFC" />
+                            <polygon points="72,136 70,132 72,128 74,132" fill="#FFE082" />
+                            <polygon points="8,72 12,70 16,72 12,74" fill="#C1BFFF" />
+                        </g>
+
+                        <!-- Inner Energy Shimmer Ring (Counter-Clockwise) -->
+                        <g class="aura-spin-ccw">
+                            <circle cx="72" cy="72" r="57" fill="none" stroke="url(#auraGrad2)" stroke-width="1.8" stroke-dasharray="8 8 14 10" stroke-linecap="round"/>
+                            <!-- Mini Stardust Particles -->
+                            <circle cx="112" cy="32" r="1.6" fill="#FFFFFF" class="stardust-blink"/>
+                            <circle cx="32" cy="112" r="1.6" fill="#FFE082" class="stardust-blink delay-1"/>
+                        </g>
+                    </svg>
+
+                    <!-- Avatar Box Premium -->
+                    <div class="avatar-image-box avatar-box-premium">
+                        {% if current_user.avatar_data %}
+                            <img src="{{ url_for('user.avatar', user_id=current_user.id) }}" alt="Avatar" id="avatar-preview" class="avatar-inner-img">
+                        {% else %}
+                            <img src="" alt="Avatar" id="avatar-preview" class="avatar-inner-img" style="display:none;">
+                            <span id="avatar-initial" class="avatar-initial-text">{{ current_user.username[0]|upper }}</span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Bottom Emblem VIP Crest SVG -->
+                    <div class="premium-bottom-crest" title="Verified VIP Pro Member">
+                        <svg viewBox="0 0 32 32" width="32" height="32">
+                            <defs>
+                                <linearGradient id="crestGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#CF6DFC" />
+                                    <stop offset="50%" stop-color="#9b72cb" />
+                                    <stop offset="100%" stop-color="#6b21a8" />
+                                </linearGradient>
+                            </defs>
+                            <circle cx="16" cy="16" r="14" fill="url(#crestGrad)" stroke="#FDFBD5" stroke-width="2"/>
+                            <!-- Crown Vector inside Emblem -->
+                            <path d="M9 20 L23 20 L21.5 13 L17.5 16.5 L16 12 L14.5 16.5 L10.5 13 Z" fill="#FFE082"/>
+                            <circle cx="16" cy="11.5" r="1.2" fill="#FFFFFF" />
+                            <circle cx="10.5" cy="12.5" r="0.9" fill="#FDFBD5" />
+                            <circle cx="21.5" cy="12.5" r="0.9" fill="#FDFBD5" />
+                        </svg>
+                    </div>
+                </div>
+                {% else %}
+                <div class="avatar-image-box {% if is_admin %}avatar-box-admin{% elif is_expert %}avatar-box-expert{% else %}avatar-box-standard{% endif %}">
                     {% if current_user.avatar_data %}
                         <img src="{{ url_for('user.avatar', user_id=current_user.id) }}" alt="Avatar" id="avatar-preview" class="avatar-inner-img">
                     {% else %}
@@ -519,17 +922,16 @@
                 </div>
 
                 <!-- Bottom Emblem Icon -->
-                <div style="position: absolute; bottom: 0; right: 0; background: {% if is_admin %}#dc2626{% elif is_expert %}#059669{% elif is_premium %}#9b72cb{% else %}#3b82f6{% endif %}; color: white; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; border: 2.5px solid var(--admin-card, #ffffff); box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+                <div style="position: absolute; bottom: 0; right: 0; background: {% if is_admin %}#dc2626{% elif is_expert %}#059669{% else %}#3b82f6{% endif %}; color: white; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; border: 2.5px solid var(--admin-card, #ffffff); box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
                     {% if is_admin %}
                         <i class="fas fa-shield-alt" style="font-size: 0.72rem;"></i>
                     {% elif is_expert %}
                         <i class="fas fa-user-graduate" style="font-size: 0.72rem;"></i>
-                    {% elif is_premium %}
-                        <i class="fas fa-crown" style="font-size: 0.72rem;"></i>
                     {% else %}
                         <i class="fas fa-camera" style="font-size: 0.72rem;"></i>
                     {% endif %}
                 </div>
+                {% endif %}
             </label>
             <input type="file" name="avatar" accept=".jpg,.jpeg,.png,.gif,.webp" style="display: none;" id="avatar-input-file" onchange="const preview=document.getElementById('avatar-preview'); preview.src=window.URL.createObjectURL(this.files[0]); preview.style.display='block'; const initial=document.getElementById('avatar-initial'); if(initial) initial.style.display='none';">
             
@@ -541,7 +943,21 @@
                 {% elif is_expert %}
                     <i class="fas fa-check-circle text-success" title="Verified Expert"></i>
                 {% elif is_premium %}
-                    <i class="fas fa-crown text-warning" title="Premium Subscriber"></i>
+                    <span class="premium-name-crown-svg" title="Verified VIP Pro Subscriber">
+                        <svg viewBox="0 0 24 24" width="22" height="22" class="crown-name-svg">
+                            <defs>
+                                <linearGradient id="nameCrownGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#FFF9C4" />
+                                    <stop offset="45%" stop-color="#FFE082" />
+                                    <stop offset="100%" stop-color="#CF6DFC" />
+                                </linearGradient>
+                            </defs>
+                            <path d="M4 18H20L21 8L16 12.5L12 5L8 12.5L3 8L4 18Z" fill="url(#nameCrownGrad)"/>
+                            <circle cx="12" cy="4.5" r="1.6" fill="#FFE082"/>
+                            <circle cx="3" cy="7.5" r="1.3" fill="#CF6DFC"/>
+                            <circle cx="21" cy="7.5" r="1.3" fill="#CF6DFC"/>
+                        </svg>
+                    </span>
                 {% endif %}
             </div>
             
@@ -554,9 +970,32 @@
                     <span class="badge-role-expert"><i class="fas fa-certificate"></i> CERTIFIED AGRICULTURAL EXPERT</span>
                     <span class="badge-clearance-expert"><i class="fas fa-microscope"></i> DIAGNOSTIC AUTHORITY</span>
                 {% elif is_premium %}
-                    <div class="settings-sublabel" style="text-transform: uppercase; font-weight: 700; font-size: 0.72rem; letter-spacing: 0.5px; background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; padding: 4px 12px; border-radius: 20px; box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);">
-                        <i class="fas fa-crown"></i> PRO FARMER
+                    <div class="premium-vip-badge">
+                        <div class="premium-badge-shimmer-wrap">
+                            <svg class="badge-shimmer-beam" viewBox="0 0 100 100" preserveAspectRatio="none">
+                                <defs>
+                                    <linearGradient id="shimmerBeam" x1="0%" y1="0%" x2="100%" y2="0%">
+                                        <stop offset="0%" stop-color="rgba(255,255,255,0)" />
+                                        <stop offset="50%" stop-color="rgba(255,255,255,0.45)" />
+                                        <stop offset="100%" stop-color="rgba(255,255,255,0)" />
+                                    </linearGradient>
+                                </defs>
+                                <rect x="0" y="0" width="100" height="100" fill="url(#shimmerBeam)" />
+                            </svg>
+                        </div>
+                        <svg class="badge-crown-vector" viewBox="0 0 24 24" width="15" height="15">
+                            <path d="M3 18H21L19.5 9L15 13L12 6L9 13L4.5 9L3 18Z" fill="#FDFBD5"/>
+                            <circle cx="12" cy="5" r="1.2" fill="#CF6DFC"/>
+                        </svg>
+                        <span class="badge-vip-text">VIP PRO FARMER</span>
+                        <span class="badge-vip-pulse-dot" title="Active VIP Status"></span>
                     </div>
+                    <span class="badge-clearance-premium">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="color: #FFE082;">
+                            <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
+                        </svg>
+                        TIER-1 PRO ACCESS
+                    </span>
                 {% else %}
                     <div class="settings-sublabel" style="text-transform: uppercase; font-weight: 600; font-size: 0.72rem; letter-spacing: 0.5px; background: rgba(59, 130, 246, 0.1); color: #3b82f6; padding: 4px 12px; border-radius: 20px;">
                         FARMER
@@ -566,34 +1005,67 @@
         </div>
 
         <!-- ===============================
-             EXCLUSIVE EXECUTIVE DIGITAL PASS (ADMIN & EXPERT)
+             EXCLUSIVE EXECUTIVE & VIP DIGITAL PASS
         =============================== -->
-        {% if is_admin or is_expert or rep_label %}
+        {% if is_admin or is_expert or rep_label or is_premium %}
         <div class="settings-section-title">
-            <i class="fas fa-id-badge text-primary"></i>
-            <span>{{ t("official_credentials")|default("Official Digital Credentials") }}</span>
+            <i class="{% if is_premium and not is_admin and not is_expert %}fas fa-crown{% else %}fas fa-id-badge{% endif %}" style="{% if is_premium and not is_admin and not is_expert %}color: #CF6DFC;{% else %}color: var(--primary);{% endif %}"></i>
+            <span>{% if is_premium and not is_admin and not is_expert %}VIP Pro Credentials &amp; Digital Pass{% else %}{{ t("official_credentials")|default("Official Digital Credentials") }}{% endif %}</span>
         </div>
-        <div class="executive-credentials-card">
-            <div class="credentials-header-row">
-                <div class="credentials-id-tag">
+        <div class="executive-credentials-card {% if is_premium and not is_admin and not is_expert %}premium-credentials-card{% endif %}">
+            {% if is_premium and not is_admin and not is_expert %}
+            <!-- Animated SVG Guilloche Wave Backdrop -->
+            <div class="credentials-svg-backdrop" aria-hidden="true">
+                <svg viewBox="0 0 600 240" preserveAspectRatio="none" class="guilloche-svg">
+                    <defs>
+                        <linearGradient id="waveGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#CF6DFC" stop-opacity="0.18" />
+                            <stop offset="50%" stop-color="#FFE082" stop-opacity="0.12" />
+                            <stop offset="100%" stop-color="#C1BFFF" stop-opacity="0.15" />
+                        </linearGradient>
+                    </defs>
+                    <path d="M0,40 C150,90 350,10 600,60 L600,240 L0,240 Z" fill="url(#waveGrad)" class="wave-layer-1"/>
+                    <path d="M0,80 C200,20 400,100 600,40 L600,240 L0,240 Z" fill="url(#waveGrad)" class="wave-layer-2"/>
+                </svg>
+            </div>
+            {% endif %}
+
+            <div class="credentials-header-row" style="position: relative; z-index: 2;">
+                <div class="credentials-id-tag {% if is_premium and not is_admin and not is_expert %}credentials-id-tag-premium{% endif %}">
                     {% if is_admin %}
                         #AGRI-ADM-{{ "%04d"|format(current_user.id) }}
                     {% elif is_expert %}
                         #AGRI-EXP-{{ "%04d"|format(current_user.id) }}
+                    {% elif is_premium %}
+                        #AGRI-VIP-{{ "%04d"|format(current_user.id) }}
                     {% else %}
                         #AGRI-REP-{{ "%04d"|format(current_user.id) }}
                     {% endif %}
                 </div>
-                <div class="credentials-status-tag">
-                    <i class="fas fa-check-circle"></i>
-                    <span>Verified Representative</span>
+                <div class="credentials-status-tag {% if is_premium and not is_admin and not is_expert %}status-tag-premium{% endif %}">
+                    {% if is_premium and not is_admin and not is_expert %}
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                            <defs>
+                                <linearGradient id="vipShieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#CF6DFC"/>
+                                    <stop offset="100%" stop-color="#7c3aed"/>
+                                </linearGradient>
+                            </defs>
+                            <path d="M12 2L4 5V11.09C4 16.14 7.41 20.85 12 22C16.59 20.85 20 16.14 20 11.09V5L12 2Z" fill="url(#vipShieldGrad)" stroke="#FFE082" stroke-width="1.5"/>
+                            <path d="M9 12L11 14L15 10" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <span>Active VIP Pro Subscriber</span>
+                    {% else %}
+                        <i class="fas fa-check-circle"></i>
+                        <span>Verified Representative</span>
+                    {% endif %}
                 </div>
             </div>
 
-            <div style="font-size: 0.8rem; font-weight: 700; color: var(--admin-muted); margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 0.04em;">
+            <div style="position: relative; z-index: 2; font-size: 0.8rem; font-weight: 700; color: var(--admin-muted); margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 0.04em;">
                 Authorized System Capabilities
             </div>
-            <div class="credentials-capabilities-list">
+            <div class="credentials-capabilities-list" style="position: relative; z-index: 2;">
                 {% if is_admin %}
                     <span class="capability-pill"><i class="fas fa-database text-primary"></i> Database Master</span>
                     <span class="capability-pill"><i class="fas fa-users-cog text-info"></i> User &amp; Role Auditing</span>
@@ -605,29 +1077,43 @@
                     <span class="capability-pill"><i class="fas fa-brain text-primary"></i> Rule Engine Control</span>
                     <span class="capability-pill"><i class="fas fa-comments text-info"></i> Farmer Live Advisory</span>
                     <span class="capability-pill"><i class="fas fa-flask text-warning"></i> Scientific Fact Publishing</span>
+                {% elif is_premium %}
+                    <span class="capability-pill capability-pill-premium"><i class="fas fa-bolt" style="color: #f59e0b;"></i> Unlimited AI Diagnostics</span>
+                    <span class="capability-pill capability-pill-premium"><i class="fas fa-satellite-dish" style="color: #38bdf8;"></i> Real-Time Weather &amp; Pest Radar</span>
+                    <span class="capability-pill capability-pill-premium"><i class="fas fa-user-md" style="color: #a78bfa;"></i> Priority Expert Advisory</span>
+                    <span class="capability-pill capability-pill-premium"><i class="fas fa-gem" style="color: #cf6dfc;"></i> 4K Ultra-Res Pathology</span>
+                    <span class="capability-pill capability-pill-premium"><i class="fas fa-award" style="color: #fde047;"></i> VIP Digital Pro Pass</span>
                 {% else %}
                     <span class="capability-pill"><i class="fas fa-id-card text-primary"></i> Official Representative Pass</span>
                 {% endif %}
             </div>
 
             <!-- Digital Pass & QR Preview -->
-            <div class="digital-pass-preview-box">
+            <div class="digital-pass-preview-box" style="position: relative; z-index: 2;">
                 <div class="profile-qr-box" id="profile-qr-code" data-qr="{{ member_card_url }}" data-qr-img="{{ member_card_qr_url }}">
                     <img src="{{ member_card_qr_url }}" alt="QR code">
                 </div>
                 <div style="flex: 1; min-width: 0;">
                     <div style="font-weight: 700; font-size: 0.95rem; color: var(--admin-text); margin-bottom: 4px;">
-                        Digital Member Badge &amp; QR
+                        {% if is_premium and not is_admin and not is_expert %}
+                            VIP Pro Member Pass &amp; QR
+                        {% else %}
+                            Digital Member Badge &amp; QR
+                        {% endif %}
                     </div>
                     <div class="text-muted" style="font-size: 0.8rem; line-height: 1.4; margin-bottom: 10px;">
-                        Instant verification credential pass. Open to view full verified card, share with colleagues, or print ID.
+                        {% if is_premium and not is_admin and not is_expert %}
+                            Instant VIP credentials verification. Scan or open to access priority expert consultations and high-tier diagnostic reports.
+                        {% else %}
+                            Instant verification credential pass. Open to view full verified card, share with colleagues, or print ID.
+                        {% endif %}
                     </div>
                     <div class="d-flex align-items-center gap-2 flex-wrap" style="gap: 8px;">
                         <a href="{{ url_for('user.member_card', user_id=current_user.id) }}"
                            target="_blank"
                            class="btn btn-sm btn-admin d-inline-flex align-items-center"
-                           style="border-radius: 999px; font-weight: 700; padding: 6px 14px;">
-                            <i class="fas fa-external-link-alt mr-1.5"></i> Open Member Card
+                           style="border-radius: 999px; font-weight: 700; padding: 6px 14px; {% if is_premium and not is_admin and not is_expert %}background: linear-gradient(135deg, #CF6DFC, #9333ea); border-color: #CF6DFC; color: #ffffff; box-shadow: 0 4px 14px rgba(207,109,252,0.35);{% endif %}">
+                            <i class="fas fa-external-link-alt mr-1.5"></i> {% if is_premium and not is_admin and not is_expert %}Open VIP Pro Pass{% else %}Open Member Card{% endif %}
                         </a>
                     </div>
                 </div>
@@ -697,7 +1183,7 @@
 
 {% block scripts %}
 {{ super() }}
-{% if rep_label or is_admin or is_expert %}
+{% if rep_label or is_admin or is_expert or is_premium %}
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 <script>
 (() => {
