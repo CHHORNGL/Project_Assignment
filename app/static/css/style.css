@@ -1772,8 +1772,8 @@ body.icon-nav {
 
 .dark-mode .topbar.app-topbar,
 .dark-mode .navbar.topbar {
-    background-color: #0d1117 !important;
-    border-bottom: 1px solid #1f2a37 !important;
+    background-color: #0b0f19 !important;
+    border-bottom: 1px solid #1f2937 !important;
 }
 
 .dark-mode .topbar-title,
@@ -5876,10 +5876,10 @@ body.farmer-no-sidebar .topbar-divider:first-of-type {
     --admin-border-light: #e3e6f0;
     --admin-text-light: #3a3b45;
     --admin-muted-light: #858796;
-    --admin-bg-dark: #0f172a;
+    --admin-bg-dark: #0b0f19;
     --admin-card-dark: #111827;
     --admin-border-dark: #1f2937;
-    --admin-text-dark: #e2e8f0;
+    --admin-text-dark: #f8fafc;
     --admin-muted-dark: #94a3b8;
     --admin-bg: var(--admin-bg-light);
     --admin-card: var(--admin-card-light);

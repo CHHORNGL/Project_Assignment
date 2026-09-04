@@ -80,40 +80,51 @@
     transition: background-color 0.25s ease, color 0.2s ease;
 }
 
-.dark-mode .farmer-dash-theme {
-    --primary: #34d399;
-    --primary-strong: #6ee7b7;
-    --primary-dark: #a7f3d0;
-    --primary-soft: rgba(52, 211, 153, 0.12);
-    --primary-softer: rgba(52, 211, 153, 0.07);
-    --primary-ring: rgba(52, 211, 153, 0.22);
-    --primary-line: rgba(52, 211, 153, 0.34);
-    --accent: #6ee7b7;
+.dark-mode .farmer-dash-theme,
+html.dark-mode .farmer-dash-theme,
+html.dark-mode body.farmer-dash-theme,
+body.dark-mode.farmer-dash-theme,
+html.dark-mode {
+    /* Famous Emerald Core */
+    --primary: #10b981;
+    --primary-strong: #34d399;
+    --primary-dark: #059669;
+    --primary-soft: rgba(16, 185, 129, 0.14);
+    --primary-softer: rgba(16, 185, 129, 0.08);
+    --primary-ring: rgba(16, 185, 129, 0.28);
+    --primary-line: rgba(16, 185, 129, 0.35);
+    --accent: #38bdf8;
 
-    --farmer-bg: #0f1210;
-    --card-bg: #181b19;
-    --surface-soft: #1f2320;
-    --surface-muted: #252a26;
+    /* Famous Obsidian Midnight Canvas & Elevated Surfaces (Tailwind Slate / GitHub Dark) */
+    --farmer-bg: #0b0f19;
+    --card-bg: #111827;
+    --surface-soft: #162032;
+    --surface-muted: #1e293b;
 
-    --border-light: #2c322d;
-    --border-strong: #3a423b;
+    /* Crisp Precision Borders (Zero muddy green) */
+    --border-light: #1f2937;
+    --border-strong: #374151;
 
-    --text-main: #f3f4f6;
-    --text-secondary: #d1d5db;
-    --text-muted: #9ca3af;
-    --text-faint: #6b7280;
+    /* High-Legibility Typography */
+    --text-main: #f8fafc;
+    --text-secondary: #cbd5e1;
+    --text-muted: #94a3b8;
+    --text-faint: #64748b;
 
-    --fm-ok: #34d399;
-    --fm-ok-bg: rgba(52, 211, 153, 0.13);
+    /* Harmonic Multi-Color System (Mix Colors) */
+    --fm-ok: #10b981;
+    --fm-ok-bg: rgba(16, 185, 129, 0.14);
     --fm-warn: #fbbf24;
-    --fm-warn-bg: rgba(251, 191, 36, 0.13);
-    --fm-bad: #f87171;
-    --fm-bad-bg: rgba(248, 113, 113, 0.13);
+    --fm-warn-bg: rgba(251, 191, 36, 0.14);
+    --fm-bad: #fb7185;
+    --fm-bad-bg: rgba(251, 113, 133, 0.14);
     --fm-info: #38bdf8;
-    --fm-info-bg: rgba(56, 189, 248, 0.13);
+    --fm-info-bg: rgba(56, 189, 248, 0.14);
+    --fm-purple: #c084fc;
+    --fm-purple-bg: rgba(192, 132, 252, 0.14);
 
-    --fm-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.3);
-    --fm-shadow-lg: 0 4px 6px -1px rgba(0, 0, 0, 0.45), 0 10px 20px -6px rgba(0, 0, 0, 0.5);
+    --fm-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.24);
+    --fm-shadow-lg: 0 10px 25px -3px rgba(0, 0, 0, 0.4), 0 4px 10px -2px rgba(0, 0, 0, 0.3);
 }
 
 /* =========================================
@@ -1481,16 +1492,16 @@ body[data-lang="km"] .fm-team-rank {
     box-shadow: 0 1px 3px rgba(5, 150, 105, 0.3);
 }
 
-/* Lead badge in dark mode: vibrant high-contrast glow */
+/* Lead badge in dark mode: vibrant emerald glow */
 .dark-mode .farmer-dash-theme .fm-team-rank.is-lead,
 html.dark-mode .fm-team-rank.is-lead {
-    background: rgba(52, 211, 153, 0.2);
-    border-color: rgba(52, 211, 153, 0.55);
-    color: #6ee7b7;
-    box-shadow: 0 0 14px rgba(52, 211, 153, 0.16);
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.22) 0%, rgba(5, 150, 105, 0.14) 100%);
+    border-color: rgba(52, 211, 153, 0.45);
+    color: #34d399;
+    box-shadow: 0 0 16px rgba(16, 185, 129, 0.2);
 }
 
-/* Frontend & UI/UX badge */
+/* Frontend & UI/UX badge in dark mode: electric sky blue */
 .fm-team-rank.is-frontend {
     color: #0284c7;
     background: #f0f9ff;
@@ -1498,12 +1509,13 @@ html.dark-mode .fm-team-rank.is-lead {
 }
 .dark-mode .farmer-dash-theme .fm-team-rank.is-frontend,
 html.dark-mode .fm-team-rank.is-frontend {
-    background: rgba(14, 165, 233, 0.16);
-    border-color: rgba(56, 189, 248, 0.4);
-    color: #7dd3fc;
+    background: linear-gradient(135deg, rgba(14, 165, 233, 0.22) 0%, rgba(2, 132, 199, 0.14) 100%);
+    border-color: rgba(56, 189, 248, 0.45);
+    color: #38bdf8;
+    box-shadow: 0 0 16px rgba(14, 165, 233, 0.2);
 }
 
-/* Mobile Developer badge */
+/* Mobile Developer badge in dark mode: royal violet */
 .fm-team-rank.is-mobile {
     color: #7c3aed;
     background: #f5f3ff;
@@ -1511,12 +1523,13 @@ html.dark-mode .fm-team-rank.is-frontend {
 }
 .dark-mode .farmer-dash-theme .fm-team-rank.is-mobile,
 html.dark-mode .fm-team-rank.is-mobile {
-    background: rgba(139, 92, 246, 0.16);
-    border-color: rgba(167, 139, 250, 0.4);
-    color: #c4b5fd;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.22) 0%, rgba(109, 40, 217, 0.14) 100%);
+    border-color: rgba(167, 139, 250, 0.45);
+    color: #c084fc;
+    box-shadow: 0 0 16px rgba(139, 92, 246, 0.2);
 }
 
-/* Data & QA badge */
+/* Data & QA badge in dark mode: warm amber gold */
 .fm-team-rank.is-data {
     color: #b45309;
     background: #fffbeb;
@@ -1524,17 +1537,18 @@ html.dark-mode .fm-team-rank.is-mobile {
 }
 .dark-mode .farmer-dash-theme .fm-team-rank.is-data,
 html.dark-mode .fm-team-rank.is-data {
-    background: rgba(245, 158, 11, 0.16);
-    border-color: rgba(251, 191, 36, 0.4);
-    color: #fde68a;
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.22) 0%, rgba(217, 119, 6, 0.14) 100%);
+    border-color: rgba(251, 191, 36, 0.45);
+    color: #fbbf24;
+    box-shadow: 0 0 16px rgba(245, 158, 11, 0.2);
 }
 
 /* Regular rank badge in dark mode */
 .dark-mode .farmer-dash-theme .fm-team-rank,
 html.dark-mode .fm-team-rank {
-    background: rgba(52, 211, 153, 0.1);
-    border-color: rgba(52, 211, 153, 0.28);
-    color: #a7f3d0;
+    background: rgba(16, 185, 129, 0.14);
+    border-color: rgba(52, 211, 153, 0.35);
+    color: #34d399;
 }
 
 .fm-team-name {
@@ -1573,8 +1587,8 @@ html[lang^="km"] .fm-team-task {
 
 .dark-mode .farmer-dash-theme .fm-team-task-box,
 html.dark-mode .fm-team-task-box {
-    background: #19211c;
-    border-color: #26342a;
+    background: #162032;
+    border-color: #1f2937;
 }
 
 .fm-team-task-label {
@@ -1597,7 +1611,7 @@ html[lang^="km"] .fm-team-task-label {
 
 .dark-mode .farmer-dash-theme .fm-team-task-label,
 html.dark-mode .fm-team-task-label {
-    color: #6ee7b7;
+    color: #34d399;
 }
 
 .fm-team-facts {
@@ -1637,7 +1651,7 @@ html.dark-mode .fm-team-facts li {
 
 .dark-mode .farmer-dash-theme .fm-team-facts i,
 html.dark-mode .fm-team-facts i {
-    color: #34d399;
+    color: #10b981;
 }
 
 .fm-team-link {
@@ -1652,7 +1666,7 @@ html.dark-mode .fm-team-facts i {
 
 .dark-mode .farmer-dash-theme .fm-team-link:hover,
 html.dark-mode .fm-team-link:hover {
-    color: #6ee7b7;
+    color: #38bdf8;
 }
 
 .fm-team-divider {
@@ -1663,21 +1677,21 @@ html.dark-mode .fm-team-link:hover {
 
 .dark-mode .farmer-dash-theme .fm-team-divider,
 html.dark-mode .fm-team-divider {
-    background: #253028;
+    background: #1f2937;
 }
 
 /* Card in dark mode */
 .dark-mode .farmer-dash-theme .fm-team-card,
 html.dark-mode .fm-team-card {
-    background: #141816;
-    border-color: #232c25;
-    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
+    background: #111827;
+    border-color: #1f2937;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
 }
 
 .dark-mode .farmer-dash-theme .fm-team-card:hover,
 html.dark-mode .fm-team-card:hover {
-    border-color: rgba(52, 211, 153, 0.45);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6), 0 0 15px rgba(52, 211, 153, 0.12);
+    border-color: #374151;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 16px rgba(16, 185, 129, 0.12);
 }
 
 /* Supervisor — the one oversized card. */
@@ -1697,8 +1711,8 @@ html.dark-mode .fm-team-card:hover {
 
 .dark-mode .farmer-dash-theme .fm-team-lead .fm-team-avatar,
 html.dark-mode .fm-team-lead .fm-team-avatar {
-    border-color: #1f2722;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+    border-color: #1f2937;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
 }
 
 .fm-team-lead .fm-team-meta { flex: 1; min-width: 0; }
@@ -1742,8 +1756,8 @@ html.dark-mode .fm-team-lead .fm-team-avatar {
 
 .dark-mode .farmer-dash-theme .fm-team-member .fm-team-avatar,
 html.dark-mode .fm-team-member .fm-team-avatar {
-    border-color: #1f2722;
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+    border-color: #1f2937;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
 }
 
 .fm-team-member .fm-team-meta {
