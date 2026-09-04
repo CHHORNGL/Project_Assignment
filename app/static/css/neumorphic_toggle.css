@@ -69,8 +69,8 @@ html.auth-panel-dark .toggle {
 .dark-mode .indicator,
 html.dark-mode .indicator,
 html.auth-panel-dark .indicator {
-  background: #10b981;
-  box-shadow: 0 1px 4px rgba(16, 185, 129, 0.4);
+  background: linear-gradient(135deg, #CF6DFC 0%, #a855f7 100%);
+  box-shadow: 0 1px 6px rgba(207, 109, 252, 0.45);
 }
 
 .toggle-state:checked ~ .indicator {

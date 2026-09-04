@@ -9,10 +9,10 @@
    ========================================================================== */
 
 :root {
-    --diag-primary: #059669;
-    --diag-primary-hover: #047857;
-    --diag-primary-light: #ecfdf5;
-    --diag-primary-ring: rgba(5, 150, 105, 0.2);
+    --diag-primary: #CF6DFC;
+    --diag-primary-hover: #b055dc;
+    --diag-primary-light: #fbf5fe;
+    --diag-primary-ring: rgba(207, 109, 252, 0.2);
     --diag-card-bg: #ffffff;
     --diag-surface: #f8fafc;
     --diag-surface-subtle: #f1f5f9;
@@ -28,18 +28,18 @@
 
 /* ==========================================================================
    EYE-COMFORT DARK MODE — ZERO GLARE / ZERO EYE STRAIN
-   - Warm, restful charcoal surfaces (#0b0f19 / #111827) instead of stark pitch-black
-   - Calm, organic emerald tones instead of blinding neon green
-   - Translucent tinted pills (#a7f3d0 on soft emerald glass) instead of solid neon
+   - Warm, restful obsidian midnight surfaces (#0b0f19 / #111827)
+   - Professional Lavender Fields palette (#FDFBD5, #BDB96A, #C1BFFF, #CF6DFC)
+   - Translucent tinted pills instead of solid neon
    - Glare-free off-white text (#e2e8f0, ~88% luminance)
    ========================================================================== */
 html.dark-mode,
 .dark-mode {
-    --diag-primary: #10b981;
-    --diag-primary-hover: #059669;
-    --diag-primary-light: rgba(16, 185, 129, 0.12);
-    --diag-primary-ring: rgba(16, 185, 129, 0.22);
-    --diag-primary-glow: rgba(16, 185, 129, 0.15);
+    --diag-primary: #CF6DFC;
+    --diag-primary-hover: #d985fc;
+    --diag-primary-light: rgba(207, 109, 252, 0.16);
+    --diag-primary-ring: rgba(207, 109, 252, 0.3);
+    --diag-primary-glow: rgba(207, 109, 252, 0.2);
 
     --diag-card-bg: #111827;
     --diag-surface: #161f30;
@@ -135,9 +135,9 @@ html[lang="km"] .diag-crop-name {
 
 html.dark-mode .diag-eyebrow-pill,
 .dark-mode .diag-eyebrow-pill {
-    color: #6ee7b7 !important;
-    background: rgba(16, 185, 129, 0.12) !important;
-    border-color: rgba(52, 211, 153, 0.25) !important;
+    color: #C1BFFF !important;
+    background: rgba(207, 109, 252, 0.16) !important;
+    border-color: rgba(193, 191, 255, 0.3) !important;
 }
 
 .diag-main-title {
@@ -283,11 +283,11 @@ html.dark-mode .diag-head-btn:hover,
 
 html.dark-mode .diag-step-item.is-active .diag-step-indicator,
 .dark-mode .diag-step-item.is-active .diag-step-indicator {
-    background: #059669 !important;
-    border-color: #10b981 !important;
+    background: linear-gradient(135deg, #CF6DFC 0%, #a855f7 100%) !important;
+    border-color: #CF6DFC !important;
     color: #ffffff !important;
     font-weight: 700 !important;
-    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25) !important;
+    box-shadow: 0 0 0 3px rgba(207, 109, 252, 0.3) !important;
 }
 
 .diag-step-item.is-active .diag-step-order {
@@ -296,7 +296,7 @@ html.dark-mode .diag-step-item.is-active .diag-step-indicator,
 
 html.dark-mode .diag-step-item.is-active .diag-step-order,
 .dark-mode .diag-step-item.is-active .diag-step-order {
-    color: #34d399 !important;
+    color: #CF6DFC !important;
 }
 
 .diag-step-item.is-completed .diag-step-indicator {
@@ -307,9 +307,9 @@ html.dark-mode .diag-step-item.is-active .diag-step-order,
 
 html.dark-mode .diag-step-item.is-completed .diag-step-indicator,
 .dark-mode .diag-step-item.is-completed .diag-step-indicator {
-    color: #34d399 !important;
-    border-color: rgba(52, 211, 153, 0.4) !important;
-    background: rgba(16, 185, 129, 0.12) !important;
+    color: #C1BFFF !important;
+    border-color: rgba(193, 191, 255, 0.4) !important;
+    background: rgba(207, 109, 252, 0.16) !important;
 }
 
 /* Stepper Connector Line */
@@ -331,7 +331,7 @@ html.dark-mode .diag-step-connector,
 
 html.dark-mode .diag-step-item.is-completed + .diag-step-connector,
 .dark-mode .diag-step-item.is-completed + .diag-step-connector {
-    background: #059669 !important;
+    background: #CF6DFC !important;
 }
 
 /* Mobile Compact Progress Caption (Visible on <= 768px) */
@@ -361,9 +361,9 @@ html.dark-mode .diag-step-item.is-completed + .diag-step-connector,
 
 html.dark-mode .diag-stepper-mobile-badge,
 .dark-mode .diag-stepper-mobile-badge {
-    background: rgba(16, 185, 129, 0.16) !important;
-    border-color: rgba(52, 211, 153, 0.4) !important;
-    color: #a7f3d0 !important;
+    background: rgba(207, 109, 252, 0.18) !important;
+    border-color: rgba(193, 191, 255, 0.4) !important;
+    color: #FDFBD5 !important;
 }
 
 .diag-stepper-mobile-title {
@@ -443,9 +443,9 @@ html.dark-mode .diag-stepper-mobile-badge,
 
 html.dark-mode .diag-card-number,
 .dark-mode .diag-card-number {
-    color: #6ee7b7 !important;
-    background: rgba(16, 185, 129, 0.12) !important;
-    border-color: rgba(52, 211, 153, 0.25) !important;
+    color: #CF6DFC !important;
+    background: rgba(207, 109, 252, 0.16) !important;
+    border-color: rgba(193, 191, 255, 0.3) !important;
 }
 
 .diag-card-title {
@@ -490,8 +490,8 @@ html.dark-mode .diag-card-number,
 
 html.dark-mode .diag-active-crop-banner,
 .dark-mode .diag-active-crop-banner {
-    background: rgba(16, 185, 129, 0.08) !important;
-    border-color: rgba(52, 211, 153, 0.22) !important;
+    background: rgba(207, 109, 252, 0.1) !important;
+    border-color: rgba(193, 191, 255, 0.25) !important;
 }
 
 .diag-active-crop-info {
@@ -520,7 +520,7 @@ html.dark-mode .diag-active-crop-banner,
 
 html.dark-mode .diag-active-crop-text span,
 .dark-mode .diag-active-crop-text span {
-    color: #6ee7b7 !important;
+    color: #C1BFFF !important;
 }
 
 .diag-change-crop-btn {
@@ -541,15 +541,15 @@ html.dark-mode .diag-active-crop-text span,
 
 html.dark-mode .diag-change-crop-btn,
 .dark-mode .diag-change-crop-btn {
-    color: #a7f3d0 !important;
-    border-color: rgba(52, 211, 153, 0.35) !important;
+    color: #C1BFFF !important;
+    border-color: rgba(193, 191, 255, 0.4) !important;
     background: #111827 !important;
 }
 
 html.dark-mode .diag-change-crop-btn:hover,
 .dark-mode .diag-change-crop-btn:hover {
-    background: #059669 !important;
-    border-color: #059669 !important;
+    background: linear-gradient(135deg, #CF6DFC 0%, #a855f7 100%) !important;
+    border-color: #CF6DFC !important;
     color: #ffffff !important;
 }
 
@@ -604,8 +604,8 @@ html.dark-mode .diag-search-input,
 html.dark-mode .diag-search-input:focus,
 .dark-mode .diag-search-input:focus {
     background: #111827 !important;
-    border-color: #059669 !important;
-    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2) !important;
+    border-color: #CF6DFC !important;
+    box-shadow: 0 0 0 3px rgba(207, 109, 252, 0.25) !important;
 }
 
 .diag-search-clear {
@@ -674,9 +674,9 @@ html.dark-mode .diag-filter-pill:hover,
 
 html.dark-mode .diag-filter-pill.is-active,
 .dark-mode .diag-filter-pill.is-active {
-    background: rgba(16, 185, 129, 0.18) !important;
-    border-color: rgba(52, 211, 153, 0.5) !important;
-    color: #a7f3d0 !important;
+    background: rgba(207, 109, 252, 0.2) !important;
+    border-color: rgba(207, 109, 252, 0.55) !important;
+    color: #CF6DFC !important;
     font-weight: 700 !important;
 }
 
@@ -729,15 +729,15 @@ html.dark-mode .diag-crop-tile,
 
 html.dark-mode .diag-crop-tile:hover,
 .dark-mode .diag-crop-tile:hover {
-    background: #1c221e;
-    border-color: rgba(52, 211, 153, 0.4);
+    background: #1a1e2e;
+    border-color: rgba(193, 191, 255, 0.45);
 }
 
 html.dark-mode .diag-crop-tile.is-selected,
 .dark-mode .diag-crop-tile.is-selected {
-    background: rgba(16, 185, 129, 0.12) !important;
-    border-color: rgba(52, 211, 153, 0.55) !important;
-    box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.3) !important;
+    background: rgba(207, 109, 252, 0.18) !important;
+    border-color: rgba(207, 109, 252, 0.6) !important;
+    box-shadow: 0 0 0 1px rgba(207, 109, 252, 0.35) !important;
 }
 
 .diag-crop-emoji {
@@ -776,7 +776,7 @@ html.dark-mode .diag-crop-tile.is-selected,
 
 html.dark-mode .diag-crop-check,
 .dark-mode .diag-crop-check {
-    background: #059669 !important;
+    background: linear-gradient(135deg, #CF6DFC 0%, #a855f7 100%) !important;
     color: #ffffff !important;
 }
 
@@ -833,9 +833,9 @@ html.dark-mode .diag-selected-ribbon,
 
 html.dark-mode .diag-active-symptom-tag,
 .dark-mode .diag-active-symptom-tag {
-    background: rgba(16, 185, 129, 0.12);
-    border-color: rgba(52, 211, 153, 0.4);
-    color: #a7f3d0;
+    background: rgba(207, 109, 252, 0.16);
+    border-color: rgba(207, 109, 252, 0.45);
+    color: #FDFBD5;
 }
 
 .diag-active-symptom-tag .remove-btn {
@@ -959,9 +959,9 @@ html.dark-mode .diag-category-badge,
 
 html.dark-mode .diag-category-badge.has-selected,
 .dark-mode .diag-category-badge.has-selected {
-    background: rgba(16, 185, 129, 0.2) !important;
-    color: #a7f3d0 !important;
-    border-color: rgba(52, 211, 153, 0.45) !important;
+    background: rgba(207, 109, 252, 0.22) !important;
+    color: #CF6DFC !important;
+    border-color: rgba(207, 109, 252, 0.5) !important;
 }
 
 .diag-category-caret {
@@ -1017,7 +1017,7 @@ html.dark-mode .diag-category-badge.has-selected,
     border-color: var(--diag-primary);
     color: #ffffff;
     font-weight: 700;
-    box-shadow: 0 2px 4px rgba(5, 150, 105, 0.2);
+    box-shadow: 0 2px 4px rgba(207, 109, 252, 0.25);
 }
 
 .diag-chip-check {
@@ -1029,7 +1029,7 @@ html.dark-mode .diag-category-badge.has-selected,
     display: inline-block;
 }
 
-/* Symptom chips: Eye-friendly dark mode (Soft emerald tint, no neon glare!) */
+/* Symptom chips: Eye-friendly dark mode (Soft lavender tint, no neon glare!) */
 html.dark-mode .diag-chip,
 .dark-mode .diag-chip {
     background: #111827;
@@ -1040,22 +1040,22 @@ html.dark-mode .diag-chip,
 html.dark-mode .diag-chip:hover,
 .dark-mode .diag-chip:hover {
     background: #1e293b;
-    border-color: rgba(52, 211, 153, 0.4);
+    border-color: rgba(193, 191, 255, 0.45);
     color: #ffffff;
 }
 
 html.dark-mode .diag-chip.is-selected,
 .dark-mode .diag-chip.is-selected {
-    background: rgba(16, 185, 129, 0.15) !important;
-    border-color: rgba(52, 211, 153, 0.5) !important;
-    color: #a7f3d0 !important;
+    background: rgba(207, 109, 252, 0.18) !important;
+    border-color: rgba(207, 109, 252, 0.55) !important;
+    color: #C1BFFF !important;
     font-weight: 700 !important;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25) !important;
 }
 
 html.dark-mode .diag-chip.is-selected .diag-chip-check,
 .dark-mode .diag-chip.is-selected .diag-chip-check {
-    color: #34d399 !important;
+    color: #CF6DFC !important;
 }
 
 /* ==========================================================================
@@ -1092,8 +1092,8 @@ html.dark-mode .diag-dropzone:hover,
 .dark-mode .diag-dropzone:hover,
 html.dark-mode .diag-dropzone.is-dragover,
 .dark-mode .diag-dropzone.is-dragover {
-    background: rgba(16, 185, 129, 0.08);
-    border-color: rgba(52, 211, 153, 0.45);
+    background: rgba(207, 109, 252, 0.08);
+    border-color: rgba(207, 109, 252, 0.45);
 }
 
 .diag-dropzone-icon {
@@ -1115,7 +1115,7 @@ html.dark-mode .diag-dropzone-icon,
 .dark-mode .diag-dropzone-icon {
     background: #111827;
     border-color: #1f2937;
-    color: #34d399;
+    color: #CF6DFC;
 }
 
 .diag-dropzone-title {
@@ -1250,8 +1250,8 @@ html.dark-mode .diag-textarea,
 html.dark-mode .diag-textarea:focus,
 .dark-mode .diag-textarea:focus {
     background: #111827;
-    border-color: #059669;
-    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+    border-color: #CF6DFC;
+    box-shadow: 0 0 0 3px rgba(207, 109, 252, 0.25);
 }
 
 /* ==========================================================================
@@ -1396,7 +1396,7 @@ html.dark-mode .diag-side-tag,
     color: #ef4444;
 }
 
-/* Live Rule Engine Match Box (Eye-Comfort) */
+/* Live Rule Engine Match Box (Lavender Fields Eye-Comfort) */
 .diag-live-engine-card {
     padding: 1rem;
     border-radius: 0.75rem;
@@ -1407,9 +1407,9 @@ html.dark-mode .diag-side-tag,
 
 html.dark-mode .diag-live-engine-card,
 .dark-mode .diag-live-engine-card {
-    background: rgba(16, 185, 129, 0.07) !important;
-    border: 1px solid rgba(52, 211, 153, 0.2) !important;
-    border-left: 3px solid #10b981 !important;
+    background: rgba(207, 109, 252, 0.08) !important;
+    border: 1px solid rgba(193, 191, 255, 0.25) !important;
+    border-left: 3px solid #CF6DFC !important;
 }
 
 .diag-live-engine-head {
@@ -1432,7 +1432,7 @@ html.dark-mode .diag-live-engine-card,
 
 html.dark-mode .diag-live-engine-label,
 .dark-mode .diag-live-engine-label {
-    color: #6ee7b7 !important;
+    color: #CF6DFC !important;
 }
 
 .diag-confidence-badge {
@@ -1447,9 +1447,9 @@ html.dark-mode .diag-live-engine-label,
 
 html.dark-mode .diag-confidence-badge,
 .dark-mode .diag-confidence-badge {
-    color: #a7f3d0 !important;
+    color: #FDFBD5 !important;
     background: #161f30 !important;
-    border-color: rgba(52, 211, 153, 0.35) !important;
+    border-color: rgba(207, 109, 252, 0.4) !important;
 }
 
 .diag-live-prediction-name {
@@ -1471,20 +1471,20 @@ html.dark-mode .diag-confidence-badge,
 
 html.dark-mode .diag-confidence-bar-bg,
 .dark-mode .diag-confidence-bar-bg {
-    background: #232c25 !important;
+    background: #232030 !important;
 }
 
 .diag-confidence-bar-fill {
     height: 100%;
     width: 0%;
     border-radius: 9999px;
-    background: linear-gradient(90deg, #10b981, #059669);
+    background: linear-gradient(90deg, #CF6DFC, #C1BFFF);
     transition: width 0.4s ease;
 }
 
 html.dark-mode .diag-confidence-bar-fill,
 .dark-mode .diag-confidence-bar-fill {
-    background: linear-gradient(90deg, #059669, #10b981) !important;
+    background: linear-gradient(90deg, #CF6DFC, #C1BFFF) !important;
 }
 
 .diag-live-engine-desc {
@@ -1495,7 +1495,7 @@ html.dark-mode .diag-confidence-bar-fill,
 }
 
 /* ==========================================================================
-   PRIMARY SUBMIT BUTTON — EYE-FRIENDLY DEEP EMERALD
+   PRIMARY SUBMIT BUTTON — LAVENDER FIELDS CTA
    ========================================================================== */
 .diag-submit-btn {
     display: flex;
@@ -1506,18 +1506,18 @@ html.dark-mode .diag-confidence-bar-fill,
     height: 3.25rem;
     border-radius: 0.75rem;
     border: none;
-    background: var(--diag-primary);
+    background: linear-gradient(135deg, #CF6DFC 0%, #a855f7 100%);
     color: #ffffff;
     font-size: 1rem;
     font-weight: 800;
     cursor: pointer;
-    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+    box-shadow: 0 4px 14px rgba(207, 109, 252, 0.3);
 }
 
 .diag-submit-btn:hover:not(:disabled) {
-    background: var(--diag-primary-hover);
+    background: linear-gradient(135deg, #d985fc 0%, #9333ea 100%);
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(5, 150, 105, 0.4);
+    box-shadow: 0 6px 20px rgba(207, 109, 252, 0.45);
 }
 
 .diag-submit-btn:disabled {
@@ -1527,20 +1527,20 @@ html.dark-mode .diag-confidence-bar-fill,
     transform: none;
 }
 
-/* Eye-comfort dark mode submit button (Deep emerald, white text, no neon glare!) */
+/* Eye-comfort dark mode submit button (Lavender Fields vivid gradient, white text) */
 html.dark-mode .diag-submit-btn,
 .dark-mode .diag-submit-btn {
-    background: linear-gradient(135deg, #059669, #047857) !important;
-    border: 1px solid rgba(52, 211, 153, 0.3) !important;
+    background: linear-gradient(135deg, #CF6DFC 0%, #9333ea 100%) !important;
+    border: 1px solid rgba(207, 109, 252, 0.35) !important;
     color: #ffffff !important;
     font-weight: 700 !important;
-    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25) !important;
+    box-shadow: 0 4px 14px rgba(207, 109, 252, 0.3) !important;
 }
 
 html.dark-mode .diag-submit-btn:hover:not(:disabled),
 .dark-mode .diag-submit-btn:hover:not(:disabled) {
-    background: linear-gradient(135deg, #10b981, #059669) !important;
-    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35) !important;
+    background: linear-gradient(135deg, #d985fc 0%, #a855f7 100%) !important;
+    box-shadow: 0 6px 20px rgba(207, 109, 252, 0.45) !important;
     color: #ffffff !important;
 }
 
@@ -1608,7 +1608,7 @@ html.dark-mode .diag-history-item,
 html.dark-mode .diag-history-item:hover,
 .dark-mode .diag-history-item:hover {
     background: #1e293b;
-    border-color: rgba(52, 211, 153, 0.4);
+    border-color: rgba(207, 109, 252, 0.45);
 }
 
 .diag-history-item-left strong {
@@ -1633,8 +1633,8 @@ html.dark-mode .diag-history-item:hover,
 
 html.dark-mode .diag-history-badge,
 .dark-mode .diag-history-badge {
-    color: #6ee7b7;
-    background: rgba(16, 185, 129, 0.12);
+    color: #C1BFFF;
+    background: rgba(207, 109, 252, 0.16);
 }
 
 /* ==========================================================================
@@ -1693,7 +1693,7 @@ html.dark-mode .diag-history-badge,
 
 html.dark-mode .diag-mobile-prediction,
 .dark-mode .diag-mobile-prediction {
-    color: #6ee7b7;
+    color: #CF6DFC;
 }
 
 /* Tablet & Mobile (< 992px) */

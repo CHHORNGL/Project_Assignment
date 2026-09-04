@@ -30,26 +30,26 @@
     --news-ink-subtle: #64748b;
     --news-ink-light: #94a3b8;
     
-    /* Agricultural Emerald Palette (Synchronized with farmer.css) */
-    --news-primary: #059669;
-    --news-primary-hover: #047857;
-    --news-primary-dark: #065f46;
-    --news-primary-soft: #ecfdf5;
-    --news-primary-ring: rgba(5, 150, 105, 0.16);
-    --news-primary-line: rgba(5, 150, 105, 0.25);
-    --news-accent: #10b981;
+    /* Lavender Fields Theme System */
+    --news-primary: #CF6DFC;
+    --news-primary-hover: #b055dc;
+    --news-primary-dark: #a855f7;
+    --news-primary-soft: rgba(207, 109, 252, 0.12);
+    --news-primary-ring: rgba(207, 109, 252, 0.18);
+    --news-primary-line: rgba(193, 191, 255, 0.3);
+    --news-accent: #C1BFFF;
     
     /* Category Colors & Status Pills */
     --news-editorial-crimson: #dc2626;
     --news-editorial-crimson-bg: #fef2f2;
-    --news-forest-emerald: #059669;
-    --news-forest-emerald-bg: #ecfdf5;
-    --news-brass-amber: #d97706;
-    --news-brass-amber-bg: #fffbeb;
-    --news-marine-blue: #0284c7;
-    --news-marine-blue-bg: #f0f9ff;
-    --news-indigo-tech: #4f46e5;
-    --news-indigo-tech-bg: #eef2ff;
+    --news-forest-emerald: #BDB96A;
+    --news-forest-emerald-bg: rgba(189, 185, 106, 0.14);
+    --news-brass-amber: #FDFBD5;
+    --news-brass-amber-bg: rgba(253, 251, 213, 0.14);
+    --news-marine-blue: #C1BFFF;
+    --news-marine-blue-bg: rgba(193, 191, 255, 0.14);
+    --news-indigo-tech: #CF6DFC;
+    --news-indigo-tech-bg: rgba(207, 109, 252, 0.14);
     
     /* Elevation & Shadows */
     --news-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.05);
@@ -72,31 +72,31 @@ html.dark-mode,
     --news-surface-subtle: #162032;
     --news-border: #1f2937;
     --news-border-strong: #374151;
-    --news-border-dark: #6ee7b7;
+    --news-border-dark: #C1BFFF;
     
     --news-ink: #f3f4f6;
     --news-ink-muted: #9ca3af;
     --news-ink-subtle: #6b7280;
     --news-ink-light: #4b5563;
     
-    --news-primary: #34d399;
-    --news-primary-hover: #6ee7b7;
-    --news-primary-dark: #a7f3d0;
-    --news-primary-soft: rgba(52, 211, 153, 0.12);
-    --news-primary-ring: rgba(52, 211, 153, 0.25);
-    --news-primary-line: rgba(52, 211, 153, 0.3);
-    --news-accent: #6ee7b7;
+    --news-primary: #CF6DFC;
+    --news-primary-hover: #d985fc;
+    --news-primary-dark: #C1BFFF;
+    --news-primary-soft: rgba(207, 109, 252, 0.16);
+    --news-primary-ring: rgba(207, 109, 252, 0.3);
+    --news-primary-line: rgba(193, 191, 255, 0.35);
+    --news-accent: #C1BFFF;
     
     --news-editorial-crimson: #f87171;
     --news-editorial-crimson-bg: rgba(239, 68, 68, 0.14);
-    --news-forest-emerald: #34d399;
-    --news-forest-emerald-bg: rgba(52, 211, 153, 0.14);
-    --news-brass-amber: #fbbf24;
-    --news-brass-amber-bg: rgba(251, 191, 36, 0.14);
-    --news-marine-blue: #38bdf8;
-    --news-marine-blue-bg: rgba(56, 189, 248, 0.14);
-    --news-indigo-tech: #818cf8;
-    --news-indigo-tech-bg: rgba(129, 140, 248, 0.14);
+    --news-forest-emerald: #BDB96A;
+    --news-forest-emerald-bg: rgba(189, 185, 106, 0.18);
+    --news-brass-amber: #FDFBD5;
+    --news-brass-amber-bg: rgba(253, 251, 213, 0.18);
+    --news-marine-blue: #C1BFFF;
+    --news-marine-blue-bg: rgba(193, 191, 255, 0.18);
+    --news-indigo-tech: #CF6DFC;
+    --news-indigo-tech-bg: rgba(207, 109, 252, 0.18);
     
     --news-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
     --news-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.45);
@@ -408,7 +408,7 @@ html[lang="km"] .chronicle-motto {
 }
 
 .chronicle-ticker-up {
-    color: #10b981;
+    color: #CF6DFC;
     font-weight: 700;
 }
 
@@ -1543,32 +1543,30 @@ html.dark-mode .news-page-wrapper,
     color: var(--news-ink);
 }
 
-/* 1. Primary Action & Active Buttons (High-contrast dark text on mint green) */
-html.dark-mode .chronicle-primary-btn,
-.dark-mode .chronicle-primary-btn,
+/* 1. Primary Action & Active Buttons (Lavender Fields) */
 html.dark-mode .chronicle-primary-btn,
 .dark-mode .chronicle-primary-btn {
-    background: linear-gradient(135deg, #059669, #047857) !important;
-    border: 1px solid rgba(52, 211, 153, 0.3) !important;
+    background: linear-gradient(135deg, #CF6DFC 0%, #a855f7 100%) !important;
+    border: 1px solid rgba(207, 109, 252, 0.35) !important;
     color: #ffffff !important;
     font-weight: 700 !important;
-    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25) !important;
+    box-shadow: 0 4px 14px rgba(207, 109, 252, 0.3) !important;
 }
 
 html.dark-mode .chronicle-primary-btn:hover,
 .dark-mode .chronicle-primary-btn:hover {
-    background: linear-gradient(135deg, #10b981, #059669) !important;
+    background: linear-gradient(135deg, #d985fc 0%, #9333ea 100%) !important;
     color: #ffffff !important;
-    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35) !important;
+    box-shadow: 0 6px 20px rgba(207, 109, 252, 0.45) !important;
 }
 
 html.dark-mode .chronicle-edition-btn.is-active,
 .dark-mode .chronicle-edition-btn.is-active,
 html.dark-mode .chronicle-dept-btn.is-active,
 .dark-mode .chronicle-dept-btn.is-active {
-    background: rgba(16, 185, 129, 0.18) !important;
-    border-color: rgba(52, 211, 153, 0.5) !important;
-    color: #a7f3d0 !important;
+    background: rgba(207, 109, 252, 0.2) !important;
+    border-color: rgba(207, 109, 252, 0.55) !important;
+    color: #CF6DFC !important;
     font-weight: 700 !important;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
 }
@@ -1577,17 +1575,17 @@ html.dark-mode .chronicle-edition-btn.is-active:hover,
 .dark-mode .chronicle-edition-btn.is-active:hover,
 html.dark-mode .chronicle-dept-btn.is-active:hover,
 .dark-mode .chronicle-dept-btn.is-active:hover {
-    background: rgba(16, 185, 129, 0.28) !important;
-    border-color: rgba(52, 211, 153, 0.7) !important;
+    background: rgba(207, 109, 252, 0.3) !important;
+    border-color: rgba(207, 109, 252, 0.75) !important;
     color: #ffffff !important;
 }
 
 html.dark-mode .chronicle-dept-btn.is-active .badge,
 .dark-mode .chronicle-dept-btn.is-active .badge {
-    background: rgba(16, 185, 129, 0.25) !important;
-    color: #34d399 !important;
+    background: rgba(207, 109, 252, 0.25) !important;
+    color: #FDFBD5 !important;
     font-weight: 700 !important;
-    border: 1px solid rgba(52, 211, 153, 0.4) !important;
+    border: 1px solid rgba(207, 109, 252, 0.45) !important;
 }
 
 /* Inactive Department Pills & Badges in Dark Mode */
@@ -1647,8 +1645,8 @@ html.dark-mode .chronicle-search-box input,
 html.dark-mode .chronicle-search-box input:focus,
 .dark-mode .chronicle-search-box input:focus {
     background: #111827 !important;
-    border-color: #34d399 !important;
-    box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.25) !important;
+    border-color: #CF6DFC !important;
+    box-shadow: 0 0 0 3px rgba(207, 109, 252, 0.25) !important;
 }
 
 html.dark-mode .chronicle-search-box input::placeholder,
@@ -1671,9 +1669,9 @@ html.dark-mode .chronicle-sync-btn,
 
 html.dark-mode .chronicle-sync-btn:hover,
 .dark-mode .chronicle-sync-btn:hover {
-    background: rgba(52, 211, 153, 0.12) !important;
-    border-color: #34d399 !important;
-    color: #34d399 !important;
+    background: rgba(207, 109, 252, 0.12) !important;
+    border-color: #CF6DFC !important;
+    color: #CF6DFC !important;
 }
 
 /* Subtle Action Buttons (Share, Listen) */
@@ -1687,8 +1685,8 @@ html.dark-mode .chronicle-subtle-btn,
 html.dark-mode .chronicle-subtle-btn:hover,
 .dark-mode .chronicle-subtle-btn:hover {
     background: #252a26 !important;
-    border-color: #34d399 !important;
-    color: #34d399 !important;
+    border-color: #CF6DFC !important;
+    color: #CF6DFC !important;
 }
 
 /* 3. Ticker Bar in Dark Mode */
@@ -1700,7 +1698,7 @@ html.dark-mode .chronicle-ticker-bar,
 
 html.dark-mode .chronicle-ticker-label,
 .dark-mode .chronicle-ticker-label {
-    background: linear-gradient(135deg, #059669, #047857) !important;
+    background: linear-gradient(135deg, #CF6DFC 0%, #a855f7 100%) !important;
     color: #ffffff !important;
 }
 
@@ -1717,7 +1715,7 @@ html.dark-mode .chronicle-ticker-item strong,
 html.dark-mode .chronicle-ticker-clickable:hover,
 .dark-mode .chronicle-ticker-clickable:hover {
     background: #162032 !important;
-    color: #34d399 !important;
+    color: #C1BFFF !important;
 }
 
 html.dark-mode #btn-toggle-ticker-pause,
@@ -1727,15 +1725,15 @@ html.dark-mode #btn-toggle-ticker-pause,
 
 html.dark-mode #btn-toggle-ticker-pause:hover,
 .dark-mode #btn-toggle-ticker-pause:hover {
-    color: #34d399 !important;
+    color: #CF6DFC !important;
 }
 
 /* 4. Category Kicker Badges in Dark Mode */
 html.dark-mode .kicker-crops,
 .dark-mode .kicker-crops {
-    background: rgba(52, 211, 153, 0.14) !important;
-    color: #34d399 !important;
-    border: 1px solid rgba(52, 211, 153, 0.3) !important;
+    background: rgba(189, 185, 106, 0.18) !important;
+    color: #BDB96A !important;
+    border: 1px solid rgba(189, 185, 106, 0.4) !important;
 }
 
 html.dark-mode .kicker-market,
@@ -1783,7 +1781,7 @@ html.dark-mode .chronicle-lead-hero,
 
 html.dark-mode .chronicle-lead-hero:hover,
 .dark-mode .chronicle-lead-hero:hover {
-    border-color: rgba(52, 211, 153, 0.35) !important;
+    border-color: rgba(207, 109, 252, 0.45) !important;
     box-shadow: 0 8px 24px -2px rgba(0, 0, 0, 0.65) !important;
 }
 
@@ -1794,7 +1792,7 @@ html.dark-mode .chronicle-lead-title,
 
 html.dark-mode .chronicle-lead-title:hover,
 .dark-mode .chronicle-lead-title:hover {
-    color: #34d399 !important;
+    color: #C1BFFF !important;
 }
 
 html.dark-mode .chronicle-lead-deck,
@@ -1804,14 +1802,14 @@ html.dark-mode .chronicle-lead-deck,
 
 html.dark-mode .chronicle-advisory-box,
 .dark-mode .chronicle-advisory-box {
-    background: rgba(52, 211, 153, 0.12) !important;
-    border-left: 4px solid #34d399 !important;
+    background: rgba(207, 109, 252, 0.12) !important;
+    border-left: 4px solid #CF6DFC !important;
     color: #f3f4f6 !important;
 }
 
 html.dark-mode .chronicle-advisory-box i,
 .dark-mode .chronicle-advisory-box i {
-    color: #34d399 !important;
+    color: #CF6DFC !important;
 }
 
 html.dark-mode .chronicle-byline,
@@ -1834,7 +1832,7 @@ html.dark-mode .chronicle-story-card,
 
 html.dark-mode .chronicle-story-card:hover,
 .dark-mode .chronicle-story-card:hover {
-    border-color: rgba(52, 211, 153, 0.35) !important;
+    border-color: rgba(207, 109, 252, 0.4) !important;
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.55) !important;
 }
 
@@ -1845,7 +1843,7 @@ html.dark-mode .chronicle-card-title,
 
 html.dark-mode .chronicle-card-title:hover,
 .dark-mode .chronicle-card-title:hover {
-    color: #34d399 !important;
+    color: #C1BFFF !important;
 }
 
 html.dark-mode .chronicle-card-summary,
@@ -1873,16 +1871,16 @@ html.dark-mode .chronicle-card-footer,
 
 html.dark-mode .chronicle-card-actions .btn-outline-dark,
 .dark-mode .chronicle-card-actions .btn-outline-dark {
-    border-color: rgba(52, 211, 153, 0.3) !important;
-    color: #34d399 !important;
-    background: rgba(52, 211, 153, 0.12) !important;
+    border-color: rgba(207, 109, 252, 0.4) !important;
+    color: #CF6DFC !important;
+    background: rgba(207, 109, 252, 0.12) !important;
 }
 
 html.dark-mode .chronicle-card-actions .btn-outline-dark:hover,
 .dark-mode .chronicle-card-actions .btn-outline-dark:hover {
-    background: #059669 !important;
+    background: linear-gradient(135deg, #CF6DFC 0%, #a855f7 100%) !important;
     color: #ffffff !important;
-    border-color: #059669 !important;
+    border-color: #CF6DFC !important;
 }
 
 html.dark-mode .chronicle-card-actions .btn-link,
@@ -1892,7 +1890,7 @@ html.dark-mode .chronicle-card-actions .btn-link,
 
 html.dark-mode .chronicle-card-actions .btn-link:hover,
 .dark-mode .chronicle-card-actions .btn-link:hover {
-    color: #34d399 !important;
+    color: #C1BFFF !important;
 }
 
 /* 6. Sidebar Widgets in Dark Mode */
@@ -1923,12 +1921,12 @@ html.dark-mode .chronicle-wire-item,
 
 html.dark-mode .chronicle-wire-item:hover,
 .dark-mode .chronicle-wire-item:hover {
-    border-left-color: #34d399 !important;
+    border-left-color: #CF6DFC !important;
 }
 
 html.dark-mode .chronicle-wire-time,
 .dark-mode .chronicle-wire-time {
-    color: #34d399 !important;
+    color: #BDB96A !important;
 }
 
 html.dark-mode .chronicle-wire-text,
@@ -1938,7 +1936,7 @@ html.dark-mode .chronicle-wire-text,
 
 html.dark-mode .chronicle-wire-text:hover,
 .dark-mode .chronicle-wire-text:hover {
-    color: #34d399 !important;
+    color: #C1BFFF !important;
 }
 
 html.dark-mode .chronicle-commodity-table tr,
@@ -2052,7 +2050,7 @@ html.dark-mode .chronicle-modal-toolbar,
 html.dark-mode .chronicle-modal-lead-deck,
 .dark-mode .chronicle-modal-lead-deck {
     background: #162032 !important;
-    border-left-color: #34d399 !important;
+    border-left-color: #CF6DFC !important;
     color: #f3f4f6 !important;
 }
 
