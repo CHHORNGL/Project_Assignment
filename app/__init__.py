@@ -6,7 +6,7 @@ import logging
 from logging.handlers import RotatingFileHandler
 
 from flask import Flask, url_for, request, render_template, redirect, g, send_from_directory, has_request_context
-from flask_login import current_user
+from flask_login import current_user, login_required
 
 from .extensions import db, login_manager, migrate, oauth
 from .config import Config
@@ -422,7 +422,10 @@ def create_app():
             return {"notifications": [], "notifications_count": 0, "notifications_link": None}
 
         notifications = []
-        notifications_link = url_for("user.notifications")
+        if getattr(request, "blueprint", None) == "farmer" or (current_user.has_role("farmer") and not current_user.has_role("admin") and not current_user.has_role("expert")):
+            notifications_link = url_for("farmer.notifications")
+        else:
+            notifications_link = url_for("user.notifications")
         unread_count = 0
 
         try:
@@ -476,5 +479,26 @@ def create_app():
         except Exception:
             body_class = ""
         return {"body_class": body_class}
+
+    @app.route("/notifications", strict_slashes=False)
+    @app.route("/notifications/", strict_slashes=False)
+    @login_required
+    def global_notifications():
+        if current_user.has_role("farmer") and not current_user.has_role("admin") and not current_user.has_role("expert"):
+            return redirect(url_for("farmer.notifications"))
+        return redirect(url_for("user.notifications"))
+
+    @app.route("/user/notifications", strict_slashes=False)
+    @app.route("/user/notifications/", strict_slashes=False)
+    @login_required
+    def user_notifications_alias():
+        return redirect(url_for("user.notifications"))
+
+    @app.route("/mobile-help-center", strict_slashes=False)
+    @app.route("/mobile-help-center/", strict_slashes=False)
+    def global_mobile_help_center():
+        if current_user.is_authenticated and current_user.has_role("farmer"):
+            return redirect(url_for("farmer.dashboard"))
+        return redirect("/")
 
     return app

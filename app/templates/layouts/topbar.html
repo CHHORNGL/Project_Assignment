@@ -35,10 +35,12 @@
     =============================== -->
     {# The wordmark carries the accessible name, so the mark beside it is
        decorative — an empty alt keeps screen readers from announcing both. #}
-    <a class="topbar-brand" href="{{ url_for('main.index') }}">
+    <a class="topbar-brand" href="{{ url_for('main.index') }}" aria-label="AXE">
         <img src="{{ url_for('static', filename='img/logo.svg', v=static_version) }}"
              alt=""
              aria-hidden="true"
+             width="26"
+             height="26"
              class="topbar-brand-logo">
         <span class="topbar-brand-name">AXE</span>
     </a>
@@ -541,102 +543,195 @@
             </label>
         </li>
 
-                <!-- ===============================
+        <!-- ===============================
              USER PROFILE / LOGIN
         =============================== -->
-        <li class="nav-item dropdown no-arrow">
-            <a class="nav-link dropdown-toggle d-flex align-items-center p-0"
+        <li class="nav-item dropdown no-arrow topbar-profile-item ml-2">
+            <a class="topbar-profile-pill dropdown-toggle"
                href="#"
                id="userDropdown"
                role="button"
-               data-toggle="dropdown">
+               data-toggle="dropdown"
+               aria-haspopup="true"
+               aria-expanded="false"
+               aria-label="{{ t('profile') }}">
 
-                <span class="mr-2 d-none d-lg-inline text-muted small">
-                    {% if current_user.is_authenticated %}
-                        {{ current_user.full_name or current_user.username }}
+                <div class="topbar-profile-avatar-wrap {% if current_user.is_authenticated and current_user.is_premium %}is-premium{% endif %}">
+                    {% if current_user.is_authenticated and (current_user.avatar_data or current_user.avatar_path) %}
+                        <img class="topbar-profile-img"
+                             src="{{ avatar_url(current_user) }}"
+                             alt="{{ current_user.username }}"
+                             width="32" height="32"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <span class="topbar-profile-initials" style="display: none;">
+                            {{ (current_user.full_name or current_user.username)[:2]|upper }}
+                        </span>
+                    {% elif current_user.is_authenticated %}
+                        <span class="topbar-profile-initials">
+                            {{ (current_user.full_name or current_user.username)[:2]|upper }}
+                        </span>
                     {% else %}
-                        {% if current_lang == 'km' %}ភ្ញៀវ{% else %}Guest User{% endif %}
+                        <img class="topbar-profile-img"
+                             src="{{ url_for('static', filename='sb-admin/img/undraw_profile.svg') }}"
+                             alt="Guest"
+                             width="32" height="32">
                     {% endif %}
-                </span>
 
-                {% if current_user.is_authenticated %}
-                <div style="{% if current_user.is_premium %}background: linear-gradient(135deg, #CF6DFC, #FFE082, #BDB96A); padding: 2px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 0 10px rgba(207, 109, 252, 0.4);{% endif %}">
-                    <img class="img-profile rounded-circle"
-                         src="{{ avatar_url(current_user) }}"
-                         style="width:36px;height:36px;object-fit:cover;{% if current_user.is_premium %}border: 2px solid white;{% endif %}">
+                    {% if current_user.is_authenticated %}
+                        {% if current_user.is_premium %}
+                            <span class="topbar-profile-badge badge-crown" title="VIP Pro">
+                                <i class="fas fa-crown"></i>
+                            </span>
+                        {% else %}
+                            <span class="topbar-profile-badge badge-online" title="Online"></span>
+                        {% endif %}
+                    {% endif %}
                 </div>
-                {% else %}
-                <div>
-                    <img class="img-profile rounded-circle"
-                         src="{{ url_for('static', filename='sb-admin/img/undraw_profile.svg') }}"
-                         style="width:36px;height:36px;object-fit:cover; border: 1px solid #e2e8f0;">
+
+                <div class="topbar-profile-info d-none d-sm-flex">
+                    <div class="topbar-profile-name">
+                        {% if current_user.is_authenticated %}
+                            {{ current_user.full_name or current_user.username }}
+                        {% else %}
+                            {% if current_lang == 'km' %}ភ្ញៀវ{% else %}Guest{% endif %}
+                        {% endif %}
+                    </div>
+                    <div class="topbar-profile-role">
+                        {% if current_user.is_authenticated %}
+                            {% if current_user.has_role('admin') %}
+                                <span class="topbar-role-tag tag-admin">Admin</span>
+                            {% elif current_user.has_role('expert') %}
+                                <span class="topbar-role-tag tag-expert">Expert</span>
+                            {% elif current_user.is_premium %}
+                                <span class="topbar-role-tag tag-premium">VIP Pro</span>
+                            {% else %}
+                                <span class="topbar-role-tag tag-farmer">{{ t("farmer") }}</span>
+                            {% endif %}
+                        {% else %}
+                            <span class="topbar-role-tag tag-guest">{% if current_lang == 'km' %}ភ្ញៀវ{% else %}Visitor{% endif %}</span>
+                        {% endif %}
+                    </div>
                 </div>
-                {% endif %}
+
+                <i class="fas fa-chevron-down topbar-profile-caret"></i>
             </a>
 
             <div class="dropdown-menu dropdown-menu-right user-dropdown-menu shadow-lg animated--grow-in"
                  aria-labelledby="userDropdown">
                 <div class="user-dropdown-header">
-                    {% if current_user.is_authenticated %}
-                    <div style="{% if current_user.is_premium %}background: linear-gradient(135deg, #CF6DFC, #FFE082, #BDB96A); padding: 3px; border-radius: 50%; box-shadow: 0 4px 15px rgba(207, 109, 252, 0.4); display: inline-block;{% endif %}">
-                        <img src="{{ avatar_url(current_user) }}"
-                             alt="{{ current_user.username }}"
-                             class="user-dropdown-avatar"
-                             style="{% if current_user.is_premium %}border: 2px solid white; margin: 0;{% endif %}">
+                    <div class="user-dropdown-avatar-wrap {% if current_user.is_authenticated and current_user.is_premium %}is-premium{% endif %}">
+                        {% if current_user.is_authenticated and (current_user.avatar_data or current_user.avatar_path) %}
+                            <img src="{{ avatar_url(current_user) }}"
+                                 alt="{{ current_user.username }}"
+                                 class="user-dropdown-avatar"
+                                 width="38" height="38"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <span class="user-dropdown-initials" style="display: none;">
+                                {{ (current_user.full_name or current_user.username)[:2]|upper }}
+                            </span>
+                        {% elif current_user.is_authenticated %}
+                            <span class="user-dropdown-initials">
+                                {{ (current_user.full_name or current_user.username)[:2]|upper }}
+                            </span>
+                        {% else %}
+                            <img src="{{ url_for('static', filename='sb-admin/img/undraw_profile.svg') }}"
+                                 alt="Guest User"
+                                 class="user-dropdown-avatar"
+                                 width="38" height="38">
+                        {% endif %}
+
+                        {% if current_user.is_authenticated %}
+                            {% if current_user.is_premium %}
+                                <span class="user-dropdown-crown-badge" title="VIP Pro">
+                                    <i class="fas fa-crown"></i>
+                                </span>
+                            {% else %}
+                                <span class="user-dropdown-online-dot" title="Online"></span>
+                            {% endif %}
+                        {% endif %}
                     </div>
-                    {% else %}
-                    <div>
-                        <img src="{{ url_for('static', filename='sb-admin/img/undraw_profile.svg') }}"
-                             alt="Guest User"
-                             class="user-dropdown-avatar"
-                             style="border: 1px solid #e2e8f0;">
-                    </div>
-                    {% endif %}
-                    <div class="user-dropdown-info" style="margin-top: 10px;">
-                        <div class="user-dropdown-name d-flex align-items-start justify-content-start gap-2">
+
+                    <div class="user-dropdown-info">
+                        <div class="user-dropdown-name text-truncate">
                             {% if current_user.is_authenticated %}
                                 {{ current_user.full_name or current_user.username }}
-                                {% if current_user.is_premium %}
-                                    <i class="fas fa-crown text-warning ml-1" style="font-size: 0.85rem;" title="Premium Account"></i>
-                                {% endif %}
                             {% else %}
                                 {% if current_lang == 'km' %}អ្នកប្រើប្រាស់ជាភ្ញៀវ{% else %}Guest User{% endif %}
                             {% endif %}
                         </div>
-                        <div class="user-dropdown-role text-left">
+                        <div class="user-dropdown-role-row">
+                            <span class="user-dropdown-handle text-truncate">
+                                {% if current_user.is_authenticated %}
+                                    @{{ current_user.username }}
+                                {% else %}
+                                    Visitor
+                                {% endif %}
+                            </span>
                             {% if current_user.is_authenticated %}
-                                {{ current_user.username }}
-                            {% else %}
-                                {% if current_lang == 'km' %}មិនទាន់ចុះឈ្មោះ{% else %}Unregistered{% endif %}
+                                {% if current_user.has_role('admin') %}
+                                    <span class="user-role-badge badge-admin">Admin</span>
+                                {% elif current_user.has_role('expert') %}
+                                    <span class="user-role-badge badge-expert">Expert</span>
+                                {% elif current_user.is_premium %}
+                                    <span class="user-role-badge badge-premium">VIP</span>
+                                {% else %}
+                                    <span class="user-role-badge badge-farmer">{{ t("farmer") }}</span>
+                                {% endif %}
                             {% endif %}
                         </div>
                     </div>
                 </div>
+
                 <div class="user-dropdown-divider"></div>
-                {% if current_user.is_authenticated %}
-                <a class="user-dropdown-item" href="{{ url_for('user.profile') }}">
-                    <span class="user-dropdown-icon"><i class="fas fa-user"></i></span>
-                    {{ t("profile") }}
-                </a>
-                <a class="user-dropdown-item" href="{{ url_for('user.settings') }}">
-                    <span class="user-dropdown-icon"><i class="fas fa-cog"></i></span>
-                    {{ t("settings") }}
-                </a>
-                <div class="user-dropdown-divider"></div>
-                <a class="user-dropdown-item user-dropdown-logout" href="{{ url_for('auth.logout') }}">
-                    <span class="user-dropdown-icon"><i class="fas fa-sign-out-alt"></i></span>
-                    {{ t("logout") }}
-                </a>
-                {% else %}
-                <a class="user-dropdown-item" href="{{ url_for('auth.login') }}">
-                    <span class="user-dropdown-icon"><i class="fas fa-sign-in-alt text-primary"></i></span>
-                    {% if current_lang == 'km' %}ចូលគណនី{% else %}Sign In{% endif %}
-                </a>
-                <a class="user-dropdown-item" href="{{ url_for('auth.register') }}">
-                    <span class="user-dropdown-icon"><i class="fas fa-user-plus text-success"></i></span>
-                    {% if current_lang == 'km' %}បង្កើតគណនី{% else %}Create Account{% endif %}
-                </a>
-                {% endif %}
+
+                <div class="user-dropdown-body">
+                    {% if current_user.is_authenticated %}
+                        <a class="user-dropdown-item {% if request.path.startswith('/users/profile') or request.path.startswith('/user/profile') %}is-active{% endif %}" href="{{ url_for('user.profile') }}">
+                            <span class="user-dropdown-icon"><i class="far fa-user"></i></span>
+                            <span class="user-dropdown-label">{{ t("profile") }}</span>
+                        </a>
+
+                        <a class="user-dropdown-item {% if request.path.startswith('/users/settings') or request.path.startswith('/user/settings') or request.path.startswith('/farmer/settings') %}is-active{% endif %}" href="{{ url_for('user.settings') }}">
+                            <span class="user-dropdown-icon"><i class="fas fa-sliders-h"></i></span>
+                            <span class="user-dropdown-label">{{ t("settings") }}</span>
+                        </a>
+
+                        {% if current_user.is_premium or current_user.has_role('admin') or current_user.has_role('expert') %}
+                        <a class="user-dropdown-item" href="{{ url_for('user.member_card', user_id=current_user.id) }}">
+                            <span class="user-dropdown-icon"><i class="fas fa-id-card"></i></span>
+                            <span class="user-dropdown-label">{% if current_lang == 'km' %}កាតសមាជិក{% else %}Member Card{% endif %}</span>
+                        </a>
+                        {% endif %}
+
+                        {% if current_user.has_role('admin') %}
+                        <a class="user-dropdown-item" href="{{ url_for('admin.dashboard') }}">
+                            <span class="user-dropdown-icon"><i class="fas fa-shield-alt"></i></span>
+                            <span class="user-dropdown-label">Admin Console</span>
+                        </a>
+                        {% elif current_user.has_role('expert') %}
+                        <a class="user-dropdown-item" href="{{ url_for('expert.dashboard') }}">
+                            <span class="user-dropdown-icon"><i class="fas fa-user-md"></i></span>
+                            <span class="user-dropdown-label">Expert Console</span>
+                        </a>
+                        {% endif %}
+
+                        <div class="user-dropdown-divider"></div>
+
+                        <a class="user-dropdown-item is-danger" href="{{ url_for('auth.logout') }}">
+                            <span class="user-dropdown-icon"><i class="fas fa-sign-out-alt"></i></span>
+                            <span class="user-dropdown-label">{{ t("logout") }}</span>
+                        </a>
+                    {% else %}
+                        <a class="user-dropdown-item" href="{{ url_for('auth.login') }}">
+                            <span class="user-dropdown-icon"><i class="fas fa-sign-in-alt text-primary"></i></span>
+                            <span class="user-dropdown-label">{% if current_lang == 'km' %}ចូលគណនី{% else %}Sign In{% endif %}</span>
+                        </a>
+                        <a class="user-dropdown-item" href="{{ url_for('auth.register') }}">
+                            <span class="user-dropdown-icon"><i class="fas fa-user-plus text-success"></i></span>
+                            <span class="user-dropdown-label">{% if current_lang == 'km' %}បង្កើតគណនី{% else %}Create Account{% endif %}</span>
+                        </a>
+                    {% endif %}
+                </div>
             </div>
         </li>
 

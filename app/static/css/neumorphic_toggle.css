@@ -22,7 +22,7 @@
 }
 
 .dark-mode .label-text {
-  color: #e2e8f0;
+  color: var(--text-main, #f1f5f9);
 }
 
 /* Mini Pill Track */
@@ -69,8 +69,8 @@ html.auth-panel-dark .toggle {
 .dark-mode .indicator,
 html.dark-mode .indicator,
 html.auth-panel-dark .indicator {
-  background: linear-gradient(135deg, #CF6DFC 0%, #a855f7 100%);
-  box-shadow: 0 1px 6px rgba(207, 109, 252, 0.45);
+  background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+  box-shadow: 0 1px 6px rgba(56, 189, 248, 0.45);
 }
 
 .toggle-state:checked ~ .indicator {

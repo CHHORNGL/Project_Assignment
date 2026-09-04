@@ -359,7 +359,10 @@ def settings():
 # ===============================
 # NOTIFICATIONS
 # ===============================
-@user_bp.route("/notifications")
+@user_bp.route("/notifications", strict_slashes=False)
+@user_bp.route("/notifications/", strict_slashes=False)
+@user_bp.route("/notification", strict_slashes=False)
+@user_bp.route("/notification/", strict_slashes=False)
 @login_required
 def notifications():
     page = request.args.get("page", type=int) or 1
@@ -377,7 +380,7 @@ def notifications():
     )
 
 
-@user_bp.route("/notifications/data")
+@user_bp.route("/notifications/data", strict_slashes=False)
 @login_required
 def notifications_data():
     page = request.args.get("page", type=int) or 1
@@ -392,7 +395,7 @@ def notifications_data():
     })
 
 
-@user_bp.route("/notifications/seen", methods=["POST"])
+@user_bp.route("/notifications/seen", methods=["POST"], strict_slashes=False)
 @login_required
 def notifications_seen():
     payload = request.get_json(silent=True) or {}

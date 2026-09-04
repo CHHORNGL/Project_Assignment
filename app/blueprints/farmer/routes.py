@@ -27,9 +27,10 @@ from app.models.rule import Rule
 from app.models.symptom import Symptom
 from app.models.chat_message import ChatMessage
 from app.models.chat_session import ChatSession
+from app.models.notification import Notification
 from app.services.rule_engine import diagnose as rule_diagnose
 from app.services.openai_assistant import generate_assistant_reply, suggest_symptoms_from_image
-from app.services.notification_service import notify_role, notify_user, _snippet
+from app.services.notification_service import notify_role, notify_user, _snippet, serialize_notification
 from app.services.audit_service import log_action
 from app.utils.i18n import t, get_current_language, normalize_display_text
 
@@ -654,6 +655,16 @@ def _process_diagnose_post():
             level="warning",
             source_id=diagnosis.id,
         )
+        notify_user(
+            user_id=current_user.id,
+            kind="diagnosis_submitted",
+            title="Diagnosis submitted",
+            subtitle=f"{crop.name}: Symptoms submitted and queued for review.",
+            url=url_for("farmer.diagnosis_result", diagnosis_id=diagnosis.id),
+            icon="fas fa-clipboard-check",
+            level="success",
+            source_id=diagnosis.id,
+        )
         db.session.commit()
     except Exception:
         db.session.rollback()
@@ -936,6 +947,16 @@ def diagnose_rule_based():
                 level="warning",
                 source_id=diagnosis.id,
             )
+            notify_user(
+                user_id=current_user.id,
+                kind="diagnosis_submitted",
+                title="Diagnosis completed",
+                subtitle=f"{crop.name}: Rule-based analysis is ready.",
+                url=url_for("farmer.diagnosis_result", diagnosis_id=diagnosis.id),
+                icon="fas fa-clipboard-check",
+                level="success",
+                source_id=diagnosis.id,
+            )
             db.session.commit()
         except Exception:
             db.session.rollback()
@@ -1150,7 +1171,10 @@ def diagnosis_result(diagnosis_id):
     Show diagnosis result (owner only or guest)
     """
 
-    diagnosis = Diagnosis.query.get_or_404(diagnosis_id)
+    diagnosis = Diagnosis.query.get(diagnosis_id)
+    if not diagnosis:
+        flash("Diagnosis record not found.", "info")
+        return redirect(url_for("farmer.dashboard"))
 
     # Security: owner only if it belongs to a user
     if diagnosis.farmer_id is not None:
@@ -1280,8 +1304,12 @@ def chat(session_id=None):
     session = (
         ChatSession.query
         .filter_by(id=session_id, farmer_id=current_user.id, session_type="ai")
-        .first_or_404()
+        .first()
     )
+    if not session:
+        if sessions:
+            return redirect(url_for("farmer.chat", session_id=sessions[0].id))
+        return redirect(url_for("farmer.new_chat"))
 
     # ---------------------------------
     # POST → Save message
@@ -1838,3 +1866,133 @@ def redeem_code():
     
     flash(f"Success! You claimed {promo.tokens_reward} AI Tokens.", "success")
     return redirect(url_for("user.settings"))
+
+
+# ===============================
+# FARMER NOTIFICATIONS
+# ===============================
+@farmer_bp.route("/notifications", strict_slashes=False)
+@farmer_bp.route("/notifications/", strict_slashes=False)
+@farmer_bp.route("/notification", strict_slashes=False)
+@farmer_bp.route("/notification/", strict_slashes=False)
+@login_required
+@farmer_required
+def notifications():
+    page = request.args.get("page", type=int) or 1
+    per_page = request.args.get("per_page", 20, type=int)
+
+    query = (
+        Notification.query
+        .filter(Notification.user_id == current_user.id)
+        .order_by(Notification.created_at.desc())
+    )
+
+    total = query.count()
+    rows = query.offset((page - 1) * per_page).limit(per_page).all()
+    next_page = page + 1 if (page * per_page) < total else None
+
+    return render_template(
+        "farmer/notifications.html",
+        notifications_items=[serialize_notification(item) for item in rows],
+        notifications_next_page=next_page,
+        notifications_per_page=per_page,
+    )
+
+
+@farmer_bp.route("/mobile-help-center", strict_slashes=False)
+@farmer_bp.route("/mobile-help-center/", strict_slashes=False)
+def mobile_help_center():
+    return redirect(url_for("farmer.dashboard"))
+
+
+@farmer_bp.route("/notifications/data", strict_slashes=False)
+@login_required
+@farmer_required
+def notifications_data():
+    page = request.args.get("page", type=int) or 1
+    per_page = request.args.get("per_page", 20, type=int)
+
+    query = (
+        Notification.query
+        .filter(Notification.user_id == current_user.id)
+        .order_by(Notification.created_at.desc())
+    )
+
+    total = query.count()
+    rows = query.offset((page - 1) * per_page).limit(per_page).all()
+    next_page = page + 1 if (page * per_page) < total else None
+
+    return jsonify({
+        "ok": True,
+        "items": [serialize_notification(item) for item in rows],
+        "next_page": next_page,
+        "per_page": per_page,
+    })
+
+
+@farmer_bp.route("/notifications/seen", methods=["POST"], strict_slashes=False)
+@login_required
+@farmer_required
+def notifications_seen():
+    payload = request.get_json(silent=True) or {}
+    ids = payload.get("ids") if isinstance(payload, dict) else None
+
+    query = (
+        Notification.query
+        .filter(
+            Notification.user_id == current_user.id,
+            Notification.read_at.is_(None),
+        )
+    )
+    if ids:
+        try:
+            id_list = [int(val) for val in ids]
+        except (TypeError, ValueError):
+            id_list = []
+        if id_list:
+            query = query.filter(Notification.id.in_(id_list))
+
+    from datetime import datetime
+    updated = query.update({"read_at": datetime.utcnow()}, synchronize_session=False)
+    db.session.commit()
+
+    unread_count = (
+        Notification.query
+        .filter(
+            Notification.user_id == current_user.id,
+            Notification.read_at.is_(None),
+        )
+        .count()
+    )
+
+    return jsonify({
+        "ok": True,
+        "updated": updated,
+        "unread_count": unread_count,
+    })
+
+
+@farmer_bp.route("/notifications/<int:notification_id>/read", methods=["POST"], strict_slashes=False)
+@login_required
+@farmer_required
+def mark_notification_read(notification_id: int):
+    notification = Notification.query.filter_by(id=notification_id, user_id=current_user.id).first_or_404()
+    from datetime import datetime
+    if not notification.read_at:
+        notification.read_at = datetime.utcnow()
+        db.session.commit()
+
+    unread_count = (
+        Notification.query
+        .filter(
+            Notification.user_id == current_user.id,
+            Notification.read_at.is_(None),
+        )
+        .count()
+    )
+
+    return jsonify({
+        "ok": True,
+        "unread_count": unread_count,
+    })
+

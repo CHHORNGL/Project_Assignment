@@ -150,6 +150,14 @@ body.icon-nav {
     white-space: nowrap;
     transition: opacity 0.2s ease, max-width 0.24s ease;
 }
+.app-sidebar .sidebar-brand-title {
+    font-family: "Inter", "Manrope", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 0.9375rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    line-height: 1.1;
+    color: #ffffff !important;
+}
 .app-sidebar .brand-sub-badge {
     font-size: 0.72rem;
     text-transform: uppercase;
@@ -624,6 +632,7 @@ body.icon-nav .app-sidebar .nav-link[data-tooltip]:hover::after,
                  alt="Logo"
                  class="sidebar-logo">
             <div class="brand-text-col">
+                <span class="sidebar-brand-title">AXE</span>
                 <span class="brand-sub-badge">
                     {% if active_side == "admin" %}ADMIN PANEL{% elif active_side == "expert" %}EXPERT PANEL{% else %}FARMER PANEL{% endif %}
                 </span>

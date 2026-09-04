@@ -147,7 +147,7 @@
         if (loading) loading.hidden = false;
 
         try {
-            const url = new URL("{{ url_for('user.notifications_data') }}", window.location.origin);
+            const url = new URL("{{ url_for('farmer.notifications_data') }}", window.location.origin);
             url.searchParams.set("page", String(nextPage));
             url.searchParams.set("per_page", String(perPage));
             const res = await fetch(url.toString(), { headers: { "Accept": "application/json" } });
@@ -186,7 +186,7 @@
 
     async function markAllRead() {
         try {
-            await fetch("/users/notifications/seen", {
+            await fetch("{{ url_for('farmer.notifications_seen') }}", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: "{}"
@@ -198,6 +198,18 @@
     if (markBtn) {
         markBtn.addEventListener("click", markAllRead);
     }
+
+    feed.addEventListener("click", (e) => {
+        const item = e.target.closest("[data-notification-id]");
+        if (!item) return;
+        const notifId = item.dataset.notificationId;
+        if (notifId && item.classList.contains("is-unread")) {
+            item.classList.remove("is-unread");
+            try {
+                fetch("/farmer/notifications/" + notifId + "/read", { method: "POST" });
+            } catch (err) {}
+        }
+    });
 
     if (feed.querySelector(".is-unread")) {
         markAllRead();

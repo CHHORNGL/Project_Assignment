@@ -28,53 +28,49 @@
    1. TOKENS
 ========================================= */
 .farmer-dash-theme {
-    /* Lavender Fields Theme System */
-    --primary: #CF6DFC;
-    --primary-strong: #b84fe6;
-    --primary-dark: #9333ea;
-    --primary-soft: rgba(207, 109, 252, 0.12);
-    --primary-softer: rgba(193, 191, 255, 0.16);
-    --primary-ring: rgba(207, 109, 252, 0.25);
-    --primary-line: rgba(193, 191, 255, 0.4);
-    --accent: #C1BFFF;
+    /* Soft Blue & Dark Slate Theme System */
+    --primary: #2563eb;
+    --primary-strong: #1d4ed8;
+    --primary-dark: #1e40af;
+    --primary-soft: rgba(37, 99, 235, 0.08);
+    --primary-softer: rgba(59, 130, 246, 0.05);
+    --primary-ring: rgba(37, 99, 235, 0.25);
+    --primary-line: rgba(37, 99, 235, 0.35);
+    --accent: #38bdf8;
+    --accent-warm: #f59e0b;
 
-    /* Lavender Fields Palette Definition */
-    --lf-cream: #FDFBD5;
-    --lf-meadow: #BDB96A;
-    --lf-soft: #C1BFFF;
-    --lf-vivid: #CF6DFC;
-
-    /* Surfaces: warm off-white canvas with gentle lavender tint */
-    --farmer-bg: #fbfbfe;
+    /* Surfaces: warm off-white / soft light gray canvas */
+    --farmer-bg: #f8fafc;
     --card-bg: #ffffff;
-    --surface-soft: #f6f5ff;
-    --surface-muted: #eeebff;
+    --surface-soft: #f1f5f9;
+    --surface-muted: #e2e8f0;
 
-    --border-light: #e5e3f5;
-    --border-strong: #d0cdeb;
+    --border-light: #e2e8f0;
+    --border-strong: #cbd5e1;
 
-    --text-main: #1e1b4b;
-    --text-secondary: #47436b;
-    --text-muted: #6b668f;
-    --text-faint: #9893b8;
+    /* Text: Dark Slate / Charcoal */
+    --text-main: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --text-faint: #94a3b8;
 
     /* Status — shared by badges, list rails and stat icons */
-    --fm-ok: #CF6DFC;
-    --fm-ok-bg: rgba(207, 109, 252, 0.12);
-    --fm-warn: #BDB96A;
-    --fm-warn-bg: rgba(189, 185, 106, 0.15);
+    --fm-ok: #2563eb;
+    --fm-ok-bg: rgba(37, 99, 235, 0.08);
+    --fm-warn: #f59e0b;
+    --fm-warn-bg: rgba(245, 158, 11, 0.12);
     --fm-bad: #ef4444;
     --fm-bad-bg: #fef2f2;
-    --fm-info: #C1BFFF;
-    --fm-info-bg: rgba(193, 191, 255, 0.2);
+    --fm-info: #38bdf8;
+    --fm-info-bg: rgba(56, 189, 248, 0.12);
 
     /* Radius + elevation scales. Two shadows only: resting and raised. */
     --fm-r-sm: 8px;
     --fm-r-md: 12px;
     --fm-r-lg: 16px;
     --fm-r-pill: 999px;
-    --fm-shadow: 0 1px 2px rgba(30, 27, 75, 0.04), 0 1px 3px rgba(30, 27, 75, 0.06);
-    --fm-shadow-lg: 0 4px 6px -1px rgba(30, 27, 75, 0.07), 0 10px 20px -6px rgba(30, 27, 75, 0.10);
+    --fm-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.06);
+    --fm-shadow-lg: 0 4px 6px -1px rgba(15, 23, 42, 0.07), 0 10px 20px -6px rgba(15, 23, 42, 0.10);
 
     --fm-gap: 1rem;
     --fm-pad: 1.25rem;
@@ -90,52 +86,47 @@ html.dark-mode .farmer-dash-theme,
 html.dark-mode body.farmer-dash-theme,
 body.dark-mode.farmer-dash-theme,
 html.dark-mode {
-    /* Lavender Fields Dark Mode System */
-    --primary: #CF6DFC;
-    --primary-strong: #C1BFFF;
-    --primary-dark: #a855f7;
-    --primary-soft: rgba(207, 109, 252, 0.18);
-    --primary-softer: rgba(193, 191, 255, 0.12);
-    --primary-ring: rgba(207, 109, 252, 0.35);
-    --primary-line: rgba(193, 191, 255, 0.45);
-    --accent: #C1BFFF;
+    /* Soft Blue & Deep Navy Dark Mode System */
+    --primary: #38bdf8;
+    --primary-strong: #60a5fa;
+    --primary-dark: #0284c7;
+    --primary-soft: rgba(56, 189, 248, 0.14);
+    --primary-softer: rgba(56, 189, 248, 0.06);
+    --primary-ring: rgba(56, 189, 248, 0.3);
+    --primary-line: rgba(56, 189, 248, 0.4);
+    --accent: #38bdf8;
+    --accent-warm: #fb923c;
 
-    /* Lavender Fields Palette Definition */
-    --lf-cream: #FDFBD5;
-    --lf-meadow: #BDB96A;
-    --lf-soft: #C1BFFF;
-    --lf-vivid: #CF6DFC;
-
-    /* Famous Obsidian Midnight Canvas & Elevated Surfaces */
-    --farmer-bg: #0b0f19;
-    --card-bg: #111827;
+    /* Deep Navy / Dark Charcoal Canvas (Avoids pure #000000 to prevent halation) */
+    --farmer-bg: #0f172a;
+    --card-bg: #1e293b;
     --surface-soft: #162032;
-    --surface-muted: #1e293b;
+    --surface-muted: #243044;
 
     /* Crisp Precision Borders */
-    --border-light: #1f2937;
-    --border-strong: #374151;
+    --border-light: #334155;
+    --border-strong: #475569;
 
-    /* High-Legibility Typography */
-    --text-main: #f8fafc;
+    /* High-Legibility Typography (Soft White / Light Gray) */
+    --text-main: #f1f5f9;
     --text-secondary: #cbd5e1;
     --text-muted: #94a3b8;
     --text-faint: #64748b;
 
-    /* Lavender Fields Status System */
-    --fm-ok: #CF6DFC;
-    --fm-ok-bg: rgba(207, 109, 252, 0.18);
-    --fm-warn: #BDB96A;
-    --fm-warn-bg: rgba(189, 185, 106, 0.18);
-    --fm-bad: #fb7185;
-    --fm-bad-bg: rgba(251, 113, 133, 0.16);
-    --fm-info: #C1BFFF;
-    --fm-info-bg: rgba(193, 191, 255, 0.18);
-    --fm-purple: #CF6DFC;
-    --fm-purple-bg: rgba(207, 109, 252, 0.18);
+    /* Status System — Muted Pastel Tones, No Pure Neon */
+    --fm-ok: #38bdf8;
+    --fm-ok-bg: rgba(56, 189, 248, 0.14);
+    --fm-warn: #fb923c;
+    --fm-warn-bg: rgba(251, 146, 60, 0.14);
+    --fm-bad: #f87171;
+    --fm-bad-bg: rgba(248, 113, 113, 0.14);
+    --fm-info: #38bdf8;
+    --fm-info-bg: rgba(56, 189, 248, 0.14);
+    --fm-purple: #818cf8;
+    --fm-purple-bg: rgba(129, 140, 248, 0.14);
 
     --fm-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.24);
-    --fm-shadow-lg: 0 10px 25px -3px rgba(0, 0, 0, 0.4), 0 4px 10px -2px rgba(0, 0, 0, 0.3);
+    --fm-shadow-lg: 0 10px 25px -3px rgba(0, 0, 0, 0.45), 0 4px 10px -2px rgba(0, 0, 0, 0.3);
 }
 
 /* =========================================
@@ -362,31 +353,34 @@ html.dark-mode {
 }
 
 .fm-btn-primary {
-    background: linear-gradient(135deg, #CF6DFC 0%, #a855f7 100%);
-    border-color: #CF6DFC;
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    border-color: #2563eb;
     color: #ffffff;
-    box-shadow: 0 4px 14px rgba(207, 109, 252, 0.3);
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25);
 }
 
 .fm-btn-primary:hover {
-    background: linear-gradient(135deg, #d985fc 0%, #9333ea 100%);
-    border-color: #d985fc;
+    background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+    border-color: #3b82f6;
     color: #ffffff;
-    box-shadow: 0 6px 20px rgba(207, 109, 252, 0.4);
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.35);
 }
 
-.dark-mode .fm-btn-primary {
-    background: linear-gradient(135deg, #CF6DFC 0%, #9333ea 100%);
-    border-color: #CF6DFC;
-    color: #ffffff;
-    box-shadow: 0 4px 16px rgba(207, 109, 252, 0.35);
+.dark-mode .fm-btn-primary,
+html.dark-mode .fm-btn-primary {
+    background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+    border-color: #38bdf8;
+    color: #0f172a;
+    font-weight: 600;
+    box-shadow: 0 4px 16px rgba(56, 189, 248, 0.25);
 }
 
-.dark-mode .fm-btn-primary:hover {
-    background: linear-gradient(135deg, #d985fc 0%, #a855f7 100%);
-    border-color: #d985fc;
-    color: #ffffff;
-    box-shadow: 0 6px 22px rgba(207, 109, 252, 0.45);
+.dark-mode .fm-btn-primary:hover,
+html.dark-mode .fm-btn-primary:hover {
+    background: linear-gradient(135deg, #7dd3fc 0%, #0369a1 100%);
+    border-color: #7dd3fc;
+    color: #0f172a;
+    box-shadow: 0 6px 22px rgba(56, 189, 248, 0.35);
 }
 
 .fm-btn-secondary {
@@ -1499,71 +1493,71 @@ body[data-lang="km"] .fm-team-rank {
     padding: 0.18rem 0.65rem;
 }
 
-/* Lead badge in light mode: vivid lavender fields with crisp white text */
+/* Lead badge in light mode: soft blue with crisp white text */
 .fm-team-rank.is-lead {
     color: #ffffff;
-    background: linear-gradient(135deg, #CF6DFC 0%, #a855f7 100%);
-    border-color: #CF6DFC;
-    box-shadow: 0 2px 8px rgba(207, 109, 252, 0.35);
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    border-color: #2563eb;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
 }
 
-/* Lead badge in dark mode: vivid lavender orchid glow (#CF6DFC) */
+/* Lead badge in dark mode: soft blue pastel glow (#38BDF8) */
 .dark-mode .farmer-dash-theme .fm-team-rank.is-lead,
 html.dark-mode .fm-team-rank.is-lead {
-    background: linear-gradient(135deg, rgba(207, 109, 252, 0.25) 0%, rgba(168, 85, 247, 0.15) 100%);
-    border-color: rgba(207, 109, 252, 0.5);
-    color: #CF6DFC;
-    box-shadow: 0 0 16px rgba(207, 109, 252, 0.25);
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.2) 0%, rgba(2, 132, 199, 0.15) 100%);
+    border-color: rgba(56, 189, 248, 0.5);
+    color: #38bdf8;
+    box-shadow: 0 0 16px rgba(56, 189, 248, 0.2);
 }
 
-/* Frontend & UI/UX badge: soft periwinkle lavender (#C1BFFF) */
+/* Frontend & UI/UX badge: indigo / periwinkle muted */
 .fm-team-rank.is-frontend {
-    color: #6366f1;
-    background: #f3f2ff;
-    border-color: #C1BFFF;
+    color: #4338ca;
+    background: #eef2ff;
+    border-color: #c7d2fe;
 }
 .dark-mode .farmer-dash-theme .fm-team-rank.is-frontend,
 html.dark-mode .fm-team-rank.is-frontend {
-    background: linear-gradient(135deg, rgba(193, 191, 255, 0.22) 0%, rgba(129, 140, 248, 0.14) 100%);
-    border-color: rgba(193, 191, 255, 0.45);
-    color: #C1BFFF;
-    box-shadow: 0 0 16px rgba(193, 191, 255, 0.2);
+    background: linear-gradient(135deg, rgba(129, 140, 248, 0.2) 0%, rgba(99, 102, 241, 0.12) 100%);
+    border-color: rgba(129, 140, 248, 0.45);
+    color: #a5b4fc;
+    box-shadow: 0 0 16px rgba(129, 140, 248, 0.18);
 }
 
-/* Mobile Developer badge: meadow sage gold (#BDB96A) */
+/* Mobile Developer badge: sage emerald */
 .fm-team-rank.is-mobile {
-    color: #6d6a2a;
-    background: #faf9ea;
-    border-color: #BDB96A;
+    color: #065f46;
+    background: #ecfdf5;
+    border-color: #a7f3d0;
 }
 .dark-mode .farmer-dash-theme .fm-team-rank.is-mobile,
 html.dark-mode .fm-team-rank.is-mobile {
-    background: linear-gradient(135deg, rgba(189, 185, 106, 0.22) 0%, rgba(163, 160, 80, 0.14) 100%);
-    border-color: rgba(189, 185, 106, 0.45);
-    color: #BDB96A;
-    box-shadow: 0 0 16px rgba(189, 185, 106, 0.2);
+    background: linear-gradient(135deg, rgba(52, 211, 153, 0.2) 0%, rgba(16, 185, 129, 0.12) 100%);
+    border-color: rgba(52, 211, 153, 0.45);
+    color: #6ee7b7;
+    box-shadow: 0 0 16px rgba(52, 211, 153, 0.18);
 }
 
-/* Data & QA badge: warm lavender cream (#FDFBD5) */
+/* Data & QA badge: warm amber / soft orange */
 .fm-team-rank.is-data {
-    color: #857218;
-    background: #fefee8;
-    border-color: #dcd98b;
+    color: #9a3412;
+    background: #fff7ed;
+    border-color: #fed7aa;
 }
 .dark-mode .farmer-dash-theme .fm-team-rank.is-data,
 html.dark-mode .fm-team-rank.is-data {
-    background: linear-gradient(135deg, rgba(253, 251, 213, 0.2) 0%, rgba(217, 119, 6, 0.12) 100%);
-    border-color: rgba(253, 251, 213, 0.45);
-    color: #FDFBD5;
-    box-shadow: 0 0 16px rgba(253, 251, 213, 0.2);
+    background: linear-gradient(135deg, rgba(251, 146, 60, 0.2) 0%, rgba(245, 158, 11, 0.12) 100%);
+    border-color: rgba(251, 146, 60, 0.45);
+    color: #fb923c;
+    box-shadow: 0 0 16px rgba(251, 146, 60, 0.18);
 }
 
 /* Regular rank badge in dark mode */
 .dark-mode .farmer-dash-theme .fm-team-rank,
 html.dark-mode .fm-team-rank {
-    background: rgba(207, 109, 252, 0.14);
-    border-color: rgba(207, 109, 252, 0.35);
-    color: #CF6DFC;
+    background: rgba(56, 189, 248, 0.12);
+    border-color: rgba(56, 189, 248, 0.35);
+    color: #38bdf8;
 }
 
 .fm-team-name {
@@ -1603,7 +1597,7 @@ html[lang^="km"] .fm-team-task {
 .dark-mode .farmer-dash-theme .fm-team-task-box,
 html.dark-mode .fm-team-task-box {
     background: #162032;
-    border-color: #1f2937;
+    border-color: #334155;
 }
 
 .fm-team-task-label {
@@ -1626,7 +1620,7 @@ html[lang^="km"] .fm-team-task-label {
 
 .dark-mode .farmer-dash-theme .fm-team-task-label,
 html.dark-mode .fm-team-task-label {
-    color: #CF6DFC;
+    color: #38bdf8;
 }
 
 .fm-team-facts {
@@ -1666,7 +1660,7 @@ html.dark-mode .fm-team-facts li {
 
 .dark-mode .farmer-dash-theme .fm-team-facts i,
 html.dark-mode .fm-team-facts i {
-    color: #C1BFFF;
+    color: #38bdf8;
 }
 
 .fm-team-link {
@@ -1681,7 +1675,7 @@ html.dark-mode .fm-team-facts i {
 
 .dark-mode .farmer-dash-theme .fm-team-link:hover,
 html.dark-mode .fm-team-link:hover {
-    color: #C1BFFF;
+    color: #38bdf8;
 }
 
 .fm-team-divider {
@@ -1692,21 +1686,21 @@ html.dark-mode .fm-team-link:hover {
 
 .dark-mode .farmer-dash-theme .fm-team-divider,
 html.dark-mode .fm-team-divider {
-    background: #1f2937;
+    background: #334155;
 }
 
 /* Card in dark mode */
 .dark-mode .farmer-dash-theme .fm-team-card,
 html.dark-mode .fm-team-card {
-    background: #111827;
-    border-color: #1f2937;
+    background: #1e293b;
+    border-color: #334155;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
 }
 
 .dark-mode .farmer-dash-theme .fm-team-card:hover,
 html.dark-mode .fm-team-card:hover {
-    border-color: #374151;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 16px rgba(207, 109, 252, 0.15);
+    border-color: #475569;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 16px rgba(56, 189, 248, 0.15);
 }
 
 /* Supervisor — the one oversized card. */

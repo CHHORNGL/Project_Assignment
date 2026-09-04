@@ -231,7 +231,7 @@
     transform: translateX(-50%);
     z-index: 5;
     pointer-events: none;
-    filter: drop-shadow(0 4px 8px rgba(207, 109, 252, 0.45));
+    filter: drop-shadow(0 4px 8px rgba(56, 189, 248, 0.45));
     animation: smoothCrownFloat 3.8s ease-in-out infinite alternate;
     will-change: transform;
 }
@@ -318,10 +318,10 @@
     padding: 3.5px;
     position: relative;
     z-index: 3;
-    background: linear-gradient(135deg, #CF6DFC, #BDB96A, #FDFBD5, #C1BFFF, #CF6DFC);
+    background: linear-gradient(135deg, #38bdf8, #2563eb, #60a5fa, #fbbf24, #38bdf8);
     background-size: 300% 300%;
     animation: smoothGradShift 8s ease infinite;
-    box-shadow: 0 0 28px rgba(207, 109, 252, 0.45), 0 8px 24px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 0 28px rgba(56, 189, 248, 0.35), 0 8px 24px rgba(15, 23, 42, 0.2);
     border: none;
 }
 
@@ -374,19 +374,19 @@
     font-size: 0.72rem;
     font-weight: 800;
     letter-spacing: 0.06em;
-    color: #4a2800;
-    background: linear-gradient(135deg, #FDFBD5 0%, #FFE082 45%, #C1BFFF 100%);
-    border: 1px solid rgba(207, 109, 252, 0.45);
-    box-shadow: 0 4px 14px rgba(207, 109, 252, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    color: #0f172a;
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 45%, #fed7aa 100%);
+    border: 1px solid rgba(56, 189, 248, 0.45);
+    box-shadow: 0 4px 14px rgba(56, 189, 248, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.8);
     overflow: hidden;
     cursor: default;
 }
 
 .dark-mode .premium-vip-badge {
-    color: #FDFBD5;
-    background: linear-gradient(135deg, rgba(207, 109, 252, 0.25) 0%, rgba(189, 185, 106, 0.22) 50%, rgba(193, 191, 255, 0.18) 100%);
-    border-color: rgba(207, 109, 252, 0.6);
-    box-shadow: 0 4px 18px rgba(207, 109, 252, 0.35), inset 0 1px 0 rgba(253, 251, 213, 0.3);
+    color: #f1f5f9;
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.2) 0%, rgba(30, 41, 59, 0.8) 50%, rgba(251, 146, 60, 0.15) 100%);
+    border-color: rgba(56, 189, 248, 0.5);
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(56, 189, 248, 0.2);
 }
 
 .premium-badge-shimmer-wrap {
@@ -433,14 +433,15 @@
     font-size: 0.72rem;
     font-weight: 700;
     color: #ffffff;
-    background: linear-gradient(135deg, #CF6DFC, #9333ea);
-    box-shadow: 0 2px 10px rgba(207, 109, 252, 0.35);
+    background: linear-gradient(135deg, #2563eb, #0284c7);
+    box-shadow: 0 2px 10px rgba(37, 99, 235, 0.3);
     letter-spacing: 0.04em;
 }
 
 .dark-mode .badge-clearance-premium {
-    background: linear-gradient(135deg, rgba(207, 109, 252, 0.4), rgba(147, 51, 234, 0.3));
-    border: 1px solid rgba(207, 109, 252, 0.5);
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.3), rgba(2, 132, 199, 0.25));
+    border: 1px solid rgba(56, 189, 248, 0.45);
+    color: #38bdf8;
 }
 
 /* 4. STANDARD USER AURA */
@@ -629,15 +630,15 @@
 
 /* Premium Credentials Card Enhancements */
 .premium-credentials-card {
-    border-color: rgba(207, 109, 252, 0.45) !important;
-    box-shadow: 0 10px 30px rgba(207, 109, 252, 0.15) !important;
+    border-color: rgba(245, 158, 11, 0.35) !important;
+    box-shadow: 0 10px 30px rgba(245, 158, 11, 0.12) !important;
     position: relative;
     overflow: hidden;
 }
 
 .dark-mode .premium-credentials-card {
-    border-color: rgba(207, 109, 252, 0.5) !important;
-    box-shadow: 0 10px 32px rgba(207, 109, 252, 0.25) !important;
+    border-color: rgba(245, 158, 11, 0.45) !important;
+    box-shadow: 0 10px 32px rgba(245, 158, 11, 0.18) !important;
 }
 
 .credentials-svg-backdrop {
@@ -670,24 +671,34 @@
 }
 
 .credentials-id-tag-premium {
-    color: #CF6DFC !important;
-    background: rgba(207, 109, 252, 0.15) !important;
-    border: 1px solid rgba(207, 109, 252, 0.35) !important;
+    color: #b45309 !important;
+    background: rgba(245, 158, 11, 0.1) !important;
+    border: 1px solid rgba(245, 158, 11, 0.3) !important;
+}
+
+.dark-mode .credentials-id-tag-premium {
+    color: #fde047 !important;
+    background: rgba(245, 158, 11, 0.16) !important;
+    border-color: rgba(245, 158, 11, 0.4) !important;
 }
 
 .status-tag-premium {
-    color: #CF6DFC !important;
+    color: #d97706 !important;
     font-weight: 800;
 }
 
+.dark-mode .status-tag-premium {
+    color: #fbbf24 !important;
+}
+
 .capability-pill-premium {
-    background: rgba(207, 109, 252, 0.08) !important;
-    border-color: rgba(207, 109, 252, 0.3) !important;
+    background: rgba(245, 158, 11, 0.08) !important;
+    border-color: rgba(245, 158, 11, 0.22) !important;
 }
 
 .dark-mode .capability-pill-premium {
-    background: rgba(207, 109, 252, 0.15) !important;
-    border-color: rgba(207, 109, 252, 0.4) !important;
+    background: rgba(245, 158, 11, 0.14) !important;
+    border-color: rgba(245, 158, 11, 0.35) !important;
 }
 
 .digital-pass-preview-box {
@@ -703,8 +714,8 @@
 }
 
 .dark-mode .digital-pass-preview-box {
-    background: #111827;
-    border-color: #374151;
+    background: #162032;
+    border-color: #334155;
 }
 
 .profile-qr-box {
@@ -804,9 +815,9 @@
                             <defs>
                                 <linearGradient id="crownGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                                     <stop offset="0%" stop-color="#FFF8E1" />
-                                    <stop offset="25%" stop-color="#FDD835" />
-                                    <stop offset="65%" stop-color="#CF6DFC" />
-                                    <stop offset="100%" stop-color="#C1BFFF" />
+                                    <stop offset="25%" stop-color="#FFE082" />
+                                    <stop offset="65%" stop-color="#38BDF8" />
+                                    <stop offset="100%" stop-color="#60A5FA" />
                                 </linearGradient>
                                 <filter id="crownGlow" x="-20%" y="-20%" width="140%" height="140%">
                                     <feGaussianBlur stdDeviation="1.5" result="glow" />
@@ -822,10 +833,10 @@
                             <rect x="5" y="26" width="38" height="3" rx="1.5" fill="#FFE082" />
                             <!-- Gemstones -->
                             <circle cx="24" cy="6" r="2.2" fill="#FFFFFF" />
-                            <circle cx="8" cy="10" r="1.8" fill="#CF6DFC" />
-                            <circle cx="40" cy="10" r="1.8" fill="#CF6DFC" />
-                            <circle cx="19" cy="20" r="1.2" fill="#FDFBD5" />
-                            <circle cx="29" cy="20" r="1.2" fill="#FDFBD5" />
+                            <circle cx="8" cy="10" r="1.8" fill="#38BDF8" />
+                            <circle cx="40" cy="10" r="1.8" fill="#38BDF8" />
+                            <circle cx="19" cy="20" r="1.2" fill="#FFE082" />
+                            <circle cx="29" cy="20" r="1.2" fill="#FFE082" />
                             <!-- Starburst Twinkle Glint on Crown -->
                             <g class="crown-twinkle-glint">
                                 <path d="M24 0 L25.5 4.5 L30 6 L25.5 7.5 L24 12 L22.5 7.5 L18 6 L22.5 4.5 Z" fill="#FFFFFF" opacity="0.95"/>
@@ -837,18 +848,18 @@
                     <svg class="premium-halo-svg" viewBox="0 0 144 144" aria-hidden="true">
                         <defs>
                             <linearGradient id="auraGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" stop-color="#CF6DFC" stop-opacity="1" />
-                                <stop offset="25%" stop-color="#FDFBD5" stop-opacity="0.9" />
-                                <stop offset="50%" stop-color="#BDB96A" stop-opacity="1" />
-                                <stop offset="75%" stop-color="#C1BFFF" stop-opacity="0.9" />
-                                <stop offset="100%" stop-color="#CF6DFC" stop-opacity="1" />
+                                <stop offset="0%" stop-color="#38BDF8" stop-opacity="1" />
+                                <stop offset="25%" stop-color="#FFE082" stop-opacity="0.9" />
+                                <stop offset="50%" stop-color="#60A5FA" stop-opacity="1" />
+                                <stop offset="75%" stop-color="#0284C7" stop-opacity="0.9" />
+                                <stop offset="100%" stop-color="#38BDF8" stop-opacity="1" />
                             </linearGradient>
 
                             <linearGradient id="auraGrad2" x1="100%" y1="0%" x2="0%" y2="100%">
                                 <stop offset="0%" stop-color="#FFE082" stop-opacity="0.85" />
-                                <stop offset="40%" stop-color="#CF6DFC" stop-opacity="0.6" />
-                                <stop offset="70%" stop-color="#C1BFFF" stop-opacity="0.9" />
-                                <stop offset="100%" stop-color="#FDFBD5" stop-opacity="0.75" />
+                                <stop offset="40%" stop-color="#38BDF8" stop-opacity="0.6" />
+                                <stop offset="70%" stop-color="#60A5FA" stop-opacity="0.9" />
+                                <stop offset="100%" stop-color="#FFE082" stop-opacity="0.75" />
                             </linearGradient>
 
                             <filter id="softGlow" x="-30%" y="-30%" width="160%" height="160%">
@@ -867,10 +878,10 @@
                         <g class="aura-spin-cw">
                             <circle cx="72" cy="72" r="62" fill="none" stroke="url(#auraGrad1)" stroke-width="2.2" stroke-dasharray="16 22 28 20" stroke-linecap="round"/>
                             <!-- Celestial Orbit Diamonds / Stars -->
-                            <polygon points="72,8 74,12 72,16 70,12" fill="#FDFBD5" />
-                            <polygon points="136,72 132,74 128,72 132,70" fill="#CF6DFC" />
+                            <polygon points="72,8 74,12 72,16 70,12" fill="#FFE082" />
+                            <polygon points="136,72 132,74 128,72 132,70" fill="#38BDF8" />
                             <polygon points="72,136 70,132 72,128 74,132" fill="#FFE082" />
-                            <polygon points="8,72 12,70 16,72 12,74" fill="#C1BFFF" />
+                            <polygon points="8,72 12,70 16,72 12,74" fill="#60A5FA" />
                         </g>
 
                         <!-- Inner Energy Shimmer Ring (Counter-Clockwise) -->
@@ -897,17 +908,17 @@
                         <svg viewBox="0 0 32 32" width="32" height="32">
                             <defs>
                                 <linearGradient id="crestGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                    <stop offset="0%" stop-color="#CF6DFC" />
-                                    <stop offset="50%" stop-color="#9b72cb" />
-                                    <stop offset="100%" stop-color="#6b21a8" />
+                                    <stop offset="0%" stop-color="#38BDF8" />
+                                    <stop offset="50%" stop-color="#0284C7" />
+                                    <stop offset="100%" stop-color="#1E40AF" />
                                 </linearGradient>
                             </defs>
-                            <circle cx="16" cy="16" r="14" fill="url(#crestGrad)" stroke="#FDFBD5" stroke-width="2"/>
+                            <circle cx="16" cy="16" r="14" fill="url(#crestGrad)" stroke="#FFE082" stroke-width="2"/>
                             <!-- Crown Vector inside Emblem -->
                             <path d="M9 20 L23 20 L21.5 13 L17.5 16.5 L16 12 L14.5 16.5 L10.5 13 Z" fill="#FFE082"/>
                             <circle cx="16" cy="11.5" r="1.2" fill="#FFFFFF" />
-                            <circle cx="10.5" cy="12.5" r="0.9" fill="#FDFBD5" />
-                            <circle cx="21.5" cy="12.5" r="0.9" fill="#FDFBD5" />
+                            <circle cx="10.5" cy="12.5" r="0.9" fill="#FFE082" />
+                            <circle cx="21.5" cy="12.5" r="0.9" fill="#FFE082" />
                         </svg>
                     </div>
                 </div>
@@ -949,13 +960,13 @@
                                 <linearGradient id="nameCrownGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                                     <stop offset="0%" stop-color="#FFF9C4" />
                                     <stop offset="45%" stop-color="#FFE082" />
-                                    <stop offset="100%" stop-color="#CF6DFC" />
+                                    <stop offset="100%" stop-color="#38BDF8" />
                                 </linearGradient>
                             </defs>
                             <path d="M4 18H20L21 8L16 12.5L12 5L8 12.5L3 8L4 18Z" fill="url(#nameCrownGrad)"/>
                             <circle cx="12" cy="4.5" r="1.6" fill="#FFE082"/>
-                            <circle cx="3" cy="7.5" r="1.3" fill="#CF6DFC"/>
-                            <circle cx="21" cy="7.5" r="1.3" fill="#CF6DFC"/>
+                            <circle cx="3" cy="7.5" r="1.3" fill="#38BDF8"/>
+                            <circle cx="21" cy="7.5" r="1.3" fill="#38BDF8"/>
                         </svg>
                     </span>
                 {% endif %}
@@ -984,8 +995,8 @@
                             </svg>
                         </div>
                         <svg class="badge-crown-vector" viewBox="0 0 24 24" width="15" height="15">
-                            <path d="M3 18H21L19.5 9L15 13L12 6L9 13L4.5 9L3 18Z" fill="#FDFBD5"/>
-                            <circle cx="12" cy="5" r="1.2" fill="#CF6DFC"/>
+                            <path d="M3 18H21L19.5 9L15 13L12 6L9 13L4.5 9L3 18Z" fill="#FFE082"/>
+                            <circle cx="12" cy="5" r="1.2" fill="#38BDF8"/>
                         </svg>
                         <span class="badge-vip-text">VIP PRO FARMER</span>
                         <span class="badge-vip-pulse-dot" title="Active VIP Status"></span>
@@ -1009,7 +1020,7 @@
         =============================== -->
         {% if is_admin or is_expert or rep_label or is_premium %}
         <div class="settings-section-title">
-            <i class="{% if is_premium and not is_admin and not is_expert %}fas fa-crown{% else %}fas fa-id-badge{% endif %}" style="{% if is_premium and not is_admin and not is_expert %}color: #CF6DFC;{% else %}color: var(--primary);{% endif %}"></i>
+            <i class="{% if is_premium and not is_admin and not is_expert %}fas fa-crown{% else %}fas fa-id-badge{% endif %}" style="{% if is_premium and not is_admin and not is_expert %}color: #f59e0b;{% else %}color: var(--primary);{% endif %}"></i>
             <span>{% if is_premium and not is_admin and not is_expert %}VIP Pro Credentials &amp; Digital Pass{% else %}{{ t("official_credentials")|default("Official Digital Credentials") }}{% endif %}</span>
         </div>
         <div class="executive-credentials-card {% if is_premium and not is_admin and not is_expert %}premium-credentials-card{% endif %}">
@@ -1019,9 +1030,9 @@
                 <svg viewBox="0 0 600 240" preserveAspectRatio="none" class="guilloche-svg">
                     <defs>
                         <linearGradient id="waveGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stop-color="#CF6DFC" stop-opacity="0.18" />
-                            <stop offset="50%" stop-color="#FFE082" stop-opacity="0.12" />
-                            <stop offset="100%" stop-color="#C1BFFF" stop-opacity="0.15" />
+                            <stop offset="0%" stop-color="#F59E0B" stop-opacity="0.15" />
+                            <stop offset="50%" stop-color="#FDE047" stop-opacity="0.10" />
+                            <stop offset="100%" stop-color="#D97706" stop-opacity="0.14" />
                         </linearGradient>
                     </defs>
                     <path d="M0,40 C150,90 350,10 600,60 L600,240 L0,240 Z" fill="url(#waveGrad)" class="wave-layer-1"/>
@@ -1047,11 +1058,11 @@
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                             <defs>
                                 <linearGradient id="vipShieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                    <stop offset="0%" stop-color="#CF6DFC"/>
-                                    <stop offset="100%" stop-color="#7c3aed"/>
+                                    <stop offset="0%" stop-color="#F59E0B"/>
+                                    <stop offset="100%" stop-color="#D97706"/>
                                 </linearGradient>
                             </defs>
-                            <path d="M12 2L4 5V11.09C4 16.14 7.41 20.85 12 22C16.59 20.85 20 16.14 20 11.09V5L12 2Z" fill="url(#vipShieldGrad)" stroke="#FFE082" stroke-width="1.5"/>
+                            <path d="M12 2L4 5V11.09C4 16.14 7.41 20.85 12 22C16.59 20.85 20 16.14 20 11.09V5L12 2Z" fill="url(#vipShieldGrad)" stroke="#FDE047" stroke-width="1.5"/>
                             <path d="M9 12L11 14L15 10" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
                         <span>Active VIP Pro Subscriber</span>
@@ -1081,7 +1092,7 @@
                     <span class="capability-pill capability-pill-premium"><i class="fas fa-bolt" style="color: #f59e0b;"></i> Unlimited AI Diagnostics</span>
                     <span class="capability-pill capability-pill-premium"><i class="fas fa-satellite-dish" style="color: #38bdf8;"></i> Real-Time Weather &amp; Pest Radar</span>
                     <span class="capability-pill capability-pill-premium"><i class="fas fa-user-md" style="color: #a78bfa;"></i> Priority Expert Advisory</span>
-                    <span class="capability-pill capability-pill-premium"><i class="fas fa-gem" style="color: #cf6dfc;"></i> 4K Ultra-Res Pathology</span>
+                    <span class="capability-pill capability-pill-premium"><i class="fas fa-gem" style="color: #38bdf8;"></i> 4K Ultra-Res Pathology</span>
                     <span class="capability-pill capability-pill-premium"><i class="fas fa-award" style="color: #fde047;"></i> VIP Digital Pro Pass</span>
                 {% else %}
                     <span class="capability-pill"><i class="fas fa-id-card text-primary"></i> Official Representative Pass</span>
@@ -1112,7 +1123,7 @@
                         <a href="{{ url_for('user.member_card', user_id=current_user.id) }}"
                            target="_blank"
                            class="btn btn-sm btn-admin d-inline-flex align-items-center"
-                           style="border-radius: 999px; font-weight: 700; padding: 6px 14px; {% if is_premium and not is_admin and not is_expert %}background: linear-gradient(135deg, #CF6DFC, #9333ea); border-color: #CF6DFC; color: #ffffff; box-shadow: 0 4px 14px rgba(207,109,252,0.35);{% endif %}">
+                           style="border-radius: 999px; font-weight: 700; padding: 6px 14px; {% if is_premium and not is_admin and not is_expert %}background: linear-gradient(135deg, #f59e0b, #d97706); border-color: #d97706; color: #ffffff; box-shadow: 0 4px 14px rgba(245,158,11,0.3);{% endif %}">
                             <i class="fas fa-external-link-alt mr-1.5"></i> {% if is_premium and not is_admin and not is_expert %}Open VIP Pro Pass{% else %}Open Member Card{% endif %}
                         </a>
                     </div>

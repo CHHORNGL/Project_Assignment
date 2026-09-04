@@ -139,6 +139,120 @@
             box-shadow: 0 22px 48px color-mix(in srgb, var(--admin-accent) 22%, rgba(15, 23, 42, 0.26));
         }
 
+        /* VIP Pro Executive Card Theme */
+        .executive-member-card.is-vip-pass {
+            border: 1.5px solid rgba(217, 119, 6, 0.35);
+            box-shadow: 0 18px 42px rgba(15, 23, 42, 0.16), 0 0 24px rgba(245, 158, 11, 0.12);
+        }
+
+        .executive-member-card.is-vip-pass:hover {
+            box-shadow: 0 24px 54px rgba(15, 23, 42, 0.22), 0 0 32px rgba(245, 158, 11, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .dark-mode .executive-member-card.is-vip-pass {
+            background: #0f141f;
+            border-color: rgba(245, 158, 11, 0.4);
+            box-shadow: 0 20px 48px rgba(0, 0, 0, 0.5), 0 0 28px rgba(245, 158, 11, 0.14);
+        }
+
+        .dark-mode .executive-member-card.is-vip-pass:hover {
+            box-shadow: 0 26px 58px rgba(0, 0, 0, 0.6), 0 0 36px rgba(245, 158, 11, 0.22);
+        }
+
+        /* VIP Header */
+        .member-card-header.is-vip-header {
+            background: linear-gradient(135deg, #090d16 0%, #111827 40%, #1e1b4b 75%, #0f172a 100%) !important;
+            position: relative;
+            border-bottom: 1px solid rgba(245, 158, 11, 0.25);
+        }
+
+        .member-card-header.is-vip-header::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #f59e0b, #fbbf24, #d97706, #f59e0b);
+        }
+
+        /* VIP Badge */
+        .member-card-badge.is-vip-badge {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 50%, #fcd34d 100%) !important;
+            color: #78350f !important;
+            border: 1px solid #f59e0b !important;
+            font-weight: 800 !important;
+            letter-spacing: 0.06em !important;
+            box-shadow: 0 2px 10px rgba(245, 158, 11, 0.35) !important;
+            text-shadow: none !important;
+        }
+
+        /* VIP Avatar */
+        .member-card-avatar.is-vip-avatar {
+            border-color: #f59e0b !important;
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.35) !important;
+            background: linear-gradient(135deg, rgba(254, 243, 199, 0.2), rgba(245, 158, 11, 0.1)) !important;
+        }
+
+        /* VIP Role Pill */
+        .member-card-role-pill.is-vip-pill {
+            color: #92400e !important;
+            background: rgba(245, 158, 11, 0.12) !important;
+            border: 1px solid rgba(245, 158, 11, 0.28) !important;
+            font-weight: 700 !important;
+        }
+
+        .dark-mode .member-card-role-pill.is-vip-pill {
+            color: #fde68a !important;
+            background: rgba(245, 158, 11, 0.18) !important;
+            border-color: rgba(245, 158, 11, 0.38) !important;
+        }
+
+        /* VIP Verification Tag */
+        .verification-tag.is-vip-verification {
+            color: #d97706 !important;
+            font-weight: 700 !important;
+        }
+
+        .dark-mode .verification-tag.is-vip-verification {
+            color: #fbbf24 !important;
+        }
+
+        /* VIP ID Tag */
+        .member-vip-id {
+            color: #92400e;
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.25);
+            border-radius: 6px;
+            padding: 2px 8px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+        }
+
+        .dark-mode .member-vip-id {
+            color: #fde68a;
+            background: rgba(245, 158, 11, 0.16);
+            border-color: rgba(245, 158, 11, 0.35);
+        }
+
+        /* VIP Watermark Hologram */
+        .vip-card-watermark {
+            position: absolute;
+            right: 18px;
+            bottom: 8px;
+            font-size: 5.5rem;
+            color: rgba(245, 158, 11, 0.05);
+            pointer-events: none;
+            transform: rotate(-12deg);
+            z-index: 0;
+            transition: color 0.3s ease;
+        }
+
+        .dark-mode .vip-card-watermark {
+            color: rgba(245, 158, 11, 0.08);
+        }
+
         /* Header */
         .member-card-header {
             display: flex;
@@ -506,37 +620,37 @@
         {% set is_expert_member = member.has_role('expert') %}
         {% set is_premium_member = member.is_premium %}
         
-        <div class="executive-member-card">
+        <div class="executive-member-card {% if is_premium_member %}is-vip-pass{% endif %}">
             <!-- Header -->
-            <div class="member-card-header" style="{% if is_admin_member %}background: linear-gradient(135deg, #b45309, #d97706, #dc2626);{% elif is_expert_member %}background: linear-gradient(135deg, #065f46, #059669, #0284c7);{% elif is_premium_member %}background: linear-gradient(135deg, #7c3aed, #CF6DFC, #9b72cb);{% endif %}">
+            <div class="member-card-header {% if is_premium_member %}is-vip-header{% endif %}" style="{% if is_admin_member %}background: linear-gradient(135deg, #b45309, #d97706, #dc2626);{% elif is_expert_member %}background: linear-gradient(135deg, #065f46, #059669, #0284c7);{% elif is_premium_member %}background: linear-gradient(135deg, #090d16 0%, #111827 40%, #1e1b4b 75%, #0f172a 100%);{% endif %}">
                 <div class="member-card-brand">
-                    <div class="member-card-logo">
+                    <div class="member-card-logo" {% if is_premium_member %}style="background: rgba(245, 158, 11, 0.2); border: 1.5px solid rgba(251, 191, 36, 0.5); box-shadow: 0 2px 10px rgba(245, 158, 11, 0.35);"{% endif %}>
                         <img src="{{ url_for('static', filename='img/logo.svg', v=static_version) }}"
                              alt="Logo"
                              class="member-card-logo-img">
                     </div>
                     <div>
                         <div class="member-card-project">Agri Expert System</div>
-                        <div class="member-card-sub">
+                        <div class="member-card-sub" {% if is_premium_member %}style="color: #fde68a; font-weight: 600;"{% endif %}>
                             {% if is_admin_member %}
                                 Executive Administrative Pass
                             {% elif is_expert_member %}
                                 Certified Diagnostic Credential
                             {% elif is_premium_member %}
-                                VIP Pro Subscriber Pass
+                                <i class="fas fa-crown mr-1" style="color: #fbbf24;"></i> VIP Pro Executive Member Pass
                             {% else %}
                                 Project Member Card
                             {% endif %}
                         </div>
                     </div>
                 </div>
-                <span class="member-card-badge" style="{% if is_admin_member %}background: #fef3c7; color: #92400e; border: 1px solid #f59e0b;{% elif is_expert_member %}background: #d1fae5; color: #065f46; border: 1px solid #10b981;{% elif is_premium_member %}background: rgba(207, 109, 252, 0.2); color: #CF6DFC; border: 1px solid #CF6DFC;{% endif %}">
+                <span class="member-card-badge {% if is_premium_member %}is-vip-badge{% endif %}" style="{% if is_admin_member %}background: #fef3c7; color: #92400e; border: 1px solid #f59e0b;{% elif is_expert_member %}background: #d1fae5; color: #065f46; border: 1px solid #10b981;{% elif is_premium_member %}background: linear-gradient(135deg, #fef3c7 0%, #fde68a 50%, #fcd34d 100%); color: #78350f; border: 1px solid #f59e0b; font-weight: 800; box-shadow: 0 2px 10px rgba(245, 158, 11, 0.35); text-shadow: none;{% endif %}">
                     {% if is_admin_member %}
                         <i class="fas fa-shield-alt mr-1"></i> {{ rep_label }}
                     {% elif is_expert_member %}
                         <i class="fas fa-certificate mr-1"></i> {{ rep_label }}
                     {% elif is_premium_member %}
-                        <i class="fas fa-crown mr-1"></i> {{ rep_label }}
+                        <i class="fas fa-crown mr-1" style="color: #b45309;"></i> {{ rep_label }}
                     {% else %}
                         {{ rep_label }}
                     {% endif %}
@@ -544,8 +658,13 @@
             </div>
 
             <!-- Body -->
-            <div class="member-card-body">
-                <div class="member-card-avatar" style="{% if is_admin_member %}border-color: #f59e0b; box-shadow: 0 0 16px rgba(245, 158, 11, 0.4);{% elif is_expert_member %}border-color: #10b981; box-shadow: 0 0 16px rgba(16, 185, 129, 0.4);{% elif is_premium_member %}border-color: #CF6DFC; box-shadow: 0 0 18px rgba(207, 109, 252, 0.45);{% endif %}">
+            <div class="member-card-body" style="position: relative;">
+                {% if is_premium_member %}
+                <div class="vip-card-watermark" aria-hidden="true">
+                    <i class="fas fa-crown"></i>
+                </div>
+                {% endif %}
+                <div class="member-card-avatar {% if is_premium_member %}is-vip-avatar{% endif %}" style="{% if is_admin_member %}border-color: #f59e0b; box-shadow: 0 0 16px rgba(245, 158, 11, 0.4);{% elif is_expert_member %}border-color: #10b981; box-shadow: 0 0 16px rgba(16, 185, 129, 0.4);{% elif is_premium_member %}border-color: #f59e0b; box-shadow: 0 0 20px rgba(245, 158, 11, 0.35); background: linear-gradient(135deg, rgba(254, 243, 199, 0.2), rgba(245, 158, 11, 0.1));{% endif %}; position: relative; z-index: 1;">
                     {% if member.avatar_data or member.avatar_path %}
                         <img src="{{ avatar_url(member) }}"
                              alt="{{ member.full_name or member.username }}">
@@ -553,7 +672,7 @@
                         {{ (member.full_name or member.username)[:2]|upper }}
                     {% endif %}
                 </div>
-                <div class="member-card-info">
+                <div class="member-card-info" style="position: relative; z-index: 1;">
                     <div class="member-card-name-row">
                         <span class="member-card-name">{{ member.full_name or member.username }}</span>
                         <span class="member-verified-badge" title="Official Verified Identity">
@@ -562,25 +681,25 @@
                         </span>
                     </div>
                     {% if role_names %}
-                    <div class="member-card-role-pill" style="{% if is_admin_member %}color: #d97706; background: rgba(245, 158, 11, 0.12);{% elif is_expert_member %}color: #059669; background: rgba(16, 185, 129, 0.12);{% elif is_premium_member %}color: #CF6DFC; background: rgba(207, 109, 252, 0.12);{% endif %}">
-                        <i class="{% if is_admin_member %}fas fa-crown{% elif is_expert_member %}fas fa-award{% elif is_premium_member %}fas fa-crown{% else %}fas fa-id-badge{% endif %}"></i>
+                    <div class="member-card-role-pill {% if is_premium_member %}is-vip-pill{% endif %}" style="{% if is_admin_member %}color: #d97706; background: rgba(245, 158, 11, 0.12);{% elif is_expert_member %}color: #059669; background: rgba(16, 185, 129, 0.12);{% elif is_premium_member %}color: #92400e; background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.28); font-weight: 700;{% endif %}">
+                        <i class="{% if is_admin_member %}fas fa-crown{% elif is_expert_member %}fas fa-award{% elif is_premium_member %}fas fa-crown text-warning{% else %}fas fa-id-badge{% endif %}"></i>
                         <span>{{ role_names }}</span>
                     </div>
                     {% endif %}
                     <div class="member-card-meta">
-                        <i class="fas fa-envelope"></i>
+                        <i class="fas fa-envelope" {% if is_premium_member %}style="color: #d97706;"{% endif %}></i>
                         <span>{{ member.email or "No email provided" }}</span>
                     </div>
                     <div class="member-card-meta">
-                        <i class="fas fa-calendar-check"></i>
+                        <i class="fas fa-calendar-check" {% if is_premium_member %}style="color: #d97706;"{% endif %}></i>
                         <span>Joined {{ member.created_at.strftime('%b %d, %Y') }}</span>
                     </div>
                 </div>
             </div>
 
             <!-- Verification Ribbon -->
-            <div class="member-card-verification-row">
-                <div class="verification-tag" style="{% if is_admin_member %}color: #d97706;{% elif is_expert_member %}color: #059669;{% elif is_premium_member %}color: #CF6DFC;{% endif %}">
+            <div class="member-card-verification-row" {% if is_premium_member %}style="background: color-mix(in srgb, var(--admin-card) 90%, rgba(245, 158, 11, 0.1)); border-top-color: rgba(245, 158, 11, 0.25);"{% endif %}>
+                <div class="verification-tag {% if is_premium_member %}is-vip-verification{% endif %}" style="{% if is_admin_member %}color: #d97706;{% elif is_expert_member %}color: #059669;{% elif is_premium_member %}color: #d97706; font-weight: 700;{% endif %}">
                     <i class="{% if is_admin_member %}fas fa-shield-check{% elif is_expert_member %}fas fa-certificate{% elif is_premium_member %}fas fa-crown{% else %}fas fa-check-circle{% endif %}"></i>
                     <span>
                         {% if is_admin_member %}
@@ -594,12 +713,22 @@
                         {% endif %}
                     </span>
                 </div>
-                <div>ID: #AGRI-{% if is_admin_member %}ADM{% elif is_expert_member %}EXP{% elif is_premium_member %}VIP{% else %}REP{% endif %}-{{ "%04d"|format(member.id) }}</div>
+                <div>
+                    {% if is_premium_member %}
+                        <span class="member-vip-id">ID: #AGRI-VIP-{{ "%04d"|format(member.id) }}</span>
+                    {% else %}
+                        ID: #AGRI-{% if is_admin_member %}ADM{% elif is_expert_member %}EXP{% else %}REP{% endif %}-{{ "%04d"|format(member.id) }}
+                    {% endif %}
+                </div>
             </div>
 
             <!-- Footer -->
-            <div class="member-card-footer">
-                Agri Expert System &bull; Official Digital Credentials
+            <div class="member-card-footer" {% if is_premium_member %}style="background: color-mix(in srgb, var(--admin-card) 92%, rgba(245, 158, 11, 0.08)); border-top-color: rgba(245, 158, 11, 0.2);"{% endif %}>
+                {% if is_premium_member %}
+                    <span style="color: #b45309; font-weight: 600;"><i class="fas fa-crown mr-1" style="font-size: 0.7rem; color: #f59e0b;"></i> Agri Expert System VIP Pro &bull; Official Digital Credentials</span>
+                {% else %}
+                    Agri Expert System &bull; Official Digital Credentials
+                {% endif %}
             </div>
         </div>
     </div>
