@@ -65,11 +65,14 @@
                     <div class="fm-team-meta">
                         <span class="fm-team-rank {% if loop.first %}is-lead{% endif %}">{% if current_lang == 'km' and person.rank_kh %}{{ person.rank_kh }}{% else %}{{ person.rank }}{% endif %}</span>
                         <h3 class="fm-team-name">{% if current_lang == 'km' and person.name_kh %}{{ person.name_kh | safe }}{% else %}{{ person.name }}{% endif %}</h3>
-                        {% if person.task %}
-                        <div class="fm-team-task">{% if current_lang == 'km' and person.task_kh %}{{ person.task_kh }}{% else %}{{ person.task }}{% endif %}</div>
-                        {% endif %}
                     </div>
                 </div>
+                {% if person.task %}
+                <div class="fm-team-task-box">
+                    <span class="fm-team-task-label"><i class="fas fa-tasks mr-1"></i>{% if current_lang == 'km' %}ការទទួលខុសត្រូវ{% else %}Role & Contributions{% endif %}</span>
+                    <p class="fm-team-task">{% if current_lang == 'km' and person.task_kh %}{{ person.task_kh }}{% else %}{{ person.task }}{% endif %}</p>
+                </div>
+                {% endif %}
                 <div class="fm-team-divider"></div>
                 <ul class="fm-team-facts">
                     {% if person.student_id %}

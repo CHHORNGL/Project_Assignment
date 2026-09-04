@@ -75,8 +75,8 @@ PROJECT_TEAM = [
     {
         "name": "Mao Seavik",
         "name_kh": "ម៉ៅ&nbsp;សៀវអ៊ិ",
-        "rank": "Team Leader & Backend Lead",
-        "rank_kh": "ប្រធានក្រុម និងស្ថាបត្យករផ្នែកខាងក្រោយ",
+        "rank": "Team Leader",
+        "rank_kh": "ប្រធានក្រុម",
         "photo": "Mao Seavik.jpg",
         "task": "System Architecture, Flask Backend APIs, Rule-Based Diagnosis Engine & Weather Intelligence",
         "task_kh": "ស្ថាបត្យកម្មប្រព័ន្ធ, ការអភិវឌ្ឍ Flask Backend, ប្រព័ន្ធវិភាគរោគវិនិច្ឆ័យផ្អែកលើវិធាន និងសេវាព័ត៌មានអាកាសធាតុ",
@@ -90,8 +90,8 @@ PROJECT_TEAM = [
     {
         "name": "Chea Cheavchorng",
         "name_kh": "ជា&nbsp;ជៀវឈ័ង្ស",
-        "rank": "Frontend & UI/UX Developer",
-        "rank_kh": "អ្នកអភិវឌ្ឍន៍ Frontend និង UI/UX",
+        "rank": "Frontend & UI/UX",
+        "rank_kh": "Frontend & UI/UX",
         "photo": "Chea Cheavchorng.jpeg",
         "task": "Farmer Web Dashboard, React Diagnosis Wizard, Theme Management & Responsive UI Design",
         "task_kh": "ផ្ទាំងគ្រប់គ្រងកសិករ, កម្មវិធី React Wizard សម្រាប់វិភាគជំងឺ, ការគ្រប់គ្រង Theme និងការរចនា UI",
@@ -105,8 +105,8 @@ PROJECT_TEAM = [
     {
         "name": "Nov Panha",
         "name_kh": "នូវ&nbsp;បញ្ញា",
-        "rank": "Mobile Application Developer",
-        "rank_kh": "អ្នកអភិវឌ្ឍន៍កម្មវិធីទូរស័ព្ទ",
+        "rank": "Mobile Developer",
+        "rank_kh": "Mobile Developer",
         "photo": "Nov Panha.png",
         "task": "Flutter Cross-Platform Mobile App, Mobile API Integration & Offline Caching",
         "task_kh": "ការអភិវឌ្ឍកម្មវិធីទូរស័ព្ទ Flutter, ការតភ្ជាប់ API និងការរក្សាទុកទិន្នន័យក្រៅបណ្ដាញ",
@@ -120,8 +120,8 @@ PROJECT_TEAM = [
     {
         "name": "Pich Rachana",
         "name_kh": "ពេជ្រ&nbsp;រចនា",
-        "rank": "Knowledge Base & QA Specialist",
-        "rank_kh": "អ្នកស្រាវជ្រាវទិន្នន័យកសិកម្ម និងត្រួតពិនិត្យគុណភាព",
+        "rank": "Data & QA",
+        "rank_kh": "Data & QA",
         "photo": "Pich Rachana.jpeg",
         "task": "Crop Disease & Symptom Rule Dataset Curation, Khmer Translation Matrix & System Testing",
         "task_kh": "ការស្រាវជ្រាវនិងរៀបចំទិន្នន័យជំងឺដំណាំ និងរោគសញ្ញា, ការបកប្រែភាសាខ្មែរ និងការធ្វើតេស្តប្រព័ន្ធ",
