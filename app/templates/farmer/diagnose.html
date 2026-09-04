@@ -1,611 +1,370 @@
 {% extends "layouts/farmer_shell.html" %}
-{% block title %}Diagnose Crop{% endblock %}
+{% block title %}{{ t("diagnose_title") }}{% endblock %}
 
 {% block content %}
 {% set is_km = (current_lang == 'km') %}
 
-<style>
-/* 📱 iOS/Mobile App Style Diagnostics */
-.diagnose-container {
-    max-width: 768px;
-    margin: 0 auto;
-    padding: 0 16px 100px 16px; /* Space for sticky footer */
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-}
-
-.section-title {
-    font-size: 0.9rem;
-    font-weight: 700;
-    color: #475569;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin: 32px 0 12px 4px;
-}
-.dark-mode .section-title {
-    color: #94a3b8;
-}
-
-/* Crop Grid */
-.crop-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-    gap: 12px;
-}
-
-.crop-card {
-    background: #ffffff;
-    border-radius: 16px;
-    padding: 16px 8px;
-    text-align: center;
-    border: 2px solid transparent;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-    cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-}
-.dark-mode .crop-card {
-    background: #1e293b;
-    box-shadow: none;
-}
-.crop-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-}
-.crop-card.selected {
-    border-color: #6366f1;
-    background: rgba(99, 102, 241, 0.05);
-}
-.dark-mode .crop-card.selected {
-    background: rgba(99, 102, 241, 0.15);
-}
-.crop-emoji {
-    font-size: 2.2rem;
-    line-height: 1;
-}
-.crop-name {
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: #1e293b;
-    line-height: 1.2;
-}
-.dark-mode .crop-name {
-    color: #f1f5f9;
-}
-.crop-card.selected .crop-name {
-    color: #6366f1;
-}
-
-/* Search Bar */
-.search-bar {
-    background: #f1f5f9;
-    border-radius: 12px;
-    padding: 12px 16px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 16px;
-}
-.dark-mode .search-bar {
-    background: #1e293b;
-}
-.search-bar i {
-    color: #94a3b8;
-}
-.search-bar input {
-    border: none;
-    background: transparent;
-    width: 100%;
-    outline: none;
-    font-size: 0.95rem;
-    color: #1e293b;
-}
-.dark-mode .search-bar input {
-    color: #f1f5f9;
-}
-.search-bar input::placeholder {
-    color: #94a3b8;
-}
-
-/* Symptom Chips */
-.symptom-chips-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-}
-.symptom-chip {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    color: #475569;
-    padding: 10px 16px;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-    user-select: none;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.02);
-}
-.dark-mode .symptom-chip {
-    background: #1e293b;
-    border-color: #334155;
-    color: #cbd5e1;
-}
-.symptom-chip:hover {
-    border-color: #cbd5e1;
-}
-.symptom-chip.selected, .dark-mode .symptom-chip.selected {
-    background: #6366f1 !important;
-    border-color: #6366f1 !important;
-    color: #ffffff !important;
-    box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3) !important;
-}
-
-.transition-transform {
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Additional Notes */
-.notes-textarea {
-    width: 100%;
-    border: 1px solid #e2e8f0;
-    border-radius: 16px;
-    padding: 16px;
-    font-size: 0.95rem;
-    outline: none;
-    transition: border-color 0.2s;
-    background: #ffffff;
-    resize: none;
-}
-.dark-mode .notes-textarea {
-    background: #1e293b;
-    border-color: #334155;
-    color: #f1f5f9;
-}
-.notes-textarea:focus {
-    border-color: #6366f1;
-}
-
-/* Sticky Action Bar */
-.action-bar {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: 16px 20px;
-    background: rgba(255, 255, 255, 0.9);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-top: 1px solid #e2e8f0;
-    z-index: 100;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-.dark-mode .action-bar {
-    background: rgba(15, 23, 42, 0.9);
-    border-top-color: #1e293b;
-}
-.symptoms-count {
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: #475569;
-}
-.dark-mode .symptoms-count {
-    color: #cbd5e1;
-}
-.symptoms-count span {
-    background: #6366f1;
-    color: #ffffff;
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-size: 0.8rem;
-    margin-right: 6px;
-}
-.btn-diagnose {
-    background: linear-gradient(135deg, #6366f1, #4f46e5);
-    color: white;
-    font-size: 1rem;
-    font-weight: 600;
-    padding: 12px 28px;
-    border-radius: 24px;
-    border: none;
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
-    cursor: pointer;
-    transition: transform 0.2s;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-}
-.btn-diagnose:hover {
-    transform: translateY(-2px);
-}
-.btn-diagnose:disabled {
-    background: #cbd5e1;
-    box-shadow: none;
-    cursor: not-allowed;
-    transform: none;
-}
-.dark-mode .btn-diagnose:disabled {
-    background: #334155;
-    color: #94a3b8;
-}
-
-/* Hide symptoms section initially */
-#symptoms-container {
-    display: none;
-    animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-}
-@keyframes slideUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-</style>
-
-<div class="diagnose-container">
-    <div class="d-flex justify-content-between align-items-center mb-2 mt-2">
-        <h4 class="mb-0 font-weight-bold text-dark dark-mode-text-white">{{ t("diagnose_title") }}</h4>
-        <a href="{{ url_for('farmer.dashboard') }}" class="btn btn-sm btn-light rounded-pill shadow-sm text-muted">
-            <i class="fas fa-times"></i>
-        </a>
+<div class="fm-page fm-narrow-form">
+    <div class="fm-head">
+        <div class="fm-head-text">
+            <span class="fm-head-eyebrow">{{ t("new_diagnosis") }}</span>
+            <h1 class="fm-head-title">{{ t("diagnose_title") }}</h1>
+            <p class="fm-head-sub">{{ t("diagnose_sub") }}</p>
+        </div>
+        <div class="fm-head-actions">
+            <a href="{{ url_for('farmer.dashboard') }}" class="fm-btn fm-btn-secondary fm-btn-sm">
+                {{ t("back_to_dashboard") }}
+            </a>
+        </div>
     </div>
-    <p class="text-muted small mb-4">{{ t("diagnose_sub") }}</p>
 
     <form id="diagnosis-form" method="POST" enctype="multipart/form-data">
         <input type="hidden" name="crop_id" id="hidden-crop-id" value="{% if selected_crop_id %}{{ selected_crop_id }}{% endif %}">
         <input type="hidden" name="symptoms" id="hidden-symptoms" value="">
 
-        <!-- CROP SELECTION -->
-        <div class="section-title">1. {% if is_km %}ជ្រើសរើសដំណាំ{% else %}Select Affected Crop{% endif %}</div>
-        
-        <div class="search-bar">
-            <i class="fas fa-search"></i>
-            <input type="text" id="crop-search-input" placeholder="{% if is_km %}ស្វែងរកដំណាំ...{% else %}Search crops...{% endif %}">
-        </div>
+        {# ── Step 1: crop ── #}
+        <section class="fm-section">
+            <h2 class="fm-step">
+                <span class="fm-step-n">1</span>
+                {% if is_km %}ជ្រើសរើសដំណាំ{% else %}Select affected crop{% endif %}
+            </h2>
 
-        <div class="crop-grid mb-4">
-            {% for crop in crops %}
-            {% set crop_name_lower = (crop.name or "")|lower %}
-            {% set is_rice = "rice" in crop_name_lower or "paddy" in crop_name_lower or "ស្រូវ" in (crop.name_kh or "") %}
-            {% set is_corn = "corn" in crop_name_lower or "maize" in crop_name_lower or "ពោត" in (crop.name_kh or "") %}
-            {% set is_cassava = "cassava" in crop_name_lower or "manioc" in crop_name_lower or "ដំឡូងមី" in (crop.name_kh or "") %}
-            {% set is_potato = "potato" in crop_name_lower or "ដំឡូងបារាំង" in (crop.name_kh or "") %}
-            {% set is_banana = "banana" in crop_name_lower or "ចេក" in (crop.name_kh or "") %}
-            {% set is_mango = "mango" in crop_name_lower or "ស្វាយ" in (crop.name_kh or "") %}
-            {% set is_tomato = "tomato" in crop_name_lower or "ប៉េងប៉ោះ" in (crop.name_kh or "") %}
-            {% set is_cucumber = "cucumber" in crop_name_lower or "ត្រសក់" in (crop.name_kh or "") %}
-            {% set is_pepper = "pepper" in crop_name_lower or "chili" in crop_name_lower or "chilli" in crop_name_lower or "ម្ទេស" in (crop.name_kh or "") %}
-            {% set is_veg = "vegetable" in crop_name_lower or "eggplant" in crop_name_lower or "បន្លែ" in (crop.name_kh or "") %}
-            {% set is_soy = "soy" in crop_name_lower or "bean" in crop_name_lower or "legume" in crop_name_lower or "សណ្តែក" in (crop.name_kh or "") %}
-            
-            {% if crop.emoji %}
-                {% set crop_emoji = crop.emoji %}
-            {% elif is_rice %}{% set crop_emoji = "🌾" %}
-            {% elif is_corn %}{% set crop_emoji = "🌽" %}
-            {% elif is_cassava %}{% set crop_emoji = "🍠" %}
-            {% elif is_potato %}{% set crop_emoji = "🥔" %}
-            {% elif is_tomato %}{% set crop_emoji = "🍅" %}
-            {% elif is_cucumber %}{% set crop_emoji = "🥒" %}
-            {% elif is_banana %}{% set crop_emoji = "🍌" %}
-            {% elif is_mango %}{% set crop_emoji = "🥭" %}
-            {% elif is_pepper %}{% set crop_emoji = "🌶️" %}
-            {% elif is_veg %}{% set crop_emoji = "🥦" %}
-            {% elif is_soy %}{% set crop_emoji = "🫘" %}
-            {% else %}{% set crop_emoji = "🌿" %}{% endif %}
-
-            <div class="crop-card {% if selected_crop_id and crop.id == selected_crop_id %}selected{% endif %}" data-crop-id="{{ crop.id }}">
-                <div class="crop-emoji">{{ crop_emoji }}</div>
-                <div class="crop-name">
-                    {% if current_lang == "km" and crop.name_kh %}{{ crop.name_kh }}{% else %}{{ crop.name }}{% endif %}
-                </div>
-                <div class="crop-search-text d-none">{{ crop.name|lower }} {{ (crop.name_kh or "")|lower }}</div>
-            </div>
-            {% endfor %}
-        </div>
-
-        <!-- SYMPTOMS SELECTION (Hidden until crop selected) -->
-        <div id="symptoms-container">
-            <div class="section-title">2. {% if is_km %}រោគសញ្ញាដែលសង្កេតឃើញ{% else %}Observed Symptoms{% endif %}</div>
-            
-            <div class="search-bar">
+            <span class="fm-search fm-search-block">
                 <i class="fas fa-search"></i>
-                <input type="text" id="symptom-search-input" placeholder="{% if is_km %}ស្វែងរករោគសញ្ញាទាំងអស់...{% else %}Search all symptoms...{% endif %}">
+                <input type="search"
+                       class="fm-input"
+                       id="crop-search-input"
+                       placeholder="{% if is_km %}ស្វែងរកដំណាំ...{% else %}Search crops...{% endif %}"
+                       aria-label="{% if is_km %}ស្វែងរកដំណាំ{% else %}Search crops{% endif %}">
+            </span>
+
+            <div class="fm-tile-grid" role="group" aria-label="{% if is_km %}ដំណាំ{% else %}Crops{% endif %}">
+                {% for crop in crops %}
+                {% set crop_name_lower = (crop.name or "")|lower %}
+                {% set is_rice = "rice" in crop_name_lower or "paddy" in crop_name_lower or "ស្រូវ" in (crop.name_kh or "") %}
+                {% set is_corn = "corn" in crop_name_lower or "maize" in crop_name_lower or "ពោត" in (crop.name_kh or "") %}
+                {% set is_cassava = "cassava" in crop_name_lower or "manioc" in crop_name_lower or "ដំឡូងមី" in (crop.name_kh or "") %}
+                {% set is_potato = "potato" in crop_name_lower or "ដំឡូងបារាំង" in (crop.name_kh or "") %}
+                {% set is_banana = "banana" in crop_name_lower or "ចេក" in (crop.name_kh or "") %}
+                {% set is_mango = "mango" in crop_name_lower or "ស្វាយ" in (crop.name_kh or "") %}
+                {% set is_tomato = "tomato" in crop_name_lower or "ប៉េងប៉ោះ" in (crop.name_kh or "") %}
+                {% set is_cucumber = "cucumber" in crop_name_lower or "ត្រសក់" in (crop.name_kh or "") %}
+                {% set is_pepper = "pepper" in crop_name_lower or "chili" in crop_name_lower or "chilli" in crop_name_lower or "ម្ទេស" in (crop.name_kh or "") %}
+                {% set is_veg = "vegetable" in crop_name_lower or "eggplant" in crop_name_lower or "បន្លែ" in (crop.name_kh or "") %}
+                {% set is_soy = "soy" in crop_name_lower or "bean" in crop_name_lower or "legume" in crop_name_lower or "សណ្តែក" in (crop.name_kh or "") %}
+
+                {% if crop.emoji %}{% set crop_emoji = crop.emoji %}
+                {% elif is_rice %}{% set crop_emoji = "🌾" %}
+                {% elif is_corn %}{% set crop_emoji = "🌽" %}
+                {% elif is_cassava %}{% set crop_emoji = "🍠" %}
+                {% elif is_potato %}{% set crop_emoji = "🥔" %}
+                {% elif is_tomato %}{% set crop_emoji = "🍅" %}
+                {% elif is_cucumber %}{% set crop_emoji = "🥒" %}
+                {% elif is_banana %}{% set crop_emoji = "🍌" %}
+                {% elif is_mango %}{% set crop_emoji = "🥭" %}
+                {% elif is_pepper %}{% set crop_emoji = "🌶️" %}
+                {% elif is_veg %}{% set crop_emoji = "🥦" %}
+                {% elif is_soy %}{% set crop_emoji = "🫘" %}
+                {% else %}{% set crop_emoji = "🌿" %}{% endif %}
+
+                {% set crop_display = crop.name_kh if is_km and crop.name_kh else crop.name %}
+                {% set is_selected = selected_crop_id and crop.id == selected_crop_id %}
+
+                {# A real button, so the grid is reachable by keyboard and the
+                   selected state is announced. The old markup used bare divs. #}
+                <button type="button"
+                        class="fm-tile{% if is_selected %} is-selected{% endif %}"
+                        data-crop-id="{{ crop.id }}"
+                        data-search="{{ (crop.name or '')|lower }} {{ (crop.name_kh or '')|lower }}"
+                        aria-pressed="{{ 'true' if is_selected else 'false' }}">
+                    <span class="fm-tile-emoji" aria-hidden="true">{{ crop_emoji }}</span>
+                    <span class="fm-tile-name">{{ crop_display }}</span>
+                </button>
+                {% endfor %}
             </div>
+        </section>
 
-            <div id="symptoms-categories">
-                <!-- LEAVES -->
-                <div class="symptom-category-group">
-                    <h6 class="category-header text-success font-weight-bold mt-4 mb-3 d-flex justify-content-between align-items-center" onclick="toggleCategory('category-2', this)" style="cursor: pointer;">
-                        <span><i class="fas fa-leaf mr-2"></i>{% if is_km %}លើស្លឹក{% else %}Leaves{% endif %}</span>
-                        <i class="fas fa-chevron-down transition-transform"></i>
-                    </h6>
-                    <div class="symptom-chips-container" id="category-2"></div>
-                </div>
+        {# ── Step 2 + 3: revealed once a crop is chosen ── #}
+        <div id="symptoms-container" hidden>
+            <section class="fm-section">
+                <h2 class="fm-step">
+                    <span class="fm-step-n">2</span>
+                    {% if is_km %}រោគសញ្ញាដែលសង្កេតឃើញ{% else %}Observed symptoms{% endif %}
+                </h2>
 
-                <!-- STEMS -->
-                <div class="symptom-category-group">
-                    <h6 class="category-header text-success font-weight-bold mt-4 mb-3 d-flex justify-content-between align-items-center" onclick="toggleCategory('category-3', this)" style="cursor: pointer;">
-                        <span><i class="fas fa-seedling mr-2"></i>{% if is_km %}លើដើម និងមែក{% else %}Stems & Branches{% endif %}</span>
-                        <i class="fas fa-chevron-down transition-transform"></i>
-                    </h6>
-                    <div class="symptom-chips-container" id="category-3"></div>
-                </div>
+                <span class="fm-search fm-search-block">
+                    <i class="fas fa-search"></i>
+                    <input type="search"
+                           class="fm-input"
+                           id="symptom-search-input"
+                           placeholder="{% if is_km %}ស្វែងរករោគសញ្ញា...{% else %}Search symptoms...{% endif %}"
+                           aria-label="{% if is_km %}ស្វែងរករោគសញ្ញា{% else %}Search symptoms{% endif %}">
+                </span>
 
-                <!-- FRUIT / FLOWERS -->
-                <div class="symptom-category-group">
-                    <h6 class="category-header text-success font-weight-bold mt-4 mb-3 d-flex justify-content-between align-items-center" onclick="toggleCategory('category-4', this)" style="cursor: pointer;">
-                        <span><i class="fas fa-apple-alt mr-2"></i>{% if is_km %}លើផ្កា និងផ្លែ{% else %}Fruit & Flowers{% endif %}</span>
-                        <i class="fas fa-chevron-down transition-transform"></i>
-                    </h6>
-                    <div class="symptom-chips-container" id="category-4"></div>
+                <div id="symptoms-categories">
+                    {% set groups = [
+                        (2, "fa-leaf",      "លើស្លឹក",                  "Leaves"),
+                        (3, "fa-seedling",  "លើដើម និងមែក",             "Stems & branches"),
+                        (4, "fa-apple-alt", "លើផ្កា និងផ្លែ",            "Fruit & flowers"),
+                        (5, "fa-bug",       "ផ្សេងៗ (ឫស, សត្វល្អិត)",   "Roots & general pests")
+                    ] %}
+                    {% for gid, gicon, gkh, gen in groups %}
+                    <div class="fm-group" data-group="{{ gid }}">
+                        <button type="button"
+                                class="fm-group-head"
+                                data-target="category-{{ gid }}"
+                                aria-expanded="true"
+                                aria-controls="category-{{ gid }}">
+                            <span><i class="fas {{ gicon }}"></i>{% if is_km %}{{ gkh }}{% else %}{{ gen }}{% endif %}</span>
+                            <i class="fas fa-chevron-down fm-group-caret" aria-hidden="true"></i>
+                        </button>
+                        <div class="fm-chip-group" id="category-{{ gid }}"></div>
+                    </div>
+                    {% endfor %}
                 </div>
+            </section>
 
-                <!-- OTHERS -->
-                <div class="symptom-category-group">
-                    <h6 class="category-header text-success font-weight-bold mt-4 mb-3 d-flex justify-content-between align-items-center" onclick="toggleCategory('category-5', this)" style="cursor: pointer;">
-                        <span><i class="fas fa-bug mr-2"></i>{% if is_km %}ផ្សេងៗ (ឫស, សត្វល្អិត){% else %}Roots & General Pests{% endif %}</span>
-                        <i class="fas fa-chevron-down transition-transform"></i>
-                    </h6>
-                    <div class="symptom-chips-container" id="category-5"></div>
-                </div>
-            </div>
+            <section class="fm-section">
+                <h2 class="fm-step">
+                    <span class="fm-step-n">3</span>
+                    {% if is_km %}រូបភាព និងចំណាំបន្ថែម{% else %}Photos & notes{% endif %}
+                    <span class="fm-step-hint">{% if is_km %}មិនតម្រូវ{% else %}Optional{% endif %}</span>
+                </h2>
 
-            <!-- ADDITIONAL NOTES & IMAGE -->
-            <div class="section-title mt-5">3. {% if is_km %}រូបភាព និងចំណាំបន្ថែម{% else %}Images & Additional Notes{% endif %}</div>
-            
-            <div class="mb-3">
-                <label class="form-label text-muted small"><i class="fas fa-camera mr-1"></i> {% if is_km %}រូបថតរោគសញ្ញា (មិនតម្រូវ){% else %}Upload Photos (Optional, Multiple allowed){% endif %}</label>
-                <div class="custom-file">
-                    <input type="file" class="custom-file-input" id="diagnosis_image" name="diagnosis_image" accept="image/*" multiple onchange="previewImages(this)">
-                    <label class="custom-file-label" for="diagnosis_image" id="diagnosis_image_label" style="border-radius: 16px;">{% if is_km %}ជ្រើសរើសរូបភាព...{% else %}Choose images...{% endif %}</label>
-                </div>
-                <div id="image-preview-container" class="mt-3 d-flex flex-wrap gap-2" style="display: none; gap: 8px;">
-                    <!-- Thumbnails will be injected here -->
-                </div>
-            </div>
+                <input type="file"
+                       class="fm-file-input"
+                       id="diagnosis_image"
+                       name="diagnosis_image"
+                       accept="image/*"
+                       multiple>
+                <label class="fm-file" for="diagnosis_image" id="diagnosis_image_label">
+                    <i class="fas fa-camera"></i>
+                    <span>{% if is_km %}ជ្រើសរើសរូបភាព...{% else %}Choose images...{% endif %}</span>
+                </label>
+                <div class="fm-thumb-grid" id="image-preview-container" hidden></div>
 
-            <textarea id="additional-notes" class="notes-textarea" rows="3" placeholder="{% if is_km %}រៀបរាប់បន្ថែមពីស្ថានភាពដំណាំ ឬសញ្ញាដែលសង្កេតឃើញ...{% else %}Describe any other symptoms or context here...{% endif %}"></textarea>
+                <div class="fm-field" style="margin-top: 1rem;">
+                    <label class="fm-label" for="additional-notes">
+                        {% if is_km %}ចំណាំបន្ថែម{% else %}Additional notes{% endif %}
+                    </label>
+                    <textarea id="additional-notes"
+                              class="fm-textarea"
+                              rows="3"
+                              placeholder="{% if is_km %}រៀបរាប់បន្ថែមពីស្ថានភាពដំណាំ...{% else %}Describe any other symptoms or context...{% endif %}"></textarea>
+                </div>
+            </section>
         </div>
 
-        <!-- STICKY ACTION BAR -->
-        <div class="action-bar">
-            <div class="symptoms-count">
-                <span id="selected-count">0</span> {% if is_km %}រោគសញ្ញា{% else %}Selected{% endif %}
+        {# Sticky rather than fixed, so it docks to the form instead of
+           floating over unrelated page content. #}
+        <div class="fm-actionbar">
+            <div class="fm-actionbar-inner">
+                <div class="fm-actionbar-count" aria-live="polite">
+                    <b id="selected-count">0</b>{% if is_km %}រោគសញ្ញា{% else %}selected{% endif %}
+                </div>
+                <button type="button" class="fm-btn fm-btn-primary" id="btn-submit" disabled>
+                    <i class="fas fa-stethoscope"></i>{{ t("diagnose_now") }}
+                </button>
             </div>
-            <button type="button" class="btn-diagnose" id="btn-submit" disabled>
-                <i class="fas fa-stethoscope"></i> {{ t("diagnose_now") }}
-            </button>
         </div>
     </form>
 </div>
-
 {% endblock %}
 
 {% block scripts %}
 <script>
 (function () {
-window.toggleCategory = function(categoryId, headerElement) {
-        const container = document.getElementById(categoryId);
-        const icon = headerElement.querySelector('i.fa-chevron-down');
-        
-        if (container.style.display === 'none') {
-            container.style.display = 'flex';
-            icon.style.transform = 'rotate(0deg)';
-        } else {
-            container.style.display = 'none';
-            icon.style.transform = 'rotate(-90deg)';
-        }
-    };
-
-    window.previewImages = function(input) {
-        const container = document.getElementById('image-preview-container');
-        const label = document.getElementById('diagnosis_image_label');
-        
-        container.innerHTML = ''; // clear existing
-        
-        if (input.files && input.files.length > 0) {
-            container.style.display = 'flex';
-            const fileCount = input.files.length;
-            label.textContent = isKm ? `${fileCount} រូបភាពបានជ្រើសរើស` : `${fileCount} images selected`;
-            
-            Array.from(input.files).forEach(file => {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const img = document.createElement('img');
-                    img.src = e.target.result;
-                    img.style.width = '80px';
-                    img.style.height = '80px';
-                    img.style.objectFit = 'cover';
-                    img.style.borderRadius = '8px';
-                    img.style.border = '1px solid #e2e8f0';
-                    container.appendChild(img);
-                }
-                reader.readAsDataURL(file);
-            });
-        } else {
-            container.style.display = 'none';
-            label.textContent = isKm ? "ជ្រើសរើសរូបភាព..." : "Choose images...";
-        }
-    };
+    const isKm = {{ 'true' if is_km else 'false' }};
 
     const cropsData = {
         {% for crop_id, symptoms in crop_symptoms.items() %}
             "{{ crop_id }}": [
                 {% for s in symptoms %}
-                    {
-                        "id": {{ s.id }},
-                        "name": "{{ s.name|escape }}",
-                        "name_kh": "{{ (s.name_kh or s.name)|escape }}"
-                    }{% if not loop.last %},{% endif %}
+                    {"id": {{ s.id }}, "name": "{{ s.name|escape }}", "name_kh": "{{ (s.name_kh or s.name)|escape }}"}{% if not loop.last %},{% endif %}
                 {% endfor %}
             ]{% if not loop.last %},{% endif %}
         {% endfor %}
     };
 
-    console.log("LANG: '{{ current_lang }}'");
-    const isKm = {{ 'true' if current_lang == 'km' else 'false' }};
-    let selectedCropId = document.getElementById("hidden-crop-id").value;
-    const selectedSymptoms = new Set();
-    const btnSubmit = document.getElementById("btn-submit");
+    const form         = document.getElementById("diagnosis-form");
+    const hiddenCrop   = document.getElementById("hidden-crop-id");
+    const hiddenSymp   = document.getElementById("hidden-symptoms");
+    const sympWrap     = document.getElementById("symptoms-container");
+    const sympCats     = document.getElementById("symptoms-categories");
+    const notes        = document.getElementById("additional-notes");
+    const countEl      = document.getElementById("selected-count");
+    const btnSubmit    = document.getElementById("btn-submit");
+    const fileInput    = document.getElementById("diagnosis_image");
+    const fileLabel    = document.getElementById("diagnosis_image_label");
+    const thumbs       = document.getElementById("image-preview-container");
 
-    function getSymptomCategory(name, nameKh) {
-        const n = (name || '').toLowerCase();
-        const kh = nameKh || '';
-        if (n.includes('leaf') || n.includes('leaves') || n.includes('spot') || n.includes('yellow') || n.includes('chlorosis') || n.includes('rust') || n.includes('streak') || n.includes('blast') || n.includes('blight') || n.includes('curl') || n.includes('mildew') || kh.includes('ស្លឹក')) return 2;
-        if (n.includes('stem') || n.includes('stalk') || n.includes('sheath') || n.includes('canker') || n.includes('rot') || kh.includes('ដើម') || kh.includes('ស្រទប')) return 3;
-        if (n.includes('fruit') || n.includes('grain') || n.includes('pod') || n.includes('flower') || n.includes('seed') || n.includes('panicle') || n.includes('ear') || kh.includes('ផ្លែ') || kh.includes('ផ្កា') || kh.includes('គ្រាប់') || kh.includes('កួរ') || kh.includes('ផ្លែផ្កា')) return 4;
+    let selectedCropId = hiddenCrop.value;
+    const selected = new Set();
+
+    function categoryOf(name, nameKh) {
+        const n = (name || "").toLowerCase();
+        const kh = nameKh || "";
+        if (n.includes("leaf") || n.includes("leaves") || n.includes("spot") || n.includes("yellow") ||
+            n.includes("chlorosis") || n.includes("rust") || n.includes("streak") || n.includes("blast") ||
+            n.includes("blight") || n.includes("curl") || n.includes("mildew") || kh.includes("ស្លឹក")) return 2;
+        if (n.includes("stem") || n.includes("stalk") || n.includes("sheath") || n.includes("canker") ||
+            n.includes("rot") || kh.includes("ដើម") || kh.includes("ស្រទប")) return 3;
+        if (n.includes("fruit") || n.includes("grain") || n.includes("pod") || n.includes("flower") ||
+            n.includes("seed") || n.includes("panicle") || n.includes("ear") || kh.includes("ផ្លែ") ||
+            kh.includes("ផ្កា") || kh.includes("គ្រាប់") || kh.includes("កួរ")) return 4;
         return 5;
+    }
+
+    function syncState() {
+        const list = Array.from(selected);
+        const note = notes.value.trim();
+        countEl.textContent = selected.size;
+        hiddenSymp.value = note ? list.concat([note]).join(", ") : list.join(", ");
+        btnSubmit.disabled = (selected.size === 0 && note === "");
     }
 
     function renderSymptoms(cropId) {
         for (let i = 2; i <= 5; i++) {
-            document.getElementById(`category-${i}`).innerHTML = "";
+            document.getElementById("category-" + i).innerHTML = "";
         }
 
-        const symptoms = cropsData[cropId] || [];
-        if (!symptoms.length) {
-            document.getElementById("symptoms-categories").innerHTML = `<div class="text-center text-muted p-4">${isKm ? "មិនមានទិន្នន័យរោគសញ្ញាទេ" : "No symptom data available."}</div>`;
+        const rows = cropsData[cropId] || [];
+        if (!rows.length) {
+            sympCats.innerHTML =
+                '<div class="fm-empty"><div class="fm-empty-title">' +
+                (isKm ? "មិនមានទិន្នន័យរោគសញ្ញាទេ" : "No symptom data available.") +
+                "</div></div>";
             return;
         }
 
-        symptoms.forEach(s => {
-            const cat = getSymptomCategory(s.name, s.name_kh);
-            const container = document.getElementById(`category-${cat}`);
-            const isChecked = selectedSymptoms.has(s.name);
+        rows.forEach(s => {
             const text = (isKm && s.name_kh) ? s.name_kh : s.name;
-            const safeSearch = text ? text.toLowerCase() : "";
-            
-            const chip = document.createElement("div");
-            chip.className = `symptom-chip ${isChecked ? 'selected' : ''}`;
+            const chip = document.createElement("button");
+            chip.type = "button";
+            chip.className = "fm-chip";
             chip.dataset.symptomName = s.name;
-            chip.dataset.searchText = safeSearch;
+            chip.dataset.search = (text || "").toLowerCase();
+            chip.setAttribute("aria-pressed", selected.has(s.name) ? "true" : "false");
+            if (selected.has(s.name)) chip.classList.add("is-selected");
             chip.textContent = text || s.name;
-            
+
             chip.addEventListener("click", () => {
-                chip.classList.toggle("selected");
-                if (chip.classList.contains("selected")) {
-                    selectedSymptoms.add(s.name);
-                } else {
-                    selectedSymptoms.delete(s.name);
-                }
-                updateActionState();
+                const on = chip.classList.toggle("is-selected");
+                chip.setAttribute("aria-pressed", on ? "true" : "false");
+                if (on) selected.add(s.name); else selected.delete(s.name);
+                syncState();
             });
-            
-            container.appendChild(chip);
+
+            document.getElementById("category-" + categoryOf(s.name, s.name_kh)).appendChild(chip);
         });
 
-        // Hide empty category headers
-        for (let i = 2; i <= 5; i++) {
-            const container = document.getElementById(`category-${i}`);
-            const header = container.previousElementSibling;
-            if (container.children.length === 0) {
-                header.style.display = 'none';
-            } else {
-                header.style.display = 'flex';
-            }
-        }
+        // Hide groups that ended up with no chips for this crop.
+        document.querySelectorAll(".fm-group").forEach(group => {
+            const box = group.querySelector(".fm-chip-group");
+            group.hidden = box.children.length === 0;
+        });
     }
 
-    function updateActionState() {
-        const count = selectedSymptoms.size;
-        document.getElementById("selected-count").textContent = count;
-        
-        // Update hidden input
-        const list = Array.from(selectedSymptoms);
-        const notes = document.getElementById("additional-notes").value.trim();
-        if (notes) list.push(notes);
-        document.getElementById("hidden-symptoms").value = list.join(", ");
-        
-        // Enable/Disable submit
-        btnSubmit.disabled = (count === 0 && notes === "");
-    }
+    // ---- Crop tiles ----
+    document.querySelectorAll(".fm-tile").forEach(tile => {
+        tile.addEventListener("click", () => {
+            document.querySelectorAll(".fm-tile").forEach(t => {
+                t.classList.remove("is-selected");
+                t.setAttribute("aria-pressed", "false");
+            });
+            tile.classList.add("is-selected");
+            tile.setAttribute("aria-pressed", "true");
 
-    // Crop Click Event
-    document.querySelectorAll(".crop-card").forEach(card => {
-        card.addEventListener("click", () => {
-            document.querySelectorAll(".crop-card").forEach(c => c.classList.remove("selected"));
-            card.classList.add("selected");
-            selectedCropId = card.dataset.cropId;
-            document.getElementById("hidden-crop-id").value = selectedCropId;
-            
-            selectedSymptoms.clear();
-            document.getElementById("symptoms-container").style.display = "block";
-            
-            // Scroll to symptoms smoothly
-            setTimeout(() => {
-                document.getElementById("symptoms-container").scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }, 100);
+            selectedCropId = tile.dataset.cropId;
+            hiddenCrop.value = selectedCropId;
 
+            selected.clear();
+            sympWrap.hidden = false;
             renderSymptoms(selectedCropId);
-            updateActionState();
+            syncState();
+
+            sympWrap.scrollIntoView({ behavior: "smooth", block: "start" });
         });
     });
 
-    // Submit Event
-    btnSubmit.addEventListener("click", () => {
-        if (!selectedCropId) {
-            alert(isKm ? "សូមជ្រើសរើសដំណាំជាមុនសិន!" : "Please select a crop first!");
+    // ---- Collapsible groups ----
+    document.querySelectorAll(".fm-group-head").forEach(head => {
+        head.addEventListener("click", () => {
+            const box = document.getElementById(head.dataset.target);
+            const open = head.getAttribute("aria-expanded") === "true";
+            head.setAttribute("aria-expanded", open ? "false" : "true");
+            box.hidden = open;
+        });
+    });
+
+    // ---- Search ----
+    document.getElementById("crop-search-input").addEventListener("input", e => {
+        const q = e.target.value.toLowerCase().trim();
+        document.querySelectorAll(".fm-tile").forEach(tile => {
+            tile.hidden = q && !tile.dataset.search.includes(q);
+        });
+    });
+
+    document.getElementById("symptom-search-input").addEventListener("input", e => {
+        const q = e.target.value.toLowerCase().trim();
+        document.querySelectorAll(".fm-chip").forEach(chip => {
+            chip.hidden = q && !chip.dataset.search.includes(q);
+        });
+
+        document.querySelectorAll(".fm-group").forEach(group => {
+            const box = group.querySelector(".fm-chip-group");
+            const visible = Array.from(box.children).some(c => !c.hidden);
+            group.hidden = !visible;
+            // Expand matching groups so hits aren't hidden behind a collapsed head.
+            if (visible && q) {
+                group.querySelector(".fm-group-head").setAttribute("aria-expanded", "true");
+                box.hidden = false;
+            }
+        });
+    });
+
+    // ---- Photos ----
+    fileInput.addEventListener("change", () => {
+        const labelText = fileLabel.querySelector("span");
+        thumbs.innerHTML = "";
+
+        if (!fileInput.files || !fileInput.files.length) {
+            thumbs.hidden = true;
+            labelText.textContent = isKm ? "ជ្រើសរើសរូបភាព..." : "Choose images...";
             return;
         }
-        updateActionState();
-        btnSubmit.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${isKm ? "កំពុងវិភាគ..." : "Analyzing..."}`;
-        document.getElementById("diagnosis-form").submit();
-    });
 
-    // Notes typing event
-    document.getElementById("additional-notes").addEventListener("input", updateActionState);
+        const n = fileInput.files.length;
+        thumbs.hidden = false;
+        labelText.textContent = isKm ? (n + " រូបភាពបានជ្រើសរើស") : (n + " image" + (n > 1 ? "s" : "") + " selected");
 
-    // Crop Search Filtering
-    const cropSearchInput = document.getElementById("crop-search-input");
-    cropSearchInput.addEventListener("input", (e) => {
-        const val = e.target.value.toLowerCase().trim();
-        document.querySelectorAll(".crop-card").forEach(card => {
-            const text = card.querySelector(".crop-search-text").textContent;
-            if (!val || text.includes(val)) {
-                card.style.display = "flex";
-            } else {
-                card.style.display = "none";
-            }
+        Array.from(fileInput.files).forEach(file => {
+            const reader = new FileReader();
+            reader.onload = e => {
+                const img = document.createElement("img");
+                img.className = "fm-thumb";
+                img.src = e.target.result;
+                img.alt = file.name;
+                thumbs.appendChild(img);
+            };
+            reader.readAsDataURL(file);
         });
     });
 
-    // Symptom Search Filtering
-    const symptomSearchInput = document.getElementById("symptom-search-input");
-    symptomSearchInput.addEventListener("input", (e) => {
-        const val = e.target.value.toLowerCase().trim();
-        document.querySelectorAll(".symptom-chip").forEach(chip => {
-            const text = chip.dataset.searchText;
-            if (!val || text.includes(val)) {
-                chip.style.display = "inline-block";
-            } else {
-                chip.style.display = "none";
-            }
-        });
-        
-        // Hide empty categories after search and auto-expand if searching
-        for (let i = 2; i <= 5; i++) {
-            const container = document.getElementById(`category-${i}`);
-            const header = container.previousElementSibling;
-            const visibleChips = Array.from(container.children).filter(c => c.style.display !== 'none');
-            
-            if (visibleChips.length > 0) {
-                header.style.display = 'flex';
-                // Auto-expand if the user is typing a search
-                if (val.length > 0 && container.style.display === 'none') {
-                    window.toggleCategory(`category-${i}`, header);
-                }
-            } else {
-                header.style.display = 'none';
-            }
-        }
+    notes.addEventListener("input", syncState);
+
+    btnSubmit.addEventListener("click", () => {
+        if (!selectedCropId) return;
+        syncState();
+        btnSubmit.disabled = true;
+        btnSubmit.innerHTML = '<i class="fas fa-spinner fa-spin"></i>' + (isKm ? "កំពុងវិភាគ..." : "Analyzing...");
+        form.submit();
     });
 
-    // Initialize if crop already selected
     if (selectedCropId) {
-        document.getElementById("symptoms-container").style.display = "block";
+        sympWrap.hidden = false;
         renderSymptoms(selectedCropId);
+        syncState();
     }
 })();
 </script>

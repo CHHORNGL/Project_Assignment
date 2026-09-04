@@ -759,7 +759,7 @@ def api_diagnose_live_evaluation():
             "ok": True,
             "suspects": candidates,
             "best": {
-                "disease_name": result.get("disease_name"),
+                "disease_name": result.get("disease_name") or result.get("diagnosis"),
                 "confidence_percent": result.get("confidence_percent"),
                 "confidence_tier": result.get("confidence_tier")
             }

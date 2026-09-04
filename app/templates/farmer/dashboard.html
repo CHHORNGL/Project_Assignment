@@ -1,5 +1,6 @@
 {% extends "layouts/farmer_shell.html" %}
 {% block title %}{{ t("farmer_dashboard_title") }}{% endblock %}
+
 {% block head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/weather_intelligence.css', v=static_version) }}">
 <script>
@@ -7,137 +8,10 @@
     const welcomePrefix = {{ t("welcome_back") | tojson }};
     const displayName = {% if current_user.is_authenticated %}{{ (current_user.full_name or current_user.username) | tojson }}{% else %}{{ ("Guest User" if current_lang != "km" else "អ្នកប្រើប្រាស់ជាភ្ញៀវ") | tojson }}{% endif %};
     if (welcomePrefix && displayName) {
-        document.title = welcomePrefix + ", " + displayName + "! | AGRI SYSTEM";
+        document.title = welcomePrefix + ", " + displayName + "! | AXE";
     }
 })();
 </script>
-<style>
-/* =========================================
-   CLEAN SEAMLESS CONTINUOUS MARQUEE TICKER
-========================================= */
-.hero-announcement-strip {
-    display: flex;
-    align-items: center;
-    background: rgba(16, 185, 129, 0.05);
-    border: 1px solid rgba(16, 185, 129, 0.16);
-    border-radius: 99px;
-    padding: 6px 14px;
-    margin-bottom: 16px;
-    overflow: hidden;
-    position: relative;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
-    transition: all 0.2s ease;
-}
-.hero-announcement-strip:hover {
-    background: rgba(16, 185, 129, 0.09);
-    border-color: rgba(16, 185, 129, 0.28);
-}
-.hero-announce-badge {
-    background: #10b981;
-    color: #ffffff;
-    font-size: 0.7rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    padding: 3px 10px;
-    border-radius: 99px;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    flex-shrink: 0;
-    box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
-    z-index: 2;
-}
-.hero-announce-badge .beacon-dot {
-    width: 6px;
-    height: 6px;
-    background: #ffffff;
-    border-radius: 50%;
-    animation: beaconPulse 1.8s infinite;
-}
-@keyframes beaconPulse {
-    0%, 100% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.4); opacity: 0.5; }
-}
-.hero-marquee-track {
-    flex: 1;
-    overflow: hidden;
-    position: relative;
-    white-space: nowrap;
-    margin: 0 12px;
-    mask-image: linear-gradient(to right, transparent 0%, black 3%, black 97%, transparent 100%);
-    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 3%, black 97%, transparent 100%);
-}
-.hero-marquee-content {
-    display: inline-flex;
-    white-space: nowrap;
-    animation: smoothMarquee 120s linear infinite;
-}
-.hero-announcement-strip:hover .hero-marquee-content,
-.hero-marquee-content.is-paused {
-    animation-play-state: paused !important;
-}
-@keyframes smoothMarquee {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
-}
-.hero-marquee-item {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 0 28px;
-    color: var(--text-main, #1e293b);
-    font-size: 0.88rem;
-    font-weight: 600;
-    text-decoration: none;
-    cursor: pointer;
-    transition: color 0.15s ease;
-}
-.hero-marquee-item:hover {
-    color: #059669;
-}
-.hero-marquee-item .item-dot {
-    color: #f59e0b;
-    font-size: 0.65rem;
-}
-.hero-announce-actions {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    flex-shrink: 0;
-    z-index: 2;
-}
-.hero-announce-btn {
-    background: transparent;
-    border: none;
-    color: var(--text-muted, #64748b);
-    border-radius: 50%;
-    width: 24px;
-    height: 24px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.7rem;
-    cursor: pointer;
-    transition: all 0.15s ease;
-    padding: 0;
-}
-.hero-announce-btn:hover {
-    background: rgba(0, 0, 0, 0.08);
-    color: var(--text-main, #0f172a);
-}
-.dark-mode .hero-announcement-strip {
-    background: rgba(16, 185, 129, 0.08);
-    border-color: rgba(16, 185, 129, 0.22);
-}
-.dark-mode .hero-marquee-item {
-    color: #f1f5f9;
-}
-.dark-mode .hero-announce-btn:hover {
-    background: rgba(255, 255, 255, 0.12);
-    color: #ffffff;
-}
-</style>
 {% endblock %}
 
 {% block content %}
@@ -145,127 +19,109 @@
 {% set pending = diagnoses|selectattr("status", "equalto", "PENDING")|list|length %}
 {% set approved = diagnoses|selectattr("status", "equalto", "APPROVED")|list|length %}
 {% set rejected = diagnoses|selectattr("status", "equalto", "REJECTED")|list|length %}
+{% set status_rail = {"APPROVED": "fm-row-ok", "PENDING": "fm-row-warn", "REJECTED": "fm-row-bad", "AUTO": "fm-row-info"} %}
+{% set status_badge = {"APPROVED": "fm-badge-ok", "PENDING": "fm-badge-warn", "REJECTED": "fm-badge-bad", "AUTO": "fm-badge-info"} %}
+{% set status_label = {"APPROVED": t("status_approved"), "PENDING": t("status_pending"), "REJECTED": t("status_rejected"), "AUTO": t("status_auto")} %}
 
 {% if current_user.is_authenticated %}
-<div class="fd-wrap">
-    <div class="farmer-hero mb-4">
-        {% if marquees %}
-        <!-- Seamless Integrated Smooth Scrolling Marquee -->
-        <div class="hero-announcement-strip" id="corpAnnouncementBar">
-            <span class="hero-announce-badge">
-                <span class="beacon-dot"></span>
-                <span>{% if current_lang == 'km' %}ដំណឹង{% else %}Notice{% endif %}</span>
-            </span>
+<div class="fm-page">
 
-            <div class="hero-marquee-track">
-                <div class="hero-marquee-content" id="heroMarqueeContent">
-                    <!-- First Set of Items -->
+    {% if marquees %}
+    {# Items are duplicated so the -50% scroll loops without a visible seam. #}
+    <div class="fm-marquee" id="marqueeBar">
+        <span class="fm-marquee-badge">
+            <span class="fm-marquee-dot"></span>
+            <span>{% if current_lang == 'km' %}ដំណឹង{% else %}Notice{% endif %}</span>
+        </span>
+
+        <div class="fm-marquee-track">
+            <div class="fm-marquee-content" id="marqueeContent">
+                {% for pass in [1, 2] %}
                     {% for mq in marquees %}
-                    <span class="hero-marquee-item"
-                          data-toggle="modal"
-                          data-target="#marqueeDetailModal"
-                          data-text="{% if current_lang == 'km' and mq.text_kh %}{{ mq.text_kh }}{% else %}{{ mq.text }}{% endif %}"
-                          data-date="{{ mq.created_at.strftime('%B %d, %Y') if mq.created_at else '' }}"
-                          title="Click to view details">
-                        <i class="fas fa-certificate item-dot"></i>
-                        <span>{% if current_lang == 'km' and mq.text_kh %}{{ mq.text_kh }}{% else %}{{ mq.text }}{% endif %}</span>
-                    </span>
+                    {% set mq_text = (mq.text_kh if current_lang == 'km' and mq.text_kh else mq.text) %}
+                    <button type="button"
+                            class="fm-marquee-item"
+                            data-toggle="modal"
+                            data-target="#marqueeModal"
+                            data-text="{{ mq_text }}"
+                            data-date="{{ mq.created_at.strftime('%B %d, %Y') if mq.created_at else '' }}"
+                            {% if pass == 2 %}aria-hidden="true" tabindex="-1"{% endif %}>
+                        <i class="fas fa-certificate"></i>
+                        <span>{{ mq_text }}</span>
+                    </button>
                     {% endfor %}
-
-                    <!-- Duplicate Set for Seamless Continuous Infinite Loop -->
-                    {% for mq in marquees %}
-                    <span class="hero-marquee-item"
-                          data-toggle="modal"
-                          data-target="#marqueeDetailModal"
-                          data-text="{% if current_lang == 'km' and mq.text_kh %}{{ mq.text_kh }}{% else %}{{ mq.text }}{% endif %}"
-                          data-date="{{ mq.created_at.strftime('%B %d, %Y') if mq.created_at else '' }}"
-                          title="Click to view details">
-                        <i class="fas fa-certificate item-dot"></i>
-                        <span>{% if current_lang == 'km' and mq.text_kh %}{{ mq.text_kh }}{% else %}{{ mq.text }}{% endif %}</span>
-                    </span>
-                    {% endfor %}
-                </div>
-            </div>
-
-            <div class="hero-announce-actions">
-                <button type="button" class="hero-announce-btn" id="btnToggleMarqueePause" title="Pause / Resume Scrolling">
-                    <i class="fas fa-pause" id="marqueePauseIcon"></i>
-                </button>
-                <button type="button" class="hero-announce-btn" id="btnCorpDismiss" title="Dismiss">
-                    <i class="fas fa-times"></i>
-                </button>
+                {% endfor %}
             </div>
         </div>
-        {% endif %}
 
+        <div class="fm-marquee-actions">
+            <button type="button" class="fm-marquee-btn" id="marqueePause"
+                    aria-label="{% if current_lang == 'km' %}ផ្អាក{% else %}Pause scrolling{% endif %}">
+                <i class="fas fa-pause" id="marqueePauseIcon"></i>
+            </button>
+            <button type="button" class="fm-marquee-btn" id="marqueeDismiss"
+                    aria-label="{% if current_lang == 'km' %}បិទ{% else %}Dismiss{% endif %}">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+    {% endif %}
 
-        <div class="d-flex justify-content-between align-items-center flex-wrap">
+    <div class="fm-head">
+        <div class="fm-head-text">
+            <span class="fm-head-eyebrow">{{ t("dashboard") if t("dashboard") else "Dashboard" }}</span>
+            <h1 class="fm-head-title">{{ t("farmer_dashboard_title") }}</h1>
+            <p class="fm-head-sub">{{ t("farmer_dashboard_sub") }}</p>
+        </div>
+        <div class="fm-head-actions">
+            <a href="{{ url_for('farmer.diagnose') }}" class="fm-btn fm-btn-primary fm-btn-sm">
+                <i class="fas fa-plus"></i>{{ t("new_diagnosis") }}
+            </a>
+            <a href="{{ url_for('farmer.chat') }}" class="fm-btn fm-btn-ghost fm-btn-sm">
+                <i class="far fa-comments"></i>{{ t("ask_expert") }}
+            </a>
+        </div>
+    </div>
+
+    <div class="fm-grid fm-grid-4">
+        <div class="fm-stat">
             <div>
-                <h4 class="mb-1 font-weight-bold text-success">{{ t("farmer_dashboard_title") }}</h4>
-                <div class="text-muted small">{{ t("farmer_dashboard_sub") }}</div>
+                <div class="fm-stat-label">{{ t("total_diagnoses") }}</div>
+                <div class="fm-stat-value">{{ total }}</div>
             </div>
-            <div class="mt-3 mt-md-0 fd-btn-row">
-                <a href="{{ url_for('farmer.diagnose') }}" class="btn btn-success btn-sm">
-                    {{ t("new_diagnosis") }}
-                </a>
-                <a href="{{ url_for('farmer.chat') }}" class="btn btn-outline-success btn-sm">
-                    {{ t("ask_expert") }}
-                </a>
+            <span class="fm-stat-icon"><i class="fas fa-notes-medical"></i></span>
+        </div>
+        <div class="fm-stat">
+            <div>
+                <div class="fm-stat-label">{{ t("pending") }}</div>
+                <div class="fm-stat-value">{{ pending }}</div>
             </div>
+            <span class="fm-stat-icon fm-stat-icon-warn"><i class="fas fa-hourglass-half"></i></span>
+        </div>
+        <div class="fm-stat">
+            <div>
+                <div class="fm-stat-label">{{ t("approved") }}</div>
+                <div class="fm-stat-value">{{ approved }}</div>
+            </div>
+            <span class="fm-stat-icon fm-stat-icon-ok"><i class="fas fa-check-circle"></i></span>
+        </div>
+        <div class="fm-stat">
+            <div>
+                <div class="fm-stat-label">{{ t("rejected") }}</div>
+                <div class="fm-stat-value">{{ rejected }}</div>
+            </div>
+            <span class="fm-stat-icon fm-stat-icon-bad"><i class="fas fa-times-circle"></i></span>
         </div>
     </div>
 
-
-
-
-    <div class="row mb-4">
-        <div class="col-md-3 mb-3">
-            <div class="metric-card">
-                <div>
-                    <div class="metric-label">{{ t("total_diagnoses") }}</div>
-                    <div class="metric-value">{{ total }}</div>
-                </div>
-                <div class="metric-icon"><i class="fas fa-notes-medical"></i></div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="metric-card">
-                <div>
-                    <div class="metric-label">{{ t("pending") }}</div>
-                    <div class="metric-value">{{ pending }}</div>
-                </div>
-                <div class="metric-icon"><i class="fas fa-hourglass-half"></i></div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="metric-card">
-                <div>
-                    <div class="metric-label">{{ t("approved") }}</div>
-                    <div class="metric-value">{{ approved }}</div>
-                </div>
-                <div class="metric-icon"><i class="fas fa-check-circle"></i></div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="metric-card">
-                <div>
-                    <div class="metric-label">{{ t("rejected") }}</div>
-                    <div class="metric-value">{{ rejected }}</div>
-                </div>
-                <div class="metric-icon"><i class="fas fa-times-circle"></i></div>
-            </div>
-        </div>
-    </div>
-
-
-
-    <div class="weather-intel-card mb-4"
+    {# Weather panel keeps its own stylesheet and element ids — the JS in
+       weather_intelligence.js queries these by id. #}
+    <div class="weather-intel-card"
          id="weather-intelligence-card"
          data-weather-endpoint="{{ url_for('weather_intelligence.weather_summary') }}"
          data-lang="{{ current_lang }}"
          data-fallback-lat="11.5564"
          data-fallback-lon="104.9282">
-        {% set wi_km = current_lang == "km" %}
         <div class="wi-header">
             <div>
                 <h5 class="wi-title mb-1">{{ t("weather_intelligence") }}</h5>
@@ -324,198 +180,160 @@
         </div>
     </div>
 
-    <div class="card mb-4">
-        <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
-            <span class="section-title">{{ t("recent_diagnoses_title") }}</span>
-            <div class="mt-2 mt-md-0 fd-btn-row">
-                <a href="{{ url_for('farmer.diagnosis_history') }}" class="btn btn-sm btn-outline-success">
+    <div class="fm-card">
+        <div class="fm-card-head">
+            <h2 class="fm-card-title">{{ t("recent_diagnoses_title") }}</h2>
+            <div class="fm-toolbar ms-auto">
+                <a href="{{ url_for('farmer.diagnosis_history') }}" class="fm-btn fm-btn-ghost fm-btn-sm">
                     {{ t("see_all") }}
                 </a>
-                <a href="{{ url_for('farmer.diagnose') }}" class="btn btn-sm btn-success">
+                <a href="{{ url_for('farmer.diagnose') }}" class="fm-btn fm-btn-primary fm-btn-sm">
                     {{ t("create_new") }}
                 </a>
             </div>
         </div>
-        <div class="card-body">
-            {% if diagnoses and diagnoses|length > 0 %}
-                <div class="diag-list">
-                    {% for d in diagnoses[:6] %}
-                    {% set disease_label = (d.disease.name_kh if current_lang == 'km' and d.disease and d.disease.name_kh else d.disease_name) %}
-                    <a class="diag-item text-decoration-none text-reset"
-                       href="{{ url_for('farmer.diagnosis_result', diagnosis_id=d.id) }}">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div class="mr-3">
-                                <div class="font-weight-bold">{{ localize(d.crop, "name", d.crop_name) }}</div>
-                                <div class="small text-muted">{{ t("disease_label") }}: {{ disease_label }}</div>
-                                <div class="small text-muted">
-                                    {{ t("symptoms_label") }}:
-                                    {{ translate_symptoms(d.symptoms)[:90] }}{% if d.symptoms|length > 90 %}...{% endif %}
-                                </div>
-                            </div>
-                            <div class="text-right">
-                                <div class="small text-muted">
-                                    {{ d.created_at.strftime("%Y-%m-%d") if d.created_at else "" }}
-                                </div>
-                                {% if d.status == "PENDING" %}
-                                    <span class="badge badge-warning">{{ t("status_pending") }}</span>
-                                {% elif d.status == "APPROVED" %}
-                                    <span class="badge badge-success">{{ t("status_approved") }}</span>
-                                {% elif d.status == "REJECTED" %}
-                                    <span class="badge badge-danger">{{ t("status_rejected") }}</span>
-                                {% elif d.status == "AUTO" %}
-                                    <span class="badge badge-info">{{ t("status_auto") }}</span>
-                                {% else %}
-                                    <span class="badge badge-secondary">{{ d.status }}</span>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </a>
-                    {% endfor %}
-                </div>
+        <div class="fm-card-body fm-card-body-flush">
+            {% if diagnoses %}
+            <div class="fm-list">
+                {% for d in diagnoses[:6] %}
+                {% set disease_label = (d.disease.name_kh if current_lang == 'km' and d.disease and d.disease.name_kh else d.disease_name) %}
+                <a class="fm-row {{ status_rail.get(d.status, '') }}"
+                   href="{{ url_for('farmer.diagnosis_result', diagnosis_id=d.id) }}">
+                    <div class="fm-row-body">
+                        <div class="fm-row-title">{{ localize(d.crop, "name", d.crop_name) }}</div>
+                        <div class="fm-row-sub">{{ disease_label }}</div>
+                        <div class="fm-row-text">{{ translate_symptoms(d.symptoms)[:90] }}{% if d.symptoms and d.symptoms|length > 90 %}…{% endif %}</div>
+                    </div>
+                    <div class="fm-row-aside">
+                        <span class="fm-row-date">{{ d.created_at.strftime("%d %b %Y") if d.created_at else "" }}</span>
+                        <span class="fm-badge {{ status_badge.get(d.status, '') }}">{{ status_label.get(d.status, d.status) }}</span>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
             {% else %}
-                <div class="text-center text-muted py-4">
-                    {{ t("no_history_yet") }}
+            <div class="fm-empty">
+                <div class="fm-empty-icon"><i class="far fa-file-alt"></i></div>
+                <div class="fm-empty-title">{{ t("no_history_yet") }}</div>
+                <div class="fm-empty-action">
+                    <a href="{{ url_for('farmer.diagnose') }}" class="fm-btn fm-btn-primary fm-btn-sm">
+                        <i class="fas fa-plus"></i>{{ t("new_diagnosis") }}
+                    </a>
                 </div>
+            </div>
             {% endif %}
         </div>
     </div>
 
-    <div class="row mb-4">
-        <div class="col-lg-7 mb-3">
-            <div class="card h-100">
-                <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
-                    <span class="section-title">{{ t("ask_expert_history") }}</span>
-                    <div class="mt-2 mt-md-0 fd-btn-row">
-                        <a href="{{ url_for('farmer.ai_history') }}" class="btn btn-sm btn-outline-success">
-                            {{ t("view_all") }}
-                        </a>
-                        <a href="{{ url_for('farmer.chat') }}" class="btn btn-sm btn-success">
-                            {{ t("open_chat") }}
-                        </a>
-                    </div>
-                </div>
-                <div class="card-body">
-                    {% if ai_questions and ai_questions|length > 0 %}
-                        <div class="diag-list">
-                            {% for item in ai_questions[:4] %}
-                                {% set msg = item[0] %}
-                                {% set sess = item[1] %}
-                                <a class="diag-item text-decoration-none text-reset"
-                                   href="{{ url_for('farmer.chat', session_id=sess.id) }}">
-                                    <div class="font-weight-bold">{{ t("question") }}</div>
-                                    <div class="small text-muted">
-                                        {{ msg.message[:120] }}{% if msg.message|length > 120 %}...{% endif %}
-                                    </div>
-                                    <div class="small text-muted mt-1">
-                                        {{ msg.created_at.strftime("%Y-%m-%d") if msg.created_at else "" }}
-                                    </div>
-                                </a>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        <div class="text-muted small">{{ t("no_questions_yet") }}</div>
-                    {% endif %}
+    <div class="fm-grid fm-grid-2">
+        <div class="fm-card">
+            <div class="fm-card-head">
+                <h2 class="fm-card-title">{{ t("ask_expert_history") }}</h2>
+                <div class="fm-toolbar ms-auto">
+                    <a href="{{ url_for('farmer.ai_history') }}" class="fm-btn fm-btn-ghost fm-btn-sm">
+                        {{ t("view_all") }}
+                    </a>
+                    <a href="{{ url_for('farmer.chat') }}" class="fm-btn fm-btn-primary fm-btn-sm">
+                        {{ t("open_chat") }}
+                    </a>
                 </div>
             </div>
-        </div>
-        <div class="col-lg-5 mb-3">
-            <div class="card h-100">
-                <div class="card-header">
-                    <span class="section-title">{{ t("quick_actions") }}</span>
+            <div class="fm-card-body fm-card-body-flush">
+                {% if ai_questions %}
+                <div class="fm-list">
+                    {% for msg, sess in ai_questions[:4] %}
+                    <a class="fm-row fm-row-info" href="{{ url_for('farmer.chat', session_id=sess.id) }}">
+                        <div class="fm-row-body">
+                            <div class="fm-row-title">{{ t("question") }}</div>
+                            <div class="fm-row-text">{{ msg.message[:120] }}{% if msg.message|length > 120 %}…{% endif %}</div>
+                        </div>
+                        <div class="fm-row-aside">
+                            <span class="fm-row-date">{{ msg.created_at.strftime("%d %b %Y") if msg.created_at else "" }}</span>
+                        </div>
+                    </a>
+                    {% endfor %}
                 </div>
-                <div class="card-body">
-                    <div class="action-grid">
-                        <a class="action-card" href="{{ url_for('farmer.diagnose') }}">
-                            <div class="action-icon"><i class="fas fa-stethoscope"></i></div>
-                            <div>
-                                <div class="action-title">{{ t("new_diagnosis") }}</div>
-                                <div class="action-sub">{{ t("diagnose_sub") }}</div>
-                            </div>
-                            <i class="fas fa-arrow-right ml-auto text-muted"></i>
-                        </a>
-                        <a class="action-card" href="{{ url_for('farmer.chat') }}">
-                            <div class="action-icon"><i class="fas fa-headset"></i></div>
-                            <div>
-                                <div class="action-title">{{ t("ask_expert") }}</div>
-                                <div class="action-sub">{{ t("ask_expert_sub") }}</div>
-                            </div>
-                            <i class="fas fa-arrow-right ml-auto text-muted"></i>
-                        </a>
-                    </div>
+                {% else %}
+                <div class="fm-empty">
+                    <div class="fm-empty-icon"><i class="far fa-comments"></i></div>
+                    <div class="fm-empty-title">{{ t("no_questions_yet") }}</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="fm-card">
+            <div class="fm-card-head">
+                <h2 class="fm-card-title">{{ t("quick_actions") }}</h2>
+            </div>
+            <div class="fm-card-body fm-card-body-flush">
+                <div class="fm-list">
+                    <a class="fm-row" href="{{ url_for('farmer.diagnose') }}">
+                        <span class="fm-row-icon"><i class="fas fa-stethoscope"></i></span>
+                        <div class="fm-row-body">
+                            <div class="fm-row-title">{{ t("new_diagnosis") }}</div>
+                            <div class="fm-row-text">{{ t("diagnose_sub") }}</div>
+                        </div>
+                        <i class="fas fa-chevron-right fm-row-chevron"></i>
+                    </a>
+                    <a class="fm-row" href="{{ url_for('farmer.chat') }}">
+                        <span class="fm-row-icon fm-row-icon-info"><i class="fas fa-headset"></i></span>
+                        <div class="fm-row-body">
+                            <div class="fm-row-title">{{ t("ask_expert") }}</div>
+                            <div class="fm-row-text">{{ t("ask_expert_sub") }}</div>
+                        </div>
+                        <i class="fas fa-chevron-right fm-row-chevron"></i>
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-
-
 {% else %}
-<div class="fdash-guest" style="max-width: 1200px; margin: 0 auto; padding: 0 16px;">
-    <!-- Guest Hero -->
-    <section class="fdash-hero" style="flex-direction: column; text-align: center; padding: 60px 20px; background: linear-gradient(135deg, var(--primary-soft, #f0fdf4), var(--card-bg, #ffffff)); border: 1px solid var(--border-light); margin-bottom: 30px; border-radius: 16px;">
-        <div style="margin-bottom: 25px;">
-            <div style="width: 80px; height: 80px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 36px; margin: 0 auto 20px; box-shadow: 0 10px 25px color-mix(in srgb, var(--primary) 30%, transparent);">
-                <i class="fas fa-leaf"></i>
-            </div>
-            <h1 class="fdash-hello" style="font-size: 2.2rem; font-weight: 800; color: var(--text-main); margin-bottom: 12px;">
-                {% if current_lang == 'km' %}សូមស្វាគមន៍មកកាន់ប្រព័ន្ធអ្នកជំនាញកសិកម្ម{% else %}Welcome to Agri Expert System{% endif %}
-            </h1>
-            <p class="fdash-hello-sub" style="margin: 0 auto; max-width: 650px; font-size: 1.05rem; line-height: 1.6; color: var(--text-muted);">
-                {% if current_lang == 'km' %}
-                ធ្វើការវិភាគជំងឺដំណាំរបស់អ្នកដោយឥតគិតថ្លៃ និងទទួលបានការណែនាំពីអ្នកជំនាញ។ ចុះឈ្មោះថ្ងៃនេះដើម្បីទទួលបានអត្ថប្រយោជន៍ពេញលេញដូចជា ការជជែកជាមួយ AI និងការព្យាករណ៍អាកាសធាតុ!
-                {% else %}
-                Diagnose crop diseases instantly for free. Create an account to unlock unlimited AI consultations, local weather intelligence, and save your diagnosis history!
-                {% endif %}
-            </p>
-        </div>
-        <div style="display: flex; gap: 16px; flex-wrap: wrap; justify-content: center;">
-            <a class="fdash-cta" href="{{ url_for('farmer.diagnose') }}" style="font-size: 1.05rem; padding: 14px 32px; background: var(--primary); color: white; border-radius: 99px; text-decoration: none;">
-                <i class="fas fa-stethoscope"></i> {% if current_lang == 'km' %}វិភាគជំងឺឥឡូវនេះ{% else %}Diagnose Now{% endif %}
+{# ── Guest view ── #}
+<div class="fm-page">
+    <section class="fm-hero">
+        <div class="fm-hero-icon"><i class="fas fa-leaf"></i></div>
+        <h1 class="fm-hero-title">
+            {% if current_lang == 'km' %}សូមស្វាគមន៍មកកាន់ប្រព័ន្ធអ្នកជំនាញកសិកម្ម{% else %}Welcome to Agri Expert System{% endif %}
+        </h1>
+        <p class="fm-hero-sub">
+            {% if current_lang == 'km' %}
+            ធ្វើការវិភាគជំងឺដំណាំរបស់អ្នកដោយឥតគិតថ្លៃ និងទទួលបានការណែនាំពីអ្នកជំនាញ។ ចុះឈ្មោះថ្ងៃនេះដើម្បីទទួលបានអត្ថប្រយោជន៍ពេញលេញដូចជា ការជជែកជាមួយ AI និងការព្យាករណ៍អាកាសធាតុ!
+            {% else %}
+            Diagnose crop diseases instantly for free. Create an account to unlock unlimited AI consultations, local weather intelligence, and save your diagnosis history.
+            {% endif %}
+        </p>
+        <div class="fm-hero-actions">
+            <a class="fm-btn fm-btn-primary fm-btn-lg" href="{{ url_for('farmer.diagnose') }}">
+                <i class="fas fa-stethoscope"></i>{% if current_lang == 'km' %}វិភាគជំងឺឥឡូវនេះ{% else %}Diagnose Now{% endif %}
             </a>
-            <a class="fdash-cta" href="{{ url_for('auth.register') }}" style="background: transparent; color: var(--primary); border: 2px solid var(--primary); box-shadow: none; font-size: 1.05rem; padding: 12px 30px; border-radius: 99px; text-decoration: none;">
-                <i class="fas fa-user-plus"></i> {% if current_lang == 'km' %}បង្កើតគណនី{% else %}Create Account{% endif %}
+            <a class="fm-btn fm-btn-ghost fm-btn-lg" href="{{ url_for('auth.register') }}">
+                <i class="fas fa-user-plus"></i>{% if current_lang == 'km' %}បង្កើតគណនី{% else %}Create Account{% endif %}
             </a>
         </div>
     </section>
 
-    <!-- Guest Feature Highlights -->
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin-bottom: 40px;">
-        <!-- Feature 1 -->
-        <div class="fdash-card" style="padding: 30px 24px; text-align: center; border-radius: 20px; transition: transform 0.2s; border-top: 4px solid #3b82f6; background: var(--card-bg);">
-            <div style="width: 60px; height: 60px; background: rgba(59,130,246,0.1); color: #3b82f6; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 20px;">
-                <i class="fas fa-robot"></i>
-            </div>
-            <h4 style="font-weight: 700; font-size: 1.2rem; color: var(--text-main); margin-bottom: 12px;">
-                {% if current_lang == 'km' %}ជជែកជាមួយ AI{% else %}AI Chat Assistant{% endif %}
-            </h4>
-            <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.5; margin: 0;">
+    <div class="fm-feature-grid">
+        <div class="fm-feature fm-feature-info">
+            <div class="fm-feature-icon"><i class="fas fa-robot"></i></div>
+            <h2 class="fm-feature-title">{% if current_lang == 'km' %}ជជែកជាមួយ AI{% else %}AI Chat Assistant{% endif %}</h2>
+            <p class="fm-feature-text">
                 {% if current_lang == 'km' %}ចុះឈ្មោះគណនីដើម្បីពិភាក្សាផ្ទាល់ជាមួយអ្នកជំនាញ AI។{% else %}Register to chat directly with our agronomy AI model.{% endif %}
             </p>
         </div>
-        
-        <!-- Feature 2 -->
-        <div class="fdash-card" style="padding: 30px 24px; text-align: center; border-radius: 20px; transition: transform 0.2s; border-top: 4px solid #f59e0b; background: var(--card-bg);">
-            <div style="width: 60px; height: 60px; background: rgba(245,158,11,0.1); color: #f59e0b; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 20px;">
-                <i class="fas fa-cloud-sun-rain"></i>
-            </div>
-            <h4 style="font-weight: 700; font-size: 1.2rem; color: var(--text-main); margin-bottom: 12px;">
-                {% if current_lang == 'km' %}ព័ត៌មានអាកាសធាតុ{% else %}Weather Intelligence{% endif %}
-            </h4>
-            <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.5; margin: 0;">
+        <div class="fm-feature fm-feature-warn">
+            <div class="fm-feature-icon"><i class="fas fa-cloud-sun-rain"></i></div>
+            <h2 class="fm-feature-title">{% if current_lang == 'km' %}ព័ត៌មានអាកាសធាតុ{% else %}Weather Intelligence{% endif %}</h2>
+            <p class="fm-feature-text">
                 {% if current_lang == 'km' %}ទទួលបានការព្យាករណ៍អាកាសធាតុរយៈពេល ៧ ថ្ងៃ។{% else %}Get detailed 7-day crop-specific weather forecasts.{% endif %}
             </p>
         </div>
-        
-        <!-- Feature 3 -->
-        <div class="fdash-card" style="padding: 30px 24px; text-align: center; border-radius: 20px; transition: transform 0.2s; border-top: 4px solid #10b981; background: var(--card-bg);">
-            <div style="width: 60px; height: 60px; background: rgba(16,185,129,0.1); color: #10b981; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 20px;">
-                <i class="fas fa-history"></i>
-            </div>
-            <h4 style="font-weight: 700; font-size: 1.2rem; color: var(--text-main); margin-bottom: 12px;">
-                {% if current_lang == 'km' %}រក្សាទុកប្រវត្តិ{% else %}Save History{% endif %}
-            </h4>
-            <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.5; margin: 0;">
+        <div class="fm-feature fm-feature-ok">
+            <div class="fm-feature-icon"><i class="fas fa-history"></i></div>
+            <h2 class="fm-feature-title">{% if current_lang == 'km' %}រក្សាទុកប្រវត្តិ{% else %}Save History{% endif %}</h2>
+            <p class="fm-feature-text">
                 {% if current_lang == 'km' %}រក្សាទុកគ្រប់កំណត់ត្រាវិភាគ និងការជជែករបស់អ្នកដោយសុវត្ថិភាព។{% else %}Keep all your crop diagnoses securely backed up on the cloud.{% endif %}
             </p>
         </div>
@@ -523,95 +341,68 @@
 </div>
 {% endif %}
 
-<!-- Announcement Detail Modal -->
-<div class="modal fade" id="marqueeDetailModal" tabindex="-1" role="dialog" aria-labelledby="marqueeDetailModalLabel" aria-hidden="true">
+{# Announcement detail — Bootstrap 4 modal; the bridge in farmer.css themes it. #}
+<div class="modal fade" id="marqueeModal" tabindex="-1" role="dialog"
+     aria-labelledby="marqueeModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
-        <div class="modal-content" style="border-radius: 16px; border: 1px solid var(--border-light); background: var(--card-bg); color: var(--text-main); overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.15);">
-            <div class="modal-header py-3 px-4 d-flex align-items-center justify-content-between" style="background: var(--surface-soft, #f8fafc); border-bottom: 1px solid var(--border-light);">
-                <div class="d-flex align-items-center">
-                    <div class="mr-2" style="width: 32px; height: 32px; border-radius: 8px; background: rgba(16, 185, 129, 0.15); color: #10b981; display: flex; align-items: center; justify-content: center;">
-                        <i class="fas fa-bullhorn fa-sm"></i>
-                    </div>
-                    <h5 class="modal-title font-weight-bold mb-0" id="marqueeDetailModalLabel" style="font-size: 1.05rem;">
-                        {% if current_lang == 'km' %}សេចក្តីជូនដំណឹង{% else %}Official Announcement{% endif %}
-                    </h5>
-                </div>
-                <button type="button" class="close text-muted" data-dismiss="modal" aria-label="Close">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="marqueeModalLabel">
+                    <i class="fas fa-bullhorn mr-2"></i>{% if current_lang == 'km' %}សេចក្តីជូនដំណឹង{% else %}Official Announcement{% endif %}
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <div class="modal-body p-4">
-                <div class="p-3 rounded mb-3" style="background: var(--surface-soft, #f8fafc); border: 1px solid var(--border-light); font-size: 1rem; line-height: 1.7; font-weight: 500;" id="modalMarqueeText">
-                </div>
-                <div class="text-muted small text-right" id="modalMarqueeDate">
-                </div>
+            <div class="modal-body">
+                <p id="marqueeModalText" class="mb-2"></p>
+                <div class="fm-row-date" id="marqueeModalDate"></div>
             </div>
-            <div class="modal-footer py-2 px-4" style="background: var(--surface-soft, #f8fafc); border-top: 1px solid var(--border-light);">
-                <button type="button" class="btn btn-sm btn-light border font-weight-bold px-3" data-dismiss="modal">
+            <div class="modal-footer">
+                <button type="button" class="fm-btn fm-btn-ghost fm-btn-sm" data-dismiss="modal">
                     {% if current_lang == 'km' %}បិទ{% else %}Close{% endif %}
                 </button>
             </div>
         </div>
     </div>
 </div>
-
 {% endblock %}
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/weather_intelligence.js', v=static_version) }}"></script>
 <script>
-document.addEventListener("DOMContentLoaded", function() {
-    const marqueeContent = document.getElementById("heroMarqueeContent");
-    const pauseBtn = document.getElementById("btnToggleMarqueePause");
+document.addEventListener("DOMContentLoaded", function () {
+    const content = document.getElementById("marqueeContent");
+    const pauseBtn = document.getElementById("marqueePause");
     const pauseIcon = document.getElementById("marqueePauseIcon");
-    const dismissBtn = document.getElementById("btnCorpDismiss");
-    const banner = document.getElementById("corpAnnouncementBar");
+    const dismissBtn = document.getElementById("marqueeDismiss");
+    const bar = document.getElementById("marqueeBar");
 
-    if (marqueeContent) {
-        // Ensure steady, calm reading speed (~40px/sec, minimum 110 seconds)
-        const scrollW = marqueeContent.scrollWidth;
-        if (scrollW > 0) {
-            const calmDuration = Math.max(110, Math.round(scrollW / 40));
-            marqueeContent.style.animationDuration = calmDuration + "s";
-        }
+    // Scale duration to content width so a long notice list scrolls at the
+    // same readable speed (~40px/s) as a short one.
+    if (content && content.scrollWidth > 0) {
+        content.style.animationDuration = Math.max(110, Math.round(content.scrollWidth / 40)) + "s";
     }
 
-    if (pauseBtn && marqueeContent) {
-        let isPaused = false;
-        pauseBtn.addEventListener("click", function(e) {
-            e.stopPropagation();
-            isPaused = !isPaused;
-            marqueeContent.classList.toggle("is-paused", isPaused);
-            if (pauseIcon) {
-                pauseIcon.className = isPaused ? "fas fa-play" : "fas fa-pause";
-            }
+    if (pauseBtn && content) {
+        pauseBtn.addEventListener("click", function () {
+            const paused = content.classList.toggle("is-paused");
+            if (pauseIcon) pauseIcon.className = paused ? "fas fa-play" : "fas fa-pause";
         });
     }
 
-    if (dismissBtn && banner) {
-        dismissBtn.addEventListener("click", function(e) {
-            e.stopPropagation();
-            banner.style.transition = "all 0.3s ease";
-            banner.style.opacity = "0";
-            banner.style.transform = "translateY(-8px)";
-            setTimeout(() => { banner.style.display = "none"; }, 300);
-        });
+    if (dismissBtn && bar) {
+        dismissBtn.addEventListener("click", function () { bar.remove(); });
     }
 
-    // Modal populate on click
-    $(document).on("click", ".hero-marquee-item", function() {
-        const text = $(this).data("text") || "";
-        const date = $(this).data("date") || "";
-        $("#modalMarqueeText").text(text);
-        if (date) {
-            $("#modalMarqueeDate").text("Posted on: " + date);
-        } else {
-            $("#modalMarqueeDate").text("");
-        }
+    document.querySelectorAll(".fm-marquee-item").forEach(function (item) {
+        item.addEventListener("click", function () {
+            const textEl = document.getElementById("marqueeModalText");
+            const dateEl = document.getElementById("marqueeModalDate");
+            if (textEl) textEl.textContent = item.dataset.text || "";
+            if (dateEl) dateEl.textContent = item.dataset.date || "";
+        });
     });
 });
 </script>
 {% endblock %}
-
-
-

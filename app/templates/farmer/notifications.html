@@ -2,60 +2,67 @@
 {% block title %}{{ t("notifications") }}{% endblock %}
 
 {% block content %}
-<div class="d-flex align-items-center justify-content-between flex-wrap mb-3">
-    <div class="mb-2">
-        <h1 class="h4 font-weight-bold mb-1">{{ t("notifications") }}</h1>
-        <div class="text-muted small">{{ t("notifications_all_sub") }}</div>
+{# Maps the service's level strings onto design-system modifiers. The JS at the
+   bottom of this file carries the same two maps for appended pages. #}
+{% set level_icon = {"success": "fm-row-icon-ok", "warning": "fm-row-icon-warn", "danger": "fm-row-icon-bad", "info": "fm-row-icon-info"} %}
+{% set level_rail = {"success": "fm-row-ok", "warning": "fm-row-warn", "danger": "fm-row-bad", "info": "fm-row-info"} %}
+<div class="fm-page">
+    <div class="fm-head">
+        <div class="fm-head-text">
+            <span class="fm-head-eyebrow">{{ t("notifications") }}</span>
+            <h1 class="fm-head-title">{{ t("notifications") }}</h1>
+            <p class="fm-head-sub">{{ t("notifications_all_sub") }}</p>
+        </div>
+        <div class="fm-head-actions">
+            <button type="button" class="fm-btn fm-btn-secondary fm-btn-sm" id="notifications-mark-all-read">
+                <i class="far fa-check-circle"></i>{{ t("notifications_mark_all_read") }}
+            </button>
+        </div>
     </div>
-    <div class="mb-2">
-        <button type="button"
-                class="btn btn-sm btn-outline-success"
-                id="notifications-mark-all-read">
-            {{ t("notifications_mark_all_read") }}
-        </button>
-    </div>
-</div>
 
-<div class="card shadow-sm">
-    <div class="card-body p-0 table-responsive">
-        <div class="notification-list is-page"
+    <div class="fm-card">
+        <!-- IDs and data-* attributes are contracts with the infinite-scroll
+             script at the bottom of this file. Keep them if the markup moves. -->
+        <div class="fm-list"
              id="notifications-feed"
              data-next-page="{{ notifications_next_page or '' }}"
              data-per-page="{{ notifications_per_page }}">
             {% if notifications_items and notifications_items|length > 0 %}
                 {% for item in notifications_items %}
-                    {% set item_classes = "notification-item" + (" is-unread" if item.unread else "") %}
-                    {% if item.url %}
-                        <a class="{{ item_classes }}" href="{{ item.url }}" data-notification-id="{{ item.id }}">
-                            <div class="notification-item-icon is-{{ item.level }}">
-                                <i class="{{ item.icon }}"></i>
-                            </div>
-                            <div class="notification-item-body">
-                                <div class="notification-item-title">{{ item.title }}</div>
-                                <div class="notification-item-sub">{{ item.subtitle }}</div>
-                            </div>
-                            <div class="notification-item-time">{{ item.time }}</div>
-                        </a>
-                    {% else %}
-                        <div class="{{ item_classes }} is-disabled" data-notification-id="{{ item.id }}">
-                            <div class="notification-item-icon is-{{ item.level }}">
-                                <i class="{{ item.icon }}"></i>
-                            </div>
-                            <div class="notification-item-body">
-                                <div class="notification-item-title">{{ item.title }}</div>
-                                <div class="notification-item-sub">{{ item.subtitle }}</div>
-                            </div>
-                            <div class="notification-item-time">{{ item.time }}</div>
-                        </div>
-                    {% endif %}
+                {% set rail = level_rail.get(item.level, "fm-row-info") %}
+                {% set icon_class = level_icon.get(item.level, "fm-row-icon-info") %}
+                {% set row_class = "fm-row " ~ rail ~ (" is-unread" if item.unread else "") %}
+                {% if item.url %}
+                <a class="{{ row_class }}" href="{{ item.url }}" data-notification-id="{{ item.id }}">
+                {% else %}
+                <div class="{{ row_class }} is-static" data-notification-id="{{ item.id }}">
+                {% endif %}
+                    <div class="fm-row-icon {{ icon_class }}">
+                        <i class="{{ item.icon }}"></i>
+                    </div>
+                    <div class="fm-row-body">
+                        <div class="fm-row-title">{{ item.title }}</div>
+                        <div class="fm-row-text">{{ item.subtitle }}</div>
+                    </div>
+                    <div class="fm-row-aside">
+                        <span class="fm-row-date">{{ item.time }}</span>
+                        {% if item.url %}<i class="fas fa-chevron-right fm-row-chevron"></i>{% endif %}
+                    </div>
+                {% if item.url %}
+                </a>
+                {% else %}
+                </div>
+                {% endif %}
                 {% endfor %}
             {% else %}
-                <div class="notification-empty">
-                    {{ t("notifications_empty") }}
+                <div class="fm-empty">
+                    <div class="fm-empty-icon"><i class="far fa-bell"></i></div>
+                    <div class="fm-empty-title">{{ t("notifications_empty") }}</div>
+                    <p class="fm-empty-sub">{{ t("notifications_all_sub") }}</p>
                 </div>
             {% endif %}
 
-            <div class="notification-feed-loading" id="notifications-loading" hidden>
+            <div class="fm-feed-loading" id="notifications-loading" hidden>
                 {{ t("loading") }}
             </div>
             <div id="notifications-sentinel"></div>
@@ -72,6 +79,10 @@
     const sentinel = document.getElementById("notifications-sentinel");
     const markBtn = document.getElementById("notifications-mark-all-read");
 
+    // Mirrors the Jinja maps above; keep the two in sync.
+    const RAIL = { success: "fm-row-ok", warning: "fm-row-warn", danger: "fm-row-bad", info: "fm-row-info" };
+    const ICON = { success: "fm-row-icon-ok", warning: "fm-row-icon-warn", danger: "fm-row-icon-bad", info: "fm-row-icon-info" };
+
     const perPage = parseInt(feed.dataset.perPage || "30", 10) || 30;
     let nextPageRaw = (feed.dataset.nextPage || "").trim();
     let nextPage = nextPageRaw ? parseInt(nextPageRaw, 10) : null;
@@ -86,37 +97,46 @@
     }
 
     function buildItemEl(item) {
+        const level = item.level || "info";
         const root = document.createElement(item.url ? "a" : "div");
-        root.className = "notification-item";
-        if (!item.url) root.classList.add("is-disabled");
+        root.className = "fm-row " + (RAIL[level] || RAIL.info);
+        if (!item.url) root.classList.add("is-static");
         if (item.unread) root.classList.add("is-unread");
         if (item.url) root.href = item.url;
         if (item.id) root.dataset.notificationId = item.id;
 
         const iconWrap = document.createElement("div");
-        iconWrap.className = "notification-item-icon is-" + (item.level || "info");
+        iconWrap.className = "fm-row-icon " + (ICON[level] || ICON.info);
         const i = document.createElement("i");
         i.className = item.icon || "fas fa-bell";
         iconWrap.appendChild(i);
 
         const body = document.createElement("div");
-        body.className = "notification-item-body";
+        body.className = "fm-row-body";
         const title = document.createElement("div");
-        title.className = "notification-item-title";
+        title.className = "fm-row-title";
         title.textContent = item.title || "";
         const sub = document.createElement("div");
-        sub.className = "notification-item-sub";
+        sub.className = "fm-row-text";
         sub.textContent = item.subtitle || "";
         body.appendChild(title);
         body.appendChild(sub);
 
-        const time = document.createElement("div");
-        time.className = "notification-item-time";
+        const aside = document.createElement("div");
+        aside.className = "fm-row-aside";
+        const time = document.createElement("span");
+        time.className = "fm-row-date";
         time.textContent = item.time || "";
+        aside.appendChild(time);
+        if (item.url) {
+            const chev = document.createElement("i");
+            chev.className = "fas fa-chevron-right fm-row-chevron";
+            aside.appendChild(chev);
+        }
 
         root.appendChild(iconWrap);
         root.appendChild(body);
-        root.appendChild(time);
+        root.appendChild(aside);
 
         return root;
     }
@@ -152,13 +172,15 @@
         }
     }
 
+    // The feed is no longer its own scroll box (it used to be capped at 320px),
+    // so the sentinel is observed against the viewport.
     if (sentinel && nextPage) {
         const io = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (!entry.isIntersecting) return;
                 loadNextPage();
             });
-        }, { root: feed, rootMargin: "200px", threshold: 0.01 });
+        }, { rootMargin: "200px", threshold: 0.01 });
         io.observe(sentinel);
     }
 

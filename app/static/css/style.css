@@ -545,14 +545,25 @@ input:focus {
     transform: scale(1.04);
 }
 
+/* Wordmark beside the mark. Letter-spaced because a three-letter uppercase
+   acronym reads as cramped at default tracking. */
 .topbar-brand-name {
-    display: none;
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    line-height: 1;
+    color: var(--text-main);
+    white-space: nowrap;
 }
 
 @media (max-width: 767.98px) {
     .topbar-brand-logo {
         height: 26px;
         max-width: 90px;
+    }
+
+    .topbar-brand-name {
+        font-size: 0.95rem;
     }
 }
 

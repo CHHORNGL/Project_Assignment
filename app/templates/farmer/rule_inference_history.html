@@ -2,33 +2,61 @@
 {% block title %}{{ t("rule_inference_history") }}{% endblock %}
 
 {% block content %}
-<div class="card shadow-sm">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <span class="section-title">{{ t("rule_inference_history") }}</span>
-        <a href="{{ url_for('farmer.diagnose') }}" class="btn btn-sm btn-outline-success">
-            {{ t("new_rule_diagnosis") }}
-        </a>
+<div class="fm-page">
+    <div class="fm-head">
+        <div class="fm-head-text">
+            <span class="fm-head-eyebrow">{{ t("new_diagnosis") }}</span>
+            <h1 class="fm-head-title">{{ t("rule_inference_history") }}</h1>
+        </div>
+        <div class="fm-head-actions">
+            <a href="{{ url_for('farmer.diagnose') }}" class="fm-btn fm-btn-primary fm-btn-sm">
+                <i class="fas fa-plus"></i>{{ t("new_rule_diagnosis") }}
+            </a>
+        </div>
     </div>
-    <div class="card-body">
+
+    <div class="fm-card">
         {% if diagnoses and diagnoses|length > 0 %}
-            <div class="diag-list">
-                {% for d in diagnoses %}
-                <a class="diag-item text-decoration-none text-reset"
-                   href="{{ url_for('farmer.diagnosis_result', diagnosis_id=d.id) }}">
-                    {% set disease_label = (d.disease.name_kh if current_lang == 'km' and d.disease and d.disease.name_kh else d.disease_name) %}
-                    <div class="font-weight-bold">{{ localize(d.crop, "name", d.crop_name) }}</div>
-                    <div class="small text-muted">{{ t("disease_label") }}: {{ disease_label }}</div>
-                    <div class="small text-muted">
-                        {{ t("symptoms_label") }}: {{ translate_symptoms(d.symptoms)[:80] }}{% if d.symptoms|length > 80 %}...{% endif %}
+        <div class="fm-card-head">
+            <h2 class="fm-card-title">{{ t("rule_inference_history") }}</h2>
+            <span class="fm-count">{{ diagnoses|length }}</span>
+        </div>
+        <div class="fm-list">
+            {% for d in diagnoses %}
+            {% set disease_label = (d.disease.name_kh if current_lang == 'km' and d.disease and d.disease.name_kh else d.disease_name) %}
+            {% set tr_symptoms = translate_symptoms(d.symptoms) %}
+            <a class="fm-row" href="{{ url_for('farmer.diagnosis_result', diagnosis_id=d.id) }}">
+                <div class="fm-row-icon">
+                    <i class="fas fa-seedling"></i>
+                </div>
+                <div class="fm-row-body">
+                    <div class="fm-row-title">{{ localize(d.crop, "name", d.crop_name) }}</div>
+                    <div class="fm-row-meta">
+                        {{ t("disease_label") }}: {{ disease_label or "—" }}
                     </div>
-                    <div class="small text-muted mt-1">
-                        {{ d.created_at.strftime("%Y-%m-%d %H:%M") if d.created_at else "" }}
+                    <div class="fm-row-sub">
+                        {{ t("symptoms_label") }}: {{ tr_symptoms if tr_symptoms else "—" }}
                     </div>
-                </a>
-                {% endfor %}
-            </div>
+                </div>
+                <div class="fm-row-aside">
+                    <span class="fm-row-date">
+                        {{ d.created_at.strftime("%d %b %Y") if d.created_at else "" }}
+                    </span>
+                    <i class="fas fa-chevron-right fm-row-chevron"></i>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
         {% else %}
-            <div class="text-muted small">{{ t("no_rule_diagnoses_yet") }}</div>
+        <div class="fm-empty">
+            <div class="fm-empty-icon"><i class="fas fa-seedling"></i></div>
+            <div class="fm-empty-title">{{ t("no_rule_diagnoses_yet") }}</div>
+            <div class="fm-empty-action">
+                <a href="{{ url_for('farmer.diagnose') }}" class="fm-btn fm-btn-primary">
+                    <i class="fas fa-plus"></i>{{ t("new_rule_diagnosis") }}
+                </a>
+            </div>
+        </div>
         {% endif %}
     </div>
 </div>

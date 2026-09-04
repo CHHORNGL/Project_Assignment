@@ -1,0 +1,2093 @@
+/* =========================================================================
+   FARMER DESIGN SYSTEM
+   =========================================================================
+   One stylesheet for every /farmer/* route (plus the farmer-facing
+   /users/profile, /users/settings and /users/notifications pages, which
+   extend layouts/farmer_shell.html too).
+
+   Loaded from layouts/base.html AFTER css/style.css, so the token block
+   below intentionally re-declares .farmer-dash-theme colours and wins on
+   source order without needing !important.
+
+   Contents
+     1. Tokens (light + dark)
+     2. Page scaffold      .fm-page / .fm-head
+     3. Cards              .fm-card
+     4. Buttons            .fm-btn
+     5. Badges             .fm-badge
+     6. Stats              .fm-stat
+     7. Lists              .fm-list / .fm-row
+     8. Toolbar + fields   .fm-toolbar / .fm-input
+     9. Empty states       .fm-empty
+    10. Bootstrap 4 bridge (so existing .card/.btn markup inherits the look)
+    11. Utility shims for the Bootstrap 5 classes used in templates
+    12. Reduced motion
+========================================================================= */
+
+/* =========================================
+   1. TOKENS
+========================================= */
+.farmer-dash-theme {
+    /* Emerald accent: agriculture-appropriate, and already the de-facto
+       colour in dashboard / diagnose / history content. */
+    --primary: #059669;
+    --primary-strong: #047857;
+    --primary-dark: #065f46;
+    --primary-soft: #ecfdf5;
+    --primary-softer: #f0fdf4;
+    --primary-ring: rgba(5, 150, 105, 0.16);
+    --primary-line: rgba(5, 150, 105, 0.28);
+    --accent: #34d399;
+
+    /* Surfaces: warm off-white canvas, plain white cards. */
+    --farmer-bg: #f8f7f4;
+    --card-bg: #ffffff;
+    --surface-soft: #f9fafb;
+    --surface-muted: #f3f4f6;
+
+    --border-light: #e7e5e1;
+    --border-strong: #d6d3ce;
+
+    --text-main: #1f2937;
+    --text-secondary: #4b5563;
+    --text-muted: #6b7280;
+    --text-faint: #9ca3af;
+
+    /* Status — shared by badges, list rails and stat icons. */
+    --fm-ok: #059669;
+    --fm-ok-bg: #ecfdf5;
+    --fm-warn: #b45309;
+    --fm-warn-bg: #fffbeb;
+    --fm-bad: #dc2626;
+    --fm-bad-bg: #fef2f2;
+    --fm-info: #0369a1;
+    --fm-info-bg: #f0f9ff;
+
+    /* Radius + elevation scales. Two shadows only: resting and raised. */
+    --fm-r-sm: 8px;
+    --fm-r-md: 12px;
+    --fm-r-lg: 16px;
+    --fm-r-pill: 999px;
+    --fm-shadow: 0 1px 2px rgba(31, 41, 55, 0.04), 0 1px 3px rgba(31, 41, 55, 0.06);
+    --fm-shadow-lg: 0 4px 6px -1px rgba(31, 41, 55, 0.07), 0 10px 20px -6px rgba(31, 41, 55, 0.10);
+
+    --fm-gap: 1rem;
+    --fm-pad: 1.25rem;
+    --fm-max: 1180px;
+
+    background: var(--farmer-bg);
+    color: var(--text-main);
+}
+
+.dark-mode .farmer-dash-theme {
+    --primary: #34d399;
+    --primary-strong: #6ee7b7;
+    --primary-dark: #a7f3d0;
+    --primary-soft: rgba(52, 211, 153, 0.12);
+    --primary-softer: rgba(52, 211, 153, 0.07);
+    --primary-ring: rgba(52, 211, 153, 0.22);
+    --primary-line: rgba(52, 211, 153, 0.34);
+    --accent: #6ee7b7;
+
+    --farmer-bg: #0f1210;
+    --card-bg: #181b19;
+    --surface-soft: #1f2320;
+    --surface-muted: #252a26;
+
+    --border-light: #2c322d;
+    --border-strong: #3a423b;
+
+    --text-main: #f3f4f6;
+    --text-secondary: #d1d5db;
+    --text-muted: #9ca3af;
+    --text-faint: #6b7280;
+
+    --fm-ok: #34d399;
+    --fm-ok-bg: rgba(52, 211, 153, 0.13);
+    --fm-warn: #fbbf24;
+    --fm-warn-bg: rgba(251, 191, 36, 0.13);
+    --fm-bad: #f87171;
+    --fm-bad-bg: rgba(248, 113, 113, 0.13);
+    --fm-info: #38bdf8;
+    --fm-info-bg: rgba(56, 189, 248, 0.13);
+
+    --fm-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.3);
+    --fm-shadow-lg: 0 4px 6px -1px rgba(0, 0, 0, 0.45), 0 10px 20px -6px rgba(0, 0, 0, 0.5);
+}
+
+/* =========================================
+   2. PAGE SCAFFOLD
+========================================= */
+.fm-page {
+    max-width: var(--fm-max);
+    margin: 0 auto;
+    padding: 0 0 3rem;
+}
+
+/* Page header. Replaces the .farmer-hero gradient panel that every farmer
+   page repeated: a title, a one-line description, and optional actions. */
+.fm-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--fm-gap);
+    flex-wrap: wrap;
+    padding: 1.75rem 0 1.1rem;
+    margin-bottom: 1.25rem;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.fm-head-text {
+    min-width: 0;
+}
+
+.fm-head-eyebrow {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--primary);
+    margin-bottom: 0.35rem;
+}
+
+.fm-head-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+    color: var(--text-main);
+    margin: 0;
+}
+
+.fm-head-sub {
+    font-size: 0.9rem;
+    line-height: 1.55;
+    color: var(--text-muted);
+    margin: 0.3rem 0 0;
+    max-width: 62ch;
+}
+
+.fm-head-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+}
+
+/* Section heading inside a page, between stacked cards. */
+.fm-section {
+    margin: 2rem 0 0.9rem;
+}
+
+.fm-section-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--text-main);
+    margin: 0;
+}
+
+.fm-section-sub {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin: 0.2rem 0 0;
+}
+
+.fm-grid {
+    display: grid;
+    gap: var(--fm-gap);
+}
+
+.fm-grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.fm-grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.fm-grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+@media (max-width: 991.98px) {
+    .fm-grid-3,
+    .fm-grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 575.98px) {
+    .fm-grid-2,
+    .fm-grid-3,
+    .fm-grid-4 { grid-template-columns: minmax(0, 1fr); }
+
+    .fm-head {
+        padding-top: 1.25rem;
+        align-items: flex-start;
+    }
+
+    .fm-head-title { font-size: 1.28rem; }
+}
+
+/* =========================================
+   3. CARDS
+========================================= */
+.fm-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-light);
+    border-radius: var(--fm-r-lg);
+    box-shadow: var(--fm-shadow);
+    overflow: hidden;
+}
+
+.fm-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    padding: 1rem var(--fm-pad);
+    border-bottom: 1px solid var(--border-light);
+    background: transparent;
+}
+
+.fm-card-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: -0.005em;
+    color: var(--text-main);
+    margin: 0;
+}
+
+.fm-card-sub {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    margin: 0.15rem 0 0;
+}
+
+.fm-card-body {
+    padding: var(--fm-pad);
+}
+
+.fm-card-body-flush { padding: 0; }
+
+.fm-card-foot {
+    padding: 0.9rem var(--fm-pad);
+    border-top: 1px solid var(--border-light);
+    background: var(--surface-soft);
+}
+
+/* Constrains single-column forms so fields don't stretch to 1180px. */
+.fm-narrow { max-width: 640px; }
+
+/* Right-aligned action row, for card footers holding cancel + submit. */
+.fm-actions-end {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.55rem;
+    flex-wrap: wrap;
+}
+
+/* Interactive card: only for cards that are themselves a link. */
+.fm-card-link {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.fm-card-link:hover {
+    color: inherit;
+    text-decoration: none;
+    border-color: var(--primary-line);
+    box-shadow: var(--fm-shadow-lg);
+    transform: translateY(-1px);
+}
+
+.fm-card-link:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+/* =========================================
+   4. BUTTONS
+========================================= */
+.fm-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    padding: 0.5rem 0.95rem;
+    border-radius: var(--fm-r-sm);
+    border: 1px solid transparent;
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.4;
+    white-space: nowrap;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background-color 0.15s ease, border-color 0.15s ease,
+                color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.fm-btn:hover { text-decoration: none; }
+
+.fm-btn:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+.fm-btn:disabled,
+.fm-btn.is-disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.fm-btn-primary {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #ffffff;
+}
+
+.fm-btn-primary:hover {
+    background: var(--primary-strong);
+    border-color: var(--primary-strong);
+    color: #ffffff;
+}
+
+.dark-mode .fm-btn-primary {
+    color: #06251b;
+}
+
+.dark-mode .fm-btn-primary:hover {
+    color: #06251b;
+}
+
+.fm-btn-secondary {
+    background: var(--card-bg);
+    border-color: var(--border-strong);
+    color: var(--text-secondary);
+}
+
+.fm-btn-secondary:hover {
+    background: var(--surface-muted);
+    border-color: var(--text-faint);
+    color: var(--text-main);
+}
+
+.fm-btn-ghost {
+    background: transparent;
+    border-color: transparent;
+    color: var(--text-muted);
+}
+
+.fm-btn-ghost:hover {
+    background: var(--surface-muted);
+    color: var(--text-main);
+}
+
+.fm-btn-danger {
+    background: var(--fm-bad);
+    border-color: var(--fm-bad);
+    color: #ffffff;
+}
+
+.fm-btn-danger:hover {
+    filter: brightness(0.94);
+    color: #ffffff;
+}
+
+.fm-btn-sm {
+    padding: 0.34rem 0.7rem;
+    font-size: 0.8rem;
+    gap: 0.35rem;
+}
+
+.fm-btn-lg {
+    padding: 0.68rem 1.3rem;
+    font-size: 0.95rem;
+}
+
+.fm-btn-block {
+    width: 100%;
+}
+
+.fm-btn i {
+    font-size: 0.85em;
+}
+
+/* =========================================
+   5. BADGES
+========================================= */
+.fm-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.2rem 0.55rem;
+    border-radius: var(--fm-r-pill);
+    font-size: 0.72rem;
+    font-weight: 600;
+    line-height: 1.5;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+    border: 1px solid transparent;
+}
+
+.fm-badge-ok {
+    background: var(--fm-ok-bg);
+    color: var(--fm-ok);
+    border-color: color-mix(in srgb, var(--fm-ok) 22%, transparent);
+}
+
+.fm-badge-warn {
+    background: var(--fm-warn-bg);
+    color: var(--fm-warn);
+    border-color: color-mix(in srgb, var(--fm-warn) 22%, transparent);
+}
+
+.fm-badge-bad {
+    background: var(--fm-bad-bg);
+    color: var(--fm-bad);
+    border-color: color-mix(in srgb, var(--fm-bad) 22%, transparent);
+}
+
+.fm-badge-info {
+    background: var(--fm-info-bg);
+    color: var(--fm-info);
+    border-color: color-mix(in srgb, var(--fm-info) 22%, transparent);
+}
+
+.fm-badge-muted {
+    background: var(--surface-muted);
+    color: var(--text-muted);
+    border-color: var(--border-light);
+}
+
+/* =========================================
+   6. STATS
+========================================= */
+.fm-stat {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 1.1rem var(--fm-pad);
+    background: var(--card-bg);
+    border: 1px solid var(--border-light);
+    border-radius: var(--fm-r-lg);
+    box-shadow: var(--fm-shadow);
+}
+
+.fm-stat-label {
+    display: block;
+    font-size: 0.73rem;
+    font-weight: 600;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 0.4rem;
+}
+
+/* Tabular figures keep the four dashboard counters vertically aligned. */
+.fm-stat-value {
+    display: block;
+    font-size: 1.7rem;
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: var(--text-main);
+    font-variant-numeric: tabular-nums;
+}
+
+.fm-stat-meta {
+    display: block;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin-top: 0.3rem;
+}
+
+.fm-stat-icon {
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
+    border-radius: var(--fm-r-md);
+    display: grid;
+    place-items: center;
+    font-size: 0.95rem;
+    background: var(--primary-soft);
+    color: var(--primary);
+}
+
+.fm-stat-icon-ok   { background: var(--fm-ok-bg);   color: var(--fm-ok); }
+.fm-stat-icon-warn { background: var(--fm-warn-bg); color: var(--fm-warn); }
+.fm-stat-icon-bad  { background: var(--fm-bad-bg);  color: var(--fm-bad); }
+.fm-stat-icon-info { background: var(--fm-info-bg); color: var(--fm-info); }
+
+/* =========================================
+   7. LISTS
+   Replaces the four separate list implementations the farmer templates had
+   (.diag-list, .diag-hist-item, .notification-list, ad-hoc history rows).
+========================================= */
+.fm-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.fm-row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0 0.9rem;
+    padding: 0.9rem var(--fm-pad);
+    border-bottom: 1px solid var(--border-light);
+    border-left: 3px solid transparent;
+    color: inherit;
+    text-decoration: none;
+    transition: background-color 0.14s ease, border-left-color 0.14s ease;
+}
+
+.fm-row:last-child { border-bottom: none; }
+
+a.fm-row:hover {
+    background: var(--surface-soft);
+    color: inherit;
+    text-decoration: none;
+}
+
+a.fm-row:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: -2px;
+}
+
+/* Status rail — the one place status colour appears as a shape, not a pill. */
+.fm-row-ok   { border-left-color: var(--fm-ok); }
+.fm-row-warn { border-left-color: var(--fm-warn); }
+.fm-row-bad  { border-left-color: var(--fm-bad); }
+.fm-row-info { border-left-color: var(--fm-info); }
+
+.fm-row-icon {
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    border-radius: var(--fm-r-md);
+    display: grid;
+    place-items: center;
+    font-size: 0.9rem;
+    background: var(--primary-soft);
+    color: var(--primary);
+}
+
+.fm-row-icon-ok   { background: var(--fm-ok-bg);   color: var(--fm-ok); }
+.fm-row-icon-warn { background: var(--fm-warn-bg); color: var(--fm-warn); }
+.fm-row-icon-bad  { background: var(--fm-bad-bg);  color: var(--fm-bad); }
+.fm-row-icon-info { background: var(--fm-info-bg); color: var(--fm-info); }
+
+.fm-row-body { min-width: 0; }
+
+.fm-row-title {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--text-main);
+    margin-bottom: 0.1rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.fm-row-meta {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.fm-row-sub {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Multi-line body text (chat questions, notification text) needs to wrap
+   and clamp instead of ellipsing on one line. */
+.fm-row-text {
+    font-size: 0.84rem;
+    line-height: 1.55;
+    color: var(--text-secondary);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    white-space: normal;
+}
+
+.fm-row-aside {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.28rem;
+    flex-shrink: 0;
+    text-align: right;
+}
+
+.fm-row-date {
+    font-size: 0.74rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.fm-row-strong {
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: var(--primary);
+    white-space: nowrap;
+}
+
+.fm-row-chevron {
+    font-size: 0.7rem;
+    color: var(--text-faint);
+}
+
+/* Unread / attention state, used by the notification feed. */
+.fm-row.is-unread {
+    background: var(--primary-softer);
+}
+
+.fm-row.is-unread .fm-row-title {
+    font-weight: 700;
+}
+
+/* A row with nowhere to go — rendered as a div, so no hover affordance. */
+.fm-row.is-static { cursor: default; }
+
+/* Infinite-scroll status line at the tail of a .fm-list. */
+.fm-feed-loading {
+    padding: 0.9rem var(--fm-pad);
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    border-top: 1px solid var(--border-light);
+}
+
+@media (max-width: 575.98px) {
+    .fm-row {
+        grid-template-columns: auto minmax(0, 1fr);
+        padding: 0.8rem 1rem;
+        row-gap: 0.4rem;
+    }
+
+    /* Drop the right rail to a third row rather than hiding the date and
+       status entirely, which is what the old .diag-hist-right did. */
+    .fm-row-aside {
+        grid-column: 1 / -1;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 0.5rem;
+        text-align: left;
+    }
+
+    .fm-row-chevron { display: none; }
+}
+
+/* =========================================
+   8. TOOLBAR + FORM FIELDS
+========================================= */
+.fm-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.fm-search {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.fm-search i {
+    position: absolute;
+    left: 0.65rem;
+    font-size: 0.75rem;
+    color: var(--text-faint);
+    pointer-events: none;
+}
+
+.fm-search .fm-input { padding-left: 1.9rem; }
+
+.fm-input,
+.fm-select,
+.fm-textarea {
+    width: 100%;
+    padding: 0.45rem 0.7rem;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: var(--text-main);
+    background: var(--card-bg);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--fm-r-sm);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.fm-textarea {
+    min-height: 5.5rem;
+    resize: vertical;
+}
+
+/* Native arrow is removed by appearance:none above, so draw one. */
+.fm-select {
+    padding-right: 1.9rem;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%236b7280'%3E%3Cpath d='M8 11.5 3.5 7h9z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.6rem center;
+    background-size: 0.7rem;
+}
+
+.fm-input:focus,
+.fm-select:focus,
+.fm-textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-ring);
+}
+
+.fm-input::placeholder,
+.fm-textarea::placeholder {
+    color: var(--text-faint);
+}
+
+.fm-input-sm { min-width: 12rem; }
+.fm-select-sm { min-width: 9rem; }
+
+/* Toolbar fields sit inline next to a card title, so they must not stretch. */
+.fm-toolbar .fm-input,
+.fm-toolbar .fm-select { width: auto; }
+
+/* Toggled by the history filter script. */
+.is-hidden { display: none !important; }
+
+.fm-label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 0.35rem;
+}
+
+.fm-hint {
+    font-size: 0.76rem;
+    color: var(--text-muted);
+    margin-top: 0.3rem;
+}
+
+.fm-error {
+    font-size: 0.76rem;
+    color: var(--fm-bad);
+    margin-top: 0.3rem;
+}
+
+.fm-field { margin-bottom: 1rem; }
+
+.fm-count {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+/* =========================================
+   9. EMPTY STATES
+========================================= */
+.fm-empty {
+    text-align: center;
+    padding: 3.25rem 1.25rem;
+}
+
+.fm-empty-icon {
+    font-size: 1.9rem;
+    color: var(--primary);
+    opacity: 0.55;
+    margin-bottom: 0.85rem;
+}
+
+.fm-empty-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: 0.3rem;
+}
+
+.fm-empty-sub {
+    font-size: 0.86rem;
+    color: var(--text-muted);
+    margin: 0 auto;
+    max-width: 42ch;
+}
+
+.fm-empty-action { margin-top: 1.1rem; }
+
+/* Definition pairs — used by view_diagnosis / detail / profile summaries. */
+.fm-dl {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem 1.5rem;
+    margin: 0;
+}
+
+.fm-dt {
+    font-size: 0.73rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 0.25rem;
+}
+
+.fm-dd {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--text-main);
+    margin: 0;
+}
+
+/* Preserves author line breaks in expert notes / solutions. */
+.fm-prose {
+    font-size: 0.9rem;
+    line-height: 1.7;
+    color: var(--text-secondary);
+    white-space: pre-line;
+}
+
+.fm-quote {
+    padding: 0.85rem 1rem;
+    background: var(--surface-soft);
+    border: 1px solid var(--border-light);
+    border-radius: var(--fm-r-md);
+    font-size: 0.88rem;
+    line-height: 1.65;
+    color: var(--text-secondary);
+}
+
+/* Spacing between a label + its block-level value inside a card body. */
+.fm-field-block { margin-top: 1.25rem; }
+.fm-field-block > .fm-dt { margin-bottom: 0.4rem; }
+
+/* Plain de-emphasised paragraph — the "nothing to show here yet" line inside
+   a populated card, where a full .fm-empty block would be too heavy. */
+.fm-muted-text {
+    margin: 0;
+    font-size: 0.89rem;
+    line-height: 1.6;
+    color: var(--text-muted);
+}
+
+/* Status callout: a tinted panel with a coloured rail. Used for expert
+   verdicts, review outcomes and inline warnings. */
+.fm-note {
+    padding: 0.9rem 1rem;
+    border-radius: var(--fm-r-md);
+    border: 1px solid var(--border-light);
+    border-left: 3px solid var(--border-strong);
+    background: var(--surface-soft);
+}
+
+.fm-note-title {
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    margin-bottom: 0.4rem;
+}
+
+.fm-note-ok {
+    background: var(--fm-ok-bg);
+    border-color: var(--primary-line);
+    border-left-color: var(--fm-ok);
+}
+.fm-note-ok .fm-note-title { color: var(--fm-ok); }
+
+.fm-note-warn {
+    background: var(--fm-warn-bg);
+    border-color: rgba(180, 83, 9, 0.22);
+    border-left-color: var(--fm-warn);
+}
+.fm-note-warn .fm-note-title { color: var(--fm-warn); }
+
+.fm-note-bad {
+    background: var(--fm-bad-bg);
+    border-color: rgba(220, 38, 38, 0.22);
+    border-left-color: var(--fm-bad);
+}
+.fm-note-bad .fm-note-title { color: var(--fm-bad); }
+
+.fm-note-info {
+    background: var(--fm-info-bg);
+    border-color: rgba(3, 105, 161, 0.22);
+    border-left-color: var(--fm-info);
+}
+.fm-note-info .fm-note-title { color: var(--fm-info); }
+
+/* Inside a tinted note the prose sits on colour, so lift it off --text-secondary. */
+.fm-note .fm-prose { color: var(--text-main); }
+
+/* =========================================
+   10. BOOTSTRAP 4 BRIDGE
+   The large templates (news, checkout, settings, profile, upgrade) carry
+   thousands of lines of their own markup built on .card / .btn-success /
+   .badge-*. Rather than rewrite all of it, map those classes onto the same
+   tokens so they inherit the system look. Scoped to .farmer-dash-theme so
+   admin and expert pages are untouched.
+========================================= */
+.farmer-dash-theme .card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-light);
+    border-radius: var(--fm-r-lg);
+    box-shadow: var(--fm-shadow);
+}
+
+.farmer-dash-theme .card-header {
+    background: transparent;
+    border-bottom: 1px solid var(--border-light);
+    padding: 1rem var(--fm-pad);
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.farmer-dash-theme .card-body { padding: var(--fm-pad); }
+
+.farmer-dash-theme .card-footer {
+    background: var(--surface-soft);
+    border-top: 1px solid var(--border-light);
+}
+
+.farmer-dash-theme .section-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+/* The old page header. Kept working, restyled flat: the gradient panel is
+   what made every farmer page look like a different product. */
+.farmer-dash-theme .farmer-hero {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--border-light);
+    border-radius: 0;
+    box-shadow: none;
+    padding: 1.5rem 0 1.1rem;
+}
+
+.farmer-dash-theme .farmer-hero h4,
+.farmer-dash-theme .farmer-hero .h4 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--text-main);
+}
+
+/* .text-success is used as a heading colour across these templates. Inside
+   the farmer shell a heading should read as text, not as an accent. */
+.farmer-dash-theme .farmer-hero .text-success,
+.farmer-dash-theme h1.text-success,
+.farmer-dash-theme h2.text-success,
+.farmer-dash-theme h3.text-success,
+.farmer-dash-theme h4.text-success,
+.farmer-dash-theme h5.text-success {
+    color: var(--text-main) !important;
+}
+
+.farmer-dash-theme .text-success { color: var(--primary) !important; }
+.farmer-dash-theme .text-muted   { color: var(--text-muted) !important; }
+.farmer-dash-theme .text-danger  { color: var(--fm-bad) !important; }
+.farmer-dash-theme .text-warning { color: var(--fm-warn) !important; }
+.farmer-dash-theme .text-info    { color: var(--fm-info) !important; }
+
+.farmer-dash-theme .btn {
+    border-radius: var(--fm-r-sm);
+    font-weight: 600;
+    font-size: 0.875rem;
+    padding: 0.5rem 0.95rem;
+    box-shadow: none;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.farmer-dash-theme .btn-sm {
+    padding: 0.34rem 0.7rem;
+    font-size: 0.8rem;
+}
+
+.farmer-dash-theme .btn-success,
+.farmer-dash-theme .btn-primary {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #ffffff;
+    box-shadow: none;
+}
+
+.farmer-dash-theme .btn-success:hover,
+.farmer-dash-theme .btn-primary:hover,
+.farmer-dash-theme .btn-success:focus,
+.farmer-dash-theme .btn-primary:focus {
+    background: var(--primary-strong);
+    border-color: var(--primary-strong);
+    color: #ffffff;
+    box-shadow: none;
+}
+
+.dark-mode .farmer-dash-theme .btn-success,
+.dark-mode .farmer-dash-theme .btn-primary,
+.dark-mode .farmer-dash-theme .btn-success:hover,
+.dark-mode .farmer-dash-theme .btn-primary:hover {
+    color: #06251b;
+}
+
+.farmer-dash-theme .btn-outline-success,
+.farmer-dash-theme .btn-outline-primary {
+    background: transparent;
+    color: var(--primary);
+    border-color: var(--primary-line);
+}
+
+.farmer-dash-theme .btn-outline-success:hover,
+.farmer-dash-theme .btn-outline-primary:hover {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #ffffff;
+}
+
+.dark-mode .farmer-dash-theme .btn-outline-success:hover,
+.dark-mode .farmer-dash-theme .btn-outline-primary:hover {
+    color: #06251b;
+}
+
+.farmer-dash-theme .btn-outline-secondary {
+    background: var(--card-bg);
+    color: var(--text-secondary);
+    border-color: var(--border-strong);
+}
+
+.farmer-dash-theme .btn-outline-secondary:hover {
+    background: var(--surface-muted);
+    border-color: var(--text-faint);
+    color: var(--text-main);
+}
+
+.farmer-dash-theme .btn:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+.farmer-dash-theme .badge {
+    padding: 0.25rem 0.55rem;
+    border-radius: var(--fm-r-pill);
+    font-size: 0.72rem;
+    font-weight: 600;
+    border: 1px solid transparent;
+}
+
+.farmer-dash-theme .badge-success {
+    background: var(--fm-ok-bg);
+    color: var(--fm-ok);
+    border-color: color-mix(in srgb, var(--fm-ok) 22%, transparent);
+}
+
+.farmer-dash-theme .badge-warning {
+    background: var(--fm-warn-bg);
+    color: var(--fm-warn);
+    border-color: color-mix(in srgb, var(--fm-warn) 22%, transparent);
+}
+
+.farmer-dash-theme .badge-danger {
+    background: var(--fm-bad-bg);
+    color: var(--fm-bad);
+    border-color: color-mix(in srgb, var(--fm-bad) 22%, transparent);
+}
+
+.farmer-dash-theme .badge-info {
+    background: var(--fm-info-bg);
+    color: var(--fm-info);
+    border-color: color-mix(in srgb, var(--fm-info) 22%, transparent);
+}
+
+.farmer-dash-theme .badge-secondary {
+    background: var(--surface-muted);
+    color: var(--text-muted);
+    border-color: var(--border-light);
+}
+
+.farmer-dash-theme .form-control {
+    background: var(--card-bg);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--fm-r-sm);
+    color: var(--text-main);
+    font-size: 0.875rem;
+}
+
+.farmer-dash-theme .form-control:focus {
+    background: var(--card-bg);
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-ring);
+    color: var(--text-main);
+}
+
+.farmer-dash-theme .form-control::placeholder { color: var(--text-faint); }
+
+.farmer-dash-theme .form-label,
+.farmer-dash-theme label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.farmer-dash-theme .metric-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-light);
+    border-radius: var(--fm-r-lg);
+    box-shadow: var(--fm-shadow);
+    padding: 1.1rem var(--fm-pad);
+}
+
+.farmer-dash-theme .metric-card:hover {
+    transform: none;
+    box-shadow: var(--fm-shadow);
+}
+
+.farmer-dash-theme .metric-label {
+    font-size: 0.73rem;
+    font-weight: 600;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.farmer-dash-theme .metric-value {
+    font-size: 1.7rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--text-main);
+    font-variant-numeric: tabular-nums;
+}
+
+.farmer-dash-theme .metric-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: var(--fm-r-md);
+    display: grid;
+    place-items: center;
+    background: var(--primary-soft);
+    color: var(--primary);
+}
+
+.farmer-dash-theme .diag-item {
+    background: var(--card-bg);
+    border: 1px solid var(--border-light);
+    border-radius: var(--fm-r-md);
+    padding: 0.85rem 1rem;
+}
+
+.farmer-dash-theme .diag-item:hover {
+    border-color: var(--primary-line);
+    box-shadow: var(--fm-shadow);
+    transform: none;
+}
+
+.farmer-dash-theme .diag-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.farmer-dash-theme .modal-content {
+    background: var(--card-bg);
+    border: 1px solid var(--border-light);
+    border-radius: var(--fm-r-lg);
+    color: var(--text-main);
+}
+
+.farmer-dash-theme .modal-header,
+.farmer-dash-theme .modal-footer {
+    border-color: var(--border-light);
+}
+
+.farmer-dash-theme hr { border-top-color: var(--border-light); }
+
+/* Text links only. Anything carrying a component class owns its own colour:
+   a bare `.farmer-dash-theme a` rule scores (0,1,1) and would beat a
+   single-class component rule like `.fm-btn-primary` (0,1,0), painting green
+   text on a green button. The exclusions keep the two from competing. */
+.farmer-dash-theme a:not([class*="fm-"]):not([class*="btn"]):not([class*="badge"]) {
+    color: var(--primary);
+}
+
+.farmer-dash-theme a:not([class*="fm-"]):not([class*="btn"]):not([class*="badge"]):hover {
+    color: var(--primary-strong);
+}
+
+/* sb-admin ships `#wrapper #content-wrapper{background-color:#f8f9fc}` — two
+   IDs, so it outranks style.css's single-ID `#content-wrapper{transparent}`
+   and paints a cool grey panel over the warm canvas. Matching its two-ID
+   shape (plus the body class) lets the farmer background run edge to edge. */
+body.farmer-dash-theme #wrapper #content-wrapper,
+body.farmer-dash-theme #content-wrapper,
+body.farmer-dash-theme #content {
+    background-color: var(--farmer-bg);
+}
+
+/* .app-shell layers two blue/cyan radial gradients plus a photo over the
+   canvas. On these content-dense pages that reads as a stray blue cast, so
+   the farmer shell keeps the flat warm background instead. */
+body.app-shell.farmer-dash-theme {
+    background-image: none;
+    background-color: var(--farmer-bg);
+}
+
+/* Nav rail: match the emerald accent and give focus a visible ring. */
+.farmer-dash-theme .farmer-topnav a.active,
+.farmer-dash-theme .farmer-topnav a.active i { color: var(--primary); }
+.farmer-dash-theme .farmer-topnav a.active::after { background: var(--primary); }
+
+.farmer-topnav a:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: -3px;
+    border-radius: 4px;
+}
+
+/* ---- Topbar chrome ----------------------------------------------------
+   The bell / chat buttons and the notification dropdown hardcode the old
+   terracotta rgba(217,119,87,*) throughout style.css (~8029-8263). Repaint
+   them from the tokens so the shell matches the pages it frames. Two
+   classes each, so these outrank the single-class originals.
+
+   Order matters: .notification-btn carries .icon-btn too, and both rules
+   score (0,2,0), so the accent treatment must come second to win. */
+.farmer-dash-theme .icon-btn {
+    background: var(--card-bg);
+    border-color: var(--border-light);
+    color: var(--text-main);
+}
+
+.farmer-dash-theme .icon-btn:hover {
+    background: var(--primary-soft);
+    border-color: var(--primary-line);
+    color: var(--primary);
+}
+
+.farmer-dash-theme .notification-btn {
+    background: var(--primary-soft);
+    border-color: var(--primary-line);
+    color: var(--primary-strong);
+    border-radius: var(--fm-r-md);
+}
+
+.farmer-dash-theme .notification-btn:hover {
+    background: var(--primary-ring);
+    box-shadow: 0 6px 14px var(--primary-ring);
+}
+
+.farmer-dash-theme .notification-btn:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+/* Flat header instead of the terracotta→forest gradient. */
+.farmer-dash-theme .notification-header {
+    background: var(--surface-soft);
+    border-bottom-color: var(--border-light);
+}
+
+.farmer-dash-theme .notification-title { color: var(--text-main); }
+.farmer-dash-theme .notification-subtitle { color: var(--text-muted); }
+
+.farmer-dash-theme .notification-count {
+    background: var(--primary);
+    color: #ffffff;
+    border-radius: var(--fm-r-sm);
+}
+
+.farmer-dash-theme .notification-menu {
+    border-radius: var(--fm-r-lg);
+    border-color: var(--border-light);
+}
+
+.farmer-dash-theme .notification-list,
+.farmer-dash-theme .notification-empty { background: var(--card-bg); }
+
+.farmer-dash-theme .notification-empty { color: var(--text-muted); }
+
+.farmer-dash-theme .notification-item { border-bottom-color: var(--border-light); }
+.farmer-dash-theme .notification-item:hover { background: var(--surface-soft); }
+.farmer-dash-theme .notification-item.is-unread { background: var(--primary-softer); }
+.farmer-dash-theme .notification-item-title { color: var(--text-main); }
+.farmer-dash-theme .notification-item-sub { color: var(--text-muted); }
+.farmer-dash-theme .notification-item-time { color: var(--text-faint); }
+
+/* Flat tints replace the four gradient icon chips. */
+.farmer-dash-theme .notification-item-icon.is-success { background: var(--fm-ok-bg);   color: var(--fm-ok); }
+.farmer-dash-theme .notification-item-icon.is-warning { background: var(--fm-warn-bg); color: var(--fm-warn); }
+.farmer-dash-theme .notification-item-icon.is-danger  { background: var(--fm-bad-bg);  color: var(--fm-bad); }
+.farmer-dash-theme .notification-item-icon.is-info    { background: var(--fm-info-bg); color: var(--fm-info); }
+
+.farmer-dash-theme .notification-footer {
+    background: var(--surface-soft);
+    color: var(--primary);
+    border-top-color: var(--border-light);
+}
+
+.farmer-dash-theme .notification-footer:hover { background: var(--primary-soft); }
+
+/* =========================================
+   11. UTILITY SHIMS
+   These Bootstrap 5 classes appear throughout the farmer templates but the
+   app ships Bootstrap 4.6, where they do not exist and silently do nothing.
+   Defining them here fixes the spacing without touching the markup.
+========================================= */
+.farmer-dash-theme .gap-1 { gap: 0.25rem; }
+.farmer-dash-theme .gap-2 { gap: 0.5rem; }
+.farmer-dash-theme .gap-3 { gap: 1rem; }
+.farmer-dash-theme .gap-4 { gap: 1.5rem; }
+
+.farmer-dash-theme .me-1 { margin-right: 0.25rem; }
+.farmer-dash-theme .me-2 { margin-right: 0.5rem; }
+.farmer-dash-theme .me-3 { margin-right: 1rem; }
+.farmer-dash-theme .ms-1 { margin-left: 0.25rem; }
+.farmer-dash-theme .ms-2 { margin-left: 0.5rem; }
+.farmer-dash-theme .ms-3 { margin-left: 1rem; }
+.farmer-dash-theme .ms-auto { margin-left: auto; }
+
+.farmer-dash-theme .text-start { text-align: left; }
+.farmer-dash-theme .text-end { text-align: right; }
+.farmer-dash-theme .fw-bold { font-weight: 700; }
+.farmer-dash-theme .fw-semibold { font-weight: 600; }
+.farmer-dash-theme .rounded-pill { border-radius: var(--fm-r-pill); }
+
+/* =========================================
+   12. TEAM ROSTER (detail page)
+   Genuinely bespoke layout — a supervisor card plus a uniform member grid.
+   Lifted out of detail.html's inline <style> so it uses the shared tokens
+   and gets dark-mode coverage from the token block instead of its own rules.
+========================================= */
+.fm-team-label {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.fm-team-label h2 {
+    margin: 0;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+/* Rule that fills the remaining width, so the label reads as a divider. */
+.fm-team-label::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--border-light);
+}
+
+.fm-team-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-light);
+    border-radius: var(--fm-r-lg);
+    box-shadow: var(--fm-shadow);
+    transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.fm-team-card:hover {
+    border-color: var(--primary-line);
+    box-shadow: var(--fm-shadow-lg);
+}
+
+.fm-team-avatar {
+    border-radius: 50%;
+    object-fit: cover;
+    background: var(--primary-soft);
+    flex-shrink: 0;
+}
+
+.fm-team-rank {
+    display: inline-block;
+    padding: 0.15rem 0.55rem;
+    border-radius: var(--fm-r-pill);
+    font-size: 0.64rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--primary-strong);
+    background: var(--primary-soft);
+}
+
+/* Lead is signalled by fill, not by a larger card. */
+.fm-team-rank.is-lead {
+    color: #ffffff;
+    background: var(--primary);
+}
+
+.fm-team-name {
+    margin: 0;
+    font-weight: 700;
+    line-height: 1.25;
+    color: var(--text-main);
+}
+
+.fm-team-task {
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.fm-team-facts {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.4rem;
+}
+
+.fm-team-facts li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.55rem;
+    min-width: 0;
+    line-height: 1.45;
+    color: var(--text-secondary);
+}
+
+.fm-team-facts i {
+    width: 14px;
+    margin-top: 0.2rem;
+    text-align: center;
+    flex-shrink: 0;
+    color: var(--primary);
+}
+
+/* Contact rows read as data, not as six emerald links — the icon carries the
+   accent. The `fm-` prefix is what keeps these out of the generic
+   `.farmer-dash-theme a:not([class*="fm-"])` rule, which scores (0,4,1) and
+   would otherwise win over any plain descendant selector here. */
+.fm-team-link {
+    color: inherit;
+    word-break: break-word;
+}
+
+.fm-team-link:hover {
+    color: var(--primary);
+    text-decoration: underline;
+}
+
+.fm-team-divider {
+    height: 1px;
+    background: var(--border-light);
+    margin: 0.9rem 0;
+}
+
+/* Supervisor — the one oversized card. */
+.fm-team-lead {
+    display: flex;
+    align-items: center;
+    gap: 1.75rem;
+    padding: 1.75rem;
+}
+
+.fm-team-lead .fm-team-avatar {
+    width: 132px;
+    height: 132px;
+    border: 4px solid var(--card-bg);
+    box-shadow: var(--fm-shadow-lg);
+}
+
+.fm-team-lead .fm-team-meta { flex: 1; min-width: 0; }
+.fm-team-lead .fm-team-rank { font-size: 0.68rem; margin-bottom: 0.5rem; }
+.fm-team-lead .fm-team-name { font-size: 1.5rem; letter-spacing: -0.015em; }
+.fm-team-lead .fm-team-task { font-size: 0.92rem; margin-top: 0.3rem; }
+
+.fm-team-lead .fm-team-facts {
+    font-size: 0.85rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.45rem 1.5rem;
+}
+
+/* Members — one uniform grid, identical cards. */
+.fm-team-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(272px, 1fr));
+    gap: var(--fm-gap);
+    align-items: stretch;
+}
+
+.fm-team-member {
+    display: flex;
+    flex-direction: column;
+    padding: 1.25rem;
+}
+
+.fm-team-member-head {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    min-width: 0;
+}
+
+.fm-team-member .fm-team-avatar {
+    width: 58px;
+    height: 58px;
+    border: 3px solid var(--card-bg);
+    box-shadow: var(--fm-shadow);
+}
+
+.fm-team-member .fm-team-meta { min-width: 0; }
+.fm-team-member .fm-team-rank { margin-bottom: 0.3rem; }
+.fm-team-member .fm-team-name { font-size: 0.98rem; }
+.fm-team-member .fm-team-task { font-size: 0.8rem; margin-top: 0.15rem; }
+.fm-team-member .fm-team-facts { font-size: 0.78rem; }
+
+@media (max-width: 639.98px) {
+    .fm-team-lead {
+        flex-direction: column;
+        text-align: center;
+        gap: 1.25rem;
+        padding: 1.5rem 1.15rem;
+    }
+
+    .fm-team-lead .fm-team-avatar { width: 108px; height: 108px; }
+    .fm-team-lead .fm-team-name { font-size: 1.25rem; }
+
+    /* Facts stay left-aligned even when the header centres, so the
+       label/value columns still scan as a list. */
+    .fm-team-lead .fm-team-facts {
+        grid-template-columns: 1fr;
+        text-align: left;
+    }
+}
+
+/* =========================================
+   13. PICKER FORM (New Diagnosis)
+   A numbered wizard built from three selectable primitives: crop tiles,
+   symptom chips, and a sticky commit bar. Lifted out of diagnose.html's
+   inline <style>, which hardcoded an indigo accent (#6366f1) that never
+   matched the emerald palette and redefined .section-title globally.
+========================================= */
+
+/* Numbered step heading. The number is a token-coloured chip so the three
+   stages read as a sequence rather than three unrelated labels. */
+.fm-step {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin: 0 0 0.9rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.fm-step-n {
+    width: 1.55rem;
+    height: 1.55rem;
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--primary-soft);
+    color: var(--primary-strong);
+    font-size: 0.78rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.fm-step-hint {
+    margin: -0.5rem 0 1rem 2.15rem;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+}
+
+/* ---- Selectable tiles (crop picker) ---- */
+.fm-tile-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+    gap: 0.7rem;
+}
+
+/* A real <button> so the grid is keyboard-navigable and each tile announces
+   its pressed state; the old markup used click-only <div>s. */
+.fm-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.9rem 0.5rem;
+    width: 100%;
+    background: var(--card-bg);
+    border: 1px solid var(--border-light);
+    border-radius: var(--fm-r-md);
+    cursor: pointer;
+    text-align: center;
+    transition: border-color 0.14s ease, background-color 0.14s ease,
+                box-shadow 0.14s ease;
+}
+
+.fm-tile:hover {
+    border-color: var(--primary-line);
+    box-shadow: var(--fm-shadow);
+}
+
+.fm-tile:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+.fm-tile.is-selected {
+    border-color: var(--primary);
+    background: var(--primary-softer);
+    box-shadow: inset 0 0 0 1px var(--primary);
+}
+
+.fm-tile-emoji {
+    font-size: 1.9rem;
+    line-height: 1;
+}
+
+.fm-tile-name {
+    font-size: 0.79rem;
+    font-weight: 600;
+    line-height: 1.25;
+    color: var(--text-main);
+}
+
+.fm-tile.is-selected .fm-tile-name { color: var(--primary-strong); }
+
+/* ---- Toggle chips (symptom picker) ---- */
+.fm-chip-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.fm-chip {
+    padding: 0.45rem 0.85rem;
+    background: var(--card-bg);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--fm-r-pill);
+    font-size: 0.83rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    user-select: none;
+    transition: border-color 0.14s ease, background-color 0.14s ease,
+                color 0.14s ease;
+}
+
+.fm-chip:hover {
+    border-color: var(--primary-line);
+    color: var(--text-main);
+}
+
+.fm-chip:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+/* Selected chips invert. Colour alone would not survive a greyscale print or
+   a red/green colour deficiency, so the check mark carries it too. */
+.fm-chip.is-selected {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #ffffff;
+}
+
+.fm-chip.is-selected::before {
+    content: "\2713";
+    margin-right: 0.35rem;
+    font-weight: 700;
+}
+
+/* Collapsible category header above each chip group. */
+.fm-group {
+    margin-top: 1.25rem;
+}
+
+.fm-group-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.45rem 0;
+    margin-bottom: 0.6rem;
+    background: none;
+    border: none;
+    border-bottom: 1px solid var(--border-light);
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-main);
+    cursor: pointer;
+    text-align: left;
+}
+
+.fm-group-head:hover { color: var(--primary-strong); }
+
+.fm-group-head:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+.fm-group-head i:first-child {
+    margin-right: 0.4rem;
+    color: var(--primary);
+}
+
+.fm-group-caret {
+    font-size: 0.7rem;
+    color: var(--text-faint);
+    transition: transform 0.18s ease;
+}
+
+.fm-group-head[aria-expanded="false"] .fm-group-caret {
+    transform: rotate(-90deg);
+}
+
+/* ---- File picker + thumbnails ---- */
+.fm-file {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.85rem 1rem;
+    background: var(--surface-soft);
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--fm-r-md);
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: border-color 0.14s ease, background-color 0.14s ease;
+}
+
+.fm-file:hover {
+    border-color: var(--primary);
+    background: var(--primary-softer);
+    color: var(--primary-strong);
+}
+
+.fm-file i { color: var(--primary); }
+
+/* The native control is hidden but still focusable, so the label picks up a
+   ring when the user tabs to it — display:none would drop it from the tab
+   order entirely. */
+.fm-file-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.fm-file-input:focus-visible + .fm-file {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+.fm-thumb-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
+.fm-thumb {
+    width: 76px;
+    height: 76px;
+    object-fit: cover;
+    border-radius: var(--fm-r-sm);
+    border: 1px solid var(--border-light);
+}
+
+/* ---- Sticky commit bar ---- */
+.fm-actionbar {
+    position: sticky;
+    bottom: 0;
+    z-index: 20;
+    margin-top: 1.5rem;
+    padding: 0.85rem 0;
+    background: var(--farmer-bg);
+    border-top: 1px solid var(--border-light);
+}
+
+.fm-actionbar-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.fm-actionbar-count {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.fm-actionbar-count b {
+    display: inline-block;
+    min-width: 1.4rem;
+    padding: 0.1rem 0.4rem;
+    margin-right: 0.35rem;
+    border-radius: var(--fm-r-pill);
+    background: var(--primary-soft);
+    color: var(--primary-strong);
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+}
+
+/* =========================================
+   14. ANNOUNCEMENT MARQUEE (dashboard)
+   A dismissible ticker. Lifted out of dashboard.html's inline <style>, which
+   hardcoded #10b981 / #059669 / #f59e0b instead of the palette tokens.
+   The scroll is a -50% translate over a doubled item list, so the seam
+   between the two copies is never visible.
+========================================= */
+.fm-marquee {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.4rem 0.75rem;
+    margin-bottom: 1rem;
+    background: var(--primary-softer);
+    border: 1px solid var(--primary-line);
+    border-radius: var(--fm-r-pill);
+    overflow: hidden;
+}
+
+.fm-marquee-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex-shrink: 0;
+    padding: 0.2rem 0.6rem;
+    border-radius: var(--fm-r-pill);
+    background: var(--primary);
+    color: #ffffff;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.fm-marquee-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #ffffff;
+    animation: fmBeacon 1.8s ease-in-out infinite;
+}
+
+@keyframes fmBeacon {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50%      { transform: scale(1.4); opacity: 0.5; }
+}
+
+/* Fade both ends so items enter and leave instead of clipping hard. */
+.fm-marquee-track {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    mask-image: linear-gradient(to right, transparent, #000 3%, #000 97%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 3%, #000 97%, transparent);
+}
+
+.fm-marquee-content {
+    display: inline-flex;
+    white-space: nowrap;
+    animation: fmMarquee 120s linear infinite;
+}
+
+@keyframes fmMarquee {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+}
+
+/* Pause on hover so a long notice can actually be read. */
+.fm-marquee:hover .fm-marquee-content,
+.fm-marquee-content.is-paused {
+    animation-play-state: paused;
+}
+
+.fm-marquee-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0 1.5rem;
+    background: none;
+    border: none;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-main);
+    cursor: pointer;
+}
+
+.fm-marquee-item:hover { color: var(--primary-strong); }
+
+.fm-marquee-item:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+.fm-marquee-item i {
+    font-size: 0.6rem;
+    color: var(--fm-warn);
+}
+
+.fm-marquee-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.15rem;
+    flex-shrink: 0;
+}
+
+.fm-marquee-btn {
+    width: 22px;
+    height: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--text-faint);
+    font-size: 0.68rem;
+    cursor: pointer;
+    transition: background-color 0.14s ease, color 0.14s ease;
+}
+
+.fm-marquee-btn:hover {
+    background: var(--primary-soft);
+    color: var(--primary-strong);
+}
+
+.fm-marquee-btn:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 1px;
+}
+
+/* =========================================
+   15. GUEST HERO + FEATURE CARDS (dashboard)
+   Shown to unauthenticated visitors. Replaces ~70 inline style="" attributes.
+========================================= */
+.fm-hero {
+    padding: 3rem 1.5rem;
+    margin-bottom: 1.75rem;
+    text-align: center;
+    background: linear-gradient(135deg, var(--primary-softer), var(--card-bg));
+    border: 1px solid var(--border-light);
+    border-radius: var(--fm-r-lg);
+}
+
+.fm-hero-icon {
+    width: 4.5rem;
+    height: 4.5rem;
+    margin: 0 auto 1.25rem;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--primary);
+    color: #ffffff;
+    font-size: 1.85rem;
+    box-shadow: var(--fm-shadow-lg);
+}
+
+.fm-hero-title {
+    margin: 0 0 0.65rem;
+    font-size: 1.85rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--text-main);
+}
+
+.fm-hero-sub {
+    max-width: 40rem;
+    margin: 0 auto;
+    font-size: 0.98rem;
+    line-height: 1.6;
+    color: var(--text-secondary);
+}
+
+.fm-hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    justify-content: center;
+    margin-top: 1.75rem;
+}
+
+.fm-feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: var(--fm-gap);
+    margin-bottom: 2rem;
+}
+
+.fm-feature {
+    padding: 1.75rem 1.35rem;
+    text-align: center;
+    background: var(--card-bg);
+    border: 1px solid var(--border-light);
+    border-top: 3px solid var(--primary);
+    border-radius: var(--fm-r-lg);
+    box-shadow: var(--fm-shadow);
+}
+
+/* The three cards differ only by accent, so the variant sets both the top
+   rule and the icon wash from one status token pair. */
+.fm-feature-info { border-top-color: var(--fm-info); }
+.fm-feature-info .fm-feature-icon { background: var(--fm-info-bg); color: var(--fm-info); }
+.fm-feature-warn { border-top-color: var(--fm-warn); }
+.fm-feature-warn .fm-feature-icon { background: var(--fm-warn-bg); color: var(--fm-warn); }
+.fm-feature-ok   { border-top-color: var(--fm-ok); }
+.fm-feature-ok .fm-feature-icon   { background: var(--fm-ok-bg);   color: var(--fm-ok); }
+
+.fm-feature-icon {
+    width: 3.25rem;
+    height: 3.25rem;
+    margin: 0 auto 1.15rem;
+    display: grid;
+    place-items: center;
+    border-radius: var(--fm-r-md);
+    background: var(--primary-soft);
+    color: var(--primary);
+    font-size: 1.4rem;
+}
+
+.fm-feature-title {
+    margin: 0 0 0.6rem;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.fm-feature-text {
+    margin: 0;
+    font-size: 0.88rem;
+    line-height: 1.55;
+    color: var(--text-secondary);
+}
+
+@media (max-width: 575.98px) {
+    .fm-hero { padding: 2.25rem 1.15rem; }
+    .fm-hero-title { font-size: 1.45rem; }
+}
+
+/* =========================================
+   16. REDUCED MOTION
+========================================= */
+@media (prefers-reduced-motion: reduce) {
+    .farmer-dash-theme *,
+    .farmer-dash-theme *::before,
+    .farmer-dash-theme *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}

@@ -585,6 +585,10 @@ def diagnose(
     )
 
     best = matched_results[0]
+    best_rule = best.get("rule")
+    best["rule_id"] = best_rule.id if best_rule else None
+    best["disease_id"] = best_rule.disease_id if best_rule else None
+    best["disease_name"] = best.get("diagnosis") or (best_rule.disease.name if best_rule and best_rule.disease else "Unknown")
     best["confidence_tier"] = _confidence_tier(best["confidence"])
     best["confidence_percent"] = round(best["confidence"] * 100, 1)
     best["symptom_scores"] = _aggregate_symptom_scores(matched_results, limit=5)

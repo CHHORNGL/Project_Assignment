@@ -334,6 +334,7 @@ def create_app():
             candidates = [
                 os.path.join(static_root, "css", "style.css"),
                 os.path.join(static_root, "css", "auth.css"),
+                os.path.join(static_root, "css", "farmer.css"),
                 os.path.join(static_root, "css", "notifications.css"),
                 os.path.join(static_root, "css", "system_status.css"),
                 os.path.join(static_root, "css", "errors.css"),

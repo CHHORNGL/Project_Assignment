@@ -33,10 +33,14 @@
     <!-- ===============================
          BRAND LOGO (farmer routes only)
     =============================== -->
-    <a class="topbar-brand" href="{{ url_for('main.index') }}" aria-label="Home">
+    {# The wordmark carries the accessible name, so the mark beside it is
+       decorative — an empty alt keeps screen readers from announcing both. #}
+    <a class="topbar-brand" href="{{ url_for('main.index') }}">
         <img src="{{ url_for('static', filename='img/logo.svg', v=static_version) }}"
-             alt="Logo"
+             alt=""
+             aria-hidden="true"
              class="topbar-brand-logo">
+        <span class="topbar-brand-name">AXE</span>
     </a>
     {% endif %}
 

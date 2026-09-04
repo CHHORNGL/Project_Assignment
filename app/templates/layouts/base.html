@@ -50,6 +50,13 @@
 <link href="{{ url_for('static', filename='css/neumorphic_toggle.css', v=static_version) }}" rel="stylesheet">
 
 <!-- ===============================
+     FARMER DESIGN SYSTEM
+     Loaded after style.css so its .farmer-dash-theme tokens win on source
+     order. Scoped to that class, so admin / expert pages are unaffected.
+=============================== -->
+<link href="{{ url_for('static', filename='css/farmer.css', v=static_version) }}" rel="stylesheet">
+
+<!-- ===============================
      GLOBAL TYPOGRAPHY
 =============================== -->
 <style>
