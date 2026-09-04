@@ -63,7 +63,8 @@
                          src="{{ url_for('static', filename='img/image_detail/' ~ person.photo) }}"
                          alt="{{ person.name }}">
                     <div class="fm-team-meta">
-                        <span class="fm-team-rank {% if loop.first %}is-lead{% endif %}">{% if current_lang == 'km' and person.rank_kh %}{{ person.rank_kh }}{% else %}{{ person.rank }}{% endif %}</span>
+                        {% set role_class = "is-lead" if loop.index == 1 else ("is-frontend" if loop.index == 2 else ("is-mobile" if loop.index == 3 else "is-data")) %}
+                        <span class="fm-team-rank {{ role_class }}">{% if current_lang == 'km' and person.rank_kh %}{{ person.rank_kh }}{% else %}{{ person.rank }}{% endif %}</span>
                         <h3 class="fm-team-name">{% if current_lang == 'km' and person.name_kh %}{{ person.name_kh | safe }}{% else %}{{ person.name }}{% endif %}</h3>
                     </div>
                 </div>

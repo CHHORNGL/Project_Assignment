@@ -1699,8 +1699,18 @@ html.dark-mode .diag-mobile-prediction,
 /* Tablet & Mobile (< 992px) */
 @media (max-width: 991.98px) {
     .diag-layout-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
         gap: 1.5rem;
+        width: 100%;
+        max-width: 100%;
+    }
+    .diag-form-column,
+    .diag-sidebar-column,
+    .diag-card,
+    .diag-stepper-wrapper {
+        min-width: 0;
+        max-width: 100%;
+        box-sizing: border-box;
     }
     .diag-sidebar-column {
         position: static;
@@ -1742,6 +1752,12 @@ html.dark-mode .diag-mobile-prediction,
         padding: 0.55rem 0.75rem;
         font-size: 0.82rem;
         text-align: center;
+        min-width: 0;
+    }
+    .diag-head-btn span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
     .diag-stepper-wrapper {
         padding: 0.85rem 1rem;

@@ -1246,6 +1246,35 @@ body.app-shell.farmer-dash-theme {
     background-color: var(--farmer-bg);
 }
 
+/* Responsive viewport & overflow containment */
+body.farmer-dash-theme {
+    overflow-x: hidden;
+}
+
+body.farmer-dash-theme #wrapper {
+    overflow-x: hidden;
+    width: 100%;
+}
+
+body.farmer-dash-theme #content-wrapper {
+    overflow-x: hidden;
+    width: 100%;
+    min-width: 0;
+}
+
+body.farmer-dash-theme .container-fluid {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+@media (max-width: 575.98px) {
+    body.farmer-dash-theme .container-fluid {
+        padding-left: 0.75rem !important;
+        padding-right: 0.75rem !important;
+    }
+}
+
 /* Nav rail: match the emerald accent and give focus a visible ring. */
 .farmer-dash-theme .farmer-topnav a.active,
 .farmer-dash-theme .farmer-topnav a.active i { color: var(--primary); }
@@ -1459,6 +1488,45 @@ html.dark-mode .fm-team-rank.is-lead {
     border-color: rgba(52, 211, 153, 0.55);
     color: #6ee7b7;
     box-shadow: 0 0 14px rgba(52, 211, 153, 0.16);
+}
+
+/* Frontend & UI/UX badge */
+.fm-team-rank.is-frontend {
+    color: #0284c7;
+    background: #f0f9ff;
+    border-color: #bae6fd;
+}
+.dark-mode .farmer-dash-theme .fm-team-rank.is-frontend,
+html.dark-mode .fm-team-rank.is-frontend {
+    background: rgba(14, 165, 233, 0.16);
+    border-color: rgba(56, 189, 248, 0.4);
+    color: #7dd3fc;
+}
+
+/* Mobile Developer badge */
+.fm-team-rank.is-mobile {
+    color: #7c3aed;
+    background: #f5f3ff;
+    border-color: #ddd6fe;
+}
+.dark-mode .farmer-dash-theme .fm-team-rank.is-mobile,
+html.dark-mode .fm-team-rank.is-mobile {
+    background: rgba(139, 92, 246, 0.16);
+    border-color: rgba(167, 139, 250, 0.4);
+    color: #c4b5fd;
+}
+
+/* Data & QA badge */
+.fm-team-rank.is-data {
+    color: #b45309;
+    background: #fffbeb;
+    border-color: #fde68a;
+}
+.dark-mode .farmer-dash-theme .fm-team-rank.is-data,
+html.dark-mode .fm-team-rank.is-data {
+    background: rgba(245, 158, 11, 0.16);
+    border-color: rgba(251, 191, 36, 0.4);
+    color: #fde68a;
 }
 
 /* Regular rank badge in dark mode */
@@ -1698,21 +1766,73 @@ html.dark-mode .fm-team-member .fm-team-avatar {
         padding: 1.5rem 1.15rem;
     }
 
-    .fm-team-lead .fm-team-avatar { width: 108px; height: 108px; }
+    .fm-team-lead .fm-team-avatar { width: 104px; height: 104px; }
     .fm-team-lead .fm-team-name { font-size: 1.25rem; }
 
     .fm-team-lead .fm-team-facts {
         grid-template-columns: 1fr;
         text-align: left;
     }
-}
 
-@media (max-width: 575.98px) {
     .fm-team-grid {
         grid-template-columns: 1fr;
+        gap: 1.15rem;
     }
+
     .fm-team-card {
-        padding: 1rem;
+        padding: 1.15rem 1rem;
+        border-radius: var(--fm-r-md);
+    }
+
+    .fm-team-member-head {
+        gap: 0.85rem;
+    }
+
+    .fm-team-member .fm-team-avatar {
+        width: 56px;
+        height: 56px;
+    }
+
+    .fm-team-member .fm-team-name {
+        font-size: 1.05rem;
+    }
+
+    .fm-team-task-box {
+        margin-top: 0.75rem;
+        padding: 0.65rem 0.8rem;
+    }
+
+    .fm-team-task {
+        font-size: 0.82rem;
+        line-height: 1.6;
+    }
+
+    .fm-team-facts {
+        gap: 0.4rem;
+        font-size: 0.8rem;
+    }
+
+    .fm-team-facts li {
+        font-size: 0.8rem;
+    }
+
+    .fm-team-link {
+        font-size: 0.78rem;
+        word-break: break-all;
+    }
+}
+
+@media (max-width: 419.98px) {
+    .fm-team-card {
+        padding: 1rem 0.85rem;
+    }
+    .fm-team-member-head {
+        flex-direction: row;
+        align-items: center;
+    }
+    .fm-team-member .fm-team-avatar {
+        width: 50px;
+        height: 50px;
     }
 }
 
