@@ -1,169 +1,1862 @@
 {% extends "layouts/farmer_shell.html" %}
 {% block title %}{{ t("diagnose_title") }}{% endblock %}
 
+{% block head %}
+<style>
+/* ==========================================================================
+   NEW DIAGNOSIS STUDIO — MODERN AGRICULTURAL CLINICAL DESIGN SYSTEM
+   Professional, clean, high-contrast, responsive diagnostic workflow
+   ========================================================================== */
+
+:root {
+    --diag-primary: #059669;
+    --diag-primary-hover: #047857;
+    --diag-primary-light: #ecfdf5;
+    --diag-primary-ring: rgba(5, 150, 105, 0.2);
+    --diag-card-bg: #ffffff;
+    --diag-surface: #f8fafc;
+    --diag-surface-subtle: #f1f5f9;
+    --diag-border: #e2e8f0;
+    --diag-border-strong: #cbd5e1;
+    --diag-ink: #0f172a;
+    --diag-ink-muted: #475569;
+    --diag-ink-subtle: #64748b;
+    --diag-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+    --diag-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+    --diag-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+}
+
+html.dark-mode,
+.dark-mode {
+    --diag-primary: #34d399;
+    --diag-primary-hover: #10b981;
+    --diag-primary-light: rgba(52, 211, 153, 0.12);
+    --diag-primary-ring: rgba(52, 211, 153, 0.25);
+    --diag-card-bg: #181b19;
+    --diag-surface: #121513;
+    --diag-surface-subtle: #1f2420;
+    --diag-border: #2c322d;
+    --diag-border-strong: #3f4740;
+    --diag-ink: #f3f4f6;
+    --diag-ink-muted: #9ca3af;
+    --diag-ink-subtle: #6b7280;
+    --diag-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+    --diag-shadow-md: 0 4px 8px rgba(0, 0, 0, 0.45);
+    --diag-shadow-lg: 0 12px 20px rgba(0, 0, 0, 0.6);
+}
+
+/* Base Page Wrapper */
+.diag-page-container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 0.5rem 3rem;
+}
+
+/* Khmer Typography Rules */
+html[lang="km"] .diag-page-container,
+.diag-page-container:lang(km) {
+    font-family: "Kantumruy Pro", "Hanuman", "Noto Sans Khmer", -apple-system, BlinkMacSystemFont, sans-serif !important;
+    letter-spacing: normal !important;
+}
+
+html[lang="km"] .diag-stepper-title,
+html[lang="km"] .diag-card-title,
+html[lang="km"] .diag-submit-btn,
+html[lang="km"] .diag-chip,
+html[lang="km"] .diag-crop-name {
+    letter-spacing: normal !important;
+    text-transform: none !important;
+}
+
+/* Top Header Bar */
+.diag-header-box {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1.5rem;
+    margin-bottom: 1.75rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--diag-border);
+}
+
+.diag-header-content {
+    flex: 1;
+}
+
+.diag-eyebrow-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.75rem;
+    background: var(--diag-primary-light);
+    color: var(--diag-primary);
+    border: 1px solid var(--diag-primary-ring);
+    border-radius: 9999px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.5rem;
+}
+
+html.dark-mode .diag-eyebrow-pill,
+.dark-mode .diag-eyebrow-pill {
+    color: #34d399;
+    background: rgba(52, 211, 153, 0.12);
+    border-color: rgba(52, 211, 153, 0.3);
+}
+
+.diag-main-title {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--diag-ink);
+    margin: 0 0 0.4rem;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+}
+
+.diag-main-sub {
+    font-size: 0.95rem;
+    color: var(--diag-ink-muted);
+    margin: 0;
+    max-width: 680px;
+    line-height: 1.5;
+}
+
+.diag-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-shrink: 0;
+}
+
+.diag-head-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem 1rem;
+    border-radius: 0.5rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.18s ease;
+    border: 1px solid var(--diag-border);
+    background: var(--diag-card-bg);
+    color: var(--diag-ink-muted);
+}
+
+.diag-head-btn:hover {
+    color: var(--diag-ink);
+    border-color: var(--diag-border-strong);
+    background: var(--diag-surface-subtle);
+    text-decoration: none;
+}
+
+/* ==========================================================================
+   INTERACTIVE MULTI-STEP PROGRESS TRACKER
+   ========================================================================== */
+.diag-stepper-wrapper {
+    margin-bottom: 2rem;
+    background: var(--diag-card-bg);
+    border: 1px solid var(--diag-border);
+    border-radius: 1rem;
+    padding: 1rem 1.5rem;
+    box-shadow: var(--diag-shadow-sm);
+}
+
+.diag-stepper-list {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    position: relative;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.diag-step-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 1;
+    position: relative;
+    cursor: pointer;
+    user-select: none;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.6rem;
+    transition: background-color 0.18s ease;
+}
+
+.diag-step-item:hover {
+    background: var(--diag-surface-subtle);
+}
+
+.diag-step-indicator {
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.88rem;
+    font-weight: 700;
+    flex-shrink: 0;
+    border: 2px solid var(--diag-border-strong);
+    background: var(--diag-surface-subtle);
+    color: var(--diag-ink-subtle);
+    transition: all 0.2s ease;
+}
+
+.diag-step-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.diag-step-order {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--diag-ink-subtle);
+}
+
+.diag-step-title {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--diag-ink);
+    line-height: 1.25;
+}
+
+/* Active and Completed States */
+.diag-step-item.is-active .diag-step-indicator {
+    background: var(--diag-primary);
+    border-color: var(--diag-primary);
+    color: #ffffff;
+    box-shadow: 0 0 0 4px var(--diag-primary-ring);
+}
+
+html.dark-mode .diag-step-item.is-active .diag-step-indicator,
+.dark-mode .diag-step-item.is-active .diag-step-indicator {
+    background: #34d399;
+    border-color: #34d399;
+    color: #06251b !important;
+    font-weight: 800;
+}
+
+.diag-step-item.is-active .diag-step-order {
+    color: var(--diag-primary);
+}
+
+.diag-step-item.is-completed .diag-step-indicator {
+    background: var(--diag-primary-light);
+    border-color: var(--diag-primary);
+    color: var(--diag-primary);
+}
+
+html.dark-mode .diag-step-item.is-completed .diag-step-indicator,
+.dark-mode .diag-step-item.is-completed .diag-step-indicator {
+    color: #34d399;
+    border-color: #34d399;
+    background: rgba(52, 211, 153, 0.15);
+}
+
+/* Connector Line */
+.diag-step-connector {
+    flex: 0 0 2.5rem;
+    height: 2px;
+    background: var(--diag-border);
+    transition: background-color 0.2s ease;
+}
+
+.diag-step-item.is-completed + .diag-step-connector {
+    background: var(--diag-primary);
+}
+
+/* ==========================================================================
+   2-COLUMN WORKSPACE LAYOUT
+   ========================================================================== */
+.diag-layout-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 390px;
+    gap: 1.75rem;
+    align-items: start;
+}
+
+@media (max-width: 991.98px) {
+    .diag-layout-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ==========================================================================
+   FORM CARDS STACK (LEFT COLUMN)
+   ========================================================================== */
+.diag-form-column {
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+}
+
+.diag-card {
+    background: var(--diag-card-bg);
+    border: 1px solid var(--diag-border);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: var(--diag-shadow-sm);
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+    position: relative;
+}
+
+.diag-card:focus-within {
+    border-color: var(--diag-border-strong);
+}
+
+.diag-card-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--diag-border);
+}
+
+.diag-card-head-left {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+}
+
+.diag-card-number {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: var(--diag-primary-light);
+    color: var(--diag-primary);
+    font-size: 0.9rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border: 1px solid var(--diag-primary-ring);
+}
+
+html.dark-mode .diag-card-number,
+.dark-mode .diag-card-number {
+    color: #34d399;
+    background: rgba(52, 211, 153, 0.15);
+    border-color: rgba(52, 211, 153, 0.3);
+}
+
+.diag-card-title {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--diag-ink);
+    margin: 0;
+    line-height: 1.25;
+}
+
+.diag-card-sub {
+    font-size: 0.83rem;
+    color: var(--diag-ink-muted);
+    margin: 0.15rem 0 0;
+}
+
+.diag-card-badge-optional {
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.2rem 0.6rem;
+    border-radius: 9999px;
+    background: var(--diag-surface-subtle);
+    color: var(--diag-ink-subtle);
+    border: 1px solid var(--diag-border);
+}
+
+/* ==========================================================================
+   STEP 1: CROP SELECTION
+   ========================================================================== */
+/* Active Crop Hero Banner */
+.diag-active-crop-banner {
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.85rem 1.25rem;
+    background: var(--diag-primary-light);
+    border: 1px solid var(--diag-primary-ring);
+    border-radius: 0.75rem;
+    margin-bottom: 1.25rem;
+}
+
+.diag-active-crop-info {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+}
+
+.diag-active-crop-emoji {
+    font-size: 2rem;
+    line-height: 1;
+}
+
+.diag-active-crop-text strong {
+    display: block;
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--diag-ink);
+}
+
+.diag-active-crop-text span {
+    font-size: 0.78rem;
+    color: var(--diag-primary);
+    font-weight: 600;
+}
+
+html.dark-mode .diag-active-crop-text span,
+.dark-mode .diag-active-crop-text span {
+    color: #34d399;
+}
+
+.diag-change-crop-btn {
+    padding: 0.4rem 0.85rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    border-radius: 0.5rem;
+    border: 1px solid var(--diag-primary);
+    background: var(--diag-card-bg);
+    color: var(--diag-primary);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.diag-change-crop-btn:hover {
+    background: var(--diag-primary);
+    color: #ffffff;
+}
+
+html.dark-mode .diag-change-crop-btn,
+.dark-mode .diag-change-crop-btn {
+    color: #34d399;
+    border-color: #34d399;
+}
+
+html.dark-mode .diag-change-crop-btn:hover,
+.dark-mode .diag-change-crop-btn:hover {
+    background: #34d399;
+    color: #06251b !important;
+}
+
+/* Crop Controls: Search & Category Filter Pills */
+.diag-controls-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+}
+
+.diag-search-input-wrap {
+    position: relative;
+    width: 100%;
+}
+
+.diag-search-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--diag-ink-subtle);
+    font-size: 0.9rem;
+    pointer-events: none;
+}
+
+.diag-search-input {
+    width: 100%;
+    height: 2.75rem;
+    padding: 0 2.5rem 0 2.6rem;
+    background: var(--diag-surface);
+    border: 1px solid var(--diag-border);
+    border-radius: 0.65rem;
+    font-size: 0.88rem;
+    color: var(--diag-ink);
+    transition: all 0.15s ease;
+}
+
+.diag-search-input:focus {
+    outline: none;
+    border-color: var(--diag-primary);
+    background: var(--diag-card-bg);
+    box-shadow: 0 0 0 3px var(--diag-primary-ring);
+}
+
+.diag-search-clear {
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--diag-ink-subtle);
+    font-size: 0.85rem;
+    cursor: pointer;
+    padding: 0.35rem;
+    display: none;
+}
+
+.diag-search-clear:hover {
+    color: var(--diag-ink);
+}
+
+/* Category Filter Tags */
+.diag-filter-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+}
+
+.diag-filter-pill {
+    padding: 0.35rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    border: 1px solid var(--diag-border);
+    background: var(--diag-surface);
+    color: var(--diag-ink-muted);
+    cursor: pointer;
+    transition: all 0.14s ease;
+}
+
+.diag-filter-pill:hover {
+    background: var(--diag-surface-subtle);
+    color: var(--diag-ink);
+    border-color: var(--diag-border-strong);
+}
+
+.diag-filter-pill.is-active {
+    background: var(--diag-primary);
+    border-color: var(--diag-primary);
+    color: #ffffff;
+    font-weight: 700;
+}
+
+html.dark-mode .diag-filter-pill.is-active,
+.dark-mode .diag-filter-pill.is-active {
+    background: #34d399;
+    border-color: #34d399;
+    color: #06251b !important;
+}
+
+/* Crop Grid Cards */
+.diag-crop-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(115px, 1fr));
+    gap: 0.85rem;
+}
+
+.diag-crop-tile {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.1rem 0.6rem 0.85rem;
+    border-radius: 0.75rem;
+    background: var(--diag-surface);
+    border: 1.5px solid var(--diag-border);
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    outline: none;
+}
+
+.diag-crop-tile:hover {
+    transform: translateY(-2px);
+    background: var(--diag-card-bg);
+    border-color: var(--diag-primary);
+    box-shadow: var(--diag-shadow-md);
+}
+
+.diag-crop-tile:focus-visible {
+    box-shadow: 0 0 0 3px var(--diag-primary-ring);
+    border-color: var(--diag-primary);
+}
+
+.diag-crop-tile.is-selected {
+    background: var(--diag-primary-light);
+    border-color: var(--diag-primary);
+    box-shadow: 0 0 0 1px var(--diag-primary);
+}
+
+.diag-crop-emoji {
+    font-size: 2.2rem;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+    transition: transform 0.18s ease;
+}
+
+.diag-crop-tile:hover .diag-crop-emoji {
+    transform: scale(1.1);
+}
+
+.diag-crop-name {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--diag-ink);
+    line-height: 1.25;
+}
+
+.diag-crop-subname {
+    font-size: 0.7rem;
+    color: var(--diag-ink-subtle);
+    margin-top: 0.15rem;
+}
+
+.diag-crop-check {
+    position: absolute;
+    top: 0.4rem;
+    right: 0.4rem;
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 50%;
+    background: var(--diag-primary);
+    color: #ffffff;
+    font-size: 0.68rem;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+html.dark-mode .diag-crop-check,
+.dark-mode .diag-crop-check {
+    background: #34d399;
+    color: #06251b !important;
+}
+
+.diag-crop-tile.is-selected .diag-crop-check {
+    display: flex;
+}
+
+/* ==========================================================================
+   STEP 2: SYMPTOMS SELECTION
+   ========================================================================== */
+.diag-symptoms-section {
+    transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+/* Selected Symptoms Ribbon */
+.diag-selected-ribbon {
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: var(--diag-surface-subtle);
+    border: 1px solid var(--diag-border);
+    border-radius: 0.65rem;
+    margin-bottom: 1.25rem;
+}
+
+.diag-selected-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    flex: 1;
+}
+
+.diag-active-symptom-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.25rem 0.6rem;
+    background: var(--diag-card-bg);
+    border: 1px solid var(--diag-primary);
+    border-radius: 9999px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--diag-ink);
+}
+
+.diag-active-symptom-tag .remove-btn {
+    background: none;
+    border: none;
+    color: var(--diag-ink-subtle);
+    cursor: pointer;
+    font-size: 0.8rem;
+    padding: 0;
+    line-height: 1;
+}
+
+.diag-active-symptom-tag .remove-btn:hover {
+    color: #ef4444;
+}
+
+.diag-clear-all-btn {
+    background: none;
+    border: none;
+    color: #ef4444;
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+}
+
+.diag-clear-all-btn:hover {
+    text-decoration: underline;
+}
+
+/* Category Groups */
+.diag-category-group {
+    margin-bottom: 1.25rem;
+    border: 1px solid var(--diag-border);
+    border-radius: 0.75rem;
+    background: var(--diag-surface);
+    overflow: hidden;
+    transition: border-color 0.15s ease;
+}
+
+.diag-category-group:last-child {
+    margin-bottom: 0;
+}
+
+.diag-category-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0.85rem 1.15rem;
+    background: var(--diag-card-bg);
+    border: none;
+    border-bottom: 1px solid var(--diag-border);
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--diag-ink);
+    text-align: left;
+    transition: background-color 0.15s ease;
+}
+
+.diag-category-header:hover {
+    background: var(--diag-surface-subtle);
+}
+
+.diag-category-header-title {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+}
+
+.diag-category-header-title i {
+    color: var(--diag-primary);
+    font-size: 0.95rem;
+    width: 1.25rem;
+    text-align: center;
+}
+
+.diag-category-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.35rem;
+    height: 1.35rem;
+    padding: 0 0.4rem;
+    border-radius: 9999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    background: var(--diag-surface-subtle);
+    color: var(--diag-ink-subtle);
+    border: 1px solid var(--diag-border);
+}
+
+.diag-category-badge.has-selected {
+    background: var(--diag-primary);
+    color: #ffffff;
+    border-color: var(--diag-primary);
+}
+
+html.dark-mode .diag-category-badge.has-selected,
+.dark-mode .diag-category-badge.has-selected {
+    background: #34d399;
+    color: #06251b !important;
+}
+
+.diag-category-caret {
+    font-size: 0.75rem;
+    color: var(--diag-ink-subtle);
+    transition: transform 0.2s ease;
+}
+
+.diag-category-header[aria-expanded="false"] .diag-category-caret {
+    transform: rotate(-90deg);
+}
+
+.diag-category-body {
+    padding: 1.15rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+}
+
+/* Symptom Chips */
+.diag-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.5rem 0.95rem;
+    border-radius: 9999px;
+    background: var(--diag-card-bg);
+    border: 1px solid var(--diag-border-strong);
+    color: var(--diag-ink);
+    font-size: 0.83rem;
+    font-weight: 600;
+    cursor: pointer;
+    user-select: none;
+    outline: none;
+    transition: all 0.15s ease;
+    line-height: 1.3;
+}
+
+.diag-chip:hover {
+    border-color: var(--diag-primary);
+    background: var(--diag-surface-subtle);
+    transform: translateY(-1px);
+}
+
+.diag-chip:focus-visible {
+    box-shadow: 0 0 0 3px var(--diag-primary-ring);
+    border-color: var(--diag-primary);
+}
+
+.diag-chip.is-selected {
+    background: var(--diag-primary);
+    border-color: var(--diag-primary);
+    color: #ffffff;
+    font-weight: 700;
+    box-shadow: 0 2px 4px rgba(5, 150, 105, 0.2);
+}
+
+.diag-chip-check {
+    display: none;
+    font-size: 0.75rem;
+}
+
+.diag-chip.is-selected .diag-chip-check {
+    display: inline-block;
+}
+
+/* High Contrast Dark Mode for Chips */
+html.dark-mode .diag-chip.is-selected,
+.dark-mode .diag-chip.is-selected {
+    background: #34d399 !important;
+    border-color: #34d399 !important;
+    color: #06251b !important;
+    font-weight: 800 !important;
+    box-shadow: 0 2px 8px rgba(52, 211, 153, 0.25);
+}
+
+/* ==========================================================================
+   STEP 3: PHOTOS & NOTES
+   ========================================================================== */
+/* Drag and Drop File Dropzone */
+.diag-dropzone {
+    border: 2px dashed var(--diag-border-strong);
+    border-radius: 0.75rem;
+    padding: 1.75rem 1.25rem;
+    background: var(--diag-surface);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    margin-bottom: 1.25rem;
+}
+
+.diag-dropzone:hover,
+.diag-dropzone.is-dragover {
+    border-color: var(--diag-primary);
+    background: var(--diag-primary-light);
+}
+
+.diag-dropzone-icon {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    background: var(--diag-card-bg);
+    border: 1px solid var(--diag-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    color: var(--diag-primary);
+    margin-bottom: 0.75rem;
+    box-shadow: var(--diag-shadow-sm);
+}
+
+.diag-dropzone-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--diag-ink);
+    margin-bottom: 0.25rem;
+}
+
+.diag-dropzone-sub {
+    font-size: 0.78rem;
+    color: var(--diag-ink-subtle);
+}
+
+.diag-dropzone-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin-top: 0.75rem;
+    padding: 0.35rem 0.85rem;
+    border-radius: 0.5rem;
+    background: var(--diag-card-bg);
+    border: 1px solid var(--diag-border-strong);
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--diag-ink);
+}
+
+/* Image Previews Gallery */
+.diag-thumb-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+}
+
+.diag-thumb-card {
+    position: relative;
+    border-radius: 0.6rem;
+    overflow: hidden;
+    border: 1px solid var(--diag-border);
+    background: var(--diag-surface);
+    display: flex;
+    flex-direction: column;
+}
+
+.diag-thumb-img {
+    width: 100%;
+    height: 90px;
+    object-fit: cover;
+}
+
+.diag-thumb-meta {
+    padding: 0.4rem 0.5rem;
+    font-size: 0.7rem;
+    color: var(--diag-ink-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.diag-thumb-remove {
+    position: absolute;
+    top: 0.3rem;
+    right: 0.3rem;
+    width: 1.35rem;
+    height: 1.35rem;
+    border-radius: 50%;
+    background: rgba(15, 23, 42, 0.75);
+    color: #ffffff;
+    border: none;
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.diag-thumb-remove:hover {
+    background: #ef4444;
+}
+
+/* Notes Textarea */
+.diag-field-label {
+    display: block;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--diag-ink);
+    margin-bottom: 0.45rem;
+}
+
+.diag-textarea {
+    width: 100%;
+    padding: 0.85rem 1rem;
+    background: var(--diag-surface);
+    border: 1px solid var(--diag-border);
+    border-radius: 0.65rem;
+    font-size: 0.88rem;
+    color: var(--diag-ink);
+    resize: vertical;
+    min-height: 90px;
+    line-height: 1.5;
+    transition: all 0.15s ease;
+}
+
+.diag-textarea:focus {
+    outline: none;
+    border-color: var(--diag-primary);
+    background: var(--diag-card-bg);
+    box-shadow: 0 0 0 3px var(--diag-primary-ring);
+}
+
+/* ==========================================================================
+   RIGHT COLUMN: STICKY DIAGNOSTIC INTELLIGENCE STUDIO
+   ========================================================================== */
+.diag-sidebar-column {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    position: sticky;
+    top: 1.5rem;
+}
+
+.diag-summary-card {
+    background: var(--diag-card-bg);
+    border: 1px solid var(--diag-border);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: var(--diag-shadow-md);
+}
+
+.diag-summary-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.85rem;
+    border-bottom: 1px solid var(--diag-border);
+}
+
+.diag-summary-title {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--diag-ink);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.diag-live-dot {
+    width: 0.55rem;
+    height: 0.55rem;
+    border-radius: 50%;
+    background: var(--diag-primary);
+    box-shadow: 0 0 0 3px var(--diag-primary-ring);
+    animation: diagPulse 2s infinite;
+}
+
+@keyframes diagPulse {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 var(--diag-primary-ring); }
+    70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(5, 150, 105, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(5, 150, 105, 0); }
+}
+
+/* Summary Row: Target Crop */
+.diag-summary-row {
+    margin-bottom: 1.15rem;
+}
+
+.diag-summary-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--diag-ink-subtle);
+    margin-bottom: 0.4rem;
+}
+
+.diag-summary-crop-box {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 0.9rem;
+    background: var(--diag-surface);
+    border: 1px solid var(--diag-border);
+    border-radius: 0.65rem;
+}
+
+.diag-summary-crop-emoji {
+    font-size: 1.75rem;
+    line-height: 1;
+}
+
+.diag-summary-crop-name {
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: var(--diag-ink);
+}
+
+.diag-summary-crop-hint {
+    font-size: 0.75rem;
+    color: var(--diag-ink-subtle);
+}
+
+/* Selected Symptoms Box in Sidebar */
+.diag-summary-symptoms-list {
+    max-height: 140px;
+    overflow-y: auto;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    padding: 0.65rem;
+    background: var(--diag-surface);
+    border: 1px solid var(--diag-border);
+    border-radius: 0.65rem;
+    margin-top: 0.35rem;
+}
+
+.diag-side-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.2rem 0.55rem;
+    border-radius: 9999px;
+    background: var(--diag-card-bg);
+    border: 1px solid var(--diag-border-strong);
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: var(--diag-ink);
+}
+
+.diag-side-tag i {
+    cursor: pointer;
+    font-size: 0.7rem;
+    color: var(--diag-ink-subtle);
+}
+
+.diag-side-tag i:hover {
+    color: #ef4444;
+}
+
+/* Live Rule Engine Match Box */
+.diag-live-engine-card {
+    padding: 1rem;
+    border-radius: 0.75rem;
+    background: var(--diag-primary-light);
+    border: 1px solid var(--diag-primary-ring);
+    margin-bottom: 1.5rem;
+    transition: all 0.2s ease;
+}
+
+.diag-live-engine-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.diag-live-engine-label {
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--diag-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+html.dark-mode .diag-live-engine-label,
+.dark-mode .diag-live-engine-label {
+    color: #34d399;
+}
+
+.diag-confidence-badge {
+    font-size: 0.72rem;
+    font-weight: 800;
+    padding: 0.15rem 0.55rem;
+    border-radius: 9999px;
+    background: var(--diag-card-bg);
+    color: var(--diag-primary);
+    border: 1px solid var(--diag-primary-ring);
+}
+
+html.dark-mode .diag-confidence-badge,
+.dark-mode .diag-confidence-badge {
+    color: #34d399;
+    background: #181b19;
+}
+
+.diag-live-prediction-name {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--diag-ink);
+    margin: 0 0 0.4rem;
+    line-height: 1.3;
+}
+
+.diag-confidence-bar-bg {
+    width: 100%;
+    height: 6px;
+    border-radius: 9999px;
+    background: var(--diag-surface-subtle);
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.diag-confidence-bar-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: 9999px;
+    background: linear-gradient(90deg, #10b981, #059669);
+    transition: width 0.4s ease;
+}
+
+html.dark-mode .diag-confidence-bar-fill,
+.dark-mode .diag-confidence-bar-fill {
+    background: linear-gradient(90deg, #34d399, #10b981);
+}
+
+.diag-live-engine-desc {
+    font-size: 0.78rem;
+    color: var(--diag-ink-muted);
+    margin: 0;
+    line-height: 1.4;
+}
+
+/* Primary Submit Button */
+.diag-submit-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    width: 100%;
+    height: 3.25rem;
+    border-radius: 0.75rem;
+    border: none;
+    background: var(--diag-primary);
+    color: #ffffff;
+    font-size: 1rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+}
+
+.diag-submit-btn:hover:not(:disabled) {
+    background: var(--diag-primary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(5, 150, 105, 0.4);
+}
+
+.diag-submit-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+
+/* High contrast dark mode submit button */
+html.dark-mode .diag-submit-btn,
+.dark-mode .diag-submit-btn {
+    background: #34d399;
+    color: #06251b !important;
+    font-weight: 800 !important;
+    box-shadow: 0 4px 14px rgba(52, 211, 153, 0.3);
+}
+
+html.dark-mode .diag-submit-btn:hover:not(:disabled),
+.dark-mode .diag-submit-btn:hover:not(:disabled) {
+    background: #10b981;
+    color: #06251b !important;
+    box-shadow: 0 6px 18px rgba(52, 211, 153, 0.45);
+}
+
+.diag-trust-note {
+    font-size: 0.74rem;
+    color: var(--diag-ink-subtle);
+    text-align: center;
+    margin-top: 0.85rem;
+    line-height: 1.4;
+}
+
+/* Recent Diagnoses Drawer in Sidebar */
+.diag-history-card {
+    background: var(--diag-card-bg);
+    border: 1px solid var(--diag-border);
+    border-radius: 1rem;
+    padding: 1.25rem 1.5rem;
+    box-shadow: var(--diag-shadow-sm);
+}
+
+.diag-history-title {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: var(--diag-ink);
+    margin: 0 0 0.85rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.diag-history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.diag-history-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.65rem 0.8rem;
+    border-radius: 0.55rem;
+    background: var(--diag-surface);
+    border: 1px solid var(--diag-border);
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.14s ease;
+}
+
+.diag-history-item:hover {
+    border-color: var(--diag-primary);
+    background: var(--diag-surface-subtle);
+    text-decoration: none;
+    transform: translateX(2px);
+}
+
+.diag-history-item-left strong {
+    display: block;
+    font-size: 0.82rem;
+    color: var(--diag-ink);
+}
+
+.diag-history-item-left span {
+    font-size: 0.72rem;
+    color: var(--diag-ink-subtle);
+}
+
+.diag-history-badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.15rem 0.5rem;
+    border-radius: 9999px;
+    background: var(--diag-primary-light);
+    color: var(--diag-primary);
+}
+
+html.dark-mode .diag-history-badge,
+.dark-mode .diag-history-badge {
+    color: #34d399;
+    background: rgba(52, 211, 153, 0.15);
+}
+
+/* ==========================================================================
+   MOBILE FLOATING BAR (< 992px)
+   ========================================================================== */
+.diag-mobile-bar {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    padding: 0.85rem 1rem;
+    background: var(--diag-card-bg);
+    border-top: 1px solid var(--diag-border);
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 991.98px) {
+    .diag-mobile-bar {
+        display: block;
+    }
+    .diag-page-container {
+        padding-bottom: 5.5rem;
+    }
+}
+
+.diag-mobile-bar-inner {
+    max-width: 600px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.diag-mobile-status {
+    display: flex;
+    flex-direction: column;
+}
+
+.diag-mobile-count {
+    font-size: 0.88rem;
+    font-weight: 800;
+    color: var(--diag-ink);
+}
+
+.diag-mobile-prediction {
+    font-size: 0.72rem;
+    color: var(--diag-primary);
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 170px;
+}
+
+html.dark-mode .diag-mobile-prediction,
+.dark-mode .diag-mobile-prediction {
+    color: #34d399;
+}
+</style>
+{% endblock %}
+
 {% block content %}
 {% set is_km = (current_lang == 'km') %}
 
-<div class="fm-page fm-narrow-form">
-    <div class="fm-head">
-        <div class="fm-head-text">
-            <span class="fm-head-eyebrow">{{ t("new_diagnosis") }}</span>
-            <h1 class="fm-head-title">{{ t("diagnose_title") }}</h1>
-            <p class="fm-head-sub">{{ t("diagnose_sub") }}</p>
+<div class="diag-page-container">
+    {# ── Top Header Bar ── #}
+    <div class="diag-header-box">
+        <div class="diag-header-content">
+            <span class="diag-eyebrow-pill">
+                <i class="fas fa-stethoscope"></i>
+                {{ t("new_diagnosis") }}
+            </span>
+            <h1 class="diag-main-title">{{ t("diagnose_title") }}</h1>
+            <p class="diag-main-sub">{{ t("diagnose_sub") }}</p>
         </div>
-        <div class="fm-head-actions">
-            <a href="{{ url_for('farmer.dashboard') }}" class="fm-btn fm-btn-secondary fm-btn-sm">
-                {{ t("back_to_dashboard") }}
+        <div class="diag-header-actions">
+            <a href="{{ url_for('farmer.dashboard') }}" class="diag-head-btn">
+                <i class="fas fa-arrow-left"></i>
+                <span>{{ t("back_to_dashboard") }}</span>
+            </a>
+            <a href="{{ url_for('farmer.diagnosis_history') }}" class="diag-head-btn">
+                <i class="far fa-file-alt"></i>
+                <span>{% if is_km %}ប្រវត្តិរោគវិនិច្ឆ័យ{% else %}History{% endif %}</span>
             </a>
         </div>
     </div>
 
+    {# ── Interactive Multi-Step Progress Tracker ── #}
+    <div class="diag-stepper-wrapper">
+        <ol class="diag-stepper-list">
+            <li class="diag-step-item is-active" id="stepper-step-1" data-step="1">
+                <div class="diag-step-indicator" id="step-indicator-1">1</div>
+                <div class="diag-step-text">
+                    <span class="diag-step-order">{% if is_km %}ជំហានទី ១{% else %}Step 1{% endif %}</span>
+                    <span class="diag-step-title">{% if is_km %}ជ្រើសរើសដំណាំ{% else %}Select Crop{% endif %}</span>
+                </div>
+            </li>
+            <li class="diag-step-connector" id="step-connector-1"></li>
+            <li class="diag-step-item" id="stepper-step-2" data-step="2">
+                <div class="diag-step-indicator" id="step-indicator-2">2</div>
+                <div class="diag-step-text">
+                    <span class="diag-step-order">{% if is_km %}ជំហានទី ២{% else %}Step 2{% endif %}</span>
+                    <span class="diag-step-title">{% if is_km %}រោគសញ្ញាសង្កេតឃើញ{% else %}Observed Symptoms{% endif %}</span>
+                </div>
+            </li>
+            <li class="diag-step-connector" id="step-connector-2"></li>
+            <li class="diag-step-item" id="stepper-step-3" data-step="3">
+                <div class="diag-step-indicator" id="step-indicator-3">3</div>
+                <div class="diag-step-text">
+                    <span class="diag-step-order">{% if is_km %}ជំហានទី ៣{% else %}Step 3{% endif %}</span>
+                    <span class="diag-step-title">{% if is_km %}រូបភាព និងព័ត៌មាន{% else %}Photos & Context{% endif %}</span>
+                </div>
+            </li>
+        </ol>
+    </div>
+
+    {# ── Main Form Form Element ── #}
     <form id="diagnosis-form" method="POST" enctype="multipart/form-data">
         <input type="hidden" name="crop_id" id="hidden-crop-id" value="{% if selected_crop_id %}{{ selected_crop_id }}{% endif %}">
         <input type="hidden" name="symptoms" id="hidden-symptoms" value="">
 
-        {# ── Step 1: crop ── #}
-        <section class="fm-section">
-            <h2 class="fm-step">
-                <span class="fm-step-n">1</span>
-                {% if is_km %}ជ្រើសរើសដំណាំ{% else %}Select affected crop{% endif %}
-            </h2>
+        <div class="diag-layout-grid">
+            {# ── LEFT COLUMN: WORKSPACE FORMS ── #}
+            <div class="diag-form-column">
 
-            <span class="fm-search fm-search-block">
-                <i class="fas fa-search"></i>
-                <input type="search"
-                       class="fm-input"
-                       id="crop-search-input"
-                       placeholder="{% if is_km %}ស្វែងរកដំណាំ...{% else %}Search crops...{% endif %}"
-                       aria-label="{% if is_km %}ស្វែងរកដំណាំ{% else %}Search crops{% endif %}">
-            </span>
-
-            <div class="fm-tile-grid" role="group" aria-label="{% if is_km %}ដំណាំ{% else %}Crops{% endif %}">
-                {% for crop in crops %}
-                {% set crop_name_lower = (crop.name or "")|lower %}
-                {% set is_rice = "rice" in crop_name_lower or "paddy" in crop_name_lower or "ស្រូវ" in (crop.name_kh or "") %}
-                {% set is_corn = "corn" in crop_name_lower or "maize" in crop_name_lower or "ពោត" in (crop.name_kh or "") %}
-                {% set is_cassava = "cassava" in crop_name_lower or "manioc" in crop_name_lower or "ដំឡូងមី" in (crop.name_kh or "") %}
-                {% set is_potato = "potato" in crop_name_lower or "ដំឡូងបារាំង" in (crop.name_kh or "") %}
-                {% set is_banana = "banana" in crop_name_lower or "ចេក" in (crop.name_kh or "") %}
-                {% set is_mango = "mango" in crop_name_lower or "ស្វាយ" in (crop.name_kh or "") %}
-                {% set is_tomato = "tomato" in crop_name_lower or "ប៉េងប៉ោះ" in (crop.name_kh or "") %}
-                {% set is_cucumber = "cucumber" in crop_name_lower or "ត្រសក់" in (crop.name_kh or "") %}
-                {% set is_pepper = "pepper" in crop_name_lower or "chili" in crop_name_lower or "chilli" in crop_name_lower or "ម្ទេស" in (crop.name_kh or "") %}
-                {% set is_veg = "vegetable" in crop_name_lower or "eggplant" in crop_name_lower or "បន្លែ" in (crop.name_kh or "") %}
-                {% set is_soy = "soy" in crop_name_lower or "bean" in crop_name_lower or "legume" in crop_name_lower or "សណ្តែក" in (crop.name_kh or "") %}
-
-                {% if crop.emoji %}{% set crop_emoji = crop.emoji %}
-                {% elif is_rice %}{% set crop_emoji = "🌾" %}
-                {% elif is_corn %}{% set crop_emoji = "🌽" %}
-                {% elif is_cassava %}{% set crop_emoji = "🍠" %}
-                {% elif is_potato %}{% set crop_emoji = "🥔" %}
-                {% elif is_tomato %}{% set crop_emoji = "🍅" %}
-                {% elif is_cucumber %}{% set crop_emoji = "🥒" %}
-                {% elif is_banana %}{% set crop_emoji = "🍌" %}
-                {% elif is_mango %}{% set crop_emoji = "🥭" %}
-                {% elif is_pepper %}{% set crop_emoji = "🌶️" %}
-                {% elif is_veg %}{% set crop_emoji = "🥦" %}
-                {% elif is_soy %}{% set crop_emoji = "🫘" %}
-                {% else %}{% set crop_emoji = "🌿" %}{% endif %}
-
-                {% set crop_display = crop.name_kh if is_km and crop.name_kh else crop.name %}
-                {% set is_selected = selected_crop_id and crop.id == selected_crop_id %}
-
-                {# A real button, so the grid is reachable by keyboard and the
-                   selected state is announced. The old markup used bare divs. #}
-                <button type="button"
-                        class="fm-tile{% if is_selected %} is-selected{% endif %}"
-                        data-crop-id="{{ crop.id }}"
-                        data-search="{{ (crop.name or '')|lower }} {{ (crop.name_kh or '')|lower }}"
-                        aria-pressed="{{ 'true' if is_selected else 'false' }}">
-                    <span class="fm-tile-emoji" aria-hidden="true">{{ crop_emoji }}</span>
-                    <span class="fm-tile-name">{{ crop_display }}</span>
-                </button>
-                {% endfor %}
-            </div>
-        </section>
-
-        {# ── Step 2 + 3: revealed once a crop is chosen ── #}
-        <div id="symptoms-container" hidden>
-            <section class="fm-section">
-                <h2 class="fm-step">
-                    <span class="fm-step-n">2</span>
-                    {% if is_km %}រោគសញ្ញាដែលសង្កេតឃើញ{% else %}Observed symptoms{% endif %}
-                </h2>
-
-                <span class="fm-search fm-search-block">
-                    <i class="fas fa-search"></i>
-                    <input type="search"
-                           class="fm-input"
-                           id="symptom-search-input"
-                           placeholder="{% if is_km %}ស្វែងរករោគសញ្ញា...{% else %}Search symptoms...{% endif %}"
-                           aria-label="{% if is_km %}ស្វែងរករោគសញ្ញា{% else %}Search symptoms{% endif %}">
-                </span>
-
-                <div id="symptoms-categories">
-                    {% set groups = [
-                        (2, "fa-leaf",      "លើស្លឹក",                  "Leaves"),
-                        (3, "fa-seedling",  "លើដើម និងមែក",             "Stems & branches"),
-                        (4, "fa-apple-alt", "លើផ្កា និងផ្លែ",            "Fruit & flowers"),
-                        (5, "fa-bug",       "ផ្សេងៗ (ឫស, សត្វល្អិត)",   "Roots & general pests")
-                    ] %}
-                    {% for gid, gicon, gkh, gen in groups %}
-                    <div class="fm-group" data-group="{{ gid }}">
-                        <button type="button"
-                                class="fm-group-head"
-                                data-target="category-{{ gid }}"
-                                aria-expanded="true"
-                                aria-controls="category-{{ gid }}">
-                            <span><i class="fas {{ gicon }}"></i>{% if is_km %}{{ gkh }}{% else %}{{ gen }}{% endif %}</span>
-                            <i class="fas fa-chevron-down fm-group-caret" aria-hidden="true"></i>
-                        </button>
-                        <div class="fm-chip-group" id="category-{{ gid }}"></div>
+                {# ── STEP 1: CROP SELECTION CARD ── #}
+                <section class="diag-card" id="step-crop-card">
+                    <div class="diag-card-head">
+                        <div class="diag-card-head-left">
+                            <div class="diag-card-number">1</div>
+                            <div>
+                                <h2 class="diag-card-title">{% if is_km %}ជ្រើសរើសដំណាំដែលរងផលប៉ះពាល់{% else %}Select Affected Crop{% endif %}</h2>
+                                <p class="diag-card-sub">{% if is_km %}សូមជ្រើសរើសដំណាំដែលកំពុងមានបញ្ហា ឬបង្ហាញសញ្ញាមិនប្រក្រតី{% else %}Choose the crop presenting signs of disease, stress, or pests{% endif %}</p>
+                            </div>
+                        </div>
                     </div>
-                    {% endfor %}
+
+                    {# Active Crop Hero Banner (Shown after selection) #}
+                    <div class="diag-active-crop-banner" id="active-crop-banner">
+                        <div class="diag-active-crop-info">
+                            <span class="diag-active-crop-emoji" id="active-crop-emoji">🌿</span>
+                            <div class="diag-active-crop-text">
+                                <strong id="active-crop-name"></strong>
+                                <span><i class="fas fa-check-circle mr-1"></i>{% if is_km %}ដំណាំត្រូវបានជ្រើសរើស{% else %}Selected Crop{% endif %}</span>
+                            </div>
+                        </div>
+                        <button type="button" class="diag-change-crop-btn" id="btn-change-crop">
+                            <i class="fas fa-sync-alt mr-1"></i>{% if is_km %}ផ្លាស់ប្តូរដំណាំ{% else %}Change Crop{% endif %}
+                        </button>
+                    </div>
+
+                    <div id="crop-picker-collapsible">
+                        {# Controls: Search and Quick Category Pills #}
+                        <div class="diag-controls-row">
+                            <div class="diag-search-input-wrap">
+                                <i class="fas fa-search diag-search-icon"></i>
+                                <input type="search"
+                                       class="diag-search-input"
+                                       id="crop-search-input"
+                                       placeholder="{% if is_km %}ស្វែងរកដំណាំតាមឈ្មោះ (ស្រូវ, ពោត, ប៉េងប៉ោះ...){% else %}Search crops by name (Rice, Tomato, Potato...){% endif %}"
+                                       aria-label="Search crops">
+                                <button type="button" class="diag-search-clear" id="crop-search-clear" aria-label="Clear search">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+
+                            <div class="diag-filter-pills" id="crop-filter-pills">
+                                <button type="button" class="diag-filter-pill is-active" data-crop-filter="all">
+                                    {% if is_km %}ដំណាំទាំងអស់{% else %}All Crops{% endif %}
+                                </button>
+                                <button type="button" class="diag-filter-pill" data-crop-filter="grains">
+                                    🌾 {% if is_km %}ធញ្ញជាតិ{% else %}Grains{% endif %}
+                                </button>
+                                <button type="button" class="diag-filter-pill" data-crop-filter="vegetables">
+                                    🥦 {% if is_km %}បន្លែ{% else %}Vegetables{% endif %}
+                                </button>
+                                <button type="button" class="diag-filter-pill" data-crop-filter="tubers">
+                                    🍠 {% if is_km %}មើមដំណាំ{% else %}Tubers{% endif %}
+                                </button>
+                                <button type="button" class="diag-filter-pill" data-crop-filter="fruits">
+                                    🍌 {% if is_km %}ផ្លែឈើ{% else %}Fruits{% endif %}
+                                </button>
+                            </div>
+                        </div>
+
+                        {# Crop Tiles Grid #}
+                        <div class="diag-crop-grid" id="crop-tiles-grid" role="group" aria-label="Crops">
+                            {% for crop in crops %}
+                            {% set crop_name_lower = (crop.name or "")|lower %}
+                            {% set is_rice = "rice" in crop_name_lower or "paddy" in crop_name_lower or "ស្រូវ" in (crop.name_kh or "") %}
+                            {% set is_corn = "corn" in crop_name_lower or "maize" in crop_name_lower or "ពោត" in (crop.name_kh or "") %}
+                            {% set is_cassava = "cassava" in crop_name_lower or "manioc" in crop_name_lower or "ដំឡូងមី" in (crop.name_kh or "") %}
+                            {% set is_potato = "potato" in crop_name_lower or "ដំឡូងបារាំង" in (crop.name_kh or "") %}
+                            {% set is_banana = "banana" in crop_name_lower or "ចេក" in (crop.name_kh or "") %}
+                            {% set is_mango = "mango" in crop_name_lower or "ស្វាយ" in (crop.name_kh or "") %}
+                            {% set is_tomato = "tomato" in crop_name_lower or "ប៉េងប៉ោះ" in (crop.name_kh or "") %}
+                            {% set is_cucumber = "cucumber" in crop_name_lower or "ត្រសក់" in (crop.name_kh or "") %}
+                            {% set is_pepper = "pepper" in crop_name_lower or "chili" in crop_name_lower or "chilli" in crop_name_lower or "ម្ទេស" in (crop.name_kh or "") %}
+                            {% set is_veg = "vegetable" in crop_name_lower or "eggplant" in crop_name_lower or "បន្លែ" in (crop.name_kh or "") %}
+                            {% set is_soy = "soy" in crop_name_lower or "bean" in crop_name_lower or "legume" in crop_name_lower or "សណ្តែក" in (crop.name_kh or "") %}
+
+                            {% if crop.emoji %}{% set crop_emoji = crop.emoji %}
+                            {% elif is_rice %}{% set crop_emoji = "🌾" %}
+                            {% elif is_corn %}{% set crop_emoji = "🌽" %}
+                            {% elif is_cassava %}{% set crop_emoji = "🍠" %}
+                            {% elif is_potato %}{% set crop_emoji = "🥔" %}
+                            {% elif is_tomato %}{% set crop_emoji = "🍅" %}
+                            {% elif is_cucumber %}{% set crop_emoji = "🥒" %}
+                            {% elif is_banana %}{% set crop_emoji = "🍌" %}
+                            {% elif is_mango %}{% set crop_emoji = "🥭" %}
+                            {% elif is_pepper %}{% set crop_emoji = "🌶️" %}
+                            {% elif is_veg %}{% set crop_emoji = "🥦" %}
+                            {% elif is_soy %}{% set crop_emoji = "🫘" %}
+                            {% else %}{% set crop_emoji = "🌿" %}{% endif %}
+
+                            {% set crop_tag = "other" %}
+                            {% if is_rice or is_corn or is_soy %}{% set crop_tag = "grains" %}
+                            {% elif is_tomato or is_cucumber or is_pepper or is_veg %}{% set crop_tag = "vegetables" %}
+                            {% elif is_potato or is_cassava %}{% set crop_tag = "tubers" %}
+                            {% elif is_banana or is_mango %}{% set crop_tag = "fruits" %}{% endif %}
+
+                            {% set crop_display = crop.name_kh if is_km and crop.name_kh else crop.name %}
+                            {% set crop_sub_display = crop.name if is_km and crop.name_kh else (crop.name_kh or "") %}
+                            {% set is_selected = selected_crop_id and crop.id == selected_crop_id %}
+
+                            <button type="button"
+                                    class="diag-crop-tile fm-tile{% if is_selected %} is-selected{% endif %}"
+                                    data-crop-id="{{ crop.id }}"
+                                    data-crop-name="{{ crop_display }}"
+                                    data-crop-emoji="{{ crop_emoji }}"
+                                    data-crop-tag="{{ crop_tag }}"
+                                    data-search="{{ (crop.name or '')|lower }} {{ (crop.name_kh or '')|lower }}"
+                                    aria-pressed="{{ 'true' if is_selected else 'false' }}">
+                                <span class="diag-crop-check"><i class="fas fa-check"></i></span>
+                                <span class="diag-crop-emoji fm-tile-emoji" aria-hidden="true">{{ crop_emoji }}</span>
+                                <span class="diag-crop-name fm-tile-name">{{ crop_display }}</span>
+                                {% if crop_sub_display %}
+                                <span class="diag-crop-subname">{{ crop_sub_display }}</span>
+                                {% endif %}
+                            </button>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </section>
+
+                {# ── STEP 2 & 3 CONTAINER (Revealed once crop is selected) ── #}
+                <div id="symptoms-container" {% if not selected_crop_id %}hidden{% endif %}>
+
+                    {# ── STEP 2: SYMPTOMS SELECTION CARD ── #}
+                    <section class="diag-card diag-symptoms-section" id="step-symptoms-card">
+                        <div class="diag-card-head">
+                            <div class="diag-card-head-left">
+                                <div class="diag-card-number">2</div>
+                                <div>
+                                    <h2 class="diag-card-title">{% if is_km %}រោគសញ្ញាដែលសង្កេតឃើញ{% else %}Observed Symptoms{% endif %}</h2>
+                                    <p class="diag-card-sub">{% if is_km %}សូមចុចជ្រើសរើសរោគសញ្ញាទាំងអស់ដែលអ្នកសង្កេតឃើញលើស្លឹក ដើម ផ្លែ ឬឫស{% else %}Tap all symptoms visible on leaves, stems, fruit, or root zones{% endif %}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {# Selected Symptoms Ribbon Bar #}
+                        <div class="diag-selected-ribbon" id="selected-symptoms-ribbon">
+                            <div class="diag-selected-tags" id="selected-symptoms-tags"></div>
+                            <button type="button" class="diag-clear-all-btn" id="btn-clear-all-symptoms">
+                                <i class="fas fa-times-circle mr-1"></i>{% if is_km %}លុបការជ្រើសរើសទាំងអស់{% else %}Clear all{% endif %}
+                            </button>
+                        </div>
+
+                        {# Symptom Search & Quick Actions #}
+                        <div class="diag-controls-row">
+                            <div class="diag-search-input-wrap">
+                                <i class="fas fa-search diag-search-icon"></i>
+                                <input type="search"
+                                       class="diag-search-input"
+                                       id="symptom-search-input"
+                                       placeholder="{% if is_km %}ស្វែងរករោគសញ្ញា (ស្នាមអុច, ស្រពោន, លឿង, ដង្កូវចោះ...){% else %}Search symptoms (e.g. leaf spots, wilting, yellowing, rot...){% endif %}"
+                                       aria-label="Search symptoms">
+                                <button type="button" class="diag-search-clear" id="symptom-search-clear" aria-label="Clear symptom search">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+
+                            {# Category Filter Tabs #}
+                            <div class="diag-filter-pills" id="symptom-category-pills">
+                                <button type="button" class="diag-filter-pill is-active" data-cat-tab="all">
+                                    {% if is_km %}ទាំងអស់{% else %}All Symptoms{% endif %}
+                                </button>
+                                <button type="button" class="diag-filter-pill" data-cat-tab="2">
+                                    🍃 {% if is_km %}ស្លឹក{% else %}Leaves{% endif %}
+                                    <span class="badge badge-light ml-1" id="badge-cat-2" style="display:none;">0</span>
+                                </button>
+                                <button type="button" class="diag-filter-pill" data-cat-tab="3">
+                                    🌾 {% if is_km %}ដើម និងមែក{% else %}Stems{% endif %}
+                                    <span class="badge badge-light ml-1" id="badge-cat-3" style="display:none;">0</span>
+                                </button>
+                                <button type="button" class="diag-filter-pill" data-cat-tab="4">
+                                    🍎 {% if is_km %}ផ្លែ និងផ្កា{% else %}Fruits{% endif %}
+                                    <span class="badge badge-light ml-1" id="badge-cat-4" style="display:none;">0</span>
+                                </button>
+                                <button type="button" class="diag-filter-pill" data-cat-tab="5">
+                                    🐛 {% if is_km %}ឫស និងសត្វល្អិត{% else %}Roots & Pests{% endif %}
+                                    <span class="badge badge-light ml-1" id="badge-cat-5" style="display:none;">0</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        {# Symptoms Categories Accordions #}
+                        <div id="symptoms-categories">
+                            {% set groups = [
+                                (2, "fa-leaf",      "លើស្លឹក",                  "Leaves & Foliage"),
+                                (3, "fa-seedling",  "លើដើម និងមែក",             "Stems & Branches"),
+                                (4, "fa-apple-alt", "លើផ្កា និងផ្លែ",            "Fruit & Flowers"),
+                                (5, "fa-bug",       "ផ្សេងៗ (ឫស, សត្វល្អិត)",   "Roots, Soil & Pests")
+                            ] %}
+                            {% for gid, gicon, gkh, gen in groups %}
+                            <div class="diag-category-group fm-group" data-group="{{ gid }}" id="group-cat-{{ gid }}">
+                                <button type="button"
+                                        class="diag-category-header fm-group-head"
+                                        data-target="category-{{ gid }}"
+                                        aria-expanded="true"
+                                        aria-controls="category-{{ gid }}">
+                                    <div class="diag-category-header-title">
+                                        <i class="fas {{ gicon }}"></i>
+                                        <span>{% if is_km %}{{ gkh }}{% else %}{{ gen }}{% endif %}</span>
+                                        <span class="diag-category-badge" id="count-cat-{{ gid }}">0</span>
+                                    </div>
+                                    <i class="fas fa-chevron-down diag-category-caret fm-group-caret" aria-hidden="true"></i>
+                                </button>
+                                <div class="diag-category-body fm-chip-group" id="category-{{ gid }}"></div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </section>
+
+                    {# ── STEP 3: PHOTOS & NOTES CARD ── #}
+                    <section class="diag-card" id="step-media-card">
+                        <div class="diag-card-head">
+                            <div class="diag-card-head-left">
+                                <div class="diag-card-number">3</div>
+                                <div>
+                                    <h2 class="diag-card-title">{% if is_km %}រូបភាព និងព័ត៌មានបន្ថែម{% else %}Photos & Contextual Notes{% endif %}</h2>
+                                    <p class="diag-card-sub">{% if is_km %}ភ្ជាប់រូបភាពស្លឹក ឬដើមដែលខូច និងរៀបរាប់បន្ថែមដើម្បីទទួលបានការវិភាគកាន់តែសុក្រឹត{% else %}Attach photos of damaged plant tissue and describe field context for higher accuracy{% endif %}</p>
+                                </div>
+                            </div>
+                            <span class="diag-card-badge-optional">{% if is_km %}មិនតម្រូវ{% else %}Optional{% endif %}</span>
+                        </div>
+
+                        {# Native Hidden File Input #}
+                        <input type="file"
+                               class="fm-file-input"
+                               id="diagnosis_image"
+                               name="diagnosis_image"
+                               accept="image/*"
+                               multiple
+                               style="position:absolute; width:1px; height:1px; opacity:0; pointer-events:none;">
+
+                        {# Modern Drag-and-Drop Dropzone #}
+                        <label class="diag-dropzone" for="diagnosis_image" id="diagnosis_image_label">
+                            <div class="diag-dropzone-icon">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                            </div>
+                            <div class="diag-dropzone-title">
+                                {% if is_km %}ចុចទីនេះដើម្បីជ្រើសរើសរូបភាព ឬទាញទម្លាក់រូបភាពមកទីនេះ{% else %}Click to browse photos or drag and drop images here{% endif %}
+                            </div>
+                            <div class="diag-dropzone-sub">
+                                {% if is_km %}ទ្រទ្រង់ JPG, PNG, WEBP (រូបភាពច្រើនសន្លឹកបាន){% else %}Supports JPG, PNG, WEBP up to 10MB per image{% endif %}
+                            </div>
+                            <div class="diag-dropzone-btn">
+                                <i class="fas fa-camera"></i>
+                                <span>{% if is_km %}ជ្រើសរើសរូបថត...{% else %}Choose photos...{% endif %}</span>
+                            </div>
+                        </label>
+
+                        {# Interactive Image Thumbnails Gallery #}
+                        <div class="diag-thumb-gallery fm-thumb-grid" id="image-preview-container" hidden></div>
+
+                        {# Additional Field Notes Textarea #}
+                        <div style="margin-top: 1.25rem;">
+                            <label class="diag-field-label" for="additional-notes">
+                                <i class="far fa-clipboard mr-1"></i>
+                                {% if is_km %}កំណត់ចំណាំបន្ថែមពីកសិករ{% else %}Additional Field Observations{% endif %}
+                            </label>
+                            <textarea id="additional-notes"
+                                      class="diag-textarea fm-textarea"
+                                      rows="3"
+                                      placeholder="{% if is_km %}រៀបរាប់បន្ថែមពីស្ថានភាពដំណាំ (ឧទាហរណ៍៖ សង្កេតឃើញរោគសញ្ញាបន្ទាប់ពីភ្លៀងធ្លាក់ខ្លាំង ៣ថ្ងៃមុន, ដំណាំកំពុងចេញផ្កា...){% else %}Describe field symptoms, recent weather conditions, duration of illness, or any fertilizers used...{% endif %}"></textarea>
+                        </div>
+                    </section>
                 </div>
-            </section>
+            </div>
 
-            <section class="fm-section">
-                <h2 class="fm-step">
-                    <span class="fm-step-n">3</span>
-                    {% if is_km %}រូបភាព និងចំណាំបន្ថែម{% else %}Photos & notes{% endif %}
-                    <span class="fm-step-hint">{% if is_km %}មិនតម្រូវ{% else %}Optional{% endif %}</span>
-                </h2>
+            {# ── RIGHT COLUMN: STICKY DIAGNOSTIC INTELLIGENCE STUDIO ── #}
+            <aside class="diag-sidebar-column">
+                <div class="diag-summary-card">
+                    <div class="diag-summary-head">
+                        <h3 class="diag-summary-title">
+                            <i class="fas fa-microchip text-success"></i>
+                            {% if is_km %}ស្ទូឌីយោវិភាគផ្ទាល់{% else %}Diagnostic Studio{% endif %}
+                        </h3>
+                        <span class="diag-live-dot" title="Live Engine Active"></span>
+                    </div>
 
-                <input type="file"
-                       class="fm-file-input"
-                       id="diagnosis_image"
-                       name="diagnosis_image"
-                       accept="image/*"
-                       multiple>
-                <label class="fm-file" for="diagnosis_image" id="diagnosis_image_label">
-                    <i class="fas fa-camera"></i>
-                    <span>{% if is_km %}ជ្រើសរើសរូបភាព...{% else %}Choose images...{% endif %}</span>
-                </label>
-                <div class="fm-thumb-grid" id="image-preview-container" hidden></div>
+                    {# Target Crop Box #}
+                    <div class="diag-summary-row">
+                        <div class="diag-summary-label">{% if is_km %}ដំណាំដែលត្រូវវិភាគ{% else %}Target Crop{% endif %}</div>
+                        <div class="diag-summary-crop-box" id="side-crop-box">
+                            <span class="diag-summary-crop-emoji" id="side-crop-emoji">🌿</span>
+                            <div>
+                                <div class="diag-summary-crop-name" id="side-crop-name">
+                                    {% if is_km %}មិនទាន់ជ្រើសរើស{% else %}No crop selected{% endif %}
+                                </div>
+                                <div class="diag-summary-crop-hint" id="side-crop-hint">
+                                    {% if is_km %}សូមជ្រើសរើសពីជំហានទី ១{% else %}Select from Step 1 above{% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-                <div class="fm-field" style="margin-top: 1rem;">
-                    <label class="fm-label" for="additional-notes">
-                        {% if is_km %}ចំណាំបន្ថែម{% else %}Additional notes{% endif %}
-                    </label>
-                    <textarea id="additional-notes"
-                              class="fm-textarea"
-                              rows="3"
-                              placeholder="{% if is_km %}រៀបរាប់បន្ថែមពីស្ថានភាពដំណាំ...{% else %}Describe any other symptoms or context...{% endif %}"></textarea>
+                    {# Recorded Symptoms Counter & List #}
+                    <div class="diag-summary-row">
+                        <div class="diag-summary-label d-flex justify-content-between align-items-center">
+                            <span>{% if is_km %}រោគសញ្ញាដែលបានកត់ត្រា{% else %}Recorded Symptoms{% endif %}</span>
+                            <span class="badge badge-success font-weight-bold" id="side-symptoms-badge">0</span>
+                        </div>
+                        <div class="diag-summary-symptoms-list" id="side-symptoms-list">
+                            <span class="text-muted small p-1">
+                                {% if is_km %}មិនទាន់មានរោគសញ្ញាត្រូវបានជ្រើសរើសនៅឡើយ{% else %}No symptoms selected yet{% endif %}
+                            </span>
+                        </div>
+                    </div>
+
+                    {# Live AI / Rule Engine Real-Time Match Card #}
+                    <div class="diag-live-engine-card" id="side-live-engine-card">
+                        <div class="diag-live-engine-head">
+                            <span class="diag-live-engine-label">
+                                <i class="fas fa-bolt"></i>
+                                {% if is_km %}ការផ្ទៀងផ្ទាត់ផ្ទាល់{% else %}Live Rule Match{% endif %}
+                            </span>
+                            <span class="diag-confidence-badge" id="side-confidence-badge" style="display:none;">0%</span>
+                        </div>
+                        <h4 class="diag-live-prediction-name" id="side-live-disease">
+                            {% if is_km %}កំពុងរង់ចាំការជ្រើសរើសរោគសញ្ញា...{% else %}Awaiting symptom selection...{% endif %}
+                        </h4>
+                        <div class="diag-confidence-bar-bg" id="side-confidence-bar-bg" style="display:none;">
+                            <div class="diag-confidence-bar-fill" id="side-confidence-bar-fill"></div>
+                        </div>
+                        <p class="diag-live-engine-desc" id="side-live-desc">
+                            {% if is_km %}ជ្រើសរើសរោគសញ្ញាយ៉ាងហោចណាស់ ១ ដើម្បីឱ្យប្រព័ន្ធផ្ទៀងផ្ទាត់ច្បាប់វិនិច្ឆ័យស្វ័យប្រវត្តិ។{% else %}Select at least 1 symptom from Step 2 to generate real-time diagnostic predictions.{% endif %}
+                        </p>
+                    </div>
+
+                    {# Action Commit Button #}
+                    <button type="button" class="diag-submit-btn fm-btn fm-btn-primary" id="btn-submit" disabled>
+                        <i class="fas fa-stethoscope"></i>
+                        <span>{{ t("diagnose_now") }}</span>
+                    </button>
+
+                    <div class="diag-trust-note">
+                        <i class="fas fa-shield-alt mr-1 text-success"></i>
+                        {% if is_km %}ផ្ទៀងផ្ទាត់ជាមួយទិន្នន័យការពារដំណាំ និងវិធានអ្នកជំនាញកសិកម្មកម្ពុជា{% else %}Verified against Cambodian agricultural extension & plant health rules{% endif %}
+                    </div>
                 </div>
-            </section>
+
+                {# Recent Diagnoses Quick List (if farmer has history) #}
+                {% if diagnoses %}
+                <div class="diag-history-card">
+                    <div class="diag-history-title">
+                        <span><i class="fas fa-history mr-1 text-muted"></i> {% if is_km %}រោគវិនិច្ឆ័យថ្មីៗរបស់អ្នក{% else %}Your Recent Diagnoses{% endif %}</span>
+                        <a href="{{ url_for('farmer.diagnosis_history') }}" class="small text-success font-weight-bold">
+                            {% if is_km %}មើលទាំងអស់{% else %}View all{% endif %}
+                        </a>
+                    </div>
+                    <ul class="diag-history-list">
+                        {% for d in diagnoses[:3] %}
+                        <li>
+                            <a href="{{ url_for('farmer.diagnosis_result', diagnosis_id=d.id) }}" class="diag-history-item">
+                                <div class="diag-history-item-left">
+                                    <strong>{{ d.crop_name }}: {{ d.disease_name }}</strong>
+                                    <span>{{ d.created_at.strftime('%b %d, %Y') if d.created_at else '' }}</span>
+                                </div>
+                                <span class="diag-history-badge">{{ d.status }}</span>
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+            </aside>
         </div>
 
-        {# Sticky rather than fixed, so it docks to the form instead of
-           floating over unrelated page content. #}
-        <div class="fm-actionbar">
-            <div class="fm-actionbar-inner">
-                <div class="fm-actionbar-count" aria-live="polite">
-                    <b id="selected-count">0</b>{% if is_km %}រោគសញ្ញា{% else %}selected{% endif %}
+        {# ── MOBILE FLOATING COMMIT BAR (< 992px) ── #}
+        <div class="diag-mobile-bar fm-actionbar" id="mobile-action-bar">
+            <div class="diag-mobile-bar-inner fm-actionbar-inner">
+                <div class="diag-mobile-status fm-actionbar-count">
+                    <div class="diag-mobile-count">
+                        <b id="selected-count">0</b> {% if is_km %}រោគសញ្ញាបានជ្រើសរើស{% else %}symptoms selected{% endif %}
+                    </div>
+                    <div class="diag-mobile-prediction" id="mobile-live-prediction">
+                        {% if is_km %}មិនទាន់មានលទ្ធផល{% else %}No prediction yet{% endif %}
+                    </div>
                 </div>
-                <button type="button" class="fm-btn fm-btn-primary" id="btn-submit" disabled>
-                    <i class="fas fa-stethoscope"></i>{{ t("diagnose_now") }}
+                <button type="button" class="diag-submit-btn fm-btn fm-btn-primary" id="mobile-btn-submit" style="width:auto; padding: 0.5rem 1.25rem; height: 2.75rem;" disabled>
+                    <i class="fas fa-stethoscope mr-1"></i>
+                    <span>{{ t("diagnose_now") }}</span>
                 </button>
             </div>
         </div>
@@ -176,6 +1869,7 @@
 (function () {
     const isKm = {{ 'true' if is_km else 'false' }};
 
+    // Dictionary of crop symptoms from backend
     const cropsData = {
         {% for crop_id, symptoms in crop_symptoms.items() %}
             "{{ crop_id }}": [
@@ -186,21 +1880,62 @@
         {% endfor %}
     };
 
-    const form         = document.getElementById("diagnosis-form");
-    const hiddenCrop   = document.getElementById("hidden-crop-id");
-    const hiddenSymp   = document.getElementById("hidden-symptoms");
-    const sympWrap     = document.getElementById("symptoms-container");
-    const sympCats     = document.getElementById("symptoms-categories");
-    const notes        = document.getElementById("additional-notes");
-    const countEl      = document.getElementById("selected-count");
-    const btnSubmit    = document.getElementById("btn-submit");
-    const fileInput    = document.getElementById("diagnosis_image");
-    const fileLabel    = document.getElementById("diagnosis_image_label");
-    const thumbs       = document.getElementById("image-preview-container");
+    // Form element references
+    const form            = document.getElementById("diagnosis-form");
+    const hiddenCrop      = document.getElementById("hidden-crop-id");
+    const hiddenSymp      = document.getElementById("hidden-symptoms");
+    const sympWrap        = document.getElementById("symptoms-container");
+    const sympCats        = document.getElementById("symptoms-categories");
+    const notes           = document.getElementById("additional-notes");
+    const countEl         = document.getElementById("selected-count");
+    const btnSubmit       = document.getElementById("btn-submit");
+    const mobileBtnSubmit = document.getElementById("mobile-btn-submit");
+    const fileInput       = document.getElementById("diagnosis_image");
+    const fileLabel       = document.getElementById("diagnosis_image_label");
+    const thumbs          = document.getElementById("image-preview-container");
 
+    // Stepper indicators
+    const stepItem1       = document.getElementById("stepper-step-1");
+    const stepItem2       = document.getElementById("stepper-step-2");
+    const stepItem3       = document.getElementById("stepper-step-3");
+    const stepInd1        = document.getElementById("step-indicator-1");
+    const stepInd2        = document.getElementById("step-indicator-2");
+    const stepInd3        = document.getElementById("step-indicator-3");
+
+    // Active Crop Hero Banner
+    const activeCropBanner= document.getElementById("active-crop-banner");
+    const activeCropEmoji = document.getElementById("active-crop-emoji");
+    const activeCropName  = document.getElementById("active-crop-name");
+    const btnChangeCrop   = document.getElementById("btn-change-crop");
+    const cropPickerCollapsible = document.getElementById("crop-picker-collapsible");
+
+    // Sidebar references
+    const sideCropEmoji   = document.getElementById("side-crop-emoji");
+    const sideCropName    = document.getElementById("side-crop-name");
+    const sideCropHint    = document.getElementById("side-crop-hint");
+    const sideSympBadge   = document.getElementById("side-symptoms-badge");
+    const sideSympList    = document.getElementById("side-symptoms-list");
+    const sideConfidenceBadge = document.getElementById("side-confidence-badge");
+    const sideLiveDisease = document.getElementById("side-live-disease");
+    const sideBarBg       = document.getElementById("side-confidence-bar-bg");
+    const sideBarFill     = document.getElementById("side-confidence-bar-fill");
+    const sideLiveDesc    = document.getElementById("side-live-desc");
+    const mobilePrediction= document.getElementById("mobile-live-prediction");
+
+    // Selected ribbon
+    const selectedRibbon  = document.getElementById("selected-symptoms-ribbon");
+    const selectedTags    = document.getElementById("selected-symptoms-tags");
+    const btnClearAll     = document.getElementById("btn-clear-all-symptoms");
+
+    // State
     let selectedCropId = hiddenCrop.value;
-    const selected = new Set();
+    const selected = new Map(); // name -> { id, name, name_kh }
+    let liveEvalTimer = null;
 
+    // Synchronized DataTransfer object for file uploads
+    let uploadedFilesTransfer = new DataTransfer();
+
+    // Categorization logic
     function categoryOf(name, nameKh) {
         const n = (name || "").toLowerCase();
         const kh = nameKh || "";
@@ -208,31 +1943,190 @@
             n.includes("chlorosis") || n.includes("rust") || n.includes("streak") || n.includes("blast") ||
             n.includes("blight") || n.includes("curl") || n.includes("mildew") || kh.includes("ស្លឹក")) return 2;
         if (n.includes("stem") || n.includes("stalk") || n.includes("sheath") || n.includes("canker") ||
-            n.includes("rot") || kh.includes("ដើម") || kh.includes("ស្រទប")) return 3;
+            n.includes("rot") || n.includes("vascular") || n.includes("bore") || n.includes("dead heart") ||
+            kh.includes("ដើម") || kh.includes("ស្រទប") || kh.includes("បណ្ដូល")) return 3;
         if (n.includes("fruit") || n.includes("grain") || n.includes("pod") || n.includes("flower") ||
-            n.includes("seed") || n.includes("panicle") || n.includes("ear") || kh.includes("ផ្លែ") ||
-            kh.includes("ផ្កា") || kh.includes("គ្រាប់") || kh.includes("កួរ")) return 4;
+            n.includes("seed") || n.includes("panicle") || n.includes("ear") || n.includes("tuber") ||
+            kh.includes("ផ្លែ") || kh.includes("ផ្កា") || kh.includes("គ្រាប់") || kh.includes("កួរ") || kh.includes("មើម")) return 4;
         return 5;
     }
 
+    // Update form submission payload and UI elements
     function syncState() {
-        const list = Array.from(selected);
+        const list = Array.from(selected.keys());
         const note = notes.value.trim();
-        countEl.textContent = selected.size;
+        const count = selected.size;
+
+        // Hidden input for POST submission
         hiddenSymp.value = note ? list.concat([note]).join(", ") : list.join(", ");
-        btnSubmit.disabled = (selected.size === 0 && note === "");
+
+        // Counters
+        if (countEl) countEl.textContent = count;
+        if (sideSympBadge) sideSympBadge.textContent = count;
+
+        // Enable / disable submit buttons
+        const canSubmit = selectedCropId && (count > 0 || note.length > 0);
+        btnSubmit.disabled = !canSubmit;
+        if (mobileBtnSubmit) mobileBtnSubmit.disabled = !canSubmit;
+
+        // Update Stepper Progress
+        if (selectedCropId) {
+            stepItem1.classList.add("is-completed");
+            stepInd1.innerHTML = '<i class="fas fa-check"></i>';
+        } else {
+            stepItem1.classList.remove("is-completed");
+            stepInd1.textContent = "1";
+        }
+
+        if (count > 0) {
+            stepItem2.classList.add("is-completed");
+            stepItem2.classList.add("is-active");
+            stepInd2.innerHTML = '<i class="fas fa-check"></i>';
+            stepItem3.classList.add("is-active");
+        } else if (selectedCropId) {
+            stepItem2.classList.remove("is-completed");
+            stepItem2.classList.add("is-active");
+            stepInd2.textContent = "2";
+            stepItem3.classList.remove("is-active");
+        }
+
+        // Update Ribbon
+        if (count > 0) {
+            selectedRibbon.style.display = "flex";
+            selectedTags.innerHTML = "";
+            selected.forEach((item, name) => {
+                const tag = document.createElement("span");
+                tag.className = "diag-active-symptom-tag";
+                const display = (isKm && item.name_kh) ? item.name_kh : item.name;
+                tag.innerHTML = `<span>${display}</span><button type="button" class="remove-btn" data-symp="${name}">&times;</button>`;
+                selectedTags.appendChild(tag);
+            });
+        } else {
+            selectedRibbon.style.display = "none";
+            selectedTags.innerHTML = "";
+        }
+
+        // Update Sidebar Symptoms List
+        if (count > 0) {
+            sideSympList.innerHTML = "";
+            selected.forEach((item, name) => {
+                const tag = document.createElement("span");
+                tag.className = "diag-side-tag";
+                const display = (isKm && item.name_kh) ? item.name_kh : item.name;
+                tag.innerHTML = `<span>${display}</span><i class="fas fa-times-circle" data-symp="${name}"></i>`;
+                sideSympList.appendChild(tag);
+            });
+        } else {
+            sideSympList.innerHTML = `<span class="text-muted small p-1">${isKm ? "មិនទាន់មានរោគសញ្ញាត្រូវបានជ្រើសរើសនៅឡើយ" : "No symptoms selected yet"}</span>`;
+        }
+
+        // Update Category Badges
+        for (let i = 2; i <= 5; i++) {
+            let catCount = 0;
+            const catBox = document.getElementById("category-" + i);
+            if (catBox) {
+                catBox.querySelectorAll(".diag-chip.is-selected").forEach(() => catCount++);
+            }
+            const countBadge = document.getElementById("count-cat-" + i);
+            const tabBadge = document.getElementById("badge-cat-" + i);
+            if (countBadge) {
+                countBadge.textContent = catCount;
+                if (catCount > 0) countBadge.classList.add("has-selected");
+                else countBadge.classList.remove("has-selected");
+            }
+            if (tabBadge) {
+                if (catCount > 0) {
+                    tabBadge.textContent = catCount;
+                    tabBadge.style.display = "inline-block";
+                } else {
+                    tabBadge.style.display = "none";
+                }
+            }
+        }
+
+        // Trigger debounced Live Evaluation
+        triggerLiveEvaluation();
     }
 
+    // Debounced Live Rule Evaluation
+    function triggerLiveEvaluation() {
+        clearTimeout(liveEvalTimer);
+        if (!selectedCropId || selected.size === 0) {
+            sideLiveDisease.textContent = isKm ? "កំពុងរង់ចាំការជ្រើសរើសរោគសញ្ញា..." : "Awaiting symptom selection...";
+            sideLiveDesc.textContent = isKm ? "ជ្រើសរើសរោគសញ្ញាយ៉ាងហោចណាស់ ១ ដើម្បីឱ្យប្រព័ន្ធផ្ទៀងផ្ទាត់ច្បាប់វិនិច្ឆ័យស្វ័យប្រវត្តិ។" : "Select at least 1 symptom from Step 2 to generate real-time diagnostic predictions.";
+            sideConfidenceBadge.style.display = "none";
+            sideBarBg.style.display = "none";
+            if (mobilePrediction) mobilePrediction.textContent = isKm ? "មិនទាន់មានលទ្ធផល" : "No prediction yet";
+            return;
+        }
+
+        sideLiveDisease.innerHTML = `<i class="fas fa-spinner fa-spin mr-1"></i> ${isKm ? "កំពុងផ្ទៀងផ្ទាត់វិធាន..." : "Evaluating knowledge base..."}`;
+
+        liveEvalTimer = setTimeout(() => {
+            const sympIds = Array.from(selected.values()).map(s => s.id).filter(Boolean);
+            fetch("{{ url_for('farmer.api_diagnose_live_evaluation') }}", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    crop_id: selectedCropId,
+                    symptoms: sympIds
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.ok && data.best && data.best.disease_name) {
+                    const disease = data.best.disease_name;
+                    const conf = Math.round(data.best.confidence_percent || 0);
+                    sideLiveDisease.textContent = disease;
+                    sideConfidenceBadge.textContent = conf + "% Match";
+                    sideConfidenceBadge.style.display = "inline-block";
+                    sideBarBg.style.display = "block";
+                    sideBarFill.style.width = conf + "%";
+                    sideLiveDesc.textContent = isKm ?
+                        `បានរកឃើញភាពត្រូវគ្នានឹងច្បាប់វិនិច្ឆ័យនៃ "${disease}" នៅក្នុងប្រព័ន្ធចំណេះដឹង។` :
+                        `Matches diagnostic rule criteria for "${disease}" in Cambodia Plant Health KB.`;
+                    if (mobilePrediction) mobilePrediction.textContent = `${disease} • ${conf}%`;
+                } else if (data && data.ok && data.suspects && data.suspects.length > 0) {
+                    const top = data.suspects[0];
+                    const disease = top.disease_name;
+                    const conf = Math.round((top.confidence || 0) * 100);
+                    sideLiveDisease.textContent = disease;
+                    sideConfidenceBadge.textContent = conf + "% Match";
+                    sideConfidenceBadge.style.display = "inline-block";
+                    sideBarBg.style.display = "block";
+                    sideBarFill.style.width = conf + "%";
+                    sideLiveDesc.textContent = isKm ?
+                        `រោគសញ្ញាស្របគ្នានឹងលក្ខខណ្ឌជំងឺ "${disease}"។` :
+                        `Symptoms align with conditions associated with "${disease}".`;
+                    if (mobilePrediction) mobilePrediction.textContent = `${disease} • ${conf}%`;
+                } else {
+                    sideLiveDisease.textContent = isKm ? "បានកត់ត្រារោគសញ្ញា" : "Symptoms Recorded";
+                    sideConfidenceBadge.style.display = "none";
+                    sideBarBg.style.display = "none";
+                    sideLiveDesc.textContent = isKm ?
+                        "រោគសញ្ញានឹងត្រូវបានវិភាគលម្អិតបន្ថែមដោយម៉ាស៊ីនវិនិច្ឆ័យនៅពេលបញ្ជូន។" :
+                        "Our expert rule engine and specialists will compute a complete assessment upon submission.";
+                    if (mobilePrediction) mobilePrediction.textContent = `${selected.size} ${isKm ? "រោគសញ្ញា" : "symptoms"}`;
+                }
+            })
+            .catch(() => {
+                sideLiveDisease.textContent = isKm ? "បានកត់ត្រារោគសញ្ញា" : "Symptoms Recorded";
+            });
+        }, 320);
+    }
+
+    // Render symptoms chips for a selected crop
     function renderSymptoms(cropId) {
         for (let i = 2; i <= 5; i++) {
-            document.getElementById("category-" + i).innerHTML = "";
+            const catBox = document.getElementById("category-" + i);
+            if (catBox) catBox.innerHTML = "";
         }
 
         const rows = cropsData[cropId] || [];
         if (!rows.length) {
             sympCats.innerHTML =
-                '<div class="fm-empty"><div class="fm-empty-title">' +
-                (isKm ? "មិនមានទិន្នន័យរោគសញ្ញាទេ" : "No symptom data available.") +
+                '<div class="p-4 text-center text-muted"><i class="fas fa-info-circle fa-2x mb-2"></i><div>' +
+                (isKm ? "មិនមានទិន្នន័យរោគសញ្ញាសម្រាប់ដំណាំនេះនៅឡើយទេ។" : "No symptom records available for this crop.") +
                 "</div></div>";
             return;
         }
@@ -241,54 +2135,172 @@
             const text = (isKm && s.name_kh) ? s.name_kh : s.name;
             const chip = document.createElement("button");
             chip.type = "button";
-            chip.className = "fm-chip";
+            chip.className = "diag-chip fm-chip";
             chip.dataset.symptomName = s.name;
-            chip.dataset.search = (text || "").toLowerCase();
+            chip.dataset.symptomId = s.id;
+            chip.dataset.search = (text || "").toLowerCase() + " " + (s.name || "").toLowerCase();
             chip.setAttribute("aria-pressed", selected.has(s.name) ? "true" : "false");
             if (selected.has(s.name)) chip.classList.add("is-selected");
-            chip.textContent = text || s.name;
+
+            chip.innerHTML = `<span class="diag-chip-check"><i class="fas fa-check"></i></span><span class="diag-chip-text">${text || s.name}</span>`;
 
             chip.addEventListener("click", () => {
                 const on = chip.classList.toggle("is-selected");
                 chip.setAttribute("aria-pressed", on ? "true" : "false");
-                if (on) selected.add(s.name); else selected.delete(s.name);
+                if (on) {
+                    selected.set(s.name, { id: s.id, name: s.name, name_kh: s.name_kh });
+                } else {
+                    selected.delete(s.name);
+                }
                 syncState();
             });
 
-            document.getElementById("category-" + categoryOf(s.name, s.name_kh)).appendChild(chip);
+            const catId = categoryOf(s.name, s.name_kh);
+            const targetCat = document.getElementById("category-" + catId);
+            if (targetCat) targetCat.appendChild(chip);
         });
 
-        // Hide groups that ended up with no chips for this crop.
-        document.querySelectorAll(".fm-group").forEach(group => {
-            const box = group.querySelector(".fm-chip-group");
-            group.hidden = box.children.length === 0;
+        // Hide empty category groups
+        document.querySelectorAll(".diag-category-group").forEach(group => {
+            const box = group.querySelector(".diag-category-body");
+            group.hidden = !box || box.children.length === 0;
         });
+
+        syncState();
     }
 
-    // ---- Crop tiles ----
-    document.querySelectorAll(".fm-tile").forEach(tile => {
-        tile.addEventListener("click", () => {
-            document.querySelectorAll(".fm-tile").forEach(t => {
-                t.classList.remove("is-selected");
-                t.setAttribute("aria-pressed", "false");
+    // Set selected crop in UI
+    function setSelectedCrop(tile) {
+        document.querySelectorAll(".diag-crop-tile").forEach(t => {
+            t.classList.remove("is-selected");
+            t.setAttribute("aria-pressed", "false");
+        });
+        tile.classList.add("is-selected");
+        tile.setAttribute("aria-pressed", "true");
+
+        selectedCropId = tile.dataset.cropId;
+        hiddenCrop.value = selectedCropId;
+
+        const cropName = tile.dataset.cropName;
+        const cropEmoji = tile.dataset.cropEmoji;
+
+        // Update Active Banner
+        activeCropBanner.style.display = "flex";
+        activeCropEmoji.textContent = cropEmoji;
+        activeCropName.textContent = cropName;
+        cropPickerCollapsible.style.display = "none";
+
+        // Update Sidebar
+        sideCropEmoji.textContent = cropEmoji;
+        sideCropName.textContent = cropName;
+        sideCropHint.textContent = isKm ? "រួចរាល់សម្រាប់ការវិភាគ" : "Ready for diagnosis";
+
+        // Show Symptoms Container
+        selected.clear();
+        sympWrap.hidden = false;
+        renderSymptoms(selectedCropId);
+
+        // Scroll to Step 2 smoothly
+        sympWrap.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    // Change crop button click
+    btnChangeCrop.addEventListener("click", () => {
+        cropPickerCollapsible.style.display = "block";
+        cropPickerCollapsible.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+
+    // Tile click listener
+    document.querySelectorAll(".diag-crop-tile").forEach(tile => {
+        tile.addEventListener("click", () => setSelectedCrop(tile));
+    });
+
+    // Crop category filter pills
+    document.querySelectorAll("#crop-filter-pills .diag-filter-pill").forEach(pill => {
+        pill.addEventListener("click", () => {
+            document.querySelectorAll("#crop-filter-pills .diag-filter-pill").forEach(p => p.classList.remove("is-active"));
+            pill.classList.add("is-active");
+            const filter = pill.dataset.cropFilter;
+
+            document.querySelectorAll(".diag-crop-tile").forEach(tile => {
+                if (filter === "all" || tile.dataset.cropTag === filter) {
+                    tile.style.display = "flex";
+                } else {
+                    tile.style.display = "none";
+                }
             });
-            tile.classList.add("is-selected");
-            tile.setAttribute("aria-pressed", "true");
-
-            selectedCropId = tile.dataset.cropId;
-            hiddenCrop.value = selectedCropId;
-
-            selected.clear();
-            sympWrap.hidden = false;
-            renderSymptoms(selectedCropId);
-            syncState();
-
-            sympWrap.scrollIntoView({ behavior: "smooth", block: "start" });
         });
     });
 
-    // ---- Collapsible groups ----
-    document.querySelectorAll(".fm-group-head").forEach(head => {
+    // Crop search filter
+    const cropSearchInput = document.getElementById("crop-search-input");
+    const cropSearchClear = document.getElementById("crop-search-clear");
+    cropSearchInput.addEventListener("input", e => {
+        const q = e.target.value.toLowerCase().trim();
+        cropSearchClear.style.display = q ? "block" : "none";
+        document.querySelectorAll(".diag-crop-tile").forEach(tile => {
+            tile.style.display = (q && !tile.dataset.search.includes(q)) ? "none" : "flex";
+        });
+    });
+
+    cropSearchClear.addEventListener("click", () => {
+        cropSearchInput.value = "";
+        cropSearchClear.style.display = "none";
+        document.querySelectorAll(".diag-crop-tile").forEach(tile => tile.style.display = "flex");
+    });
+
+    // Symptom search filter
+    const sympSearchInput = document.getElementById("symptom-search-input");
+    const sympSearchClear = document.getElementById("symptom-search-clear");
+    sympSearchInput.addEventListener("input", e => {
+        const q = e.target.value.toLowerCase().trim();
+        sympSearchClear.style.display = q ? "block" : "none";
+
+        document.querySelectorAll(".diag-chip").forEach(chip => {
+            chip.hidden = q && !chip.dataset.search.includes(q);
+        });
+
+        document.querySelectorAll(".diag-category-group").forEach(group => {
+            const box = group.querySelector(".diag-category-body");
+            const visible = Array.from(box.children).some(c => !c.hidden);
+            group.hidden = !visible;
+            if (visible && q) {
+                group.querySelector(".diag-category-header").setAttribute("aria-expanded", "true");
+                box.hidden = false;
+            }
+        });
+    });
+
+    sympSearchClear.addEventListener("click", () => {
+        sympSearchInput.value = "";
+        sympSearchClear.style.display = "none";
+        document.querySelectorAll(".diag-chip").forEach(c => c.hidden = false);
+        document.querySelectorAll(".diag-category-group").forEach(g => {
+            const box = g.querySelector(".diag-category-body");
+            g.hidden = !box || box.children.length === 0;
+        });
+    });
+
+    // Symptom Category Tabs Filter
+    document.querySelectorAll("#symptom-category-pills .diag-filter-pill").forEach(tab => {
+        tab.addEventListener("click", () => {
+            document.querySelectorAll("#symptom-category-pills .diag-filter-pill").forEach(t => t.classList.remove("is-active"));
+            tab.classList.add("is-active");
+            const cat = tab.dataset.catTab;
+
+            document.querySelectorAll(".diag-category-group").forEach(group => {
+                if (cat === "all" || group.dataset.group === cat) {
+                    const box = group.querySelector(".diag-category-body");
+                    group.hidden = !box || box.children.length === 0;
+                } else {
+                    group.hidden = true;
+                }
+            });
+        });
+    });
+
+    // Collapsible category accordions
+    document.querySelectorAll(".diag-category-header").forEach(head => {
         head.addEventListener("click", () => {
             const box = document.getElementById(head.dataset.target);
             const open = head.getAttribute("aria-expanded") === "true";
@@ -297,74 +2309,173 @@
         });
     });
 
-    // ---- Search ----
-    document.getElementById("crop-search-input").addEventListener("input", e => {
-        const q = e.target.value.toLowerCase().trim();
-        document.querySelectorAll(".fm-tile").forEach(tile => {
-            tile.hidden = q && !tile.dataset.search.includes(q);
+    // Remove single symptom from ribbon or sidebar
+    function removeSymptom(sympName) {
+        selected.delete(sympName);
+        document.querySelectorAll(`.diag-chip[data-symptom-name="${sympName}"]`).forEach(chip => {
+            chip.classList.remove("is-selected");
+            chip.setAttribute("aria-pressed", "false");
         });
+        syncState();
+    }
+
+    selectedTags.addEventListener("click", e => {
+        const btn = e.target.closest(".remove-btn");
+        if (btn) removeSymptom(btn.dataset.symp);
     });
 
-    document.getElementById("symptom-search-input").addEventListener("input", e => {
-        const q = e.target.value.toLowerCase().trim();
-        document.querySelectorAll(".fm-chip").forEach(chip => {
-            chip.hidden = q && !chip.dataset.search.includes(q);
-        });
-
-        document.querySelectorAll(".fm-group").forEach(group => {
-            const box = group.querySelector(".fm-chip-group");
-            const visible = Array.from(box.children).some(c => !c.hidden);
-            group.hidden = !visible;
-            // Expand matching groups so hits aren't hidden behind a collapsed head.
-            if (visible && q) {
-                group.querySelector(".fm-group-head").setAttribute("aria-expanded", "true");
-                box.hidden = false;
-            }
-        });
+    sideSympList.addEventListener("click", e => {
+        const icon = e.target.closest("i");
+        if (icon && icon.dataset.symp) removeSymptom(icon.dataset.symp);
     });
 
-    // ---- Photos ----
-    fileInput.addEventListener("change", () => {
-        const labelText = fileLabel.querySelector("span");
+    // Clear all symptoms
+    btnClearAll.addEventListener("click", () => {
+        selected.clear();
+        document.querySelectorAll(".diag-chip").forEach(chip => {
+            chip.classList.remove("is-selected");
+            chip.setAttribute("aria-pressed", "false");
+        });
+        syncState();
+    });
+
+    // File Upload handling with DataTransfer synchronization
+    function refreshPhotoPreviews() {
         thumbs.innerHTML = "";
+        const files = Array.from(uploadedFilesTransfer.files);
 
-        if (!fileInput.files || !fileInput.files.length) {
+        if (!files.length) {
             thumbs.hidden = true;
-            labelText.textContent = isKm ? "ជ្រើសរើសរូបភាព..." : "Choose images...";
+            fileLabel.querySelector(".diag-dropzone-title").textContent = isKm ?
+                "ចុចទីនេះដើម្បីជ្រើសរើសរូបភាព ឬទាញទម្លាក់រូបភាពមកទីនេះ" :
+                "Click to browse photos or drag and drop images here";
             return;
         }
 
-        const n = fileInput.files.length;
         thumbs.hidden = false;
-        labelText.textContent = isKm ? (n + " រូបភាពបានជ្រើសរើស") : (n + " image" + (n > 1 ? "s" : "") + " selected");
+        fileLabel.querySelector(".diag-dropzone-title").textContent = isKm ?
+            `${files.length} រូបភាពត្រូវបានជ្រើសរើស (ចុចដើម្បីបន្ថែម)` :
+            `${files.length} photo${files.length > 1 ? "s" : ""} selected (click to add more)`;
 
-        Array.from(fileInput.files).forEach(file => {
+        files.forEach((file, index) => {
+            const card = document.createElement("div");
+            card.className = "diag-thumb-card";
+
+            const sizeMb = (file.size / (1024 * 1024)).toFixed(1);
+            const sizeStr = file.size > 1024 * 1024 ? `${sizeMb} MB` : `${Math.round(file.size / 1024)} KB`;
+
+            const img = document.createElement("img");
+            img.className = "diag-thumb-img";
+            img.alt = file.name;
+
             const reader = new FileReader();
-            reader.onload = e => {
-                const img = document.createElement("img");
-                img.className = "fm-thumb";
-                img.src = e.target.result;
-                img.alt = file.name;
-                thumbs.appendChild(img);
-            };
+            reader.onload = e => { img.src = e.target.result; };
             reader.readAsDataURL(file);
+
+            const removeBtn = document.createElement("button");
+            removeBtn.type = "button";
+            removeBtn.className = "diag-thumb-remove";
+            removeBtn.innerHTML = "&times;";
+            removeBtn.title = isKm ? "លុបរូបភាពនេះ" : "Remove photo";
+            removeBtn.addEventListener("click", () => {
+                const newDt = new DataTransfer();
+                Array.from(uploadedFilesTransfer.files).forEach((f, i) => {
+                    if (i !== index) newDt.items.add(f);
+                });
+                uploadedFilesTransfer = newDt;
+                fileInput.files = uploadedFilesTransfer.files;
+                refreshPhotoPreviews();
+            });
+
+            const meta = document.createElement("div");
+            meta.className = "diag-thumb-meta";
+            meta.textContent = `${file.name} (${sizeStr})`;
+
+            card.appendChild(img);
+            card.appendChild(removeBtn);
+            card.appendChild(meta);
+            thumbs.appendChild(card);
         });
+    }
+
+    fileInput.addEventListener("change", () => {
+        if (fileInput.files && fileInput.files.length) {
+            Array.from(fileInput.files).forEach(f => uploadedFilesTransfer.items.add(f));
+            fileInput.files = uploadedFilesTransfer.files;
+        }
+        refreshPhotoPreviews();
     });
 
+    // Drag-and-drop dropzone interactions
+    fileLabel.addEventListener("dragover", e => {
+        e.preventDefault();
+        fileLabel.classList.add("is-dragover");
+    });
+
+    fileLabel.addEventListener("dragleave", () => {
+        fileLabel.classList.remove("is-dragover");
+    });
+
+    fileLabel.addEventListener("drop", e => {
+        e.preventDefault();
+        fileLabel.classList.remove("is-dragover");
+        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
+            Array.from(e.dataTransfer.files).forEach(f => {
+                if (f.type.startsWith("image/")) uploadedFilesTransfer.items.add(f);
+            });
+            fileInput.files = uploadedFilesTransfer.files;
+            refreshPhotoPreviews();
+        }
+    });
+
+    // Notes typing listener
     notes.addEventListener("input", syncState);
 
-    btnSubmit.addEventListener("click", () => {
-        if (!selectedCropId) return;
-        syncState();
-        btnSubmit.disabled = true;
-        btnSubmit.innerHTML = '<i class="fas fa-spinner fa-spin"></i>' + (isKm ? "កំពុងវិភាគ..." : "Analyzing...");
-        form.submit();
+    // Stepper click jump navigation
+    stepItem1.addEventListener("click", () => {
+        cropPickerCollapsible.style.display = "block";
+        document.getElementById("step-crop-card").scrollIntoView({ behavior: "smooth", block: "start" });
     });
 
-    if (selectedCropId) {
-        sympWrap.hidden = false;
-        renderSymptoms(selectedCropId);
+    stepItem2.addEventListener("click", () => {
+        if (selectedCropId) {
+            document.getElementById("step-symptoms-card").scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+    });
+
+    stepItem3.addEventListener("click", () => {
+        if (selectedCropId) {
+            document.getElementById("step-media-card").scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+    });
+
+    // Form submission
+    function submitDiagnosis() {
+        if (!selectedCropId) return;
         syncState();
+        const submitText = isKm ? '<i class="fas fa-spinner fa-spin mr-2"></i> កំពុងវិភាគរោគវិនិច្ឆ័យ...' : '<i class="fas fa-spinner fa-spin mr-2"></i> Analyzing diagnosis...';
+        btnSubmit.disabled = true;
+        btnSubmit.innerHTML = submitText;
+        if (mobileBtnSubmit) {
+            mobileBtnSubmit.disabled = true;
+            mobileBtnSubmit.innerHTML = submitText;
+        }
+        form.submit();
+    }
+
+    btnSubmit.addEventListener("click", submitDiagnosis);
+    if (mobileBtnSubmit) mobileBtnSubmit.addEventListener("click", submitDiagnosis);
+
+    // Initial setup if crop is preselected
+    if (selectedCropId) {
+        const preselectedTile = document.querySelector(`.diag-crop-tile[data-crop-id="${selectedCropId}"]`);
+        if (preselectedTile) {
+            setSelectedCrop(preselectedTile);
+        } else {
+            sympWrap.hidden = false;
+            renderSymptoms(selectedCropId);
+            syncState();
+        }
     }
 })();
 </script>
