@@ -58,9 +58,15 @@
     <div class="auth-clean-card">
         <!-- Brand Header -->
         <div class="auth-card-header">
-            <div class="auth-brand-badge">
-                <img src="{{ url_for('static', filename='img/logo.svg', v=static_version) }}" alt="Logo" class="auth-clean-logo">
-            </div>
+            <a href="{{ url_for('main.index') }}" class="auth-brand-badge" aria-label="AXE">
+                <img src="{{ url_for('static', filename='img/logo.svg', v=static_version) }}"
+                     alt=""
+                     aria-hidden="true"
+                     width="28"
+                     height="28"
+                     class="auth-clean-logo">
+                <span class="auth-brand-name">AXE</span>
+            </a>
             <h1 class="auth-clean-title">Staff Portal</h1>
             <p class="auth-clean-subtitle">Sign in with authorized administrative or expert credentials</p>
         </div>

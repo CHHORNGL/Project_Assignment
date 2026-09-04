@@ -215,14 +215,52 @@ html[lang^="km"] body.auth-body textarea {
 .auth-brand {
     display: inline-flex;
     align-items: center;
-    gap: 12px;
-    background: rgba(255, 255, 255, 0.09);
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    padding: 8px 18px;
-    border-radius: 16px;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+    gap: 8px;
+    background: #0f172a;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    padding: 4px 14px 4px 5px;
+    border-radius: 9999px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18), 0 1px 3px rgba(0, 0, 0, 0.1);
+    text-decoration: none !important;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    user-select: none;
+}
+
+.auth-brand:hover {
+    background: #1e293b;
+    border-color: rgba(255, 255, 255, 0.25);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+}
+
+.auth-brand-logo-img {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    max-width: 28px !important;
+    border-radius: 50%;
+    object-fit: contain;
+    flex-shrink: 0;
+    display: block;
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.auth-brand:hover .auth-brand-logo-img {
+    transform: scale(1.06);
+}
+
+.auth-brand .auth-brand-name {
+    font-family: "Inter", "Manrope", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 0.875rem;
+    font-weight: 650;
+    letter-spacing: 0.06em;
+    line-height: 1;
+    color: #ffffff !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    transform: translateY(-0.5px);
 }
 
 .auth-brand-mark {
@@ -230,13 +268,17 @@ html[lang^="km"] body.auth-body textarea {
 }
 
 .auth-brand-sub {
-    font-size: 0.72rem;
-    font-weight: 700;
-    color: rgba(255, 255, 255, 0.9);
+    font-family: "Inter", "Manrope", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.7);
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    padding-left: 12px;
-    border-left: 1px solid rgba(255, 255, 255, 0.22);
+    padding-left: 8px;
+    border-left: 1px solid rgba(255, 255, 255, 0.2);
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
 }
 
 .auth-pill {
@@ -1125,52 +1167,108 @@ html.auth-panel-dark .auth-clean-card {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    height: 58px;
+    gap: 8px;
+    height: 38px;
     width: auto;
-    min-width: 154px;
-    padding: 10px 24px;
-    border-radius: 18px;
-    background: #ffffff;
-    box-shadow: 
-        0 10px 25px -5px rgba(11, 82, 214, 0.10),
-        0 4px 10px -2px rgba(9, 201, 255, 0.06),
-        0 0 0 1px rgba(11, 82, 214, 0.08) inset;
-    margin-bottom: 20px;
-    border: 1px solid rgba(11, 82, 214, 0.14);
-    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.auth-brand-badge:hover {
-    transform: translateY(-2px) scale(1.02);
-    box-shadow: 
-        0 16px 32px -6px rgba(11, 82, 214, 0.16),
-        0 6px 14px -2px rgba(9, 201, 255, 0.12),
-        0 0 0 1px rgba(11, 82, 214, 0.15) inset;
-}
-
-.dark-mode .auth-brand-badge {
+    min-width: unset;
+    padding: 4px 14px 4px 5px;
+    border-radius: 9999px;
     background: #0f172a;
-    border-color: rgba(17, 135, 255, 0.28);
+    border: 1px solid rgba(255, 255, 255, 0.14);
     box-shadow: 
-        0 12px 28px -6px rgba(0, 0, 0, 0.5),
-        0 0 22px -2px rgba(17, 135, 255, 0.18),
-        0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+        0 4px 12px -2px rgba(15, 23, 42, 0.18),
+        0 1px 3px rgba(15, 23, 42, 0.08),
+        0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+    margin-bottom: 22px;
+    text-decoration: none !important;
+    user-select: none;
+    box-sizing: border-box;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.dark-mode .auth-brand-badge:hover {
+.auth-brand-badge:hover,
+.auth-brand-badge:focus-visible {
+    background: #1e293b;
+    border-color: rgba(255, 255, 255, 0.28);
+    transform: translateY(-1.5px);
     box-shadow: 
-        0 18px 36px -6px rgba(0, 0, 0, 0.6),
-        0 0 28px 0px rgba(17, 135, 255, 0.28),
+        0 8px 20px -4px rgba(15, 23, 42, 0.26),
+        0 2px 6px rgba(15, 23, 42, 0.12),
+        0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+    outline: none;
+}
+
+/* Standalone icon fallback (if badge has only an icon) */
+.auth-brand-badge:has(> .auth-clean-logo:only-child) {
+    width: 42px;
+    height: 42px;
+    padding: 6px;
+    border-radius: 50%;
+}
+
+.dark-mode .auth-brand-badge,
+html.dark-mode .auth-brand-badge,
+html.auth-panel-dark .auth-brand-badge {
+    background: rgba(15, 23, 42, 0.95);
+    border-color: rgba(255, 255, 255, 0.14);
+    box-shadow: 
+        0 4px 14px -2px rgba(0, 0, 0, 0.45),
+        0 1px 3px rgba(0, 0, 0, 0.3),
+        0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+}
+
+.dark-mode .auth-brand-badge:hover,
+html.dark-mode .auth-brand-badge:hover,
+html.auth-panel-dark .auth-brand-badge:hover,
+.dark-mode .auth-brand-badge:focus-visible,
+html.dark-mode .auth-brand-badge:focus-visible,
+html.auth-panel-dark .auth-brand-badge:focus-visible {
+    background: #1e293b;
+    border-color: rgba(56, 189, 248, 0.35);
+    box-shadow: 
+        0 8px 24px -4px rgba(0, 0, 0, 0.55),
+        0 0 20px -2px rgba(56, 189, 248, 0.18),
         0 0 0 1px rgba(255, 255, 255, 0.1) inset;
 }
 
 .auth-clean-logo {
-    height: 38px;
-    width: auto;
-    max-width: 140px;
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    max-width: 28px !important;
+    border-radius: 50%;
     object-fit: contain;
+    flex-shrink: 0;
     display: block;
-    filter: drop-shadow(0 2px 4px rgba(11, 82, 214, 0.08));
+    border: none;
+    background: transparent;
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.auth-brand-badge:hover .auth-clean-logo {
+    transform: scale(1.06);
+}
+
+/* Wordmark "AXE": Sleek, geometric, golden proportioned */
+.auth-brand-name {
+    font-family: "Inter", "Manrope", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 0.875rem; /* 14px */
+    font-weight: 650;
+    letter-spacing: 0.06em;
+    line-height: 1;
+    color: #ffffff !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    transform: translateY(-0.5px);
+}
+
+.dark-mode .auth-brand-name,
+html.dark-mode .auth-brand-name,
+html.auth-panel-dark .auth-brand-name {
+    color: #ffffff !important;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
 }
 
 .auth-brand-logo-img {
@@ -1601,13 +1699,19 @@ html.auth-panel-dark .auth-register-link:hover {
         border-radius: 22px;
     }
     .auth-brand-badge {
-        height: 52px;
-        min-width: 136px;
-        padding: 8px 18px;
+        height: 35px;
+        padding: 3px 12px 3px 4px;
+        gap: 7px;
+        margin-bottom: 18px;
     }
     .auth-clean-logo {
-        height: 32px;
-        max-width: 120px;
+        width: 25px !important;
+        height: 25px !important;
+        min-width: 25px !important;
+        max-width: 25px !important;
+    }
+    .auth-brand-name {
+        font-size: 0.8125rem; /* ~13px */
     }
     .auth-clean-title {
         font-size: 1.28rem;
