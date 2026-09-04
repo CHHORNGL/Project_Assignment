@@ -1535,72 +1535,583 @@ html[lang="km"] .chronicle-modal-lead-deck {
     }
 }
 
-/* Dark Mode Refinements for Badges, Modals & Advisory Blocks */
-html.dark-mode .impact-badge-high,
-.dark-mode .impact-badge-high {
-    background: rgba(239, 68, 68, 0.16);
-    color: #fca5a5;
-    border-color: rgba(239, 68, 68, 0.35);
+/* ==========================================================================
+   COMPREHENSIVE HIGH-CONTRAST DARK MODE SYSTEM FOR NEWS
+   ========================================================================== */
+html.dark-mode .news-page-wrapper,
+.dark-mode .news-page-wrapper {
+    color: var(--news-ink);
 }
 
-html.dark-mode .impact-badge-advisory,
-.dark-mode .impact-badge-advisory {
-    background: rgba(245, 158, 11, 0.16);
-    color: #fde68a;
-    border-color: rgba(245, 158, 11, 0.35);
+/* 1. Primary Action & Active Buttons (High-contrast dark text on mint green) */
+html.dark-mode .chronicle-primary-btn,
+.dark-mode .chronicle-primary-btn,
+html.dark-mode .chronicle-edition-btn.is-active,
+.dark-mode .chronicle-edition-btn.is-active,
+html.dark-mode .chronicle-dept-btn.is-active,
+.dark-mode .chronicle-dept-btn.is-active {
+    background: #34d399 !important;
+    border-color: #34d399 !important;
+    color: #06251b !important;
+    font-weight: 800 !important;
+    box-shadow: 0 4px 14px rgba(52, 211, 153, 0.3) !important;
 }
 
-html.dark-mode .impact-badge-moderate,
-.dark-mode .impact-badge-moderate {
-    background: rgba(99, 102, 241, 0.16);
-    color: #c7d2fe;
-    border-color: rgba(99, 102, 241, 0.35);
+html.dark-mode .chronicle-primary-btn:hover,
+.dark-mode .chronicle-primary-btn:hover,
+html.dark-mode .chronicle-edition-btn.is-active:hover,
+.dark-mode .chronicle-edition-btn.is-active:hover,
+html.dark-mode .chronicle-dept-btn.is-active:hover,
+.dark-mode .chronicle-dept-btn.is-active:hover {
+    background: #6ee7b7 !important;
+    border-color: #6ee7b7 !important;
+    color: #06251b !important;
 }
 
-html.dark-mode .chronicle-modal-close-btn:hover,
-.dark-mode .chronicle-modal-close-btn:hover {
-    background: rgba(239, 68, 68, 0.2);
-    color: #f87171;
-    border-color: rgba(239, 68, 68, 0.4);
+html.dark-mode .chronicle-dept-btn.is-active .badge,
+.dark-mode .chronicle-dept-btn.is-active .badge {
+    background: rgba(6, 37, 27, 0.25) !important;
+    color: #06251b !important;
+    font-weight: 800 !important;
+    border: none !important;
 }
 
-html.dark-mode .chronicle-modal-advisory-card,
-.dark-mode .chronicle-modal-advisory-card {
-    background: rgba(245, 158, 11, 0.1);
-    border-color: rgba(245, 158, 11, 0.25);
-    border-left-color: #fbbf24;
+/* Inactive Department Pills & Badges in Dark Mode */
+html.dark-mode .chronicle-dept-btn,
+.dark-mode .chronicle-dept-btn {
+    background: #181b19 !important;
+    border-color: #2c322d !important;
+    color: #9ca3af !important;
 }
 
-html.dark-mode .chronicle-modal-advisory-title,
-.dark-mode .chronicle-modal-advisory-title {
-    color: #fbbf24;
+html.dark-mode .chronicle-dept-btn:hover,
+.dark-mode .chronicle-dept-btn:hover {
+    background: #1f2420 !important;
+    border-color: #3a423b !important;
+    color: #f3f4f6 !important;
 }
 
-html.dark-mode .chronicle-card-tip,
-.dark-mode .chronicle-card-tip {
-    background: rgba(245, 158, 11, 0.1);
-    border-left-color: #fbbf24;
+html.dark-mode .chronicle-dept-btn .badge,
+.dark-mode .chronicle-dept-btn .badge {
+    background: #1f2420 !important;
+    color: #9ca3af !important;
+    border-color: #2c322d !important;
 }
 
-html.dark-mode .chronicle-card-tip strong,
-.dark-mode .chronicle-card-tip strong {
-    color: #fbbf24;
+/* Inactive Edition Switcher Buttons in Dark Mode */
+html.dark-mode .chronicle-edition-btn,
+.dark-mode .chronicle-edition-btn {
+    color: #9ca3af !important;
+}
+
+html.dark-mode .chronicle-edition-btn:hover,
+.dark-mode .chronicle-edition-btn:hover {
+    color: #f3f4f6 !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* 2. Controls Bar, Search Input & Sync Button */
+html.dark-mode .chronicle-control-bar,
+.dark-mode .chronicle-control-bar {
+    background: #181b19 !important;
+    border-color: #2c322d !important;
+}
+
+html.dark-mode .chronicle-edition-toggle,
+.dark-mode .chronicle-edition-toggle {
+    background: #131714 !important;
+    border-color: #2c322d !important;
+}
+
+html.dark-mode .chronicle-search-box input,
+.dark-mode .chronicle-search-box input {
+    background: #131714 !important;
+    border-color: #2c322d !important;
+    color: #f3f4f6 !important;
+}
+
+html.dark-mode .chronicle-search-box input:focus,
+.dark-mode .chronicle-search-box input:focus {
+    background: #181b19 !important;
+    border-color: #34d399 !important;
+    box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.25) !important;
+}
+
+html.dark-mode .chronicle-search-box input::placeholder,
+.dark-mode .chronicle-search-box input::placeholder {
+    color: #6b7280 !important;
+    opacity: 1 !important;
+}
+
+html.dark-mode .chronicle-search-box i,
+.dark-mode .chronicle-search-box i {
+    color: #6b7280 !important;
+}
+
+html.dark-mode .chronicle-sync-btn,
+.dark-mode .chronicle-sync-btn {
+    background: #181b19 !important;
+    border-color: #2c322d !important;
+    color: #e5e7eb !important;
+}
+
+html.dark-mode .chronicle-sync-btn:hover,
+.dark-mode .chronicle-sync-btn:hover {
+    background: rgba(52, 211, 153, 0.12) !important;
+    border-color: #34d399 !important;
+    color: #34d399 !important;
+}
+
+/* Subtle Action Buttons (Share, Listen) */
+html.dark-mode .chronicle-subtle-btn,
+.dark-mode .chronicle-subtle-btn {
+    background: #1f2420 !important;
+    border-color: #2c322d !important;
+    color: #e5e7eb !important;
+}
+
+html.dark-mode .chronicle-subtle-btn:hover,
+.dark-mode .chronicle-subtle-btn:hover {
+    background: #252a26 !important;
+    border-color: #34d399 !important;
+    color: #34d399 !important;
+}
+
+/* 3. Ticker Bar in Dark Mode */
+html.dark-mode .chronicle-ticker-bar,
+.dark-mode .chronicle-ticker-bar {
+    background: #181b19 !important;
+    border-color: #2c322d !important;
+}
+
+html.dark-mode .chronicle-ticker-label,
+.dark-mode .chronicle-ticker-label {
+    background: linear-gradient(135deg, #059669, #047857) !important;
+    color: #ffffff !important;
+}
+
+html.dark-mode .chronicle-ticker-item,
+.dark-mode .chronicle-ticker-item {
+    color: #9ca3af !important;
+}
+
+html.dark-mode .chronicle-ticker-item strong,
+.dark-mode .chronicle-ticker-item strong {
+    color: #f3f4f6 !important;
+}
+
+html.dark-mode .chronicle-ticker-clickable:hover,
+.dark-mode .chronicle-ticker-clickable:hover {
+    background: #1f2420 !important;
+    color: #34d399 !important;
+}
+
+html.dark-mode #btn-toggle-ticker-pause,
+.dark-mode #btn-toggle-ticker-pause {
+    color: #9ca3af !important;
+}
+
+html.dark-mode #btn-toggle-ticker-pause:hover,
+.dark-mode #btn-toggle-ticker-pause:hover {
+    color: #34d399 !important;
+}
+
+/* 4. Category Kicker Badges in Dark Mode */
+html.dark-mode .kicker-crops,
+.dark-mode .kicker-crops {
+    background: rgba(52, 211, 153, 0.14) !important;
+    color: #34d399 !important;
+    border: 1px solid rgba(52, 211, 153, 0.3) !important;
+}
+
+html.dark-mode .kicker-market,
+.dark-mode .kicker-market {
+    background: rgba(251, 191, 36, 0.14) !important;
+    color: #fbbf24 !important;
+    border: 1px solid rgba(251, 191, 36, 0.3) !important;
+}
+
+html.dark-mode .kicker-weather,
+.dark-mode .kicker-weather {
+    background: rgba(56, 189, 248, 0.14) !important;
+    color: #38bdf8 !important;
+    border: 1px solid rgba(56, 189, 248, 0.3) !important;
+}
+
+html.dark-mode .kicker-pests,
+.dark-mode .kicker-pests {
+    background: rgba(248, 113, 113, 0.14) !important;
+    color: #f87171 !important;
+    border: 1px solid rgba(248, 113, 113, 0.3) !important;
+}
+
+html.dark-mode .kicker-tech,
+.dark-mode .kicker-tech {
+    background: rgba(129, 140, 248, 0.14) !important;
+    color: #818cf8 !important;
+    border: 1px solid rgba(129, 140, 248, 0.3) !important;
+}
+
+html.dark-mode .kicker-lead,
+.dark-mode .kicker-lead {
+    background: rgba(248, 113, 113, 0.14) !important;
+    color: #f87171 !important;
+    border: 1px solid rgba(248, 113, 113, 0.3) !important;
+}
+
+/* 5. Hero Feature & Cards in Dark Mode */
+html.dark-mode .chronicle-lead-hero,
+.dark-mode .chronicle-lead-hero {
+    background: #181b19 !important;
+    border-color: #2c322d !important;
+    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5) !important;
+}
+
+html.dark-mode .chronicle-lead-hero:hover,
+.dark-mode .chronicle-lead-hero:hover {
+    border-color: rgba(52, 211, 153, 0.35) !important;
+    box-shadow: 0 8px 24px -2px rgba(0, 0, 0, 0.65) !important;
+}
+
+html.dark-mode .chronicle-lead-title,
+.dark-mode .chronicle-lead-title {
+    color: #f3f4f6 !important;
+}
+
+html.dark-mode .chronicle-lead-title:hover,
+.dark-mode .chronicle-lead-title:hover {
+    color: #34d399 !important;
+}
+
+html.dark-mode .chronicle-lead-deck,
+.dark-mode .chronicle-lead-deck {
+    color: #9ca3af !important;
 }
 
 html.dark-mode .chronicle-advisory-box,
 .dark-mode .chronicle-advisory-box {
-    background: rgba(52, 211, 153, 0.12);
-    border-left-color: #34d399;
+    background: rgba(52, 211, 153, 0.12) !important;
+    border-left: 4px solid #34d399 !important;
+    color: #f3f4f6 !important;
 }
 
 html.dark-mode .chronicle-advisory-box i,
 .dark-mode .chronicle-advisory-box i {
-    color: #34d399;
+    color: #34d399 !important;
+}
+
+html.dark-mode .chronicle-byline,
+.dark-mode .chronicle-byline {
+    color: #6b7280 !important;
+    border-top-color: #2c322d !important;
+}
+
+html.dark-mode .chronicle-byline strong,
+.dark-mode .chronicle-byline strong {
+    color: #f3f4f6 !important;
+}
+
+html.dark-mode .chronicle-story-card,
+.dark-mode .chronicle-story-card {
+    background: #181b19 !important;
+    border-color: #2c322d !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35) !important;
+}
+
+html.dark-mode .chronicle-story-card:hover,
+.dark-mode .chronicle-story-card:hover {
+    border-color: rgba(52, 211, 153, 0.35) !important;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.55) !important;
+}
+
+html.dark-mode .chronicle-card-title,
+.dark-mode .chronicle-card-title {
+    color: #f3f4f6 !important;
+}
+
+html.dark-mode .chronicle-card-title:hover,
+.dark-mode .chronicle-card-title:hover {
+    color: #34d399 !important;
+}
+
+html.dark-mode .chronicle-card-summary,
+.dark-mode .chronicle-card-summary {
+    color: #9ca3af !important;
+}
+
+html.dark-mode .chronicle-card-tip,
+.dark-mode .chronicle-card-tip {
+    background: rgba(245, 158, 11, 0.12) !important;
+    border-left: 3px solid #fbbf24 !important;
+    color: #fde68a !important;
+}
+
+html.dark-mode .chronicle-card-tip strong,
+.dark-mode .chronicle-card-tip strong {
+    color: #fbbf24 !important;
+}
+
+html.dark-mode .chronicle-card-footer,
+.dark-mode .chronicle-card-footer {
+    border-top-color: #2c322d !important;
+    color: #6b7280 !important;
+}
+
+html.dark-mode .chronicle-card-actions .btn-outline-dark,
+.dark-mode .chronicle-card-actions .btn-outline-dark {
+    border-color: rgba(52, 211, 153, 0.3) !important;
+    color: #34d399 !important;
+    background: rgba(52, 211, 153, 0.12) !important;
 }
 
 html.dark-mode .chronicle-card-actions .btn-outline-dark:hover,
 .dark-mode .chronicle-card-actions .btn-outline-dark:hover {
-    color: #0f1210;
+    background: #34d399 !important;
+    color: #06251b !important;
+    border-color: #34d399 !important;
+}
+
+html.dark-mode .chronicle-card-actions .btn-link,
+.dark-mode .chronicle-card-actions .btn-link {
+    color: #9ca3af !important;
+}
+
+html.dark-mode .chronicle-card-actions .btn-link:hover,
+.dark-mode .chronicle-card-actions .btn-link:hover {
+    color: #34d399 !important;
+}
+
+/* 6. Sidebar Widgets in Dark Mode */
+html.dark-mode .chronicle-side-widget,
+.dark-mode .chronicle-side-widget {
+    background: #181b19 !important;
+    border-color: #2c322d !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35) !important;
+}
+
+html.dark-mode .chronicle-widget-title,
+.dark-mode .chronicle-widget-title {
+    color: #f3f4f6 !important;
+    border-bottom-color: #2c322d !important;
+}
+
+html.dark-mode .chronicle-pill-tag,
+.dark-mode .chronicle-pill-tag {
+    background: #1f2420 !important;
+    border-color: #2c322d !important;
+    color: #9ca3af !important;
+}
+
+html.dark-mode .chronicle-wire-item,
+.dark-mode .chronicle-wire-item {
+    border-left-color: #2c322d !important;
+}
+
+html.dark-mode .chronicle-wire-item:hover,
+.dark-mode .chronicle-wire-item:hover {
+    border-left-color: #34d399 !important;
+}
+
+html.dark-mode .chronicle-wire-time,
+.dark-mode .chronicle-wire-time {
+    color: #34d399 !important;
+}
+
+html.dark-mode .chronicle-wire-text,
+.dark-mode .chronicle-wire-text {
+    color: #f3f4f6 !important;
+}
+
+html.dark-mode .chronicle-wire-text:hover,
+.dark-mode .chronicle-wire-text:hover {
+    color: #34d399 !important;
+}
+
+html.dark-mode .chronicle-commodity-table tr,
+.dark-mode .chronicle-commodity-table tr {
+    border-bottom-color: #2c322d !important;
+}
+
+html.dark-mode .chronicle-commodity-table td,
+.dark-mode .chronicle-commodity-table td {
+    color: #f3f4f6 !important;
+}
+
+html.dark-mode .chronicle-check-item,
+.dark-mode .chronicle-check-item {
+    color: #9ca3af !important;
+}
+
+html.dark-mode .chronicle-check-item strong,
+.dark-mode .chronicle-check-item strong {
+    color: #f3f4f6 !important;
+}
+
+/* 7. Reading Room Modal in Dark Mode */
+html.dark-mode .chronicle-modal .modal-content,
+.dark-mode .chronicle-modal .modal-content {
+    background: #181b19 !important;
+    border-color: #2c322d !important;
+    box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.75) !important;
+    color: #f3f4f6 !important;
+}
+
+html.dark-mode .chronicle-modal .modal-header,
+.dark-mode .chronicle-modal .modal-header {
+    background: #1f2420 !important;
+    border-bottom-color: #2c322d !important;
+}
+
+html.dark-mode .chronicle-modal-title,
+.dark-mode .chronicle-modal-title {
+    color: #f3f4f6 !important;
+}
+
+html.dark-mode .chronicle-modal-close-btn,
+.dark-mode .chronicle-modal-close-btn {
+    background: #181b19 !important;
+    border-color: #2c322d !important;
+    color: #9ca3af !important;
+}
+
+html.dark-mode .chronicle-modal-close-btn:hover,
+.dark-mode .chronicle-modal-close-btn:hover {
+    background: rgba(239, 68, 68, 0.25) !important;
+    color: #f87171 !important;
+    border-color: rgba(239, 68, 68, 0.45) !important;
+}
+
+html.dark-mode .impact-badge-high,
+.dark-mode .impact-badge-high {
+    background: rgba(239, 68, 68, 0.16) !important;
+    color: #fca5a5 !important;
+    border: 1px solid rgba(239, 68, 68, 0.35) !important;
+}
+
+html.dark-mode .impact-badge-advisory,
+.dark-mode .impact-badge-advisory {
+    background: rgba(245, 158, 11, 0.16) !important;
+    color: #fde68a !important;
+    border: 1px solid rgba(245, 158, 11, 0.35) !important;
+}
+
+html.dark-mode .impact-badge-moderate,
+.dark-mode .impact-badge-moderate {
+    background: rgba(99, 102, 241, 0.16) !important;
+    color: #c7d2fe !important;
+    border: 1px solid rgba(99, 102, 241, 0.35) !important;
+}
+
+html.dark-mode .chronicle-modal-region-pill,
+.dark-mode .chronicle-modal-region-pill {
+    background: #181b19 !important;
+    border-color: #2c322d !important;
+    color: #e5e7eb !important;
+}
+
+html.dark-mode .chronicle-modal-byline-bar,
+.dark-mode .chronicle-modal-byline-bar {
+    background: #141815 !important;
+    border-bottom-color: #2c322d !important;
+    color: #9ca3af !important;
+}
+
+html.dark-mode .chronicle-modal-source-pill,
+.dark-mode .chronicle-modal-source-pill {
+    background: #181b19 !important;
+    border-color: #2c322d !important;
+    color: #f3f4f6 !important;
+}
+
+html.dark-mode .chronicle-modal-body,
+.dark-mode .chronicle-modal-body {
+    background: #181b19 !important;
+    color: #f3f4f6 !important;
+}
+
+html.dark-mode .chronicle-modal-toolbar,
+.dark-mode .chronicle-modal-toolbar {
+    background: #1f2420 !important;
+    border-color: #2c322d !important;
+}
+
+html.dark-mode .chronicle-modal-lead-deck,
+.dark-mode .chronicle-modal-lead-deck {
+    background: #1f2420 !important;
+    border-left-color: #34d399 !important;
+    color: #f3f4f6 !important;
+}
+
+html.dark-mode .chronicle-modal-advisory-card,
+.dark-mode .chronicle-modal-advisory-card {
+    background: rgba(245, 158, 11, 0.12) !important;
+    border: 1px solid rgba(245, 158, 11, 0.3) !important;
+    border-left: 5px solid #fbbf24 !important;
+}
+
+html.dark-mode .chronicle-modal-advisory-title,
+.dark-mode .chronicle-modal-advisory-title {
+    color: #fbbf24 !important;
+}
+
+html.dark-mode .chronicle-modal-advisory-text,
+.dark-mode .chronicle-modal-advisory-text {
+    color: #fde68a !important;
+}
+
+html.dark-mode .chronicle-modal-advisory-card i,
+.dark-mode .chronicle-modal-advisory-card i {
+    color: #fbbf24 !important;
+}
+
+html.dark-mode .chronicle-intel-cell,
+.dark-mode .chronicle-intel-cell {
+    background: #1f2420 !important;
+    border-color: #2c322d !important;
+}
+
+html.dark-mode .chronicle-intel-cell .cell-label,
+.dark-mode .chronicle-intel-cell .cell-label {
+    color: #9ca3af !important;
+}
+
+html.dark-mode .chronicle-intel-cell .cell-val,
+.dark-mode .chronicle-intel-cell .cell-val {
+    color: #f3f4f6 !important;
+}
+
+html.dark-mode .chronicle-modal .modal-footer,
+.dark-mode .chronicle-modal .modal-footer {
+    background: #1f2420 !important;
+    border-top-color: #2c322d !important;
+}
+
+/* 8. Overriding Bootstrap White Line Classes & Muted Text */
+html.dark-mode .news-page-wrapper .text-muted,
+.dark-mode .news-page-wrapper .text-muted,
+html.dark-mode .chronicle-modal .text-muted,
+.dark-mode .chronicle-modal .text-muted {
+    color: #9ca3af !important;
+}
+
+html.dark-mode .news-page-wrapper .border,
+.dark-mode .news-page-wrapper .border,
+html.dark-mode .news-page-wrapper .border-bottom,
+.dark-mode .news-page-wrapper .border-bottom,
+html.dark-mode .news-page-wrapper .border-top,
+.dark-mode .news-page-wrapper .border-top,
+html.dark-mode .chronicle-modal .border-top,
+.dark-mode .chronicle-modal .border-top,
+html.dark-mode .chronicle-modal .border-bottom,
+.dark-mode .chronicle-modal .border-bottom {
+    border-color: #2c322d !important;
+}
+
+html.dark-mode .chronicle-empty-state,
+.dark-mode .chronicle-empty-state {
+    background: #181b19 !important;
+    border-color: #2c322d !important;
+    color: #f3f4f6 !important;
 }
 </style>
 
@@ -1724,32 +2235,32 @@ html.dark-mode .chronicle-card-actions .btn-outline-dark:hover,
         <button type="button" class="chronicle-dept-btn is-active" data-cat="all">
             <i class="fas fa-newspaper"></i>
             <span>{% if current_lang == 'km' %}ទំព័រមុខ (ទាំងអស់){% else %}Front Page (All){% endif %}</span>
-            <span class="badge badge-light ml-1 font-weight-normal" id="dept-count-all">12</span>
+            <span class="badge ml-1 font-weight-normal" id="dept-count-all">12</span>
         </button>
         <button type="button" class="chronicle-dept-btn" data-cat="crops">
             <i class="fas fa-seedling"></i>
             <span>{% if current_lang == 'km' %}ដំណាំ និងការប្រមូលផល{% else %}Crops & Harvest{% endif %}</span>
-            <span class="badge badge-light ml-1 font-weight-normal" id="dept-count-crops"></span>
+            <span class="badge ml-1 font-weight-normal" id="dept-count-crops"></span>
         </button>
         <button type="button" class="chronicle-dept-btn" data-cat="market">
             <i class="fas fa-chart-line"></i>
             <span>{% if current_lang == 'km' %}ទីផ្សារ និងតម្លៃ{% else %}Markets & Prices{% endif %}</span>
-            <span class="badge badge-light ml-1 font-weight-normal" id="dept-count-market"></span>
+            <span class="badge ml-1 font-weight-normal" id="dept-count-market"></span>
         </button>
         <button type="button" class="chronicle-dept-btn" data-cat="weather">
             <i class="fas fa-cloud-sun-rain"></i>
             <span>{% if current_lang == 'km' %}ឧតុនិយម និងអាកាសធាតុ{% else %}Climate & Weather{% endif %}</span>
-            <span class="badge badge-light ml-1 font-weight-normal" id="dept-count-weather"></span>
+            <span class="badge ml-1 font-weight-normal" id="dept-count-weather"></span>
         </button>
         <button type="button" class="chronicle-dept-btn" data-cat="pests">
             <i class="fas fa-shield-virus"></i>
             <span>{% if current_lang == 'km' %}សត្វល្អិត និងជំងឺដំណាំ{% else %}Pests & Crop Health{% endif %}</span>
-            <span class="badge badge-light ml-1 font-weight-normal" id="dept-count-pests"></span>
+            <span class="badge ml-1 font-weight-normal" id="dept-count-pests"></span>
         </button>
         <button type="button" class="chronicle-dept-btn" data-cat="tech">
             <i class="fas fa-microchip"></i>
             <span>{% if current_lang == 'km' %}បច្ចេកវិទ្យាកសិកម្ម{% else %}AgriTech & Innovation{% endif %}</span>
-            <span class="badge badge-light ml-1 font-weight-normal" id="dept-count-tech"></span>
+            <span class="badge ml-1 font-weight-normal" id="dept-count-tech"></span>
         </button>
     </nav>
 
