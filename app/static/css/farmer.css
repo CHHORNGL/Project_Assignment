@@ -1706,6 +1706,14 @@ html.dark-mode .fm-team-member .fm-team-avatar {
         text-align: left;
     }
 }
+
+@media (max-width: 575.98px) {
+    .fm-team-grid {
+        grid-template-columns: 1fr;
+    }
+    .fm-team-card {
+        padding: 1rem;
+    }
 }
 
 /* =========================================
