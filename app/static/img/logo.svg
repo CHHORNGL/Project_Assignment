@@ -1,16 +1,73 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg width="256px" height="257px" viewBox="0 0 256 257" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" preserveAspectRatio="xMidYMid">
-    <title>JWT</title>
-    <g>
-				<polygon fill="#FFFFFF" points="147.386158 69.0712136 147.129388 -1.0975284e-14 108.613842 -1.0975284e-14 108.870612 69.0712136 128.128385 95.5185557"></polygon>
-				<polygon fill="#FFFFFF" points="108.870612 187.442327 108.870612 256.770311 147.386158 256.770311 147.386158 187.442327 128.128385 160.994985"></polygon>
-				<polygon fill="#00F2E6" points="147.386158 187.442327 187.955868 243.418255 219.025075 220.822467 178.455366 164.84654 147.386158 154.832497"></polygon>
-				<polygon fill="#00F2E6" points="108.870612 69.0712136 68.0441324 13.0952859 36.9749248 35.6910732 77.5446339 91.667001 108.870612 101.681043"></polygon>
-				<polygon fill="#00B9F1" points="77.5446339 91.667001 11.8114343 70.3550652 3.70594005e-15 106.816449 65.7331996 128.385155 96.8024072 118.114343"></polygon>
-				<polygon fill="#00B9F1" points="159.197593 138.399198 178.455366 164.84654 244.188566 186.158475 256 149.697091 190.2668 128.385155"></polygon>
-				<polygon fill="#D63AFF" points="190.2668 128.385155 256 106.816449 244.188566 70.3550652 178.455366 91.667001 159.197593 118.114343"></polygon>
-				<polygon fill="#D63AFF" points="65.7331996 128.385155 3.70594005e-15 149.697091 11.8114343 186.158475 77.5446339 164.84654 96.8024072 138.399198"></polygon>
-				<polygon fill="#FB015B" points="77.5446339 164.84654 36.9749248 220.822467 68.0441324 243.418255 108.870612 187.442327 108.870612 154.832497"></polygon>
-				<polygon fill="#FB015B" points="178.455366 91.667001 219.025075 35.6910732 187.955868 13.0952859 147.386158 69.0712136 147.386158 101.681043"></polygon>
+<svg width="264px" height="264px" viewBox="0 0 264 264" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" preserveAspectRatio="xMidYMid">
+    <title>Agri Precision</title>
+    <style type="text/css"><![CDATA[
+        /* The cycle animation lives inside this file on purpose: the logo is used
+           everywhere as <img src="logo.svg">, and an external stylesheet cannot
+           reach nodes inside an img-referenced SVG document. */
+
+        /* The viewBox is 264x264 and .logo-recentre puts the mark's centre at
+           exactly (132, 132), so "50% 50%" is the true centre of the mark under
+           either transform-box reference (view-box origin (0,0) size 264x264, or
+           the geometry's own fill-box). Both resolve to the same pivot, so the
+           mark spins true instead of wobbling off-axis. */
+        .logo-cycle {
+            transform-box: view-box;
+            transform-origin: 50% 50%;
+            animation: logo-spin 9s linear infinite;
+        }
+
+        .logo-arm {
+            animation: logo-arm-pulse 2.2s ease-in-out infinite;
+        }
+
+        /* One delay step per arm, ordered by clockwise angle, so the highlight
+           travels around the ring exactly once per 2.2s pulse cycle. */
+        .logo-arm-0 { animation-delay: 0s; }
+        .logo-arm-1 { animation-delay: 0.22s; }
+        .logo-arm-2 { animation-delay: 0.44s; }
+        .logo-arm-3 { animation-delay: 0.66s; }
+        .logo-arm-4 { animation-delay: 0.88s; }
+        .logo-arm-5 { animation-delay: 1.1s; }
+        .logo-arm-6 { animation-delay: 1.32s; }
+        .logo-arm-7 { animation-delay: 1.54s; }
+        .logo-arm-8 { animation-delay: 1.76s; }
+        .logo-arm-9 { animation-delay: 1.98s; }
+
+        @keyframes logo-spin {
+            from { transform: rotate(0deg); }
+            to   { transform: rotate(360deg); }
+        }
+
+        /* Kept shallow so it reads as a soft travelling highlight at the 24-38px
+           sizes the logo is actually rendered at, not as a flicker. */
+        @keyframes logo-arm-pulse {
+            0%, 100% { opacity: 1; }
+            50%      { opacity: 0.68; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .logo-cycle,
+            .logo-arm {
+                animation: none;
+            }
+        }
+    ]]></style>
+    <g class="logo-cycle">
+        <!-- Shifts the original 0 0 256 257 artwork into the padded 264x264 box so
+             its centre lands on (132, 132). The padding is what keeps the arm tips
+             from being clipped at the viewport edge as the group rotates. -->
+        <g class="logo-recentre" transform="translate(4, 3.614845)">
+				<polygon class="logo-arm logo-arm-0" fill="#FFFFFF" points="147.386158 69.0712136 147.129388 -1.0975284e-14 108.613842 -1.0975284e-14 108.870612 69.0712136 128.128385 95.5185557"></polygon>
+				<polygon class="logo-arm logo-arm-5" fill="#FFFFFF" points="108.870612 187.442327 108.870612 256.770311 147.386158 256.770311 147.386158 187.442327 128.128385 160.994985"></polygon>
+				<polygon class="logo-arm logo-arm-4" fill="#00F2E6" points="147.386158 187.442327 187.955868 243.418255 219.025075 220.822467 178.455366 164.84654 147.386158 154.832497"></polygon>
+				<polygon class="logo-arm logo-arm-9" fill="#00F2E6" points="108.870612 69.0712136 68.0441324 13.0952859 36.9749248 35.6910732 77.5446339 91.667001 108.870612 101.681043"></polygon>
+				<polygon class="logo-arm logo-arm-8" fill="#00B9F1" points="77.5446339 91.667001 11.8114343 70.3550652 3.70594005e-15 106.816449 65.7331996 128.385155 96.8024072 118.114343"></polygon>
+				<polygon class="logo-arm logo-arm-3" fill="#00B9F1" points="159.197593 138.399198 178.455366 164.84654 244.188566 186.158475 256 149.697091 190.2668 128.385155"></polygon>
+				<polygon class="logo-arm logo-arm-2" fill="#D63AFF" points="190.2668 128.385155 256 106.816449 244.188566 70.3550652 178.455366 91.667001 159.197593 118.114343"></polygon>
+				<polygon class="logo-arm logo-arm-7" fill="#D63AFF" points="65.7331996 128.385155 3.70594005e-15 149.697091 11.8114343 186.158475 77.5446339 164.84654 96.8024072 138.399198"></polygon>
+				<polygon class="logo-arm logo-arm-6" fill="#FB015B" points="77.5446339 164.84654 36.9749248 220.822467 68.0441324 243.418255 108.870612 187.442327 108.870612 154.832497"></polygon>
+				<polygon class="logo-arm logo-arm-1" fill="#FB015B" points="178.455366 91.667001 219.025075 35.6910732 187.955868 13.0952859 147.386158 69.0712136 147.386158 101.681043"></polygon>
+        </g>
     </g>
 </svg>
