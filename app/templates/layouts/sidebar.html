@@ -132,7 +132,7 @@ body.icon-nav {
 .app-sidebar .sidebar-logo {
     height: 36px !important;
     width: auto !important;
-    max-width: 120px !important;
+    max-width: 40px !important;
     border-radius: 0 !important;
     object-fit: contain !important;
     box-shadow: none !important;
@@ -628,11 +628,10 @@ body.icon-nav .app-sidebar .nav-link[data-tooltip]:hover::after,
     =============================== -->
     <div class="sidebar-brand-row">
         <a class="sidebar-brand" href="{{ home_url }}" aria-label="Dashboard">
-            <img src="{{ url_for("static", filename="img/logo.svg", v=static_version) }}"
-                 alt="Logo"
+            <img src="{{ url_for('static', filename='img/newlogo-dark.svg', v=static_version) }}"
+                 alt="Agriculture"
                  class="sidebar-logo">
             <div class="brand-text-col">
-                <span class="sidebar-brand-title">AXE</span>
                 <span class="brand-sub-badge">
                     {% if active_side == "admin" %}ADMIN PANEL{% elif active_side == "expert" %}EXPERT PANEL{% else %}FARMER PANEL{% endif %}
                 </span>

@@ -8,7 +8,7 @@
     const welcomePrefix = {{ t("welcome_back") | tojson }};
     const displayName = {% if current_user.is_authenticated %}{{ (current_user.full_name or current_user.username) | tojson }}{% else %}{{ ("Guest User" if current_lang != "km" else "អ្នកប្រើប្រាស់ជាភ្ញៀវ") | tojson }}{% endif %};
     if (welcomePrefix && displayName) {
-        document.title = welcomePrefix + ", " + displayName + "! | AXE";
+        document.title = welcomePrefix + ", " + displayName + "! | AGRI SYSTEM";
     }
 })();
 </script>

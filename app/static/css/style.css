@@ -71,7 +71,7 @@
 .sidebar-logo {
     height: 36px;
     width: auto;
-    max-width: 120px;
+    max-width: 45px;
     object-fit: contain;
     border: none;
     box-shadow: none;
@@ -522,98 +522,66 @@ input:focus {
 .topbar-brand {
     display: inline-flex;
     align-items: center;
-    gap: 7px;
-    height: 34px;
-    padding: 3px 10px 3px 4px;
-    border-radius: 9999px;
-    background: #0f172a; /* Obsidian contrast capsule */
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12), 0 1px 2px rgba(15, 23, 42, 0.06);
+    justify-content: center;
     text-decoration: none !important;
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 2px 4px;
+    margin: 0;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
     user-select: none;
-    box-sizing: border-box;
+    flex-shrink: 0;
 }
 
 .topbar-brand:hover,
 .topbar-brand:focus-visible {
-    background: #1e293b;
-    border-color: rgba(255, 255, 255, 0.22);
-    transform: translateY(-1px);
-    box-shadow: 0 3px 8px rgba(15, 23, 42, 0.18), 0 1px 3px rgba(15, 23, 42, 0.1);
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    transform: scale(1.06);
+    opacity: 0.9;
     outline: none;
 }
 
 .topbar-brand-logo {
-    width: 26px !important;
-    height: 26px !important;
-    min-width: 26px !important;
-    max-width: 26px !important;
-    border-radius: 50%;
+    height: 32px !important;
+    width: auto !important;
+    max-height: 32px !important;
+    max-width: 38px !important;
+    border-radius: 0 !important;
     object-fit: contain;
     flex-shrink: 0;
     display: block;
-    border: none;
-    box-shadow: none;
-    background: transparent;
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
     transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.topbar-brand:hover .topbar-brand-logo {
-    transform: scale(1.06);
-}
-
-/* Wordmark "AXE": Sleek, refined, clean geometric typography scaled harmoniously to the logo */
-.topbar-brand-name {
-    font-family: "Inter", "Manrope", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    font-size: 0.8125rem; /* ~13px - compact, sleek, and well-proportioned */
-    font-weight: 600; /* SemiBold - balanced weight, not bulky */
-    letter-spacing: 0.05em;
-    line-height: 1;
-    color: #ffffff !important;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-    white-space: nowrap;
-    display: inline-flex;
-    align-items: center;
-    transform: translateY(-0.5px);
-}
-
-/* Dark Mode Harmonization */
 .dark-mode .topbar-brand {
-    background: rgba(30, 41, 59, 0.88);
-    border-color: rgba(255, 255, 255, 0.14);
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
 }
 
-.dark-mode .topbar-brand:hover,
-.dark-mode .topbar-brand:focus-visible {
-    background: #334155;
-    border-color: rgba(56, 189, 248, 0.4);
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35);
-}
-
-.dark-mode .topbar-brand-name {
-    color: #ffffff !important;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+.dark-mode .topbar-brand-logo,
+.dark-mode .farmer-brand-logo,
+.dark-mode .farmer-chat-logo-img {
+    content: url('../img/newlogo-dark.svg');
+    filter: drop-shadow(0 0 10px rgba(255, 214, 0, 0.35));
 }
 
 @media (max-width: 767.98px) {
     .topbar-brand {
-        height: 30px;
-        padding: 2px 8px 2px 3px;
-        gap: 5px;
+        padding: 0;
     }
 
     .topbar-brand-logo {
-        width: 24px !important;
-        height: 24px !important;
-        min-width: 24px !important;
-        max-width: 24px !important;
-    }
-
-    .topbar-brand-name {
-        font-size: 0.75rem; /* 12px on mobile */
-        transform: translateY(-0.5px);
+        height: 26px !important;
+        width: auto !important;
+        max-height: 26px !important;
+        max-width: 32px !important;
     }
 }
 
@@ -2329,7 +2297,7 @@ body.farmer-no-sidebar .topbar-divider:first-of-type {
 .farmer-brand-logo {
     height: 36px;
     width: auto;
-    max-width: 120px;
+    max-width: 45px;
     object-fit: contain;
     border: none;
     box-shadow: none;
@@ -12898,6 +12866,179 @@ body.modal-open .farmer-topnav {
     .admin-hero-meta .badge {
         font-size: 0.72rem;
         padding: 4px 8px;
+    }
+}
+
+/* ==========================================================================
+   EXCLUSIVE PREMIUM VIP NAVBAR ANIMATED BACKGROUND (MODERN HIGH-QUALITY)
+   ========================================================================== */
+.topbar.app-topbar.premium-navbar-animated {
+    background: rgba(255, 255, 255, 0.86) !important;
+    -webkit-backdrop-filter: blur(24px) saturate(190%);
+    backdrop-filter: blur(24px) saturate(190%);
+    border-bottom: 1px solid rgba(226, 232, 240, 0.8) !important;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.02), 0 4px 16px -2px rgba(37, 99, 235, 0.05) !important;
+}
+
+.dark-mode .topbar.app-topbar.premium-navbar-animated {
+    background: rgba(11, 15, 25, 0.84) !important;
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    backdrop-filter: blur(24px) saturate(180%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 0 4px 30px -4px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Ensure interactive controls remain on top of the ambient canvas */
+.topbar.app-topbar.premium-navbar-animated > *:not(.premium-nav-fx) {
+    position: relative;
+    z-index: 2;
+}
+
+/* Ambient Canvas Layer - strictly clipped, zero layout shift */
+.premium-nav-fx {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 1;
+    border-radius: inherit;
+}
+
+/* Fluid Organic Ambient Mesh */
+.premium-nav-aurora-mesh {
+    position: absolute;
+    inset: -20px -50px;
+    width: calc(100% + 100px);
+    height: calc(100% + 40px);
+    background: 
+        radial-gradient(ellipse 55% 80% at 20% 50%, rgba(56, 189, 248, 0.10), transparent 70%),
+        radial-gradient(ellipse 50% 70% at 80% 50%, rgba(99, 102, 241, 0.07), transparent 70%),
+        radial-gradient(ellipse 40% 60% at 50% 80%, rgba(245, 158, 11, 0.06), transparent 60%);
+    filter: blur(22px);
+    animation: modernFloatDrift 16s ease-in-out infinite alternate;
+    pointer-events: none;
+    will-change: transform, opacity;
+}
+
+.dark-mode .premium-nav-aurora-mesh {
+    inset: auto;
+    top: -150%;
+    left: -50%;
+    width: 200%;
+    height: 400%;
+    background: conic-gradient(
+        from 0deg at 50% 50%,
+        rgba(56, 189, 248, 0.28) 0deg,
+        rgba(99, 102, 241, 0.24) 70deg,
+        rgba(245, 158, 11, 0.25) 140deg,
+        rgba(16, 185, 129, 0.20) 220deg,
+        rgba(59, 130, 246, 0.26) 300deg,
+        rgba(56, 189, 248, 0.28) 360deg
+    );
+    filter: blur(45px);
+    animation: modernSpinAurora 18s linear infinite;
+}
+
+/* Glassmorphic Specular Light Shimmer */
+.premium-nav-shimmer-sweep {
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 35%;
+    height: 100%;
+    background: linear-gradient(
+        105deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.25) 35%,
+        rgba(255, 255, 255, 0.75) 50%,
+        rgba(255, 255, 255, 0.25) 65%,
+        transparent 100%
+    );
+    animation: modernShimmerSweep 10s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    pointer-events: none;
+}
+
+.dark-mode .premium-nav-shimmer-sweep {
+    width: 45%;
+    transform: skewX(-25deg);
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.04),
+        rgba(255, 255, 255, 0.12),
+        rgba(255, 255, 255, 0.04),
+        transparent
+    );
+    animation: modernShimmerSweep 9s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+/* Luminous Laser Beam along Bottom Border */
+.premium-nav-laser-beam {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(56, 189, 248, 0) 15%,
+        rgba(37, 99, 235, 0.4) 40%,
+        rgba(99, 102, 241, 0.6) 50%,
+        rgba(37, 99, 235, 0.4) 60%,
+        rgba(56, 189, 248, 0) 85%,
+        transparent 100%
+    );
+    background-size: 200% 100%;
+    animation: modernLaserGlide 8s linear infinite;
+    pointer-events: none;
+    box-shadow: 0 1px 3px rgba(37, 99, 235, 0.15);
+}
+
+.dark-mode .premium-nav-laser-beam {
+    height: 2px;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(56, 189, 248, 0.2) 15%,
+        rgba(56, 189, 248, 0.95) 35%,
+        rgba(251, 191, 36, 1) 50%,
+        rgba(129, 140, 248, 0.9) 65%,
+        rgba(56, 189, 248, 0.2) 85%,
+        transparent 100%
+    );
+    background-size: 200% 100%;
+    animation: modernLaserGlide 6s linear infinite;
+    box-shadow: 0 0 16px rgba(251, 191, 36, 0.55), 0 0 8px rgba(56, 189, 248, 0.45);
+}
+
+/* Smooth Modern Keyframes */
+@keyframes modernFloatDrift {
+    0% { transform: scale(1) translateX(0) translateY(0); }
+    50% { transform: scale(1.05) translateX(30px) translateY(-5px); }
+    100% { transform: scale(0.98) translateX(-30px) translateY(5px); }
+}
+
+@keyframes modernSpinAurora {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes modernShimmerSweep {
+    0%, 65% { left: -100%; }
+    100% { left: 200%; }
+}
+
+@keyframes modernLaserGlide {
+    0% { background-position: 200% 0%; }
+    100% { background-position: -200% 0%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .premium-nav-aurora-mesh,
+    .premium-nav-shimmer-sweep,
+    .premium-nav-laser-beam {
+        animation: none !important;
     }
 }
 

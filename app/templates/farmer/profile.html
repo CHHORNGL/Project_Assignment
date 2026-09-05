@@ -718,24 +718,49 @@
     border-color: #334155;
 }
 
-.profile-qr-box {
-    width: 100px;
-    height: 100px;
-    background: #ffffff;
-    border-radius: 10px;
-    padding: 5px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+.profile-pass-icon-badge {
+    width: 84px;
+    height: 84px;
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.16), rgba(251, 191, 36, 0.08));
+    border: 1px solid rgba(245, 158, 11, 0.35);
+    border-radius: 16px;
     display: flex;
     align-items: center;
     justify-content: center;
+    font-size: 2.1rem;
+    color: #f59e0b;
+    box-shadow: 0 4px 16px rgba(245, 158, 11, 0.15);
     flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
 }
 
-.profile-qr-box canvas,
-.profile-qr-box img {
-    width: 100%;
-    height: 100%;
-    display: block;
+.dark-mode .profile-pass-icon-badge {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.22), rgba(217, 119, 6, 0.12));
+    border-color: rgba(245, 158, 11, 0.45);
+    color: #fbbf24;
+    box-shadow: 0 6px 20px rgba(245, 158, 11, 0.22);
+}
+
+.pass-direct-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: rgba(16, 185, 129, 0.12);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.28);
+}
+
+.dark-mode .pass-direct-pill {
+    background: rgba(16, 185, 129, 0.2);
+    color: #34d399;
+    border-color: rgba(16, 185, 129, 0.4);
 }
 
 .sticky-save {
@@ -1016,60 +1041,25 @@
         </div>
 
         <!-- ===============================
-             EXCLUSIVE EXECUTIVE & VIP DIGITAL PASS
+             EXCLUSIVE EXECUTIVE CREDENTIALS (ADMIN & EXPERT STAFF ONLY)
         =============================== -->
-        {% if is_admin or is_expert or rep_label or is_premium %}
+        {% if is_admin or is_expert %}
         <div class="settings-section-title">
-            <i class="{% if is_premium and not is_admin and not is_expert %}fas fa-crown{% else %}fas fa-id-badge{% endif %}" style="{% if is_premium and not is_admin and not is_expert %}color: #f59e0b;{% else %}color: var(--primary);{% endif %}"></i>
-            <span>{% if is_premium and not is_admin and not is_expert %}VIP Pro Credentials &amp; Digital Pass{% else %}{{ t("official_credentials")|default("Official Digital Credentials") }}{% endif %}</span>
+            <i class="fas fa-id-badge" style="color: var(--primary);"></i>
+            <span>{{ t("official_credentials")|default("Official Digital Credentials") }}</span>
         </div>
-        <div class="executive-credentials-card {% if is_premium and not is_admin and not is_expert %}premium-credentials-card{% endif %}">
-            {% if is_premium and not is_admin and not is_expert %}
-            <!-- Animated SVG Guilloche Wave Backdrop -->
-            <div class="credentials-svg-backdrop" aria-hidden="true">
-                <svg viewBox="0 0 600 240" preserveAspectRatio="none" class="guilloche-svg">
-                    <defs>
-                        <linearGradient id="waveGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stop-color="#F59E0B" stop-opacity="0.15" />
-                            <stop offset="50%" stop-color="#FDE047" stop-opacity="0.10" />
-                            <stop offset="100%" stop-color="#D97706" stop-opacity="0.14" />
-                        </linearGradient>
-                    </defs>
-                    <path d="M0,40 C150,90 350,10 600,60 L600,240 L0,240 Z" fill="url(#waveGrad)" class="wave-layer-1"/>
-                    <path d="M0,80 C200,20 400,100 600,40 L600,240 L0,240 Z" fill="url(#waveGrad)" class="wave-layer-2"/>
-                </svg>
-            </div>
-            {% endif %}
-
+        <div class="executive-credentials-card">
             <div class="credentials-header-row" style="position: relative; z-index: 2;">
-                <div class="credentials-id-tag {% if is_premium and not is_admin and not is_expert %}credentials-id-tag-premium{% endif %}">
+                <div class="credentials-id-tag">
                     {% if is_admin %}
                         #AGRI-ADM-{{ "%04d"|format(current_user.id) }}
                     {% elif is_expert %}
                         #AGRI-EXP-{{ "%04d"|format(current_user.id) }}
-                    {% elif is_premium %}
-                        #AGRI-VIP-{{ "%04d"|format(current_user.id) }}
-                    {% else %}
-                        #AGRI-REP-{{ "%04d"|format(current_user.id) }}
                     {% endif %}
                 </div>
-                <div class="credentials-status-tag {% if is_premium and not is_admin and not is_expert %}status-tag-premium{% endif %}">
-                    {% if is_premium and not is_admin and not is_expert %}
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                            <defs>
-                                <linearGradient id="vipShieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                    <stop offset="0%" stop-color="#F59E0B"/>
-                                    <stop offset="100%" stop-color="#D97706"/>
-                                </linearGradient>
-                            </defs>
-                            <path d="M12 2L4 5V11.09C4 16.14 7.41 20.85 12 22C16.59 20.85 20 16.14 20 11.09V5L12 2Z" fill="url(#vipShieldGrad)" stroke="#FDE047" stroke-width="1.5"/>
-                            <path d="M9 12L11 14L15 10" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                        <span>Active VIP Pro Subscriber</span>
-                    {% else %}
-                        <i class="fas fa-check-circle"></i>
-                        <span>Verified Representative</span>
-                    {% endif %}
+                <div class="credentials-status-tag">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Verified Representative</span>
                 </div>
             </div>
 
@@ -1088,43 +1078,26 @@
                     <span class="capability-pill"><i class="fas fa-brain text-primary"></i> Rule Engine Control</span>
                     <span class="capability-pill"><i class="fas fa-comments text-info"></i> Farmer Live Advisory</span>
                     <span class="capability-pill"><i class="fas fa-flask text-warning"></i> Scientific Fact Publishing</span>
-                {% elif is_premium %}
-                    <span class="capability-pill capability-pill-premium"><i class="fas fa-bolt" style="color: #f59e0b;"></i> Unlimited AI Diagnostics</span>
-                    <span class="capability-pill capability-pill-premium"><i class="fas fa-satellite-dish" style="color: #38bdf8;"></i> Real-Time Weather &amp; Pest Radar</span>
-                    <span class="capability-pill capability-pill-premium"><i class="fas fa-user-md" style="color: #a78bfa;"></i> Priority Expert Advisory</span>
-                    <span class="capability-pill capability-pill-premium"><i class="fas fa-gem" style="color: #38bdf8;"></i> 4K Ultra-Res Pathology</span>
-                    <span class="capability-pill capability-pill-premium"><i class="fas fa-award" style="color: #fde047;"></i> VIP Digital Pro Pass</span>
-                {% else %}
-                    <span class="capability-pill"><i class="fas fa-id-card text-primary"></i> Official Representative Pass</span>
                 {% endif %}
             </div>
 
-            <!-- Digital Pass & QR Preview -->
             <div class="digital-pass-preview-box" style="position: relative; z-index: 2;">
-                <div class="profile-qr-box" id="profile-qr-code" data-qr="{{ member_card_url }}" data-qr-img="{{ member_card_qr_url }}">
-                    <img src="{{ member_card_qr_url }}" alt="QR code">
+                <div class="profile-pass-icon-badge" style="background: rgba(37, 99, 235, 0.1); border-color: rgba(37, 99, 235, 0.3); color: #2563eb;">
+                    <i class="fas fa-id-card"></i>
                 </div>
                 <div style="flex: 1; min-width: 0;">
-                    <div style="font-weight: 700; font-size: 0.95rem; color: var(--admin-text); margin-bottom: 4px;">
-                        {% if is_premium and not is_admin and not is_expert %}
-                            VIP Pro Member Pass &amp; QR
-                        {% else %}
-                            Digital Member Badge &amp; QR
-                        {% endif %}
+                    <div style="font-weight: 700; font-size: 1rem; color: var(--admin-text); margin-bottom: 4px;">
+                        Digital Member Badge
                     </div>
-                    <div class="text-muted" style="font-size: 0.8rem; line-height: 1.4; margin-bottom: 10px;">
-                        {% if is_premium and not is_admin and not is_expert %}
-                            Instant VIP credentials verification. Scan or open to access priority expert consultations and high-tier diagnostic reports.
-                        {% else %}
-                            Instant verification credential pass. Open to view full verified card, share with colleagues, or print ID.
-                        {% endif %}
+                    <div class="text-muted" style="font-size: 0.82rem; line-height: 1.45; margin-bottom: 12px;">
+                        Official representative credentials. Open to view your full verified card or print ID.
                     </div>
                     <div class="d-flex align-items-center gap-2 flex-wrap" style="gap: 8px;">
                         <a href="{{ url_for('user.member_card', user_id=current_user.id) }}"
                            target="_blank"
                            class="btn btn-sm btn-admin d-inline-flex align-items-center"
-                           style="border-radius: 999px; font-weight: 700; padding: 6px 14px; {% if is_premium and not is_admin and not is_expert %}background: linear-gradient(135deg, #f59e0b, #d97706); border-color: #d97706; color: #ffffff; box-shadow: 0 4px 14px rgba(245,158,11,0.3);{% endif %}">
-                            <i class="fas fa-external-link-alt mr-1.5"></i> {% if is_premium and not is_admin and not is_expert %}Open VIP Pro Pass{% else %}Open Member Card{% endif %}
+                           style="border-radius: 999px; font-weight: 700; padding: 7px 18px; font-size: 0.85rem;">
+                            <i class="fas fa-external-link-alt mr-2"></i> Open Member Card
                         </a>
                     </div>
                 </div>
@@ -1194,30 +1167,6 @@
 
 {% block scripts %}
 {{ super() }}
-{% if rep_label or is_admin or is_expert or is_premium %}
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
-<script>
-(() => {
-    const holder = document.getElementById("profile-qr-code");
-    if (!holder) return;
-    if (typeof QRCode === "undefined") return;
-    const url = holder.dataset.qr;
-    if (!url) return;
-    const canvas = document.createElement("canvas");
-    QRCode.toCanvas(canvas, url, {
-        width: 140,
-        margin: 1,
-        color: { dark: "#0f172a", light: "#ffffff" }
-    }, (err) => {
-        if (err) {
-            console.warn("QR generation note:", err);
-            return;
-        }
-        holder.innerHTML = "";
-        holder.appendChild(canvas);
-    });
-})();
-</script>
-{% endif %}
 {% endblock %}
+
 

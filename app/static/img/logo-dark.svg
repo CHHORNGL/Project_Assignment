@@ -3,12 +3,11 @@
     <title>Logo</title>
     <style>
         .logo-wire {
-            fill: #2563EB;
-            transition: fill 0.25s ease;
+            fill: #F8FAFC;
         }
         .logo-facet {
             fill: #FFD600;
-            opacity: 0.95;
+            opacity: 0.92;
         }
     </style>
     <g>

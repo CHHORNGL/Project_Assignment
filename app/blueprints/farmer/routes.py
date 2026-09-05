@@ -766,11 +766,26 @@ def api_diagnose_live_evaluation():
 
     if result:
         candidates = result.get("ranked_candidates") or []
+        best_disease_name = result.get("disease_name") or result.get("diagnosis")
+        if get_current_language() == "km":
+            rule_obj = result.get("rule")
+            if rule_obj and getattr(rule_obj, "disease", None) and getattr(rule_obj.disease, "name_kh", None):
+                best_disease_name = rule_obj.disease.name_kh
+            elif not best_disease_name or best_disease_name == "Unknown":
+                best_disease_name = t("Unknown")
+
+            for cand in candidates:
+                disease_id = cand.get("disease_id")
+                if disease_id:
+                    d_row = Disease.query.get(disease_id)
+                    if d_row and d_row.name_kh:
+                        cand["disease_name"] = d_row.name_kh
+
         return jsonify({
             "ok": True,
             "suspects": candidates,
             "best": {
-                "disease_name": result.get("disease_name") or result.get("diagnosis"),
+                "disease_name": best_disease_name,
                 "confidence_percent": result.get("confidence_percent"),
                 "confidence_tier": result.get("confidence_tier")
             }

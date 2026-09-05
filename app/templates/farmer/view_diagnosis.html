@@ -52,7 +52,7 @@
 
             <div class="fm-field-block">
                 <div class="fm-dt">{{ t("symptoms_label") }}</div>
-                <div class="fm-quote">{{ diagnosis.symptoms or "—" }}</div>
+                <div class="fm-quote">{{ translate_symptoms(diagnosis.symptoms) or "—" }}</div>
             </div>
         </div>
     </div>

@@ -2403,7 +2403,7 @@ html.dark-mode .diag-mobile-prediction,
 {% block scripts %}
 <script>
 (function () {
-    const isKm = {{ 'true' if is_km else 'false' }};
+    const isKm = {{ 'true' if (current_lang == 'km') else 'false' }};
 
     // Dictionary of crop symptoms from backend
     const cropsData = {

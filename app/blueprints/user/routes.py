@@ -55,8 +55,6 @@ def _representative_label(user: User):
     if user.has_role("expert"):
         roles.append("Expert")
     if not roles:
-        if getattr(user, "is_premium", False):
-            return "VIP Pro Member"
         return None
     return f"{' & '.join(roles)} Representative"
 
@@ -235,13 +233,8 @@ def profile():
 
     rep_label = _representative_label(current_user)
     member_card_url = None
-    member_card_qr_url = None
     if rep_label:
         member_card_url = url_for("user.member_card", user_id=current_user.id, _external=True)
-        member_card_qr_url = (
-            "https://api.qrserver.com/v1/create-qr-code/?size=160x160&data="
-            + quote_plus(member_card_url)
-        )
     if current_user.has_role("admin") or current_user.has_role("expert"):
         layout_shell = "layouts/base.html"
     else:
@@ -251,7 +244,6 @@ def profile():
         "farmer/profile.html",
         rep_label=rep_label,
         member_card_url=member_card_url,
-        member_card_qr_url=member_card_qr_url,
         layout_shell=layout_shell
     )
 

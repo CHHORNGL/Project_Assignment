@@ -108,6 +108,11 @@ html.dark-mode .page-loader-card {
   color: #f8fafc;
 }
 
+.dark-mode .page-loader-logo {
+  content: url('../img/newlogo-dark.svg');
+  filter: drop-shadow(0 0 8px rgba(255, 214, 0, 0.35));
+}
+
 /* ============================================================================
    4. NEWTON'S CRADLE ANIMATION COMPONENT
    ============================================================================ */

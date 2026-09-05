@@ -344,6 +344,8 @@ def create_app():
                 os.path.join(static_root, "js", "error_pages.js"),
                 os.path.join(static_root, "js", "weather_intelligence.js"),
                 os.path.join(static_root, "img", "logo.svg"),
+                os.path.join(static_root, "img", "logo-dark.svg"),
+                os.path.join(static_root, "img", "logo_icon.svg"),
                 os.path.join(static_root, "sw.js"),
             ]
             mtimes = []
@@ -380,10 +382,14 @@ def create_app():
             from flask import g
             if not hasattr(g, 'symptom_kh_map'):
                 from app.models.symptom import Symptom
-                g.symptom_kh_map = {s.name.lower().strip(): s.name_kh for s in Symptom.query.all() if s.name and s.name_kh}
+                g.symptom_kh_map = {
+                    s.name.lower().strip(): s.name_kh.strip()
+                    for s in Symptom.query.all()
+                    if s.name and s.name_kh and s.name_kh.strip()
+                }
             
             names = [s.strip() for s in symptoms_str.split(',') if s.strip()]
-            translated = [g.symptom_kh_map.get(name.lower(), name) for name in names]
+            translated = [g.symptom_kh_map.get(name.lower().strip(), name) for name in names]
             return ", ".join(translated)
 
         return {

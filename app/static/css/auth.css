@@ -215,70 +215,45 @@ html[lang^="km"] body.auth-body textarea {
 .auth-brand {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    background: #0f172a;
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    padding: 4px 14px 4px 5px;
-    border-radius: 9999px;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18), 0 1px 3px rgba(0, 0, 0, 0.1);
+    justify-content: center;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    padding: 0;
     text-decoration: none !important;
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
     user-select: none;
+    box-sizing: border-box;
 }
 
 .auth-brand:hover {
-    background: #1e293b;
-    border-color: rgba(255, 255, 255, 0.25);
-    transform: translateY(-1px);
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    transform: scale(1.06);
+    opacity: 0.92;
 }
 
 .auth-brand-logo-img {
-    width: 28px !important;
-    height: 28px !important;
-    min-width: 28px !important;
-    max-width: 28px !important;
-    border-radius: 50%;
+    height: 44px !important;
+    width: auto !important;
+    max-height: 44px !important;
+    max-width: 50px !important;
+    border-radius: 0 !important;
     object-fit: contain;
     flex-shrink: 0;
     display: block;
+    border: none !important;
+    background: transparent !important;
     transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.auth-brand:hover .auth-brand-logo-img {
-    transform: scale(1.06);
-}
-
-.auth-brand .auth-brand-name {
-    font-family: "Inter", "Manrope", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    font-size: 0.875rem;
-    font-weight: 650;
-    letter-spacing: 0.06em;
-    line-height: 1;
-    color: #ffffff !important;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
-    white-space: nowrap;
-    display: inline-flex;
-    align-items: center;
-    transform: translateY(-0.5px);
-}
-
-.auth-brand-mark {
-    display: none;
-}
-
-.auth-brand-sub {
-    font-family: "Inter", "Manrope", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    font-size: 0.6875rem;
-    font-weight: 600;
-    color: rgba(255, 255, 255, 0.7);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    padding-left: 8px;
-    border-left: 1px solid rgba(255, 255, 255, 0.2);
-    line-height: 1;
-    display: inline-flex;
-    align-items: center;
+.dark-mode .auth-brand-logo-img,
+html.dark-mode .auth-brand-logo-img,
+html.auth-panel-dark .auth-brand-logo-img {
+    content: url('../img/newlogo-dark.svg');
+    filter: drop-shadow(0 0 12px rgba(255, 214, 0, 0.35));
 }
 
 .auth-pill {
@@ -1167,54 +1142,34 @@ html.auth-panel-dark .auth-clean-card {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    height: 38px;
-    width: auto;
-    min-width: unset;
-    padding: 4px 14px 4px 5px;
-    border-radius: 9999px;
-    background: #0f172a;
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    box-shadow: 
-        0 4px 12px -2px rgba(15, 23, 42, 0.18),
-        0 1px 3px rgba(15, 23, 42, 0.08),
-        0 0 0 1px rgba(255, 255, 255, 0.05) inset;
-    margin-bottom: 22px;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    padding: 0;
+    margin-bottom: 18px;
     text-decoration: none !important;
     user-select: none;
     box-sizing: border-box;
-    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
 }
 
 .auth-brand-badge:hover,
 .auth-brand-badge:focus-visible {
-    background: #1e293b;
-    border-color: rgba(255, 255, 255, 0.28);
-    transform: translateY(-1.5px);
-    box-shadow: 
-        0 8px 20px -4px rgba(15, 23, 42, 0.26),
-        0 2px 6px rgba(15, 23, 42, 0.12),
-        0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    transform: scale(1.06);
+    opacity: 0.92;
     outline: none;
-}
-
-/* Standalone icon fallback (if badge has only an icon) */
-.auth-brand-badge:has(> .auth-clean-logo:only-child) {
-    width: 42px;
-    height: 42px;
-    padding: 6px;
-    border-radius: 50%;
 }
 
 .dark-mode .auth-brand-badge,
 html.dark-mode .auth-brand-badge,
 html.auth-panel-dark .auth-brand-badge {
-    background: rgba(15, 23, 42, 0.95);
-    border-color: rgba(255, 255, 255, 0.14);
-    box-shadow: 
-        0 4px 14px -2px rgba(0, 0, 0, 0.45),
-        0 1px 3px rgba(0, 0, 0, 0.3),
-        0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
 }
 
 .dark-mode .auth-brand-badge:hover,
@@ -1223,61 +1178,34 @@ html.auth-panel-dark .auth-brand-badge:hover,
 .dark-mode .auth-brand-badge:focus-visible,
 html.dark-mode .auth-brand-badge:focus-visible,
 html.auth-panel-dark .auth-brand-badge:focus-visible {
-    background: #1e293b;
-    border-color: rgba(56, 189, 248, 0.35);
-    box-shadow: 
-        0 8px 24px -4px rgba(0, 0, 0, 0.55),
-        0 0 20px -2px rgba(56, 189, 248, 0.18),
-        0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
 }
 
 .auth-clean-logo {
-    width: 28px !important;
-    height: 28px !important;
-    min-width: 28px !important;
-    max-width: 28px !important;
-    border-radius: 50%;
+    height: 52px !important;
+    width: auto !important;
+    max-height: 52px !important;
+    max-width: 58px !important;
+    border-radius: 0 !important;
     object-fit: contain;
     flex-shrink: 0;
     display: block;
-    border: none;
-    background: transparent;
+    border: none !important;
+    background: transparent !important;
     transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.dark-mode .auth-clean-logo,
+html.dark-mode .auth-clean-logo,
+html.auth-panel-dark .auth-clean-logo {
+    content: url('../img/newlogo-dark.svg');
+    filter: drop-shadow(0 0 14px rgba(255, 214, 0, 0.35));
 }
 
 .auth-brand-badge:hover .auth-clean-logo {
     transform: scale(1.06);
-}
-
-/* Wordmark "AXE": Sleek, geometric, golden proportioned */
-.auth-brand-name {
-    font-family: "Inter", "Manrope", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    font-size: 0.875rem; /* 14px */
-    font-weight: 650;
-    letter-spacing: 0.06em;
-    line-height: 1;
-    color: #ffffff !important;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
-    white-space: nowrap;
-    display: inline-flex;
-    align-items: center;
-    transform: translateY(-0.5px);
-}
-
-.dark-mode .auth-brand-name,
-html.dark-mode .auth-brand-name,
-html.auth-panel-dark .auth-brand-name {
-    color: #ffffff !important;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
-}
-
-.auth-brand-logo-img {
-    height: 38px;
-    width: auto;
-    max-width: 135px;
-    object-fit: contain;
-    display: inline-block;
-    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.2));
 }
 
 .auth-clean-title {
@@ -1699,19 +1627,13 @@ html.auth-panel-dark .auth-register-link:hover {
         border-radius: 22px;
     }
     .auth-brand-badge {
-        height: 35px;
-        padding: 3px 12px 3px 4px;
-        gap: 7px;
-        margin-bottom: 18px;
+        margin-bottom: 14px;
     }
     .auth-clean-logo {
-        width: 25px !important;
-        height: 25px !important;
-        min-width: 25px !important;
-        max-width: 25px !important;
-    }
-    .auth-brand-name {
-        font-size: 0.8125rem; /* ~13px */
+        height: 44px !important;
+        width: auto !important;
+        max-height: 44px !important;
+        max-width: 50px !important;
     }
     .auth-clean-title {
         font-size: 1.28rem;

@@ -1,7 +1,11 @@
-<!-- ===============================
-     TOPBAR
-================================ -->
-<nav class="navbar navbar-expand navbar-light topbar app-topbar mb-4 static-top shadow-sm">
+<nav class="navbar navbar-expand navbar-light topbar app-topbar mb-4 static-top shadow-sm {% if current_user.is_authenticated and current_user.is_premium %}premium-navbar-animated{% endif %}">
+    {% if current_user.is_authenticated and current_user.is_premium %}
+    <div class="premium-nav-fx" aria-hidden="true">
+        <div class="premium-nav-aurora-mesh"></div>
+        <div class="premium-nav-shimmer-sweep"></div>
+        <div class="premium-nav-laser-beam"></div>
+    </div>
+    {% endif %}
 
     <!-- ===============================
          MOBILE SIDEBAR TOGGLE
@@ -35,14 +39,11 @@
     =============================== -->
     {# The wordmark carries the accessible name, so the mark beside it is
        decorative — an empty alt keeps screen readers from announcing both. #}
-    <a class="topbar-brand" href="{{ url_for('main.index') }}" aria-label="AXE">
-        <img src="{{ url_for('static', filename='img/logo.svg', v=static_version) }}"
-             alt=""
-             aria-hidden="true"
-             width="26"
-             height="26"
+    <a class="topbar-brand" href="{{ url_for('main.index') }}" aria-label="Home">
+        <img src="{{ url_for('static', filename='img/newlogo.svg', v=static_version) }}"
+             alt="Logo"
+             height="32"
              class="topbar-brand-logo">
-        <span class="topbar-brand-name">AXE</span>
     </a>
     {% endif %}
 
@@ -696,7 +697,7 @@
                             <span class="user-dropdown-label">{{ t("settings") }}</span>
                         </a>
 
-                        {% if current_user.is_premium or current_user.has_role('admin') or current_user.has_role('expert') %}
+                        {% if current_user.has_role('admin') or current_user.has_role('expert') %}
                         <a class="user-dropdown-item" href="{{ url_for('user.member_card', user_id=current_user.id) }}">
                             <span class="user-dropdown-icon"><i class="fas fa-id-card"></i></span>
                             <span class="user-dropdown-label">{% if current_lang == 'km' %}កាតសមាជិក{% else %}Member Card{% endif %}</span>
