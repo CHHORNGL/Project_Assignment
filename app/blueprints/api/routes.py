@@ -1,5 +1,4 @@
-from flask import Blueprint, jsonify, request
-from flask_login import login_user, current_user, logout_user
+from flask import Blueprint, jsonify, request, session
 from flask_login import login_user, current_user, logout_user, login_required
 from sqlalchemy import or_
 from app.models.user import User
@@ -88,8 +87,8 @@ def chat_ask():
 
 @api_bp.route('/login', methods=['POST'])
 def login():
-    data = request.get_json()
-    identifier = data.get('username')
+    data = request.get_json() or {}
+    identifier = data.get('username') or data.get('email')
     password = data.get('password')
     
     if not identifier or not password:
@@ -313,6 +312,18 @@ def me():
         'google_sub': current_user.google_sub,
         'has_password': False if current_user.google_sub else bool(current_user.password_hash)
     })
+
+@api_bp.route('/logout', methods=['POST', 'GET'])
+def logout():
+    logout_user()
+    session.pop("verify_user_id", None)
+    session.pop("verify_purpose", None)
+    return jsonify({'success': True, 'message': 'Logged out successfully'})
+
+@api_bp.route('/reset-password', methods=['POST'])
+def api_reset_password():
+    from app.blueprints.auth.routes import reset_password_api
+    return reset_password_api()
 
 from app.models.crop import Crop
 

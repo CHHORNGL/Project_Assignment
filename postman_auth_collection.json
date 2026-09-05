@@ -1,0 +1,307 @@
+{
+  "info": {
+    "name": "Agri System - Auth API Collection",
+    "_postman_id": "agri-auth-api-collection-v1",
+    "description": "Ready-to-use API collection for testing Agri System authentication in Apidog / Postman.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "test_email",
+      "value": "test_farmer@test.com",
+      "type": "string"
+    },
+    {
+      "key": "test_password",
+      "value": "12345678",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Login (Email & Password)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{test_email}}\",\n  \"password\": \"{{test_password}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "login"
+          ]
+        },
+        "description": "Logs in a user. Session cookie is automatically saved by Apidog/Postman."
+      }
+    },
+    {
+      "name": "2. Get Current User Profile (/api/me)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/me",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "me"
+          ]
+        },
+        "description": "Returns profile data of the logged in user using the active session cookie."
+      }
+    },
+    {
+      "name": "3. Register New Account",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"newfarmer_demo@example.com\",\n  \"full_name\": \"Demo Farmer\",\n  \"password\": \"SecurePassword123!\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/register",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "register"
+          ]
+        },
+        "description": "Registers a new farmer account and triggers a 6-digit OTP to user email (printed in server terminal)."
+      }
+    },
+    {
+      "name": "4. Verify OTP Code",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"code\": \"123456\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/verify-code",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "verify-code"
+          ]
+        },
+        "description": "Verify 6-digit code for registration or 2FA login."
+      }
+    },
+    {
+      "name": "5. Resend OTP Code",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/resend-code",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "resend-code"
+          ]
+        },
+        "description": "Resends a fresh OTP code to user email during pending verification."
+      }
+    },
+    {
+      "name": "6. Reset Password - Step 1: Send OTP",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"action\": \"send_code\",\n  \"email\": \"{{test_email}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/reset-password",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "reset-password"
+          ]
+        },
+        "description": "Sends a 6-digit password reset OTP to user email."
+      }
+    },
+    {
+      "name": "7. Reset Password - Step 2: Verify OTP",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"action\": \"verify_code\",\n  \"email\": \"{{test_email}}\",\n  \"code\": \"123456\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/reset-password",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "reset-password"
+          ]
+        },
+        "description": "Verifies the OTP code before submitting new password."
+      }
+    },
+    {
+      "name": "8. Reset Password - Step 3: Set New Password",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"action\": \"reset_password\",\n  \"email\": \"{{test_email}}\",\n  \"code\": \"123456\",\n  \"password\": \"NewSecurePassword123!\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/reset-password",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "reset-password"
+          ]
+        },
+        "description": "Sets the new password using verified OTP code."
+      }
+    },
+    {
+      "name": "9. Toggle 2FA (Enable / Disable)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"enabled\": true\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/2fa/toggle",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "2fa",
+            "toggle"
+          ]
+        },
+        "description": "Enables or disables 2FA for the currently logged in user."
+      }
+    },
+    {
+      "name": "10. Update Profile (Username / Email)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"test_farmer\",\n  \"email\": \"test_farmer@test.com\",\n  \"password\": \"{{test_password}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/update-profile",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "update-profile"
+          ]
+        },
+        "description": "Update account username and email with password verification."
+      }
+    },
+    {
+      "name": "11. Logout",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/logout",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "logout"
+          ]
+        },
+        "description": "Destroys the active session."
+      }
+    }
+  ]
+}

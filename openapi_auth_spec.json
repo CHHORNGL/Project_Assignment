@@ -1,0 +1,349 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Agri System - Authentication & User API",
+    "version": "1.0.0",
+    "description": "Complete Authentication & User Session API for testing in Apidog / Postman / Insomnia."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5000",
+      "description": "Local Development Server"
+    },
+    {
+      "url": "http://127.0.0.1:5000",
+      "description": "Loopback IP Server"
+    }
+  ],
+  "paths": {
+    "/api/login": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "User Login",
+        "description": "Authenticate user using email or username and password. Returns session cookie and user profile or triggers 2FA if enabled.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "password"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "example": "test_farmer@test.com"
+                  },
+                  "username": {
+                    "type": "string",
+                    "example": "test_farmer"
+                  },
+                  "password": {
+                    "type": "string",
+                    "example": "12345678"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful login or 2FA required"
+          },
+          "400": {
+            "description": "Missing credentials"
+          },
+          "401": {
+            "description": "Invalid username or password"
+          }
+        }
+      }
+    },
+    "/api/register": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "User Registration",
+        "description": "Register a new farmer account. Sends a 6-digit verification code to the provided email.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email",
+                  "password"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "example": "farmer_new@test.com"
+                  },
+                  "full_name": {
+                    "type": "string",
+                    "example": "Sokha Chan"
+                  },
+                  "password": {
+                    "type": "string",
+                    "example": "StrongPass123!"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User created, OTP sent to email"
+          },
+          "400": {
+            "description": "Email already exists or invalid fields"
+          }
+        }
+      }
+    },
+    "/api/verify-code": {
+      "post": {
+        "tags": [
+          "Authentication",
+          "Two-Factor & OTP"
+        ],
+        "summary": "Verify OTP Code",
+        "description": "Verify the 6-digit OTP code sent to user email during registration or 2FA login.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "code"
+                ],
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "example": "123456"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Code verified, logged in"
+          },
+          "400": {
+            "description": "Invalid or expired code"
+          },
+          "401": {
+            "description": "Session expired"
+          }
+        }
+      }
+    },
+    "/api/resend-code": {
+      "post": {
+        "tags": [
+          "Authentication",
+          "Two-Factor & OTP"
+        ],
+        "summary": "Resend OTP Code",
+        "description": "Resend a fresh 6-digit OTP code to the email in active verification session.",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "New OTP sent to email"
+          },
+          "401": {
+            "description": "Session expired"
+          }
+        }
+      }
+    },
+    "/api/me": {
+      "get": {
+        "tags": [
+          "User Profile"
+        ],
+        "summary": "Get Current User Profile",
+        "description": "Returns profile info for currently authenticated session.",
+        "responses": {
+          "200": {
+            "description": "User profile data"
+          },
+          "401": {
+            "description": "Unauthorized (not logged in)"
+          }
+        }
+      }
+    },
+    "/api/logout": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Logout User",
+        "description": "Invalidates active session cookie.",
+        "responses": {
+          "200": {
+            "description": "Logged out successfully"
+          }
+        }
+      }
+    },
+    "/api/reset-password": {
+      "post": {
+        "tags": [
+          "Password Management"
+        ],
+        "summary": "Forgot / Reset Password via OTP",
+        "description": "Multi-action endpoint: send_code, verify_code, or reset_password.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "action",
+                  "email"
+                ],
+                "properties": {
+                  "action": {
+                    "type": "string",
+                    "enum": [
+                      "send_code",
+                      "verify_code",
+                      "reset_password"
+                    ],
+                    "example": "send_code"
+                  },
+                  "email": {
+                    "type": "string",
+                    "example": "test_farmer@test.com"
+                  },
+                  "code": {
+                    "type": "string",
+                    "example": "123456"
+                  },
+                  "password": {
+                    "type": "string",
+                    "example": "NewPassword123!"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Action processed successfully"
+          },
+          "400": {
+            "description": "Invalid OTP or invalid action"
+          }
+        }
+      }
+    },
+    "/api/2fa/toggle": {
+      "post": {
+        "tags": [
+          "Security"
+        ],
+        "summary": "Toggle Two-Factor Authentication",
+        "description": "Enable or disable email-based 2FA for the current user.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "enabled"
+                ],
+                "properties": {
+                  "enabled": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "2FA state updated"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/update-profile": {
+      "post": {
+        "tags": [
+          "User Profile"
+        ],
+        "summary": "Update Profile",
+        "description": "Update username or email. Requires current password for confirmation.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "username",
+                  "email"
+                ],
+                "properties": {
+                  "username": {
+                    "type": "string",
+                    "example": "test_farmer"
+                  },
+                  "email": {
+                    "type": "string",
+                    "example": "test_farmer@test.com"
+                  },
+                  "password": {
+                    "type": "string",
+                    "example": "12345678"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Profile updated successfully"
+          },
+          "400": {
+            "description": "Username/email taken or incorrect password"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    }
+  }
+}
