@@ -1,3 +1,4 @@
+from app.utils.input_validation import support_message_fields
 import os
 import uuid
 from werkzeug.utils import secure_filename
@@ -36,9 +37,7 @@ def get_support_messages():
 @role_required("farmer")
 def send_support_message():
     data = request.get_json()
-    message_text = data.get("message", "")
-    attachment_url = data.get("attachment_url")
-    attachment_type = data.get("attachment_type")
+    message_text, attachment_url, attachment_type = support_message_fields(data)
 
     if not message_text and not attachment_url:
         return jsonify({"error": "Empty message"}), 400

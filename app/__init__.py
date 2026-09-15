@@ -1,11 +1,12 @@
 from datetime import datetime
 import os
+import sys
 import time
 from uuid import uuid4
 import logging
 from logging.handlers import RotatingFileHandler
 
-from flask import Flask, url_for, request, render_template, redirect, g, send_from_directory, has_request_context
+from flask import Flask, jsonify, url_for, request, render_template, redirect, g, send_from_directory, has_request_context
 from flask_login import current_user, login_required
 
 from .extensions import db, login_manager, migrate, oauth
@@ -13,6 +14,10 @@ from .config import Config
 from app.models.notification import Notification
 from app.services.notification_service import serialize_notification
 from app.utils.i18n import t, get_current_language, normalize_display_text
+from app.utils.security_headers import register_security_headers
+from app.utils.rate_limiting import register_rate_limiting
+from app.utils.input_validation import register_input_validation, safe_next_url
+from app.utils.session_security import init_server_sessions, register_session_security
 
 from werkzeug.middleware.proxy_fix import ProxyFix
 
@@ -20,8 +25,14 @@ from flask_cors import CORS
 
 def create_app():
     app = Flask(__name__)
-    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
     app.config.from_object(Config)
+    trusted_proxies = app.config["TRUSTED_PROXY_COUNT"]
+    app.wsgi_app = ProxyFix(
+        app.wsgi_app, x_for=trusted_proxies, x_proto=trusted_proxies,
+        x_host=trusted_proxies, x_prefix=trusted_proxies,
+    )
+    register_security_headers(app)
+    init_server_sessions(app)
     
     # 🌍 Enable CORS for all routes, allowing credentials (cookies) to be sent cross-origin
     CORS(app, supports_credentials=True)
@@ -35,6 +46,7 @@ def create_app():
                 record.request_id = getattr(g, "request_id", "-")
                 record.path = getattr(request, "path", "-")
                 record.method = getattr(request, "method", "-")
+                record.client_ip = request.remote_addr or "-"
                 try:
                     record.user = current_user.username if current_user.is_authenticated else "anonymous"
                 except Exception:
@@ -43,6 +55,7 @@ def create_app():
                 record.request_id = "-"
                 record.path = "-"
                 record.method = "-"
+                record.client_ip = "-"
                 record.user = "-"
             return True
 
@@ -51,22 +64,41 @@ def create_app():
         os.makedirs(log_dir, exist_ok=True)
         log_path = os.path.join(log_dir, "app.log")
 
+        log_format = (
+            "%(asctime)s %(levelname)s [%(request_id)s] "
+            "ip=%(client_ip)s %(method)s %(path)s user=%(user)s %(message)s"
+        )
+        formatter = logging.Formatter(log_format)
+        req_filter = _RequestContextFilter()
+
+        # Rotating file handler (5MB, 5 backups)
         file_handler = RotatingFileHandler(
             log_path,
-            maxBytes=1_000_000,
+            maxBytes=5_000_000,
             backupCount=5,
             encoding="utf-8",
         )
         file_handler.setLevel(logging.INFO)
-        file_handler.addFilter(_RequestContextFilter())
-        file_handler.setFormatter(
-            logging.Formatter(
-                "%(asctime)s %(levelname)s [%(request_id)s] %(method)s %(path)s user=%(user)s %(message)s"
-            )
-        )
+        file_handler.addFilter(req_filter)
+        file_handler.setFormatter(formatter)
+
+        # Standard output handler (for Docker/container logs)
+        stdout_handler = logging.StreamHandler(sys.stdout)
+        stdout_handler.setLevel(logging.INFO)
+        stdout_handler.addFilter(req_filter)
+        stdout_handler.setFormatter(formatter)
+
         app.logger.setLevel(logging.INFO)
         app.logger.addHandler(file_handler)
+        app.logger.addHandler(stdout_handler)
         app.logger.propagate = False
+
+        # Dedicated security audit logger
+        sec_logger = logging.getLogger("security.audit")
+        sec_logger.setLevel(logging.INFO)
+        sec_logger.addHandler(file_handler)
+        sec_logger.addHandler(stdout_handler)
+        sec_logger.propagate = False
     except Exception:
         # Logging must never prevent the app from starting.
         pass
@@ -84,12 +116,12 @@ def create_app():
         return "farmer"
 
     def _safe_next_url(value):
-        if value and value.startswith("/"):
-            return value
-        return None
+        return safe_next_url(value)
 
     @login_manager.unauthorized_handler
     def _unauthorized():
+        if request.path.startswith("/api/") or request.is_json:
+            return jsonify(error="Authentication required. Please log in again.", code="authentication_required"), 401
         role = _infer_login_role(request.path or "")
         next_url = request.full_path or request.path
         if next_url.endswith("?"):
@@ -149,6 +181,10 @@ def create_app():
     app.register_blueprint(weather_intelligence_bp)  # /weather-intelligence/...
     app.register_blueprint(user_bp)     # /user/...
     app.register_blueprint(api_bp)      # /api/...
+
+    register_rate_limiting(app)
+    register_input_validation(app)
+    register_session_security(app)
 
     # ===============================
     # ERROR HANDLERS
@@ -243,6 +279,8 @@ def create_app():
         else:
             g.request_id = uuid4().hex[:12]
 
+        g.start_time = time.time()
+
         # Ensure database session is clean at the start of each request.
         try:
             # If there's an active but failed transaction, rollback
@@ -262,6 +300,9 @@ def create_app():
         rid = getattr(g, "request_id", None)
         if rid:
             response.headers.setdefault("X-Request-ID", rid)
+        if request.endpoint not in {"static", "healthz"} and not (request.path or "").startswith("/static/"):
+            duration = (time.time() - getattr(g, "start_time", time.time())) * 1000
+            app.logger.info(f"Completed {response.status_code} in {duration:.1f}ms")
         return response
 
     @app.teardown_request

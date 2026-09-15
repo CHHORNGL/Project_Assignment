@@ -1,3 +1,5 @@
+from app.utils.input_validation import text_field, email_field, password_field, code_field, safe_next_url, InputValidationError
+from app.utils.audit import audit_log
 # app/blueprints/auth/routes.py
 
 import re
@@ -26,7 +28,6 @@ from flask_login import (
     current_user,
     login_required
 )
-from werkzeug.security import check_password_hash
 from sqlalchemy import or_
 
 from app.extensions import db, oauth
@@ -107,9 +108,7 @@ def _send_verification_email(email, code):
 
 
 def _safe_next_url(value: Optional[str]) -> Optional[str]:
-    if value and value.startswith("/"):
-        return value
-    return None
+    return safe_next_url(value)
 
 
 def _resolve_auth_theme_runtime():
@@ -151,10 +150,14 @@ def login():
         ).first()
 
         # ❌ Invalid email or password
-        if not user or not check_password_hash(
-            user.password_hash,
-            form.password.data
-        ):
+        if not user or not user.check_password(form.password.data, upgrade=True):
+            audit_log(
+                "AUTH_LOGIN_FAILURE",
+                target_user=email_input,
+                detail="Invalid credentials",
+                status="FAILURE",
+                severity="WARNING",
+            )
             flash("Invalid email or password.", "danger")
             return render_template(
                 "auth/login.html",
@@ -166,6 +169,14 @@ def login():
 
         # 🚫 BANNED USER CHECK
         if not user.is_active:
+            audit_log(
+                "AUTH_LOGIN_BLOCKED",
+                target_user=user.username,
+                user_id=user.id,
+                detail="Banned account login attempt",
+                status="BLOCKED",
+                severity="WARNING",
+            )
             flash("Your account has been banned. Please contact administrator.", "danger")
             return render_template(
                 "auth/login.html",
@@ -215,7 +226,14 @@ def login():
             return redirect(url_for("auth.verify_code"))
 
         # ✅ Login success
-        login_user(user, remember=True)
+        db.session.commit()  # Persist any password hash upgrade.
+        login_user(user, remember=False)
+        audit_log(
+            "AUTH_LOGIN_SUCCESS",
+            target_user=user.username,
+            user_id=user.id,
+            detail="Farmer password authentication",
+        )
         flash("Welcome back!", "success")
         return redirect(next_url or url_for("main.index"))
 
@@ -296,7 +314,7 @@ def register():
         session.pop("register_otp_code", None)
         session.pop("register_otp_expiry", None)
 
-        login_user(user, remember=True)
+        login_user(user, remember=False)
         flash("Registration successful! Welcome to Agri System.", "success")
         return redirect(url_for("main.index"))
 
@@ -309,7 +327,7 @@ def register():
 @auth_bp.route("/send-register-otp", methods=["POST"])
 def send_register_otp():
     data = request.get_json()
-    email = (data.get("email") or "").strip().lower()
+    email = email_field(data)
     
     if not email or "@" not in email:
         return {"success": False, "message": "Please enter a valid email address"}
@@ -467,7 +485,7 @@ def verify_code():
         db.session.commit()
 
         # Log in the user
-        login_user(user, remember=True)
+        login_user(user, remember=False)
 
         session.pop("verify_user_id", None)
         session.pop("verify_purpose", None)
@@ -601,7 +619,7 @@ def google_callback():
         flash("Two-step verification code has been sent to your Gmail/Email address.", "info")
         return redirect(url_for("auth.verify_code"))
 
-    login_user(user, remember=True)
+    login_user(user, remember=False)
     flash("Welcome back!", "success")
     return redirect(url_for("main.index"))
 
@@ -715,7 +733,7 @@ def passkey_login_verify():
         passkey.sign_count = auth_verification.new_sign_count
         db.session.commit()
         
-        login_user(user, remember=True)
+        login_user(user, remember=False)
         flash("Logged in successfully via Passkey!", "success")
         return {"status": "ok"}
     except Exception as e:
@@ -724,10 +742,12 @@ def passkey_login_verify():
 @auth_bp.route("/reset-password-api", methods=["POST"])
 def reset_password_api():
     data = request.get_json()
-    action = data.get("action")
+    action = text_field(data, "action", required=True, maximum=30)
+    if action not in {"send_code", "verify_code", "reset_password"}:
+        raise InputValidationError("action", "Unknown action.")
 
     if action == "send_code":
-        email = (data.get("email") or "").strip().lower()
+        email = email_field(data)
         user = User.query.filter_by(email=email).first()
         if user and user.is_active:
             code = "".join(random.choices(string.digits, k=6))
@@ -739,8 +759,8 @@ def reset_password_api():
         return {"success": True, "message": "If account exists, OTP sent"} # Prevent email enum
 
     elif action == "verify_code":
-        email = (data.get("email") or "").strip().lower()
-        input_code = (data.get("code") or "").strip()
+        email = email_field(data)
+        input_code = code_field(data)
         user = User.query.filter_by(email=email).first()
         if not user or not user.two_factor_code or user.two_factor_code != input_code:
             return {"success": False, "message": "Invalid OTP code"}
@@ -749,13 +769,16 @@ def reset_password_api():
         return {"success": True, "message": "OTP verified"}
 
     elif action == "reset_password":
-        email = (data.get("email") or "").strip().lower()
-        input_code = (data.get("code") or "").strip()
-        new_password = data.get("password")
+        email = email_field(data)
+        input_code = code_field(data)
+        new_password = password_field(data, new=True)
         user = User.query.filter_by(email=email).first()
         if not user or not user.two_factor_code or user.two_factor_code != input_code:
             return {"success": False, "message": "Invalid OTP code"}
         
+        if not user.two_factor_expiry or user.two_factor_expiry < datetime.datetime.utcnow():
+            return {"success": False, "message": "OTP expired"}, 400
+
         user.set_password(new_password)
         user.two_factor_code = None
         user.two_factor_expiry = None

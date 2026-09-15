@@ -1,3 +1,4 @@
+from app.utils.input_validation import (text_field, email_field, password_field, code_field, boolean_field, positive_integer, string_list)
 from flask import Blueprint, jsonify, request, session
 from flask_login import login_user, current_user, logout_user, login_required
 from sqlalchemy import or_
@@ -16,8 +17,8 @@ def perform_diagnosis():
     if not data:
         return jsonify({'error': 'No data provided'}), 400
         
-    symptoms = data.get('symptoms', [])
-    crop_id = data.get('crop_id')
+    symptoms = string_list(data, 'symptoms')
+    crop_id = positive_integer(data, 'crop_id')
     
     if not symptoms:
         return jsonify({'error': 'Please provide at least one symptom'}), 400
@@ -74,7 +75,7 @@ def chat_ask():
     if not data or not data.get('message'):
         return jsonify({'error': 'Message is required'}), 400
         
-    user_message = data['message']
+    user_message = text_field(data, 'message', required=True, maximum=4000)
     
     # You could save to DB here if you wanted session history, 
     # but for a simple "modern chat" we can just return the reply.
@@ -88,8 +89,8 @@ def chat_ask():
 @api_bp.route('/login', methods=['POST'])
 def login():
     data = request.get_json() or {}
-    identifier = data.get('username') or data.get('email')
-    password = data.get('password')
+    identifier = text_field(data, 'username' if data.get('username') else 'email', required=True, maximum=255)
+    password = password_field(data)
     
     if not identifier or not password:
         return jsonify({'error': 'Missing credentials'}), 400
@@ -101,7 +102,7 @@ def login():
         )
     ).first()
     
-    if user and user.check_password(password):
+    if user and user.check_password(password, upgrade=True):
         if not user.is_verified:
             from app.blueprints.auth.routes import _send_verification_email
             import random, string, datetime
@@ -128,7 +129,8 @@ def login():
             session["verify_purpose"] = "login"
             return jsonify({'success': True, 'requires_2fa': True, 'purpose': 'login', 'email': user.email})
             
-        login_user(user, remember=True)
+        db.session.commit()  # Persist any password hash upgrade.
+        login_user(user, remember=False)
         return jsonify({
             'success': True,
             'user': {
@@ -210,7 +212,7 @@ def telegram_login_api():
     if getattr(user, 'is_active', True) is False:
         return jsonify({'error': 'Account is banned'}), 403
 
-    login_user(user, remember=True)
+    login_user(user, remember=False)
     return jsonify({
         'success': True,
         'user': {
@@ -232,7 +234,7 @@ def verify_code():
     import datetime
     
     data = request.get_json()
-    code = (data.get('code') or '').strip()
+    code = code_field(data)
     
     user_id = session.get("verify_user_id")
     purpose = session.get("verify_purpose")
@@ -256,7 +258,7 @@ def verify_code():
         user.is_verified = True
         
     db.session.commit()
-    login_user(user, remember=True)
+    login_user(user, remember=False)
     
     session.pop("verify_user_id", None)
     session.pop("verify_purpose", None)
@@ -420,9 +422,9 @@ def _unique_username(base: str) -> str:
 @api_bp.route('/register', methods=['POST'])
 def register():
     data = request.get_json()
-    email = data.get('email', '').strip().lower()
-    full_name = data.get('full_name', '').strip()
-    password = data.get('password', '')
+    email = email_field(data)
+    full_name = text_field(data, 'full_name', maximum=120)
+    password = password_field(data, new=True)
     
     if not email or not password:
         return jsonify({'error': 'Email and password are required'}), 400
@@ -546,7 +548,7 @@ def toggle_2fa():
     if not current_user.is_authenticated:
         return jsonify({'error': 'Unauthorized'}), 401
     data = request.get_json()
-    enabled = bool(data.get('enabled', False))
+    enabled = boolean_field(data, 'enabled')
     current_user.two_factor_enabled = enabled
     db.session.commit()
     return jsonify({'success': True, 'two_factor_enabled': enabled})
@@ -559,12 +561,12 @@ def google_login_api():
     from app import db
     
     data = request.get_json()
-    id_token = data.get('id_token')
+    id_token = text_field(data, 'id_token', required=True, maximum=16384)
     if not id_token:
         return jsonify({'error': 'Missing Google ID token'}), 400
         
     try:
-        resp = requests.get(f'https://oauth2.googleapis.com/tokeninfo?id_token={id_token}', timeout=10)
+        resp = requests.get('https://oauth2.googleapis.com/tokeninfo', params={'id_token': id_token}, timeout=10)
         if resp.status_code != 200:
             return jsonify({'error': 'Invalid Google ID token'}), 401
             
@@ -602,7 +604,7 @@ def google_login_api():
             user.roles.append(farmer_role)
             
         db.session.commit()
-        login_user(user, remember=True)
+        login_user(user, remember=False)
         
         return jsonify({
             'success': True,
@@ -627,9 +629,9 @@ def update_profile_api():
         return jsonify({'error': 'Unauthorized'}), 401
         
     data = request.get_json()
-    new_username = data.get('username', '').strip()
-    new_email = data.get('email', '').strip().lower()
-    password = data.get('password', '')
+    new_username = text_field(data, 'username', required=True, maximum=50)
+    new_email = email_field(data)
+    password = password_field(data, required=False)
     
     if not new_username or not new_email:
         return jsonify({'error': 'Username and Email are required'}), 400

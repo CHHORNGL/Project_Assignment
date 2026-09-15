@@ -1,82 +1,138 @@
 {% extends "layouts/base.html" %}
 {% block title %}{{ t("diagnosis_knowledge_manager") }}{% endblock %}
 
-{% set body_class = "admin-theme" %}
+{% set body_class = "expert-theme admin-theme" %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
-        <div>
-            <h3 class="font-weight-bold mb-1">{{ t("diagnosis_knowledge_manager") }}</h3>
-            <p class="text-muted mb-0">{{ t("diagnosis_knowledge_manager_sub") }}</p>
+<div class="expert-board">
+
+    <!-- ===============================
+         HERO HEADER
+    =============================== -->
+    <div class="expert-hero">
+        <div class="expert-hero-content">
+            <span class="expert-hero-role-pill">
+                <i class="fas fa-book-medical"></i> Pathology Repository &bull; Diagnosis Manager
+            </span>
+            <h1 class="expert-title">
+                <i class="fas fa-notes-medical"></i> {{ t("diagnosis_knowledge_manager") }}
+            </h1>
+            <p class="expert-sub">{{ t("diagnosis_knowledge_manager_sub")|default("Curate botanical plant pathology, verified causal agents, step-by-step treatments, and diagnostic references.") }}</p>
+            <div class="expert-hero-meta">
+                <span class="exp-badge exp-badge-approved">
+                    <i class="fas fa-check-double"></i> Ready Entries: {{ knowledge_ready_count }}
+                </span>
+                <span class="exp-badge exp-badge-info">
+                    <i class="fas fa-database"></i> Total: {{ diseases|length }}
+                </span>
+            </div>
         </div>
-        <a href="{{ url_for('expert.create_disease') }}" class="btn btn-admin mt-2 mt-md-0">
-            <i class="fas fa-plus-circle mr-1"></i> {{ t("add_diagnosis_knowledge") }}
-        </a>
+        <div class="expert-hero-actions">
+            <a href="{{ url_for('expert.create_disease') }}" class="btn-exp-primary">
+                <i class="fas fa-plus-circle"></i> {{ t("add_diagnosis_knowledge") }}
+            </a>
+            <a href="{{ url_for('expert.knowledge_dashboard') }}" class="btn-exp-outline">
+                <i class="fas fa-cogs"></i> {{ t("knowledge_base") }}
+            </a>
+        </div>
     </div>
 
-    <div class="row mb-3">
-        <div class="col-md-6 mb-2">
-            <div class="admin-panel">
-                <div class="">
-                    <div class="small text-muted">{{ t("total_diagnosis_entries") }}</div>
-                    <div class="h4 mb-0">{{ diseases|length }}</div>
+    <!-- ===============================
+         REPOSITORY KPIS
+    =============================== -->
+    <div class="row mb-4">
+        <div class="col-md-6 mb-3">
+            <div class="exp-kpi-card kpi-teal">
+                <div class="exp-kpi-info">
+                    <span class="exp-kpi-label">{{ t("total_diagnosis_entries") }}</span>
+                    <span class="exp-kpi-value">{{ diseases|length }}</span>
+                    <span class="exp-kpi-sub">Curated crop pathologies</span>
+                </div>
+                <div class="exp-kpi-icon">
+                    <i class="fas fa-notes-medical"></i>
                 </div>
             </div>
         </div>
-        <div class="col-md-6 mb-2">
-            <div class="admin-panel">
-                <div class="">
-                    <div class="small text-muted">{{ t("knowledge_ready_entries") }}</div>
-                    <div class="h4 mb-0">{{ knowledge_ready_count }}</div>
+        <div class="col-md-6 mb-3">
+            <div class="exp-kpi-card">
+                <div class="exp-kpi-info">
+                    <span class="exp-kpi-label">{{ t("knowledge_ready_entries") }}</span>
+                    <span class="exp-kpi-value">{{ knowledge_ready_count }}</span>
+                    <span class="exp-kpi-sub">Complete with treatment &amp; cause</span>
+                </div>
+                <div class="exp-kpi-icon">
+                    <i class="fas fa-check-circle"></i>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="admin-panel">
-        <div class="admin-panel-title d-flex justify-content-between align-items-center">
-            <span class="font-weight-bold">{{ t("knowledge_entries") }}</span>
-            <span class="text-muted small">{{ t("knowledge_entries_count", count=diseases|length) }}</span>
+    <!-- ===============================
+         DIAGNOSIS KNOWLEDGE REPOSITORY TABLE
+    =============================== -->
+    <div class="exp-card">
+        <div class="exp-card-header">
+            <div>
+                <h2 class="exp-card-title">
+                    <i class="fas fa-table"></i> {{ t("knowledge_entries") }}
+                </h2>
+                <div class="exp-card-sub">{{ t("knowledge_entries_count", count=diseases|length) }}</div>
+            </div>
         </div>
-        <div class=" border-bottom">
+
+        <!-- Filter & Bulk Actions Toolbar -->
+        <div class="exp-filter-toolbar">
+            <!-- Instant Search Input -->
+            <div class="exp-search-wrap">
+                <i class="fas fa-search"></i>
+                <input type="text"
+                       id="diseaseSearchInput"
+                       class="exp-search-input"
+                       placeholder="Filter diseases by name, crop, category, or treatment...">
+            </div>
+
+            <!-- Bulk Form Controls -->
             <form id="bulk-diseases-form"
                   method="POST"
                   action="{{ url_for('expert.diseases_bulk') }}"
-                  data-total="{{ diseases|length }}">
+                  data-total="{{ diseases|length }}"
+                  class="d-flex align-items-center gap-2 flex-wrap"
+                  style="gap: 8px;">
                 <input type="hidden" name="scope" value="selected" id="diseases-scope">
-                <div class="form-inline">
-                    <select name="action" class="form-control form-control-sm mr-2">
-                        <option value="">{{ t("bulk_action") }}</option>
-                        <option value="delete">{{ t("delete_selected") }}</option>
-                    </select>
-                    <button class="btn btn-sm btn-outline-danger">{{ t("apply") }}</button>
-                    <div class="form-check ml-3">
-                        <input class="form-check-input" type="checkbox" id="apply-all-diseases">
-                        <label class="form-check-label small text-muted" for="apply-all-diseases">
-                            {{ t("apply_to_listed_entries") }}
-                        </label>
-                    </div>
+                <select name="action" class="exp-select py-1 text-secondary" style="font-size: 0.82rem; height: 38px;">
+                    <option value="">{{ t("bulk_action") }}</option>
+                    <option value="delete">{{ t("delete_selected") }}</option>
+                </select>
+                <button type="submit" class="btn-exp-danger btn-exp-sm" style="height: 38px;">
+                    <i class="fas fa-trash-alt mr-1"></i> {{ t("apply") }}
+                </button>
+                <div class="custom-control custom-checkbox ml-2">
+                    <input type="checkbox" class="custom-control-input" id="apply-all-diseases">
+                    <label class="custom-control-label small text-muted font-weight-normal" for="apply-all-diseases">
+                        {{ t("apply_to_listed_entries") }}
+                    </label>
                 </div>
             </form>
         </div>
 
-        <div class="table-responsive">
-            <table class="table table-bordered table-hover mb-0">
+        <div class="exp-table-responsive">
+            <table class="exp-table" id="diseasesTable">
                 <thead>
                     <tr>
-                        <th style="width:40px;"><input type="checkbox" id="select-all-diseases"></th>
-                        <th>{{ t("crop_label") }}</th>
-                        <th>{{ t("diagnosis_name_taxonomy") }}</th>
-                        <th>{{ t("cause_explanation") }}</th>
-                        <th>{{ t("treatment_prevention") }}</th>
-                        <th>{{ t("references_image") }}</th>
-                        <th style="width:190px;">{{ t("actions") }}</th>
+                        <th style="width: 40px;">
+                            <input type="checkbox" id="select-all-diseases" aria-label="Select all rows">
+                        </th>
+                        <th style="width: 140px;">{{ t("crop_label") }}</th>
+                        <th style="min-width: 220px;">{{ t("diagnosis_name_taxonomy") }}</th>
+                        <th style="min-width: 200px;">{{ t("cause_explanation") }}</th>
+                        <th style="min-width: 220px;">{{ t("treatment_prevention") }}</th>
+                        <th style="width: 130px;">{{ t("references_image") }}</th>
+                        <th style="width: 150px;" class="text-right">{{ t("actions") }}</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for d in diseases %}
-                    <tr>
+                    <tr class="disease-row">
                         <td>
                             <input type="checkbox"
                                    class="disease-select"
@@ -86,85 +142,114 @@
                                    data-crop="{{ localize(d.crop, 'name', '-') }}"
                                    form="bulk-diseases-form">
                         </td>
-                        <td>{{ localize(d.crop, "name", "-") }}</td>
                         <td>
-                            <div class="font-weight-bold">{{ d.name_kh if current_lang == 'km' and d.name_kh else d.name }}</div>
-                            {% if d.severity_level %}
-                            <div class="small text-muted">{{ t("severity") }}: {{ d.severity_level }}</div>
-                            {% endif %}
-                            {% if d.agriculture_category or d.agriculture_sub_category or d.reference_scope %}
-                            <div class="small mt-1">
+                            <div class="d-flex align-items-center gap-2" style="gap: 8px;">
+                                <div class="d-inline-flex align-items-center justify-content-center flex-shrink-0"
+                                     style="width: 28px; height: 28px; border-radius: 6px; background: var(--exp-primary-soft); color: var(--exp-primary); font-size: 0.8rem;">
+                                    <i class="fas fa-seedling"></i>
+                                </div>
+                                <span class="font-weight-bold">{{ localize(d.crop, "name", "-") }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="font-weight-bold" style="color: var(--exp-text); font-size: 0.95rem;">
+                                {{ d.name_kh if current_lang == 'km' and d.name_kh else d.name }}
+                            </div>
+                            <div class="d-flex flex-wrap gap-1 mt-1" style="gap: 4px;">
+                                {% if d.severity_level %}
+                                <span class="exp-badge {% if d.severity_level == 'Critical' %}exp-badge-critical{% elif d.severity_level == 'High' %}exp-badge-high{% elif d.severity_level == 'Medium' %}exp-badge-medium{% else %}exp-badge-low{% endif %}" style="font-size: 0.68rem; padding: 0.15rem 0.45rem;">
+                                    {{ d.severity_level }}
+                                </span>
+                                {% endif %}
+
                                 {% if d.agriculture_category %}
-                                <span class="badge badge-info">{{ t("category") }}: {{ d.agriculture_category }}</span>
+                                <span class="exp-badge exp-badge-info" style="font-size: 0.68rem; padding: 0.15rem 0.45rem;">
+                                    {{ d.agriculture_category }}
+                                </span>
                                 {% endif %}
+
                                 {% if d.agriculture_sub_category %}
-                                <span class="badge badge-light">{{ t("sub_category") }}: {{ d.agriculture_sub_category }}</span>
-                                {% endif %}
-                                {% if d.reference_scope %}
-                                <span class="badge badge-secondary">
-                                    {{ t("scope") }}: {{ reference_scope_labels.get(d.reference_scope, d.reference_scope) if reference_scope_labels is defined else d.reference_scope }}
+                                <span class="exp-badge exp-badge-muted" style="font-size: 0.68rem; padding: 0.15rem 0.45rem;">
+                                    {{ d.agriculture_sub_category }}
                                 </span>
                                 {% endif %}
                             </div>
-                            {% endif %}
                         </td>
-                        <td class="small">
-                            {% if d.cause_explanation %}
-                                {{ d.cause_explanation[:120] }}{% if d.cause_explanation|length > 120 %}...{% endif %}
-                            {% else %}
-                                <span class="text-muted">{{ t("not_set") }}</span>
-                            {% endif %}
-                        </td>
-                        <td class="small">
-                            <div>
-                                <strong>{{ t("treatment") }}:</strong>
-                                {% if d.treatment %}
-                                    {{ d.treatment[:90] }}{% if d.treatment|length > 90 %}...{% endif %}
+                        <td>
+                            <div class="text-secondary small" style="max-width: 280px; line-height: 1.45;">
+                                {% if d.cause_explanation %}
+                                    {{ d.cause_explanation[:110] }}{% if d.cause_explanation|length > 110 %}...{% endif %}
                                 {% else %}
-                                    <span class="text-muted">{{ t("not_set") }}</span>
-                                {% endif %}
-                            </div>
-                            <div class="mt-1">
-                                <strong>{{ t("prevention_tips") }}:</strong>
-                                {% if d.prevention_tips %}
-                                    {{ d.prevention_tips[:90] }}{% if d.prevention_tips|length > 90 %}...{% endif %}
-                                {% else %}
-                                    <span class="text-muted">{{ t("not_set") }}</span>
-                                {% endif %}
-                            </div>
-                        </td>
-                        <td class="small">
-                            <div>
-                                {% if d.reference_links %}
-                                    <span class="badge badge-info">{{ t("references") }}</span>
-                                {% else %}
-                                    <span class="badge badge-light">{{ t("no_references") }}</span>
-                                {% endif %}
-                                {% if d.knowledge_image_data %}
-                                    <span class="badge badge-success">{{ t("image") }}</span>
-                                {% else %}
-                                    <span class="badge badge-light">{{ t("no_image") }}</span>
-                                {% endif %}
-                                {% if d.visual_input_notes %}
-                                    <span class="badge badge-primary">{{ t("visual_input_notes") }}</span>
+                                    <span class="text-muted font-italic">{{ t("not_set") }}</span>
                                 {% endif %}
                             </div>
                         </td>
                         <td>
-                            <a href="{{ url_for('expert.edit_disease', disease_id=d.id) }}"
-                               class="btn btn-sm btn-primary">{{ t("manage") }}</a>
-                            <form method="POST"
-                                  action="{{ url_for('expert.delete_disease', disease_id=d.id) }}"
-                                  class="d-inline"
-                                  onsubmit="return confirm('{{ t('delete_diagnosis_knowledge_confirm') }}');">
-                                <button class="btn btn-sm btn-danger">{{ t("delete") }}</button>
-                            </form>
+                            <div class="small" style="max-width: 280px; line-height: 1.45;">
+                                <div class="text-truncate">
+                                    <strong class="text-success">{{ t("treatment") }}:</strong>
+                                    {% if d.treatment %}
+                                        {{ d.treatment[:80] }}{% if d.treatment|length > 80 %}...{% endif %}
+                                    {% else %}
+                                        <span class="text-muted font-italic">{{ t("not_set") }}</span>
+                                    {% endif %}
+                                </div>
+                                <div class="text-truncate mt-1 text-muted">
+                                    <strong>{{ t("prevention_tips") }}:</strong>
+                                    {% if d.prevention_tips %}
+                                        {{ d.prevention_tips[:80] }}{% if d.prevention_tips|length > 80 %}...{% endif %}
+                                    {% else %}
+                                        <span class="font-italic">{{ t("not_set") }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="d-flex flex-column gap-1" style="gap: 3px;">
+                                {% if d.knowledge_image_data %}
+                                <span class="exp-badge exp-badge-approved" style="font-size: 0.68rem; padding: 0.15rem 0.45rem;">
+                                    <i class="fas fa-image"></i> {{ t("image") }}
+                                </span>
+                                {% endif %}
+
+                                {% if d.reference_links %}
+                                <span class="exp-badge exp-badge-info" style="font-size: 0.68rem; padding: 0.15rem 0.45rem;">
+                                    <i class="fas fa-link"></i> {{ t("references") }}
+                                </span>
+                                {% endif %}
+
+                                {% if not d.knowledge_image_data and not d.reference_links %}
+                                <span class="text-muted small font-italic">{{ t("no_references") }}</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="text-right">
+                            <div class="d-flex justify-content-end align-items-center gap-1" style="gap: 6px;">
+                                <a href="{{ url_for('expert.edit_disease', disease_id=d.id) }}"
+                                   class="btn-exp-outline btn-exp-sm" title="Edit Entry">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form method="POST"
+                                      action="{{ url_for('expert.delete_disease', disease_id=d.id) }}"
+                                      class="d-inline m-0"
+                                      onsubmit="return confirm('{{ t('delete_diagnosis_knowledge_confirm') }}');">
+                                    <button class="btn btn-sm btn-outline-danger" style="border-radius: 6px; padding: 0.25rem 0.55rem;" title="{{ t('delete') }}">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="7" class="text-center text-muted py-4">
-                            {{ t("no_diagnosis_knowledge_entries_found") }}
+                        <td colspan="7">
+                            <div class="exp-empty-state">
+                                <div class="exp-empty-icon">
+                                    <i class="fas fa-notes-medical"></i>
+                                </div>
+                                <div class="exp-empty-title">{{ t("no_diagnosis_knowledge_entries_found") }}</div>
+                                <div class="exp-empty-text">Add your first plant disease and treatment advisory to begin building the diagnosis repository.</div>
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}
@@ -172,6 +257,7 @@
             </table>
         </div>
     </div>
+
 </div>
 {% endblock %}
 
@@ -212,6 +298,25 @@
         }),
         getFiltersLabel: () => {{ t("current_page_results")|tojson }},
         actionLabel: (action) => (action === "delete" ? {{ t("delete")|tojson }} : {{ t("apply")|tojson }})
+    });
+
+    // Client-side quick filter
+    const searchInput = document.getElementById("diseaseSearchInput");
+    const table = document.getElementById("diseasesTable");
+    if (!searchInput || !table) return;
+
+    searchInput.addEventListener("input", function() {
+        const query = this.value.toLowerCase().trim();
+        const rows = table.querySelectorAll("tbody tr.disease-row");
+
+        rows.forEach(function(row) {
+            const text = row.textContent.toLowerCase();
+            if (!query || text.includes(query)) {
+                row.style.display = "";
+            } else {
+                row.style.display = "none";
+            }
+        });
     });
 })();
 </script>

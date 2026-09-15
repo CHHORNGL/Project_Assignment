@@ -1,20 +1,21 @@
 {% extends "layouts/base.html" %}
 {% block title %}{{ t("expert_dashboard_title") }}{% endblock %}
-{% set body_class = "admin-theme" %}
+{% set body_class = "expert-theme admin-theme" %}
+
 {% block head %}
 <script>
 (function () {
     const welcomePrefix = {{ t("auth_welcome_back") | tojson }};
     const displayName = {{ (current_user.full_name or current_user.username) | tojson }};
     if (welcomePrefix && displayName) {
-        document.title = welcomePrefix + ", " + displayName + "!";
+        document.title = welcomePrefix + ", " + displayName + "! | AGRI EXPERT";
     }
 })();
 </script>
 {% endblock %}
 
 {% block content %}
-<div class="admin-board">
+<div class="expert-board">
 
     {% set pending = diagnoses|length %}
     {% set reviewed = approved_count + rejected_count %}
@@ -28,330 +29,248 @@
     {% set rejected_pct = (rejected_count / donut_safe_total * 100) %}
     {% set approved_end = pending_pct + approved_pct %}
 
-    <div class="admin-hero">
-        <div>
-            <div class="admin-title">{{ t("expert_command_center") }}</div>
-            <div class="admin-sub">{{ t("expert_command_sub") }}</div>
-            <div class="admin-hero-meta">
-                <span class="badge badge-primary">{{ t("status_pending") }} {{ pending }}</span>
-                <span class="badge badge-primary">{{ t("reviewed") }} {{ reviewed }}</span>
-                <span class="badge badge-primary">{{ t("completion") }} {{ completion|round(0) }}%</span>
+    <!-- ===============================
+         HERO COMMAND HEADER
+    =============================== -->
+    <div class="expert-hero">
+        <div class="expert-hero-content">
+            <span class="expert-hero-role-pill">
+                <i class="fas fa-shield-alt"></i> {{ t("expert_panel") }} &bull; Agronomy Console
+            </span>
+            <h1 class="expert-title">
+                <i class="fas fa-microscope"></i> {{ t("expert_command_center") }}
+            </h1>
+            <p class="expert-sub">{{ t("expert_command_sub") }}</p>
+            <div class="expert-hero-meta">
+                <span class="exp-badge exp-badge-pending">
+                    <i class="fas fa-hourglass-half"></i> {{ t("status_pending") }}: {{ pending }}
+                </span>
+                <span class="exp-badge exp-badge-approved">
+                    <i class="fas fa-check-circle"></i> {{ t("reviewed") }}: {{ reviewed }}
+                </span>
+                <span class="exp-badge exp-badge-info">
+                    <i class="fas fa-chart-line"></i> {{ t("completion") }}: {{ completion|round(0) }}%
+                </span>
             </div>
         </div>
-        <div class="admin-hero-actions">
-            <a class="btn btn-admin" href="{{ url_for('expert.create_rule') }}">{{ t("add_rule") }}</a>
-            <a class="btn btn-admin-outline" href="{{ url_for('expert.knowledge_dashboard') }}">{{ t("knowledge_base") }}</a>
+        <div class="expert-hero-actions">
+            <a class="btn-exp-primary" href="{{ url_for('expert.create_disease') }}">
+                <i class="fas fa-plus"></i> {{ t("add_diagnosis_knowledge") }}
+            </a>
+            <a class="btn-exp-outline" href="{{ url_for('expert.create_rule') }}">
+                <i class="fas fa-cogs"></i> {{ t("add_rule") }}
+            </a>
+            <a class="btn-exp-outline" href="{{ url_for('expert.knowledge_dashboard') }}">
+                <i class="fas fa-book-open"></i> {{ t("knowledge_base") }}
+            </a>
         </div>
     </div>
 
+    <!-- ===============================
+         KPI SUMMARY METRICS
+    =============================== -->
     <div class="row mb-4">
-        <div class="col-md-3 mb-3">
-            <div class="admin-kpi">
-                <div>
-                    <div class="admin-kpi-label">{{ t("pending_cases") }}</div>
-                    <div class="admin-kpi-value">{{ pending }}</div>
-                    <div class="admin-kpi-sub">{{ t("awaiting_review") }}</div>
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="exp-kpi-card kpi-amber">
+                <div class="exp-kpi-info">
+                    <span class="exp-kpi-label">{{ t("pending_cases") }}</span>
+                    <span class="exp-kpi-value">{{ pending }}</span>
+                    <span class="exp-kpi-sub">
+                        <i class="fas fa-clock mr-1 text-warning"></i>{{ t("awaiting_review") }}
+                    </span>
                 </div>
-                <div class="admin-kpi-icon"><i class="fas fa-hourglass-half"></i></div>
+                <div class="exp-kpi-icon">
+                    <i class="fas fa-hourglass-half"></i>
+                </div>
             </div>
         </div>
-        <div class="col-md-3 mb-3">
-            <div class="admin-kpi">
-                <div>
-                    <div class="admin-kpi-label">{{ t("status_approved") }}</div>
-                    <div class="admin-kpi-value">{{ approved_count }}</div>
-                    <div class="admin-kpi-sub">{{ t("validated_diagnoses") }}</div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="exp-kpi-card">
+                <div class="exp-kpi-info">
+                    <span class="exp-kpi-label">{{ t("status_approved") }}</span>
+                    <span class="exp-kpi-value">{{ approved_count }}</span>
+                    <span class="exp-kpi-sub">
+                        <i class="fas fa-check mr-1 text-success"></i>{{ t("validated_diagnoses") }}
+                    </span>
                 </div>
-                <div class="admin-kpi-icon"><i class="fas fa-check-circle"></i></div>
+                <div class="exp-kpi-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
             </div>
         </div>
-        <div class="col-md-3 mb-3">
-            <div class="admin-kpi">
-                <div>
-                    <div class="admin-kpi-label">{{ t("status_rejected") }}</div>
-                    <div class="admin-kpi-value">{{ rejected_count }}</div>
-                    <div class="admin-kpi-sub">{{ t("needs_correction") }}</div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="exp-kpi-card kpi-rose">
+                <div class="exp-kpi-info">
+                    <span class="exp-kpi-label">{{ t("status_rejected") }}</span>
+                    <span class="exp-kpi-value">{{ rejected_count }}</span>
+                    <span class="exp-kpi-sub">
+                        <i class="fas fa-times mr-1 text-danger"></i>{{ t("needs_correction") }}
+                    </span>
                 </div>
-                <div class="admin-kpi-icon"><i class="fas fa-times-circle"></i></div>
+                <div class="exp-kpi-icon">
+                    <i class="fas fa-times-circle"></i>
+                </div>
             </div>
         </div>
-        <div class="col-md-3 mb-3">
-            <div class="admin-kpi">
-                <div>
-                    <div class="admin-kpi-label">{{ t("active_chats") }}</div>
-                    <div class="admin-kpi-value">{{ chat_count }}</div>
-                    <div class="admin-kpi-sub">{{ t("live_farmer_support") }}</div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="exp-kpi-card kpi-indigo">
+                <div class="exp-kpi-info">
+                    <span class="exp-kpi-label">{{ t("active_chats") }}</span>
+                    <span class="exp-kpi-value">{{ chat_count }}</span>
+                    <span class="exp-kpi-sub">
+                        <i class="fas fa-comments mr-1 text-primary"></i>{{ t("live_farmer_support") }}
+                    </span>
                 </div>
-                <div class="admin-kpi-icon"><i class="fas fa-comments"></i></div>
+                <div class="exp-kpi-icon">
+                    <i class="fas fa-comments"></i>
+                </div>
             </div>
         </div>
     </div>
 
+    <!-- ===============================
+         REVIEW PIPELINE & SCHEDULE
+    =============================== -->
     <div class="row mb-4">
+        <!-- Review Pipeline & Breakdown -->
         <div class="col-lg-7 mb-3">
-            <div class="admin-panel">
-                <div class="admin-panel-header">
+            <div class="exp-card h-100">
+                <div class="exp-card-header">
                     <div>
-                        <div class="admin-panel-title">{{ t("review_pipeline") }}</div>
-                        <div class="admin-panel-sub">{{ t("progress_all_status") }}</div>
+                        <h2 class="exp-card-title">
+                            <i class="fas fa-stream"></i> {{ t("review_pipeline") }}
+                        </h2>
+                        <div class="exp-card-sub">{{ t("progress_all_status") }}</div>
                     </div>
-                    <span class="badge badge-success">{{ completion|round(0) }}% {{ t("completion") }}</span>
+                    <span class="exp-badge exp-badge-approved">
+                        <i class="fas fa-check"></i> {{ completion|round(0) }}% {{ t("completion") }}
+                    </span>
                 </div>
 
-                <div class="expert-progress-stack">
-                    <div class="expert-progress-row">
-                        <span class="label">{{ t("reviewed") }}</span>
-                        <div class="expert-progress">
-                            <span style="width: {{ (reviewed / safe_total * 100)|round(0) }}%;"></span>
-                        </div>
-                        <span class="value">{{ reviewed }}</span>
-                    </div>
-                    <div class="expert-progress-row">
-                        <span class="label">{{ t("status_approved") }}</span>
-                        <div class="expert-progress">
-                            <span style="width: {{ (approved_count / safe_total * 100)|round(0) }}%;"></span>
-                        </div>
-                        <span class="value">{{ approved_count }}</span>
-                    </div>
-                    <div class="expert-progress-row">
-                        <span class="label">{{ t("status_rejected") }}</span>
-                        <div class="expert-progress">
-                            <span style="width: {{ (rejected_count / safe_total * 100)|round(0) }}%;"></span>
-                        </div>
-                        <span class="value">{{ rejected_count }}</span>
-                    </div>
-                    <div class="expert-progress-row">
-                        <span class="label">{{ t("status_pending") }}</span>
-                        <div class="expert-progress">
-                            <span style="width: {{ (pending / safe_total * 100)|round(0) }}%;"></span>
-                        </div>
-                        <span class="value">{{ pending }}</span>
-                    </div>
-                </div>
-
-                <div class="expert-donut-section">
-                    <div class="admin-panel-sub">{{ t("case_breakdown") }}</div>
-                    <div class="expert-donut-wrap">
-                        <div class="expert-donut"
-                             style="{% if donut_total %}
-                                    background: conic-gradient(
-                                        var(--donut-pending) 0 {{ pending_pct|round(2) }}%,
-                                        var(--donut-approved) {{ pending_pct|round(2) }}% {{ approved_end|round(2) }}%,
-                                        var(--donut-rejected) {{ approved_end|round(2) }}% 100%
-                                    );
-                                    {% else %}
-                                    background: conic-gradient(var(--donut-muted) 0 100%);
-                                    {% endif %}">
-                            <div class="expert-donut-hole">
-                                <div class="expert-donut-total">{{ donut_total }}</div>
-                                <div class="expert-donut-label">{{ t("total_cases") }}</div>
+                <div class="exp-card-body">
+                    <!-- Progress Rows -->
+                    <div class="expert-progress-stack mb-4">
+                        <div class="expert-progress-row">
+                            <span class="label">{{ t("reviewed") }}</span>
+                            <div class="expert-progress">
+                                <span style="width: {{ (reviewed / safe_total * 100)|round(0) }}%; background: #059669;"></span>
                             </div>
+                            <span class="value">{{ reviewed }}</span>
                         </div>
-                        <div class="expert-donut-legend">
-                            <div class="expert-donut-item">
-                                <span class="expert-donut-dot pending"></span>
-                                <div>
-                                    <div class="expert-donut-name">{{ t("status_pending") }}</div>
-                                    <div class="expert-donut-meta">{{ pending }} • {{ pending_pct|round(0) }}%</div>
+                        <div class="expert-progress-row">
+                            <span class="label">{{ t("status_approved") }}</span>
+                            <div class="expert-progress">
+                                <span style="width: {{ (approved_count / safe_total * 100)|round(0) }}%; background: #10b981;"></span>
+                            </div>
+                            <span class="value">{{ approved_count }}</span>
+                        </div>
+                        <div class="expert-progress-row">
+                            <span class="label">{{ t("status_rejected") }}</span>
+                            <div class="expert-progress">
+                                <span style="width: {{ (rejected_count / safe_total * 100)|round(0) }}%; background: #e11d48;"></span>
+                            </div>
+                            <span class="value">{{ rejected_count }}</span>
+                        </div>
+                        <div class="expert-progress-row">
+                            <span class="label">{{ t("status_pending") }}</span>
+                            <div class="expert-progress">
+                                <span style="width: {{ (pending / safe_total * 100)|round(0) }}%; background: #d97706;"></span>
+                            </div>
+                            <span class="value">{{ pending }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Donut Breakdown -->
+                    <div class="expert-donut-section">
+                        <div class="exp-card-sub mb-3 font-weight-bold text-uppercase" style="letter-spacing: 0.06em;">
+                            {{ t("case_breakdown") }}
+                        </div>
+                        <div class="expert-donut-wrap">
+                            <div class="expert-donut"
+                                 style="{% if donut_total %}
+                                        background: conic-gradient(
+                                            #d97706 0 {{ pending_pct|round(2) }}%,
+                                            #059669 {{ pending_pct|round(2) }}% {{ approved_end|round(2) }}%,
+                                            #e11d48 {{ approved_end|round(2) }}% 100%
+                                        );
+                                        {% else %}
+                                        background: conic-gradient(var(--exp-border) 0 100%);
+                                        {% endif %}">
+                                <div class="expert-donut-hole">
+                                    <div class="expert-donut-total">{{ donut_total }}</div>
+                                    <div class="expert-donut-label">{{ t("total_cases") }}</div>
                                 </div>
                             </div>
-                            <div class="expert-donut-item">
-                                <span class="expert-donut-dot approved"></span>
-                                <div>
-                                    <div class="expert-donut-name">{{ t("status_approved") }}</div>
-                                    <div class="expert-donut-meta">{{ approved_count }} • {{ approved_pct|round(0) }}%</div>
-                                </div>
-                            </div>
-                            <div class="expert-donut-item">
-                                <span class="expert-donut-dot rejected"></span>
-                                <div>
-                                    <div class="expert-donut-name">{{ t("status_rejected") }}</div>
-                                    <div class="expert-donut-meta">{{ rejected_count }} • {{ rejected_pct|round(0) }}%</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-5 mb-3">
-            <div class="admin-panel">
-                <div class="admin-panel-header">
-                    <div>
-                        <div class="admin-panel-title">{{ t("calendar_time") }}</div>
-                        <div class="admin-panel-sub">{{ t("review_schedule") }}</div>
-                    </div>
-                </div>
-                <div class="agro-calendar-layout">
-                    <div class="agro-clock">
-                        <div class="agro-clock-time" id="expertClockTime">--:--:--</div>
-                        <div class="agro-clock-date" id="expertClockDate">--</div>
-                        <div class="agro-clock-tz" id="expertClockTz">--</div>
-                    </div>
-                    <div class="agro-calendar-block">
-                        <div class="agro-calendar-head">
-                            <button class="agro-cal-nav" type="button" data-expert-cal="-1">
-                                <i class="fas fa-chevron-left"></i>
-                            </button>
-                            <div class="agro-cal-title" id="expertCalTitle">--</div>
-                            <button class="agro-cal-nav" type="button" data-expert-cal="1">
-                                <i class="fas fa-chevron-right"></i>
-                            </button>
-                        </div>
-                        <div class="agro-calendar-week">
-                            <span>{{ t("sun") }}</span>
-                            <span>{{ t("mon") }}</span>
-                            <span>{{ t("tue") }}</span>
-                            <span>{{ t("wed") }}</span>
-                            <span>{{ t("thu") }}</span>
-                            <span>{{ t("fri") }}</span>
-                            <span>{{ t("sat") }}</span>
-                        </div>
-                        <div class="agro-calendar-grid" id="expertCalGrid"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row mb-4">
-        <div class="col-lg-5 mb-3">
-            <div class="admin-panel">
-                <div class="admin-panel-header">
-                    <div>
-                        <div class="admin-panel-title">{{ t("quick_actions") }}</div>
-                        <div class="admin-panel-sub">{{ t("jump_tools") }}</div>
-                    </div>
-                </div>
-                <div class="expert-actions-grid">
-                    <a class="expert-action-card" href="{{ url_for('expert.knowledge_dashboard') }}">
-                        <div class="expert-action-icon"><i class="fas fa-book"></i></div>
-                        <div>
-                            <div class="expert-action-title">{{ t("knowledge_base") }}</div>
-                            <div class="expert-action-sub">{{ t("manage_rules_symptoms") }}</div>
-                        </div>
-                        <i class="fas fa-arrow-right"></i>
-                    </a>
-                    <a class="expert-action-card" href="{{ url_for('expert.farmer_chats') }}">
-                        <div class="expert-action-icon"><i class="fas fa-headset"></i></div>
-                        <div>
-                            <div class="expert-action-title">{{ t("farmer_chats_title") }}</div>
-                            <div class="expert-action-sub">{{ t("respond_requests") }}</div>
-                        </div>
-                        <i class="fas fa-arrow-right"></i>
-                    </a>
-                    <a class="expert-action-card" href="{{ url_for('expert.pending_diagnoses') }}">
-                        <div class="expert-action-icon"><i class="fas fa-stethoscope"></i></div>
-                        <div>
-                            <div class="expert-action-title">{{ t("rule_based_cases") }}</div>
-                            <div class="expert-action-sub">{{ t("review_auto_diagnoses") }}</div>
-                        </div>
-                        <i class="fas fa-arrow-right"></i>
-                    </a>
-                    <a class="expert-action-card" href="{{ url_for('expert.diseases') }}">
-                        <div class="expert-action-icon"><i class="fas fa-notes-medical"></i></div>
-                        <div>
-                            <div class="expert-action-title">{{ t("diagnosis_knowledge") }}</div>
-                            <div class="expert-action-sub">{{ t("diagnosis_knowledge_sub") }}</div>
-                        </div>
-                        <i class="fas fa-arrow-right"></i>
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-7 mb-3">
-            <div class="admin-panel">
-                <div class="admin-panel-header">
-                    <div>
-                        <div class="admin-panel-title">{{ t("priority_queue") }}</div>
-                        <div class="admin-panel-sub">{{ t("next_cases") }}</div>
-                    </div>
-                    <span class="badge badge-success">{{ pending }} {{ t("pending_count") }}</span>
-                </div>
-                <div class="expert-queue">
-                    {% for d in diagnoses[:5] %}
-                    <div class="expert-queue-item">
-                        <div>
-                            <div class="expert-queue-title">#{{ d.id }} • {{ localize(d.crop, "name", t("unknown_crop")) }}</div>
-                            <div class="expert-queue-sub">
-                                {{ d.symptoms[:80] }}{% if d.symptoms|length > 80 %}...{% endif %}
-                            </div>
-                        </div>
-                        <div class="expert-queue-meta">
-                            <span class="expert-queue-date">{{ d.created_at.strftime("%b %d") }}</span>
-                            <a href="{{ url_for('expert.review_diagnosis', diagnosis_id=d.id) }}"
-                               class="btn btn-sm btn-admin-outline">
-                                {{ t("review") }}
-                            </a>
-                        </div>
-                    </div>
-                    {% else %}
-                    <div class="text-muted small">{{ t("no_cases_waiting") }}</div>
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row mb-4">
-        <div class="col-lg-12">
-            <div class="admin-panel">
-                <div class="admin-panel-header">
-                    <div>
-                        <div class="admin-panel-title">{{ t("support_hub_short") }}</div>
-                        <div class="admin-panel-sub">{{ t("support_hub_quick") }}</div>
-                    </div>
-                    <div class="admin-hero-actions">
-                        <a class="btn btn-admin-outline" href="{{ url_for('expert.farmer_chats') }}">{{ t("open_chats") }}</a>
-                        <a class="btn btn-admin-outline" href="{{ url_for('expert.pending_diagnoses') }}">{{ t("review_auto_cases") }}</a>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-lg-6 mb-3">
-                        <div class="admin-panel-sub mb-2">{{ t("recent_auto_diagnoses") }}</div>
-                        <div class="expert-queue">
-                            {% for d in auto_cases %}
-                            <div class="expert-queue-item">
-                                <div>
-                                    <div class="expert-queue-title">#{{ d.id }} • {{ localize(d.crop, "name", t("unknown_crop")) }}</div>
-                                    <div class="expert-queue-sub">
-                                        {{ d.symptoms[:80] }}{% if d.symptoms|length > 80 %}...{% endif %}
+                            <div class="expert-donut-legend">
+                                <div class="expert-donut-item">
+                                    <span class="expert-donut-dot" style="background: #d97706;"></span>
+                                    <div>
+                                        <div class="expert-donut-name">{{ t("status_pending") }}</div>
+                                        <div class="expert-donut-meta">{{ pending }} &bull; {{ pending_pct|round(0) }}%</div>
                                     </div>
                                 </div>
-                                <div class="expert-queue-meta">
-                                    <span class="expert-queue-date">{{ d.created_at.strftime("%b %d") }}</span>
-                                    <a href="{{ url_for('expert.review_diagnosis', diagnosis_id=d.id) }}"
-                                       class="btn btn-sm btn-admin-outline">
-                                        {{ t("review") }}
-                                    </a>
+                                <div class="expert-donut-item">
+                                    <span class="expert-donut-dot" style="background: #059669;"></span>
+                                    <div>
+                                        <div class="expert-donut-name">{{ t("status_approved") }}</div>
+                                        <div class="expert-donut-meta">{{ approved_count }} &bull; {{ approved_pct|round(0) }}%</div>
+                                    </div>
+                                </div>
+                                <div class="expert-donut-item">
+                                    <span class="expert-donut-dot" style="background: #e11d48;"></span>
+                                    <div>
+                                        <div class="expert-donut-name">{{ t("status_rejected") }}</div>
+                                        <div class="expert-donut-meta">{{ rejected_count }} &bull; {{ rejected_pct|round(0) }}%</div>
+                                    </div>
                                 </div>
                             </div>
-                            {% else %}
-                            <div class="text-muted small">{{ t("no_auto_cases") }}</div>
-                            {% endfor %}
                         </div>
                     </div>
-                    <div class="col-lg-6 mb-3">
-                        <div class="admin-panel-sub mb-2">{{ t("support_shortcuts") }}</div>
-                        <div class="expert-actions-grid">
-                            <a class="expert-action-card" href="{{ url_for('expert.farmer_chats') }}">
-                                <div class="expert-action-icon"><i class="fas fa-comments"></i></div>
-                                <div>
-                                    <div class="expert-action-title">{{ t("farmer_chats_title") }}</div>
-                                    <div class="expert-action-sub">{{ t("respond_now") }}</div>
-                                </div>
-                                <i class="fas fa-arrow-right"></i>
-                            </a>
-                            <a class="expert-action-card" href="{{ url_for('expert.pending_diagnoses') }}">
-                                <div class="expert-action-icon"><i class="fas fa-clipboard-check"></i></div>
-                                <div>
-                                    <div class="expert-action-title">{{ t("auto_diagnoses") }}</div>
-                                    <div class="expert-action-sub">{{ t("approve_reject") }}</div>
-                                </div>
-                                <i class="fas fa-arrow-right"></i>
-                            </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Schedule & Clock -->
+        <div class="col-lg-5 mb-3">
+            <div class="exp-card h-100">
+                <div class="exp-card-header">
+                    <div>
+                        <h2 class="exp-card-title">
+                            <i class="fas fa-calendar-alt"></i> {{ t("calendar_time") }}
+                        </h2>
+                        <div class="exp-card-sub">{{ t("review_schedule") }}</div>
+                    </div>
+                </div>
+                <div class="exp-card-body">
+                    <div class="agro-calendar-layout">
+                        <div class="agro-clock">
+                            <div class="agro-clock-time" id="expertClockTime">--:--:--</div>
+                            <div class="agro-clock-date" id="expertClockDate">--</div>
+                            <div class="agro-clock-tz" id="expertClockTz">--</div>
+                        </div>
+                        <div class="agro-calendar-block">
+                            <div class="agro-calendar-head">
+                                <button class="agro-cal-nav" type="button" data-expert-cal="-1" aria-label="Previous Month">
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
+                                <div class="agro-cal-title" id="expertCalTitle">--</div>
+                                <button class="agro-cal-nav" type="button" data-expert-cal="1" aria-label="Next Month">
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                            </div>
+                            <div class="agro-calendar-week">
+                                <span>{{ t("sun") }}</span>
+                                <span>{{ t("mon") }}</span>
+                                <span>{{ t("tue") }}</span>
+                                <span>{{ t("wed") }}</span>
+                                <span>{{ t("thu") }}</span>
+                                <span>{{ t("fri") }}</span>
+                                <span>{{ t("sat") }}</span>
+                            </div>
+                            <div class="agro-calendar-grid" id="expertCalGrid"></div>
                         </div>
                     </div>
                 </div>
@@ -359,44 +278,219 @@
         </div>
     </div>
 
-    <div class="admin-panel" id="pending-diagnoses">
-        <div class="admin-panel-header">
-            <div>
-                <div class="admin-panel-title">{{ t("pending_diagnoses_title") }}</div>
-                <div class="admin-panel-sub">{{ t("full_queue_review") }}</div>
+    <!-- ===============================
+         PRIORITY QUEUE & FAST ACTIONS
+    =============================== -->
+    <div class="row mb-4">
+        <!-- Quick Actions Grid -->
+        <div class="col-lg-5 mb-3">
+            <div class="exp-card h-100">
+                <div class="exp-card-header">
+                    <div>
+                        <h2 class="exp-card-title">
+                            <i class="fas fa-bolt"></i> {{ t("quick_actions") }}
+                        </h2>
+                        <div class="exp-card-sub">{{ t("jump_tools") }}</div>
+                    </div>
+                </div>
+                <div class="exp-card-body">
+                    <div class="expert-actions-grid">
+                        <a class="expert-action-card" href="{{ url_for('expert.pending_diagnoses') }}">
+                            <div class="expert-action-icon" style="background: var(--exp-amber-soft); color: var(--exp-amber);">
+                                <i class="fas fa-clipboard-check"></i>
+                            </div>
+                            <div>
+                                <div class="expert-action-title">{{ t("rule_based_cases") }}</div>
+                                <div class="expert-action-sub">{{ t("review_auto_diagnoses") }}</div>
+                            </div>
+                            <i class="fas fa-arrow-right ml-auto text-muted"></i>
+                        </a>
+
+                        <a class="expert-action-card" href="{{ url_for('expert.farmer_chats') }}">
+                            <div class="expert-action-icon" style="background: var(--exp-indigo-soft); color: var(--exp-indigo);">
+                                <i class="fas fa-headset"></i>
+                            </div>
+                            <div>
+                                <div class="expert-action-title">{{ t("farmer_chats_title") }}</div>
+                                <div class="expert-action-sub">{{ t("respond_requests") }}</div>
+                            </div>
+                            <i class="fas fa-arrow-right ml-auto text-muted"></i>
+                        </a>
+
+                        <a class="expert-action-card" href="{{ url_for('expert.diseases') }}">
+                            <div class="expert-action-icon">
+                                <i class="fas fa-notes-medical"></i>
+                            </div>
+                            <div>
+                                <div class="expert-action-title">{{ t("diagnosis_knowledge") }}</div>
+                                <div class="expert-action-sub">{{ t("diagnosis_knowledge_sub") }}</div>
+                            </div>
+                            <i class="fas fa-arrow-right ml-auto text-muted"></i>
+                        </a>
+
+                        <a class="expert-action-card" href="{{ url_for('expert.knowledge_dashboard') }}">
+                            <div class="expert-action-icon" style="background: var(--exp-teal-soft); color: var(--exp-teal);">
+                                <i class="fas fa-book-open"></i>
+                            </div>
+                            <div>
+                                <div class="expert-action-title">{{ t("knowledge_base") }}</div>
+                                <div class="expert-action-sub">{{ t("manage_rules_symptoms") }}</div>
+                            </div>
+                            <i class="fas fa-arrow-right ml-auto text-muted"></i>
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="table-responsive">
-            <table class="table table-hover mb-0">
+
+        <!-- Priority Queue (Next Cases) -->
+        <div class="col-lg-7 mb-3">
+            <div class="exp-card h-100">
+                <div class="exp-card-header">
+                    <div>
+                        <h2 class="exp-card-title">
+                            <i class="fas fa-hourglass-start"></i> {{ t("priority_queue") }}
+                        </h2>
+                        <div class="exp-card-sub">{{ t("next_cases") }}</div>
+                    </div>
+                    <a href="{{ url_for('expert.pending_diagnoses') }}" class="btn-exp-outline btn-exp-sm">
+                        {{ t("view_all")|default("View All") }} ({{ pending }})
+                    </a>
+                </div>
+                <div class="exp-card-body">
+                    <div class="expert-queue">
+                        {% for d in diagnoses[:5] %}
+                        <div class="expert-queue-item">
+                            <div class="d-flex align-items-center gap-3" style="gap: 12px; min-width: 0;">
+                                <div class="expert-action-icon flex-shrink-0" style="width: 40px; height: 40px; border-radius: 10px; background: var(--exp-primary-soft); color: var(--exp-primary); font-size: 1rem;">
+                                    <i class="fas fa-seedling"></i>
+                                </div>
+                                <div style="min-width: 0;">
+                                    <div class="expert-queue-title">
+                                        #{{ d.id }} &bull; {{ localize(d.crop, "name", t("unknown_crop")) }}
+                                        {% if d.status == 'AUTO' %}
+                                        <span class="exp-badge exp-badge-auto ml-1" style="font-size: 0.68rem; padding: 0.15rem 0.5rem;">AI Matched</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="expert-queue-sub text-truncate">
+                                        {{ d.symptoms[:85] }}{% if d.symptoms|length > 85 %}...{% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="expert-queue-meta flex-shrink-0">
+                                <span class="expert-queue-date">{{ d.created_at.strftime("%b %d") }}</span>
+                                <a href="{{ url_for('expert.review_diagnosis', diagnosis_id=d.id) }}"
+                                   class="btn-exp-primary btn-exp-sm">
+                                    <i class="fas fa-stethoscope"></i> {{ t("review") }}
+                                </a>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="exp-empty-state py-4">
+                            <div class="exp-empty-icon" style="width: 50px; height: 50px; font-size: 1.3rem;">
+                                <i class="fas fa-check-double"></i>
+                            </div>
+                            <div class="exp-empty-title" style="font-size: 1rem;">{{ t("no_cases_waiting") }}</div>
+                            <div class="exp-empty-text small">{{ t("cases_waiting_review") }}</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===============================
+         FULL PENDING DIAGNOSES TABLE
+    =============================== -->
+    <div class="exp-card" id="pending-diagnoses">
+        <div class="exp-card-header">
+            <div>
+                <h2 class="exp-card-title">
+                    <i class="fas fa-clipboard-list"></i> {{ t("pending_diagnoses_title") }}
+                </h2>
+                <div class="exp-card-sub">{{ t("full_queue_review") }}</div>
+            </div>
+            <span class="exp-badge exp-badge-pending">
+                <i class="fas fa-inbox"></i> {{ pending }} {{ t("pending_count") }}
+            </span>
+        </div>
+
+        <!-- Filter Toolbar -->
+        <div class="exp-filter-toolbar">
+            <div class="exp-search-wrap">
+                <i class="fas fa-search"></i>
+                <input type="text"
+                       id="dashQueueSearch"
+                       class="exp-search-input"
+                       placeholder="{{ t('search_placeholder')|default('Search by ID, crop name, or symptom keywords...') }}">
+            </div>
+            <div class="small text-muted ml-auto d-none d-md-block">
+                Showing <strong id="dashQueueCount">{{ pending }}</strong> cases
+            </div>
+        </div>
+
+        <div class="exp-table-responsive">
+            <table class="exp-table" id="dashQueueTable">
                 <thead>
                     <tr>
-                        <th>ID</th>
-                        <th>{{ t("crop_header") }}</th>
+                        <th style="width: 90px;">ID</th>
+                        <th style="width: 180px;">{{ t("crop_header") }}</th>
                         <th>{{ t("symptoms_header") }}</th>
-                        <th>{{ t("date") }}</th>
-                        <th class="text-right">{{ t("action") }}</th>
+                        <th style="width: 140px;">{{ t("status") }}</th>
+                        <th style="width: 120px;">{{ t("date") }}</th>
+                        <th style="width: 130px;" class="text-right">{{ t("action") }}</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for d in diagnoses %}
                     <tr>
-                        <td>#{{ d.id }}</td>
-                        <td>{{ localize(d.crop, "name", "-") }}</td>
-                        <td class="text-muted small">
-                            {{ d.symptoms[:60] }}{% if d.symptoms|length > 60 %}...{% endif %}
+                        <td class="font-weight-bold">#{{ d.id }}</td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2" style="gap: 8px;">
+                                <div class="d-inline-flex align-items-center justify-content-center"
+                                     style="width: 30px; height: 30px; border-radius: 8px; background: var(--exp-primary-soft); color: var(--exp-primary); font-size: 0.85rem;">
+                                    <i class="fas fa-seedling"></i>
+                                </div>
+                                <span class="font-weight-bold">{{ localize(d.crop, "name", "-") }}</span>
+                            </div>
                         </td>
-                        <td class="small">{{ d.created_at.strftime("%Y-%m-%d") }}</td>
+                        <td>
+                            <div class="text-muted" style="max-width: 480px; line-height: 1.45;">
+                                {{ d.symptoms[:100] }}{% if d.symptoms|length > 100 %}...{% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            {% if d.status == 'AUTO' %}
+                            <span class="exp-badge exp-badge-auto">
+                                <i class="fas fa-robot"></i> {{ t("status_auto")|default("AUTO") }}
+                            </span>
+                            {% else %}
+                            <span class="exp-badge exp-badge-pending">
+                                <i class="fas fa-hourglass-half"></i> {{ t("status_pending")|default("PENDING") }}
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="small text-muted">{{ d.created_at.strftime("%Y-%m-%d") }}</span>
+                        </td>
                         <td class="text-right">
                             <a href="{{ url_for('expert.review_diagnosis', diagnosis_id=d.id) }}"
-                               class="btn btn-sm btn-admin-outline">
-                                {{ t("review") }}
+                               class="btn-exp-primary btn-exp-sm">
+                                <i class="fas fa-stethoscope mr-1"></i> {{ t("review") }}
                             </a>
                         </td>
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="5" class="text-center text-muted py-4">
-                            {{ t("no_pending_diagnoses") }}
+                        <td colspan="6">
+                            <div class="exp-empty-state">
+                                <div class="exp-empty-icon">
+                                    <i class="fas fa-clipboard-check"></i>
+                                </div>
+                                <div class="exp-empty-title">{{ t("no_pending_diagnoses") }}</div>
+                                <div class="exp-empty-text">{{ t("all_cases_reviewed_message")|default("All patient cases have been verified. Great work!") }}</div>
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}
@@ -427,9 +521,9 @@
         second: "2-digit"
     });
     const dateFormatter = new Intl.DateTimeFormat(locale, {
-        weekday: "long",
+        weekday: "short",
         year: "numeric",
-        month: "long",
+        month: "short",
         day: "numeric"
     });
     const monthFormatter = new Intl.DateTimeFormat(locale, {
@@ -524,6 +618,33 @@
     renderClock();
     renderCalendar();
     setInterval(renderClock, 1000);
+})();
+
+// Client-side quick filter for dashboard table
+(function initQueueSearch() {
+    const searchInput = document.getElementById("dashQueueSearch");
+    const table = document.getElementById("dashQueueTable");
+    const countEl = document.getElementById("dashQueueCount");
+    if (!searchInput || !table) return;
+
+    searchInput.addEventListener("input", function() {
+        const query = this.value.toLowerCase().trim();
+        const rows = table.querySelectorAll("tbody tr");
+        let visibleCount = 0;
+
+        rows.forEach(function(row) {
+            if (row.querySelector(".exp-empty-state")) return;
+            const text = row.textContent.toLowerCase();
+            if (!query || text.includes(query)) {
+                row.style.display = "";
+                visibleCount++;
+            } else {
+                row.style.display = "none";
+            }
+        });
+
+        if (countEl) countEl.textContent = visibleCount;
+    });
 })();
 </script>
 {% endblock %}

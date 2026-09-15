@@ -302,7 +302,7 @@ def _symptom_candidates_for_crop(crop_id: int) -> list[dict]:
                 "name_kh": getattr(symptom, "name_kh", None),
             }
 
-    if not candidates:
+    if not candidates and (crop_id == 0 or crop_id is None):
         all_symptoms = Symptom.query.order_by(Symptom.name.asc()).all()
         for symptom in all_symptoms:
             if not symptom or not symptom.id or not symptom.name:
@@ -719,8 +719,11 @@ def diagnose():
     else:
         diagnoses = []
 
+    from flask_wtf.csrf import generate_csrf
+
     return render_template(
         "farmer/diagnose.html",
+        diagnosis_csrf_token=generate_csrf(),
         crops=crops,
         crop_symptoms=crop_symptoms,
         diagnoses=diagnoses,
@@ -1026,6 +1029,7 @@ def diagnose_rule_based():
             "domain_id": "crop",
             "subcategory_id": inferred_subcategory_id,
         }
+        symptoms_by_crop.setdefault(crop.id, {})
 
     for rule in rules:
         if not rule.disease or not rule.disease.crop_id:
@@ -1060,6 +1064,7 @@ def diagnose_rule_based():
     from flask_wtf.csrf import generate_csrf
     bootstrap_data = {
         "postUrl": url_for("farmer.diagnose_rule_based"),
+        "liveEvaluationApi": url_for("farmer.api_diagnose_live_evaluation"),
         "dashboardUrl": url_for("farmer.dashboard"),
         "chatUrl": url_for("farmer.chat"),
         "currentLang": current_lang,
@@ -1332,6 +1337,10 @@ def chat(session_id=None):
     if request.method == "POST":
         user_message = request.form.get("message", "").strip()
 
+        wants_json = request.headers.get("X-Requested-With") == "XMLHttpRequest"
+        if not user_message and wants_json:
+            return jsonify(ok=False, error="Please enter a message."), 400
+
         if user_message:
             farmer_message = ChatMessage(
                 sender="farmer",
@@ -1483,6 +1492,8 @@ def chat(session_id=None):
             except Exception:
                 db.session.rollback()
 
+        if wants_json:
+            return jsonify(ok=True, reply=reply, session_id=session.id, title=session.title)
         return redirect(url_for("farmer.chat", session_id=session.id))
 
     # ---------------------------------

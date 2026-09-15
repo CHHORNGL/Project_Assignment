@@ -5,7 +5,6 @@ import datetime
 
 from flask import Blueprint, render_template, redirect, url_for, flash, request, session
 from flask_login import login_user, current_user
-from werkzeug.security import check_password_hash
 
 from webauthn import (
     generate_authentication_options,
@@ -23,6 +22,7 @@ from app.models.passkey import UserPasskey
 from app.forms.auth_forms import LoginForm
 from app.services.theme_manager import resolve_active_runtime
 from app.blueprints.auth.routes import _send_verification_email, _safe_next_url
+from app.utils.audit import audit_log
 
 staff_bp = Blueprint("staff", __name__, url_prefix="/staff")
 
@@ -50,11 +50,26 @@ def login():
         identifier = (form.email.data or "").strip()
         user = User.query.filter(db.func.lower(User.email) == db.func.lower(identifier)).first()
 
-        if not user or not check_password_hash(user.password_hash, form.password.data):
+        if not user or not user.check_password(form.password.data, upgrade=True):
+            audit_log(
+                "STAFF_LOGIN_FAILURE",
+                target_user=identifier,
+                detail="Invalid staff credentials",
+                status="FAILURE",
+                severity="WARNING",
+            )
             flash("Invalid email or password.", "danger")
             return render_template("staff/login.html", form=form, active_role="expert", next_url=next_url, auth_theme_runtime=auth_theme_runtime)
 
         if not user.is_active:
+            audit_log(
+                "STAFF_LOGIN_BLOCKED",
+                target_user=user.username,
+                user_id=user.id,
+                detail="Banned staff account login attempt",
+                status="BLOCKED",
+                severity="WARNING",
+            )
             flash("Your account has been banned. Please contact administrator.", "danger")
             return render_template("staff/login.html", form=form, active_role="expert", next_url=next_url, auth_theme_runtime=auth_theme_runtime)
 
@@ -74,7 +89,14 @@ def login():
             flash("Verification code sent to your email.", "info")
             return redirect(url_for("auth.verify_code"))
 
-        login_user(user, remember=True)
+        db.session.commit()  # Persist any password hash upgrade.
+        login_user(user, remember=False)
+        audit_log(
+            "STAFF_LOGIN_SUCCESS",
+            target_user=user.username,
+            user_id=user.id,
+            detail="Staff password authentication",
+        )
         flash("Welcome back!", "success")
         return redirect(next_url or url_for("main.index"))
 
@@ -123,7 +145,7 @@ def passkey_login_verify():
         passkey.sign_count = auth_verification.new_sign_count
         db.session.commit()
         
-        login_user(user, remember=True)
+        login_user(user, remember=False)
         flash("Logged in successfully via Passkey!", "success")
         return {"status": "ok"}
     except Exception as e:

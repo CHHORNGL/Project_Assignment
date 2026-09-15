@@ -1,70 +1,92 @@
 {% extends "layouts/base.html" %}
 {% block title %}{{ t("add_symptom") }}{% endblock %}
 
-{% set body_class = "admin-theme" %}
+{% set body_class = "expert-theme admin-theme" %}
 
 {% block content %}
-<div class="container-fluid" style="max-width:700px">
+<div class="expert-board" style="max-width: 780px; margin: 0 auto 3rem;">
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="font-weight-bold text-primary">
-            {{ t("add_symptom") }}
-        </h3>
-
-        <a href="{{ url_for('expert.knowledge_dashboard') }}"
-           class="btn btn-light btn-sm shadow-sm">
-            {{ t("back") }}
-        </a>
-    </div>
-
-    <div class="admin-panel">
-        <div class="">
-            <form method="POST">
-                <div class="form-group">
-                    <label class="font-weight-bold">{{ t("symptom_name") }}</label>
-                    <input type="text"
-                           name="name"
-                           class="form-control"
-                           placeholder="{{ t("symptom_name_placeholder") }}"
-                           required>
-                </div>
-
-                <div class="form-group">
-                    <label class="font-weight-bold">{{ t("description_label") }}</label>
-                    <textarea name="description"
-                              class="form-control"
-                              rows="3"
-                              placeholder="{{ t("description_placeholder") }}"></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label class="font-weight-bold">{{ t("symptom_name_kh") }}</label>
-                    <input type="text"
-                           name="name_kh"
-                           class="form-control"
-                           placeholder="{{ t("symptom_name_kh_placeholder") }}">
-                </div>
-
-                <div class="form-group">
-                    <label class="font-weight-bold">{{ t("symptom_description_kh") }}</label>
-                    <textarea name="description_kh"
-                              class="form-control"
-                              rows="3"
-                              placeholder="{{ t("description_kh_placeholder") }}"></textarea>
-                </div>
-
-                <div class="text-right mt-4">
-                    <button class="btn btn-admin px-4">
-                        {{ t("save_symptom") }}
-                    </button>
-                    <a href="{{ url_for('expert.knowledge_dashboard') }}"
-                       class="btn btn-secondary ml-2">
-                        {{ t("cancel") }}
-                    </a>
-                </div>
-            </form>
+    <!-- ===============================
+         HERO HEADER
+    =============================== -->
+    <div class="expert-hero mb-4">
+        <div class="expert-hero-content">
+            <span class="expert-hero-role-pill">
+                <i class="fas fa-stethoscope"></i> Pathology Symptom Dictionary
+            </span>
+            <h1 class="expert-title">
+                <i class="fas fa-plus-circle"></i> {{ t("add_symptom") }}
+            </h1>
+            <p class="expert-sub">Define a distinct plant symptom indicator that can be linked to decision tree rules and diagnostic queries.</p>
+        </div>
+        <div class="expert-hero-actions">
+            <a href="{{ url_for('expert.knowledge_dashboard') }}" class="btn-exp-outline">
+                <i class="fas fa-arrow-left"></i> {{ t("back") }}
+            </a>
         </div>
     </div>
+
+    <!-- ===============================
+         SYMPTOM FORM
+    =============================== -->
+    <form method="POST">
+        <div class="exp-form-section">
+            <div class="exp-form-section-title">
+                <i class="fas fa-file-signature"></i> Symptom Specification
+            </div>
+
+            <div class="form-group mb-3">
+                <label class="exp-form-label">
+                    {{ t("symptom_name") }} (English) <span class="text-danger">*</span>
+                </label>
+                <input type="text"
+                       name="name"
+                       class="exp-form-control"
+                       placeholder="{{ t('symptom_name_placeholder')|default('e.g. Yellowing of leaf margins, Brown circular spots') }}"
+                       required>
+            </div>
+
+            <div class="form-group mb-3">
+                <label class="exp-form-label">
+                    {{ t("description_label") }} (English)
+                </label>
+                <textarea name="description"
+                          class="exp-form-control"
+                          rows="3"
+                          placeholder="{{ t('description_placeholder')|default('Detailed clinical presentation, pattern of occurrence, or texture...') }}"></textarea>
+            </div>
+
+            <div class="form-group mb-3">
+                <label class="exp-form-label">
+                    {{ t("symptom_name_kh") }} (Khmer)
+                </label>
+                <input type="text"
+                       name="name_kh"
+                       class="exp-form-control kh"
+                       placeholder="ឧទាហរណ៍៖ ស្លឹកឡើងលឿងតាមគែម, ស្នាមអុជត្នោត...">
+            </div>
+
+            <div class="form-group mb-0">
+                <label class="exp-form-label">
+                    {{ t("symptom_description_kh") }} (Khmer)
+                </label>
+                <textarea name="description_kh"
+                          class="exp-form-control kh"
+                          rows="3"
+                          placeholder="ពណ៌នាពិស្តារអំពីសញ្ញារោគ..."></textarea>
+            </div>
+        </div>
+
+        <div class="d-flex align-items-center justify-content-end gap-3 mt-4" style="gap: 12px;">
+            <a href="{{ url_for('expert.knowledge_dashboard') }}" class="btn-exp-outline" style="min-height: 46px;">
+                {{ t("cancel") }}
+            </a>
+            <button type="submit" class="btn-exp-primary" style="min-height: 46px; font-size: 0.95rem; padding: 0 1.75rem;">
+                <i class="fas fa-check-circle mr-1"></i>
+                <span>{{ t("save_symptom") }}</span>
+            </button>
+        </div>
+    </form>
 
 </div>
 {% endblock %}

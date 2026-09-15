@@ -1,59 +1,138 @@
 {% extends "layouts/base.html" %}
 {% block title %}{{ t("pending_diagnoses_title") }}{% endblock %}
-{% set body_class = "admin-theme" %}
+{% set body_class = "expert-theme admin-theme" %}
 
 {% block content %}
-<div class="admin-board">
-    <div class="admin-hero">
-        <div>
-            <div class="admin-title">{{ t("pending_diagnoses_title") }}</div>
-            <div class="admin-sub">{{ t("cases_waiting_review") }}</div>
+<div class="expert-board">
+
+    <!-- ===============================
+         HERO HEADER
+    =============================== -->
+    <div class="expert-hero">
+        <div class="expert-hero-content">
+            <span class="expert-hero-role-pill">
+                <i class="fas fa-tasks"></i> Case Triage &bull; Diagnostic Queue
+            </span>
+            <h1 class="expert-title">
+                <i class="fas fa-hourglass-half"></i> {{ t("pending_diagnoses_title") }}
+            </h1>
+            <p class="expert-sub">{{ t("cases_waiting_review") }}</p>
+            <div class="expert-hero-meta">
+                <span class="exp-badge exp-badge-pending">
+                    <i class="fas fa-inbox"></i> {{ diagnoses|length }} {{ t("pending_count") }}
+                </span>
+            </div>
         </div>
-        <div class="admin-hero-actions">
-            <a class="btn btn-admin" href="{{ url_for('expert.dashboard') }}">{{ t("back") }} {{ t("dashboard") }}</a>
+        <div class="expert-hero-actions">
+            <a class="btn-exp-outline" href="{{ url_for('expert.dashboard') }}">
+                <i class="fas fa-arrow-left"></i> {{ t("back") }} {{ t("dashboard") }}
+            </a>
+            <a class="btn-exp-primary" href="{{ url_for('expert.farmer_chats') }}">
+                <i class="fas fa-comments"></i> {{ t("farmer_chats") }}
+            </a>
         </div>
     </div>
 
-    <div class="admin-panel">
-        <div class="admin-panel-header">
+    <!-- ===============================
+         QUEUE PANEL
+    =============================== -->
+    <div class="exp-card">
+        <div class="exp-card-header">
             <div>
-                <div class="admin-panel-title">{{ t("pending_queue") }}</div>
-                <div class="admin-panel-sub">{{ t("cases_waiting_review") }}</div>
+                <h2 class="exp-card-title">
+                    <i class="fas fa-stream"></i> {{ t("pending_queue") }}
+                </h2>
+                <div class="exp-card-sub">{{ t("cases_waiting_review") }}</div>
             </div>
-            <span class="badge badge-success">{{ diagnoses|length }} {{ t("pending_count") }}</span>
+            <span class="exp-badge exp-badge-pending">
+                <strong id="pendingQueueBadgeCount">{{ diagnoses|length }}</strong> {{ t("pending_count") }}
+            </span>
         </div>
 
-        <div class="table-responsive">
-            <table class="table table-hover mb-0">
+        <!-- Filter Toolbar -->
+        <div class="exp-filter-toolbar">
+            <div class="exp-search-wrap">
+                <i class="fas fa-search"></i>
+                <input type="text"
+                       id="queueSearchInput"
+                       class="exp-search-input"
+                       placeholder="{{ t('search_placeholder')|default('Search by ID, crop name, or symptoms...') }}">
+            </div>
+            <div class="d-flex align-items-center gap-2" style="gap: 8px;">
+                <select id="statusFilter" class="exp-select">
+                    <option value="all">All Cases</option>
+                    <option value="auto">AI Matched (AUTO)</option>
+                    <option value="pending">Standard Pending</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="exp-table-responsive">
+            <table class="exp-table" id="pendingQueueTable">
                 <thead>
                     <tr>
-                        <th>{{ t("id_label") }}</th>
-                        <th>{{ t("crop_header") }}</th>
+                        <th style="width: 90px;">{{ t("id_label") }}</th>
+                        <th style="width: 200px;">{{ t("crop_header") }}</th>
                         <th>{{ t("symptoms_header") }}</th>
-                        <th>{{ t("date") }}</th>
-                        <th class="text-right">{{ t("action") }}</th>
+                        <th style="width: 140px;">{{ t("status") }}</th>
+                        <th style="width: 130px;">{{ t("date") }}</th>
+                        <th style="width: 130px;" class="text-right">{{ t("action") }}</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for d in diagnoses %}
-                    <tr>
-                        <td>#{{ d.id }}</td>
-                        <td>{{ localize(d.crop, "name", "-") }}</td>
-                        <td class="text-muted small">
-                            {{ d.symptoms[:60] }}{% if d.symptoms|length > 60 %}...{% endif %}
+                    <tr data-status="{{ 'auto' if d.status == 'AUTO' else 'pending' }}">
+                        <td class="font-weight-bold">#{{ d.id }}</td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2" style="gap: 8px;">
+                                <div class="d-inline-flex align-items-center justify-content-center flex-shrink-0"
+                                     style="width: 32px; height: 32px; border-radius: 8px; background: var(--exp-primary-soft); color: var(--exp-primary); font-size: 0.9rem;">
+                                    <i class="fas fa-seedling"></i>
+                                </div>
+                                <div>
+                                    <div class="font-weight-bold">{{ localize(d.crop, "name", d.crop_name or "-") }}</div>
+                                    {% if d.farmer %}
+                                    <div class="small text-muted">@{{ d.farmer.username }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
                         </td>
-                        <td class="small">{{ d.created_at.strftime("%Y-%m-%d") }}</td>
+                        <td>
+                            <div class="text-muted" style="max-width: 520px; line-height: 1.45;">
+                                {{ d.symptoms[:110] }}{% if d.symptoms|length > 110 %}...{% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            {% if d.status == 'AUTO' %}
+                            <span class="exp-badge exp-badge-auto">
+                                <i class="fas fa-robot"></i> {{ t("status_auto")|default("AUTO") }}
+                            </span>
+                            {% else %}
+                            <span class="exp-badge exp-badge-pending">
+                                <i class="fas fa-hourglass-half"></i> {{ t("status_pending")|default("PENDING") }}
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="small text-muted">{{ d.created_at.strftime("%Y-%m-%d") }}</span>
+                        </td>
                         <td class="text-right">
                             <a href="{{ url_for('expert.review_diagnosis', diagnosis_id=d.id) }}"
-                               class="btn btn-sm btn-admin-outline">
-                                {{ t("review") }}
+                               class="btn-exp-primary btn-exp-sm">
+                                <i class="fas fa-stethoscope mr-1"></i> {{ t("review") }}
                             </a>
                         </td>
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="5" class="text-center text-muted py-4">
-                            {{ t("no_pending_diagnoses") }}
+                        <td colspan="6">
+                            <div class="exp-empty-state">
+                                <div class="exp-empty-icon">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <div class="exp-empty-title">{{ t("no_pending_diagnoses") }}</div>
+                                <div class="exp-empty-text">{{ t("all_cases_reviewed_message")|default("No cases currently waiting for review. You are all caught up!") }}</div>
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}
@@ -61,5 +140,45 @@
             </table>
         </div>
     </div>
+
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+    const searchInput = document.getElementById("queueSearchInput");
+    const statusFilter = document.getElementById("statusFilter");
+    const table = document.getElementById("pendingQueueTable");
+    const countBadge = document.getElementById("pendingQueueBadgeCount");
+    if (!searchInput || !table) return;
+
+    function filterRows() {
+        const query = searchInput.value.toLowerCase().trim();
+        const selectedStatus = statusFilter ? statusFilter.value : "all";
+        const rows = table.querySelectorAll("tbody tr");
+        let visibleCount = 0;
+
+        rows.forEach(function (row) {
+            if (row.querySelector(".exp-empty-state")) return;
+            const text = row.textContent.toLowerCase();
+            const rowStatus = row.getAttribute("data-status") || "pending";
+            const matchesQuery = !query || text.includes(query);
+            const matchesStatus = (selectedStatus === "all") || (rowStatus === selectedStatus);
+
+            if (matchesQuery && matchesStatus) {
+                row.style.display = "";
+                visibleCount++;
+            } else {
+                row.style.display = "none";
+            }
+        });
+
+        if (countBadge) countBadge.textContent = visibleCount;
+    }
+
+    searchInput.addEventListener("input", filterRows);
+    if (statusFilter) statusFilter.addEventListener("change", filterRows);
+})();
+</script>
 {% endblock %}

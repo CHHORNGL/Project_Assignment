@@ -1,6 +1,6 @@
 {% extends "layouts/base.html" %}
 {% block title %}{{ t("mixed_agri_knowledge") }}{% endblock %}
-{% set body_class = "agri-knowledge-page expert-simple" %}
+{% set body_class = "agri-knowledge-page expert-simple expert-theme" %}
 
 {% block head %}
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Spline+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -35,6 +35,15 @@
 }
 
 .dark-mode .agri-knowledge-page {
+    --agri-ink: var(--exp-text);
+    --agri-muted: var(--exp-muted);
+    --agri-border: var(--exp-border);
+    --agri-surface: var(--exp-card);
+    --agri-soft: var(--exp-card-subtle);
+    --agri-accent: var(--exp-primary);
+    --agri-accent-2: var(--exp-cyan);
+    --agri-highlight: var(--exp-primary-soft);
+    --agri-shadow: var(--exp-shadow-md);
     --agri-btn-primary-text: #e6f2ec;
     --agri-btn-outline-bg: #0f1623;
     --agri-btn-outline-border: #1f2a37;

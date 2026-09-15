@@ -4,7 +4,6 @@ from app import create_app
 from app.extensions import db
 from app.models.user import User
 from app.models.role import Role
-from werkzeug.security import generate_password_hash
 
 app = create_app()
 
@@ -31,9 +30,9 @@ with app.app_context():
         expert = User(
             username="expert1",
             email=EXPERT_EMAIL,
-            password_hash=generate_password_hash(EXPERT_PASSWORD),
             is_verified=True
         )
+        expert.set_password(EXPERT_PASSWORD)
         expert.roles.append(expert_role)
         db.session.add(expert)
         db.session.commit()

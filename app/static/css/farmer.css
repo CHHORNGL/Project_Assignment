@@ -2389,3 +2389,34 @@ html.dark-mode .fm-team-member .fm-team-avatar {
         scroll-behavior: auto !important;
     }
 }
+
+/* Calendar and clock follow the active page theme, including generated days. */
+.farmer-dash-theme :is(.agro-clock, .agro-calendar-block, .agro-cal-nav, .agro-cal-cell) {
+    background: var(--card-bg);
+    border-color: var(--border-light);
+    color: var(--text-main);
+}
+.farmer-dash-theme :is(.agro-clock-time, .agro-cal-title) { color: var(--text-main); }
+.farmer-dash-theme :is(.agro-clock-date, .agro-clock-tz, .agro-calendar-week span, .agro-cal-cell .cal-lunar) {
+    color: var(--text-muted);
+}
+.farmer-dash-theme .agro-cal-cell.is-muted {
+    background: var(--surface-soft);
+    color: var(--text-muted);
+}
+.farmer-dash-theme .agro-cal-cell.is-today {
+    background: var(--primary-soft);
+    border-color: var(--primary);
+    color: var(--primary);
+    box-shadow: none;
+}
+.farmer-dash-theme .agro-cal-cell.is-today .cal-lunar { color: var(--primary); }
+.farmer-dash-theme .agro-cal-nav:hover {
+    background: var(--primary-soft);
+    border-color: var(--primary);
+    color: var(--primary);
+}
+.farmer-dash-theme .agro-cal-nav:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}

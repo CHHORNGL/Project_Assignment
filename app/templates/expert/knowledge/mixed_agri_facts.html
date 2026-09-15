@@ -1,37 +1,62 @@
 {% extends "layouts/base.html" %}
 {% block title %}{{ t("mixed_agri_facts") }}{% endblock %}
 
-{% set body_class = "admin-theme" %}
+{% set body_class = "expert-theme admin-theme" %}
 
 {% block content %}
-<div class="container-fluid">
+<div class="expert-board">
 
-    <div class="d-flex align-items-center justify-content-between mb-4">
-        <h3 class="font-weight-bold text-primary">{{ t("mixed_agri_facts") }}</h3>
-        <div>
-            <a href="{{ url_for('expert.mixed_agri_dashboard') }}"
-               class="btn btn-light btn-sm shadow-sm">
-                {{ t("back") }}
+    <!-- ===============================
+         HERO HEADER
+    =============================== -->
+    <div class="expert-hero">
+        <div class="expert-hero-content">
+            <span class="expert-hero-role-pill">
+                <i class="fas fa-leaf"></i> Empirical Agronomic Knowledge Base
+            </span>
+            <h1 class="expert-title">
+                <i class="fas fa-atom"></i> {{ t("mixed_agri_facts") }}
+            </h1>
+            <p class="expert-sub">Catalog structured agronomic facts, soil requirements, nutrient thresholds, pest interactions, and crop husbandry facts.</p>
+            <div class="expert-hero-meta">
+                <span class="exp-badge exp-badge-approved">
+                    <i class="fas fa-check-double"></i> {{ pagination.total }} Curated Facts
+                </span>
+            </div>
+        </div>
+        <div class="expert-hero-actions">
+            <a href="{{ url_for('expert.mixed_agri_dashboard') }}" class="btn-exp-outline">
+                <i class="fas fa-arrow-left"></i> {{ t("back") }}
             </a>
-            <a href="{{ url_for('expert.mixed_agri_fact_create') }}"
-               class="btn btn-sm btn-admin ml-2">
-                {{ t("add_fact") }}
+            <a href="{{ url_for('expert.mixed_agri_fact_create') }}" class="btn-exp-primary">
+                <i class="fas fa-plus-circle"></i> {{ t("add_fact") }}
             </a>
-            <a href="{{ url_for('expert.mixed_agri_facts_export', format='csv', q=q, source_id=source_id) }}"
-               class="btn btn-sm btn-outline-secondary ml-2">
-                {{ t("export_csv") }}
+            <a href="{{ url_for('expert.mixed_agri_facts_export', format='csv', q=q, source_id=source_id) }}" class="btn-exp-outline btn-exp-sm">
+                <i class="fas fa-file-csv"></i> {{ t("export_csv") }}
             </a>
-            <a href="{{ url_for('expert.mixed_agri_facts_export', format='json', q=q, source_id=source_id) }}"
-               class="btn btn-sm btn-outline-secondary ml-2">
-                {{ t("export_json") }}
+            <a href="{{ url_for('expert.mixed_agri_facts_export', format='json', q=q, source_id=source_id) }}" class="btn-exp-outline btn-exp-sm">
+                <i class="fas fa-file-code"></i> {{ t("export_json") }}
             </a>
         </div>
     </div>
 
-    <div class="admin-panel mb-4">
-        <div class="">
-            <form method="GET" class="form-inline">
-                <select name="source_id" class="form-control form-control-sm mr-2">
+    <!-- ===============================
+         FACTS TABLE PANEL
+    =============================== -->
+    <div class="exp-card">
+        <div class="exp-card-header">
+            <div>
+                <h2 class="exp-card-title">
+                    <i class="fas fa-table"></i> {{ t("facts") }}
+                </h2>
+                <div class="exp-card-sub">{{ t("total_count", count=pagination.total) }}</div>
+            </div>
+        </div>
+
+        <!-- Filter & Search Toolbar -->
+        <div class="exp-filter-toolbar">
+            <form method="GET" class="d-flex align-items-center gap-2 flex-grow-1 flex-wrap" style="gap: 8px;">
+                <select name="source_id" class="exp-select" style="min-width: 180px;">
                     <option value="">{{ t("all_sources") }}</option>
                     {% for s in sources %}
                     <option value="{{ s.id }}" {% if source_id == s.id %}selected{% endif %}>
@@ -39,152 +64,179 @@
                     </option>
                     {% endfor %}
                 </select>
-                <input type="text"
-                       name="q"
-                       value="{{ q }}"
-                       class="form-control form-control-sm mr-2"
-                       placeholder="{{ t("search_facts_placeholder") }}">
-                <select name="per_page" class="form-control form-control-sm mr-2">
-                    <option value="25" {% if pagination.per_page == 25 %}selected{% endif %}>25</option>
-                    <option value="50" {% if pagination.per_page == 50 %}selected{% endif %}>50</option>
-                    <option value="100" {% if pagination.per_page == 100 %}selected{% endif %}>100</option>
+                <div class="exp-search-wrap">
+                    <i class="fas fa-search"></i>
+                    <input type="text"
+                           name="q"
+                           value="{{ q }}"
+                           class="exp-search-input"
+                           placeholder="{{ t('search_facts_placeholder')|default('Search statement, crop, or topic keywords...') }}">
+                </div>
+                <select name="per_page" class="exp-select" style="min-width: 100px;">
+                    <option value="25" {% if pagination.per_page == 25 %}selected{% endif %}>25 / page</option>
+                    <option value="50" {% if pagination.per_page == 50 %}selected{% endif %}>50 / page</option>
+                    <option value="100" {% if pagination.per_page == 100 %}selected{% endif %}>100 / page</option>
                 </select>
-                <button class="btn btn-sm btn-primary">{{ t("filter") }}</button>
+                <button class="btn-exp-primary btn-exp-sm" type="submit">
+                    <i class="fas fa-filter mr-1"></i> {{ t("filter") }}
+                </button>
                 {% if q or source_id %}
-                <a href="{{ url_for('expert.mixed_agri_facts') }}"
-                   class="btn btn-sm btn-outline-secondary ml-2">{{ t("clear") }}</a>
+                <a href="{{ url_for('expert.mixed_agri_facts') }}" class="btn-exp-outline btn-exp-sm">
+                    {{ t("clear") }}
+                </a>
                 {% endif %}
             </form>
-        </div>
-    </div>
 
-    <div class="admin-panel">
-        <div class="admin-panel-title d-flex justify-content-between">
-            <span class="font-weight-bold">{{ t("facts") }}</span>
-            <span class="text-muted small">{{ t("total_count", count=pagination.total) }}</span>
-        </div>
-
-        <div class=" border-bottom">
+            <!-- Bulk Form Controls -->
             <form id="bulk-facts-form"
                   method="POST"
                   action="{{ url_for('expert.mixed_agri_facts_bulk') }}"
                   data-total="{{ pagination.total }}"
+                  data-source-id="{{ source_id|default('') }}"
                   data-query="{{ q|default('') }}"
-                  data-source="{{ source_id|default('') }}">
+                  class="d-flex align-items-center gap-2 flex-wrap ml-auto"
+                  style="gap: 8px;">
                 <input type="hidden" name="next" value="{{ current_path }}">
                 <input type="hidden" name="scope" value="selected" id="facts-scope">
-                <input type="hidden" name="q" value="{{ q }}">
                 <input type="hidden" name="source_id" value="{{ source_id }}">
-                <div class="form-inline">
-                    <select name="action" class="form-control form-control-sm mr-2">
-                        <option value="">{{ t("bulk_action") }}</option>
-                        <option value="delete">{{ t("delete_selected") }}</option>
-                        <option value="export_csv">{{ t("export_selected_csv") }}</option>
-                        <option value="export_json">{{ t("export_selected_json") }}</option>
-                    </select>
-                    <button class="btn btn-sm btn-outline-danger">{{ t("apply") }}</button>
-                    <div class="form-check ml-3">
-                        <input class="form-check-input" type="checkbox" id="apply-all-facts">
-                        <label class="form-check-label small text-muted" for="apply-all-facts">
-                            {{ t("apply_all_filtered", count=pagination.total) }}
-                        </label>
-                    </div>
+                <input type="hidden" name="q" value="{{ q }}">
+                <select name="action" class="exp-select py-1" style="font-size: 0.82rem; height: 38px;">
+                    <option value="">{{ t("bulk_action") }}</option>
+                    <option value="delete">{{ t("delete_selected") }}</option>
+                    <option value="export_csv">{{ t("export_selected_csv") }}</option>
+                    <option value="export_json">{{ t("export_selected_json") }}</option>
+                </select>
+                <button class="btn-exp-danger btn-exp-sm" style="height: 38px;">
+                    {{ t("apply") }}
+                </button>
+                <div class="custom-control custom-checkbox ml-2">
+                    <input type="checkbox" class="custom-control-input" id="apply-all-facts">
+                    <label class="custom-control-label small text-muted font-weight-normal" for="apply-all-facts">
+                        {{ t("apply_all_filtered", count=pagination.total) }}
+                    </label>
                 </div>
             </form>
         </div>
 
-        <div class=" p-0 table-responsive">
-            <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead class="thead-light">
-                        <tr>
-                            <th>
-                                <input type="checkbox" id="select-all-facts">
-                            </th>
-                            <th>{{ t("id_label") }}</th>
-                            <th>{{ t("source") }}</th>
-                            <th>{{ t("topic") }}</th>
-                            <th>{{ t("region") }}</th>
-                            <th>{{ t("metric") }}</th>
-                            <th>{{ t("fact") }}</th>
-                            <th>{{ t("actions") }}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for f in facts %}
-                        <tr>
-                            <td>
-                                <input type="checkbox"
-                                       class="fact-select"
-                                       name="fact_ids"
-                                       value="{{ f.id }}"
-                                       data-topic="{{ f.topic }}"
-                                       data-region="{{ f.region }}"
-                                       form="bulk-facts-form">
-                            </td>
-                            <td>#{{ f.id }}</td>
-                            <td class="small">{{ f.source.source_title if f.source else '-' }}</td>
-                            <td>{{ f.topic }}</td>
-                            <td>{{ f.region or '-' }}</td>
-                            <td class="small">
-                                {% if f.metric_value is not none %}
-                                    {{ f.metric_value }}
-                                    {% if f.metric_unit %} {{ f.metric_unit }}{% endif %}
-                                    {% if f.metric_year %} ({{ f.metric_year }}){% endif %}
-                                {% else %}
-                                    -
-                                {% endif %}
-                            </td>
-                            <td class="text-muted small">{{ f.fact_text | truncate(160) }}</td>
-                            <td>
+        <div class="exp-table-responsive">
+            <table class="exp-table">
+                <thead>
+                    <tr>
+                        <th style="width: 40px;">
+                            <input type="checkbox" id="select-all-facts" aria-label="Select all facts">
+                        </th>
+                        <th style="width: 80px;">{{ t("id_label") }}</th>
+                        <th style="width: 140px;">{{ t("crop_header") }}</th>
+                        <th style="width: 150px;">{{ t("topic") }}</th>
+                        <th style="min-width: 280px;">{{ t("statement") }}</th>
+                        <th style="min-width: 180px;">{{ t("source") }}</th>
+                        <th style="width: 100px;">{{ t("confidence_label") }}</th>
+                        <th style="width: 120px;" class="text-right">{{ t("actions") }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for f in facts %}
+                    <tr>
+                        <td>
+                            <input type="checkbox"
+                                   class="fact-select"
+                                   name="fact_ids"
+                                   value="{{ f.id }}"
+                                   data-statement="{{ f.fact_statement }}"
+                                   data-crop="{{ f.crop or '-' }}"
+                                   data-topic="{{ f.topic or '-' }}"
+                                   form="bulk-facts-form">
+                        </td>
+                        <td class="font-weight-bold">#{{ f.id }}</td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2" style="gap: 6px;">
+                                <i class="fas fa-seedling text-success small"></i>
+                                <span class="font-weight-bold">{{ f.crop or '-' }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="exp-badge exp-badge-info">{{ f.topic or 'General' }}</span>
+                        </td>
+                        <td>
+                            <div class="text-secondary small" style="line-height: 1.45;">
+                                {{ f.fact_statement }}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="text-truncate small" style="max-width: 180px;" title="{{ f.source.source_title if f.source else '-' }}">
+                                <i class="fas fa-book mr-1 text-muted"></i>
+                                {{ f.source.source_title if f.source else '-' }}
+                            </div>
+                        </td>
+                        <td>
+                            {% if f.confidence_score is not none %}
+                            <span class="exp-badge {% if f.confidence_score >= 0.75 %}exp-badge-approved{% elif f.confidence_score >= 0.5 %}exp-badge-pending{% else %}exp-badge-muted{% endif %}">
+                                {{ (f.confidence_score * 100) | round(0) }}%
+                            </span>
+                            {% else %}
+                            <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-right">
+                            <div class="d-flex justify-content-end gap-1" style="gap: 6px;">
                                 <a href="{{ url_for('expert.mixed_agri_fact_edit', fact_id=f.id) }}"
-                                   class="btn btn-sm btn-outline-primary">{{ t("edit") }}</a>
+                                   class="btn-exp-outline btn-exp-sm" title="{{ t('edit') }}">
+                                    <i class="fas fa-edit"></i>
+                                </a>
                                 <form method="POST"
                                       action="{{ url_for('expert.mixed_agri_fact_delete', fact_id=f.id) }}"
-                                      class="d-inline"
-                                      onsubmit="return confirm('{{ t("confirm_delete_fact") }}')">
-                                    <button class="btn btn-sm btn-outline-danger ml-1">{{ t("delete") }}</button>
+                                      class="d-inline m-0"
+                                      onsubmit="return confirm('{{ t('delete_fact_confirm') }}');">
+                                    <button class="btn btn-sm btn-outline-danger" style="border-radius: 6px; padding: 0.25rem 0.55rem;" title="{{ t('delete') }}">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
                                 </form>
-                            </td>
-                        </tr>
-                        {% else %}
-                        <tr>
-                            <td colspan="7" class="text-center text-muted py-4">
-                                {{ t("no_facts_found") }}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="8">
+                            <div class="exp-empty-state">
+                                <div class="exp-empty-icon">
+                                    <i class="fas fa-leaf"></i>
+                                </div>
+                                <div class="exp-empty-title">{{ t("no_facts_found") }}</div>
+                                <div class="exp-empty-text">No agronomic facts recorded yet. Click "Add Fact" to synthesize crop evidence.</div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
 
-        <div class="d-flex justify-content-between align-items-center p-3">
-            <div class="text-muted small">
-                {{ t("showing_range", start=pagination.start, end=pagination.end, total=pagination.total) }}
-            </div>
-            <div>
+        {% if pagination.pages > 1 %}
+        <div class="d-flex justify-content-between align-items-center p-3 border-top" style="border-color: var(--exp-border) !important;">
+            <span class="small text-muted">Page {{ pagination.page }} of {{ pagination.pages }}</span>
+            <ul class="pagination pagination-sm m-0">
                 {% if pagination.has_prev %}
-                <a class="btn btn-sm btn-outline-secondary"
-                   href="{{ url_for('expert.mixed_agri_facts', page=pagination.page - 1, q=q, source_id=source_id, per_page=pagination.per_page) }}">
-                    {{ t("prev") }}
-                </a>
-                {% else %}
-                <span class="btn btn-sm btn-outline-secondary disabled">{{ t("prev") }}</span>
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('expert.mixed_agri_facts', page=pagination.prev_num, q=q, source_id=source_id, per_page=pagination.per_page) }}">&laquo;</a>
+                </li>
                 {% endif %}
-
-                <span class="mx-2 small">{{ t("page_of", page=pagination.page, pages=pagination.pages) }}</span>
-
+                {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                    {% if p %}
+                        <li class="page-item {% if p == pagination.page %}active{% endif %}">
+                            <a class="page-link" href="{{ url_for('expert.mixed_agri_facts', page=p, q=q, source_id=source_id, per_page=pagination.per_page) }}">{{ p }}</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+                    {% endif %}
+                {% endfor %}
                 {% if pagination.has_next %}
-                <a class="btn btn-sm btn-outline-secondary"
-                   href="{{ url_for('expert.mixed_agri_facts', page=pagination.page + 1, q=q, source_id=source_id, per_page=pagination.per_page) }}">
-                    {{ t("next") }}
-                </a>
-                {% else %}
-                <span class="btn btn-sm btn-outline-secondary disabled">{{ t("next") }}</span>
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('expert.mixed_agri_facts', page=pagination.next_num, q=q, source_id=source_id, per_page=pagination.per_page) }}">&raquo;</a>
+                </li>
                 {% endif %}
-            </div>
+            </ul>
         </div>
+        {% endif %}
     </div>
 
 </div>
@@ -213,27 +265,22 @@
         modalConfirmId: "bulk-facts-confirm-submit",
         modalCopyId: "bulk-facts-confirm-copy",
         modalTitleId: "bulk-facts-confirm-title",
-        modalBaseTitle: "{{ t("confirm_bulk_action") }}",
-        itemLabel: "{{ t("item_label_fact") }}",
+        modalBaseTitle: {{ t("confirm_bulk_action")|tojson }},
+        itemLabel: {{ t("fact")|tojson }},
         previewColumns: [
-            { key: "id", label: "{{ t("id_label") }}" },
-            { key: "topic", label: "{{ t("topic") }}" },
-            { key: "region", label: "{{ t("region") }}" }
+            { key: "id", label: {{ t("id_label")|tojson }} },
+            { key: "statement", label: {{ t("statement")|tojson }} },
+            { key: "crop", label: {{ t("crop_header")|tojson }} },
+            { key: "topic", label: {{ t("topic")|tojson }} }
         ],
         getPreviewRow: (checkbox) => ({
             id: checkbox.value,
-            topic: checkbox.getAttribute("data-topic") || "",
-            region: checkbox.getAttribute("data-region") || ""
+            statement: checkbox.getAttribute("data-statement") || "",
+            crop: checkbox.getAttribute("data-crop") || "",
+            topic: checkbox.getAttribute("data-topic") || ""
         }),
-        getFiltersLabel: (form) => {
-            const q = form.dataset.query || "";
-            const sourceId = form.dataset.source || "";
-            const parts = [];
-            if (q) parts.push(`q="${q}"`);
-            if (sourceId) parts.push(`source_id=${sourceId}`);
-            return parts.length ? parts.join(", ") : "{{ t("no_filters") }}";
-        },
-        actionLabel: (action) => (action === "delete" ? "{{ t("delete") }}" : "{{ t("export_label") }}")
+        getFiltersLabel: () => {{ (t("filter_query") ~ ": " ~ q) if q else t("all_filtered_results")|tojson }},
+        actionLabel: (action) => (action === "delete" ? {{ t("delete")|tojson }} : {{ t("apply")|tojson }})
     });
 })();
 </script>

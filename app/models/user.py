@@ -9,6 +9,11 @@ from app.extensions import db, login_manager
 from .associations import user_roles
 
 
+# Explicit OWASP scrypt baseline: 128 MiB memory, random salt per password.
+PASSWORD_HASH_METHOD = "scrypt:131072:8:1"
+PASSWORD_SALT_LENGTH = 16
+
+
 # ===============================
 # FLASK-LOGIN USER LOADER
 # ===============================
@@ -186,10 +191,39 @@ class User(db.Model, UserMixin):
     # PASSWORD HELPERS
     # ===============================
     def set_password(self, password: str):
-        self.password_hash = generate_password_hash(password)
+        if not isinstance(password, str) or not password:
+            raise ValueError("Password must be a non-empty string")
+        self.password_hash = generate_password_hash(
+            password, method=PASSWORD_HASH_METHOD, salt_length=PASSWORD_SALT_LENGTH
+        )
 
-    def check_password(self, password: str) -> bool:
-        return check_password_hash(self.password_hash, password)
+    def check_password(self, password: str, *, upgrade: bool = False) -> bool:
+        """Verify without changing the password; optionally stage a hash upgrade.
+
+        Login callers using upgrade=True must commit their transaction. Existing
+        Werkzeug PBKDF2 and scrypt hashes remain usable without a password reset.
+        """
+        if not isinstance(password, str) or not password or not self.password_hash:
+            return False
+        method = self.password_hash.split("$", 1)[0]
+        # Never accept Werkzeug's deprecated plaintext / fast-hash formats.
+        if not method.startswith(("pbkdf2:", "scrypt:")):
+            return False
+        try:
+            valid = check_password_hash(self.password_hash, password)
+        except (ValueError, TypeError, OverflowError):
+            return False
+        if valid and upgrade and self._password_hash_needs_upgrade(method):
+            self.set_password(password)
+        return valid
+
+    @staticmethod
+    def _password_hash_needs_upgrade(method: str) -> bool:
+        if not method.startswith("scrypt:"):
+            return True
+        _, n, r, p = method.split(":")
+        # Preserve hashes whose parameters already meet or exceed our policy.
+        return int(n) < 131072 or int(r) < 8 or int(p) < 1
 
     # ===============================
     # ROLE CHECK

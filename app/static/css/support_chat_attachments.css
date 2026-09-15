@@ -1,0 +1,26 @@
+.support-attachment-dialog { width: min(420px, calc(100vw - 24px)); max-height: calc(100vh - 24px); max-height: calc(100dvh - 24px); padding: 20px; border: 1px solid #e2e8f0; border-radius: 22px; background: #fff; color: #243448; box-shadow: 0 24px 80px #0f172a40; overflow-y: auto; font-family: inherit; }
+.support-attachment-dialog::backdrop { background: #0f172a80; backdrop-filter: blur(3px); }
+.support-attachment-dialog[open] { animation: supportPreviewIn 160ms ease-out; }
+.support-attachment-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+.support-attachment-head h2 { margin: 0; font-size: 18px; font-weight: 700; }
+.support-attachment-dialog button { min-height: 44px; border: 0; border-radius: 12px; padding: 8px 14px; background: #eef3f7; color: #334155; font: inherit; cursor: pointer; }
+.support-attachment-head button { font-size: 24px; min-width: 44px; padding: 0; }
+.support-attachment-preview { border-radius: 14px; overflow: hidden; }
+.support-attachment-preview img { display: block; width: 100%; max-height: 300px; object-fit: contain; background: #f1f5f9; }
+.support-attachment-preview audio { display: block; width: 100%; }
+.support-attachment-status { font-size: 13px; line-height: 1.6; color: #64748b; margin: 12px 0; overflow-wrap: anywhere; }
+.support-caption-label { display: block; font-size: 13px; font-weight: 600; }
+.support-caption-label span { font-weight: 400; color: #64748b; }
+.support-caption-label textarea { display: block; box-sizing: border-box; width: 100%; margin-top: 7px; border: 1px solid #dbe3eb; border-radius: 12px; background: transparent; color: inherit; padding: 12px; resize: vertical; font: inherit; font-size: 16px; }
+.support-attachment-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+.support-attachment-actions [data-send] { background: #2481cc; color: #fff; min-width: 80px; }
+.support-attachment-dialog button:disabled { opacity: .5; cursor: default; }
+.support-attachment-dialog button:focus-visible, .support-caption-label textarea:focus { outline: 2px solid #2481cc; outline-offset: 2px; }
+.support-location-card { display: block; white-space: pre-line; padding: 24px 16px; background: #e9f3fb; color: #24679b; border-radius: 14px; line-height: 1.9; text-decoration: none; }
+.dark-mode .support-attachment-dialog { background: #17212b; color: #e2e8f0; border-color: #344454; }
+.dark-mode .support-attachment-dialog button { background: #293b4c; color: #e2e8f0; }
+.dark-mode .support-attachment-actions [data-send] { background: #2481cc; }
+.dark-mode .support-caption-label textarea { border-color: #344454; }
+.dark-mode .support-attachment-status, .dark-mode .support-caption-label span { color: #a3b3c3; }
+@keyframes supportPreviewIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { .support-attachment-dialog[open] { animation: none; } }

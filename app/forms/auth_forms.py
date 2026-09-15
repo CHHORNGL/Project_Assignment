@@ -5,7 +5,8 @@ from wtforms.validators import (
     Length,
     EqualTo,
     Optional,
-    Email
+    Email,
+    Regexp
 )
 
 
@@ -26,7 +27,7 @@ class LoginForm(FlaskForm):
         "Password",
         validators=[
             DataRequired(message="Password is required"),
-            Length(min=3)
+            Length(min=3, max=1024)
         ]
     )
 
@@ -50,7 +51,7 @@ class RegisterForm(FlaskForm):
         "Verification Code",
         validators=[
             DataRequired(message="Verification code is required"),
-            Length(min=6, max=6, message="Code must be 6 digits")
+            Regexp(r"^[0-9]{6}$", message="Code must be 6 digits")
         ]
     )
 
@@ -66,7 +67,7 @@ class RegisterForm(FlaskForm):
         "Password",
         validators=[
             DataRequired(message="Password is required"),
-            Length(min=6, message="Password must be at least 6 characters")
+            Length(min=6, max=1024, message="Password must contain 6–1024 characters")
         ]
     )
 
@@ -99,14 +100,14 @@ class ResetPasswordForm(FlaskForm):
         "Verification Code",
         validators=[
             DataRequired(message="Verification code is required"),
-            Length(min=6, max=6, message="Code must be 6 digits")
+            Regexp(r"^[0-9]{6}$", message="Code must be 6 digits")
         ]
     )
     password = PasswordField(
         "New Password",
         validators=[
             DataRequired(message="Password is required"),
-            Length(min=6, message="Password must be at least 6 characters")
+            Length(min=6, max=1024, message="Password must contain 6–1024 characters")
         ]
     )
     confirm_password = PasswordField(

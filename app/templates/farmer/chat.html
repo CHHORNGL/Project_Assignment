@@ -115,46 +115,47 @@
 }
 
 .v0-bubble-user {
-    max-width: min(85%, 600px);
-    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    max-width: min(85%, 620px);
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
     color: #ffffff;
-    padding: 0.85rem 1.25rem;
+    padding: 0.9rem 1.35rem;
     border-radius: 20px 20px 4px 20px;
     font-size: 0.95rem;
-    line-height: 1.55;
-    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.2);
+    line-height: 1.6;
+    box-shadow: 0 6px 18px rgba(5, 150, 105, 0.22);
 }
 
 .dark-mode .v0-bubble-user {
-    background: linear-gradient(135deg, #0284c7, #1e40af);
-    border: 1px solid rgba(56, 189, 248, 0.35);
+    background: linear-gradient(135deg, #059669, #065f46);
+    border: 1px solid rgba(52, 211, 153, 0.3);
     color: #ffffff;
-    box-shadow: 0 4px 14px rgba(2, 132, 199, 0.3);
+    box-shadow: 0 6px 18px rgba(5, 150, 105, 0.25);
 }
 
 .v0-msg-expert {
     justify-content: flex-start;
-    gap: 0.75rem;
+    gap: 0.85rem;
 }
 
 .v0-expert-avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
     overflow: hidden;
     flex-shrink: 0;
-    border: 1.5px solid rgba(37, 99, 235, 0.25);
+    border: 1.5px solid rgba(16, 185, 129, 0.3);
     background: #ffffff;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 3px;
     margin-top: 2px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
 }
 
 .dark-mode .v0-expert-avatar {
     background: #1e293b;
-    border-color: rgba(56, 189, 248, 0.35);
+    border-color: rgba(52, 211, 153, 0.35);
 }
 
 .v0-expert-avatar img {
@@ -164,45 +165,78 @@
 }
 
 .v0-bubble-expert {
-    max-width: min(88%, 680px);
+    max-width: min(88%, 700px);
     background: #ffffff;
     border: 1px solid #e2e8f0;
-    padding: 1rem 1.35rem;
-    border-radius: 4px 20px 20px 20px;
+    padding: 1.15rem 1.45rem;
+    border-radius: 4px 22px 22px 22px;
     color: #0f172a;
     font-size: 0.95rem;
-    line-height: 1.6;
-    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+    line-height: 1.65;
+    box-shadow: 0 4px 18px rgba(15, 23, 42, 0.05);
 }
 
 .dark-mode .v0-bubble-expert {
     background: #1e293b;
     border-color: #334155;
     color: #f1f5f9;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
 }
 
 .v0-bubble-meta {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 0.4rem;
+    gap: 0.6rem;
+    margin-bottom: 0.5rem;
     font-size: 0.78rem;
-    color: #71717a;
+    color: #64748b;
     font-weight: 600;
 }
 
 .v0-bubble-expert-badge {
     background: rgba(16, 185, 129, 0.12);
-    color: #10b981;
-    padding: 2px 8px;
+    color: #047857;
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    padding: 2px 10px;
     border-radius: 999px;
     font-size: 0.72rem;
     font-weight: 700;
+    letter-spacing: 0.02em;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.dark-mode .v0-bubble-expert-badge {
+    background: rgba(16, 185, 129, 0.2);
+    color: #34d399;
+    border-color: rgba(52, 211, 153, 0.35);
+}
+
+.v0-hero-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 1.1rem;
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.28);
+    border-radius: 999px;
+    color: #047857;
+    font-size: 0.8rem;
+    font-weight: 700;
+    margin-bottom: 1.25rem;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+}
+
+.dark-mode .v0-hero-pill {
+    background: rgba(16, 185, 129, 0.16);
+    border-color: rgba(52, 211, 153, 0.35);
+    color: #34d399;
 }
 
 /* ==========================================================================
-   V0 COMPOSER BOX (Inspired by v0-ai-chat.tsx)
+   V0 COMPOSER BOX (Inspired by Claude, ChatGPT & Gemini)
    ========================================================================== */
 .v0-composer-card {
     position: relative;
@@ -211,42 +245,42 @@
     margin: 0 auto;
     background: #ffffff;
     border: 1.5px solid #e2e8f0;
-    border-radius: 20px;
+    border-radius: 24px;
     box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     overflow: hidden;
 }
 
 .dark-mode .v0-composer-card {
-    background: #1e293b;
-    border-color: #334155;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    background: #19221e;
+    border-color: #273731;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
 }
 
 .v0-composer-card:focus-within {
-    border-color: #2563eb;
-    box-shadow: 0 12px 36px rgba(37, 99, 235, 0.12);
+    border-color: #10b981;
+    box-shadow: 0 14px 40px rgba(16, 185, 129, 0.15), 0 0 0 3px rgba(16, 185, 129, 0.12);
 }
 
 .dark-mode .v0-composer-card:focus-within {
-    border-color: #38bdf8;
-    box-shadow: 0 12px 36px rgba(56, 189, 248, 0.2);
+    border-color: #10b981;
+    box-shadow: 0 14px 40px rgba(16, 185, 129, 0.25), 0 0 0 3px rgba(16, 185, 129, 0.2);
 }
 
 .v0-textarea-container {
     width: 100%;
-    padding: 0.85rem 1.15rem 0.25rem;
+    padding: 0.95rem 1.25rem 0.35rem;
 }
 
 .v0-chat-textarea {
     width: 100%;
-    min-height: 52px;
+    min-height: 48px;
     max-height: 180px;
     border: none;
     outline: none;
     background: transparent;
-    font-size: 0.95rem;
-    line-height: 1.5;
+    font-size: 0.96rem;
+    line-height: 1.55;
     font-family: inherit;
     color: #09090b;
     resize: none;
@@ -259,8 +293,8 @@
 }
 
 .v0-chat-textarea::placeholder {
-    color: #a1a1aa;
-    font-size: 0.93rem;
+    color: #94a3b8;
+    font-size: 0.94rem;
 }
 
 /* Bottom Controls Bar */
@@ -268,116 +302,203 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0.6rem 0.85rem 0.75rem;
-    gap: 0.5rem;
+    padding: 0.6rem 1rem 0.8rem;
+    gap: 0.6rem;
 }
 
 .v0-toolbar-left,
 .v0-toolbar-right {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.6rem;
 }
 
-.v0-tool-btn {
-    appearance: none;
-    border: none;
-    background: transparent;
-    cursor: pointer;
+.v0-model-indicator {
     display: inline-flex;
     align-items: center;
-    gap: 0.35rem;
-    padding: 0.4rem 0.65rem;
-    border-radius: 8px;
-    color: #71717a;
-    font-size: 0.82rem;
-    font-weight: 500;
-    transition: all 0.15s ease;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.76rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    border: 1px solid rgba(16, 185, 129, 0.28);
+    color: #047857;
+    background: rgba(16, 185, 129, 0.08);
+    cursor: default;
+    user-select: none;
 }
 
-.v0-tool-btn:hover {
-    background: #f4f4f5;
-    color: #09090b;
+.dark-mode .v0-model-indicator {
+    border-color: rgba(52, 211, 153, 0.35);
+    color: #34d399;
+    background: rgba(16, 185, 129, 0.16);
 }
 
-.dark-mode .v0-tool-btn:hover {
-    background: #27272a;
-    color: #ffffff;
+.v0-model-pulse-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #10b981;
+    display: inline-block;
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    animation: farmerDotPulse 2s infinite;
 }
 
-.v0-context-badge {
+.v0-quick-help-btn {
     display: inline-flex;
     align-items: center;
-    gap: 0.35rem;
-    padding: 0.3rem 0.75rem;
-    border-radius: 8px;
-    font-size: 0.8rem;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.76rem;
     font-weight: 600;
-    border: 1px dashed #d4d4d8;
-    color: #52525b;
-    background: #fafafa;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    color: #64748b;
     cursor: pointer;
     transition: all 0.15s ease;
 }
 
-.dark-mode .v0-context-badge {
-    border-color: #3f3f46;
-    color: #a1a1aa;
-    background: #27272a;
+.v0-quick-help-btn:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+    border-color: #cbd5e1;
 }
 
-.v0-context-badge:hover {
-    border-color: #a1a1aa;
-    color: #09090b;
+.dark-mode .v0-quick-help-btn {
+    border-color: #2e3e37;
+    background: #1f2b25;
+    color: #94a3b8;
 }
 
-.dark-mode .v0-context-badge:hover {
-    border-color: #52525b;
-    color: #ffffff;
+.dark-mode .v0-quick-help-btn:hover {
+    background: #273730;
+    color: #f1f5f9;
+}
+
+.v0-shortcut-hint {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.72rem;
+    color: #94a3b8;
+    user-select: none;
+}
+
+.v0-shortcut-hint kbd {
+    background: rgba(148, 163, 184, 0.15);
+    color: #64748b;
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    border-radius: 4px;
+    padding: 1px 5px;
+    font-size: 0.7rem;
+    font-family: inherit;
+}
+
+.dark-mode .v0-shortcut-hint kbd {
+    background: rgba(148, 163, 184, 0.15);
+    color: #94a3b8;
+    border-color: rgba(148, 163, 184, 0.25);
 }
 
 /* Send Button */
 .v0-send-btn {
-    width: 36px;
-    height: 36px;
-    min-width: 36px;
-    border-radius: 10px;
-    border: 1px solid #e4e4e7;
-    background: #f4f4f5;
-    color: #a1a1aa;
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    border-radius: 50%;
+    border: 1px solid #e2e8f0;
+    background: #f1f5f9;
+    color: #94a3b8;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     outline: none;
 }
 
 .dark-mode .v0-send-btn {
-    border-color: #27272a;
-    background: #27272a;
-    color: #71717a;
+    border-color: #334155;
+    background: #24322b;
+    color: #64748b;
 }
 
 .v0-send-btn.has-input {
-    background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
-    border-color: #2563eb !important;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    border-color: #10b981 !important;
     color: #ffffff !important;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
-    transform: scale(1.02);
-}
-
-.dark-mode .v0-send-btn.has-input {
-    background: linear-gradient(135deg, #38bdf8, #0284c7) !important;
-    border-color: #38bdf8 !important;
-    color: #0f172a !important;
-    box-shadow: 0 4px 14px rgba(56, 189, 248, 0.35);
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+    transform: scale(1.05);
 }
 
 .v0-send-btn:hover.has-input {
-    transform: scale(1.06);
+    transform: scale(1.1);
+    box-shadow: 0 6px 18px rgba(16, 185, 129, 0.5);
 }
+
+.v0-send-btn:active.has-input {
+    transform: scale(0.95);
+}
+
+/* Claude/ChatGPT style disclaimer */
+.v0-composer-disclaimer {
+    max-width: 860px;
+    margin: 8px auto 0;
+    text-align: center;
+    font-size: 0.72rem;
+    color: #94a3b8;
+    line-height: 1.4;
+    user-select: none;
+    padding: 0 8px;
+}
+
+.dark-mode .v0-composer-disclaimer {
+    color: #64748b;
+}
+
+/* Compact prompt input */
+#farmer-chat-form .v0-composer-card {
+    display: flex; align-items: flex-end; gap: 8px;
+    width: 100%; max-width: 760px; padding: 7px;
+    border: 1px solid #dce3df; border-radius: 26px;
+    background: #fff; box-shadow: 0 2px 10px rgba(15,23,42,.035);
+    transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+#farmer-chat-form .v0-composer-card:focus-within {
+    border-color: #87ae9d; box-shadow: 0 0 0 2px rgba(5,150,105,.06);
+}
+#farmer-chat-form .v0-textarea-container { flex: 1; min-width: 0; width: auto; padding: 9px 0 9px 12px; }
+#farmer-chat-form .v0-chat-textarea {
+    display: block; min-height: 26px; max-height: 160px; margin: 0;
+    padding: 0; font-size: 16px; line-height: 26px; color: #1e293b;
+    scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent;
+}
+#farmer-chat-form .v0-chat-textarea::placeholder { font-size: 16px; color: #7a8581; }
+#farmer-chat-form .v0-send-btn {
+    width: 44px; height: 44px; min-width: 44px; padding: 0; flex-shrink: 0;
+    border: 0; border-radius: 50%; background: #eef2f0; color: #94a3b8;
+    transform: none; box-shadow: none;
+}
+#farmer-chat-form .v0-send-btn.has-input { background: #047857 !important; color: #fff !important; transform: none; box-shadow: none; }
+#farmer-chat-form .v0-send-btn.has-input:hover { background: #065f46 !important; }
+#farmer-chat-form .v0-send-btn:disabled { cursor: default; }
+#farmer-chat-form button:focus-visible { outline: 2px solid #059669; outline-offset: 2px; }
+.dark-mode #farmer-chat-form .v0-composer-card { background: #18221e; border-color: #34433b; box-shadow: none; }
+.dark-mode #farmer-chat-form .v0-chat-textarea { color: #edf2ef; }
+.dark-mode #farmer-chat-form .v0-chat-textarea::placeholder { color: #9aa9a0; }
+.dark-mode #farmer-chat-form .v0-send-btn { background: #2b3931; }
+@media (max-width: 600px) {
+    #farmer-chat-form .v0-composer-card { padding: 5px; gap: 4px; }
+    #farmer-chat-form .v0-textarea-container { padding-left: 10px; }
+}
+@media (prefers-reduced-motion: reduce) { #farmer-chat-form .v0-composer-card, #farmer-chat-form button { transition: none; } }
+ .expert-chat-pending .v0-bubble-expert { color: #64748b; }
+.expert-chat-pending .v0-bubble-expert::before { content: ""; display: inline-block; width: 8px; height: 8px; margin-right: 8px; border-radius: 50%; background: #059669; animation: expertThinking 1s ease-in-out infinite alternate; }
+@keyframes expertThinking { from { opacity: .3; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .expert-chat-pending .v0-bubble-expert::before { animation: none; } }
 </style>
 
 <div class="v0-chat-wrapper">
@@ -405,7 +526,7 @@
                     </div>
                     <div class="v0-bubble-expert">
                         <div class="v0-bubble-meta">
-                            <span class="v0-bubble-expert-badge">{{ t("farmer_expert") }}</span>
+                            <span class="v0-bubble-expert-badge"><i class="fas fa-robot mr-1"></i>{{ t("farmer_expert") }}</span>
                             {% if m.created_at %}
                             <span>{{ m.created_at.strftime('%H:%M') }}</span>
                             {% endif %}
@@ -419,6 +540,10 @@
     {% else %}
         <!-- V0 EMPTY STATE HERO -->
         <div class="v0-empty-container">
+            <div class="v0-hero-pill">
+                <i class="fas fa-seedling mr-1"></i>
+                <span>{{ t("farmer_expert") }} &bull; {{ t("agri_assistant") }}</span>
+            </div>
             <h1 class="v0-empty-title">
                 {% if current_lang == 'km' %}
                     តើខ្ញុំអាចជួយអ្វីដល់ដំណាំរបស់អ្នក?
@@ -460,34 +585,26 @@
 
 
 {% block input %}
-<!-- V0 AI CHAT COMPOSER -->
+<!-- MODERN AI CHAT COMPOSER (Claude, ChatGPT & Gemini style) -->
 <form method="POST" class="w-100" id="farmer-chat-form">
     <div class="v0-composer-card">
+        <label for="farmer-chat-input" class="sr-only">{% if current_lang == "km" %}សួរ AI{% else %}Ask AI{% endif %}</label>
+        <span id="expert-compose-help" class="sr-only">{% if current_lang == "km" %}ប្រាប់អំពីដំណាំ និងរោគសញ្ញារបស់អ្នក។{% else %}Describe your crop, symptoms, or question.{% endif %}</span>
         <div class="v0-textarea-container">
             <textarea
                 name="message"
                 id="farmer-chat-input"
                 class="v0-chat-textarea"
-                placeholder="{{ t('ask_expert_placeholder')|default('Ask Agri Expert a question... (Enter to send, Shift+Enter for new line)') }}"
+                placeholder="{% if current_lang == 'km' %}សួរអំពីដំណាំរបស់អ្នក…{% else %}Ask anything about your crops…{% endif %}"
+                aria-describedby="expert-compose-help"
                 rows="1"
                 required
                 autocomplete="off"></textarea>
         </div>
 
-        <div class="v0-composer-toolbar">
-            <div class="v0-toolbar-left">
-                <button type="button" class="v0-context-badge" id="btn-quick-context" title="Smart Assistant Context">
-                    <i class="fas fa-seedling text-success"></i>
-                    <span>Smart Expert</span>
-                </button>
-            </div>
-
-            <div class="v0-toolbar-right">
-                <button type="submit" class="v0-send-btn" id="v0-send-btn" aria-label="{{ t('send') }}" title="{{ t('send') }}">
-                    <i class="fas fa-arrow-up"></i>
-                </button>
-            </div>
-        </div>
+        <button type="submit" class="v0-send-btn" id="v0-send-btn" aria-label="{{ t('send') }}" title="{{ t('send') }}" disabled>
+            <i class="fas fa-arrow-up" aria-hidden="true"></i>
+        </button>
     </div>
 </form>
 
@@ -499,12 +616,15 @@
     const suggestionChips = document.querySelectorAll(".v0-action-btn");
 
     if (!textarea) return;
+    let sending = false;
 
-    // Auto-resize logic (min 52px, max 180px)
+    // Start with one line and grow only as the user types.
     function autoResize() {
         textarea.style.height = "auto";
-        const newHeight = Math.min(Math.max(textarea.scrollHeight, 52), 180);
+        const newHeight = Math.min(Math.max(textarea.scrollHeight, 26), 160);
         textarea.style.height = newHeight + "px";
+
+        sendBtn.disabled = sending || textarea.value.trim().length === 0;
 
         // Update send button active state
         if (textarea.value.trim().length > 0) {
@@ -518,10 +638,10 @@
 
     // Keyboard submit on Enter (without Shift)
     textarea.addEventListener("keydown", function(e) {
-        if (e.key === "Enter" && !e.shiftKey) {
+        if (e.key === "Enter" && !e.shiftKey && !e.isComposing && window.matchMedia("(pointer: fine)").matches) {
             e.preventDefault();
             if (textarea.value.trim().length > 0 && form) {
-                form.submit();
+                form.requestSubmit();
             }
         }
     });
@@ -536,6 +656,65 @@
                 textarea.focus();
             }
         });
+    });
+
+    function appendChatMessage(text, user) {
+        const wrapper = document.querySelector(".v0-chat-wrapper");
+        const empty = wrapper.querySelector(".v0-empty-container");
+        if (empty) empty.remove();
+        let list = wrapper.querySelector(".v0-messages-list");
+        if (!list) {
+            list = document.createElement("div");
+            list.className = "v0-messages-list";
+            wrapper.appendChild(list);
+        }
+        const row = document.createElement("div");
+        row.className = "v0-msg-row " + (user ? "v0-msg-user" : "v0-msg-expert");
+        const bubble = document.createElement("div");
+        bubble.className = user ? "v0-bubble-user" : "v0-bubble-expert";
+        bubble.style.whiteSpace = "pre-wrap";
+        bubble.textContent = text;
+        row.appendChild(bubble);
+        list.appendChild(row);
+        row.scrollIntoView({ block: "nearest", behavior: "auto" });
+        return row;
+    }
+
+    form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const message = textarea.value.trim();
+        if (sending || !message) return;
+        const payload = new FormData(form);
+        sending = true;
+        textarea.value = "";
+        autoResize();
+        form.setAttribute("aria-busy", "true");
+        appendChatMessage(message, true);
+        const pending = appendChatMessage({{ ("AI កំពុងសរសេរ…" if current_lang == "km" else "AI is writing…")|tojson }}, false);
+        pending.classList.add("expert-chat-pending");
+        pending.setAttribute("role", "status");
+        try {
+            const response = await fetch(form.action || window.location.href, {
+                method: "POST", body: payload,
+                headers: { "X-Requested-With": "XMLHttpRequest", "Accept": "application/json" },
+                credentials: "same-origin",
+            });
+            const data = await response.json().catch(() => null);
+            if (!response.ok || !data?.ok || typeof data.reply !== "string") {
+                throw new Error(data?.error || {{ ("មិនអាចទទួលចម្លើយបានទេ។ សូមពិនិត្យការតភ្ជាប់ ហើយពិនិត្យប្រវត្តិជជែកមុនផ្ញើម្ដងទៀត។" if current_lang == "km" else "Could not receive the reply. Check your connection and chat history before sending again.")|tojson }});
+            }
+            pending.remove();
+            appendChatMessage(data.reply, false);
+        } catch (error) {
+            pending.classList.remove("expert-chat-pending");
+            pending.setAttribute("role", "alert");
+            pending.firstElementChild.textContent = error.message;
+        } finally {
+            sending = false;
+            form.removeAttribute("aria-busy");
+            autoResize();
+            textarea.focus({ preventScroll: true });
+        }
     });
 
     // Initial resize on load

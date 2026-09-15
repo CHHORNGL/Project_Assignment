@@ -9,28 +9,28 @@ class AuditLog(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
 
-    # Who did the action (admin)
+    # Who did the action (user/admin, or None for system/unauthenticated events)
     user_id = db.Column(
         db.Integer,
         db.ForeignKey("users.id"),
-        nullable=False
+        nullable=True
     )
 
-    # Action type (CREATE_USER, BAN_USER, CHANGE_ROLE, ...)
+    # Action type (e.g. AUTH_LOGIN_SUCCESS, AUTH_LOGIN_FAILURE, USER_BAN, etc.)
     action = db.Column(
         db.String(100),
         nullable=False
     )
 
-    # Target username / role / object
+    # Target username / email / resource
     target_user = db.Column(
         db.String(100),
         nullable=True
     )
 
-    # Extra detail (role change, status, etc.)
+    # Extra detail (ip, request_id, reason, status, etc.)
     detail = db.Column(
-        db.String(255),
+        db.Text,
         nullable=True
     )
 

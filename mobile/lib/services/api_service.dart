@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user.dart';
+import 'session_cookie.dart';
 
 class ApiService {
   // Use 10.0.2.2 for Android emulator, 127.0.0.1 for iOS Simulator, or your machine's IP for physical devices
@@ -19,12 +20,15 @@ class ApiService {
     };
   }
 
-  static void _updateCookie(http.Response response) async {
-    String? rawCookie = response.headers['set-cookie'];
-    if (rawCookie != null) {
-      int index = rawCookie.indexOf(';');
-      String cookie = (index == -1) ? rawCookie : rawCookie.substring(0, index);
-      final prefs = await SharedPreferences.getInstance();
+  static Future<void> _updateCookie(http.Response response) async {
+    final rawCookie = response.headers['set-cookie'];
+    if (rawCookie == null) return;
+    final cookie = sessionCookieHeader(rawCookie);
+    if (cookie == null) return;
+    final prefs = await SharedPreferences.getInstance();
+    if (cookie == 'session=') {
+      await prefs.remove('session_cookie');
+    } else {
       await prefs.setString('session_cookie', cookie);
     }
   }
@@ -42,11 +46,7 @@ class ApiService {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final cookie = response.headers['set-cookie'];
-        if (cookie != null) {
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('session_cookie', cookie);
-        }
+        await _updateCookie(response);
         return data;
       }
       return {'success': false, 'error': 'Server error ${response.statusCode}'};
@@ -71,11 +71,7 @@ class ApiService {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final cookie = response.headers['set-cookie'];
-        if (cookie != null) {
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('session_cookie', cookie);
-        }
+        await _updateCookie(response);
         return data;
       }
       return {'success': false, 'error': 'Server error ${response.statusCode}'};
@@ -100,10 +96,7 @@ class ApiService {
       );
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final setCookie = response.headers['set-cookie'];
-        if (setCookie != null) {
-          await prefs.setString('session_cookie', setCookie);
-        }
+        await _updateCookie(response);
         return data;
       }
       return {'success': false, 'error': 'Invalid code or expired'};
@@ -377,7 +370,19 @@ class ApiService {
 
   static Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('session_cookie');
+    try {
+      final cookie = prefs.getString('session_cookie');
+      if (cookie != null) {
+        await http.post(
+          Uri.parse('$baseUrl/logout'),
+          headers: {'Cookie': cookie, 'Accept': 'application/json'},
+        ).timeout(const Duration(seconds: 10));
+      }
+    } catch (_) {
+      // Local sign-out still works offline; the server session expires normally.
+    } finally {
+      await prefs.remove('session_cookie');
+    }
   }
 
   static Future<Map<String, dynamic>?> diagnoseImage(File imageFile) async {
@@ -424,7 +429,7 @@ class ApiService {
         body: json.encode({'id_token': idToken}),
       );
       
-      _updateCookie(response);
+      await _updateCookie(response);
       final data = json.decode(response.body);
       
       if (response.statusCode == 200) {

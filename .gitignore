@@ -72,3 +72,6 @@ diag3.py
 rewrite_register.py
 rewrite_forgot_password.py
 test_jinja.py
+
+# Local server-side session records
+instance/sessions/

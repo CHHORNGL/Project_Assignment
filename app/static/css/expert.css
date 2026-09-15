@@ -1,0 +1,1133 @@
+/* =========================================================================
+   EXPERT DESIGN SYSTEM (AGRI EXPERT / PATHOLOGY CONSOLE)
+   =========================================================================
+   Comprehensive, professional UI framework for all /expert/* routes.
+   Scoped to .expert-theme and .expert-board. Fully supports light & dark modes.
+   ========================================================================= */
+
+.expert-theme,
+[data-theme="expert"] {
+    color-scheme: light;
+    /* Emerald & Botanical Authority Palette */
+    --exp-primary: #047857;
+    --exp-primary-hover: #047857;
+    --exp-primary-active: #065f46;
+    --exp-primary-light: #10b981;
+    --exp-primary-soft: rgba(16, 185, 129, 0.12);
+    --exp-primary-softer: rgba(16, 185, 129, 0.05);
+    --exp-primary-border: rgba(16, 185, 129, 0.25);
+    --exp-primary-ring: rgba(16, 185, 129, 0.35);
+
+    /* Secondary Accents */
+    --exp-teal: #0d9488;
+    --exp-teal-soft: rgba(13, 148, 136, 0.12);
+    --exp-cyan: #0284c7;
+    --exp-cyan-soft: rgba(2, 132, 199, 0.12);
+    --exp-indigo: #4f46e5;
+    --exp-indigo-soft: rgba(79, 70, 229, 0.12);
+    --exp-amber: #92400e;
+    --exp-amber-soft: rgba(217, 119, 6, 0.12);
+    --exp-rose: #e11d48;
+    --exp-rose-soft: rgba(225, 29, 72, 0.12);
+
+    /* Neutral Surfaces (Light Theme) */
+    --exp-bg: #f8fafc;
+    --exp-card: #ffffff;
+    --exp-card-elevated: #ffffff;
+    --exp-card-subtle: #f1f5f9;
+    --exp-card-highlight: #ecfdf5;
+    --exp-border: #e2e8f0;
+    --exp-border-soft: #edf2f7;
+    --exp-border-hover: #cbd5e1;
+
+    /* Typography */
+    --exp-text: #0f172a;
+    --exp-text-secondary: #334155;
+    --exp-muted: #64748b;
+    --exp-faint: #94a3b8;
+
+    /* Radii & Shadows */
+    --exp-radius-xs: 6px;
+    --exp-radius-sm: 10px;
+    --exp-radius-md: 14px;
+    --exp-radius-lg: 18px;
+    --exp-radius-xl: 24px;
+    --exp-radius-pill: 9999px;
+
+    --exp-shadow-xs: 0 1px 2px 0 rgba(15, 23, 42, 0.04);
+    --exp-shadow-sm: 0 2px 4px 0 rgba(15, 23, 42, 0.05);
+    --exp-shadow-md: 0 6px 16px -2px rgba(15, 23, 42, 0.07), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
+    --exp-shadow-lg: 0 14px 28px -4px rgba(15, 23, 42, 0.09), 0 6px 12px -2px rgba(15, 23, 42, 0.04);
+    --exp-shadow-hover: 0 18px 36px -4px rgba(5, 150, 105, 0.14), 0 8px 16px -2px rgba(15, 23, 42, 0.06);
+
+    /* Transitions */
+    --exp-transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* =========================================
+   DARK MODE OVERRIDES
+   ========================================= */
+.dark-mode .expert-theme,
+.dark-mode.expert-theme,
+.dark-mode [data-theme="expert"] {
+    color-scheme: dark;
+    --exp-primary: #34d399;
+    --exp-teal: #2dd4bf;
+    --exp-cyan: #38bdf8;
+    --exp-indigo: #a5b4fc;
+    --exp-amber: #fbbf24;
+    --exp-rose: #fb7185;
+    --exp-bg: #0b0f19;
+    --exp-card: #131c2e;
+    --exp-card-elevated: #18243b;
+    --exp-card-subtle: #192338;
+    --exp-card-highlight: rgba(16, 185, 129, 0.1);
+    --exp-border: #223049;
+    --exp-border-soft: #1a2538;
+    --exp-border-hover: #334464;
+
+    --exp-text: #f8fafc;
+    --exp-text-secondary: #cbd5e1;
+    --exp-muted: #94a3b8;
+    --exp-faint: #64748b;
+
+    --exp-shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+    --exp-shadow-sm: 0 2px 4px 0 rgba(0, 0, 0, 0.4);
+    --exp-shadow-md: 0 8px 20px -3px rgba(0, 0, 0, 0.5);
+    --exp-shadow-lg: 0 16px 32px -4px rgba(0, 0, 0, 0.6);
+    --exp-shadow-hover: 0 18px 36px -4px rgba(16, 185, 129, 0.25);
+}
+
+/* Base background for content area on expert routes */
+.expert-theme #content {
+    background-color: var(--exp-bg) !important;
+    color: var(--exp-text);
+}
+
+/* =========================================
+   EXPERT BOARD / CONTAINER
+   ========================================= */
+.expert-board {
+    width: 100%;
+    margin-bottom: 2rem;
+    animation: expFadeIn 0.35s ease-out;
+}
+
+@keyframes expFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* =========================================
+   EXPERT HERO BANNER
+   ========================================= */
+.expert-hero {
+    position: relative;
+    background: var(--exp-card);
+    border: 1px solid var(--exp-border);
+    border-radius: var(--exp-radius-lg);
+    padding: 1.5rem 1.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--exp-shadow-sm);
+    overflow: hidden;
+    transition: var(--exp-transition);
+}
+
+.expert-hero::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #059669, #10b981, #0d9488);
+}
+
+.expert-hero-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    z-index: 1;
+}
+
+.expert-hero-role-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    align-self: flex-start;
+    padding: 0.2rem 0.65rem;
+    border-radius: var(--exp-radius-pill);
+    background: var(--exp-primary-soft);
+    color: var(--exp-primary);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.expert-title {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--exp-text);
+    letter-spacing: -0.02em;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+}
+
+.expert-title i {
+    color: var(--exp-primary);
+    font-size: 1.45rem;
+}
+
+.expert-sub {
+    color: var(--exp-muted);
+    font-size: 0.93rem;
+    margin: 0;
+    max-width: 680px;
+    line-height: 1.5;
+}
+
+.expert-hero-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+    margin-top: 0.5rem;
+}
+
+.expert-hero-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    z-index: 1;
+}
+
+/* =========================================
+   BUTTONS
+   ========================================= */
+.btn-exp-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background: linear-gradient(135deg, #059669, #047857);
+    color: #ffffff !important;
+    font-weight: 600;
+    font-size: 0.88rem;
+    padding: 0.55rem 1.15rem;
+    border-radius: var(--exp-radius-sm);
+    border: 1px solid transparent;
+    box-shadow: 0 3px 10px rgba(5, 150, 105, 0.28);
+    transition: var(--exp-transition);
+    text-decoration: none !important;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.btn-exp-primary:hover {
+    background: linear-gradient(135deg, #047857, #065f46);
+    color: #ffffff !important;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(5, 150, 105, 0.38);
+}
+
+.btn-exp-primary:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(5, 150, 105, 0.25);
+}
+
+.btn-exp-outline {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background: var(--exp-card);
+    color: var(--exp-text) !important;
+    font-weight: 600;
+    font-size: 0.88rem;
+    padding: 0.55rem 1.15rem;
+    border-radius: var(--exp-radius-sm);
+    border: 1px solid var(--exp-border);
+    box-shadow: var(--exp-shadow-xs);
+    transition: var(--exp-transition);
+    text-decoration: none !important;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.btn-exp-outline:hover {
+    background: var(--exp-card-subtle);
+    border-color: var(--exp-primary-border);
+    color: var(--exp-primary) !important;
+    transform: translateY(-1px);
+    box-shadow: var(--exp-shadow-sm);
+}
+
+.btn-exp-success {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: #ffffff !important;
+    font-weight: 700;
+    font-size: 0.92rem;
+    padding: 0.65rem 1.4rem;
+    border-radius: var(--exp-radius-sm);
+    border: none;
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+    transition: var(--exp-transition);
+    text-decoration: none !important;
+    cursor: pointer;
+}
+
+.btn-exp-success:hover {
+    background: linear-gradient(135deg, #059669, #047857);
+    color: #ffffff !important;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+}
+
+.btn-exp-danger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background: linear-gradient(135deg, #f43f5e, #e11d48);
+    color: #ffffff !important;
+    font-weight: 700;
+    font-size: 0.92rem;
+    padding: 0.65rem 1.4rem;
+    border-radius: var(--exp-radius-sm);
+    border: none;
+    box-shadow: 0 4px 14px rgba(225, 29, 72, 0.28);
+    transition: var(--exp-transition);
+    text-decoration: none !important;
+    cursor: pointer;
+}
+
+.btn-exp-danger:hover {
+    background: linear-gradient(135deg, #e11d48, #be123c);
+    color: #ffffff !important;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(225, 29, 72, 0.38);
+}
+
+.btn-exp-sm {
+    padding: 0.35rem 0.75rem;
+    font-size: 0.8rem;
+    border-radius: var(--exp-radius-xs);
+}
+
+/* =========================================
+   EXPERT METRIC / KPI CARDS
+   ========================================= */
+.exp-kpi-card {
+    background: var(--exp-card);
+    border: 1px solid var(--exp-border);
+    border-radius: var(--exp-radius-md);
+    padding: 1.25rem 1.35rem;
+    box-shadow: var(--exp-shadow-xs);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+    transition: var(--exp-transition);
+}
+
+.exp-kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--exp-shadow-md);
+    border-color: var(--exp-border-hover);
+}
+
+.exp-kpi-card::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--exp-primary);
+}
+
+.exp-kpi-card.kpi-amber::before { background: var(--exp-amber); }
+.exp-kpi-card.kpi-rose::before { background: var(--exp-rose); }
+.exp-kpi-card.kpi-indigo::before { background: var(--exp-indigo); }
+.exp-kpi-card.kpi-teal::before { background: var(--exp-teal); }
+
+.exp-kpi-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.exp-kpi-label {
+    font-size: 0.74rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--exp-muted);
+}
+
+.exp-kpi-value {
+    font-size: 1.85rem;
+    font-weight: 800;
+    color: var(--exp-text);
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+}
+
+.exp-kpi-sub {
+    font-size: 0.82rem;
+    color: var(--exp-muted);
+}
+
+.exp-kpi-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--exp-radius-sm);
+    background: var(--exp-primary-soft);
+    color: var(--exp-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+    transition: var(--exp-transition);
+}
+
+.exp-kpi-card:hover .exp-kpi-icon {
+    transform: scale(1.08);
+}
+
+.exp-kpi-card.kpi-amber .exp-kpi-icon {
+    background: var(--exp-amber-soft);
+    color: var(--exp-amber);
+}
+
+.exp-kpi-card.kpi-rose .exp-kpi-icon {
+    background: var(--exp-rose-soft);
+    color: var(--exp-rose);
+}
+
+.exp-kpi-card.kpi-indigo .exp-kpi-icon {
+    background: var(--exp-indigo-soft);
+    color: var(--exp-indigo);
+}
+
+.exp-kpi-card.kpi-teal .exp-kpi-icon {
+    background: var(--exp-teal-soft);
+    color: var(--exp-teal);
+}
+
+/* =========================================
+   PANELS & CARDS
+   ========================================= */
+.exp-card {
+    background: var(--exp-card);
+    border: 1px solid var(--exp-border);
+    border-radius: var(--exp-radius-md);
+    box-shadow: var(--exp-shadow-xs);
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+    transition: var(--exp-transition);
+}
+
+.exp-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    padding: 1.15rem 1.4rem;
+    background: var(--exp-card);
+    border-bottom: 1px solid var(--exp-border);
+}
+
+.exp-card-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--exp-text);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.exp-card-title i {
+    color: var(--exp-primary);
+}
+
+.exp-card-sub {
+    font-size: 0.82rem;
+    color: var(--exp-muted);
+    margin-top: 0.15rem;
+}
+
+.exp-card-body {
+    padding: 1.35rem 1.4rem;
+}
+
+.exp-card-body.p-0 {
+    padding: 0 !important;
+}
+
+/* =========================================
+   BADGES & TAGS
+   ========================================= */
+.exp-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.76rem;
+    font-weight: 700;
+    padding: 0.3rem 0.75rem;
+    border-radius: var(--exp-radius-pill);
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+.exp-badge-pending {
+    background: var(--exp-amber-soft);
+    color: var(--exp-amber);
+    border: 1px solid rgba(217, 119, 6, 0.25);
+}
+
+.exp-badge-approved {
+    background: var(--exp-primary-soft);
+    color: var(--exp-primary);
+    border: 1px solid var(--exp-primary-border);
+}
+
+.exp-badge-rejected {
+    background: var(--exp-rose-soft);
+    color: var(--exp-rose);
+    border: 1px solid rgba(225, 29, 72, 0.25);
+}
+
+.exp-badge-auto {
+    background: var(--exp-indigo-soft);
+    color: var(--exp-indigo);
+    border: 1px solid rgba(79, 70, 229, 0.25);
+}
+
+.exp-badge-info {
+    background: var(--exp-cyan-soft);
+    color: var(--exp-cyan);
+    border: 1px solid rgba(2, 132, 199, 0.25);
+}
+
+.exp-badge-muted {
+    background: var(--exp-card-subtle);
+    color: var(--exp-muted);
+    border: 1px solid var(--exp-border);
+}
+
+/* Severity indicators */
+.exp-badge-critical {
+    background: rgba(225, 29, 72, 0.15);
+    color: var(--exp-rose);
+    border: 1px solid rgba(225, 29, 72, 0.35);
+    font-weight: 800;
+}
+
+.exp-badge-high {
+    background: rgba(234, 88, 12, 0.15);
+    color: var(--exp-amber);
+    border: 1px solid rgba(234, 88, 12, 0.35);
+}
+
+.exp-badge-medium {
+    background: rgba(217, 119, 6, 0.15);
+    color: var(--exp-amber);
+    border: 1px solid rgba(217, 119, 6, 0.3);
+}
+
+.exp-badge-low {
+    background: rgba(16, 185, 129, 0.15);
+    color: var(--exp-primary);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+/* =========================================
+   TABLES
+   ========================================= */
+.exp-table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.exp-table {
+    width: 100%;
+    margin-bottom: 0;
+    color: var(--exp-text);
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.exp-table thead th {
+    background: var(--exp-card-subtle);
+    color: var(--exp-muted);
+    font-size: 0.74rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.85rem 1.15rem;
+    border-top: none;
+    border-bottom: 1px solid var(--exp-border);
+    white-space: nowrap;
+}
+
+.exp-table tbody td {
+    padding: 0.95rem 1.15rem;
+    vertical-align: middle;
+    border-top: 1px solid var(--exp-border-soft);
+    font-size: 0.88rem;
+    transition: var(--exp-transition);
+}
+
+.exp-table tbody tr:hover td {
+    background-color: var(--exp-primary-softer);
+}
+
+.exp-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* =========================================
+   FILTER BAR & SEARCH
+   ========================================= */
+.exp-filter-toolbar {
+    background: var(--exp-card-subtle);
+    border-bottom: 1px solid var(--exp-border);
+    padding: 0.85rem 1.25rem;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.exp-search-wrap {
+    position: relative;
+    flex-grow: 1;
+    min-width: 220px;
+}
+
+.exp-search-wrap i {
+    position: absolute;
+    left: 0.85rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--exp-muted);
+    font-size: 0.85rem;
+    pointer-events: none;
+}
+
+.exp-search-input {
+    width: 100%;
+    padding: 0.48rem 0.85rem 0.48rem 2.2rem;
+    border-radius: var(--exp-radius-sm);
+    border: 1px solid var(--exp-border);
+    background: var(--exp-card);
+    color: var(--exp-text);
+    font-size: 0.88rem;
+    transition: var(--exp-transition);
+}
+
+.exp-search-input:focus {
+    border-color: var(--exp-primary);
+    box-shadow: 0 0 0 3px var(--exp-primary-ring);
+    outline: none;
+}
+
+.exp-select {
+    padding: 0.48rem 2rem 0.48rem 0.85rem;
+    border-radius: var(--exp-radius-sm);
+    border: 1px solid var(--exp-border);
+    background: var(--exp-card);
+    color: var(--exp-text);
+    font-size: 0.88rem;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 14px 14px;
+    cursor: pointer;
+    transition: var(--exp-transition);
+}
+
+.exp-select:focus {
+    border-color: var(--exp-primary);
+    box-shadow: 0 0 0 3px var(--exp-primary-ring);
+    outline: none;
+}
+
+/* =========================================
+   DIAGNOSIS REVIEW STUDIO (CASE DETAILS)
+   ========================================= */
+.exp-case-hero {
+    background: var(--exp-card);
+    border: 1px solid var(--exp-border);
+    border-radius: var(--exp-radius-lg);
+    padding: 1.5rem 1.75rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--exp-shadow-sm);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.exp-case-hero::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 5px;
+    background: linear-gradient(180deg, #059669, #10b981);
+}
+
+.exp-case-tag {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--exp-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.exp-case-crop-name {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--exp-text);
+    margin: 0.2rem 0;
+}
+
+.exp-case-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    color: var(--exp-muted);
+    font-size: 0.86rem;
+    margin-top: 0.35rem;
+}
+
+.exp-case-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.exp-gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 0.85rem;
+    margin-top: 0.85rem;
+}
+
+.exp-gallery-item {
+    position: relative;
+    border-radius: var(--exp-radius-sm);
+    overflow: hidden;
+    border: 1px solid var(--exp-border);
+    cursor: pointer;
+    background: #000;
+    aspect-ratio: 1;
+}
+
+.exp-gallery-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.exp-gallery-item:hover img {
+    transform: scale(1.08);
+    opacity: 0.9;
+}
+
+.exp-gallery-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    font-size: 1.2rem;
+}
+
+.exp-gallery-item:hover .exp-gallery-overlay {
+    opacity: 1;
+}
+
+/* Quick solution pills */
+.exp-quick-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    margin: 0.65rem 0 1rem;
+}
+
+.exp-chip-btn {
+    font-size: 0.76rem;
+    font-weight: 600;
+    padding: 0.35rem 0.75rem;
+    border-radius: var(--exp-radius-pill);
+    border: 1px solid var(--exp-border);
+    background: var(--exp-card-subtle);
+    color: var(--exp-text-secondary);
+    cursor: pointer;
+    transition: var(--exp-transition);
+    user-select: none;
+}
+
+.exp-chip-btn:hover {
+    background: var(--exp-primary-soft);
+    border-color: var(--exp-primary-border);
+    color: var(--exp-primary);
+    transform: translateY(-1px);
+}
+
+/* =========================================
+   CHATROOM & MESSAGING
+   ========================================= */
+.exp-chat-shell {
+    background: var(--exp-card);
+    border: 1px solid var(--exp-border);
+    border-radius: var(--exp-radius-lg);
+    box-shadow: var(--exp-shadow-md);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 240px);
+    min-height: 480px;
+    max-height: 740px;
+}
+
+.exp-chat-header {
+    padding: 1rem 1.5rem;
+    background: var(--exp-card);
+    border-bottom: 1px solid var(--exp-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.exp-chat-user-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    font-weight: 700;
+    flex-shrink: 0;
+    box-shadow: 0 4px 10px rgba(16, 185, 129, 0.25);
+}
+
+.exp-chat-feed {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 1.5rem;
+    background: color-mix(in srgb, var(--exp-card) 95%, var(--exp-bg) 5%);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.exp-msg-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.65rem;
+    max-width: 82%;
+}
+
+.exp-msg-row.farmer-msg {
+    margin-right: auto;
+}
+
+.exp-msg-row.expert-msg {
+    margin-left: auto;
+    flex-direction: row-reverse;
+}
+
+.exp-msg-bubble {
+    padding: 0.85rem 1.15rem;
+    border-radius: var(--exp-radius-md);
+    font-size: 0.92rem;
+    line-height: 1.5;
+    word-break: break-word;
+    box-shadow: var(--exp-shadow-xs);
+    position: relative;
+}
+
+.farmer-msg .exp-msg-bubble {
+    background: var(--exp-card);
+    border: 1px solid var(--exp-border);
+    color: var(--exp-text);
+    border-bottom-left-radius: 3px;
+}
+
+.expert-msg .exp-msg-bubble {
+    background: linear-gradient(135deg, #059669, #047857);
+    color: #ffffff;
+    border: none;
+    border-bottom-right-radius: 3px;
+    box-shadow: 0 4px 14px rgba(5, 150, 105, 0.25);
+}
+
+.exp-msg-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.72rem;
+    margin-bottom: 0.25rem;
+    font-weight: 700;
+}
+
+.farmer-msg .exp-msg-meta {
+    color: var(--exp-primary);
+}
+
+.expert-msg .exp-msg-meta {
+    color: rgba(255, 255, 255, 0.8);
+    justify-content: flex-end;
+}
+
+.exp-chat-input-bar {
+    padding: 1rem 1.25rem;
+    background: var(--exp-card);
+    border-top: 1px solid var(--exp-border);
+}
+
+.exp-chat-textarea {
+    border-radius: var(--exp-radius-sm);
+    border: 1px solid var(--exp-border);
+    background: var(--exp-bg);
+    color: var(--exp-text);
+    padding: 0.65rem 0.95rem;
+    font-size: 0.92rem;
+    resize: none;
+    transition: var(--exp-transition);
+}
+
+.exp-chat-textarea:focus {
+    border-color: var(--exp-primary);
+    box-shadow: 0 0 0 3px var(--exp-primary-ring);
+    outline: none;
+}
+
+/* =========================================
+   FORM CONTROLS & STYLING
+   ========================================= */
+.exp-form-section {
+    background: var(--exp-card);
+    border: 1px solid var(--exp-border);
+    border-radius: var(--exp-radius-md);
+    padding: 1.5rem;
+    margin-bottom: 1.25rem;
+    box-shadow: var(--exp-shadow-xs);
+    transition: var(--exp-transition);
+}
+
+.exp-form-section:hover {
+    border-color: var(--exp-border-hover);
+}
+
+.exp-form-section-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--exp-text);
+    margin-bottom: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-bottom: 0.65rem;
+    border-bottom: 1px solid var(--exp-border-soft);
+}
+
+.exp-form-section-title i {
+    color: var(--exp-primary);
+}
+
+.exp-form-label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--exp-text);
+    margin-bottom: 0.4rem;
+    display: block;
+}
+
+.exp-form-control {
+    width: 100%;
+    padding: 0.55rem 0.95rem;
+    font-size: 0.92rem;
+    border-radius: var(--exp-radius-sm);
+    border: 1px solid var(--exp-border);
+    background: var(--exp-card);
+    color: var(--exp-text);
+    transition: var(--exp-transition);
+}
+
+.exp-form-control:focus {
+    border-color: var(--exp-primary);
+    box-shadow: 0 0 0 3px var(--exp-primary-ring);
+    outline: none;
+}
+
+.exp-form-hint {
+    font-size: 0.78rem;
+    color: var(--exp-muted);
+    margin-top: 0.35rem;
+    display: block;
+}
+
+/* =========================================
+   EMPTY STATES
+   ========================================= */
+.exp-empty-state {
+    text-align: center;
+    padding: 3.5rem 1.5rem;
+}
+
+.exp-empty-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 1.25rem;
+    border-radius: 50%;
+    background: var(--exp-primary-soft);
+    color: var(--exp-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+}
+
+.exp-empty-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--exp-text);
+    margin-bottom: 0.35rem;
+}
+
+.exp-empty-text {
+    font-size: 0.88rem;
+    color: var(--exp-muted);
+    max-width: 420px;
+    margin: 0 auto;
+}
+
+/* =========================================
+   RESPONSIVE ADJUSTMENTS
+   ========================================= */
+@media (max-width: 768px) {
+    .expert-hero {
+        padding: 1.25rem;
+    }
+    .expert-title {
+        font-size: 1.35rem;
+    }
+    .expert-hero-actions {
+        width: 100%;
+    }
+    .btn-exp-primary,
+    .btn-exp-outline {
+        width: 100%;
+    }
+    .exp-msg-row {
+        max-width: 92%;
+    }
+}
+
+/* Shared Bootstrap utilities and legacy dashboard widgets use expert tokens. */
+.expert-theme .text-muted { color: var(--exp-muted) !important; }
+.expert-theme .text-dark { color: var(--exp-text) !important; }
+.expert-theme .bg-light { background-color: var(--exp-card-subtle) !important; }
+.expert-theme .expert-progress-row,
+.expert-theme .expert-donut-total,
+.expert-theme .expert-donut-name { color: var(--exp-text); }
+.expert-theme .expert-progress-row .label,
+.expert-theme .expert-donut-label,
+.expert-theme .expert-donut-meta { color: var(--exp-muted); }
+.expert-theme .expert-donut-hole { background: var(--exp-card); }
+.expert-theme .expert-donut-item {
+    background: var(--exp-card-subtle);
+    border-color: var(--exp-border);
+}
+.expert-theme .expert-progress { background: var(--exp-border); }
+.expert-theme :is(.exp-form-control, .exp-search-input, .exp-chat-textarea)::placeholder {
+    color: var(--exp-muted);
+    opacity: 1;
+}
+.expert-theme :is(.exp-form-control, .exp-select):disabled {
+    background-color: var(--exp-card-subtle);
+    color: var(--exp-muted);
+    cursor: not-allowed;
+}
+.expert-theme :is(a, button, input, select, textarea):focus-visible {
+    outline: 2px solid var(--exp-primary);
+    outline-offset: 3px;
+}
+
+/* Calendar and clock follow the active page theme, including generated days. */
+.expert-theme :is(.agro-clock, .agro-calendar-block, .agro-cal-nav, .agro-cal-cell) {
+    background: var(--exp-card);
+    border-color: var(--exp-border);
+    color: var(--exp-text);
+}
+.expert-theme :is(.agro-clock-time, .agro-cal-title) { color: var(--exp-text); }
+.expert-theme :is(.agro-clock-date, .agro-clock-tz, .agro-calendar-week span, .agro-cal-cell .cal-lunar) {
+    color: var(--exp-muted);
+}
+.expert-theme .agro-cal-cell.is-muted {
+    background: var(--exp-card-subtle);
+    color: var(--exp-muted);
+}
+.expert-theme .agro-cal-cell.is-today {
+    background: var(--exp-primary-soft);
+    border-color: var(--exp-primary);
+    color: var(--exp-primary);
+    box-shadow: none;
+}
+.expert-theme .agro-cal-cell.is-today .cal-lunar { color: var(--exp-primary); }
+.expert-theme .agro-cal-nav:hover {
+    background: var(--exp-primary-soft);
+    border-color: var(--exp-primary);
+    color: var(--exp-primary);
+}
+.expert-theme .agro-cal-nav:focus-visible {
+    outline: 2px solid var(--exp-primary);
+    outline-offset: 2px;
+}

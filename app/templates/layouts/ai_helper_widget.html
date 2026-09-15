@@ -15,69 +15,101 @@
     <button type="button"
             class="ai-helper-fab"
             id="ai-helper-fab"
-            aria-label="{{ t('ai_helper') }}"
+            aria-label="{{ t('agri_assistant') }}"
             aria-controls="ai-helper-panel"
-            aria-expanded="false">
-        <i class="fas fa-robot" aria-hidden="true"></i>
+            aria-expanded="false"
+            title="{{ t('agri_assistant') }}">
+        <span class="ai-helper-fab-icon-wrap" aria-hidden="true">
+            <i class="fas fa-robot ai-helper-fab-open-icon" aria-hidden="true"></i>
+            <i class="fas fa-times ai-helper-fab-close-icon" aria-hidden="true"></i>
+        </span>
+        <span class="ai-helper-fab-pulse" aria-hidden="true"></span>
+        <span class="ai-helper-fab-online-dot" aria-hidden="true"></span>
+        <span class="ai-helper-fab-label">{{ t('agri_assistant') }}</span>
     </button>
 
     <div class="ai-helper-panel is-collapsed"
          id="ai-helper-panel"
          role="dialog"
          aria-modal="false"
-         aria-label="{{ t('ai_helper') }}">
+         aria-label="{{ t('agri_assistant') }}">
 
         <div class="ai-helper-header">
             <div class="ai-helper-title-wrap">
-                <img class="ai-helper-title-logo"
-                     src="{{ url_for('static', filename='img/logo_icon.svg', v=static_version) }}"
-                     alt="Agriculture">
-                <div class="ai-helper-title">
-                    {% if current_lang == "km" %}
-                        សូមស្វាគមន៍, {{ current_user.full_name or current_user.username }}!
-                    {% else %}
-                        Welcome, {{ current_user.full_name or current_user.username }}!
-                    {% endif %}
+                <div class="ai-helper-avatar-box">
+                    <img class="ai-helper-title-logo"
+                         src="{{ url_for('static', filename='img/logo_icon.svg', v=static_version) }}"
+                         alt="Agri System">
+                    <span class="ai-helper-online-badge"></span>
+                </div>
+                <div class="ai-helper-header-info">
+                    <div class="ai-helper-title-row">
+                        <span class="ai-helper-title">{{ t('agri_assistant') }}</span>
+                        <span class="ai-helper-pill">AI 2.0</span>
+                    </div>
+                    <div class="ai-helper-subtitle">
+                        <span class="ai-helper-sub-dot"></span>
+                        <span>{{ t('ai_online') }} &bull; {{ current_user.full_name or current_user.username }}</span>
+                    </div>
                 </div>
             </div>
             <div class="ai-helper-actions">
-                <button type="button" class="ai-helper-close" aria-label="{{ t('close') }}">
+                <button type="button" class="ai-helper-reset" aria-label="{{ t('reset') }}" title="{{ t('confirm_clear_ai_helper') }}">
+                    <i class="fas fa-redo-alt" aria-hidden="true"></i>
+                </button>
+                <button type="button" class="ai-helper-close" aria-label="{{ t('close') }}" title="{{ t('close') }}">
                     <i class="fas fa-times" aria-hidden="true"></i>
                 </button>
             </div>
         </div>
 
-        <div class="ai-helper-tabs" role="tablist" aria-label="{{ t('ai_helper') }}">
+        <div class="ai-helper-tabs" role="tablist" aria-label="{{ t('agri_assistant') }}">
             <button type="button"
                     class="ai-helper-tab is-active"
                     role="tab"
                     aria-selected="true"
                     data-tab="chat">
                 <i class="fas fa-comment-dots" aria-hidden="true"></i>
-                {{ t("ask_ai") }}
+                <span>{% if current_lang == "km" %}ជជែកជាមួយ AI{% else %}Chat with AI{% endif %}</span>
             </button>
             <button type="button"
                     class="ai-helper-tab"
                     role="tab"
                     aria-selected="false"
                     data-tab="contact">
-                <i class="fas fa-life-ring" aria-hidden="true"></i>
-                {{ t("contact_admin") }}
+                <i class="fas fa-headset" aria-hidden="true"></i>
+                <span>{{ t("contact_admin") }}</span>
             </button>
         </div>
 
         <div class="ai-helper-body">
             <div class="ai-helper-view" data-view="chat">
                 <div class="ai-helper-thread" id="ai-helper-thread" aria-live="polite"></div>
+
+                <div class="ai-helper-suggestions" id="ai-helper-suggestions">
+                    <button type="button" class="ai-helper-chip" data-query="{{ t('suggestion_rice_blast')|default('🌾 Rice disease diagnosis') }}">
+                        <span>🌾 {{ t('suggestion_rice_blast')|default('Rice Blast') }}</span>
+                    </button>
+                    <button type="button" class="ai-helper-chip" data-query="{{ t('suggestion_tomato_curl')|default('🍅 Tomato leaf curl diagnosis') }}">
+                        <span>🍅 {{ t('suggestion_tomato_curl')|default('Tomato Curl') }}</span>
+                    </button>
+                    <button type="button" class="ai-helper-chip" data-query="{{ t('suggestion_pest_control')|default('🐛 Pest control guide') }}">
+                        <span>🐛 {{ t('suggestion_pest_control')|default('Pest Guide') }}</span>
+                    </button>
+                    <button type="button" class="ai-helper-chip" data-query="How does weather affect crop health?">
+                        <span>🌦️ {{ t('suggestion_dry_season')|default('Weather & Soil') }}</span>
+                    </button>
+                </div>
+
                 <form class="ai-helper-compose" id="ai-helper-form" autocomplete="off">
-                    <input type="text"
-                           class="ai-helper-input"
-                           id="ai-helper-input"
-                           maxlength="1200"
-                           placeholder="{{ t('ai_helper_placeholder') }}">
-                    <button type="submit" class="ai-helper-send">
-                        <i class="fas fa-paper-plane" aria-hidden="true"></i>
-                        <span class="ai-helper-send-text">{{ t("send") }}</span>
+                    <textarea class="ai-helper-input"
+                              id="ai-helper-input"
+                              rows="1"
+                              maxlength="1200"
+                              aria-label="{{ t('ai_helper_placeholder') }}"
+                              placeholder="{{ t('ai_helper_placeholder') }}"></textarea>
+                    <button type="submit" class="ai-helper-send" aria-label="{{ t('send') }}" title="{{ t('send') }}">
+                        <i class="fas fa-arrow-up" aria-hidden="true"></i>
                     </button>
                 </form>
             </div>
@@ -87,13 +119,14 @@
                     {{ t("contact_admin_sub") }}
                 </div>
                 <form class="ai-helper-contact" id="ai-helper-support-form" autocomplete="off">
+                    <label class="ai-helper-field-label" for="ai-helper-support-text">{{ t("describe_issue") }}</label>
                     <textarea class="ai-helper-textarea"
                               id="ai-helper-support-text"
                               maxlength="2000"
                               placeholder="{{ t('describe_issue') }}"></textarea>
-                    <button type="submit" class="ai-helper-send ai-helper-send-admin">
+                    <button type="submit" class="ai-helper-send-admin">
                         <i class="fas fa-paper-plane" aria-hidden="true"></i>
-                        {{ t("send_to_admin") }}
+                        <span>{{ t("send_to_admin") }}</span>
                     </button>
                 </form>
                 <div class="ai-helper-status" id="ai-helper-support-status" aria-live="polite"></div>
@@ -102,5 +135,5 @@
     </div>
 </div>
 
-<script src="{{ url_for('static', filename='js/ai_helper_widget.js') }}"></script>
+<script src="{{ url_for('static', filename='js/ai_helper_widget.js', v=static_version) }}"></script>
 {% endif %}

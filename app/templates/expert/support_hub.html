@@ -1,135 +1,112 @@
 {% extends "layouts/base.html" %}
 {% block title %}{{ t("support_hub_title") }}{% endblock %}
-{% set body_class = "admin-theme" %}
+{% set body_class = "expert-theme admin-theme" %}
 
 {% block content %}
-<div class="admin-board expert-board">
-    <div class="admin-hero">
-        <div>
-            <div class="admin-title">{{ t("support_hub_title") }}</div>
-            <div class="admin-sub">{{ t("support_hub_sub") }}</div>
+<div class="expert-board">
+
+    <!-- ===============================
+         HERO HEADER
+    =============================== -->
+    <div class="expert-hero">
+        <div class="expert-hero-content">
+            <span class="expert-hero-role-pill">
+                <i class="fas fa-headset"></i> Operations &amp; Support Hub
+            </span>
+            <h1 class="expert-title">
+                <i class="fas fa-satellite-dish"></i> {{ t("support_hub_title") }}
+            </h1>
+            <p class="expert-sub">{{ t("support_hub_sub")|default("Cross-channel operational overview of farmer communications, auto-diagnosed cases, and diagnostic transcripts.") }}</p>
         </div>
-        <div class="admin-hero-actions">
-            <a class="btn btn-admin" href="{{ url_for('expert.farmer_chats') }}">{{ t("open_chats") }}</a>
-            <a class="btn btn-admin-outline" href="{{ url_for('expert.pending_diagnoses') }}">{{ t("pending_diagnoses_title") }}</a>
+        <div class="expert-hero-actions">
+            <a class="btn-exp-primary" href="{{ url_for('expert.farmer_chats') }}">
+                <i class="fas fa-comments"></i> {{ t("open_chats") }}
+            </a>
+            <a class="btn-exp-outline" href="{{ url_for('expert.pending_diagnoses') }}">
+                <i class="fas fa-hourglass-half"></i> {{ t("pending_diagnoses_title") }}
+            </a>
         </div>
     </div>
 
+    <!-- ===============================
+         OPERATIONAL KPIS
+    =============================== -->
     <div class="row mb-4">
-        <div class="col-md-3 mb-3">
-            <div class="admin-kpi">
-                <div>
-                    <div class="admin-kpi-label">{{ t("rule_sessions") }}</div>
-                    <div class="admin-kpi-value">{{ total_rule_sessions }}</div>
-                    <div class="admin-kpi-sub">{{ t("rule_sessions_sub") }}</div>
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="exp-kpi-card kpi-indigo">
+                <div class="exp-kpi-info">
+                    <span class="exp-kpi-label">{{ t("rule_sessions") }}</span>
+                    <span class="exp-kpi-value">{{ total_rule_sessions }}</span>
+                    <span class="exp-kpi-sub">{{ t("rule_sessions_sub") }}</span>
                 </div>
-                <div class="admin-kpi-icon"><i class="fas fa-comments"></i></div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="admin-kpi">
-                <div>
-                    <div class="admin-kpi-label">{{ t("rule_messages") }}</div>
-                    <div class="admin-kpi-value">{{ total_rule_messages }}</div>
-                    <div class="admin-kpi-sub">{{ t("rule_messages_sub") }}</div>
-                </div>
-                <div class="admin-kpi-icon"><i class="fas fa-comment-dots"></i></div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="admin-kpi">
-                <div>
-                    <div class="admin-kpi-label">{{ t("farmers") }}</div>
-                    <div class="admin-kpi-value">{{ rule_unique_farmers }}</div>
-                    <div class="admin-kpi-sub">{{ t("farmers_sub") }}</div>
-                </div>
-                <div class="admin-kpi-icon"><i class="fas fa-users"></i></div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="admin-kpi">
-                <div>
-                    <div class="admin-kpi-label">{{ t("last_24h") }}</div>
-                    <div class="admin-kpi-value">{{ last_24h_rule_messages }}</div>
-                    <div class="admin-kpi-sub">{{ t("rule_messages_short") }}</div>
-                </div>
-                <div class="admin-kpi-icon"><i class="fas fa-clock"></i></div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row mb-4">
-        <div class="col-lg-6 mb-3">
-            <div class="admin-panel">
-                <div class="admin-panel-header">
-                    <div>
-                        <div class="admin-panel-title">{{ t("farmer_chats_title") }}</div>
-                        <div class="admin-panel-sub">{{ t("farmer_chats_sub") }}</div>
-                    </div>
-                </div>
-                <div class="expert-actions-grid">
-                    <a class="expert-action-card" href="{{ url_for('expert.farmer_chats') }}">
-                        <div class="expert-action-icon"><i class="fas fa-headset"></i></div>
-                        <div>
-                            <div class="expert-action-title">{{ t("farmer_chats_title") }}</div>
-                            <div class="expert-action-sub">{{ t("respond_now") }}</div>
-                        </div>
-                        <i class="fas fa-arrow-right"></i>
-                    </a>
-                    <a class="expert-action-card" href="{{ url_for('expert.farmer_chats') }}">
-                        <div class="expert-action-icon"><i class="fas fa-comments"></i></div>
-                        <div>
-                            <div class="expert-action-title">{{ t("chat_queue") }}</div>
-                            <div class="expert-action-sub">{{ t("chat_queue_sub") }}</div>
-                        </div>
-                        <i class="fas fa-arrow-right"></i>
-                    </a>
+                <div class="exp-kpi-icon">
+                    <i class="fas fa-comments"></i>
                 </div>
             </div>
         </div>
 
-        <div class="col-lg-6 mb-3">
-            <div class="admin-panel">
-                <div class="admin-panel-header">
-                    <div>
-                        <div class="admin-panel-title">{{ t("rule_cases_title") }}</div>
-                        <div class="admin-panel-sub">{{ t("rule_cases_sub") }}</div>
-                    </div>
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="exp-kpi-card kpi-teal">
+                <div class="exp-kpi-info">
+                    <span class="exp-kpi-label">{{ t("rule_messages") }}</span>
+                    <span class="exp-kpi-value">{{ total_rule_messages }}</span>
+                    <span class="exp-kpi-sub">{{ t("rule_messages_sub") }}</span>
                 </div>
-                <div class="expert-actions-grid">
-                    <a class="expert-action-card" href="{{ url_for('expert.pending_diagnoses') }}">
-                        <div class="expert-action-icon"><i class="fas fa-clipboard-check"></i></div>
-                        <div>
-                            <div class="expert-action-title">{{ t("pending_review") }}</div>
-                            <div class="expert-action-sub">{{ t("approve_reject") }}</div>
-                        </div>
-                        <i class="fas fa-arrow-right"></i>
-                    </a>
-                    <a class="expert-action-card" href="{{ url_for('expert.diseases') }}">
-                        <div class="expert-action-icon"><i class="fas fa-database"></i></div>
-                        <div>
-                            <div class="expert-action-title">{{ t("knowledge_updates") }}</div>
-                            <div class="expert-action-sub">{{ t("knowledge_updates_sub") }}</div>
-                        </div>
-                        <i class="fas fa-arrow-right"></i>
-                    </a>
+                <div class="exp-kpi-icon">
+                    <i class="fas fa-comment-dots"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="exp-kpi-card">
+                <div class="exp-kpi-info">
+                    <span class="exp-kpi-label">{{ t("farmers") }}</span>
+                    <span class="exp-kpi-value">{{ rule_unique_farmers }}</span>
+                    <span class="exp-kpi-sub">{{ t("farmers_sub") }}</span>
+                </div>
+                <div class="exp-kpi-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="exp-kpi-card kpi-amber">
+                <div class="exp-kpi-info">
+                    <span class="exp-kpi-label">{{ t("last_24h") }}</span>
+                    <span class="exp-kpi-value">{{ last_24h_rule_messages }}</span>
+                    <span class="exp-kpi-sub">{{ t("rule_messages_short") }}</span>
+                </div>
+                <div class="exp-kpi-icon">
+                    <i class="fas fa-bolt"></i>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="admin-panel">
-        <div class="admin-panel-header">
+    <!-- ===============================
+         DIAGNOSTIC CASES AUDIT PANEL
+    =============================== -->
+    <div class="exp-card mb-4">
+        <div class="exp-card-header">
             <div>
-                <div class="admin-panel-title">{{ t("rule_cases_title") }}</div>
-                <div class="admin-panel-sub">{{ t("rule_cases_filter_sub") }}</div>
+                <h2 class="exp-card-title">
+                    <i class="fas fa-microscope"></i> {{ t("rule_cases_title") }}
+                </h2>
+                <div class="exp-card-sub">{{ t("rule_cases_filter_sub") }}</div>
             </div>
+            <span class="exp-badge exp-badge-info">
+                {{ auto_cases|length }} Filtered Cases
+            </span>
         </div>
-        <div class=" pt-3">
-            <form class="form-row mb-3" method="GET">
-                <div class="col-md-3 mb-2">
-                    <label class="small text-muted">{{ t("crop_label") }}</label>
-                    <select name="crop_id" class="form-control">
+
+        <!-- Case Filters -->
+        <div class="exp-filter-toolbar">
+            <form class="form-row w-100 align-items-end" method="GET">
+                <div class="col-md-3 col-sm-6 mb-2">
+                    <label class="small font-weight-bold text-muted text-uppercase mb-1" style="letter-spacing: 0.06em;">{{ t("crop_label") }}</label>
+                    <select name="crop_id" class="exp-select w-100">
                         <option value="">{{ t("all_crops") }}</option>
                         {% for crop in crops %}
                             <option value="{{ crop.id }}" {% if filter_crop_id == crop.id %}selected{% endif %}>
@@ -138,66 +115,97 @@
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-md-3 mb-2">
-                    <label class="small text-muted">{{ t("diagnosis_status") }}</label>
-                    <select name="status" class="form-control">
+                <div class="col-md-3 col-sm-6 mb-2">
+                    <label class="small font-weight-bold text-muted text-uppercase mb-1" style="letter-spacing: 0.06em;">{{ t("diagnosis_status") }}</label>
+                    <select name="status" class="exp-select w-100">
                         <option value="AUTO" {% if filter_status == "AUTO" %}selected{% endif %}>{{ t("status_auto") }}</option>
                         <option value="PENDING" {% if filter_status == "PENDING" %}selected{% endif %}>{{ t("status_pending") }}</option>
                         <option value="APPROVED" {% if filter_status == "APPROVED" %}selected{% endif %}>{{ t("status_approved") }}</option>
                         <option value="REJECTED" {% if filter_status == "REJECTED" %}selected{% endif %}>{{ t("status_rejected") }}</option>
                     </select>
                 </div>
-                <div class="col-md-3 mb-2">
-                    <label class="small text-muted">{{ t("from") }}</label>
-                    <input type="date" name="date_from" class="form-control"
-                           value="{{ filter_date_from or '' }}">
+                <div class="col-md-2 col-sm-6 mb-2">
+                    <label class="small font-weight-bold text-muted text-uppercase mb-1" style="letter-spacing: 0.06em;">{{ t("from") }}</label>
+                    <input type="date" name="date_from" class="exp-search-input py-2" value="{{ filter_date_from or '' }}">
                 </div>
-                <div class="col-md-3 mb-2">
-                    <label class="small text-muted">{{ t("to") }}</label>
-                    <input type="date" name="date_to" class="form-control"
-                           value="{{ filter_date_to or '' }}">
+                <div class="col-md-2 col-sm-6 mb-2">
+                    <label class="small font-weight-bold text-muted text-uppercase mb-1" style="letter-spacing: 0.06em;">{{ t("to") }}</label>
+                    <input type="date" name="date_to" class="exp-search-input py-2" value="{{ filter_date_to or '' }}">
                 </div>
-                <div class="col-12 d-flex mt-2">
-                    <button class="btn btn-admin-outline btn-sm mr-2" type="submit">{{ t("apply_filters") }}</button>
-                    <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('expert.support_hub') }}">{{ t("reset") }}</a>
+                <div class="col-md-2 col-sm-12 mb-2 d-flex gap-2" style="gap: 6px;">
+                    <button class="btn-exp-primary btn-exp-sm flex-grow-1" type="submit">
+                        <i class="fas fa-filter mr-1"></i> {{ t("apply_filters") }}
+                    </button>
+                    <a class="btn-exp-outline btn-exp-sm" href="{{ url_for('expert.support_hub') }}" title="Reset">
+                        <i class="fas fa-undo"></i>
+                    </a>
                 </div>
             </form>
         </div>
-        <div class="expert-queue">
-            {% for d in auto_cases %}
-            <div class="expert-queue-item">
-                <div>
-                    <div class="expert-queue-title">#{{ d.id }} • {{ localize(d.crop, "name", t("unknown_crop")) }}</div>
-                    <div class="expert-queue-sub">
-                        {{ d.symptoms[:80] }}{% if d.symptoms|length > 80 %}...{% endif %}
+
+        <div class="exp-card-body">
+            <div class="expert-queue">
+                {% for d in auto_cases %}
+                <div class="expert-queue-item">
+                    <div class="d-flex align-items-center gap-3" style="gap: 12px; min-width: 0;">
+                        <div class="expert-action-icon flex-shrink-0" style="width: 40px; height: 40px; border-radius: 10px; background: var(--exp-primary-soft); color: var(--exp-primary);">
+                            <i class="fas fa-seedling"></i>
+                        </div>
+                        <div style="min-width: 0;">
+                            <div class="expert-queue-title">
+                                #{{ d.id }} &bull; {{ localize(d.crop, "name", t("unknown_crop")) }}
+                                <span class="exp-badge exp-badge-auto ml-1" style="font-size: 0.68rem; padding: 0.15rem 0.5rem;">
+                                    {{ d.status }}
+                                </span>
+                            </div>
+                            <div class="expert-queue-sub text-truncate">
+                                {{ d.symptoms[:90] }}{% if d.symptoms|length > 90 %}...{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="expert-queue-meta flex-shrink-0">
+                        <span class="expert-queue-date">{{ d.created_at.strftime("%b %d, %Y") }}</span>
+                        <a href="{{ url_for('expert.review_diagnosis', diagnosis_id=d.id) }}"
+                           class="btn-exp-primary btn-exp-sm">
+                            <i class="fas fa-stethoscope mr-1"></i> {{ t("review") }}
+                        </a>
                     </div>
                 </div>
-                <div class="expert-queue-meta">
-                    <span class="expert-queue-date">{{ d.created_at.strftime("%b %d") }}</span>
-                    <a href="{{ url_for('expert.review_diagnosis', diagnosis_id=d.id) }}"
-                       class="btn btn-sm btn-admin-outline">
-                        {{ t("review") }}
-                    </a>
+                {% else %}
+                <div class="exp-empty-state py-4">
+                    <div class="exp-empty-icon" style="width: 46px; height: 46px; font-size: 1.2rem;">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <div class="exp-empty-title" style="font-size: 0.95rem;">{{ t("no_auto_cases") }}</div>
+                    <div class="exp-empty-text small">No diagnostic cases matched your current filter criteria.</div>
                 </div>
+                {% endfor %}
             </div>
-            {% else %}
-            <div class="text-muted small">{{ t("no_auto_cases") }}</div>
-            {% endfor %}
         </div>
     </div>
 
-    <div class="admin-panel mt-4">
-        <div class="admin-panel-header">
+    <!-- ===============================
+         CHAT TRANSCRIPTS STREAM PANEL
+    =============================== -->
+    <div class="exp-card">
+        <div class="exp-card-header">
             <div>
-                <div class="admin-panel-title">{{ t("rule_chat_messages") }}</div>
-                <div class="admin-panel-sub">{{ t("rule_chat_messages_sub") }}</div>
+                <h2 class="exp-card-title">
+                    <i class="fas fa-comments"></i> {{ t("rule_chat_messages") }}
+                </h2>
+                <div class="exp-card-sub">{{ t("rule_chat_messages_sub") }}</div>
             </div>
+            <span class="exp-badge exp-badge-approved">
+                {{ rule_chat_messages|length }} Transcripts
+            </span>
         </div>
-        <div class=" pt-3">
-            <form class="form-row mb-3" method="GET">
-                <div class="col-md-3 mb-2">
-                    <label class="small text-muted">{{ t("farmer_label") }}</label>
-                    <select name="chat_farmer_id" class="form-control">
+
+        <!-- Chat Filters -->
+        <div class="exp-filter-toolbar">
+            <form class="form-row w-100 align-items-end" method="GET">
+                <div class="col-md-3 col-sm-6 mb-2">
+                    <label class="small font-weight-bold text-muted text-uppercase mb-1" style="letter-spacing: 0.06em;">{{ t("farmer_label") }}</label>
+                    <select name="chat_farmer_id" class="exp-select w-100">
                         <option value="">{{ t("all_farmers") }}</option>
                         {% for f in rule_farmers %}
                             <option value="{{ f.id }}" {% if chat_farmer_id == f.id %}selected{% endif %}>
@@ -206,48 +214,74 @@
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-md-3 mb-2">
-                    <label class="small text-muted">{{ t("keyword") }}</label>
-                    <input type="text" name="chat_keyword" class="form-control"
+                <div class="col-md-3 col-sm-6 mb-2">
+                    <label class="small font-weight-bold text-muted text-uppercase mb-1" style="letter-spacing: 0.06em;">{{ t("keyword") }}</label>
+                    <input type="text"
+                           name="chat_keyword"
+                           class="exp-search-input py-2"
                            placeholder="{{ t('search_messages') }}"
                            value="{{ chat_keyword or '' }}">
                 </div>
-                <div class="col-md-3 mb-2">
-                    <label class="small text-muted">{{ t("from") }}</label>
-                    <input type="date" name="chat_date_from" class="form-control"
-                           value="{{ chat_date_from or '' }}">
+                <div class="col-md-2 col-sm-6 mb-2">
+                    <label class="small font-weight-bold text-muted text-uppercase mb-1" style="letter-spacing: 0.06em;">{{ t("from") }}</label>
+                    <input type="date" name="chat_date_from" class="exp-search-input py-2" value="{{ chat_date_from or '' }}">
                 </div>
-                <div class="col-md-3 mb-2">
-                    <label class="small text-muted">{{ t("to") }}</label>
-                    <input type="date" name="chat_date_to" class="form-control"
-                           value="{{ chat_date_to or '' }}">
+                <div class="col-md-2 col-sm-6 mb-2">
+                    <label class="small font-weight-bold text-muted text-uppercase mb-1" style="letter-spacing: 0.06em;">{{ t("to") }}</label>
+                    <input type="date" name="chat_date_to" class="exp-search-input py-2" value="{{ chat_date_to or '' }}">
                 </div>
-                <div class="col-12 d-flex mt-2">
-                    <button class="btn btn-admin-outline btn-sm mr-2" type="submit">{{ t("apply_filters") }}</button>
-                    <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('expert.support_hub') }}">{{ t("reset") }}</a>
+                <div class="col-md-2 col-sm-12 mb-2 d-flex gap-2" style="gap: 6px;">
+                    <button class="btn-exp-primary btn-exp-sm flex-grow-1" type="submit">
+                        <i class="fas fa-filter mr-1"></i> {{ t("apply_filters") }}
+                    </button>
+                    <a class="btn-exp-outline btn-exp-sm" href="{{ url_for('expert.support_hub') }}" title="Reset">
+                        <i class="fas fa-undo"></i>
+                    </a>
                 </div>
             </form>
         </div>
-        <div class="expert-queue">
-            {% for m in rule_chat_messages %}
-            <div class="expert-queue-item">
-                <div>
-                    <div class="expert-queue-title">
-                        {{ t("farmer_label") if m.sender == "farmer" else t("system_label") }} •
-                        {{ t("session") }} #{{ m.session_id }}
+
+        <div class="exp-card-body">
+            <div class="expert-queue">
+                {% for m in rule_chat_messages %}
+                <div class="expert-queue-item">
+                    <div class="d-flex align-items-center gap-3" style="gap: 12px; min-width: 0;">
+                        <div class="d-inline-flex align-items-center justify-content-center flex-shrink-0 text-white"
+                             style="width: 36px; height: 36px; border-radius: 10px; background: {% if m.sender == 'farmer' %}#10b981{% else %}#059669{% endif %}; font-size: 0.85rem; font-weight: 700;">
+                            {{ 'F' if m.sender == 'farmer' else 'E' }}
+                        </div>
+                        <div style="min-width: 0;">
+                            <div class="expert-queue-title">
+                                <span>{{ t("farmer_label") if m.sender == "farmer" else t("system_label") }}</span>
+                                <span class="exp-badge exp-badge-muted ml-1" style="font-size: 0.68rem; padding: 0.15rem 0.5rem;">
+                                    {{ t("session") }} #{{ m.session_id }}
+                                </span>
+                            </div>
+                            <div class="expert-queue-sub" style="line-height: 1.45;">
+                                {{ m.message[:140] }}{% if m.message|length > 140 %}...{% endif %}
+                            </div>
+                        </div>
                     </div>
-                    <div class="expert-queue-sub">
-                        {{ m.message[:120] }}{% if m.message|length > 120 %}...{% endif %}
+                    <div class="expert-queue-meta flex-shrink-0">
+                        <span class="expert-queue-date">{{ m.created_at.strftime("%Y-%m-%d %H:%M") }}</span>
+                        <a href="{{ url_for('expert.reply_chat_session', session_id=m.session_id) }}"
+                           class="btn-exp-outline btn-exp-sm">
+                            <i class="fas fa-eye mr-1"></i> View Thread
+                        </a>
                     </div>
                 </div>
-                <div class="expert-queue-meta">
-                    <span class="expert-queue-date">{{ m.created_at.strftime("%Y-%m-%d %H:%M") }}</span>
+                {% else %}
+                <div class="exp-empty-state py-4">
+                    <div class="exp-empty-icon" style="width: 46px; height: 46px; font-size: 1.2rem;">
+                        <i class="fas fa-comment-slash"></i>
+                    </div>
+                    <div class="exp-empty-title" style="font-size: 0.95rem;">{{ t("no_rule_chat_messages") }}</div>
+                    <div class="exp-empty-text small">No consultation messages matched the selected filters.</div>
                 </div>
+                {% endfor %}
             </div>
-            {% else %}
-            <div class="text-muted small">{{ t("no_rule_chat_messages") }}</div>
-            {% endfor %}
         </div>
     </div>
+
 </div>
 {% endblock %}

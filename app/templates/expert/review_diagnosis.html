@@ -1,89 +1,358 @@
 {% extends "layouts/base.html" %}
-{% block title %}{{ t("review_diagnosis") }}{% endblock %}
+{% block title %}{{ t("review_diagnosis") }} #{{ diagnosis.id }}{% endblock %}
 
-{% set body_class = "admin-theme" %}
+{% set body_class = "expert-theme admin-theme" %}
 
 {% block content %}
-<h3 class="mb-4">{{ t("review_diagnosis") }}</h3>
+<div class="expert-board">
 
-<div class="row">
-
-    <!-- Diagnosis Info -->
-    <div class="col-md-6">
-        <div class="admin-panel mb-4">
-            <div class="admin-panel-title">
-                <strong>{{ t("diagnosis_information") }}</strong>
+    <!-- ===============================
+         CASE HERO HEADER
+    =============================== -->
+    <div class="exp-case-hero">
+        <div>
+            <div class="exp-case-tag">
+                <i class="fas fa-stethoscope mr-1"></i> {{ t("review_diagnosis") }} &bull; Case File #{{ diagnosis.id }}
             </div>
-            <div class="">
-
-                <p><strong>{{ t("crop_label") }}:</strong> {{ localize(diagnosis.crop, "name", diagnosis.crop_name) }}</p>
-                <p><strong>{{ t("symptoms_label") }}:</strong><br>{{ diagnosis.symptoms }}</p>
-                
-                {% if diagnosis.image_paths %}
-                <p><strong>{% if current_lang == 'km' %}រូបភាពភ្ជាប់{% else %}Attached Images{% endif %}:</strong></p>
-                <div class="d-flex flex-wrap mb-3" style="gap: 10px;">
-                    {% for path in diagnosis.image_paths %}
-                    <img src="{{ url_for('static', filename=path) }}" alt="Farmer Upload" class="img-thumbnail" style="max-width: 150px; max-height: 150px; object-fit: cover;">
-                    {% endfor %}
-                </div>
-                {% endif %}
-
-                {% set disease_label = (diagnosis.disease.name_kh if current_lang == 'km' and diagnosis.disease and diagnosis.disease.name_kh else diagnosis.disease_name) %}
-                <p><strong>{{ t("auto_disease") }}:</strong> {{ disease_label }}</p>
-
-                {% if diagnosis.confidence %}
-                <p>
-                    <strong>{{ t("confidence_label") }}:</strong>
-                    {{ (diagnosis.confidence * 100) | round(1) }}%
-                </p>
-                {% endif %}
-
+            <h1 class="exp-case-crop-name">
+                {{ localize(diagnosis.crop, "name", diagnosis.crop_name) }}
+            </h1>
+            <div class="exp-case-meta">
+                <span>
+                    <i class="fas fa-user-circle text-primary"></i>
+                    <strong>{{ diagnosis.farmer.username if diagnosis.farmer else t("farmer") }}</strong>
+                </span>
+                <span>
+                    <i class="fas fa-calendar-alt"></i>
+                    {{ diagnosis.created_at.strftime("%B %d, %Y - %H:%M") }}
+                </span>
+                <span>
+                    {% if diagnosis.status == 'APPROVED' %}
+                    <span class="exp-badge exp-badge-approved">
+                        <i class="fas fa-check-circle"></i> {{ t("status_approved") }}
+                    </span>
+                    {% elif diagnosis.status == 'REJECTED' %}
+                    <span class="exp-badge exp-badge-rejected">
+                        <i class="fas fa-times-circle"></i> {{ t("status_rejected") }}
+                    </span>
+                    {% elif diagnosis.status == 'AUTO' %}
+                    <span class="exp-badge exp-badge-auto">
+                        <i class="fas fa-robot"></i> {{ t("status_auto") }}
+                    </span>
+                    {% else %}
+                    <span class="exp-badge exp-badge-pending">
+                        <i class="fas fa-hourglass-half"></i> {{ t("status_pending") }}
+                    </span>
+                    {% endif %}
+                </span>
             </div>
+        </div>
+
+        <div class="d-flex align-items-center gap-2 flex-wrap" style="gap: 8px;">
+            <a href="{{ url_for('expert.pending_diagnoses') }}" class="btn-exp-outline">
+                <i class="fas fa-arrow-left"></i> {{ t("back") }} {{ t("pending_queue") }}
+            </a>
+            {% if diagnosis.farmer_id %}
+            <a href="{{ url_for('expert.reply_chat', farmer_id=diagnosis.farmer_id) }}" class="btn-exp-outline">
+                <i class="fas fa-comments"></i> {{ t("farmer_chats") }}
+            </a>
+            {% endif %}
         </div>
     </div>
 
-    <!-- Expert Action -->
-    <div class="col-md-6">
-        <div class="admin-panel mb-4">
-            <div class="admin-panel-title">
-                <strong>{{ t("expert_decision") }}</strong>
-            </div>
-            <div class="">
+    <!-- ===============================
+         MAIN 2-COLUMN WORKSPACE
+    =============================== -->
+    <div class="row">
 
-                <!-- APPROVE -->
-                <form method="POST">
-                    <input type="hidden" name="action" value="approve">
+        <!-- LEFT COLUMN: CLINICAL EVIDENCE & CASE DOSSIER -->
+        <div class="col-lg-7 mb-4">
 
-                    <div class="form-group">
-                        <label>{{ t("expert_solution") }}</label>
-                        <textarea name="solution"
-                                  class="form-control"
-                                  rows="4"
-                                  placeholder="{{ t("solution_placeholder") }}"
-                                  required></textarea>
+            <!-- Candidate Disease & Confidence Card -->
+            <div class="exp-card mb-4">
+                <div class="exp-card-header">
+                    <div>
+                        <h2 class="exp-card-title">
+                            <i class="fas fa-virus"></i> Diagnostic Match Analysis
+                        </h2>
+                        <div class="exp-card-sub">Automated inference and candidate pathology</div>
+                    </div>
+                    {% if diagnosis.confidence %}
+                    <span class="exp-badge {% if diagnosis.confidence >= 0.75 %}exp-badge-approved{% elif diagnosis.confidence >= 0.5 %}exp-badge-pending{% else %}exp-badge-muted{% endif %}">
+                        {{ (diagnosis.confidence * 100) | round(1) }}% {{ t("confidence_label") }}
+                    </span>
+                    {% endif %}
+                </div>
+                <div class="exp-card-body">
+                    {% set disease_label = (diagnosis.disease.name_kh if current_lang == 'km' and diagnosis.disease and diagnosis.disease.name_kh else (diagnosis.disease.name if diagnosis.disease else diagnosis.disease_name)) %}
+                    <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+                        <div>
+                            <span class="small text-muted text-uppercase font-weight-bold" style="letter-spacing: 0.06em;">{{ t("auto_disease") }}</span>
+                            <div class="h4 font-weight-bold text-success mb-0 mt-1">{{ disease_label or "Unknown Disease" }}</div>
+                        </div>
+                        {% if diagnosis.disease and diagnosis.disease.severity_level %}
+                        <span class="exp-badge {% if diagnosis.disease.severity_level == 'Critical' %}exp-badge-critical{% elif diagnosis.disease.severity_level == 'High' %}exp-badge-high{% elif diagnosis.disease.severity_level == 'Medium' %}exp-badge-medium{% else %}exp-badge-low{% endif %}">
+                            <i class="fas fa-exclamation-triangle"></i> Severity: {{ diagnosis.disease.severity_level }}
+                        </span>
+                        {% endif %}
                     </div>
 
-                    <button class="btn btn-admin d-inline-flex align-items-center">
-                        <i class="fas fa-check-circle mr-2"></i>
-                        {{ t("approve_diagnosis") }}
+                    {% if diagnosis.confidence %}
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between small text-muted mb-1">
+                            <span>Diagnostic Match Score</span>
+                            <span class="font-weight-bold text-dark">{{ (diagnosis.confidence * 100)|round(1) }}%</span>
+                        </div>
+                        <div class="expert-progress" style="height: 10px;">
+                            <span style="width: {{ (diagnosis.confidence * 100)|round(0) }}%; background: {% if diagnosis.confidence >= 0.75 %}#059669{% elif diagnosis.confidence >= 0.5 %}#d97706{% else %}#64748b{% endif %};"></span>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if diagnosis.diagnosis_reason %}
+                    <div class="p-3 rounded border" style="background: var(--exp-card-subtle); border-color: var(--exp-border) !important;">
+                        <span class="small font-weight-bold text-muted text-uppercase d-block mb-1">Rule Engine Evidence & Match Rationale</span>
+                        <div class="small text-secondary" style="line-height: 1.5;">{{ diagnosis.diagnosis_reason }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Observed Symptoms Card -->
+            <div class="exp-card mb-4">
+                <div class="exp-card-header">
+                    <div>
+                        <h2 class="exp-card-title">
+                            <i class="fas fa-clipboard-check"></i> {{ t("symptoms_label") }}
+                        </h2>
+                        <div class="exp-card-sub">Reported field symptoms and farmer observation</div>
+                    </div>
+                </div>
+                <div class="exp-card-body">
+                    <div class="p-3 rounded border mb-3" style="background: var(--exp-card-subtle); border-color: var(--exp-border) !important; font-size: 0.95rem; line-height: 1.6; color: var(--exp-text);">
+                        <i class="fas fa-quote-left mr-2 text-muted" style="opacity: 0.5;"></i>
+                        {{ diagnosis.symptoms }}
+                    </div>
+
+                    {% if diagnosis.selected_symptom_ids %}
+                    <div class="mt-2">
+                        <span class="small font-weight-bold text-muted text-uppercase d-block mb-2">Identified Symptom Indicators</span>
+                        <div class="d-flex flex-wrap gap-2" style="gap: 6px;">
+                            {% for sym_id in diagnosis.selected_symptom_ids %}
+                            <span class="exp-badge exp-badge-info">
+                                <i class="fas fa-check mr-1"></i> Symptom #{{ sym_id }}
+                            </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Attached Field Images Gallery -->
+            <div class="exp-card">
+                <div class="exp-card-header">
+                    <div>
+                        <h2 class="exp-card-title">
+                            <i class="fas fa-camera"></i> Attached Field Evidence Photos
+                        </h2>
+                        <div class="exp-card-sub">Photographic evidence submitted by the farmer</div>
+                    </div>
+                    {% if diagnosis.image_paths %}
+                    <span class="exp-badge exp-badge-info">
+                        <i class="fas fa-images"></i> {{ diagnosis.image_paths|length }} Photo(s)
+                    </span>
+                    {% endif %}
+                </div>
+                <div class="exp-card-body">
+                    {% if diagnosis.image_paths %}
+                    <div class="exp-gallery-grid">
+                        {% for path in diagnosis.image_paths %}
+                        <div class="exp-gallery-item" onclick="openLightbox('{{ url_for('static', filename=path) }}', 'Field photo #{{ loop.index }}')">
+                            <img src="{{ url_for('static', filename=path) }}" alt="Farmer Upload #{{ loop.index }}" loading="lazy">
+                            <div class="exp-gallery-overlay">
+                                <i class="fas fa-search-plus"></i>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <small class="text-muted d-block mt-2">
+                        <i class="fas fa-info-circle mr-1"></i> Click on any photo to view full-resolution lightbox inspection.
+                    </small>
+                    {% else %}
+                    <div class="exp-empty-state py-4">
+                        <div class="exp-empty-icon" style="width: 46px; height: 46px; font-size: 1.15rem;">
+                            <i class="fas fa-image"></i>
+                        </div>
+                        <div class="exp-empty-title" style="font-size: 0.95rem;">No Photos Attached</div>
+                        <div class="exp-empty-text small">Farmer did not upload visual photos for this diagnosis case.</div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+
+        <!-- RIGHT COLUMN: EXPERT DECISION & TREATMENT STUDIO -->
+        <div class="col-lg-5 mb-4">
+            <div class="exp-card position-sticky" style="top: 20px;">
+                <div class="exp-card-header">
+                    <div>
+                        <h2 class="exp-card-title">
+                            <i class="fas fa-user-md"></i> {{ t("expert_decision") }}
+                        </h2>
+                        <div class="exp-card-sub">Validate pathology and formulate treatment advisory</div>
+                    </div>
+                </div>
+
+                <div class="exp-card-body">
+
+                    <!-- APPROVAL FORM -->
+                    <form method="POST" id="approveDiagnosisForm">
+                        <input type="hidden" name="action" value="approve">
+
+                        <div class="form-group mb-2">
+                            <label class="exp-form-label">
+                                <i class="fas fa-prescription mr-1 text-success"></i> {{ t("expert_solution") }}
+                                <span class="text-danger">*</span>
+                            </label>
+                            
+                            <!-- Quick Template Chips -->
+                            <div class="exp-quick-chips">
+                                <button type="button" class="exp-chip-btn" onclick="insertSolution('Apply copper hydroxide fungicide spray every 7-10 days until symptoms subside.')">
+                                    + Fungicide Spray
+                                </button>
+                                <button type="button" class="exp-chip-btn" onclick="insertSolution('Prune and safely destroy infected leaves. Improve air circulation and avoid overhead watering.')">
+                                    + Sanitation & Water
+                                </button>
+                                <button type="button" class="exp-chip-btn" onclick="insertSolution('Apply balanced N-P-K fertilizer with added potassium to build cellular disease resistance.')">
+                                    + Nutrient Balance
+                                </button>
+                                <button type="button" class="exp-chip-btn" onclick="insertSolution('Monitor daily. If spread continues, isolate the affected plants to protect adjacent rows.')">
+                                    + Isolation
+                                </button>
+                            </div>
+
+                            <textarea name="solution"
+                                      id="expertSolutionInput"
+                                      class="exp-form-control"
+                                      rows="6"
+                                      placeholder="{{ t('solution_placeholder')|default('Enter professional treatment steps, recommended fungicides/pesticides, watering adjustments, or preventive measures for the farmer...') }}"
+                                      required>{{ diagnosis.solution or '' }}</textarea>
+                            <small class="exp-form-hint">
+                                Provide actionable, precise recommendations in clear farmer-friendly language.
+                            </small>
+                        </div>
+
+                        <div class="mt-3">
+                            <button type="submit" class="btn-exp-success w-100 mb-2">
+                                <i class="fas fa-check-circle mr-2"></i> {{ t("approve_diagnosis") }}
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="d-flex align-items-center my-3">
+                        <hr class="flex-grow-1 my-0" style="border-color: var(--exp-border);">
+                        <span class="px-2 small text-muted text-uppercase" style="letter-spacing: 0.06em; font-size: 0.72rem;">Or Reject Case</span>
+                        <hr class="flex-grow-1 my-0" style="border-color: var(--exp-border);">
+                    </div>
+
+                    <!-- REJECT BUTTON TRIGGERING CONFIRMATION MODAL -->
+                    <button type="button"
+                            class="btn-exp-danger w-100"
+                            data-toggle="modal"
+                            data-target="#rejectDiagnosisModal">
+                        <i class="fas fa-times-circle mr-2"></i> {{ t("reject_diagnosis") }}
                     </button>
-                </form>
 
-                <hr>
-
-                <!-- REJECT -->
-                <form method="POST">
-                    <input type="hidden" name="action" value="reject">
-
-                    <button class="btn btn-danger d-inline-flex align-items-center">
-                        <i class="fas fa-times-circle mr-2"></i>
-                        {{ t("reject_diagnosis") }}
-                    </button>
-                </form>
-
+                </div>
             </div>
         </div>
+
     </div>
 
 </div>
+
+<!-- ===============================
+     LIGHTBOX MODAL FOR IMAGES
+=============================== -->
+<div class="modal fade" id="lightboxModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content border-0" style="background: rgba(15, 23, 42, 0.95); border-radius: 16px; overflow: hidden;">
+            <div class="modal-header border-0 pb-0 text-white">
+                <h5 class="modal-title font-weight-bold" id="lightboxTitle">Inspection View</h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close" style="opacity: 0.8;">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body text-center p-3">
+                <img id="lightboxImg" src="" alt="High Resolution Field Evidence" class="img-fluid rounded" style="max-height: 80vh; object-fit: contain;">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===============================
+     REJECTION CONFIRMATION MODAL
+=============================== -->
+<div class="modal fade" id="rejectDiagnosisModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; background: var(--exp-card);">
+            <div class="modal-header border-0 pb-0">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="d-inline-flex align-items-center justify-content-center"
+                         style="width: 40px; height: 40px; border-radius: 10px; background: var(--exp-rose-soft); color: var(--exp-rose); font-size: 1.2rem;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <h5 class="modal-title font-weight-bold text-danger ml-2">{{ t("reject_diagnosis") }}</h5>
+                </div>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body py-3">
+                <p class="text-secondary mb-2" style="font-size: 0.95rem;">
+                    Are you sure you want to reject Case <strong>#{{ diagnosis.id }}</strong> for <strong>{{ localize(diagnosis.crop, "name", diagnosis.crop_name) }}</strong>?
+                </p>
+                <p class="text-muted small mb-0">
+                    The farmer will receive a notification that the diagnosis requires re-evaluation or more specific symptoms.
+                </p>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-light px-3" data-dismiss="modal" style="border-radius: 10px; font-weight: 600;">
+                    {{ t("cancel") }}
+                </button>
+                <form method="POST" class="d-inline m-0">
+                    <input type="hidden" name="action" value="reject">
+                    <button type="submit" class="btn-exp-danger">
+                        <i class="fas fa-times-circle mr-1"></i> Confirm Rejection
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function insertSolution(text) {
+    const input = document.getElementById("expertSolutionInput");
+    if (!input) return;
+    if (input.value.trim().length > 0) {
+        input.value += "\n" + text;
+    } else {
+        input.value = text;
+    }
+    input.focus();
+}
+
+function openLightbox(src, title) {
+    const img = document.getElementById("lightboxImg");
+    const titleEl = document.getElementById("lightboxTitle");
+    if (img) img.src = src;
+    if (titleEl && title) titleEl.textContent = title;
+    $('#lightboxModal').modal('show');
+}
+</script>
 {% endblock %}

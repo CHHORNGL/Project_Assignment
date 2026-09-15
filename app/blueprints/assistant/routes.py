@@ -1,6 +1,5 @@
+from app.utils.input_validation import text_field
 # app/blueprints/assistant/routes.py
-
-from datetime import datetime
 
 from flask import jsonify, request
 from flask_login import current_user, login_required
@@ -12,23 +11,6 @@ from app.services.notification_service import notify_role, _snippet
 from app.utils.i18n import t
 
 from . import assistant_bp
-
-
-_AI_RATE_LIMIT = {
-    "window_seconds": 60,
-    "max_requests": 30,
-    "buckets": {},
-}
-
-
-def _rate_limited(key: str) -> bool:
-    now = datetime.utcnow().timestamp()
-    bucket = _AI_RATE_LIMIT["buckets"].get(key)
-    if not bucket or now - bucket["start"] > _AI_RATE_LIMIT["window_seconds"]:
-        _AI_RATE_LIMIT["buckets"][key] = {"start": now, "count": 1}
-        return False
-    bucket["count"] += 1
-    return bucket["count"] > _AI_RATE_LIMIT["max_requests"]
 
 
 def _allowed_role() -> bool:
@@ -60,13 +42,9 @@ def ask():
     if not _allowed_role():
         return jsonify({"ok": False, "error": "Forbidden"}), 403
 
-    key = f"user:{current_user.id}"
-    if _rate_limited(key):
-        return jsonify({"ok": False, "error": "Rate limit exceeded"}), 429
-
     payload = request.get_json(silent=True) or {}
-    message = (payload.get("message") or "").strip()
-    page = (payload.get("page") or "").strip()
+    message = text_field(payload, "message", required=True, maximum=2000)
+    page = text_field(payload, "page", maximum=255)
 
     if not message:
         return jsonify({"ok": False, "error": "Empty message"}), 400
@@ -86,13 +64,9 @@ def support():
     if not _allowed_role():
         return jsonify({"ok": False, "error": "Forbidden"}), 403
 
-    key = f"support:{current_user.id}"
-    if _rate_limited(key):
-        return jsonify({"ok": False, "error": "Rate limit exceeded"}), 429
-
     payload = request.get_json(silent=True) or {}
-    message = (payload.get("message") or "").strip()
-    page = (payload.get("page") or "").strip()
+    message = text_field(payload, "message", required=True, maximum=2000)
+    page = text_field(payload, "page", maximum=255)
 
     if not message:
         return jsonify({"ok": False, "error": "Empty message"}), 400

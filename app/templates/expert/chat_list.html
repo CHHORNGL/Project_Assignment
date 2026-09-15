@@ -1,31 +1,75 @@
 {% extends "layouts/base.html" %}
 {% block title %}{{ t("expert_chats_title") }}{% endblock %}
 
-{% set body_class = "admin-theme" %}
+{% set body_class = "expert-theme admin-theme" %}
 
 {% block content %}
-<div class="container-fluid mt-4">
+<div class="expert-board">
 
-    <h3><i class="fas fa-comments text-success mr-2" aria-hidden="true"></i>Farmer Questions</h3>
+    <div class="expert-hero mb-4">
+        <div class="expert-hero-content">
+            <span class="expert-hero-role-pill">
+                <i class="fas fa-comments"></i> Inquiries &bull; Consultation Desk
+            </span>
+            <h1 class="expert-title">
+                <i class="fas fa-comments"></i> {{ t("farmer_chats_title")|default("Farmer Questions & Consultations") }}
+            </h1>
+            <p class="expert-sub">Direct advisory inquiries submitted by farmers seeking guidance from agricultural specialists.</p>
+        </div>
+        <div class="expert-hero-actions">
+            <a href="{{ url_for('expert.dashboard') }}" class="btn-exp-outline">
+                <i class="fas fa-arrow-left"></i> {{ t("dashboard") }}
+            </a>
+        </div>
+    </div>
 
-    {% if chats %}
-        <ul class="list-group mt-3">
-            {% for c in chats %}
-                <li class="list-group-item d-flex justify-content-between">
-                    <div>
-                        <strong>{{ t("farmer_id") }}:</strong> {{ c.farmer_id }}<br>
-                        <small>{{ c.message[:80] }}...</small>
+    <div class="exp-card">
+        <div class="exp-card-header">
+            <div>
+                <h2 class="exp-card-title">
+                    <i class="fas fa-question-circle"></i> Inquiries List
+                </h2>
+                <div class="exp-card-sub">{{ chats|length if chats else 0 }} Inquiries</div>
+            </div>
+        </div>
+
+        <div class="exp-card-body p-0">
+            {% if chats %}
+            <div class="list-group list-group-flush">
+                {% for c in chats %}
+                <div class="list-group-item d-flex justify-content-between align-items-center p-3 border-bottom" style="background: var(--exp-card); border-color: var(--exp-border) !important; color: var(--exp-text);">
+                    <div class="d-flex align-items-center gap-3" style="gap: 12px;">
+                        <div class="d-flex align-items-center justify-content-center text-white"
+                             style="width: 42px; height: 42px; border-radius: 10px; background: linear-gradient(135deg, #059669, #10b981); font-weight: 700;">
+                            F
+                        </div>
+                        <div>
+                            <div class="font-weight-bold" style="color: var(--exp-text);">
+                                {{ t("farmer_id") }}: #{{ c.farmer_id }}
+                            </div>
+                            <div class="text-muted small" style="line-height: 1.45;">
+                                {{ c.message[:100] }}{% if c.message|length > 100 %}...{% endif %}
+                            </div>
+                        </div>
                     </div>
                     <a href="{{ url_for('expert.reply_chat', farmer_id=c.farmer_id) }}"
-                       class="btn btn-sm btn-admin">
-                        {{ t("reply") }}
+                       class="btn-exp-primary btn-exp-sm">
+                        <i class="fas fa-reply mr-1"></i> {{ t("reply") }}
                     </a>
-                </li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p>{{ t("no_farmer_messages") }}</p>
-    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="exp-empty-state py-5">
+                <div class="exp-empty-icon">
+                    <i class="fas fa-comment-slash"></i>
+                </div>
+                <div class="exp-empty-title">{{ t("no_farmer_messages") }}</div>
+                <div class="exp-empty-text">There are no pending questions from farmers at the moment.</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
 
 </div>
 {% endblock %}

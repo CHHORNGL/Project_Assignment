@@ -5,138 +5,172 @@
 
 {% block title %}{{ t("expert_form") }}{% endblock %}
 
-{% set body_class = "admin-theme" %}
+{% set body_class = "expert-theme admin-theme" %}
 
 {% block content %}
-<div class="container-fluid" style="max-width: 800px">
+<div class="expert-board" style="max-width: 860px; margin: 0 auto 3rem;">
 
-    <h3 class="mb-4 font-weight-bold">
-        <i class="fas fa-brain mr-2 text-primary"></i>
-        {{ t("expert_knowledge_input") }}
-    </h3>
-
-    <div class="admin-panel">
-        <div class=" form-scroll">
-
-            <form method="POST">
-
-                <!-- Crop -->
-                <div class="form-group">
-                    <label class="font-weight-semibold">{{ t("crop_name") }}</label>
-                    <input
-                        type="text"
-                        name="crop_name"
-                        class="form-control"
-                        placeholder="{{ t("crop_example") }}"
-                        required
-                    >
-                </div>
-
-                <!-- Disease -->
-                <div class="form-group">
-                    <label class="font-weight-semibold">{{ t("disease_name") }}</label>
-                    <input
-                        type="text"
-                        name="disease_name"
-                        class="form-control"
-                        placeholder="{{ t("disease_example_placeholder") }}"
-                        required
-                    >
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group col-md-6">
-                        <label class="font-weight-semibold">Agriculture Category</label>
-                        <input
-                            type="text"
-                            id="form-agri-category"
-                            name="agriculture_category"
-                            class="form-control"
-                            list="form-agri-category-options"
-                            placeholder="e.g., Rice & Cereals"
-                            required
-                        >
-                        <datalist id="form-agri-category-options">
-                            {% for option in agriculture_categories %}
-                            <option value="{{ option.label }}"></option>
-                            {% endfor %}
-                        </datalist>
-                    </div>
-                    <div class="form-group col-md-6">
-                        <label class="font-weight-semibold">Sub-category</label>
-                        <input
-                            type="text"
-                            id="form-agri-sub-category"
-                            name="agriculture_sub_category"
-                            class="form-control"
-                            list="form-agri-sub-category-options"
-                            placeholder="e.g., Rice"
-                            required
-                        >
-                        <datalist id="form-agri-sub-category-options"></datalist>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="font-weight-semibold">Crop / Reference Scope</label>
-                    <select name="reference_scope" class="form-control" required>
-                        <option value="">Select scope</option>
-                        {% for scope in reference_scopes %}
-                        <option value="{{ scope.id }}">{{ scope.label }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <!-- {{ t("symptoms_label") }} -->
-                <div class="form-group">
-                    <label class="font-weight-semibold">{{ t("symptoms_label") }}</label>
-                    <textarea
-                        name="symptoms"
-                        class="form-control"
-                        rows="4"
-                        placeholder="{{ t("description_placeholder") }}"
-                        required
-                    ></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label class="font-weight-semibold">Visual Input Notes</label>
-                    <textarea
-                        name="visual_input_notes"
-                        class="form-control"
-                        rows="2"
-                        placeholder="Describe visual cues and photo collection guidance."
-                    ></textarea>
-                </div>
-
-                <!-- Solution -->
-                <div class="form-group">
-                    <label class="font-weight-semibold">{{ t("treatment") }}</label>
-                    <textarea
-                        name="solution"
-                        class="form-control"
-                        rows="4"
-                        placeholder="{{ t("expert_solution_placeholder") }}"
-                        required
-                    ></textarea>
-                </div>
-
-                <!-- Actions -->
-                <div class="text-right">
-                    <button class="btn btn-admin">
-                        <i class="fas fa-save mr-2"></i>{{ t("save_knowledge") }}
-                    </button>
-
-                    <a href="{{ url_for('expert.dashboard') }}"
-                       class="btn btn-secondary ml-2">
-                        {{ t("cancel") }}
-                    </a>
-                </div>
-
-            </form>
-
+    <!-- ===============================
+         HERO HEADER
+    =============================== -->
+    <div class="expert-hero mb-4">
+        <div class="expert-hero-content">
+            <span class="expert-hero-role-pill">
+                <i class="fas fa-bolt"></i> Quick Entry Console
+            </span>
+            <h1 class="expert-title">
+                <i class="fas fa-brain"></i> {{ t("expert_knowledge_input") }}
+            </h1>
+            <p class="expert-sub">Rapidly intake field crop diagnoses, associated symptoms, and curative treatments into the knowledge repository.</p>
+        </div>
+        <div class="expert-hero-actions">
+            <a href="{{ url_for('expert.dashboard') }}" class="btn-exp-outline">
+                <i class="fas fa-arrow-left"></i> {{ t("dashboard") }}
+            </a>
         </div>
     </div>
+
+    <!-- ===============================
+         ENTRY FORM
+    =============================== -->
+    <form method="POST" id="quickKnowledgeForm">
+
+        <!-- 1. Identification -->
+        <div class="exp-form-section">
+            <div class="exp-form-section-title">
+                <i class="fas fa-seedling"></i> 1. Crop &amp; Disease Identification
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-6 mb-3">
+                    <label class="exp-form-label">
+                        {{ t("crop_name") }} <span class="text-danger">*</span>
+                    </label>
+                    <input type="text"
+                           name="crop_name"
+                           class="exp-form-control"
+                           placeholder="{{ t('crop_example')|default('e.g. Rice, Tomato, Cassava') }}"
+                           required>
+                </div>
+                <div class="form-group col-md-6 mb-3">
+                    <label class="exp-form-label">
+                        {{ t("disease_name") }} <span class="text-danger">*</span>
+                    </label>
+                    <input type="text"
+                           name="disease_name"
+                           class="exp-form-control"
+                           placeholder="{{ t('disease_example_placeholder')|default('e.g. Bacterial Leaf Streak') }}"
+                           required>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Taxonomy & Scope -->
+        <div class="exp-form-section">
+            <div class="exp-form-section-title">
+                <i class="fas fa-sitemap"></i> 2. Agricultural Taxonomy &amp; Reference Scope
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-6 mb-3">
+                    <label class="exp-form-label">
+                        {{ t("agriculture_category")|default("Agriculture Category") }} <span class="text-danger">*</span>
+                    </label>
+                    <input type="text"
+                           id="form-agri-category"
+                           name="agriculture_category"
+                           class="exp-form-control"
+                           list="form-agri-category-options"
+                           placeholder="e.g. Rice &amp; Cereals"
+                           required>
+                    <datalist id="form-agri-category-options">
+                        {% for option in agriculture_categories %}
+                        <option value="{{ option.label }}"></option>
+                        {% endfor %}
+                    </datalist>
+                </div>
+                <div class="form-group col-md-6 mb-3">
+                    <label class="exp-form-label">
+                        {{ t("sub_category")|default("Sub-category") }} <span class="text-danger">*</span>
+                    </label>
+                    <input type="text"
+                           id="form-agri-sub-category"
+                           name="agriculture_sub_category"
+                           class="exp-form-control"
+                           list="form-agri-sub-category-options"
+                           placeholder="e.g. Rice"
+                           required>
+                    <datalist id="form-agri-sub-category-options"></datalist>
+                </div>
+            </div>
+
+            <div class="form-group mb-0">
+                <label class="exp-form-label">
+                    {{ t("crop_reference_scope")|default("Crop / Reference Scope") }} <span class="text-danger">*</span>
+                </label>
+                <select name="reference_scope" class="exp-select w-100" required>
+                    <option value="">{{ t("select_scope")|default("Select Scope...") }}</option>
+                    {% for scope in reference_scopes %}
+                    <option value="{{ scope.id }}">{{ scope.label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <!-- 3. Symptoms & Visual Identification -->
+        <div class="exp-form-section">
+            <div class="exp-form-section-title">
+                <i class="fas fa-stethoscope"></i> 3. Clinical Symptoms &amp; Visual Notes
+            </div>
+            <div class="form-group mb-3">
+                <label class="exp-form-label">
+                    {{ t("symptoms_label") }} <span class="text-danger">*</span>
+                </label>
+                <textarea name="symptoms"
+                          class="exp-form-control"
+                          rows="4"
+                          placeholder="{{ t('description_placeholder')|default('Describe visible plant signs: discoloration, lesions, wilting, powdering, or stunted growth...') }}"
+                          required></textarea>
+            </div>
+
+            <div class="form-group mb-0">
+                <label class="exp-form-label">
+                    {{ t("visual_input_notes")|default("Visual Input Notes") }}
+                </label>
+                <textarea name="visual_input_notes"
+                          class="exp-form-control"
+                          rows="2"
+                          placeholder="Describe visual cues and photo collection guidance for farmers."></textarea>
+            </div>
+        </div>
+
+        <!-- 4. Solution & Remedies -->
+        <div class="exp-form-section">
+            <div class="exp-form-section-title">
+                <i class="fas fa-prescription-bottle-alt"></i> 4. Recommended Treatment Protocol
+            </div>
+            <div class="form-group mb-0">
+                <label class="exp-form-label">
+                    {{ t("treatment") }} <span class="text-danger">*</span>
+                </label>
+                <textarea name="solution"
+                          class="exp-form-control"
+                          rows="4"
+                          placeholder="{{ t('expert_solution_placeholder')|default('Specify curative treatment steps, chemical or biological controls, application doses, and preventive guidelines...') }}"
+                          required></textarea>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="d-flex align-items-center justify-content-end gap-3 mt-4" style="gap: 12px;">
+            <a href="{{ url_for('expert.dashboard') }}" class="btn-exp-outline" style="min-height: 46px;">
+                {{ t("cancel") }}
+            </a>
+            <button type="submit" class="btn-exp-primary" style="min-height: 46px; font-size: 0.95rem; padding: 0 1.75rem;">
+                <i class="fas fa-save mr-1"></i>
+                <span>{{ t("save_knowledge") }}</span>
+            </button>
+        </div>
+
+    </form>
 
 </div>
 {% endblock %}

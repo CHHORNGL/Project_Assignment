@@ -290,7 +290,10 @@
                 </div>
             </div>
         </li>
-        <script>
+        <script src="{{ url_for('static', filename='js/support_chat_render.js') }}"></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/support_chat_attachments.css', v=static_version) }}">
+<script src="{{ url_for('static', filename='js/support_chat_attachments.js', v=static_version) }}"></script>
+<script>
         document.addEventListener("DOMContentLoaded", function() {
             const chatBody = document.getElementById("support-chat-body");
             const chatInput = document.getElementById("support-chat-input");
@@ -348,17 +351,7 @@
                                     div.style.boxShadow = "0 1px 2px rgba(0, 0, 0, 0.05)";
                                 }
                                 
-                                let contentHTML = msg.message ? `<div>${msg.message}</div>` : '';
-                                if (msg.attachment_url) {
-                                    if (msg.attachment_type === 'image') {
-                                        contentHTML += `<img src="${msg.attachment_url}" style="max-width:100%; border-radius:8px; margin-top:4px;">`;
-                                    } else if (msg.attachment_type === 'audio') {
-                                        contentHTML += `<audio controls src="${msg.attachment_url}" style="max-width:100%; height:32px; margin-top:4px;"></audio>`;
-                                    } else if (msg.attachment_type === 'location') {
-                                        contentHTML += `<div style="margin-top:4px;"><i class="fas fa-map-marker-alt"></i> <a href="https://maps.google.com/?q=${msg.attachment_url}" target="_blank" style="color:inherit;text-decoration:underline;">View on Map</a></div>`;
-                                    }
-                                }
-                                div.innerHTML = contentHTML;
+                                window.renderSupportMessage(div, msg);
                                 chatBody.appendChild(div);
                             });
                             chatBody.scrollTop = chatBody.scrollHeight;
@@ -382,99 +375,17 @@
                 sendPayload({ message: text });
             }
 
-            function uploadFile(file, type) {
-                const formData = new FormData();
-                formData.append('file', file);
-                fetch('/farmer/support_chat/upload', {
-                    method: 'POST',
-                    body: formData
-                }).then(res => res.json()).then(data => {
-                    if(data.url) {
-                        sendPayload({ message: '', attachment_url: data.url, attachment_type: type });
-                    }
-                });
-            }
-
             chatSend.addEventListener("click", sendMessage);
             chatInput.addEventListener("keypress", (e) => {
                 if (e.key === "Enter") sendMessage();
             });
             
-            imgBtn.addEventListener("click", () => { keepChatOpen = true; fileInput.click(); setTimeout(()=>keepChatOpen=false, 2000); });
-            
-            let mediaRecorder;
-            let audioChunks = [];
-            let isRecording = false;
-
-            micBtn.addEventListener("click", async () => {
-                keepChatOpen = true; 
-                setTimeout(()=>keepChatOpen=false, 2000);
-                
-                if (!isRecording) {
-                    try {
-                        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                        mediaRecorder = new MediaRecorder(stream);
-                        mediaRecorder.start();
-                        isRecording = true;
-                        
-                        micBtn.classList.remove("fa-microphone");
-                        micBtn.classList.add("fa-stop-circle");
-                        micBtn.style.color = "red";
-                        
-                        mediaRecorder.addEventListener("dataavailable", event => {
-                            audioChunks.push(event.data);
-                        });
-                        
-                        mediaRecorder.addEventListener("stop", () => {
-                            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                            audioChunks = [];
-                            
-                            const formData = new FormData();
-                            formData.append('file', audioBlob, 'voice.webm');
-                            
-                            fetch('/farmer/support_chat/upload', {
-                                method: 'POST',
-                                body: formData
-                            }).then(res => res.json()).then(data => {
-                                if(data.url) {
-                                    sendPayload({ message: '', attachment_url: data.url, attachment_type: 'audio' });
-                                }
-                            });
-                        });
-                    } catch (err) {
-                        alert("Microphone access denied or not available.");
-                    }
-                } else {
-                    mediaRecorder.stop();
-                    isRecording = false;
-                    micBtn.classList.remove("fa-stop-circle");
-                    micBtn.classList.add("fa-microphone");
-                    micBtn.style.color = "";
-                    mediaRecorder.stream.getTracks().forEach(track => track.stop());
-                }
-            });
-            
-            fileInput.addEventListener("change", (e) => {
-                if (e.target.files.length) uploadFile(e.target.files[0], 'image');
-                e.target.value = '';
-            });
-            
-            locBtn.addEventListener("click", () => {
-                keepChatOpen = true; 
-                setTimeout(()=>keepChatOpen=false, 2000);
-                if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(
-                        (pos) => {
-                            const loc = `${pos.coords.latitude},${pos.coords.longitude}`;
-                            sendPayload({ message: 'Shared Location', attachment_url: loc, attachment_type: 'location' });
-                        },
-                        (err) => {
-                            alert("Could not get location: " + err.message);
-                        },
-                        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-                    );
-                }
-            });
+            window.initSupportAttachments({
+        imgBtn, micBtn, locBtn, fileInput,
+        uploadUrl: '/farmer/support_chat/upload',
+        getSendUrl: () => '/farmer/support_chat/send',
+        onSent: fetchMessages,
+    });
 
             document.getElementById("supportDropdown").addEventListener("click", () => {
                 fetchMessages();

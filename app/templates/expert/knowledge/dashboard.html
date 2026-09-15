@@ -1,161 +1,257 @@
 {% extends "layouts/base.html" %}
 {% block title %}{{ t("knowledge_base") }}{% endblock %}
 
-{% set body_class = "admin-theme" %}
+{% set body_class = "expert-theme admin-theme" %}
 
 {% block content %}
-<div class="container-fluid">
+<div class="expert-board">
 
-    <div class="d-flex align-items-center justify-content-between mb-4">
-        <h3 class="font-weight-bold text-primary">
-            {{ t("knowledge_base") }}
-        </h3>
-        <div>
-            <a href="{{ url_for('expert.create_symptom') }}"
-               class="btn btn-sm btn-outline-primary">
-                {{ t("add_symptom") }}
+    <!-- ===============================
+         HERO HEADER
+    =============================== -->
+    <div class="expert-hero">
+        <div class="expert-hero-content">
+            <span class="expert-hero-role-pill">
+                <i class="fas fa-brain"></i> Decision Support &bull; Rule-Based Engine
+            </span>
+            <h1 class="expert-title">
+                <i class="fas fa-book-open"></i> {{ t("knowledge_base") }}
+            </h1>
+            <p class="expert-sub">Manage pathological symptoms, decision tree rules, confidence ratings, and mixed agriculture knowledge bases.</p>
+            <div class="expert-hero-meta">
+                <span class="exp-badge exp-badge-approved">
+                    <i class="fas fa-cogs"></i> {{ rule_count }} Active Rules
+                </span>
+                <span class="exp-badge exp-badge-info">
+                    <i class="fas fa-notes-medical"></i> {{ symptom_count }} Symptoms
+                </span>
+                <span class="exp-badge exp-badge-pending">
+                    <i class="fas fa-virus"></i> {{ disease_count }} Diseases
+                </span>
+            </div>
+        </div>
+        <div class="expert-hero-actions">
+            <a href="{{ url_for('expert.create_rule') }}" class="btn-exp-primary">
+                <i class="fas fa-plus-circle"></i> {{ t("add_rule") }}
             </a>
-            <a href="{{ url_for('expert.create_rule') }}"
-               class="btn btn-sm btn-admin ml-2">
-                {{ t("add_rule") }}
+            <a href="{{ url_for('expert.create_symptom') }}" class="btn-exp-outline">
+                <i class="fas fa-plus"></i> {{ t("add_symptom") }}
             </a>
-            <a href="{{ url_for('expert.mixed_agri_dashboard') }}"
-               class="btn btn-sm btn-outline-secondary ml-2">
-                {{ t("mixed_agriculture") }}
+            <a href="{{ url_for('expert.mixed_agri_dashboard') }}" class="btn-exp-outline">
+                <i class="fas fa-leaf"></i> {{ t("mixed_agriculture") }}
             </a>
-            <a href="{{ url_for('expert.diseases') }}"
-               class="btn btn-sm btn-outline-success ml-2">
-                <i class="fas fa-notes-medical mr-1"></i>{{ t("diagnosis_knowledge") }}
+            <a href="{{ url_for('expert.diseases') }}" class="btn-exp-outline">
+                <i class="fas fa-notes-medical"></i> {{ t("diagnosis_knowledge") }}
             </a>
         </div>
     </div>
 
-    <!-- Stats -->
-    <div class="row">
-        <div class="col-md-4 mb-4">
-            <div class="card stat-card h-100 p-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <div class="stat-title">{{ t("symptoms_label") }}</div>
-                        <div class="stat-value text-info">{{ symptom_count }}</div>
-                    </div>
-                    <i class="fas fa-notes-medical fa-2x text-info"></i>
+    <!-- ===============================
+         ENGINE METRIC STATS
+    =============================== -->
+    <div class="row mb-4">
+        <div class="col-xl-4 col-md-6 mb-3">
+            <div class="exp-kpi-card kpi-teal">
+                <div class="exp-kpi-info">
+                    <span class="exp-kpi-label">{{ t("symptoms_label") }}</span>
+                    <span class="exp-kpi-value">{{ symptom_count }}</span>
+                    <span class="exp-kpi-sub">Curated symptom indicators</span>
+                </div>
+                <div class="exp-kpi-icon">
+                    <i class="fas fa-stethoscope"></i>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-4 mb-4">
-            <div class="card stat-card h-100 p-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <div class="stat-title">{{ t("rules_engine") }}</div>
-                        <div class="stat-value text-success">{{ rule_count }}</div>
-                    </div>
-                    <i class="fas fa-cogs fa-2x text-success"></i>
+        <div class="col-xl-4 col-md-6 mb-3">
+            <div class="exp-kpi-card">
+                <div class="exp-kpi-info">
+                    <span class="exp-kpi-label">{{ t("rules_engine") }}</span>
+                    <span class="exp-kpi-value">{{ rule_count }}</span>
+                    <span class="exp-kpi-sub">Active decision algorithms</span>
+                </div>
+                <div class="exp-kpi-icon">
+                    <i class="fas fa-cogs"></i>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-4 mb-4">
-            <div class="card stat-card h-100 p-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <div class="stat-title">{{ t("diseases") }}</div>
-                        <div class="stat-value text-warning">{{ disease_count }}</div>
-                    </div>
-                    <i class="fas fa-notes-medical fa-2x text-warning"></i>
+        <div class="col-xl-4 col-md-12 mb-3">
+            <div class="exp-kpi-card kpi-amber">
+                <div class="exp-kpi-info">
+                    <span class="exp-kpi-label">{{ t("diseases") }}</span>
+                    <span class="exp-kpi-value">{{ disease_count }}</span>
+                    <span class="exp-kpi-sub">Diagnosable pathologies</span>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- {{ t("mixed_agriculture") }} -->
-    <div class="row">
-        <div class="col-md-6 mb-4">
-            <div class="card stat-card h-100 p-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <div class="stat-title">{{ t("mixed_agri_sources") }}</div>
-                        <div class="stat-value text-primary">{{ mixed_source_count }}</div>
-                    </div>
-                    <i class="fas fa-book fa-2x text-primary"></i>
-                </div>
-                <div class="mt-2">
-                    <a href="{{ url_for('expert.mixed_agri_sources') }}" class="small">{{ t("manage_sources") }}</a>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-6 mb-4">
-            <div class="card stat-card h-100 p-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <div class="stat-title">{{ t("mixed_agri_facts") }}</div>
-                        <div class="stat-value text-success">{{ mixed_fact_count }}</div>
-                    </div>
-                    <i class="fas fa-leaf fa-2x text-success"></i>
-                </div>
-                <div class="mt-2">
-                    <a href="{{ url_for('expert.mixed_agri_facts') }}" class="small">{{ t("manage_facts") }}</a>
+                <div class="exp-kpi-icon">
+                    <i class="fas fa-virus"></i>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- {{ t("rules_engine") }} Table -->
-    <div class="admin-panel mb-4">
-        <div class="admin-panel-title d-flex justify-content-between">
-            <span class="font-weight-bold">{{ t("diagnosis_rules_engine") }}</span>
-            <span class="text-muted small">{{ t("total_count", count=rule_count) }}</span>
+    <!-- Mixed Agriculture Knowledge Sub-Cards -->
+    <div class="row mb-4">
+        <div class="col-md-6 mb-3">
+            <div class="exp-card h-100">
+                <div class="exp-card-body d-flex align-items-center justify-content-between p-3">
+                    <div class="d-flex align-items-center gap-3" style="gap: 14px;">
+                        <div class="d-flex align-items-center justify-content-center"
+                             style="width: 46px; height: 46px; border-radius: 12px; background: var(--exp-cyan-soft); color: var(--exp-cyan); font-size: 1.25rem;">
+                            <i class="fas fa-book"></i>
+                        </div>
+                        <div>
+                            <div class="font-weight-bold" style="color: var(--exp-text);">{{ t("mixed_agri_sources") }}</div>
+                            <div class="small text-muted">{{ mixed_source_count }} verified literature &amp; institutional sources</div>
+                        </div>
+                    </div>
+                    <a href="{{ url_for('expert.mixed_agri_sources') }}" class="btn-exp-outline btn-exp-sm">
+                        {{ t("manage_sources") }} <i class="fas fa-arrow-right ml-1"></i>
+                    </a>
+                </div>
+            </div>
         </div>
 
-        <div class=" p-0 table-responsive">
-            <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead class="thead-light">
-                        <tr>
-                            <th>{{ t("id_label") }}</th>
-                            <th>{{ t("rule_name") }}</th>
-                            <th>{{ t("disease_label") }}</th>
-                            <th>{{ t("symptoms_label") }}</th>
-                            <th>{{ t("confidence_label") }}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for r in rules %}
-                        <tr>
-                            <td>#{{ r.id }}</td>
-                            <td>{{ r.name }}</td>
-                            <td>
-                                {% if r.disease %}
+        <div class="col-md-6 mb-3">
+            <div class="exp-card h-100">
+                <div class="exp-card-body d-flex align-items-center justify-content-between p-3">
+                    <div class="d-flex align-items-center gap-3" style="gap: 14px;">
+                        <div class="d-flex align-items-center justify-content-center"
+                             style="width: 46px; height: 46px; border-radius: 12px; background: var(--exp-primary-soft); color: var(--exp-primary); font-size: 1.25rem;">
+                            <i class="fas fa-leaf"></i>
+                        </div>
+                        <div>
+                            <div class="font-weight-bold" style="color: var(--exp-text);">{{ t("mixed_agri_facts") }}</div>
+                            <div class="small text-muted">{{ mixed_fact_count }} structured agronomic facts</div>
+                        </div>
+                    </div>
+                    <a href="{{ url_for('expert.mixed_agri_facts') }}" class="btn-exp-outline btn-exp-sm">
+                        {{ t("manage_facts") }} <i class="fas fa-arrow-right ml-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===============================
+         DIAGNOSIS RULES TABLE
+    =============================== -->
+    <div class="exp-card">
+        <div class="exp-card-header">
+            <div>
+                <h2 class="exp-card-title">
+                    <i class="fas fa-code-branch"></i> {{ t("diagnosis_rules_engine") }}
+                </h2>
+                <div class="exp-card-sub">{{ t("total_count", count=rule_count) }}</div>
+            </div>
+            <a href="{{ url_for('expert.create_rule') }}" class="btn-exp-primary btn-exp-sm">
+                <i class="fas fa-plus mr-1"></i> {{ t("add_rule") }}
+            </a>
+        </div>
+
+        <!-- Filter Toolbar -->
+        <div class="exp-filter-toolbar">
+            <div class="exp-search-wrap">
+                <i class="fas fa-search"></i>
+                <input type="text"
+                       id="rulesSearchInput"
+                       class="exp-search-input"
+                       placeholder="Search rules by name, disease, or symptom keywords...">
+            </div>
+        </div>
+
+        <div class="exp-table-responsive">
+            <table class="exp-table" id="rulesTable">
+                <thead>
+                    <tr>
+                        <th style="width: 80px;">{{ t("id_label") }}</th>
+                        <th style="width: 220px;">{{ t("rule_name") }}</th>
+                        <th style="width: 200px;">{{ t("disease_label") }}</th>
+                        <th>{{ t("symptoms_label") }}</th>
+                        <th style="width: 130px;">{{ t("confidence_label") }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in rules %}
+                    <tr class="rule-row">
+                        <td class="font-weight-bold">#{{ r.id }}</td>
+                        <td>
+                            <div class="font-weight-bold" style="color: var(--exp-text);">{{ r.name }}</div>
+                        </td>
+                        <td>
+                            {% if r.disease %}
+                            <div class="d-flex align-items-center gap-2" style="gap: 6px;">
+                                <i class="fas fa-virus text-warning small"></i>
+                                <span class="font-weight-bold">
                                     {{ r.disease.name_kh if current_lang == 'km' and r.disease.name_kh else r.disease.name }}
+                                </span>
+                            </div>
+                            {% else %}
+                            <span class="text-muted font-italic">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="d-flex flex-wrap gap-1" style="gap: 5px;">
+                                {% for s_name in r.symptom_names() %}
+                                <span class="exp-badge exp-badge-muted" style="font-size: 0.72rem; padding: 0.15rem 0.5rem;">
+                                    {{ s_name }}
+                                </span>
                                 {% else %}
-                                    -
-                                {% endif %}
-                            </td>
-                            <td class="text-muted small">
-                                {{ r.symptom_names()|join(", ") }}
-                            </td>
-                            <td>
-                                {% if r.confidence is not none %}
-                                    {{ (r.confidence * 100) | round(0) }}%
-                                {% else %}
-                                    -
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% else %}
-                        <tr>
-                            <td colspan="5" class="text-center text-muted py-4">
-                                {{ t("no_rules_added") }}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+                                <span class="text-muted small font-italic">No symptoms linked</span>
+                                {% endfor %}
+                            </div>
+                        </td>
+                        <td>
+                            {% if r.confidence is not none %}
+                            <span class="exp-badge {% if r.confidence >= 0.75 %}exp-badge-approved{% elif r.confidence >= 0.5 %}exp-badge-pending{% else %}exp-badge-muted{% endif %}">
+                                {{ (r.confidence * 100) | round(0) }}%
+                            </span>
+                            {% else %}
+                            <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5">
+                            <div class="exp-empty-state">
+                                <div class="exp-empty-icon">
+                                    <i class="fas fa-cogs"></i>
+                                </div>
+                                <div class="exp-empty-title">{{ t("no_rules_added") }}</div>
+                                <div class="exp-empty-text">Create your first diagnostic rule linking symptoms to disease identifications.</div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+    const searchInput = document.getElementById("rulesSearchInput");
+    const table = document.getElementById("rulesTable");
+    if (!searchInput || !table) return;
+
+    searchInput.addEventListener("input", function() {
+        const query = this.value.toLowerCase().trim();
+        const rows = table.querySelectorAll("tbody tr.rule-row");
+
+        rows.forEach(function(row) {
+            const text = row.textContent.toLowerCase();
+            if (!query || text.includes(query)) {
+                row.style.display = "";
+            } else {
+                row.style.display = "none";
+            }
+        });
+    });
+})();
+</script>
 {% endblock %}

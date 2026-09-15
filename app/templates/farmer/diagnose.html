@@ -2463,15 +2463,7 @@ html.dark-mode .diag-dock-submit-btn,
     const isKm = {{ 'true' if (current_lang == 'km') else 'false' }};
 
     // Dictionary of crop symptoms from backend
-    const cropsData = {
-        {% for crop_id, symptoms in crop_symptoms.items() %}
-            "{{ crop_id }}": [
-                {% for s in symptoms %}
-                    {"id": {{ s.id }}, "name": "{{ s.name|escape }}", "name_kh": "{{ (s.name_kh or s.name)|escape }}"}{% if not loop.last %},{% endif %}
-                {% endfor %}
-            ]{% if not loop.last %},{% endif %}
-        {% endfor %}
-    };
+    const cropsData = {{ crop_symptoms|tojson }};
 
     // Form element references
     const form            = document.getElementById("diagnosis-form");
@@ -2534,6 +2526,7 @@ html.dark-mode .diag-dock-submit-btn,
     let selectedCropId = hiddenCrop.value;
     const selected = new Map(); // name -> { id, name, name_kh }
     let liveEvalTimer = null;
+    let liveEvalVersion = 0;
 
     // Synchronized DataTransfer object for file uploads
     let uploadedFilesTransfer = new DataTransfer();
@@ -2688,6 +2681,9 @@ html.dark-mode .diag-dock-submit-btn,
     // Debounced Live Rule Evaluation
     function triggerLiveEvaluation() {
         clearTimeout(liveEvalTimer);
+        const requestVersion = ++liveEvalVersion;
+        if (sideConfidenceBadge) sideConfidenceBadge.style.display = "none";
+        if (sideBarBg) sideBarBg.style.display = "none";
         if (!selectedCropId || selected.size === 0) {
             if (sideLiveDisease) sideLiveDisease.textContent = isKm ? "កំពុងរង់ចាំការជ្រើសរើសរោគសញ្ញា..." : "Awaiting symptom selection...";
             if (sideLiveDesc) sideLiveDesc.textContent = isKm ? "ជ្រើសរើសរោគសញ្ញាយ៉ាងហោចណាស់ ១ ដើម្បីឱ្យប្រព័ន្ធផ្ទៀងផ្ទាត់ច្បាប់វិនិច្ឆ័យស្វ័យប្រវត្តិ។" : "Select at least 1 symptom from Step 2 to generate real-time diagnostic predictions.";
@@ -2703,14 +2699,19 @@ html.dark-mode .diag-dock-submit-btn,
             const sympIds = Array.from(selected.values()).map(s => s.id).filter(Boolean);
             fetch("{{ url_for('farmer.api_diagnose_live_evaluation') }}", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: { "Content-Type": "application/json", "X-CSRFToken": {{ diagnosis_csrf_token|tojson }} },
                 body: JSON.stringify({
                     crop_id: selectedCropId,
                     symptoms: sympIds
                 })
             })
-            .then(res => res.json())
+            .then(async res => {
+                const data = await res.json();
+                if (!res.ok || !data?.ok) throw new Error(data?.error || "Unable to load diagnosis results.");
+                return data;
+            })
             .then(data => {
+                if (requestVersion !== liveEvalVersion) return;
                 if (data && data.ok && data.best && data.best.disease_name) {
                     const disease = data.best.disease_name;
                     const conf = Math.round(data.best.confidence_percent || 0);
@@ -2751,7 +2752,8 @@ html.dark-mode .diag-dock-submit-btn,
                 }
             })
             .catch(() => {
-                if (sideLiveDisease) sideLiveDisease.textContent = isKm ? "បានកត់ត្រារោគសញ្ញា" : "Symptoms Recorded";
+                if (requestVersion !== liveEvalVersion) return;
+                if (sideLiveDisease) sideLiveDisease.textContent = isKm ? "មិនអាចទាញយកលទ្ធផលបានទេ" : "Unable to load diagnosis results.";
             });
         }, 320);
     }
@@ -2764,13 +2766,15 @@ html.dark-mode .diag-dock-submit-btn,
         }
 
         const rows = cropsData[cropId] || [];
-        if (!rows.length) {
-            sympCats.innerHTML =
-                '<div class="p-4 text-center text-muted"><i class="fas fa-info-circle fa-2x mb-2"></i><div>' +
-                (isKm ? "មិនមានទិន្នន័យរោគសញ្ញាសម្រាប់ដំណាំនេះនៅឡើយទេ។" : "No symptom records available for this crop.") +
-                "</div></div>";
-            return;
+        let emptyMessage = document.getElementById("symptoms-empty-message");
+        if (!emptyMessage) {
+            emptyMessage = document.createElement("div");
+            emptyMessage.id = "symptoms-empty-message";
+            emptyMessage.className = "p-4 text-center text-muted";
+            emptyMessage.textContent = isKm ? "មិនមានទិន្នន័យរោគសញ្ញាសម្រាប់ដំណាំនេះនៅឡើយទេ។" : "No symptom records available for this crop.";
+            sympCats.appendChild(emptyMessage);
         }
+        emptyMessage.hidden = rows.length > 0;
 
         rows.forEach(s => {
             const text = (isKm && s.name_kh) ? s.name_kh : s.name;
@@ -2819,6 +2823,7 @@ html.dark-mode .diag-dock-submit-btn,
         tile.classList.add("is-selected");
         tile.setAttribute("aria-pressed", "true");
 
+        const cropChanged = String(selectedCropId) !== String(tile.dataset.cropId);
         selectedCropId = tile.dataset.cropId;
         hiddenCrop.value = selectedCropId;
 
@@ -2840,8 +2845,12 @@ html.dark-mode .diag-dock-submit-btn,
         if (dockCropEmoji) dockCropEmoji.textContent = cropEmoji;
         if (dockCropName) dockCropName.textContent = cropName;
 
-        // Show Symptoms Container
-        selected.clear();
+        // Opening the picker or reselecting the same crop keeps the draft.
+        if (cropChanged) {
+            selected.clear();
+            sympSearchInput.value = "";
+            sympSearchClear.style.display = "none";
+        }
         sympWrap.hidden = false;
         renderSymptoms(selectedCropId);
 

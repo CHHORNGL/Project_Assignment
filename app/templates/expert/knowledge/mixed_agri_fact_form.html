@@ -1,102 +1,137 @@
 {% extends "layouts/base.html" %}
 {% block title %}{{ t("edit") if is_edit else t("add") }} {{ t("fact") }}{% endblock %}
 
-{% set body_class = "admin-theme" %}
+{% set body_class = "expert-theme admin-theme" %}
 
 {% block content %}
-<div class="container-fluid" style="max-width:900px">
+<div class="expert-board" style="max-width: 860px; margin: 0 auto 3rem;">
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="font-weight-bold text-primary">
-            {{ t("edit") if is_edit else t("add") }} {{ t("fact") }}
-        </h3>
-
-        <a href="{{ url_for('expert.mixed_agri_facts') }}"
-           class="btn btn-light btn-sm shadow-sm">
-            {{ t("back") }}
-        </a>
+    <!-- ===============================
+         HERO HEADER
+    =============================== -->
+    <div class="expert-hero mb-4">
+        <div class="expert-hero-content">
+            <span class="expert-hero-role-pill">
+                <i class="fas fa-atom"></i> Empirical Fact Synthesizer
+            </span>
+            <h1 class="expert-title">
+                <i class="fas fa-plus-circle"></i> {{ t("edit") if is_edit else t("add") }} {{ t("fact") }}
+            </h1>
+            <p class="expert-sub">Synthesize and link verifiable agronomic facts, soil requirements, planting thresholds, or treatment parameters to an institutional source.</p>
+        </div>
+        <div class="expert-hero-actions">
+            <a href="{{ url_for('expert.mixed_agri_facts') }}" class="btn-exp-outline">
+                <i class="fas fa-arrow-left"></i> {{ t("back") }}
+            </a>
+        </div>
     </div>
 
-    <div class="admin-panel">
-        <div class="">
-            <form method="POST">
-                <div class="form-group">
-                    <label class="font-weight-bold">{{ t("source") }}</label>
-                    <select name="source_id" class="form-control" required>
-                        <option value="">{{ t("select_source") }}</option>
-                        {% for s in sources %}
-                        <option value="{{ s.id }}" {% if selected_source_id == s.id %}selected{% endif %}>
-                            {{ s.source_title }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                </div>
+    <!-- ===============================
+         FACT FORM
+    =============================== -->
+    <form method="POST">
+        <div class="exp-form-section">
+            <div class="exp-form-section-title">
+                <i class="fas fa-file-alt"></i> Fact Statement &amp; Context
+            </div>
 
-                <div class="form-group">
-                    <label class="font-weight-bold">{{ t("topic") }}</label>
+            <div class="form-group mb-3">
+                <label class="exp-form-label">
+                    {{ t("source") }} <span class="text-danger">*</span>
+                </label>
+                <select name="source_id" class="exp-select w-100" required>
+                    <option value="">{{ t("select_source") }}</option>
+                    {% for s in sources %}
+                    <option value="{{ s.id }}" {% if selected_source_id == s.id %}selected{% endif %}>
+                        {{ s.source_title }} ({{ s.source_org }})
+                    </option>
+                    {% endfor %}
+                </select>
+                <small class="exp-form-hint">Citing authority or research publication backing this fact.</small>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group col-md-6 mb-3">
+                    <label class="exp-form-label">
+                        {{ t("topic") }} <span class="text-danger">*</span>
+                    </label>
                     <input type="text"
                            name="topic"
-                           class="form-control"
+                           class="exp-form-control"
+                           placeholder="e.g. Soil Salinity, Rice Blast Treatment"
                            value="{{ fact.topic if fact else '' }}"
                            required>
                 </div>
 
-                <div class="form-group">
-                    <label class="font-weight-bold">{{ t("region") }}</label>
+                <div class="form-group col-md-6 mb-3">
+                    <label class="exp-form-label">
+                        {{ t("region") }}
+                    </label>
                     <input type="text"
                            name="region"
-                           class="form-control"
+                           class="exp-form-control"
+                           placeholder="e.g. Southeast Asia, Battambang Province"
                            value="{{ fact.region if fact else '' }}">
                 </div>
+            </div>
 
-                <div class="form-group">
-                    <label class="font-weight-bold">{{ t("fact_text") }}</label>
-                    <textarea name="fact_text"
-                              class="form-control"
-                              rows="4"
-                              required>{{ fact.fact_text if fact else '' }}</textarea>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group col-md-4">
-                        <label class="font-weight-bold">{{ t("metric_value") }}</label>
-                        <input type="text"
-                               name="metric_value"
-                               class="form-control"
-                               value="{{ fact.metric_value if fact and fact.metric_value is not none else '' }}"
-                               placeholder="{{ t("metric_value_placeholder") }}">
-                    </div>
-
-                    <div class="form-group col-md-4">
-                        <label class="font-weight-bold">{{ t("metric_unit") }}</label>
-                        <input type="text"
-                               name="metric_unit"
-                               class="form-control"
-                               value="{{ fact.metric_unit if fact else '' }}"
-                               placeholder="{{ t("metric_unit_placeholder") }}">
-                    </div>
-
-                    <div class="form-group col-md-4">
-                        <label class="font-weight-bold">{{ t("metric_year") }}</label>
-                        <input type="number"
-                               name="metric_year"
-                               class="form-control"
-                               value="{{ fact.metric_year if fact and fact.metric_year is not none else '' }}">
-                    </div>
-                </div>
-
-                <div class="text-right mt-4 d-flex justify-content-end align-items-center" style="gap: 10px;">
-                    <a href="{{ url_for('expert.mixed_agri_facts') }}" class="btn btn-light border px-4 font-weight-bold" style="border-radius: 12px; min-height: 44px; display: inline-flex; align-items: center;">
-                        {{ t("cancel") }}
-                    </a>
-                    <button type="submit" class="btn-save-clean">
-                        <i class="fas fa-check"></i>
-                        <span>{{ t("update") if is_edit else t("save") }} {{ t("fact") }}</span>
-                    </button>
-                </div>
-            </form>
+            <div class="form-group mb-0">
+                <label class="exp-form-label">
+                    {{ t("fact_text") }} <span class="text-danger">*</span>
+                </label>
+                <textarea name="fact_text"
+                          class="exp-form-control"
+                          rows="4"
+                          placeholder="State the verifiable agronomic finding, treatment recommendation, or cultivation threshold..."
+                          required>{{ fact.fact_text if fact else '' }}</textarea>
+            </div>
         </div>
-    </div>
+
+        <div class="exp-form-section">
+            <div class="exp-form-section-title">
+                <i class="fas fa-ruler-combined"></i> Quantitative Metric Parameters
+            </div>
+
+            <div class="form-row">
+                <div class="form-group col-md-4 mb-3">
+                    <label class="exp-form-label">{{ t("metric_value") }}</label>
+                    <input type="text"
+                           name="metric_value"
+                           class="exp-form-control"
+                           value="{{ fact.metric_value if fact and fact.metric_value is not none else '' }}"
+                           placeholder="{{ t('metric_value_placeholder')|default('e.g. 5.5') }}">
+                </div>
+
+                <div class="form-group col-md-4 mb-3">
+                    <label class="exp-form-label">{{ t("metric_unit") }}</label>
+                    <input type="text"
+                           name="metric_unit"
+                           class="exp-form-control"
+                           value="{{ fact.metric_unit if fact else '' }}"
+                           placeholder="{{ t('metric_unit_placeholder')|default('e.g. pH, kg/ha') }}">
+                </div>
+
+                <div class="form-group col-md-4 mb-3">
+                    <label class="exp-form-label">{{ t("metric_year") }}</label>
+                    <input type="number"
+                           name="metric_year"
+                           class="exp-form-control"
+                           placeholder="e.g. 2024"
+                           value="{{ fact.metric_year if fact and fact.metric_year is not none else '' }}">
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex align-items-center justify-content-end gap-3 mt-4" style="gap: 12px;">
+            <a href="{{ url_for('expert.mixed_agri_facts') }}" class="btn-exp-outline" style="min-height: 46px;">
+                {{ t("cancel") }}
+            </a>
+            <button type="submit" class="btn-exp-primary" style="min-height: 46px; font-size: 0.95rem; padding: 0 1.75rem;">
+                <i class="fas fa-check-circle mr-1"></i>
+                <span>{{ t("update") if is_edit else t("save") }} {{ t("fact") }}</span>
+            </button>
+        </div>
+    </form>
 
 </div>
 {% endblock %}

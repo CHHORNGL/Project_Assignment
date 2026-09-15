@@ -1,5 +1,7 @@
 import { useDeferredValue, useEffect, useRef, useState } from "react";
 
+import { scheduleLiveEvaluation } from "./liveEvaluation.js";
+
 import StepCard from "./components/StepCard";
 import Stepper from "./components/Stepper";
 import SymptomCard from "./components/SymptomCard";
@@ -46,9 +48,21 @@ function formatTemplate(template, values, fallback) {
 }
 
 function getSymptomsForCrop(cropId, symptomsByCrop) {
-  const specific = symptomsByCrop?.[String(cropId)] || symptomsByCrop?.[cropId] || [];
+  const isGeneral = !cropId || String(cropId) === "0";
+  const specific = symptomsByCrop?.[String(cropId)] ?? symptomsByCrop?.[cropId];
   const fallback = symptomsByCrop?.["0"] || symptomsByCrop?.[0] || [];
-  const source = Array.isArray(specific) && specific.length ? specific : fallback;
+
+  // When a specific crop is chosen, only use its registered symptoms (empty if none yet).
+  // Only fall back to the global pool ("0") when General Crop or no crop is selected.
+  let source;
+  if (isGeneral) {
+    source = fallback;
+  } else if (Array.isArray(specific)) {
+    source = specific;
+  } else {
+    source = [];
+  }
+
   const rows = [];
   const seen = new Set();
 
@@ -785,6 +799,11 @@ export default function DiagnosisWizardPage({ bootstrap }) {
   }
 
   useEffect(() => {
+    setSelectedSymptoms([]);
+    setSymptomSearch("");
+    setFormError("");
+    setScanResult(null);
+    setQuestionnaireActive(true);
     if (!selectedCropId) {
       setSelectedSymptoms([]);
       setCurrentCategoryIndex(0);
@@ -865,50 +884,33 @@ export default function DiagnosisWizardPage({ bootstrap }) {
       openLiveCamera(activeCameraDeviceId);
     }
   }, [scanMode, currentStep]);
-  const lastLiveEvalRef = useRef(null);
-
-  const triggerLiveEvaluation = async (currentPos, currentNeg) => {
-    if (!selectedCropId) return;
-
-    const cacheKey = JSON.stringify({ pos: currentPos, neg: currentNeg });
-    if (lastLiveEvalRef.current === cacheKey) return;
-    lastLiveEvalRef.current = cacheKey;
+  useEffect(() => {
+    setLiveSuspects([]);
+    setLiveBestMatch(null);
+    setEvaluatingLive(false);
+    if (currentStep !== 3 || !selectedCropId || (!selectedSymptoms.length && !deniedSymptoms.length)) {
+      return undefined;
+    }
 
     setEvaluatingLive(true);
-    try {
-      const response = await fetch("/api/diagnose/live-evaluation", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Requested-With": "XMLHttpRequest",
-          "X-CSRFToken": bootstrap?.csrfToken || "",
-        },
-        credentials: "include",
-        body: JSON.stringify({
-          crop_id: selectedCropId,
-          symptoms: currentPos,
-          denied_symptoms: currentNeg,
-          category: selectedDomainId,
-        }),
-      });
-
-      const data = await response.json();
-      if (data && data.ok) {
+    setFormError("");
+    return scheduleLiveEvaluation({
+      url: bootstrap.liveEvaluationApi,
+      csrfToken: bootstrap.csrfToken,
+      payload: {
+        crop_id: selectedCropId,
+        symptoms: selectedSymptoms,
+        denied_symptoms: deniedSymptoms,
+        category: diagnosisCategory,
+      },
+      onSuccess: (data) => {
         setLiveSuspects(data.suspects || []);
         setLiveBestMatch(data.best || null);
-      }
-    } catch (e) {
-      console.error("Live evaluation failed:", e);
-    } finally {
-      setEvaluatingLive(false);
-    }
-  };
-
-  useEffect(() => {
-    if (currentStep === 3) {
-      triggerLiveEvaluation(selectedSymptoms, deniedSymptoms);
-    }
-  }, [selectedSymptoms, deniedSymptoms, currentStep]);
+      },
+      onError: (error) => setFormError(error.message),
+      onSettled: () => setEvaluatingLive(false),
+    });
+  }, [selectedCropId, selectedSymptoms, deniedSymptoms, diagnosisCategory, currentStep, bootstrap.liveEvaluationApi, bootstrap.csrfToken]);
   useEffect(() => {
     function handleVisibilityChange() {
       if (document.hidden) {
@@ -1182,7 +1184,7 @@ export default function DiagnosisWizardPage({ bootstrap }) {
             <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
               {/* Questionnaire / Checklist Panel */}
               <div className="space-y-6">
-                {questionnaireActive ? (
+                {questionnaireActive && currentSymptoms.length > 0 ? (
                   /* Guided Questionnaire Mode */
                   (() => {
                     const activeCategories = groupSymptoms(currentSymptoms);

@@ -179,10 +179,16 @@
         return minTop;
     }
 
+    // clientWidth excludes the page scrollbar; reserve room for the button's
+    // pulse/hover effect and the panel shadow beside overlay scrollbars too.
+    function getRightBoundary() {
+        return (document.documentElement.clientWidth || window.innerWidth) - 12;
+    }
+
     function clampToViewport() {
         const rect = root.getBoundingClientRect();
         const margin = 12;
-        const maxLeft = Math.max(margin, window.innerWidth - rect.width - margin);
+        const maxLeft = Math.max(margin, getRightBoundary() - rect.width - margin);
         let maxTop = Math.max(margin, window.innerHeight - rect.height - margin);
         const minTop = getSafeMinTop(margin);
 
@@ -240,10 +246,14 @@
         const isMobileSheet = window.matchMedia && window.matchMedia("(max-width: 520px)").matches;
         if (isMobileSheet) {
             panel.style.left = `${gap}px`;
-            panel.style.right = `${gap}px`;
+            panel.style.right = `calc(${gap + 12}px + env(safe-area-inset-right, 0px))`;
             panel.style.top = "auto";
             panel.style.bottom = `calc(${gap}px + env(safe-area-inset-bottom, 0px))`;
-            panel.style.maxHeight = `calc(100vh - ${minTop + gap}px)`;
+            const viewport = window.visualViewport;
+            const visibleHeight = viewport ? viewport.height : window.innerHeight;
+            const keyboardInset = viewport ? Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop) : 0;
+            panel.style.bottom = `calc(${keyboardInset + gap}px + env(safe-area-inset-bottom, 0px))`;
+            panel.style.maxHeight = `${Math.max(120, visibleHeight - minTop - gap - 24)}px`;
             return;
         }
 
@@ -258,7 +268,7 @@
             top = fabRect.bottom + gap;
         }
 
-        const maxLeft = Math.max(gap, window.innerWidth - panelRect.width - gap);
+        const maxLeft = Math.max(gap, getRightBoundary() - panelRect.width - gap);
         const maxTop = Math.max(gap, window.innerHeight - panelRect.height - gap);
         left = clamp(left, gap, maxLeft);
         top = clamp(top, minTop, Math.max(minTop, maxTop));
@@ -271,6 +281,7 @@
         opts = opts || {};
         const shouldFocus = opts.focus !== false;
         panel.classList.remove("is-collapsed");
+        fab.classList.add("is-open");
         fab.setAttribute("aria-expanded", "true");
         saveOpenState(true);
         ensureGreeting();
@@ -284,6 +295,7 @@
 
     function close() {
         panel.classList.add("is-collapsed");
+        fab.classList.remove("is-open");
         fab.setAttribute("aria-expanded", "false");
         saveOpenState(false);
     }
@@ -314,6 +326,13 @@
         const item = document.createElement("div");
         item.className = "ai-helper-msg " + kind;
 
+        if (kind === "assistant") {
+            const avatar = document.createElement("div");
+            avatar.className = "ai-helper-msg-avatar";
+            avatar.innerHTML = '<i class="fas fa-robot"></i>';
+            item.appendChild(avatar);
+        }
+
         const bubble = document.createElement("div");
         bubble.className = "ai-helper-bubble";
         bubble.textContent = escapeText(text);
@@ -333,6 +352,11 @@
         if (!thread) return null;
         const item = document.createElement("div");
         item.className = "ai-helper-msg assistant";
+
+        const avatar = document.createElement("div");
+        avatar.className = "ai-helper-msg-avatar";
+        avatar.innerHTML = '<i class="fas fa-robot"></i>';
+        item.appendChild(avatar);
 
         const bubble = document.createElement("div");
         bubble.className = "ai-helper-bubble ai-helper-typing";
@@ -399,6 +423,15 @@
         if (isOpen()) positionPanel();
     });
 
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener("resize", () => {
+            if (isOpen()) positionPanel();
+        });
+        window.visualViewport.addEventListener("scroll", () => {
+            if (isOpen()) positionPanel();
+        });
+    }
+
     // Drag to reposition (mobile + desktop). Only when panel is closed.
     let drag = null;
     let suppressClick = false;
@@ -443,7 +476,7 @@
         let left = drag.baseLeft + dx;
         let top = drag.baseTop + dy;
 
-        const maxLeft = Math.max(margin, window.innerWidth - w - margin);
+        const maxLeft = Math.max(margin, getRightBoundary() - w - margin);
         let maxTop = Math.max(margin, window.innerHeight - h - margin);
         const minTop = getSafeMinTop(margin);
 
@@ -468,7 +501,7 @@
             const rect = root.getBoundingClientRect();
             const margin = 12;
             const w = rect.width || 56;
-            const maxLeft = Math.max(margin, window.innerWidth - w - margin);
+            const maxLeft = Math.max(margin, getRightBoundary() - w - margin);
             const minTop = getSafeMinTop(margin);
 
             // Snap to nearest horizontal edge for a cleaner look.
@@ -546,14 +579,46 @@
         });
     });
 
+    const suggestionChips = root.querySelectorAll(".ai-helper-chip");
+    suggestionChips.forEach((chip) => {
+        chip.addEventListener("click", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const query = chip.dataset.query;
+            if (!query || !input) return;
+            input.value = query;
+            if (form) {
+                form.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
+            }
+        });
+    });
+
+    function resizeComposer() {
+        if (!input) return;
+        input.style.height = "auto";
+        input.style.height = `${Math.min(input.scrollHeight, 120)}px`;
+    }
+
+    if (input) {
+        input.addEventListener("input", resizeComposer);
+        input.addEventListener("keydown", (event) => {
+            if (event.key !== "Enter" || event.shiftKey || event.isComposing) return;
+            // Touch keyboards retain Enter for a new line; use the send button.
+            if (!window.matchMedia("(pointer: fine)").matches) return;
+            event.preventDefault();
+            if (form && !input.disabled) form.requestSubmit();
+        });
+    }
+
     if (form) {
         form.addEventListener("submit", async (e) => {
             e.preventDefault();
-            if (!input) return;
+            if (!input || input.disabled) return;
             const message = (input.value || "").trim();
             if (!message) return;
 
             input.value = "";
+            resizeComposer();
             appendMessage("user", message);
 
             const typingEl = appendTyping();
@@ -593,7 +658,7 @@
     if (supportForm) {
         supportForm.addEventListener("submit", async (e) => {
             e.preventDefault();
-            if (!supportText) return;
+            if (!supportText || supportText.disabled) return;
             const message = (supportText.value || "").trim();
             if (!message) return;
 
