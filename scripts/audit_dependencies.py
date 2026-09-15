@@ -94,8 +94,13 @@ def run_pip_audit():
         print("  ⚠️  pip-audit is not installed. Install via `pip install pip-audit` to scan for CVEs.")
         return False, "pip-audit not installed"
 
+    lock_file = ROOT_DIR / "requirements.lock"
+    cmd = [sys.executable, "-m", "pip_audit"]
+    if lock_file.exists():
+        cmd.extend(["-r", str(lock_file)])
+
     audit_res = subprocess.run(
-        [sys.executable, "-m", "pip_audit"],
+        cmd,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True
