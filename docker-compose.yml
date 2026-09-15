@@ -45,6 +45,12 @@ services:
       - TRUSTED_PROXY_COUNT=1
       - POSTGRES_HOST=db
       - DATABASE_URL=postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/healthz', timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      start_period: 60s
+      retries: 5
     env_file:
       - .env
     volumes:

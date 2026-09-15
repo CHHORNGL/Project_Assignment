@@ -202,7 +202,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   color: Theme.of(context).colorScheme.surface,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: Theme.of(context).dividerColor, width: 1.5),
-                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 8, offset: const Offset(0, 4))],
+                  boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 8, offset: const Offset(0, 4))],
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,

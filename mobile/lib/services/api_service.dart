@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user.dart';
@@ -16,7 +17,7 @@ class ApiService {
     return {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
-      if (cookie != null) 'Cookie': cookie,
+      'Cookie': ?cookie,
     };
   }
 
@@ -90,7 +91,7 @@ class ApiService {
         Uri.parse('$baseUrl/verify-code'),
         headers: {
           'Content-Type': 'application/json',
-          if (cookie != null) 'Cookie': cookie,
+          'Cookie': ?cookie,
         },
         body: jsonEncode({'code': code}),
       );
@@ -112,7 +113,7 @@ class ApiService {
       final response = await http.post(
         Uri.parse('$baseUrl/resend-code'),
         headers: {
-          if (cookie != null) 'Cookie': cookie,
+          'Cookie': ?cookie,
         }
       );
       return response.statusCode == 200;
@@ -296,7 +297,7 @@ class ApiService {
         Uri.parse('$usersBaseUrl/settings'),
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
-          if (cookie != null) 'Cookie': cookie,
+          'Cookie': ?cookie,
         },
         body: {
           'ai_model': aiModel,
@@ -320,7 +321,7 @@ class ApiService {
         Uri.parse('$baseUrl/2fa/toggle'),
         headers: {
           'Content-Type': 'application/json',
-          if (cookie != null) 'Cookie': cookie,
+          'Cookie': ?cookie,
         },
         body: jsonEncode({'enabled': enabled}),
       );
@@ -406,7 +407,7 @@ class ApiService {
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
       } else {
-        print('Diagnose Error: ${response.statusCode} - ${response.body}');
+        debugPrint('Diagnose request failed: ${response.statusCode}');
         try {
           final errorData = jsonDecode(response.body);
           if (errorData.containsKey('error')) {
@@ -416,7 +417,7 @@ class ApiService {
         return {'error': 'Server error: ${response.statusCode}'};
       }
     } catch (e) {
-      print('Exception in diagnoseImage: $e');
+      debugPrint('Exception in diagnoseImage: $e');
       return {'error': 'Failed to connect to server.'};
     }
   }
@@ -451,7 +452,7 @@ class ApiService {
         Uri.parse('$baseUrl/update-profile'),
         headers: {
           'Content-Type': 'application/json',
-          if (cookie != null) 'Cookie': cookie,
+          'Cookie': ?cookie,
         },
         body: json.encode({
           'username': username,

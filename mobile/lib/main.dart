@@ -153,7 +153,7 @@ class _AgriAppState extends State<AgriApp> {
         elevation: isDark ? 2 : 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: isDark ? BorderSide.none : BorderSide(color: Colors.grey.withOpacity(0.1)),
+          side: isDark ? BorderSide.none : BorderSide(color: Colors.grey.withValues(alpha: 0.1)),
         ),
       ),
       bottomSheetTheme: BottomSheetThemeData(

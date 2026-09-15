@@ -19,13 +19,14 @@ class _CropScanScreenState extends State<CropScanScreen> {
   Future<void> _pickImage(ImageSource source) async {
     try {
       final XFile? pickedFile = await _picker.pickImage(source: source);
+      if (!mounted) return;
       if (pickedFile != null) {
         setState(() {
           _image = File(pickedFile.path);
         });
       }
     } catch (e) {
-      print("Failed to pick image: $e");
+      debugPrint("Failed to pick image: $e");
     }
   }
 
@@ -43,6 +44,7 @@ class _CropScanScreenState extends State<CropScanScreen> {
     });
 
     final result = await ApiService.diagnoseImage(_image!);
+    if (!mounted) return;
 
     setState(() {
       _isDiagnosing = false;

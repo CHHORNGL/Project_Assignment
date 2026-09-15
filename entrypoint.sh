@@ -8,11 +8,11 @@ until pg_isready -h "${POSTGRES_HOST:-db}" -p 5432 -U "${POSTGRES_USER:-postgres
 done
 echo "✅ PostgreSQL database is ready!"
 
-# Run database initialization and stamp migrations
+# Initialize fresh databases and apply pending migrations to existing databases
 echo "🔄 Initializing database schema (setup_db.py)..."
 python setup_db.py
-echo "🔄 Stamping migrations to head..."
-flask db stamp head
+echo "🔄 Applying database migrations..."
+flask db upgrade
 
 # Run seed scripts in app context
 echo "🌱 Running database seeds..."

@@ -83,7 +83,7 @@ class _ManualDiagnosisScreenState extends State<ManualDiagnosisScreen> {
       final headers = {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        if (cookie != null) 'Cookie': cookie,
+        'Cookie': ?cookie,
       };
 
       final response = await http.get(
@@ -131,7 +131,7 @@ class _ManualDiagnosisScreenState extends State<ManualDiagnosisScreen> {
       final headers = {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        if (cookie != null) 'Cookie': cookie,
+        'Cookie': ?cookie,
       };
 
       final response = await http.post(
@@ -411,7 +411,7 @@ class _ManualDiagnosisScreenState extends State<ManualDiagnosisScreen> {
                                     ),
                                     boxShadow: [
                                       if (isSelected)
-                                        BoxShadow(color: Colors.green.withOpacity(0.1), blurRadius: 8, offset: const Offset(0, 4))
+                                        BoxShadow(color: Colors.green.withValues(alpha: 0.1), blurRadius: 8, offset: const Offset(0, 4))
                                     ],
                                   ),
                                   child: Row(
@@ -470,7 +470,7 @@ class _ManualDiagnosisScreenState extends State<ManualDiagnosisScreen> {
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
                     color: Theme.of(context).colorScheme.surface,
-                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -5))],
+                    boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, -5))],
                   ),
                   child: SizedBox(
                     width: double.infinity,
