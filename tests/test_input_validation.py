@@ -73,6 +73,7 @@ class RealRouteValidationTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         with patch.multiple(Config, SQLALCHEMY_DATABASE_URI='sqlite://',
+                            SECRET_KEY='isolated-route-test-key', SESSION_TYPE='cachelib',
                             RATELIMIT_STORAGE_URI='memory://', RATE_LIMIT_AUTH='1000 per minute',
                             RATE_LIMIT_RECOVERY='1000 per minute'):
             cls.app = create_app()

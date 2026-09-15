@@ -21,18 +21,16 @@ outdated third-party components (OWASP A06:2021).
 - `requirements.txt` declares direct production dependencies grouped by domain
   (Core Framework, Database & Migrations, Authentication & Security, Integrations).
   Every package is strictly pinned (`==`) to tested versions to avoid runtime drift.
-- `requirements.lock` captures the full transitive dependency tree (88 packages)
+- `requirements.lock` captures the full transitive dependency tree
   generated from a verified environment via `pip freeze`.
-- `requirements-dev.txt` isolates developer utilities (e.g., `pip-audit`) to keep
-  production Docker images lean.
+- The current lock also includes audit tooling so CI installs its tested versions.
 
 ### Deterministic Container Builds
 In `Dockerfile`:
 - **Stage 1 (Frontend):** Uses `npm ci` rather than `npm install`. This guarantees
   that the exact dependency versions specified in `package-lock.json` are installed
   without modifying the lockfile.
-- **Stage 2 (Backend):** Checks for `requirements.lock` and installs all locked
-  packages directly, falling back to `requirements.txt` only if a lockfile is absent.
+- **Stage 2 (Backend):** Installs `requirements.lock` directly and requires the lockfile to be present.
 
 ---
 
@@ -42,7 +40,7 @@ In `Dockerfile`:
 Run from the repository root:
 
 ```sh
-.venv/bin/python scripts/audit_dependencies.py --check-lockfile
+.venv/bin/python scripts/audit_dependencies.py --check-lockfile --strict
 ```
 
 The script performs automated checks:
@@ -66,10 +64,11 @@ Automated weekly scans are configured in `.github/dependabot.yml` across 5 ecosy
 
 ### Continuous Integration (CI)
 The GitHub Actions workflow at `.github/workflows/dependency-audit.yml` triggers
-on every pull request and push modifying dependency files. It automatically enforces:
+on every pull request and push to main, weekly, and on manual dispatch. It enforces:
 - Lockfile installation integrity.
 - `pip check` zero-error validation.
-- `scripts/audit_dependencies.py --check-lockfile` verification.
+- `scripts/audit_dependencies.py --check-lockfile --strict --python-only` verification.
+- Backend tests, frontend build, and JavaScript regression tests.
 - `npm audit --audit-level=high` checks.
 
 ---
@@ -88,7 +87,7 @@ on every pull request and push modifying dependency files. It automatically enfo
    ```
 4. Verify manifest-lockfile parity and tree integrity:
    ```sh
-   .venv/bin/python scripts/audit_dependencies.py --check-lockfile
+   .venv/bin/python scripts/audit_dependencies.py --check-lockfile --strict
    ```
 
 ### Resolving Vulnerabilities
@@ -122,3 +121,18 @@ Run the comprehensive test suite from the repository root:
 - OWASP Vulnerable and Outdated Components: https://owasp.org/Top10/A06_2021-Vulnerable_and_Outdated_Components/
 - Python Packaging Authority (PyPA) Reproducible Builds: https://packaging.python.org/
 - GitHub Dependabot Documentation: https://docs.github.com/en/code-security/dependabot
+
+## September 2026 security update
+
+Updated Vite to 7.3.6 and its React plugin to 5.2.0, with Node 22 in CI and Docker.
+Updated vulnerable Python packages and their exact lockfile versions. Local Python
+and npm advisory scans report zero known vulnerabilities at verification time.
+Audit failures and missing Python audit tooling now fail strict CI checks.
+
+These scans address known dependency advisories; passing does not prove that all
+application code, configuration, or external integrations are secure.
+
+To publish the reviewed changes from the project root, stage the changed manifests,
+lockfiles, workflow, audit script, tests, Dockerfile, documentation, and generated
+frontend assets; commit them and push main. Check both jobs in GitHub Actions.
+Never commit your `.env`, credentials, or local session files.

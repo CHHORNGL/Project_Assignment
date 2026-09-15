@@ -36,21 +36,28 @@ def check_manifest_lockfile_sync(req_path: Path, lock_path: Path):
     if not lock_path.exists():
         return False, f"Lockfile not found: {lock_path}"
 
-    with open(req_path, "r", encoding="utf-8") as f:
-        declared = {
-            name for line in f
-            if (name := parse_requirement_name(line))
-        }
+    def pins(path):
+        result = {}
+        for raw in path.read_text().splitlines():
+            line = raw.split("#", 1)[0].strip()
+            if not line:
+                continue
+            match = re.fullmatch(r"([A-Za-z0-9_.-]+)(?:\[[^\]]+\])?==([^\s;]+)", line)
+            if not match:
+                raise ValueError(f"Unpinned or invalid requirement in {path.name}: {line}")
+            name = match[1].lower().replace("_", "-").replace(".", "-")
+            if name in result:
+                raise ValueError(f"Duplicate requirement in {path.name}: {name}")
+            result[name] = match[2]
+        return result
 
-    with open(lock_path, "r", encoding="utf-8") as f:
-        locked = {
-            name for line in f
-            if (name := parse_requirement_name(line))
-        }
-
-    missing_in_lock = declared - locked
-    if missing_in_lock:
-        return False, f"Packages in {req_path.name} missing from {lock_path.name}: {sorted(missing_in_lock)}"
+    try:
+        declared, locked = pins(req_path), pins(lock_path)
+    except ValueError as error:
+        return False, str(error)
+    mismatches = [name for name, version in declared.items() if locked.get(name) != version]
+    if mismatches:
+        return False, f"Missing or mismatched locked versions: {sorted(mismatches)}"
 
     print(f"  ✅ All {len(declared)} declared dependencies are locked in {lock_path.name} ({len(locked)} total packages locked).")
     return True, "Manifest and lockfile are in sync."
@@ -85,7 +92,7 @@ def run_pip_audit():
     )
     if res.returncode != 0:
         print("  ⚠️  pip-audit is not installed. Install via `pip install pip-audit` to scan for CVEs.")
-        return True, "pip-audit not installed"
+        return False, "pip-audit not installed"
 
     audit_res = subprocess.run(
         [sys.executable, "-m", "pip_audit"],
@@ -102,7 +109,10 @@ def run_pip_audit():
             print(f"     {line}")
         if len(audit_res.stdout.strip().splitlines()) > 15:
             print("     ... (run `.venv/bin/pip-audit` for complete CVE breakdown)")
-        return False, audit_res.stdout.strip()
+        detail = (audit_res.stdout + "\n" + audit_res.stderr).strip()
+        if audit_res.stderr.strip():
+            print(audit_res.stderr.strip())
+        return False, detail
 
 
 def check_frontend():
@@ -145,7 +155,7 @@ def check_frontend():
         else:
             print("  ⚠️  npm audit: High or critical vulnerabilities detected in frontend dependencies.")
             return False, audit.stdout.strip()
-    return True, "npm not available"
+    return False, "npm not available"
 
 
 def check_mobile():
@@ -169,6 +179,7 @@ def main():
     parser = argparse.ArgumentParser(description="Audit project dependencies across Python, Node, and Dart ecosystems.")
     parser.add_argument("--check-lockfile", action="store_true", help="Enforce manifest-to-lockfile parity.")
     parser.add_argument("--strict", action="store_true", help="Exit with code 1 if any warning or CVE is found.")
+    parser.add_argument("--python-only", action="store_true", help="Run only Python checks; frontend has its own CI job.")
     args = parser.parse_args()
 
     req_file = ROOT_DIR / "requirements.txt"
@@ -188,13 +199,14 @@ def main():
     audit_ok, audit_msg = run_pip_audit()
     results.append(("Python Vulnerability Audit", audit_ok, audit_msg))
 
-    # 4. Frontend
-    fe_ok, fe_msg = check_frontend()
-    results.append(("Frontend Dependency Health", fe_ok, fe_msg))
+    if not args.python_only:
+        # 4. Frontend
+        fe_ok, fe_msg = check_frontend()
+        results.append(("Frontend Dependency Health", fe_ok, fe_msg))
 
-    # 5. Mobile
-    mob_ok, mob_msg = check_mobile()
-    results.append(("Mobile Dependency Health", mob_ok, mob_msg))
+        # 5. Mobile
+        mob_ok, mob_msg = check_mobile()
+        results.append(("Mobile Dependency Health", mob_ok, mob_msg))
 
     print("\n" + "=" * 60)
     print("📊 DEPENDENCY AUDIT SUMMARY")
