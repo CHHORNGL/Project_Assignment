@@ -12,6 +12,7 @@ from flask import (
 )
 import re
 import os
+from datetime import datetime
 from uuid import uuid4
 from flask_login import current_user, login_required
 from sqlalchemy.orm import joinedload
@@ -1289,6 +1290,14 @@ def _ensure_legacy_session(farmer_id: int):
     return session
 
 
+def _chat_timestamp(message):
+    """Return a saved chat timestamp in an explicit UTC ISO format."""
+    created_at = getattr(message, "created_at", None)
+    if not isinstance(created_at, datetime):
+        return None
+    return f"{created_at.isoformat(timespec='seconds')}Z"
+
+
 @farmer_bp.route("/chat/new")
 @farmer_required
 def new_chat():
@@ -1463,19 +1472,21 @@ def chat(session_id=None):
                 else:
                     reply = t("chat_need_crop_and_symptoms")
 
-            db.session.add(
-                ChatMessage(
-                    sender="system",
-                    message=reply,
-                    farmer_id=current_user.id,
-                    session_id=session.id
-                )
+            assistant_message = ChatMessage(
+                sender="system",
+                message=reply,
+                farmer_id=current_user.id,
+                session_id=session.id
             )
+            db.session.add(assistant_message)
 
             if not session.title or session.title == "New Chat":
                 session.title = (user_message[:40] + "...") if len(user_message) > 40 else user_message
             session.updated_at = db.func.now()
             db.session.commit()
+
+            user_created_at = _chat_timestamp(farmer_message)
+            assistant_created_at = _chat_timestamp(assistant_message)
 
             try:
                 notify_role(
@@ -1493,7 +1504,14 @@ def chat(session_id=None):
                 db.session.rollback()
 
         if wants_json:
-            return jsonify(ok=True, reply=reply, session_id=session.id, title=session.title)
+            return jsonify(
+                ok=True,
+                reply=reply,
+                session_id=session.id,
+                title=session.title,
+                user_created_at=user_created_at,
+                assistant_created_at=assistant_created_at,
+            )
         return redirect(url_for("farmer.chat", session_id=session.id))
 
     # ---------------------------------
@@ -2021,4 +2039,3 @@ def mark_notification_read(notification_id: int):
         "ok": True,
         "unread_count": unread_count,
     })
-

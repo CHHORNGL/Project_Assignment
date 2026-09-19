@@ -193,6 +193,19 @@
     font-weight: 600;
 }
 
+.v0-message-time {
+    display: block;
+    font-size: 0.72rem;
+    line-height: 1.2;
+    opacity: 0.65;
+    white-space: nowrap;
+}
+
+.v0-bubble-user .v0-message-time {
+    margin-top: 4px;
+    text-align: right;
+}
+
 .v0-bubble-expert-badge {
     background: rgba(16, 185, 129, 0.12);
     color: #047857;
@@ -512,8 +525,7 @@
                     <div class="v0-bubble-user">
                         <div>{{ m.message }}</div>
                         {% if m.created_at %}
-                        <div style="font-size: 0.72rem; opacity: 0.65; text-align: right; margin-top: 4px;">
-                            {{ m.created_at.strftime('%H:%M') }}
+                        <div class="v0-message-time" data-chat-time="{{ m.created_at.isoformat() }}Z">
                         </div>
                         {% endif %}
                     </div>
@@ -528,7 +540,7 @@
                         <div class="v0-bubble-meta">
                             <span class="v0-bubble-expert-badge"><i class="fas fa-robot mr-1"></i>{{ t("farmer_expert") }}</span>
                             {% if m.created_at %}
-                            <span>{{ m.created_at.strftime('%H:%M') }}</span>
+                            <time class="v0-message-time" data-chat-time="{{ m.created_at.isoformat() }}Z"></time>
                             {% endif %}
                         </div>
                         <div class="v0-bubble-text">{{ m.message | safe }}</div>
@@ -614,6 +626,8 @@
     const sendBtn = document.getElementById("v0-send-btn");
     const form = document.getElementById("farmer-chat-form");
     const suggestionChips = document.querySelectorAll(".v0-action-btn");
+    const expertLogoUrl = {{ url_for('static', filename='img/logo_icon.svg', v=static_version)|tojson }};
+    const expertName = {{ t("farmer_expert")|tojson }};
 
     if (!textarea) return;
     let sending = false;
@@ -658,7 +672,34 @@
         });
     });
 
-    function appendChatMessage(text, user) {
+    function formatChatTime(timestamp) {
+        const date = new Date(timestamp || Date.now());
+        if (Number.isNaN(date.getTime())) return "";
+        return new Intl.DateTimeFormat(undefined, {
+            hour: "2-digit",
+            minute: "2-digit",
+        }).format(date);
+    }
+
+    function createChatTime(timestamp) {
+        const time = document.createElement("time");
+        const value = timestamp || new Date().toISOString();
+        time.className = "v0-message-time";
+        time.dataset.chatTime = value;
+        time.dateTime = value;
+        time.textContent = formatChatTime(value);
+        return time;
+    }
+
+    function updateChatTime(row, timestamp) {
+        const time = row && row.querySelector(".v0-message-time");
+        if (!time || !timestamp) return;
+        time.dataset.chatTime = timestamp;
+        time.dateTime = timestamp;
+        time.textContent = formatChatTime(timestamp);
+    }
+
+    function appendChatMessage(text, user, timestamp) {
         const wrapper = document.querySelector(".v0-chat-wrapper");
         const empty = wrapper.querySelector(".v0-empty-container");
         if (empty) empty.remove();
@@ -672,13 +713,49 @@
         row.className = "v0-msg-row " + (user ? "v0-msg-user" : "v0-msg-expert");
         const bubble = document.createElement("div");
         bubble.className = user ? "v0-bubble-user" : "v0-bubble-expert";
-        bubble.style.whiteSpace = "pre-wrap";
-        bubble.textContent = text;
+
+        if (user) {
+            const messageText = document.createElement("div");
+            messageText.textContent = text;
+            bubble.appendChild(messageText);
+            bubble.appendChild(createChatTime(timestamp));
+        } else {
+            const avatar = document.createElement("div");
+            avatar.className = "v0-expert-avatar";
+            const logo = document.createElement("img");
+            logo.src = expertLogoUrl;
+            logo.alt = expertName;
+            avatar.appendChild(logo);
+            row.appendChild(avatar);
+
+            const meta = document.createElement("div");
+            meta.className = "v0-bubble-meta";
+            const badge = document.createElement("span");
+            badge.className = "v0-bubble-expert-badge";
+            const icon = document.createElement("i");
+            icon.className = "fas fa-robot mr-1";
+            icon.setAttribute("aria-hidden", "true");
+            badge.appendChild(icon);
+            badge.appendChild(document.createTextNode(expertName));
+            meta.appendChild(badge);
+            meta.appendChild(createChatTime(timestamp));
+            bubble.appendChild(meta);
+
+            const messageText = document.createElement("div");
+            messageText.className = "v0-bubble-text";
+            messageText.textContent = text;
+            bubble.appendChild(messageText);
+        }
         row.appendChild(bubble);
         list.appendChild(row);
         row.scrollIntoView({ block: "nearest", behavior: "auto" });
         return row;
     }
+
+    document.querySelectorAll("[data-chat-time]").forEach((time) => {
+        time.textContent = formatChatTime(time.dataset.chatTime);
+        time.dateTime = time.dataset.chatTime;
+    });
 
     form.addEventListener("submit", async (event) => {
         event.preventDefault();
@@ -689,7 +766,7 @@
         textarea.value = "";
         autoResize();
         form.setAttribute("aria-busy", "true");
-        appendChatMessage(message, true);
+        const userRow = appendChatMessage(message, true);
         const pending = appendChatMessage({{ ("AI កំពុងសរសេរ…" if current_lang == "km" else "AI is writing…")|tojson }}, false);
         pending.classList.add("expert-chat-pending");
         pending.setAttribute("role", "status");
@@ -703,12 +780,14 @@
             if (!response.ok || !data?.ok || typeof data.reply !== "string") {
                 throw new Error(data?.error || {{ ("មិនអាចទទួលចម្លើយបានទេ។ សូមពិនិត្យការតភ្ជាប់ ហើយពិនិត្យប្រវត្តិជជែកមុនផ្ញើម្ដងទៀត។" if current_lang == "km" else "Could not receive the reply. Check your connection and chat history before sending again.")|tojson }});
             }
+            updateChatTime(userRow, data.user_created_at);
             pending.remove();
-            appendChatMessage(data.reply, false);
+            appendChatMessage(data.reply, false, data.assistant_created_at);
         } catch (error) {
             pending.classList.remove("expert-chat-pending");
             pending.setAttribute("role", "alert");
-            pending.firstElementChild.textContent = error.message;
+            const pendingText = pending.querySelector(".v0-bubble-text");
+            if (pendingText) pendingText.textContent = error.message;
         } finally {
             sending = false;
             form.removeAttribute("aria-busy");
