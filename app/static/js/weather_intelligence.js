@@ -5,7 +5,9 @@
     const CACHE_KEY_PREFIX = "agri_weather_intel_payload_v3";
     const LOCATION_KEY = "agri_weather_intel_location_v1";
     const GEO_TIMEOUT_MS = 5500;
-    const REQUEST_TIMEOUT_MS = 8500;
+    const REQUEST_TIMEOUT_MS = 18000;
+    const MAX_CACHE_AGE_MS = 6 * 60 * 60 * 1000;
+    let retryTimer;
 
     const endpoint = String(root.dataset.weatherEndpoint || "").trim();
     const fallbackLat = Number(root.dataset.fallbackLat || 0) || 11.5564;
@@ -26,6 +28,13 @@
             source_cache: "Cached",
             source_fallback: "Fallback",
             source_stale: "Stale cache",
+            status_rate_limited: "Weather provider limit reached | Retrying automatically",
+            status_provider_unavailable: "Weather provider unavailable | Retrying automatically",
+            showing_saved: "Showing saved weather",
+            met_forecast: "MET Norway forecast",
+            adapted_forecast: "Forecast adapted from",
+            forecast_estimates: "Daily values are estimates; today covers the remaining hours.",
+            weather_data: "Weather data from",
             no_alert_title: "No weather alerts",
             no_alert_message: "The weather looks stable for now.",
             no_recommend: "No recommendations are available right now.",
@@ -45,6 +54,13 @@
             source_cache: "ទិន្នន័យសន្សំ",
             source_fallback: "ទិន្នន័យជំនួស",
             source_stale: "ទិន្នន័យសន្សំចាស់",
+            status_rate_limited: "សេវាអាកាសធាតុដល់កម្រិតសំណើ | នឹងព្យាយាមឡើងវិញដោយស្វ័យប្រវត្តិ",
+            status_provider_unavailable: "សេវាអាកាសធាតុមិនអាចប្រើបាន | នឹងព្យាយាមឡើងវិញដោយស្វ័យប្រវត្តិ",
+            showing_saved: "បង្ហាញទិន្នន័យអាកាសធាតុដែលបានរក្សាទុក",
+            met_forecast: "ការព្យាករណ៍ MET Norway",
+            adapted_forecast: "ការព្យាករណ៍កែសម្រួលពី",
+            forecast_estimates: "តម្លៃប្រចាំថ្ងៃជាការប៉ាន់ស្មាន។ ថ្ងៃនេះគ្របដណ្តប់ម៉ោងដែលនៅសល់។",
+            weather_data: "ទិន្នន័យអាកាសធាតុពី",
             no_alert_title: "មិនមានការជូនដំណឹងអាកាសធាតុ",
             no_alert_message: "អាកាសធាតុស្ថិរភាពសម្រាប់ឥឡូវនេះ។",
             no_recommend: "មិនមានអនុសាសន៍ថ្មីនៅពេលនេះទេ។",
@@ -74,6 +90,7 @@
     const alertListEl = document.getElementById("wi-alert-list");
     const forecastGridEl = document.getElementById("wi-forecast-grid");
     const recommendListEl = document.getElementById("wi-recommend-list");
+    const attributionEl = document.getElementById("wi-attribution");
 
     function setStatus(text) {
         if (statusEl) statusEl.textContent = text;
@@ -106,7 +123,7 @@
         if (!iso) return "";
         const dt = new Date(iso);
         if (Number.isNaN(dt.getTime())) return "";
-        return dt.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
+        return dt.toLocaleString(locale, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
     }
 
     function setCurrent(current) {
@@ -204,17 +221,35 @@
         const meta = payload.meta || {};
         const source = meta.source || "live";
         const updatedAt = relativeUpdatedAt(meta.generated_at);
+        const isMet = meta.provider === "met-norway";
+        if (attributionEl) {
+            attributionEl.innerHTML = source === "fallback" ? "" : (
+                `${escapeHtml(tt(isMet ? "adapted_forecast" : "weather_data"))} ` +
+                (isMet ? '<a href="https://www.met.no/en" target="_blank" rel="noopener noreferrer">MET Norway</a>'
+                    : '<a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a>') +
+                ' · <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a>' +
+                (isMet ? `<br>${escapeHtml(tt("forecast_estimates"))}` : "")
+            );
+        }
 
         let sourceLabel = tt("source_live");
         if (source === "cache") sourceLabel = tt("source_cache");
         if (source === "stale-cache") sourceLabel = tt("source_stale");
         if (source === "fallback") sourceLabel = tt("source_fallback");
+        if (isMet) sourceLabel = `${tt("met_forecast")} | ${sourceLabel}`;
 
         const updatedLabel = updatedAt ? ` | ${tt("status_updated")} ${updatedAt}` : "";
         setStatus(`${sourceLabel}${updatedLabel}`);
+        if (meta.degraded) {
+            const message = tt(meta.error_code === "provider_rate_limited"
+                ? "status_rate_limited" : "status_provider_unavailable");
+            setStatus(`${message}${source === "stale-cache" ? ` | ${tt("showing_saved")}${updatedLabel}` : ""}`);
+        }
     }
 
     function savePayload(payload) {
+        // Never replace a useful forecast with an outage placeholder or stale data.
+        if (!payload || (payload.meta || {}).degraded || (payload.current || {}).temp_c == null) return;
         try {
             localStorage.setItem(
                 CACHE_KEY,
@@ -228,13 +263,23 @@
         }
     }
 
-    function loadPayload() {
+    function loadPayload(coords) {
         try {
             const raw = localStorage.getItem(CACHE_KEY);
             if (!raw) return null;
             const parsed = JSON.parse(raw);
             const payload = parsed && parsed.payload ? parsed.payload : null;
             if (!payload) return null;
+            if ((payload.meta || {}).source === "fallback" || (payload.current || {}).temp_c == null) return null;
+            const generatedAt = Date.parse((payload.meta || {}).generated_at);
+            const age = Date.now() - generatedAt;
+            if (!Number.isFinite(age) || age < 0 || age > MAX_CACHE_AGE_MS) return null;
+            if (coords) {
+                const location = payload.location || {};
+                if (Math.abs(Number(location.latitude) - coords.lat) > 0.002 ||
+                    Math.abs(Number(location.longitude) - coords.lon) > 0.002 ||
+                    !Number.isFinite(Number(location.latitude)) || !Number.isFinite(Number(location.longitude))) return null;
+            }
             const payloadLang = String(((payload.meta || {}).lang || "")).toLowerCase();
             if (payloadLang && payloadLang !== lang) {
                 return null;
@@ -332,6 +377,7 @@
     }
 
     async function loadWeather() {
+        window.clearTimeout(retryTimer);
         const cached = loadPayload();
         if (cached) {
             render(cached);
@@ -340,18 +386,34 @@
             setStatus(tt("status_loading_weather"));
         }
 
+        let coords;
         try {
-            const coords = await resolveLocation();
+            coords = await resolveLocation();
             const livePayload = await fetchSummary(coords.lat, coords.lon);
-            render(livePayload);
+            const meta = livePayload.meta || {};
+            const saved = meta.source === "fallback" ? loadPayload(coords) : null;
+            if (saved) {
+                render({ ...saved, meta: {
+                    ...saved.meta, source: "stale-cache", degraded: true, error_code: meta.error_code,
+                } });
+            } else {
+                render(livePayload);
+            }
             savePayload(livePayload);
+            if (meta.degraded) {
+                retryTimer = window.setTimeout(loadWeather,
+                    Math.max(60, Number(meta.retry_after_seconds) || 60) * 1000);
+            }
         } catch (error) {
-            const fallback = loadPayload();
+            const fallback = loadPayload(coords);
             if (fallback) {
                 render(fallback);
                 setStatus(tt("status_offline_cache"));
             } else {
                 setStatus(tt("status_offline_unavailable"));
+                setCurrent({});
+                setAnalytics({});
+                setForecast([]);
                 setAlerts([
                     {
                         color: "orange",
@@ -361,6 +423,7 @@
                 ]);
                 setRecommendations([tt("no_network_reco_2"), tt("no_network_reco_3")]);
             }
+            retryTimer = window.setTimeout(loadWeather, 60 * 1000);
         }
     }
 

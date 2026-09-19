@@ -91,7 +91,18 @@
     font-size: 0.78rem;
     font-weight: 600;
     padding: 6px 11px;
-    white-space: nowrap;
+    white-space: normal;
+}
+
+.wi-attribution {
+    margin-top: 12px;
+    color: var(--wi-soft);
+    font-size: 0.75rem;
+}
+
+.wi-attribution a {
+    color: inherit;
+    text-decoration: underline;
 }
 
 .wi-content {

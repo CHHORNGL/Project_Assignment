@@ -415,7 +415,7 @@ def build_weather_intelligence_payload(
         "alerts": alerts,
         "recommendations": recommendations,
         "meta": {
-            "provider": "open-meteo",
+            "provider": raw_payload.get("_provider", "open-meteo"),
             "generated_at": datetime.now(timezone.utc).isoformat(),
             "source": "live",
             "degraded": False,
@@ -467,12 +467,12 @@ def build_offline_fallback_payload(
         },
         "forecast": forecast,
         "analytics": {
-            "rain_next_24h_mm": 0.0,
-            "max_wind_next_24h_kph": 0.0,
-            "avg_temp_next_24h_c": 0.0,
-            "weekly_rain_mm": 0.0,
-            "weekly_max_temp_c": 0.0,
-            "weekly_min_temp_c": 0.0,
+            "rain_next_24h_mm": None,
+            "max_wind_next_24h_kph": None,
+            "avg_temp_next_24h_c": None,
+            "weekly_rain_mm": None,
+            "weekly_max_temp_c": None,
+            "weekly_min_temp_c": None,
         },
         "alerts": [
             {

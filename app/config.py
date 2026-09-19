@@ -41,6 +41,8 @@ class Config:
 
     SECRET_KEY = os.getenv("SECRET_KEY")
     SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL")
+    if SQLALCHEMY_DATABASE_URI and SQLALCHEMY_DATABASE_URI.startswith("postgres://"):
+        SQLALCHEMY_DATABASE_URI = "postgresql://" + SQLALCHEMY_DATABASE_URI[len("postgres://"):]
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = False
     GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
@@ -57,6 +59,8 @@ class Config:
         _int_env("WEATHER_STALE_TTL_SECONDS", 21600),
     )
     WEATHER_REQUEST_TIMEOUT_SECONDS = max(2.0, _float_env("WEATHER_REQUEST_TIMEOUT_SECONDS", 6.0))
+    # Blank reuses session Redis in production; local development stays in memory.
+    WEATHER_REDIS_URL = os.getenv("WEATHER_REDIS_URL", "").strip()
 
     # Dynamic theme manager seasonal automation.
     THEME_EVENTS_PROVIDER = (os.getenv("THEME_EVENTS_PROVIDER", "auto") or "auto").strip().lower()
@@ -81,8 +85,8 @@ class Config:
     SESSION_KEY_PREFIX = "agri:session:"
     SESSION_ID_LENGTH = 32
     SESSION_PERMANENT = True
-    SESSION_IDLE_TIMEOUT_SECONDS = max(60, _int_env("SESSION_IDLE_TIMEOUT_SECONDS", 1800))
-    SESSION_ABSOLUTE_TIMEOUT_SECONDS = max(60, _int_env("SESSION_ABSOLUTE_TIMEOUT_SECONDS", 43200))
+    SESSION_IDLE_TIMEOUT_SECONDS = max(60, _int_env("SESSION_IDLE_TIMEOUT_SECONDS", 15 * 24 * 60 * 60))
+    SESSION_ABSOLUTE_TIMEOUT_SECONDS = max(60, _int_env("SESSION_ABSOLUTE_TIMEOUT_SECONDS", 15 * 24 * 60 * 60))
     PERMANENT_SESSION_LIFETIME = timedelta(seconds=SESSION_ABSOLUTE_TIMEOUT_SECONDS)
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SECURE = os.getenv("SESSION_COOKIE_SECURE", "true").lower() == "true"

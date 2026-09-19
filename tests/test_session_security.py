@@ -1,5 +1,6 @@
 import time
 import unittest
+from datetime import timedelta
 from unittest.mock import patch
 
 from cachelib import SimpleCache
@@ -117,6 +118,30 @@ class SessionSecurityTests(unittest.TestCase):
         self.account.password_hash = 'changed-password-hash'
         for client in (self.client, other):
             self.assertEqual(self.request('/api/private', client=client).status_code, 401)
+
+    def test_fifteen_day_session_survives_inactivity_but_activity_cannot_extend_deadline(self):
+        lifetime = 15 * 24 * 60 * 60
+        self.app.config.update(
+            SESSION_IDLE_TIMEOUT_SECONDS=lifetime,
+            SESSION_ABSOLUTE_TIMEOUT_SECONDS=lifetime,
+            PERMANENT_SESSION_LIFETIME=timedelta(seconds=lifetime),
+        )
+        start = time.time()
+        with patch('app.utils.session_security.time.time', return_value=start):
+            self.login()
+        cookie = self.client.get_cookie('session')
+        self.assertIsNotNone(cookie.expires)
+        self.assertAlmostEqual(cookie.expires.timestamp() - start, lifetime, delta=5)
+        # A returning browser keeps its persistent cookie after two weeks away.
+        returning = self.app.test_client()
+        returning.set_cookie('session', cookie.value)
+        for elapsed in (14 * 24 * 60 * 60, lifetime - 1):
+            with patch('app.utils.session_security.time.time', return_value=start + elapsed):
+                self.assertEqual(self.request('/api/private', client=returning).status_code, 200)
+        with patch('app.utils.session_security.time.time', return_value=start + lifetime):
+            response = self.request('/api/private', client=returning)
+            self.assertEqual(response.status_code, 401)
+            self.assertEqual(response.json['code'], 'session_expired')
 
     def test_banned_account_is_signed_out(self):
         self.login()

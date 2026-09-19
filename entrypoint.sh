@@ -3,9 +3,7 @@ set -e
 
 # Wait for PostgreSQL to be ready to accept connections
 echo "⏳ Waiting for PostgreSQL database..."
-until pg_isready -h "${POSTGRES_HOST:-db}" -p 5432 -U "${POSTGRES_USER:-postgres}"; do
-  sleep 1
-done
+python scripts/wait_for_database.py
 echo "✅ PostgreSQL database is ready!"
 
 # Initialize fresh databases and apply pending migrations to existing databases
@@ -18,11 +16,13 @@ flask db upgrade
 echo "🌱 Running database seeds..."
 python seed_roles.py || echo "⚠️ seed_roles.py failed or skipped"
 python seed_permissions.py || echo "⚠️ seed_permissions.py failed or skipped"
-python seed_admin.py || echo "⚠️ seed_admin.py failed or skipped"
-python seed_expert.py || echo "⚠️ seed_expert.py failed or skipped"
-python seed_farmer.py || echo "⚠️ seed_farmer.py failed or skipped"
+if [ "${SEED_ACCOUNTS:-false}" = "true" ]; then
+  python seed_admin.py
+  python seed_expert.py
+  python seed_farmer.py
+fi
 python seed_rule_based_knowledge.py || echo "⚠️ seed_rule_based_knowledge.py failed or skipped"
 
 # Start the Gunicorn production server
 echo "🚀 Starting Gunicorn server..."
-exec gunicorn --bind 0.0.0.0:5000 --workers 4 --timeout 120 "run:app"
+exec gunicorn --bind "0.0.0.0:${PORT:-5000}" --workers "${WEB_CONCURRENCY:-2}" --timeout 120 "run:app"

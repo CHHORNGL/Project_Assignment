@@ -12,9 +12,10 @@ the browser cookie. The cookie name remains `session` for mobile compatibility.
   identifier, and deletes the prior session record.
 - Logout deletes the old session record and clears all verification/reset state.
   A copied cookie cannot restore that session after logout completes.
-- Authenticated requests expire after 30 minutes without a qualifying dynamic
-  request or after 12 hours since login, whichever happens first. Polling counts
-  as activity; static assets, health checks, and preflights do not extend activity.
+- Sessions last up to 15 days from login, including time without activity and
+  browser restarts. Both timeout settings default to 1296000 seconds. Activity
+  cannot extend the 15-day deadline; the next dynamic request at or after it
+  signs the user out. Static assets, health checks and preflights do not renew activity.
 - Password changes/resets and account bans invalidate existing authenticated
   sessions on their next dynamic request. A server-only HMAC of the password hash
   detects changes without a schema migration. Automatic password-hash upgrades
@@ -70,7 +71,16 @@ mobile hardening. No full device/emulator flow was run for this change.
 Restart the local app, or rebuild/recreate the Docker web service with Redis.
 Deploy the updated mobile client alongside the backend. Existing browser/mobile
 sessions will need to sign in again. No SQL schema migration is required.
-The live Redis/Cloudflare deployment was not changed or tested here.
+
+On 2026-09-16, Railway's backend timeout variables were set to 1296000 seconds
+and deployment `89236815-fbdd-4290-b7e2-f1f9d1a634c7` completed successfully using the
+existing image's configurable session policy. Runtime config confirms both timeouts
+and permanent cookie lifetime are 1296000 seconds; an HTTPS login-page check
+receives a cookie expiring in 15 days. All eight session tests pass, including
+inactivity followed by expiry exactly at day 15 despite recent activity.
+Local defaults and `.env.example`
+also use 15 days for future builds. Existing session records/cookies keep their
+old storage expiry until refreshed; signing in again starts a full new 15-day period.
 
 Server-side sessions do not replace CSRF protection, an explicit CORS origin
 allowlist, or correct authentication verification. The existing permissive CORS

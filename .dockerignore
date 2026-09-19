@@ -13,6 +13,9 @@ frontend/node_modules
 node_modules
 app/static/diagnosis-wizard/*
 instance/logs/*
+instance/sessions/
+*.dump
+*.backup
 flask_run.log
 *.log
 *.diff

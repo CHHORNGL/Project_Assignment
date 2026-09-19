@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 from typing import Any
 
 import requests
@@ -11,6 +13,22 @@ OPEN_METEO_FORECAST_URL = "https://api.open-meteo.com/v1/forecast"
 
 class WeatherProviderError(Exception):
     """Raised when upstream weather provider data cannot be fetched or parsed."""
+
+    def __init__(self, message: str, *, code: str = "provider_unavailable", retry_after: int = 60):
+        super().__init__(message)
+        self.code = code
+        self.retry_after = retry_after
+
+
+def _retry_after(value: str | None) -> int:
+    try:
+        seconds = int(value)
+    except (TypeError, ValueError):
+        try:
+            seconds = int((parsedate_to_datetime(value) - datetime.now(timezone.utc)).total_seconds())
+        except (TypeError, ValueError, OverflowError):
+            seconds = 900
+    return max(60, min(seconds, 86400))
 
 
 @dataclass(frozen=True)
@@ -76,8 +94,16 @@ class OpenMeteoClient:
                 params=params,
                 timeout=self._timeout_seconds,
             )
+            if response.status_code == 429:
+                raise WeatherProviderError(
+                    "Weather provider request limit reached",
+                    code="provider_rate_limited",
+                    retry_after=_retry_after(response.headers.get("Retry-After")),
+                )
             response.raise_for_status()
             payload = response.json()
+        except WeatherProviderError:
+            raise
         except Exception as exc:  # requests exceptions are implementation details.
             raise WeatherProviderError("Weather provider is unavailable") from exc
 
