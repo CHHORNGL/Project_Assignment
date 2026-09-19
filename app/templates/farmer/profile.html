@@ -808,6 +808,9 @@
 {% set is_admin = current_user.has_role('admin') %}
 {% set is_expert = current_user.has_role('expert') %}
 {% set is_premium = current_user.is_premium %}
+{% set route_role_name = current_user.get_route_role_name() %}
+{% set route_role_is_custom = route_role_name and route_role_name not in ('admin', 'expert', 'farmer') %}
+{% set route_role_label = route_role_name|replace('_', ' ')|title if route_role_name else t("farmer") %}
 
 <div class="settings-container pt-3">
     <!-- Header Title -->
@@ -820,6 +823,8 @@
                 System Administrator &bull; Executive Control Center
             {% elif is_expert %}
                 Agricultural Specialist &bull; Verified Diagnostic Authority
+            {% elif route_role_is_custom %}
+                {{ route_role_label }}
             {% elif is_premium %}
                 Agri System Pro Subscriber
             {% else %}
@@ -1005,6 +1010,10 @@
                 {% elif is_expert %}
                     <span class="badge-role-expert"><i class="fas fa-certificate"></i> CERTIFIED AGRICULTURAL EXPERT</span>
                     <span class="badge-clearance-expert"><i class="fas fa-microscope"></i> DIAGNOSTIC AUTHORITY</span>
+                {% elif route_role_is_custom %}
+                    <div class="settings-sublabel" style="text-transform: uppercase; font-weight: 600; font-size: 0.72rem; letter-spacing: 0.5px; background: rgba(59, 130, 246, 0.1); color: #3b82f6; padding: 4px 12px; border-radius: 20px;">
+                        {{ route_role_label|upper }}
+                    </div>
                 {% elif is_premium %}
                     <div class="premium-vip-badge">
                         <div class="premium-badge-shimmer-wrap">
@@ -1034,7 +1043,7 @@
                     </span>
                 {% else %}
                     <div class="settings-sublabel" style="text-transform: uppercase; font-weight: 600; font-size: 0.72rem; letter-spacing: 0.5px; background: rgba(59, 130, 246, 0.1); color: #3b82f6; padding: 4px 12px; border-radius: 20px;">
-                        FARMER
+                        {{ route_role_label|upper }}
                     </div>
                 {% endif %}
             </div>
@@ -1168,5 +1177,3 @@
 {% block scripts %}
 {{ super() }}
 {% endblock %}
-
-
