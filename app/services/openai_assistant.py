@@ -245,6 +245,7 @@ def suggest_symptoms_from_image(
     crop_name: str,
     symptom_candidates: list[dict],
     max_suggestions: int = 8,
+    model_choice: Optional[str] = None,
 ) -> Optional[dict]:
     """
     Use OpenAI vision to suggest visible symptoms.
@@ -303,7 +304,26 @@ def suggest_symptoms_from_image(
         candidate_lines.append(f"- {line}")
     candidates_text = "\n".join(candidate_lines)
 
-    model_name = _get_model_name()
+    model_choice = (model_choice or "").strip().lower()
+    if model_choice not in {"", "auto", "original-ai", "gemini-2.5-flash", "gemini-2.5-pro"}:
+        model_choice = ""
+    try:
+        from app.models.site_setting import SiteSetting
+        expert_provider = SiteSetting.query.get("EXPERT_PROVIDER")
+        active_provider = SiteSetting.query.get("ACTIVE_PROVIDER")
+        provider = (
+            expert_provider.value.strip()
+            if expert_provider and expert_provider.value.strip()
+            else (active_provider.value.strip() if active_provider and active_provider.value.strip() else "groq")
+        ).lower()
+    except Exception:
+        provider = "groq"
+    if model_choice.startswith("gemini-"):
+        provider = "gemini"
+    elif model_choice == "original-ai":
+        provider = "openai"
+
+    model_name = model_choice if model_choice.startswith("gemini-") else _get_model_name()
     system_prompt = (
         "You are an agricultural vision assistant. "
         "From the image, choose only symptoms that are directly visible. "
@@ -319,7 +339,7 @@ def suggest_symptoms_from_image(
         f"Candidate symptoms:\n{candidates_text}"
     )
 
-    if model_name == "original-ai":
+    if provider in {"openai", "groq"}:
         client = _get_openai_client()
         if not client:
             return {"matched_symptoms": [], "notes": ""}
@@ -365,7 +385,7 @@ def suggest_symptoms_from_image(
                 return None
     else:
         client = _get_client()
-        if not client:
+        if not client or not types:
             return {"matched_symptoms": [], "notes": ""}
         try:
             image_part = types.Part.from_bytes(data=image_bytes, mime_type=mime_type or "image/jpeg")

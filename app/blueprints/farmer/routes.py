@@ -317,6 +317,62 @@ def _symptom_candidates_for_crop(crop_id: int) -> list[dict]:
     return sorted(candidates.values(), key=lambda item: str(item.get("name") or "").lower())
 
 
+def _format_image_rule_reply(*, crop, vision_result: dict | None, diagnosis_result: dict | None) -> str:
+    """Build a deterministic image answer from database symptoms and rules."""
+    matched_rows = (vision_result or {}).get("matched_symptoms") or []
+    matched_names = []
+    for row in matched_rows:
+        if isinstance(row, dict):
+            name = _localize_field(
+                Symptom.query.get(row.get("id")),
+                "name",
+                str(row.get("name") or "").strip(),
+            )
+        else:
+            name = str(row or "").strip()
+        if name and name not in matched_names:
+            matched_names.append(name)
+
+    if not matched_names:
+        return (
+            "Image analysis completed using the symptoms in the database, but no database symptom "
+            "could be confirmed from this image. Please upload a clearer crop photo or describe the symptoms."
+        )
+
+    lines = [
+        "Image analysis (database symptoms only):",
+        "Matched symptoms: " + ", ".join(matched_names) + ".",
+    ]
+    if crop:
+        lines.append("Crop filter: " + _localize_field(crop, "name", crop.name) + ".")
+
+    if not diagnosis_result:
+        lines.append(
+            "No disease rule in the database matched these symptoms. The image result is not a confirmed disease diagnosis."
+        )
+        return "\n".join(lines)
+
+    rule = diagnosis_result.get("rule")
+    disease = rule.disease if rule else None
+    disease_name = _localize_field(disease, "name", "Unknown")
+    confidence = diagnosis_result.get("confidence")
+    confidence_text = f"{int(round(float(confidence) * 100))}%" if confidence is not None else "Not available"
+    lines.extend(
+        [
+            "Database rule matched: " + str(getattr(rule, "name", "Agricultural rule")) + ".",
+            "Possible disease from database: " + disease_name + ".",
+            "Rule confidence: " + confidence_text + ".",
+        ]
+    )
+    missing = diagnosis_result.get("missing_symptoms") or []
+    if missing:
+        lines.append("Other rule symptoms not confirmed: " + ", ".join(missing) + ".")
+    recommendation = ((diagnosis_result.get("recommendations") or {}).get("solution") or "").strip()
+    if recommendation:
+        lines.append("Database recommendation: " + recommendation)
+    return "\n".join(lines)
+
+
 def _split_csv_symptoms(raw_text: str | None) -> list[str]:
     if not raw_text:
         return []
@@ -1508,12 +1564,37 @@ def chat(session_id=None):
             crop = find_crop()
             symptoms_list, explicit_symptoms = extract_symptoms(user_message)
 
-            reply = generate_assistant_reply(
-                user_message,
-                image_bytes=image_bytes,
-                image_mime_type=image_mime_type,
-                model_choice=request.form.get("model_choice", "auto"),
-            )
+            if image_bytes:
+                # Vision is constrained to symptoms that already exist in the
+                # database, then the existing rule engine makes the diagnosis.
+                symptom_candidates = _symptom_candidates_for_crop(crop.id if crop else None)
+                vision_result = suggest_symptoms_from_image(
+                    image_bytes=image_bytes,
+                    mime_type=image_mime_type,
+                    crop_name=_localize_field(crop, "name", "Unknown") if crop else "Unknown",
+                    symptom_candidates=symptom_candidates,
+                    max_suggestions=8,
+                    model_choice=request.form.get("model_choice", "auto"),
+                )
+                visual_symptoms = [
+                    str(row.get("name") or "").strip()
+                    for row in (vision_result or {}).get("matched_symptoms", [])
+                    if isinstance(row, dict) and str(row.get("name") or "").strip()
+                ]
+                image_diagnosis = rule_diagnose(
+                    visual_symptoms,
+                    crop_id=crop.id if crop else None,
+                ) if visual_symptoms else None
+                reply = _format_image_rule_reply(
+                    crop=crop,
+                    vision_result=vision_result,
+                    diagnosis_result=image_diagnosis,
+                )
+            else:
+                reply = generate_assistant_reply(
+                    user_message,
+                    model_choice=request.form.get("model_choice", "auto"),
+                )
 
             if not reply:
                 if is_greeting(message_lower):
