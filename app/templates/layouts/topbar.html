@@ -275,6 +275,7 @@
                 <div id="support-chat-body" class="farmer-chat-body">
                     <!-- Messages will appear here -->
                 </div>
+                <div id="support-chat-status" role="status" aria-live="polite" style="display:none; padding: 0 16px 8px; color: #dc2626; font-size: 0.78rem;"></div>
                 <div class="farmer-chat-footer">
                     <div class="farmer-chat-actions">
                         <i class="fas fa-image farmer-chat-action-btn" id="support-chat-img-btn" title="Send Image"></i>
@@ -305,23 +306,23 @@
             const locBtn = document.getElementById("support-chat-loc-btn");
             const fileInput = document.getElementById("support-chat-file");
             const audioInput = document.getElementById("support-chat-audio");
+            const chatStatus = document.getElementById("support-chat-status");
             
-            let keepChatOpen = false;
             const chatMenu = document.querySelector('.dropdown-menu[aria-labelledby="supportDropdown"]');
             if (chatMenu) {
                 chatMenu.addEventListener('click', function (e) {
                     e.stopPropagation();
                 });
-                
-                $(chatMenu).parent().on('hide.bs.dropdown', function (e) {
-                    if (keepChatOpen) {
-                        e.preventDefault();
-                    }
-                });
             }
 
             if(!chatBody) return;
             let lastMsgCount = 0;
+
+            function setChatStatus(message) {
+                if (!chatStatus) return;
+                chatStatus.textContent = message || "";
+                chatStatus.style.display = message ? "block" : "none";
+            }
 
             function fetchMessages() {
                 fetch('/farmer/support_chat/messages')
@@ -363,18 +364,29 @@
             }
 
             function sendPayload(payload) {
-                fetch('/farmer/support_chat/send', {
+                setChatStatus("");
+                return fetch('/farmer/support_chat/send', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    credentials: 'same-origin',
                     body: JSON.stringify(payload)
-                }).then(() => fetchMessages());
+                }).then(async (response) => {
+                    const data = await response.json().catch(() => null);
+                    if (!response.ok || !data?.success) {
+                        throw new Error(data?.error || 'Message could not be sent.');
+                    }
+                    await fetchMessages();
+                }).catch((error) => {
+                    setChatStatus(error.message || 'Message could not be sent.');
+                });
             }
 
             function sendMessage() {
                 const text = chatInput.value.trim();
                 if (!text) return;
-                chatInput.value = '';
-                sendPayload({ message: text });
+                sendPayload({ message: text }).then(() => {
+                    if (!chatStatus || !chatStatus.textContent) chatInput.value = '';
+                });
             }
 
             chatSend.addEventListener("click", sendMessage);
