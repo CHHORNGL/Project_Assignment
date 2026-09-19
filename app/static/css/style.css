@@ -2419,7 +2419,8 @@ body.farmer-no-sidebar .topbar > .topbar-divider:first-of-type {
 }
 
 .farmer-dash-nav a.sub-link .nav-icon {
-    width: 28px;
+    width: auto;
+    min-width: 28px;
     height: 28px;
     border-radius: 9px;
     font-size: 11px;
@@ -3957,9 +3958,10 @@ body.farmer-no-sidebar .topbar > .topbar-divider:first-of-type {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    gap: 5px;
     width: 28px;
     height: 28px;
-    padding: 0;
+    padding: 0 7px;
     border: 0;
     border-radius: 8px;
     background: transparent;
@@ -3967,6 +3969,11 @@ body.farmer-no-sidebar .topbar > .topbar-divider:first-of-type {
     cursor: pointer;
     opacity: 1;
     transition: opacity 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.farmer-history-menu-trigger span {
+    font-size: 0.68rem;
+    font-weight: 650;
 }
 
 .farmer-chat-history-item:hover .farmer-history-menu-trigger,
