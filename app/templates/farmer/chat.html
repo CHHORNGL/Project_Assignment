@@ -521,6 +521,20 @@
     background: #f1f7f3; border-color: #d7e6df; color: #166534;
 }
 .v0-tool-btn i { font-size: 0.82rem; }
+.v0-fill-prompt-btn {
+    min-width: 116px;
+    justify-content: center;
+    border-color: #b7e4cb;
+    background: linear-gradient(135deg, #f0fbf4 0%, #e3f7eb 100%);
+    color: #087443;
+    box-shadow: 0 2px 7px rgba(16, 185, 129, 0.10);
+}
+.v0-fill-prompt-btn:hover, .v0-fill-prompt-btn[aria-expanded="true"] {
+    border-color: #80cda1;
+    background: linear-gradient(135deg, #e3f7eb 0%, #d5f1e1 100%);
+    color: #065f46;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.16);
+}
 .v0-model-btn { border-color: #d7e6df; background: #f7fbf8; color: #166534; }
 .v0-model-btn .v0-model-pulse-dot { width: 6px; height: 6px; }
 .v0-menu {
@@ -540,6 +554,8 @@
 .v0-menu-item i { width: 16px; text-align: center; color: #059669; }
 .dark-mode #farmer-chat-form .v0-attachment-preview { border-color: #355244; background: #1d3027; color: #86efac; }
 .dark-mode .v0-tool-btn, .dark-mode .v0-model-btn { color: #a7b8ae; }
+.dark-mode .v0-fill-prompt-btn { border-color: #3b7257; background: linear-gradient(135deg, #203d2d 0%, #1d3427 100%); color: #a7f3c5; }
+.dark-mode .v0-fill-prompt-btn:hover, .dark-mode .v0-fill-prompt-btn[aria-expanded="true"] { border-color: #5b9b75; background: #294b37; color: #d1fae5; }
 .dark-mode .v0-tool-btn:hover, .dark-mode .v0-model-btn:hover, .dark-mode .v0-tool-btn[aria-expanded="true"], .dark-mode .v0-model-btn[aria-expanded="true"] { background: #24382e; border-color: #3b5748; color: #bbf7d0; }
 .dark-mode .v0-model-btn { background: #20352a; border-color: #3b5748; color: #bbf7d0; }
 .dark-mode .v0-menu { border-color: #3b5146; background: #1b2922; box-shadow: 0 14px 35px rgba(0, 0, 0, .35); }
@@ -553,6 +569,7 @@
     #farmer-chat-form .v0-composer-card { padding: 6px 7px; border-radius: 20px; }
     #farmer-chat-form .v0-textarea-container { padding-left: 10px; }
     .v0-tool-btn span, .v0-model-btn span.v0-model-label { display: none; }
+    .v0-fill-prompt-btn span { display: inline; }
     .v0-tool-btn, .v0-model-btn { padding: 7px 8px; }
     .v0-shortcut-hint { display: none; }
 }
@@ -676,8 +693,8 @@
                     <i class="fas fa-paperclip" aria-hidden="true"></i><span>Attach image</span>
                 </button>
                 <div class="v0-tool-wrap">
-                    <button type="button" class="v0-tool-btn" id="farmer-chat-fill-prompt" title="Fill prompt" aria-expanded="false" aria-controls="farmer-chat-prompt-menu">
-                        <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i><span>Fill prompt</span>
+                    <button type="button" class="v0-tool-btn v0-fill-prompt-btn" id="farmer-chat-fill-prompt" title="Fill prompt" aria-expanded="false" aria-controls="farmer-chat-prompt-menu">
+                        <i class="fas fa-magic" aria-hidden="true"></i><span>Fill prompt</span>
                     </button>
                     <div class="v0-menu" id="farmer-chat-prompt-menu" hidden>
                         <div class="v0-menu-title">Suggested prompts</div>
