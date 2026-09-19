@@ -28,9 +28,9 @@ def _role_label() -> str:
             if current_user.has_role("admin"):
                 return "admin"
             if current_user.has_role("expert"):
-                return "expert"
-            if current_user.has_role("farmer"):
-                return "farmer"
+                return current_user.get_route_role_name("expert") or "expert"
+            if current_user.has_route_access("farmer"):
+                return current_user.get_route_role_name("farmer") or "farmer"
     except Exception:
         pass
     return "user"

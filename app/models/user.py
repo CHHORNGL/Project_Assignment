@@ -234,6 +234,21 @@ class User(db.Model, UserMixin):
     def has_route_access(self, route_type: str) -> bool:
         return any(getattr(role, "route_type", "farmer") == route_type for role in self.roles)
 
+    def get_route_role_name(self, route_type: str | None = None) -> str | None:
+        """Return the assigned role name for a portal route.
+
+        Custom roles inherit a route type (for example, ``field_officer`` can
+        use the farmer portal). Display code must use that assigned role name
+        instead of falling back to the built-in ``farmer`` label.
+        """
+        roles = list(self.roles or [])
+        if route_type:
+            for role in roles:
+                if getattr(role, "route_type", None) == route_type:
+                    return role.name
+            return None
+        return roles[0].name if roles else None
+
     # ===============================
     # PERMISSION CHECK
     # ===============================

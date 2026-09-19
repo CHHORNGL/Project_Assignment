@@ -1,4 +1,6 @@
 <nav class="navbar navbar-expand navbar-light topbar app-topbar mb-4 static-top shadow-sm {% if current_user.is_authenticated and current_user.is_premium %}premium-navbar-animated{% endif %}">
+    {% set farmer_role_name = current_user.get_route_role_name("farmer") if current_user.is_authenticated else none %}
+    {% set farmer_role_label = farmer_role_name|replace('_', ' ')|title if farmer_role_name and farmer_role_name != 'farmer' else t("farmer") %}
     {% if current_user.is_authenticated and current_user.is_premium %}
     <div class="premium-nav-fx" aria-hidden="true">
         <div class="premium-nav-aurora-mesh"></div>
@@ -132,7 +134,7 @@
         <!-- ===============================
              LIVE CHAT
         =============================== -->
-        {% if current_user.is_authenticated and current_user.has_role('farmer') %}
+        {% if current_user.is_authenticated and current_user.has_route_access('farmer') %}
         <li class="nav-item dropdown no-arrow mx-1">
             <a class="nav-link dropdown-toggle p-0"
                href="#"
@@ -512,6 +514,8 @@
                                 <span class="topbar-role-tag tag-admin">Admin</span>
                             {% elif current_user.has_role('expert') %}
                                 <span class="topbar-role-tag tag-expert">Expert</span>
+                            {% elif farmer_role_name and farmer_role_name != 'farmer' %}
+                                <span class="topbar-role-tag tag-farmer">{{ farmer_role_label }}</span>
                             {% elif current_user.is_premium %}
                                 <span class="topbar-role-tag tag-premium">VIP Pro</span>
                             {% else %}
@@ -582,6 +586,8 @@
                                     <span class="user-role-badge badge-admin">Admin</span>
                                 {% elif current_user.has_role('expert') %}
                                     <span class="user-role-badge badge-expert">Expert</span>
+                                {% elif farmer_role_name and farmer_role_name != 'farmer' %}
+                                    <span class="user-role-badge badge-farmer">{{ farmer_role_label }}</span>
                                 {% elif current_user.is_premium %}
                                     <span class="user-role-badge badge-premium">VIP</span>
                                 {% else %}

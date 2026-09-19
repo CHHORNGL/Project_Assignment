@@ -1,11 +1,12 @@
 {% if current_user.is_authenticated
-      and (current_user.has_role("farmer") or current_user.has_role("expert"))
+      and (current_user.has_route_access("farmer") or current_user.has_route_access("expert"))
       and (request.path.startswith("/farmer") or request.path.startswith("/expert")) %}
+{% set helper_role_name = current_user.get_route_role_name("expert") if request.path.startswith("/expert") else current_user.get_route_role_name("farmer") %}
 <div class="ai-helper-widget"
      data-ask-url="{{ url_for('assistant.ask') }}"
      data-support-url="{{ url_for('assistant.support') }}"
      data-user-id="{{ current_user.id }}"
-     data-role="{% if current_user.has_role('expert') %}expert{% else %}farmer{% endif %}"
+     data-role="{{ helper_role_name or 'user' }}"
      data-greeting="{{ t('ai_helper_greeting') }}"
      data-clear-confirm="{{ t('confirm_clear_ai_helper') }}"
      data-ai-unavailable="{{ t('ai_unavailable') }}"

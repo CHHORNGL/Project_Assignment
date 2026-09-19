@@ -599,6 +599,8 @@ body.icon-nav .app-sidebar .nav-link[data-tooltip]:hover::after,
 {% set path = request.path %}
 {% set home_url = url_for("main.index") %}
 {% set active_side = "farmer" %}
+{% set farmer_role_name = current_user.get_route_role_name("farmer") if current_user.is_authenticated else none %}
+{% set farmer_role_label = farmer_role_name|replace('_', ' ')|title if farmer_role_name and farmer_role_name != 'farmer' else t("farmer") %}
 {% if current_user.is_authenticated %}
     {% if path.startswith("/admin") and (current_user.has_role("admin") or current_user.has_route_access("admin")) %}
         {% set home_url = url_for("admin.dashboard") %}
@@ -633,7 +635,7 @@ body.icon-nav .app-sidebar .nav-link[data-tooltip]:hover::after,
                  class="sidebar-logo">
             <div class="brand-text-col">
                 <span class="brand-sub-badge">
-                    {% if active_side == "admin" %}ADMIN PANEL{% elif active_side == "expert" %}EXPERT PANEL{% else %}FARMER PANEL{% endif %}
+                    {% if active_side == "admin" %}ADMIN PANEL{% elif active_side == "expert" %}EXPERT PANEL{% else %}{{ farmer_role_label|upper }} PANEL{% endif %}
                 </span>
             </div>
         </a>
@@ -898,7 +900,7 @@ body.icon-nav .app-sidebar .nav-link[data-tooltip]:hover::after,
     {% if current_user.is_authenticated and active_side == "farmer" %}
 
     <div class="sidebar-heading">
-        {{ t("farmer") }}
+        {{ farmer_role_label }}
     </div>
 
     <li class="nav-item">
