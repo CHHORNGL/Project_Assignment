@@ -16,9 +16,13 @@ try:
 except Exception:
     OpenAI = None
 
+from flask import current_app
 from flask_login import current_user
 
 DEFAULT_MODEL = "llama-3.3-70b-versatile"
+DEFAULT_GROQ_MODEL = "openai/gpt-oss-120b"
+DEFAULT_OPENAI_MODEL = "gpt-4o-mini"
+DEFAULT_GEMINI_MODEL = "gemini-2.5-flash"
 
 
 def _get_openai_model():
@@ -30,6 +34,59 @@ def _get_openai_model():
     except Exception:
         pass
     return os.getenv("OPENAI_MODEL", DEFAULT_MODEL).strip() or DEFAULT_MODEL
+
+
+def _get_ai_route():
+    """Resolve the same admin AI route used by the expert assistant.
+
+    The AI helper used to select the logged-in user's ``ai_model``. That
+    bypassed the admin provider/key configuration and could make the helper
+    try Gemini even when the application was configured for Groq or OpenAI.
+    """
+    from app.models.site_setting import SiteSetting
+
+    provider = "groq"
+    expert_override = False
+    expert_model = ""
+    provider_models = {
+        "groq": DEFAULT_GROQ_MODEL,
+        "openai": DEFAULT_OPENAI_MODEL,
+        "gemini": DEFAULT_GEMINI_MODEL,
+    }
+
+    try:
+        active_setting = SiteSetting.query.get("ACTIVE_PROVIDER")
+        expert_provider_setting = SiteSetting.query.get("EXPERT_PROVIDER")
+        expert_model_setting = SiteSetting.query.get("EXPERT_MODEL")
+
+        active_provider = (active_setting.value or "").strip().lower() if active_setting else ""
+        expert_provider = (
+            (expert_provider_setting.value or "").strip().lower()
+            if expert_provider_setting else ""
+        )
+        if expert_provider in provider_models:
+            provider = expert_provider
+            expert_override = True
+        elif active_provider in provider_models:
+            provider = active_provider
+
+        if expert_model_setting and expert_model_setting.value:
+            expert_model = expert_model_setting.value.strip()
+
+        for key in provider_models:
+            setting = SiteSetting.query.get(
+                {"groq": "GROQ_MODEL", "openai": "OPENAI_MODEL", "gemini": "GEMINI_MODEL"}[key]
+            )
+            if setting and setting.value and setting.value.strip():
+                provider_models[key] = setting.value.strip()
+
+    except Exception:
+        pass
+
+    model = expert_model if expert_override and expert_model else provider_models[provider]
+    if not model:
+        model = _get_openai_model()
+    return provider, model
 
 
 PROJECT_CONTEXT = """You are helping users of the Integrated Agricultural Expert System web app.
@@ -114,7 +171,7 @@ class MultiKeyOpenAI:
     def __init__(self, clients):
         self.chat = MultiKeyOpenAIChat(clients)
 
-def _get_openai_client():
+def _get_openai_client(provider=None):
     global _pa_cached_openai_client, _pa_cached_openai_key
     if OpenAI is None:
         return None
@@ -123,11 +180,10 @@ def _get_openai_client():
     keys_list = []
     base_url = None
     try:
-        db_provider = SiteSetting.query.get("ACTIVE_PROVIDER")
+        if not provider:
+            provider, _ = _get_ai_route()
         db_groq = SiteSetting.query.get("API_KEY_GROQ")
         db_openai = SiteSetting.query.get("API_KEY_OPENAI")
-        
-        provider = db_provider.value.strip() if db_provider else "groq"
 
         if provider == "groq" and db_groq and db_groq.value.strip():
             keys_list = [k.strip() for k in db_groq.value.split(",") if k.strip()]
@@ -148,10 +204,14 @@ def _get_openai_client():
 
     if not keys_list:
         env_key = os.getenv("OPENAI_API_KEY", "").strip()
-        if env_key:
+        if env_key and not env_key.startswith("sk-your-") and "your-api-key" not in env_key:
             keys_list = [env_key]
         base_url = os.getenv("OPENAI_BASE_URL", "").strip() or None
 
+    keys_list = [
+        key for key in keys_list
+        if key and not key.startswith("sk-your-") and "your-api-key" not in key
+    ]
     if not keys_list:
         return None
 
@@ -162,35 +222,35 @@ def _get_openai_client():
         _pa_cached_openai_key = cache_key
     return _pa_cached_openai_client
 
-def _get_client():
-    if genai and current_user and current_user.is_authenticated and getattr(current_user, 'ai_api_key', None):
-        keys = [k.strip() for k in current_user.ai_api_key.split(',') if k.strip()]
-        if keys:
-            import random
-            return genai.Client(api_key=random.choice(keys))
-    
-    api_key = ""
-    if genai:
-        from app.models.site_setting import SiteSetting
-        try:
-            db_gemini = SiteSetting.query.get("API_KEY_GEMINI")
-            if db_gemini and db_gemini.value.strip():
-                api_key = db_gemini.value.strip()
-        except Exception:
-            pass
+def _get_gemini_client():
+    """Build a Gemini client from the admin key pool, with user fallback."""
+    if not genai:
+        return None
 
-        if not api_key:
-            api_key = os.getenv("GEMINI_API_KEY", "").strip()
-            
-        if api_key:
-            return genai.Client(api_key=api_key)
+    keys = []
+    from app.models.site_setting import SiteSetting
+    try:
+        db_gemini = SiteSetting.query.get("API_KEY_GEMINI")
+        if db_gemini and db_gemini.value.strip():
+            keys = [key.strip() for key in db_gemini.value.split(",") if key.strip()]
+    except Exception:
+        pass
+
+    if not keys and current_user and current_user.is_authenticated:
+        user_key = getattr(current_user, "ai_api_key", None)
+        if user_key:
+            keys = [key.strip() for key in user_key.split(",") if key.strip()]
+
+    if not keys:
+        env_key = os.getenv("GEMINI_API_KEY", "").strip()
+        if env_key:
+            keys = [env_key]
+
+    if keys:
+        import random
+        return genai.Client(api_key=random.choice(keys))
 
     return None
-
-def _get_model_name():
-    if current_user and current_user.is_authenticated and getattr(current_user, 'ai_model', None):
-        return current_user.ai_model
-    return os.getenv("GEMINI_MODEL", "gemini-1.5-flash").strip()
 
 
 def _fallback_reply(user_message: str, *, user_role: str, page: str, lang: str) -> str:
@@ -264,7 +324,7 @@ def generate_project_reply(user_message: str, *, user_role: str, page: str = "")
     if _looks_like_agri_query(user_message) and not _looks_like_system_query(user_message):
         return _system_only_reply(lang)
 
-    model_name = _get_model_name()
+    provider, model_name = _get_ai_route()
     system_prompt = (
         "You are a helpful AI assistant for this web application. "
         "Answer questions about how to use the system, navigation, features, and basic troubleshooting. "
@@ -285,13 +345,25 @@ def generate_project_reply(user_message: str, *, user_role: str, page: str = "")
     )
 
     try:
-        if model_name == "original-ai":
-            client = _get_openai_client()
+        if provider == "gemini":
+            client = _get_gemini_client()
             if not client:
                 return _fallback_reply(user_message, user_role=user_role, page=page, lang=lang)
-            model = os.getenv("OPENAI_HELPER_MODEL", "").strip() or _get_openai_model()
+            response = client.models.generate_content(
+                model=model_name,
+                contents=[system_prompt, user_prompt],
+                config=types.GenerateContentConfig(
+                    temperature=0.2,
+                    max_output_tokens=1000,
+                ),
+            )
+            content = response.text if response else None
+        else:
+            client = _get_openai_client(provider)
+            if not client:
+                return _fallback_reply(user_message, user_role=user_role, page=page, lang=lang)
             response = client.chat.completions.create(
-                model=model,
+                model=model_name,
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt},
@@ -300,43 +372,8 @@ def generate_project_reply(user_message: str, *, user_role: str, page: str = "")
                 max_tokens=1000,
             )
             content = response.choices[0].message.content if response.choices and response.choices[0].message else None
-        else:
-            client = _get_client()
-            if not client:
-                client = _get_openai_client()
-                if client:
-                    model = _get_openai_model()
-                    try:
-                        response = client.chat.completions.create(
-                            model=model,
-                            messages=[
-                                {"role": "system", "content": system_prompt},
-                                {"role": "user", "content": user_prompt},
-                            ],
-                            temperature=0.2,
-                            max_tokens=1000,
-                        )
-                        content = response.choices[0].message.content if response.choices and response.choices[0].message else None
-                    except Exception as e:
-                        current_app.logger.error(f"Error calling OpenAI API in project_assistant: {e}")
-                        content = None
-                else:
-                    return _fallback_reply(user_message, user_role=user_role, page=page, lang=lang)
-            else:
-                try:
-                    response = client.models.generate_content(
-                        model=model_name,
-                        contents=[system_prompt, user_prompt],
-                        config=types.GenerateContentConfig(
-                            temperature=0.2,
-                            max_output_tokens=1000
-                        )
-                    )
-                    content = response.text if response else None
-                except Exception as e:
-                    current_app.logger.error(f"Error calling Gemini API in project_assistant: {e}")
-                    content = None
     except Exception:
+        current_app.logger.exception("AI helper request failed")
         return _fallback_reply(user_message, user_role=user_role, page=page, lang=lang)
 
     return content.strip() if content else _fallback_reply(user_message, user_role=user_role, page=page, lang=lang)
