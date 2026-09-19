@@ -15,6 +15,7 @@ from app.models.role import Role
 from app.models.chat_session import ChatSession
 from app.models.chat_message import ChatMessage
 from app.utils.session_security import credential_stamp
+from app.blueprints.farmer.routes import _format_history_title, _is_greeting_or_filler
 
 
 class FarmerAiHistoryTestCase(unittest.TestCase):
@@ -105,6 +106,72 @@ class FarmerAiHistoryTestCase(unittest.TestCase):
         self.assertIn("Tomato pests", content)
         self.assertIn("history-search-input", content)
         self.assertNotIn("builtin_function_or_method", content)
+
+    def test_helpers_format_title_and_detect_filler(self):
+        # Format title max length 30 chars with ellipsis
+        self.assertEqual(_format_history_title("Short title", 30), "Short title")
+        long_title = "What pesticide should I spray for brown plant hopper on my rice crops?"
+        formatted = _format_history_title(long_title, 30)
+        self.assertLessEqual(len(formatted), 30)
+        self.assertTrue(formatted.endswith("..."))
+        self.assertEqual(formatted, "What pesticide should I spr...")
+
+        # Greetings & filler detection
+        self.assertTrue(_is_greeting_or_filler("Hi"))
+        self.assertTrue(_is_greeting_or_filler("hello"))
+        self.assertTrue(_is_greeting_or_filler("hey there"))
+        self.assertTrue(_is_greeting_or_filler("Good morning"))
+        self.assertTrue(_is_greeting_or_filler("ok"))
+        self.assertTrue(_is_greeting_or_filler("thank you"))
+        self.assertTrue(_is_greeting_or_filler("សួស្តី"))
+        self.assertTrue(_is_greeting_or_filler("ជំរាបសួរ"))
+
+        # Substantive questions
+        self.assertFalse(_is_greeting_or_filler("How do I treat tomato blight?"))
+        self.assertFalse(_is_greeting_or_filler("Rice blast disease symptoms and treatment"))
+        self.assertFalse(_is_greeting_or_filler("Hi, my rice leaves are turning yellow"))
+        self.assertFalse(_is_greeting_or_filler("Hello expert, what is this pest on my cassava?"))
+
+    def test_chat_session_titling_lifecycle(self):
+        self._login()
+        session = ChatSession(farmer_id=self.user.id, title="New Chat", session_type="ai")
+        db.session.add(session)
+        db.session.commit()
+
+        # 1. Sending a greeting labels the session as 'General Chat'
+        res1 = self.client.post(
+            f"/farmer/chat/{session.id}",
+            data={"message": "Hello expert"},
+            headers={"X-Requested-With": "XMLHttpRequest"}
+        )
+        self.assertEqual(res1.status_code, 200)
+        db.session.refresh(session)
+        self.assertEqual(session.title, "General Chat")
+        self.assertEqual(res1.json["title"], "General Chat")
+
+        # 2. Sending a substantive question updates the title from General Chat to truncated question
+        long_question = "What pesticide should I spray for brown plant hopper on my rice crops?"
+        res2 = self.client.post(
+            f"/farmer/chat/{session.id}",
+            data={"message": long_question},
+            headers={"X-Requested-With": "XMLHttpRequest"}
+        )
+        self.assertEqual(res2.status_code, 200)
+        db.session.refresh(session)
+        self.assertLessEqual(len(session.title), 30)
+        self.assertTrue(session.title.endswith("..."))
+        self.assertEqual(session.title, "What pesticide should I spr...")
+        self.assertEqual(res2.json["title"], "What pesticide should I spr...")
+
+        # 3. Subsequent conversational filler does NOT overwrite the substantive title
+        res3 = self.client.post(
+            f"/farmer/chat/{session.id}",
+            data={"message": "Thank you so much!"},
+            headers={"X-Requested-With": "XMLHttpRequest"}
+        )
+        self.assertEqual(res3.status_code, 200)
+        db.session.refresh(session)
+        self.assertEqual(session.title, "What pesticide should I spr...")
 
 
 if __name__ == "__main__":

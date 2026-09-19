@@ -509,6 +509,67 @@ def _chat_history_icon(message: str) -> str:
     return "far fa-comment-dots"
 
 
+def _format_history_title(text: str, max_length: int = 30) -> str:
+    """Format and truncate history titles to at most max_length characters with an ellipsis (...)."""
+    if not text:
+        return "General Chat"
+    cleaned = re.sub(r"\s+", " ", text).strip()
+    if len(cleaned) <= max_length:
+        return cleaned
+    return cleaned[: max_length - 3].rstrip() + "..."
+
+
+def _is_greeting_or_filler(text: str) -> bool:
+    """Determine whether text is a generic greeting, polite closing, or short filler without agricultural context."""
+    if not text:
+        return True
+    clean = text.strip().lower()
+
+    # Khmer greetings & fillers
+    km_fillers = {
+        "ជំរាបសួរ", "សួស្តី", "សួរស្តី", "សួស្ដី", "សួរស្ដី", "សួស្តីបង",
+        "អរគុណ", "អរគុណច្រើន", "បាទ", "ចាស", "ចាស៎", "យល់ព្រម", "មិនអីទេ",
+        "ជម្រាបសួរ", "សុខសប្បាយ", "ជំរាបសួរអ្នកជំនាញ"
+    }
+    for k in km_fillers:
+        if clean == k or (clean.startswith(k) and len(clean.split()) <= 3):
+            return True
+
+    # Strip punctuation
+    stripped = re.sub(r"[^\w\s]", " ", clean).strip()
+    words = [w for w in stripped.split() if w]
+    if not words:
+        return True
+
+    greeting_words = {
+        "hi", "hello", "hey", "hii", "hihi", "hola", "yo", "sup", "greetings",
+        "welcome", "goodmorning", "goodafternoon", "goodevening"
+    }
+    filler_words = {
+        "there", "sir", "madam", "expert", "friend", "bro", "admin", "bot",
+        "ai", "team", "everyone", "all", "please", "help", "ok", "okay", "k",
+        "kk", "thanks", "thank", "you", "thx", "ty", "yes", "yeah", "yep",
+        "no", "nope", "nah", "cool", "nice", "good", "bye", "goodbye", "test",
+        "testing", "morning", "afternoon", "evening", "day", "sure", "fine"
+    }
+
+    # If the message is short (1-3 words) and consists exclusively of greetings/fillers
+    if len(words) <= 3 and all(w in greeting_words or w in filler_words for w in words):
+        return True
+
+    # Common multi-word phrases
+    exact_phrases = {
+        "good morning", "good afternoon", "good evening", "good day",
+        "thank you", "thank you so much", "thanks a lot", "thanks expert",
+        "can you help", "anyone there", "are you there", "hello there",
+        "hi there", "hey there", "how are you"
+    }
+    if stripped in exact_phrases:
+        return True
+
+    return False
+
+
 @farmer_bp.route("/history/ai")
 @farmer_required
 def ai_history():
@@ -565,11 +626,20 @@ def ai_history():
         latest_q = farmer_msgs[-1].message if farmer_msgs else ""
         latest_r = expert_msgs[-1].message if expert_msgs else ""
 
-        title = sess.title or ""
-        if not title or title in ("New Chat", "Legacy Chat"):
-            title = first_q or latest_q or ("ការសន្ទនាថ្មី" if is_km else "New Conversation")
-        if len(title) > 80:
-            title = title[:77] + "..."
+        title = (sess.title or "").strip()
+        is_temp = not title or title in ("New Chat", "Legacy Chat", "General Chat", "ការជជែកទូទៅ")
+        if is_temp:
+            substantive_q = None
+            for fm in farmer_msgs:
+                if not _is_greeting_or_filler(fm.message):
+                    substantive_q = fm.message
+                    break
+            if substantive_q:
+                title = _format_history_title(substantive_q, max_length=30)
+            else:
+                title = "ការជជែកទូទៅ" if is_km else "General Chat"
+        else:
+            title = _format_history_title(title, max_length=30)
 
         timestamp = sess.updated_at or (msgs[-1].created_at if msgs else sess.created_at)
         created_at_val = timestamp
@@ -1590,8 +1660,18 @@ def chat(session_id=None):
             )
             db.session.add(assistant_message)
 
-            if not session.title or session.title == "New Chat":
-                session.title = (user_message[:40] + "...") if len(user_message) > 40 else user_message
+            is_filler = _is_greeting_or_filler(user_message)
+            current_title = (session.title or "").strip()
+            is_temp_title = not current_title or current_title in ("New Chat", "General Chat", "Legacy Chat", "ការជជែកទូទៅ")
+
+            if is_temp_title:
+                if is_filler:
+                    session.title = "General Chat"
+                else:
+                    session.title = _format_history_title(user_message, max_length=30)
+            elif len(current_title) > 30:
+                session.title = _format_history_title(current_title, max_length=30)
+
             session.updated_at = db.func.now()
             db.session.commit()
 

@@ -146,7 +146,7 @@
                         <div class="farmer-history-icon">
                             <i class="far fa-comment-alt"></i>
                         </div>
-                        <span class="farmer-history-title text-truncate">{{ s.title if s.title else t("new_chat") }}</span>
+                        <span class="farmer-history-title text-truncate">{% if s.title == 'General Chat' %}{{ t('general_chat')|default('General Chat') }}{% elif s.title %}{{ s.title }}{% else %}{{ t('new_chat') }}{% endif %}</span>
                     </a>
                 {% endfor %}
                 <div class="farmer-chat-history-more" style="padding: 6px 10px; margin-top: 4px; border-top: 1px dashed rgba(148, 163, 184, 0.2);">

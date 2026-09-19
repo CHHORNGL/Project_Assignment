@@ -790,6 +790,13 @@
             }
             updateChatTime(userRow, data.user_created_at);
             updateCreditBalance(data.credits_remaining);
+            if (data.title) {
+                const activeTitleEl = document.querySelector(".farmer-chat-history-item.active .farmer-history-title");
+                if (activeTitleEl) {
+                    activeTitleEl.textContent = data.title;
+                    activeTitleEl.closest(".farmer-chat-history-item")?.setAttribute("title", data.title);
+                }
+            }
             pending.remove();
             appendChatMessage(data.reply, false, data.assistant_created_at);
         } catch (error) {
