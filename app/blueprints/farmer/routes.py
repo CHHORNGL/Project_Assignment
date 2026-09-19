@@ -1418,10 +1418,9 @@ def _chat_timestamp(message):
 @farmer_bp.route("/chat/new")
 @farmer_required
 def new_chat():
-    session = ChatSession(farmer_id=current_user.id, title="New Chat", session_type="ai")
-    db.session.add(session)
-    db.session.commit()
-    return redirect(url_for("farmer.chat", session_id=session.id))
+    # Keep an empty New Chat out of history. The first submitted message
+    # creates the real ChatSession inside the chat endpoint.
+    return redirect(url_for("farmer.chat", draft="1"))
 
 
 @farmer_bp.route("/chat", methods=["GET", "POST"])
@@ -1435,24 +1434,27 @@ def chat(session_id=None):
     # Ensure legacy messages belong to a session
     _ensure_legacy_session(current_user.id)
 
+    is_draft = request.args.get("draft") == "1" and session_id is None
     sessions = (
         ChatSession.query
         .filter_by(farmer_id=current_user.id, session_type="ai")
-        .order_by(ChatSession.updated_at.desc())
+        .order_by(ChatSession.is_pinned.desc(), ChatSession.updated_at.desc())
         .all()
     )
 
-    if session_id is None:
+    if session_id is None and not is_draft:
         if sessions:
             return redirect(url_for("farmer.chat", session_id=sessions[0].id))
         return redirect(url_for("farmer.new_chat"))
 
-    session = (
-        ChatSession.query
-        .filter_by(id=session_id, farmer_id=current_user.id, session_type="ai")
-        .first()
-    )
-    if not session:
+    session = None
+    if session_id is not None:
+        session = (
+            ChatSession.query
+            .filter_by(id=session_id, farmer_id=current_user.id, session_type="ai")
+            .first()
+        )
+    if session_id is not None and not session:
         if sessions:
             return redirect(url_for("farmer.chat", session_id=sessions[0].id))
         return redirect(url_for("farmer.new_chat"))
@@ -1463,6 +1465,8 @@ def chat(session_id=None):
     if request.method == "POST":
         user_message = request.form.get("message", "").strip()
         wants_json = request.headers.get("X-Requested-With") == "XMLHttpRequest"
+        draft_redirect = url_for("farmer.chat", draft="1")
+        session_redirect = url_for("farmer.chat", session_id=session.id) if session else draft_redirect
 
         attachment = request.files.get("attachment")
         image_bytes = None
@@ -1477,14 +1481,14 @@ def chat(session_id=None):
                 if wants_json:
                     return jsonify(ok=False, error=error), 400
                 flash(error, "danger")
-                return redirect(url_for("farmer.chat", session_id=session.id))
+                return redirect(session_redirect)
             image_bytes = attachment.read()
             if len(image_bytes) > 6 * 1024 * 1024:
                 error = "The image must be 6 MB or smaller."
                 if wants_json:
                     return jsonify(ok=False, error=error), 400
                 flash(error, "danger")
-                return redirect(url_for("farmer.chat", session_id=session.id))
+                return redirect(session_redirect)
             if not user_message:
                 user_message = "Please analyze the attached crop image and explain what I should do."
 
@@ -1492,6 +1496,14 @@ def chat(session_id=None):
             return jsonify(ok=False, error="Please enter a message."), 400
 
         if user_message:
+            if session is None:
+                session = ChatSession(
+                    farmer_id=current_user.id,
+                    title="New Chat",
+                    session_type="ai",
+                )
+                db.session.add(session)
+                db.session.flush()
             farmer_message = ChatMessage(
                 sender="farmer",
                 message=user_message,
@@ -1703,12 +1715,14 @@ def chat(session_id=None):
     # ---------------------------------
     # GET → Load messages
     # ---------------------------------
-    messages = (
-        ChatMessage.query
-        .filter_by(farmer_id=current_user.id, session_id=session.id)
-        .order_by(ChatMessage.created_at.asc())
-        .all()
-    )
+    messages = []
+    if session is not None:
+        messages = (
+            ChatMessage.query
+            .filter_by(farmer_id=current_user.id, session_id=session.id)
+            .order_by(ChatMessage.created_at.asc())
+            .all()
+        )
 
     return render_template(
         "farmer/chat.html",
@@ -1716,6 +1730,52 @@ def chat(session_id=None):
         sessions=sessions,
         active_session=session
     )
+
+
+def _farmer_chat_session(session_id: int):
+    return (
+        ChatSession.query
+        .filter_by(id=session_id, farmer_id=current_user.id, session_type="ai")
+        .first()
+    )
+
+
+@farmer_bp.route("/chat/<int:session_id>/pin", methods=["POST"])
+@farmer_required
+def pin_chat_session(session_id):
+    session = _farmer_chat_session(session_id)
+    if not session:
+        return jsonify(ok=False, error="Conversation not found."), 404
+    session.is_pinned = not bool(session.is_pinned)
+    db.session.commit()
+    return jsonify(ok=True, is_pinned=session.is_pinned)
+
+
+@farmer_bp.route("/chat/<int:session_id>/rename", methods=["POST"])
+@farmer_required
+def rename_chat_session(session_id):
+    session = _farmer_chat_session(session_id)
+    if not session:
+        return jsonify(ok=False, error="Conversation not found."), 404
+    payload = request.get_json(silent=True) or request.form
+    title = str(payload.get("title") or "").strip()
+    if not title:
+        return jsonify(ok=False, error="Please enter a conversation name."), 400
+    session.title = title[:200]
+    session.updated_at = db.func.now()
+    db.session.commit()
+    return jsonify(ok=True, title=session.title)
+
+
+@farmer_bp.route("/chat/<int:session_id>/delete", methods=["POST"])
+@farmer_required
+def delete_chat_session(session_id):
+    session = _farmer_chat_session(session_id)
+    if not session:
+        return jsonify(ok=False, error="Conversation not found."), 404
+    db.session.delete(session)
+    db.session.commit()
+    return jsonify(ok=True, redirect_url=url_for("farmer.chat"))
 
 @farmer_bp.route("/detail")
 def detail():

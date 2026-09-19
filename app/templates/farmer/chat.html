@@ -736,6 +736,7 @@
     const modelLabel = document.getElementById("farmer-chat-model-label");
     const promptButton = document.getElementById("farmer-chat-fill-prompt");
     const moreButton = document.getElementById("farmer-chat-more");
+    const isDraftChat = new URLSearchParams(window.location.search).get("draft") === "1";
     const expertLogoUrl = {{ url_for('static', filename='img/logo_icon.svg', v=static_version)|tojson }};
     const expertName = {{ t("farmer_expert")|tojson }};
 
@@ -1026,6 +1027,10 @@
                     activeTitleEl.textContent = data.title;
                     activeTitleEl.closest(".farmer-chat-history-item")?.setAttribute("title", data.title);
                 }
+            }
+            if (isDraftChat && data.session_id) {
+                window.location.href = `/farmer/chat/${data.session_id}`;
+                return;
             }
             pending.remove();
             appendChatMessage(data.reply, false, data.assistant_created_at);

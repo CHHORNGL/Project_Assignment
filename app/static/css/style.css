@@ -3892,6 +3892,16 @@ body.farmer-no-sidebar .topbar > .topbar-divider:first-of-type {
     transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
+.farmer-history-main {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    flex: 1;
+    min-width: 0;
+    color: inherit !important;
+    text-decoration: none !important;
+}
+
 .farmer-history-icon {
     display: grid;
     place-items: center;
@@ -3936,6 +3946,86 @@ body.farmer-no-sidebar .topbar > .topbar-divider:first-of-type {
     opacity: 0;
     transform: translateX(-3px);
     transition: opacity 0.15s ease, transform 0.15s ease, color 0.15s ease;
+}
+
+.farmer-history-actions {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.farmer-history-menu-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--fc-muted);
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.farmer-chat-history-item:hover .farmer-history-menu-trigger,
+.farmer-chat-history-item.active .farmer-history-menu-trigger,
+.farmer-history-menu-trigger[aria-expanded="true"] {
+    opacity: 1;
+}
+
+.farmer-history-menu-trigger:hover,
+.farmer-history-menu-trigger[aria-expanded="true"] {
+    background: rgba(148, 163, 184, 0.16);
+    color: var(--fc-text);
+}
+
+.farmer-history-menu {
+    position: absolute;
+    z-index: 50;
+    top: calc(100% + 5px);
+    right: 0;
+    min-width: 178px;
+    padding: 5px;
+    border: 1px solid var(--fc-border);
+    border-radius: 11px;
+    background: var(--fc-panel);
+    box-shadow: 0 14px 30px rgba(15, 23, 42, 0.18);
+}
+
+.farmer-history-menu[hidden] {
+    display: none;
+}
+
+.farmer-history-menu button {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    width: 100%;
+    padding: 8px 9px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--fc-text);
+    font-size: 0.78rem;
+    text-align: left;
+    cursor: pointer;
+}
+
+.farmer-history-menu button:hover {
+    background: rgba(148, 163, 184, 0.12);
+}
+
+.farmer-history-menu button i {
+    width: 15px;
+    color: var(--fc-muted);
+    text-align: center;
+}
+
+.farmer-history-menu button.is-danger,
+.farmer-history-menu button.is-danger i {
+    color: #dc2626;
 }
 
 .farmer-chat-history-item:hover {

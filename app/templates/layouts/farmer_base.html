@@ -134,20 +134,35 @@
         <div class="farmer-chat-history" id="farmer-chat-history-list">
             {% if sessions and sessions|length > 0 %}
                 {% for s in sessions %}
-                    <a href="{{ url_for('farmer.chat', session_id=s.id) }}"
-                       class="farmer-chat-history-item text-truncate {% if active_session and active_session.id == s.id %}active{% endif %}"
-                       title="{{ s.title if s.title else t('new_chat') }}">
-                        <div class="farmer-history-icon">
-                            <i class="far fa-comment-alt"></i>
+                    <div class="farmer-chat-history-item {% if active_session and active_session.id == s.id %}active{% endif %}"
+                         data-session-id="{{ s.id }}"
+                         data-session-title="{{ s.title if s.title else t('new_chat') }}">
+                        <a href="{{ url_for('farmer.chat', session_id=s.id) }}"
+                           class="farmer-history-main"
+                           title="{{ s.title if s.title else t('new_chat') }}">
+                            <div class="farmer-history-icon">
+                                <i class="{% if s.is_pinned %}fas fa-thumbtack{% else %}far fa-comment-alt{% endif %}"></i>
+                            </div>
+                            <div class="farmer-history-content">
+                                <span class="farmer-history-title text-truncate">{% if s.title == 'General Chat' %}{{ t('general_chat')|default('General Chat') }}{% elif s.title %}{{ s.title }}{% else %}{{ t('new_chat') }}{% endif %}</span>
+                                {% if s.updated_at %}
+                                <span class="farmer-history-time">{{ s.updated_at.strftime('%d %b %Y') }}</span>
+                                {% endif %}
+                            </div>
+                            <i class="fas fa-chevron-right farmer-history-chevron" aria-hidden="true"></i>
+                        </a>
+                        <div class="farmer-history-actions">
+                            <button type="button" class="farmer-history-menu-trigger" aria-label="Conversation actions" title="Conversation actions" aria-expanded="false">
+                                <i class="fas fa-ellipsis-vertical" aria-hidden="true"></i>
+                            </button>
+                            <div class="farmer-history-menu" hidden>
+                                <button type="button" data-chat-action="pin"><i class="fas fa-thumbtack"></i><span>{{ 'Unpin' if s.is_pinned else 'Pin' }}</span></button>
+                                <button type="button" data-chat-action="rename"><i class="fas fa-pen"></i><span>Rename</span></button>
+                                <button type="button" data-chat-action="share"><i class="fas fa-share-nodes"></i><span>Share conversation</span></button>
+                                <button type="button" data-chat-action="delete" class="is-danger"><i class="fas fa-trash"></i><span>Delete</span></button>
+                            </div>
                         </div>
-                        <div class="farmer-history-content">
-                            <span class="farmer-history-title text-truncate">{% if s.title == 'General Chat' %}{{ t('general_chat')|default('General Chat') }}{% elif s.title %}{{ s.title }}{% else %}{{ t('new_chat') }}{% endif %}</span>
-                            {% if s.updated_at %}
-                            <span class="farmer-history-time">{{ s.updated_at.strftime('%d %b %Y') }}</span>
-                            {% endif %}
-                        </div>
-                        <i class="fas fa-chevron-right farmer-history-chevron" aria-hidden="true"></i>
-                    </a>
+                    </div>
                 {% endfor %}
             {% else %}
                 <div class="farmer-history-empty">
@@ -456,6 +471,142 @@
 
 <script>
 (function () {
+    // Conversation actions: pin, rename, delete, and share.
+    const historyList = document.getElementById("farmer-chat-history-list");
+    if (!historyList) return;
+
+    function closeHistoryMenus(except) {
+        historyList.querySelectorAll(".farmer-history-menu").forEach((menu) => {
+            if (menu !== except) {
+                menu.hidden = true;
+                const trigger = menu.parentElement && menu.parentElement.querySelector(".farmer-history-menu-trigger");
+                if (trigger) trigger.setAttribute("aria-expanded", "false");
+            }
+        });
+    }
+
+    function notice(message) {
+        let toast = document.getElementById("farmer-history-toast");
+        if (!toast) {
+            toast = document.createElement("div");
+            toast.id = "farmer-history-toast";
+            toast.style.cssText = "position:fixed;z-index:2000;left:50%;bottom:24px;transform:translateX(-50%);padding:10px 14px;border-radius:10px;background:#17231d;color:#fff;font-size:.82rem;box-shadow:0 8px 24px rgba(0,0,0,.18);opacity:0;transition:opacity .18s ease;pointer-events:none;";
+            document.body.appendChild(toast);
+        }
+        toast.textContent = message;
+        toast.style.opacity = "1";
+        clearTimeout(toast._hideTimer);
+        toast._hideTimer = setTimeout(() => { toast.style.opacity = "0"; }, 2200);
+    }
+
+    async function sessionAction(item, action, payload) {
+        const sessionId = item.dataset.sessionId;
+        const response = await fetch(`/farmer/chat/${sessionId}/${action}`, {
+            method: "POST",
+            headers: {
+                "X-Requested-With": "XMLHttpRequest",
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+            },
+            body: payload ? JSON.stringify(payload) : "{}",
+            credentials: "same-origin",
+        });
+        const data = await response.json().catch(() => null);
+        if (!response.ok || !data?.ok) throw new Error(data?.error || "Could not update conversation.");
+        return data;
+    }
+
+    historyList.querySelectorAll(".farmer-history-menu-trigger").forEach((trigger) => {
+        trigger.addEventListener("click", (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            const menu = trigger.parentElement.querySelector(".farmer-history-menu");
+            const willOpen = menu.hidden;
+            closeHistoryMenus(menu);
+            menu.hidden = !willOpen;
+            trigger.setAttribute("aria-expanded", willOpen ? "true" : "false");
+        });
+    });
+
+    historyList.querySelectorAll("[data-chat-action]").forEach((button) => {
+        button.addEventListener("click", async (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            const item = button.closest(".farmer-chat-history-item");
+            const action = button.dataset.chatAction;
+            const title = item?.dataset.sessionTitle || "Conversation";
+            closeHistoryMenus();
+            if (!item) return;
+
+            if (action === "share") {
+                const url = new URL(item.querySelector(".farmer-history-main")?.href || window.location.href, window.location.origin).href;
+                try {
+                    if (navigator.share) {
+                        await navigator.share({ title, text: title, url });
+                    } else if (navigator.clipboard) {
+                        await navigator.clipboard.writeText(url);
+                        notice("Conversation link copied.");
+                    } else {
+                        notice(url);
+                    }
+                } catch (error) {
+                    if (error?.name !== "AbortError") notice("Could not share this conversation.");
+                }
+                return;
+            }
+
+            if (action === "rename") {
+                const nextTitle = window.prompt("Rename conversation", title);
+                if (nextTitle === null || !nextTitle.trim()) return;
+                try {
+                    const data = await sessionAction(item, "rename", { title: nextTitle.trim() });
+                    item.dataset.sessionTitle = data.title;
+                    const titleEl = item.querySelector(".farmer-history-title");
+                    const main = item.querySelector(".farmer-history-main");
+                    if (titleEl) titleEl.textContent = data.title;
+                    if (main) main.title = data.title;
+                    notice("Conversation renamed.");
+                } catch (error) {
+                    notice(error.message);
+                }
+                return;
+            }
+
+            if (action === "delete") {
+                if (!window.confirm("Delete this conversation and all its messages?")) return;
+                try {
+                    const data = await sessionAction(item, "delete");
+                    if (item.classList.contains("active")) {
+                        window.location.href = data.redirect_url || "/farmer/chat";
+                    } else {
+                        item.remove();
+                        notice("Conversation deleted.");
+                    }
+                } catch (error) {
+                    notice(error.message);
+                }
+                return;
+            }
+
+            if (action === "pin") {
+                try {
+                    await sessionAction(item, "pin");
+                    window.location.reload();
+                } catch (error) {
+                    notice(error.message);
+                }
+            }
+        });
+    });
+
+    document.addEventListener("click", (event) => {
+        if (!event.target.closest(".farmer-history-actions")) closeHistoryMenus();
+    });
+})();
+</script>
+
+<script>
+(function () {
     // User menu popover toggle
     const toggle = document.getElementById("farmer-user-toggle");
     const menu = document.getElementById("farmer-user-menu");
@@ -494,7 +645,8 @@
             clearBtn.classList.toggle("is-hidden", q.length === 0);
         }
         items.forEach((item) => {
-            const text = item.textContent.toLowerCase();
+            const title = item.querySelector(".farmer-history-title");
+            const text = (title ? title.textContent : item.textContent).toLowerCase();
             item.style.display = text.includes(q) ? "" : "none";
         });
     });

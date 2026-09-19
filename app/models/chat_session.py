@@ -21,6 +21,13 @@ class ChatSession(db.Model):
         default="ai"
     )
 
+    is_pinned = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=False,
+        server_default=db.false(),
+    )
+
     created_at = db.Column(
         db.DateTime,
         default=datetime.utcnow
