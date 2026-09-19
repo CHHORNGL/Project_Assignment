@@ -699,6 +699,14 @@
         time.textContent = formatChatTime(timestamp);
     }
 
+    function updateCreditBalance(credits) {
+        const value = Number(credits);
+        if (!Number.isFinite(value)) return;
+        document.querySelectorAll("[data-ai-credits]").forEach((element) => {
+            element.textContent = String(Math.max(0, Math.floor(value)));
+        });
+    }
+
     function appendChatMessage(text, user, timestamp) {
         const wrapper = document.querySelector(".v0-chat-wrapper");
         const empty = wrapper.querySelector(".v0-empty-container");
@@ -781,6 +789,7 @@
                 throw new Error(data?.error || {{ ("មិនអាចទទួលចម្លើយបានទេ។ សូមពិនិត្យការតភ្ជាប់ ហើយពិនិត្យប្រវត្តិជជែកមុនផ្ញើម្ដងទៀត។" if current_lang == "km" else "Could not receive the reply. Check your connection and chat history before sending again.")|tojson }});
             }
             updateChatTime(userRow, data.user_created_at);
+            updateCreditBalance(data.credits_remaining);
             pending.remove();
             appendChatMessage(data.reply, false, data.assistant_created_at);
         } catch (error) {

@@ -192,7 +192,7 @@
                     {% if current_user.is_authenticated and current_user.has_route_access('farmer') %}
                         <div class="farmer-menu-credit-row">
                             <span class="farmer-menu-credit-label"><i class="fas fa-coins mr-1 text-warning"></i>{{ t("ai_credits")|default("AI Tokens") }}:</span>
-                            <span class="farmer-menu-credit-val">{{ "Unlimited" if current_user.is_premium else current_user.ai_credits }}</span>
+                            <span class="farmer-menu-credit-val" data-ai-credits>{{ "Unlimited" if current_user.is_premium else current_user.ai_credits }}</span>
                         </div>
                     {% endif %}
                 </div>
@@ -274,7 +274,7 @@
                 {% if current_user.is_authenticated and current_user.has_route_access('farmer') %}
                     {% if not current_user.is_premium %}
                     <span class="badge farmer-credit-badge" title="AI Tokens">
-                        <i class="fas fa-coins mr-1"></i> {{ current_user.ai_credits }} <span class="d-none d-md-inline">Tokens</span>
+                        <i class="fas fa-coins mr-1"></i> <span data-ai-credits>{{ current_user.ai_credits }}</span> <span class="d-none d-md-inline">Tokens</span>
                     </span>
                     {% else %}
                     <span class="badge farmer-premium-badge" title="Unlimited AI Access">

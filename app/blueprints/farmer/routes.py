@@ -1504,6 +1504,9 @@ def chat(session_id=None):
                 db.session.rollback()
 
         if wants_json:
+            credits_remaining = None
+            if current_user.has_route_access("farmer") and not current_user.is_premium:
+                credits_remaining = max(0, current_user.ai_credits or 0)
             return jsonify(
                 ok=True,
                 reply=reply,
@@ -1511,6 +1514,7 @@ def chat(session_id=None):
                 title=session.title,
                 user_created_at=user_created_at,
                 assistant_created_at=assistant_created_at,
+                credits_remaining=credits_remaining,
             )
         return redirect(url_for("farmer.chat", session_id=session.id))
 

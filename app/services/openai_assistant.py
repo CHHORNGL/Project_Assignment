@@ -507,11 +507,24 @@ def _build_kb_context(message: str) -> Tuple[str, Optional[Crop]]:
     return "\n".join(lines), crop
 
 
+def _uses_farmer_ai_credits(user) -> bool:
+    """Return whether this account should pay for Farmer AI usage."""
+    if not user or not getattr(user, "is_authenticated", False):
+        return False
+    if getattr(user, "is_premium", False):
+        return False
+    try:
+        return bool(user.has_route_access("farmer"))
+    except AttributeError:
+        # Keep compatibility with lightweight user objects used by integrations.
+        return bool(user.has_role("farmer"))
+
+
 def generate_assistant_reply(user_message: str) -> Optional[str]:
     from app.extensions import db
-    is_premium = getattr(current_user, 'is_premium', False)
+    charges_farmer_credits = _uses_farmer_ai_credits(current_user)
     
-    if current_user and current_user.is_authenticated and current_user.has_role('farmer') and not is_premium:
+    if charges_farmer_credits:
         from datetime import datetime, timedelta
         if current_user.last_credit_reset and (datetime.utcnow() - current_user.last_credit_reset) >= timedelta(days=1):
             current_user.ai_credits = 13000
@@ -588,7 +601,7 @@ def generate_assistant_reply(user_message: str) -> Optional[str]:
 
     if reply_content:
         reply_content = reply_content.strip()
-        if current_user and current_user.is_authenticated and current_user.has_role('farmer') and not is_premium:
+        if charges_farmer_credits:
             tokens_used = (len(system_prompt) + len(user_prompt) + len(reply_content)) // 4
             current_user.ai_credits = max(0, current_user.ai_credits - tokens_used)
             try:
@@ -1825,4 +1838,3 @@ def _get_curated_agri_news(region="cambodia", lang="en"):
                     "source": "World Agroforestry Centre (ICRAF)"
                 }
             ]
-
