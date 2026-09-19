@@ -578,6 +578,48 @@
 .expert-chat-pending .v0-bubble-expert::before { content: ""; display: inline-block; width: 8px; height: 8px; margin-right: 8px; border-radius: 50%; background: #059669; animation: expertThinking 1s ease-in-out infinite alternate; }
 @keyframes expertThinking { from { opacity: .3; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .expert-chat-pending .v0-bubble-expert::before { animation: none; } }
+
+/* Indigo / slate Ask Expert theme. Keeps the chat independent from the
+   application's agricultural green palette. */
+.v0-bubble-user { background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%); box-shadow: 0 6px 18px rgba(79, 70, 229, .22); }
+.v0-action-btn .text-success { color: #6366f1 !important; }
+.dark-mode .v0-bubble-user { background: linear-gradient(135deg, #4f46e5, #3730a3); border-color: rgba(165, 180, 252, .30); box-shadow: 0 6px 18px rgba(79, 70, 229, .25); }
+.v0-expert-avatar { border-color: rgba(99, 102, 241, .30); }
+.dark-mode .v0-expert-avatar { border-color: rgba(165, 180, 252, .35); }
+.v0-bubble-expert-badge { background: rgba(99, 102, 241, .12); color: #4338ca; border-color: rgba(99, 102, 241, .25); }
+.dark-mode .v0-bubble-expert-badge { background: rgba(99, 102, 241, .20); color: #a5b4fc; border-color: rgba(165, 180, 252, .35); }
+.v0-hero-pill { background: rgba(99, 102, 241, .10); border-color: rgba(99, 102, 241, .28); color: #4338ca; }
+.dark-mode .v0-hero-pill { background: rgba(99, 102, 241, .16); border-color: rgba(165, 180, 252, .35); color: #a5b4fc; }
+.v0-composer-card:focus-within { border-color: #6366f1; box-shadow: 0 14px 40px rgba(99, 102, 241, .15), 0 0 0 3px rgba(99, 102, 241, .12); }
+.dark-mode .v0-composer-card:focus-within { border-color: #6366f1; box-shadow: 0 14px 40px rgba(99, 102, 241, .25), 0 0 0 3px rgba(99, 102, 241, .20); }
+.v0-model-indicator { border-color: rgba(99, 102, 241, .28); color: #4338ca; background: rgba(99, 102, 241, .08); }
+.dark-mode .v0-model-indicator { border-color: rgba(165, 180, 252, .35); color: #a5b4fc; background: rgba(99, 102, 241, .16); }
+.v0-model-pulse-dot { background: #6366f1; box-shadow: 0 0 0 0 rgba(99, 102, 241, .7); }
+.v0-send-btn.has-input { background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important; border-color: #6366f1 !important; box-shadow: 0 4px 14px rgba(99, 102, 241, .35); }
+.v0-send-btn:hover.has-input { background: #4338ca !important; box-shadow: 0 6px 18px rgba(99, 102, 241, .45); }
+#farmer-chat-form .v0-send-btn.has-input { background: #4f46e5 !important; }
+#farmer-chat-form .v0-send-btn.has-input:hover { background: #4338ca !important; }
+#farmer-chat-form button:focus-visible { outline-color: #6366f1; }
+.v0-attachment-preview { border-color: #c7d2fe; background: #eef2ff; color: #3730a3; }
+.v0-tool-btn:hover, .v0-model-btn:hover, .v0-tool-btn[aria-expanded="true"], .v0-model-btn[aria-expanded="true"] { background: #eef2ff; border-color: #c7d2fe; color: #3730a3; }
+.v0-fill-prompt-btn { border-color: #c7d2fe; background: linear-gradient(135deg, #f5f3ff 0%, #eef2ff 100%); color: #4338ca; box-shadow: 0 2px 7px rgba(99, 102, 241, .10); }
+.v0-fill-prompt-btn:hover, .v0-fill-prompt-btn[aria-expanded="true"] { border-color: #a5b4fc; background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%); color: #3730a3; box-shadow: 0 4px 12px rgba(99, 102, 241, .16); }
+.v0-model-btn { border-color: #c7d2fe; background: #f8fafc; color: #3730a3; }
+.v0-menu { border-color: #e2e8f0; }
+.v0-menu-item:hover, .v0-menu-item.is-selected { background: #eef2ff; color: #3730a3; }
+.v0-menu-item i { color: #6366f1; }
+.dark-mode .v0-attachment-preview { border-color: #334155; background: #1e293b; color: #c7d2fe; }
+.dark-mode .v0-tool-btn:hover, .dark-mode .v0-model-btn:hover, .dark-mode .v0-tool-btn[aria-expanded="true"], .dark-mode .v0-model-btn[aria-expanded="true"] { background: #1e293b; border-color: #475569; color: #c7d2fe; }
+.dark-mode .v0-fill-prompt-btn { border-color: #111827; background: #111827; color: #cbd5e1; }
+.dark-mode .v0-fill-prompt-btn:hover, .dark-mode .v0-fill-prompt-btn[aria-expanded="true"] { border-color: #334155; background: #1f2937; color: #e0e7ff; }
+.dark-mode .v0-model-btn { border-color: #475569; background: #1e293b; color: #c7d2fe; }
+.dark-mode .v0-menu { border-color: #334155; background: #111827; }
+.dark-mode .v0-menu-item { color: #cbd5e1; }
+.dark-mode .v0-menu-item:hover, .dark-mode .v0-menu-item.is-selected { background: #1e293b; color: #e0e7ff; }
+.dark-mode .v0-menu-item i { color: #818cf8; }
+.dark-mode #farmer-chat-form .v0-composer-card { background: #111827; border-color: #334155; }
+.dark-mode #farmer-chat-form .v0-send-btn { background: #1f2937; border-color: #334155; }
+.dark-mode .expert-chat-pending .v0-bubble-expert::before { background: #6366f1; }
 </style>
 
 <div class="v0-chat-wrapper">
