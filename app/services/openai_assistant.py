@@ -520,7 +520,12 @@ def _uses_farmer_ai_credits(user) -> bool:
         return bool(user.has_role("farmer"))
 
 
-def generate_assistant_reply(user_message: str) -> Optional[str]:
+def generate_assistant_reply(
+    user_message: str,
+    image_bytes: Optional[bytes] = None,
+    image_mime_type: str = "image/jpeg",
+    model_choice: Optional[str] = None,
+) -> Optional[str]:
     from app.extensions import db
     charges_farmer_credits = _uses_farmer_ai_credits(current_user)
     
@@ -564,14 +569,32 @@ def generate_assistant_reply(user_message: str) -> Optional[str]:
 
     reply_content = None
     
+    # The composer can request a model for one message. Keep this allowlist
+    # small so a browser cannot inject arbitrary provider/model values.
+    model_choice = (model_choice or "").strip().lower()
+    if model_choice not in {"", "auto", "original-ai", "gemini-2.5-flash", "gemini-2.5-pro"}:
+        model_choice = ""
+    if model_choice.startswith("gemini-"):
+        provider = "gemini"
+    elif model_choice == "original-ai":
+        provider = "openai"
+
     if provider == "gemini":
         client = _get_client()
         if client:
-            model = _get_model_name()
+            model = model_choice if model_choice.startswith("gemini-") else _get_model_name()
+            gemini_contents = [system_prompt, user_prompt]
+            if image_bytes and types:
+                gemini_contents.append(
+                    types.Part.from_bytes(
+                        data=image_bytes,
+                        mime_type=image_mime_type or "image/jpeg",
+                    )
+                )
             try:
                 response = client.models.generate_content(
                     model=model,
-                    contents=[system_prompt, user_prompt],
+                    contents=gemini_contents,
                     config=types.GenerateContentConfig(
                         temperature=0.3,
                         max_output_tokens=600,
@@ -585,12 +608,24 @@ def generate_assistant_reply(user_message: str) -> Optional[str]:
         client = _get_openai_client()
         if client:
             model = _get_openai_model()
+            openai_user_content = user_prompt
+            if image_bytes:
+                image_data_url = (
+                    "data:"
+                    + (image_mime_type or "image/jpeg")
+                    + ";base64,"
+                    + base64.b64encode(image_bytes).decode("utf-8")
+                )
+                openai_user_content = [
+                    {"type": "text", "text": user_prompt},
+                    {"type": "image_url", "image_url": {"url": image_data_url}},
+                ]
             try:
                 response = client.chat.completions.create(
                     model=model,
                     messages=[
                         {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": user_prompt},
+                        {"role": "user", "content": openai_user_content},
                     ],
                     temperature=0.3,
                     max_tokens=600,

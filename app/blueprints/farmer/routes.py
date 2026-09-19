@@ -1406,8 +1406,32 @@ def chat(session_id=None):
     # ---------------------------------
     if request.method == "POST":
         user_message = request.form.get("message", "").strip()
-
         wants_json = request.headers.get("X-Requested-With") == "XMLHttpRequest"
+
+        attachment = request.files.get("attachment")
+        image_bytes = None
+        image_mime_type = "image/jpeg"
+        attachment_name = ""
+        if attachment and attachment.filename:
+            attachment_name = secure_filename(attachment.filename)[:120]
+            image_mime_type = (attachment.mimetype or "").lower().strip()
+            allowed_image_types = {"image/jpeg", "image/png", "image/webp", "image/gif"}
+            if image_mime_type not in allowed_image_types:
+                error = "Please attach a JPG, PNG, WebP, or GIF image."
+                if wants_json:
+                    return jsonify(ok=False, error=error), 400
+                flash(error, "danger")
+                return redirect(url_for("farmer.chat", session_id=session.id))
+            image_bytes = attachment.read()
+            if len(image_bytes) > 6 * 1024 * 1024:
+                error = "The image must be 6 MB or smaller."
+                if wants_json:
+                    return jsonify(ok=False, error=error), 400
+                flash(error, "danger")
+                return redirect(url_for("farmer.chat", session_id=session.id))
+            if not user_message:
+                user_message = "Please analyze the attached crop image and explain what I should do."
+
         if not user_message and wants_json:
             return jsonify(ok=False, error="Please enter a message."), 400
 
@@ -1484,7 +1508,12 @@ def chat(session_id=None):
             crop = find_crop()
             symptoms_list, explicit_symptoms = extract_symptoms(user_message)
 
-            reply = generate_assistant_reply(user_message)
+            reply = generate_assistant_reply(
+                user_message,
+                image_bytes=image_bytes,
+                image_mime_type=image_mime_type,
+                model_choice=request.form.get("model_choice", "auto"),
+            )
 
             if not reply:
                 if is_greeting(message_lower):
@@ -1586,6 +1615,7 @@ def chat(session_id=None):
                 user_created_at=user_created_at,
                 assistant_created_at=assistant_created_at,
                 credits_remaining=credits_remaining,
+                attachment_name=attachment_name,
             )
         return redirect(url_for("farmer.chat", session_id=session.id))
 

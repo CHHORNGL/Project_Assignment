@@ -474,16 +474,17 @@
 
 /* Compact prompt input */
 #farmer-chat-form .v0-composer-card {
-    display: flex; align-items: flex-end; gap: 8px;
-    width: 100%; max-width: 760px; padding: 7px;
+    display: flex; flex-direction: column; align-items: stretch; gap: 0;
+    width: 100%; max-width: 760px; padding: 8px 10px 7px;
     border: 1px solid #dce3df; border-radius: 26px;
     background: #fff; box-shadow: 0 2px 10px rgba(15,23,42,.035);
     transition: border-color 160ms ease, box-shadow 160ms ease;
+    overflow: visible;
 }
 #farmer-chat-form .v0-composer-card:focus-within {
     border-color: #87ae9d; box-shadow: 0 0 0 2px rgba(5,150,105,.06);
 }
-#farmer-chat-form .v0-textarea-container { flex: 1; min-width: 0; width: auto; padding: 9px 0 9px 12px; }
+#farmer-chat-form .v0-textarea-container { flex: 1; min-width: 0; width: auto; padding: 8px 2px 8px 5px; }
 #farmer-chat-form .v0-chat-textarea {
     display: block; min-height: 26px; max-height: 160px; margin: 0;
     padding: 0; font-size: 16px; line-height: 26px; color: #1e293b;
@@ -499,13 +500,61 @@
 #farmer-chat-form .v0-send-btn.has-input:hover { background: #065f46 !important; }
 #farmer-chat-form .v0-send-btn:disabled { cursor: default; }
 #farmer-chat-form button:focus-visible { outline: 2px solid #059669; outline-offset: 2px; }
+.v0-attachment-preview {
+    display: inline-flex; align-items: center; gap: 8px; align-self: flex-start;
+    max-width: min(100%, 360px); margin: 2px 4px 4px; padding: 6px 9px;
+    border: 1px solid #d7e6df; border-radius: 12px; background: #f5faf7;
+    color: #166534; font-size: 0.8rem; font-weight: 650;
+}
+.v0-attachment-preview[hidden], .v0-menu[hidden] { display: none; }
+.v0-attachment-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.v0-attachment-remove { border: 0; background: transparent; color: #64748b; cursor: pointer; padding: 2px 4px; }
+.v0-composer-toolbar { padding: 2px 0 0; min-height: 36px; }
+.v0-tool-wrap, .v0-model-wrap { position: relative; }
+.v0-tool-btn, .v0-model-btn {
+    display: inline-flex; align-items: center; gap: 7px; min-height: 32px;
+    padding: 6px 9px; border: 1px solid transparent; border-radius: 10px;
+    background: transparent; color: #66736d; font-size: 0.78rem; font-weight: 650;
+    cursor: pointer; transition: background 140ms ease, color 140ms ease, border-color 140ms ease;
+}
+.v0-tool-btn:hover, .v0-model-btn:hover, .v0-tool-btn[aria-expanded="true"], .v0-model-btn[aria-expanded="true"] {
+    background: #f1f7f3; border-color: #d7e6df; color: #166534;
+}
+.v0-tool-btn i { font-size: 0.82rem; }
+.v0-model-btn { border-color: #d7e6df; background: #f7fbf8; color: #166534; }
+.v0-model-btn .v0-model-pulse-dot { width: 6px; height: 6px; }
+.v0-menu {
+    position: absolute; z-index: 30; left: 0; bottom: calc(100% + 8px); min-width: 220px;
+    padding: 6px; border: 1px solid #dbe7e0; border-radius: 14px; background: #fff;
+    box-shadow: 0 14px 35px rgba(15, 23, 42, .14);
+}
+.v0-model-menu { right: 0; left: auto; min-width: 210px; }
+.v0-menu-title { padding: 7px 9px 5px; color: #94a3a0; font-size: 0.68rem; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
+.v0-menu-item {
+    display: flex; align-items: center; gap: 9px; width: 100%; padding: 9px 10px;
+    border: 0; border-radius: 9px; background: transparent; color: #33423b;
+    text-align: left; font-size: 0.82rem; cursor: pointer;
+}
+.v0-menu-item:hover, .v0-menu-item.is-selected { background: #edf8f1; color: #166534; }
+.v0-menu-item small { display: block; margin-top: 2px; color: #94a3b8; font-size: .68rem; }
+.v0-menu-item i { width: 16px; text-align: center; color: #059669; }
+.dark-mode #farmer-chat-form .v0-attachment-preview { border-color: #355244; background: #1d3027; color: #86efac; }
+.dark-mode .v0-tool-btn, .dark-mode .v0-model-btn { color: #a7b8ae; }
+.dark-mode .v0-tool-btn:hover, .dark-mode .v0-model-btn:hover, .dark-mode .v0-tool-btn[aria-expanded="true"], .dark-mode .v0-model-btn[aria-expanded="true"] { background: #24382e; border-color: #3b5748; color: #bbf7d0; }
+.dark-mode .v0-model-btn { background: #20352a; border-color: #3b5748; color: #bbf7d0; }
+.dark-mode .v0-menu { border-color: #3b5146; background: #1b2922; box-shadow: 0 14px 35px rgba(0, 0, 0, .35); }
+.dark-mode .v0-menu-item { color: #d1e2d8; }
+.dark-mode .v0-menu-item:hover, .dark-mode .v0-menu-item.is-selected { background: #294536; color: #bbf7d0; }
 .dark-mode #farmer-chat-form .v0-composer-card { background: #18221e; border-color: #34433b; box-shadow: none; }
 .dark-mode #farmer-chat-form .v0-chat-textarea { color: #edf2ef; }
 .dark-mode #farmer-chat-form .v0-chat-textarea::placeholder { color: #9aa9a0; }
 .dark-mode #farmer-chat-form .v0-send-btn { background: #2b3931; }
 @media (max-width: 600px) {
-    #farmer-chat-form .v0-composer-card { padding: 5px; gap: 4px; }
+    #farmer-chat-form .v0-composer-card { padding: 6px 7px; border-radius: 20px; }
     #farmer-chat-form .v0-textarea-container { padding-left: 10px; }
+    .v0-tool-btn span, .v0-model-btn span.v0-model-label { display: none; }
+    .v0-tool-btn, .v0-model-btn { padding: 7px 8px; }
+    .v0-shortcut-hint { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { #farmer-chat-form .v0-composer-card, #farmer-chat-form button { transition: none; } }
  .expert-chat-pending .v0-bubble-expert { color: #64748b; }
@@ -600,6 +649,15 @@
 <!-- MODERN AI CHAT COMPOSER (Claude, ChatGPT & Gemini style) -->
 <form method="POST" class="w-100" id="farmer-chat-form">
     <div class="v0-composer-card">
+        <input type="file" id="farmer-chat-file" name="attachment" accept="image/jpeg,image/png,image/webp,image/gif" hidden>
+        <input type="hidden" name="model_choice" id="farmer-chat-model" value="auto">
+        <div class="v0-attachment-preview" id="farmer-chat-attachment" hidden>
+            <i class="fas fa-image" aria-hidden="true"></i>
+            <span class="v0-attachment-name" id="farmer-chat-attachment-name"></span>
+            <button type="button" class="v0-attachment-remove" id="farmer-chat-attachment-remove" aria-label="Remove attachment" title="Remove attachment">
+                <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
+        </div>
         <label for="farmer-chat-input" class="sr-only">{% if current_lang == "km" %}សួរ AI{% else %}Ask AI{% endif %}</label>
         <span id="expert-compose-help" class="sr-only">{% if current_lang == "km" %}ប្រាប់អំពីដំណាំ និងរោគសញ្ញារបស់អ្នក។{% else %}Describe your crop, symptoms, or question.{% endif %}</span>
         <div class="v0-textarea-container">
@@ -610,13 +668,55 @@
                 placeholder="{% if current_lang == 'km' %}សួរអំពីដំណាំរបស់អ្នក…{% else %}Ask anything about your crops…{% endif %}"
                 aria-describedby="expert-compose-help"
                 rows="1"
-                required
                 autocomplete="off"></textarea>
         </div>
-
-        <button type="submit" class="v0-send-btn" id="v0-send-btn" aria-label="{{ t('send') }}" title="{{ t('send') }}" disabled>
-            <i class="fas fa-arrow-up" aria-hidden="true"></i>
-        </button>
+        <div class="v0-composer-toolbar">
+            <div class="v0-toolbar-left">
+                <button type="button" class="v0-tool-btn" id="farmer-chat-attach" title="Attach image" aria-label="Attach image">
+                    <i class="fas fa-paperclip" aria-hidden="true"></i><span>Attach image</span>
+                </button>
+                <div class="v0-tool-wrap">
+                    <button type="button" class="v0-tool-btn" id="farmer-chat-fill-prompt" title="Fill prompt" aria-expanded="false" aria-controls="farmer-chat-prompt-menu">
+                        <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i><span>Fill prompt</span>
+                    </button>
+                    <div class="v0-menu" id="farmer-chat-prompt-menu" hidden>
+                        <div class="v0-menu-title">Suggested prompts</div>
+                        <button type="button" class="v0-menu-item" data-prompt="What disease or pest could affect my crop? What signs should I check?"><i class="fas fa-leaf"></i><span>Identify crop problem</span></button>
+                        <button type="button" class="v0-menu-item" data-prompt="Give me a safe treatment plan for my crop, including timing and precautions."><i class="fas fa-shield-heart"></i><span>Make a treatment plan</span></button>
+                        <button type="button" class="v0-menu-item" data-prompt="What fertilizer and watering schedule is suitable for my crop?"><i class="fas fa-droplet"></i><span>Fertilizer and watering</span></button>
+                    </div>
+                </div>
+                <div class="v0-tool-wrap">
+                    <button type="button" class="v0-tool-btn" id="farmer-chat-more" title="More tools" aria-expanded="false" aria-controls="farmer-chat-more-menu">
+                        <i class="fas fa-ellipsis" aria-hidden="true"></i><span>More</span>
+                    </button>
+                    <div class="v0-menu" id="farmer-chat-more-menu" hidden>
+                        <div class="v0-menu-title">More tools</div>
+                        <button type="button" class="v0-menu-item" data-prompt="Compare the possible causes of this crop problem and tell me what evidence would confirm each one."><i class="fas fa-list-check"></i><span>Compare causes</span></button>
+                        <button type="button" class="v0-menu-item" data-prompt="Explain this agricultural advice in simple steps I can follow in the field."><i class="fas fa-person-chalkboard"></i><span>Explain simply</span></button>
+                        <button type="button" class="v0-menu-item" data-clear-prompt="true"><i class="fas fa-eraser"></i><span>Clear prompt</span></button>
+                    </div>
+                </div>
+            </div>
+            <div class="v0-toolbar-right">
+                <div class="v0-model-wrap">
+                    <button type="button" class="v0-model-btn" id="farmer-chat-model-button" title="Change AI model" aria-expanded="false" aria-controls="farmer-chat-model-menu">
+                        <span class="v0-model-pulse-dot" aria-hidden="true"></span><span class="v0-model-label" id="farmer-chat-model-label">Auto (Admin)</span><i class="fas fa-chevron-down" aria-hidden="true"></i>
+                    </button>
+                    <div class="v0-menu v0-model-menu" id="farmer-chat-model-menu" hidden>
+                        <div class="v0-menu-title">AI model</div>
+                        <button type="button" class="v0-menu-item is-selected" data-model="auto"><i class="fas fa-sliders"></i><span><strong>Auto (Admin)</strong><small>Use the model configured by admin</small></span></button>
+                        <button type="button" class="v0-menu-item" data-model="gemini-2.5-flash"><i class="fas fa-bolt"></i><span><strong>Gemini Flash</strong><small>Fast everyday crop questions</small></span></button>
+                        <button type="button" class="v0-menu-item" data-model="gemini-2.5-pro"><i class="fas fa-brain"></i><span><strong>Gemini Pro</strong><small>More detailed analysis</small></span></button>
+                        <button type="button" class="v0-menu-item" data-model="original-ai"><i class="fas fa-microchip"></i><span><strong>Original AI</strong><small>Use the configured OpenAI/Groq model</small></span></button>
+                    </div>
+                </div>
+                <span class="v0-shortcut-hint"><kbd>Enter</kbd> to send</span>
+                <button type="submit" class="v0-send-btn" id="v0-send-btn" aria-label="{{ t('send') }}" title="{{ t('send') }}" disabled>
+                    <i class="fas fa-arrow-up" aria-hidden="true"></i>
+                </button>
+            </div>
+        </div>
     </div>
 </form>
 
@@ -626,11 +726,25 @@
     const sendBtn = document.getElementById("v0-send-btn");
     const form = document.getElementById("farmer-chat-form");
     const suggestionChips = document.querySelectorAll(".v0-action-btn");
+    const fileInput = document.getElementById("farmer-chat-file");
+    const attachBtn = document.getElementById("farmer-chat-attach");
+    const attachmentPreview = document.getElementById("farmer-chat-attachment");
+    const attachmentName = document.getElementById("farmer-chat-attachment-name");
+    const removeAttachmentBtn = document.getElementById("farmer-chat-attachment-remove");
+    const modelInput = document.getElementById("farmer-chat-model");
+    const modelButton = document.getElementById("farmer-chat-model-button");
+    const modelLabel = document.getElementById("farmer-chat-model-label");
+    const promptButton = document.getElementById("farmer-chat-fill-prompt");
+    const moreButton = document.getElementById("farmer-chat-more");
     const expertLogoUrl = {{ url_for('static', filename='img/logo_icon.svg', v=static_version)|tojson }};
     const expertName = {{ t("farmer_expert")|tojson }};
 
     if (!textarea) return;
     let sending = false;
+
+    function hasComposerContent() {
+        return Boolean(textarea.value.trim() || (fileInput && fileInput.files && fileInput.files.length));
+    }
 
     // Start with one line and grow only as the user types.
     function autoResize() {
@@ -638,7 +752,7 @@
         const newHeight = Math.min(Math.max(textarea.scrollHeight, 26), 160);
         textarea.style.height = newHeight + "px";
 
-        sendBtn.disabled = sending || textarea.value.trim().length === 0;
+        sendBtn.disabled = sending || !hasComposerContent();
 
         // Update send button active state
         if (textarea.value.trim().length > 0) {
@@ -671,6 +785,108 @@
             }
         });
     });
+
+    function setMenu(button, menu, open) {
+        if (!button || !menu) return;
+        menu.hidden = !open;
+        button.setAttribute("aria-expanded", open ? "true" : "false");
+    }
+
+    function closeMenus(except) {
+        document.querySelectorAll("#farmer-chat-form .v0-menu").forEach((menu) => {
+            if (menu !== except) setMenu(menu.previousElementSibling, menu, false);
+        });
+    }
+
+    const promptMenu = document.getElementById("farmer-chat-prompt-menu");
+    const moreMenu = document.getElementById("farmer-chat-more-menu");
+    const modelMenu = document.getElementById("farmer-chat-model-menu");
+
+    if (promptButton && promptMenu) {
+        promptButton.addEventListener("click", () => {
+            const open = promptMenu.hidden;
+            closeMenus(promptMenu);
+            setMenu(promptButton, promptMenu, open);
+        });
+    }
+    if (moreButton && moreMenu) {
+        moreButton.addEventListener("click", () => {
+            const open = moreMenu.hidden;
+            closeMenus(moreMenu);
+            setMenu(moreButton, moreMenu, open);
+        });
+    }
+    if (modelButton && modelMenu) {
+        modelButton.addEventListener("click", () => {
+            const open = modelMenu.hidden;
+            closeMenus(modelMenu);
+            setMenu(modelButton, modelMenu, open);
+        });
+    }
+
+    document.querySelectorAll("#farmer-chat-form [data-prompt]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+            textarea.value = btn.getAttribute("data-prompt") || "";
+            autoResize();
+            closeMenus();
+            textarea.focus();
+        });
+    });
+    document.querySelectorAll("#farmer-chat-form [data-clear-prompt]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+            textarea.value = "";
+            autoResize();
+            closeMenus();
+            textarea.focus();
+        });
+    });
+    document.querySelectorAll("#farmer-chat-form [data-model]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+            const value = btn.getAttribute("data-model") || "auto";
+            const labels = {
+                auto: "Auto (Admin)",
+                "gemini-2.5-flash": "Gemini Flash",
+                "gemini-2.5-pro": "Gemini Pro",
+                "original-ai": "Original AI",
+            };
+            if (modelInput) modelInput.value = value;
+            if (modelLabel) modelLabel.textContent = labels[value] || "Auto (Admin)";
+            document.querySelectorAll("#farmer-chat-model-menu [data-model]").forEach((item) => {
+                item.classList.toggle("is-selected", item === btn);
+            });
+            closeMenus();
+        });
+    });
+    document.addEventListener("click", (event) => {
+        if (!event.target.closest("#farmer-chat-form .v0-tool-wrap, #farmer-chat-form .v0-model-wrap")) {
+            closeMenus();
+        }
+    });
+
+    function clearAttachment() {
+        if (fileInput) fileInput.value = "";
+        if (attachmentName) attachmentName.textContent = "";
+        if (attachmentPreview) attachmentPreview.hidden = true;
+        autoResize();
+    }
+
+    if (attachBtn && fileInput) attachBtn.addEventListener("click", () => fileInput.click());
+    if (fileInput) {
+        fileInput.addEventListener("change", () => {
+            const file = fileInput.files && fileInput.files[0];
+            if (!file) return;
+            const allowed = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+            if (!allowed.includes(file.type) || file.size > 6 * 1024 * 1024) {
+                window.alert("Please choose a JPG, PNG, WebP, or GIF image up to 6 MB.");
+                clearAttachment();
+                return;
+            }
+            if (attachmentName) attachmentName.textContent = file.name;
+            if (attachmentPreview) attachmentPreview.hidden = false;
+            autoResize();
+        });
+    }
+    if (removeAttachmentBtn) removeAttachmentBtn.addEventListener("click", clearAttachment);
 
     function formatChatTime(timestamp) {
         const date = new Date(timestamp || Date.now());
@@ -707,7 +923,7 @@
         });
     }
 
-    function appendChatMessage(text, user, timestamp) {
+    function appendChatMessage(text, user, timestamp, attachedName) {
         const wrapper = document.querySelector(".v0-chat-wrapper");
         const empty = wrapper.querySelector(".v0-empty-container");
         if (empty) empty.remove();
@@ -726,6 +942,16 @@
             const messageText = document.createElement("div");
             messageText.textContent = text;
             bubble.appendChild(messageText);
+            if (attachedName) {
+                const attachment = document.createElement("div");
+                attachment.className = "v0-attachment-preview";
+                attachment.innerHTML = '<i class="fas fa-image" aria-hidden="true"></i>';
+                const name = document.createElement("span");
+                name.className = "v0-attachment-name";
+                name.textContent = attachedName;
+                attachment.appendChild(name);
+                bubble.appendChild(attachment);
+            }
             bubble.appendChild(createChatTime(timestamp));
         } else {
             const avatar = document.createElement("div");
@@ -768,13 +994,17 @@
     form.addEventListener("submit", async (event) => {
         event.preventDefault();
         const message = textarea.value.trim();
-        if (sending || !message) return;
+        const selectedAttachment = fileInput && fileInput.files && fileInput.files[0];
+        if (sending || (!message && !selectedAttachment)) return;
         const payload = new FormData(form);
         sending = true;
         textarea.value = "";
+        if (fileInput) fileInput.value = "";
+        if (attachmentPreview) attachmentPreview.hidden = true;
         autoResize();
         form.setAttribute("aria-busy", "true");
-        const userRow = appendChatMessage(message, true);
+        const displayMessage = message || "Please analyze the attached crop image and explain what I should do.";
+        const userRow = appendChatMessage(displayMessage, true, null, selectedAttachment && selectedAttachment.name);
         const pending = appendChatMessage({{ ("AI កំពុងសរសេរ…" if current_lang == "km" else "AI is writing…")|tojson }}, false);
         pending.classList.add("expert-chat-pending");
         pending.setAttribute("role", "status");
