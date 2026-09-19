@@ -1858,7 +1858,6 @@ def build_farmer_dashboard_bootstrap(*, diagnoses, ai_questions, crops):
                     "title": _copy("History", "ប្រវត្តិ"),
                     "items": [
                         {"label": t("recent_diagnoses_title"), "href": url_for("farmer.diagnosis_history"), "description": _copy("Past diagnosis records", "ប្រវត្តិវិនិច្ឆ័យ")},
-                        {"label": t("ask_expert_history"), "href": url_for("farmer.ai_history"), "description": _copy("AI question archive", "សំណួរ AI")},
                         {"label": t("ask_expert_title"), "href": url_for("farmer.chat"), "description": t("ask_expert_sub")},
                     ],
                 },
@@ -1959,7 +1958,6 @@ def _farmer_navigation_sections():
             "title": _copy("History"),
             "items": [
                 {"label": t("recent_diagnoses_title"), "href": url_for("farmer.diagnosis_history"), "description": _copy("Past diagnosis records")},
-                {"label": t("ask_expert_history"), "href": url_for("farmer.ai_history"), "description": _copy("AI question archive")},
                 {"label": t("ask_expert_title"), "href": url_for("farmer.chat"), "description": t("ask_expert_sub")},
             ],
         },

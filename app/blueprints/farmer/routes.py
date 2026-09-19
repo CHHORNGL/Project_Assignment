@@ -12,9 +12,8 @@ from flask import (
 )
 import re
 import os
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from uuid import uuid4
-from zoneinfo import ZoneInfo
 from flask_login import current_user, login_required
 from sqlalchemy.orm import joinedload
 from werkzeug.utils import secure_filename
@@ -573,125 +572,7 @@ def _is_greeting_or_filler(text: str) -> bool:
 @farmer_bp.route("/history/ai")
 @farmer_required
 def ai_history():
-    _ensure_legacy_session(current_user.id)
-
-    sessions = (
-        ChatSession.query
-        .filter_by(farmer_id=current_user.id, session_type="ai")
-        .order_by(ChatSession.updated_at.desc(), ChatSession.created_at.desc())
-        .all()
-    )
-
-    questions = (
-        db.session.query(ChatMessage, ChatSession)
-        .join(ChatSession, ChatSession.id == ChatMessage.session_id)
-        .filter(
-            ChatSession.farmer_id == current_user.id,
-            ChatSession.session_type == "ai",
-            ChatMessage.sender == "farmer"
-        )
-        .order_by(ChatMessage.created_at.desc())
-        .all()
-    )
-
-    try:
-        history_zone = ZoneInfo("Asia/Phnom_Penh")
-    except Exception:
-        history_zone = timezone.utc
-    now_local = datetime.now(timezone.utc).astimezone(history_zone)
-
-    is_km = get_current_language() == "km"
-    group_labels = {
-        "today": "ថ្ងៃនេះ" if is_km else "Today",
-        "yesterday": "ម្សិលមិញ" if is_km else "Yesterday",
-        "last_7_days": "៧ ថ្ងៃមុន" if is_km else "Last 7 Days",
-        "older": "មុននេះ" if is_km else "Older",
-    }
-    grouped = {key: [] for key in group_labels}
-    active_session_id = request.args.get("session_id", type=int)
-    if active_session_id is None and sessions:
-        active_session_id = sessions[0].id
-    active_marked = False
-
-    processed_sessions = []
-    for sess in sessions:
-        msgs = sorted(sess.messages, key=lambda m: m.created_at or datetime.min)
-        if not msgs:
-            continue
-
-        farmer_msgs = [m for m in msgs if m.sender == "farmer"]
-        expert_msgs = [m for m in msgs if m.sender != "farmer"]
-
-        first_q = farmer_msgs[0].message if farmer_msgs else ""
-        latest_q = farmer_msgs[-1].message if farmer_msgs else ""
-        latest_r = expert_msgs[-1].message if expert_msgs else ""
-
-        title = (sess.title or "").strip()
-        is_temp = not title or title in ("New Chat", "Legacy Chat", "General Chat", "ការជជែកទូទៅ")
-        if is_temp:
-            substantive_q = None
-            for fm in farmer_msgs:
-                if not _is_greeting_or_filler(fm.message):
-                    substantive_q = fm.message
-                    break
-            if substantive_q:
-                title = _format_history_title(substantive_q, max_length=30)
-            else:
-                title = "ការជជែកទូទៅ" if is_km else "General Chat"
-        else:
-            title = _format_history_title(title, max_length=30)
-
-        timestamp = sess.updated_at or (msgs[-1].created_at if msgs else sess.created_at)
-        created_at_val = timestamp
-        if created_at_val:
-            if created_at_val.tzinfo is None:
-                created_at_val = created_at_val.replace(tzinfo=timezone.utc)
-            session_day = created_at_val.astimezone(history_zone).date()
-            day_age = (now_local.date() - session_day).days
-            if day_age <= 0:
-                group_key = "today"
-            elif day_age == 1:
-                group_key = "yesterday"
-            elif 2 <= day_age <= 7:
-                group_key = "last_7_days"
-            else:
-                group_key = "older"
-        else:
-            group_key = "older"
-
-        is_active = bool(active_session_id and sess.id == active_session_id and not active_marked)
-        if is_active:
-            active_marked = True
-
-        entry = {
-            "session": sess,
-            "title": title,
-            "first_question": first_q,
-            "latest_question": latest_q,
-            "latest_reply": latest_r,
-            "message_count": len(msgs),
-            "icon": _chat_history_icon(latest_q or title),
-            "timestamp": timestamp,
-            "formatted_date": timestamp.strftime("%d %b %Y · %H:%M") if timestamp else "",
-            "active": is_active,
-            "has_reply": bool(latest_r),
-        }
-        grouped[group_key].append(entry)
-        processed_sessions.append(entry)
-
-    history_groups = [
-        {"key": key, "label": group_labels[key], "entries": entries, "items": entries}
-        for key, entries in grouped.items()
-        if entries
-    ]
-    return render_template(
-        "farmer/ai_history.html",
-        questions=questions,
-        sessions=sessions,
-        total_count=len(processed_sessions),
-        history_groups=history_groups,
-        active_session_id=active_session_id,
-    )
+    return redirect(url_for("farmer.chat"))
 
 # ===============================
 # FARMER RULE-BASED INFERENCE HISTORY

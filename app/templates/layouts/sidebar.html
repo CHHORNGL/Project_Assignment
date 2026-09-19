@@ -938,7 +938,7 @@ body.icon-nav .app-sidebar .nav-link[data-tooltip]:hover::after,
     </li>
 
     <li class="nav-item">
-        <a class="nav-link {% if path.startswith("/farmer/chat") or path.startswith("/farmer/history/ai") %}active{% endif %}"
+        <a class="nav-link {% if path.startswith("/farmer/chat") %}active{% endif %}"
            href="{{ url_for("farmer.chat") }}"
            data-tooltip="{{ t("ask_expert") }}"
            aria-label="{{ t("ask_expert") }}">

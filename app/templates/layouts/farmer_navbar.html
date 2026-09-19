@@ -34,7 +34,7 @@
         </a>
 
         <a href="{{ url_for('farmer.chat') }}"
-           class="{% if path.startswith('/farmer/chat') or path.startswith('/farmer/history/ai') %}active{% endif %}">
+           class="{% if path.startswith('/farmer/chat') %}active{% endif %}">
             <i class="far fa-comments"></i>
             <span>{{ t("ask_expert") }}</span>
         </a>
