@@ -115,15 +115,51 @@
         font-weight: 800;
     }
 
-    .ai-history-list { display: grid; gap: 0.85rem; }
+    .ai-history-groups { display: grid; gap: 1.6rem; }
+
+    .ai-history-group-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        margin: 0 0 0.65rem;
+        padding: 0 0.25rem;
+    }
+
+    .ai-history-group-title {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin: 0;
+        color: var(--text-main, #0f172a);
+        font-size: 0.92rem;
+        font-weight: 800;
+    }
+
+    .ai-history-group-title::before {
+        content: "";
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--history-accent);
+        box-shadow: 0 0 0 4px var(--history-soft);
+    }
+
+    .ai-history-group-count {
+        color: var(--text-muted, #64748b);
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+
+    .ai-history-list { display: grid; gap: 0.65rem; }
 
     .ai-history-card {
         display: grid;
         grid-template-columns: 54px minmax(0, 1fr) auto;
         align-items: center;
         gap: 1rem;
-        min-height: 145px;
-        padding: 1.15rem 1.3rem;
+        min-height: 104px;
+        padding: 1rem 1.15rem;
         border: 1px solid var(--border-light, #e2e8f0);
         border-left: 4px solid var(--history-accent);
         border-radius: 18px;
@@ -137,6 +173,7 @@
     .ai-history-card:hover,
     .ai-history-card:focus-visible {
         border-color: rgba(5, 150, 105, 0.36);
+        background: #f0fdf8;
         color: inherit;
         text-decoration: none;
         transform: translateY(-2px);
@@ -144,6 +181,18 @@
     }
 
     .ai-history-card:focus-visible { outline: 2px solid var(--history-accent); outline-offset: 3px; }
+
+    .ai-history-card.is-active {
+        border-color: var(--history-accent);
+        border-left-width: 5px;
+        background: linear-gradient(90deg, rgba(16, 185, 129, 0.14), rgba(236, 253, 245, 0.72));
+        box-shadow: 0 10px 24px rgba(5, 150, 105, 0.14);
+    }
+
+    .ai-history-card.is-active .ai-history-card-arrow {
+        background: var(--history-accent);
+        color: #fff;
+    }
 
     .ai-history-card-icon {
         display: grid;
@@ -184,10 +233,12 @@
     .ai-history-question {
         margin: 0;
         color: var(--text-main, #0f172a);
-        font-size: 1.08rem;
+        font-size: 1rem;
         font-weight: 700;
-        line-height: 1.5;
-        overflow-wrap: anywhere;
+        line-height: 1.45;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     .ai-history-meta {
@@ -267,13 +318,14 @@
 
     .dark-mode .ai-history-card-icon { background: rgba(16, 185, 129, 0.18); color: #6ee7b7; }
     .dark-mode .ai-history-card:hover,
-    .dark-mode .ai-history-card:focus-visible { background: rgba(16, 185, 129, 0.06); }
+    .dark-mode .ai-history-card:focus-visible,
+    .dark-mode .ai-history-card.is-active { background: rgba(16, 185, 129, 0.12); }
 
     @media (max-width: 680px) {
         .ai-history-page { padding-top: 0.5rem; }
         .ai-history-hero { align-items: stretch; flex-direction: column; padding: 1.25rem; border-radius: 18px; }
         .ai-history-open { width: 100%; }
-        .ai-history-card { grid-template-columns: 44px minmax(0, 1fr); gap: 0.8rem; min-height: 0; padding: 1rem; }
+        .ai-history-card { grid-template-columns: 44px minmax(0, 1fr); gap: 0.8rem; min-height: 0; padding: 0.9rem; }
         .ai-history-card-icon { width: 44px; height: 44px; border-radius: 13px; font-size: 1rem; }
         .ai-history-card-arrow { display: none; }
         .ai-history-question { font-size: 0.98rem; }
@@ -298,29 +350,42 @@
         <span class="ai-history-summary-count">{{ questions|length }}</span>
     </div>
 
-    <div class="ai-history-list">
-        {% for item in questions %}
-        {% set msg = item[0] %}
-        {% set sess = item[1] %}
-        <a class="ai-history-card" href="{{ url_for('farmer.chat', session_id=sess.id) }}">
-            <div class="ai-history-card-icon" aria-hidden="true">
-                <i class="far fa-comment-dots"></i>
+    <div class="ai-history-groups">
+        {% for group in history_groups %}
+        <section class="ai-history-group" aria-labelledby="history-group-{{ group.key }}">
+            <div class="ai-history-group-head">
+                <h2 class="ai-history-group-title" id="history-group-{{ group.key }}">{{ group.label }}</h2>
+                <span class="ai-history-group-count">{{ group.items|length }} {{ t("question") }}</span>
             </div>
-            <div class="ai-history-card-body">
-                <div class="ai-history-card-label">
-                    <span><i class="fas fa-robot"></i>{{ t("question") }}</span>
-                </div>
-                <p class="ai-history-question">{{ msg.message }}</p>
-                <div class="ai-history-meta">
-                    <span><i class="far fa-clock"></i>
-                        {{ msg.created_at.strftime("%d %b %Y · %H:%M") if msg.created_at else "" }}
-                    </span>
-                    <span aria-hidden="true">&bull;</span>
-                    <span>{{ t("ask_expert") }}</span>
-                </div>
+            <div class="ai-history-list">
+                {% for item in group.items %}
+                {% set msg = item.message %}
+                {% set sess = item.session %}
+                <a class="ai-history-card{% if item.active %} is-active{% endif %}"
+                   href="{{ url_for('farmer.chat', session_id=sess.id) }}"
+                   title="{{ msg.message }}"
+                   {% if item.active %}aria-current="page"{% endif %}>
+                    <div class="ai-history-card-icon" aria-hidden="true">
+                        <i class="{{ item.icon }}"></i>
+                    </div>
+                    <div class="ai-history-card-body">
+                        <div class="ai-history-card-label">
+                            <span><i class="{{ item.icon }}"></i>{{ t("question") }}</span>
+                        </div>
+                        <p class="ai-history-question">{{ msg.message }}</p>
+                        <div class="ai-history-meta">
+                            <span><i class="far fa-clock"></i>
+                                {{ msg.created_at.strftime("%d %b %Y · %H:%M") if msg.created_at else "" }}
+                            </span>
+                            <span aria-hidden="true">&bull;</span>
+                            <span>{{ t("ask_expert") }}</span>
+                        </div>
+                    </div>
+                    <span class="ai-history-card-arrow" aria-hidden="true"><i class="fas fa-arrow-right"></i></span>
+                </a>
+                {% endfor %}
             </div>
-            <span class="ai-history-card-arrow" aria-hidden="true"><i class="fas fa-arrow-right"></i></span>
-        </a>
+        </section>
         {% endfor %}
     </div>
     {% else %}

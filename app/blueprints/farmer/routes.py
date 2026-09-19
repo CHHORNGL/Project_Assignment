@@ -12,8 +12,9 @@ from flask import (
 )
 import re
 import os
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from uuid import uuid4
+from zoneinfo import ZoneInfo
 from flask_login import current_user, login_required
 from sqlalchemy.orm import joinedload
 from werkzeug.utils import secure_filename
@@ -494,6 +495,20 @@ def dashboard():
 # ===============================
 # FARMER CHAT HISTORY (VIEW ALL)
 # ===============================
+def _chat_history_icon(message: str) -> str:
+    """Choose a small visual cue for the most common agriculture questions."""
+    text = (message or "").lower()
+    if any(word in text for word in ("weather", "rain", "temperature", "drought", "អាកាសធាតុ", "ភ្លៀង")):
+        return "fas fa-cloud-sun"
+    if any(word in text for word in ("pest", "insect", "worm", "bug", "aphid", "caterpillar", "សត្វល្អិត")):
+        return "fas fa-bug"
+    if any(word in text for word in ("soil", "fertilizer", "nutrient", "water", "irrigat", "ដី", "ជី", "ទឹក")):
+        return "fas fa-flask"
+    if any(word in text for word in ("crop", "plant", "leaf", "rice", "corn", "tomato", "potato", "cassava", "seed", "ដំណាំ", "ស្រូវ")):
+        return "fas fa-seedling"
+    return "far fa-comment-dots"
+
+
 @farmer_bp.route("/history/ai")
 @farmer_required
 def ai_history():
@@ -508,9 +523,65 @@ def ai_history():
         .order_by(ChatMessage.created_at.desc())
         .all()
     )
+
+    try:
+        history_zone = ZoneInfo("Asia/Phnom_Penh")
+    except Exception:
+        history_zone = timezone.utc
+    now_local = datetime.now(timezone.utc).astimezone(history_zone)
+    group_labels = {
+        "today": "Today",
+        "yesterday": "Yesterday",
+        "last_7_days": "Last 7 Days",
+        "older": "Older",
+    }
+    grouped = {key: [] for key in group_labels}
+    active_session_id = request.args.get("session_id", type=int)
+    if active_session_id is None and questions:
+        active_session_id = questions[0][1].id
+    active_marked = False
+
+    for message, session in questions:
+        created_at = message.created_at
+        if created_at:
+            if created_at.tzinfo is None:
+                created_at = created_at.replace(tzinfo=timezone.utc)
+            message_day = created_at.astimezone(history_zone).date()
+            day_age = (now_local.date() - message_day).days
+            if day_age == 0:
+                group_key = "today"
+            elif day_age == 1:
+                group_key = "yesterday"
+            elif 2 <= day_age <= 7:
+                group_key = "last_7_days"
+            else:
+                group_key = "older"
+        else:
+            group_key = "older"
+
+        grouped[group_key].append({
+            "message": message,
+            "session": session,
+            "icon": _chat_history_icon(message.message),
+            "active": bool(
+                active_session_id
+                and session.id == active_session_id
+                and not active_marked
+            ),
+        })
+        if active_session_id and session.id == active_session_id:
+            active_marked = True
+
+    history_groups = [
+        {"key": key, "label": group_labels[key], "items": items}
+        for key, items in grouped.items()
+        if items
+    ]
     return render_template(
         "farmer/ai_history.html",
-        questions=questions
+        questions=questions,
+        history_groups=history_groups,
+        active_session_id=active_session_id,
     )
 
 # ===============================
