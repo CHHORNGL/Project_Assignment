@@ -124,9 +124,17 @@
         <!-- 5. CHAT HISTORY SECTION -->
         <div class="farmer-chat-history-header">
             <span class="farmer-history-label">{{ t("chat_history") }}</span>
-            {% if sessions and sessions|length > 0 %}
-            <span class="farmer-history-count">{{ sessions|length }}</span>
-            {% endif %}
+            <div class="d-flex align-items-center" style="gap: 6px;">
+                {% if sessions and sessions|length > 0 %}
+                <span class="farmer-history-count">{{ sessions|length }}</span>
+                {% endif %}
+                <a href="{{ url_for('farmer.ai_history') }}"
+                   class="farmer-history-viewall"
+                   title="{{ t('view_all') }}"
+                   style="color: var(--fc-muted); font-size: 0.72rem; padding: 2px 4px; border-radius: 4px; transition: color 0.15s ease;">
+                    <i class="fas fa-external-link-alt"></i>
+                </a>
+            </div>
         </div>
 
         <div class="farmer-chat-history" id="farmer-chat-history-list">
@@ -141,6 +149,13 @@
                         <span class="farmer-history-title text-truncate">{{ s.title if s.title else t("new_chat") }}</span>
                     </a>
                 {% endfor %}
+                <div class="farmer-chat-history-more" style="padding: 6px 10px; margin-top: 4px; border-top: 1px dashed rgba(148, 163, 184, 0.2);">
+                    <a href="{{ url_for('farmer.ai_history') }}"
+                       style="font-size: 0.76rem; font-weight: 600; color: var(--fc-accent, #10b981); display: flex; align-items: center; justify-content: space-between; text-decoration: none;">
+                        <span>{{ t("view_all") }}</span>
+                        <i class="fas fa-arrow-right" style="font-size: 0.68rem;"></i>
+                    </a>
+                </div>
             {% else %}
                 <div class="farmer-history-empty">
                     <div class="farmer-empty-icon">
