@@ -3965,7 +3965,7 @@ body.farmer-no-sidebar .topbar > .topbar-divider:first-of-type {
     background: transparent;
     color: var(--fc-muted);
     cursor: pointer;
-    opacity: 0;
+    opacity: 1;
     transition: opacity 0.15s ease, background 0.15s ease, color 0.15s ease;
 }
 
