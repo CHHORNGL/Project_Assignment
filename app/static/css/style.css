@@ -3859,10 +3859,10 @@ body.farmer-no-sidebar .topbar > .topbar-divider:first-of-type {
 .farmer-chat-history {
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 5px;
     flex: 1;
     overflow-y: auto;
-    padding-right: 2px;
+    padding: 6px 2px 8px 0;
 }
 
 .farmer-chat-history::-webkit-scrollbar {
@@ -3877,49 +3877,98 @@ body.farmer-no-sidebar .topbar > .topbar-divider:first-of-type {
 .farmer-chat-history-item {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 8px 10px;
-    border-radius: 9px;
+    gap: 11px;
+    min-height: 58px;
+    padding: 9px 10px;
+    border-radius: 12px;
     background: transparent;
     border: 1px solid transparent;
     color: var(--fc-text) !important;
-    font-size: 0.84rem;
-    font-weight: 500;
+    font-size: 0.86rem;
+    font-weight: 550;
     line-height: 1.35;
     text-decoration: none !important;
     position: relative;
-    transition: all 0.15s ease;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
 .farmer-history-icon {
-    font-size: 0.8rem;
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: rgba(148, 163, 184, 0.10);
+    font-size: 0.84rem;
     color: var(--fc-muted);
     flex-shrink: 0;
-    transition: color 0.15s ease;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.farmer-history-content {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    flex-direction: column;
+    gap: 3px;
 }
 
 .farmer-history-title {
-    flex: 1;
     min-width: 0;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    color: inherit;
+    font-weight: 600;
+}
+
+.farmer-history-time {
+    color: var(--fc-muted);
+    font-size: 0.7rem;
+    font-weight: 500;
+    line-height: 1.1;
+}
+
+.farmer-history-chevron {
+    flex-shrink: 0;
+    color: var(--fc-muted);
+    font-size: 0.64rem;
+    opacity: 0;
+    transform: translateX(-3px);
+    transition: opacity 0.15s ease, transform 0.15s ease, color 0.15s ease;
 }
 
 .farmer-chat-history-item:hover {
-    background: rgba(148, 163, 184, 0.12);
+    background: rgba(148, 163, 184, 0.10);
+    border-color: rgba(148, 163, 184, 0.16);
     color: var(--fc-text) !important;
 }
 
+.farmer-chat-history-item:hover .farmer-history-chevron {
+    opacity: 1;
+    transform: translateX(0);
+}
+
 .farmer-chat-history-item.active {
-    background: var(--fc-chip);
-    border-color: rgba(16, 185, 129, 0.25);
+    background: rgba(16, 185, 129, 0.12);
+    border-color: rgba(16, 185, 129, 0.30);
     color: var(--fc-accent-strong) !important;
     font-weight: 600;
 }
 
 .farmer-chat-history-item.active .farmer-history-icon {
+    background: rgba(16, 185, 129, 0.18);
     color: var(--fc-accent);
+}
+
+.farmer-chat-history-item.active .farmer-history-time,
+.farmer-chat-history-item.active .farmer-history-chevron {
+    color: var(--fc-accent);
+}
+
+.farmer-chat-history-item.active .farmer-history-chevron {
+    opacity: 1;
+    transform: translateX(0);
 }
 
 .farmer-chat-history-item.active::before {

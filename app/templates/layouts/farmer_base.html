@@ -146,7 +146,13 @@
                         <div class="farmer-history-icon">
                             <i class="far fa-comment-alt"></i>
                         </div>
-                        <span class="farmer-history-title text-truncate">{% if s.title == 'General Chat' %}{{ t('general_chat')|default('General Chat') }}{% elif s.title %}{{ s.title }}{% else %}{{ t('new_chat') }}{% endif %}</span>
+                        <div class="farmer-history-content">
+                            <span class="farmer-history-title text-truncate">{% if s.title == 'General Chat' %}{{ t('general_chat')|default('General Chat') }}{% elif s.title %}{{ s.title }}{% else %}{{ t('new_chat') }}{% endif %}</span>
+                            {% if s.updated_at %}
+                            <span class="farmer-history-time">{{ s.updated_at.strftime('%d %b %Y') }}</span>
+                            {% endif %}
+                        </div>
+                        <i class="fas fa-chevron-right farmer-history-chevron" aria-hidden="true"></i>
                     </a>
                 {% endfor %}
                 <div class="farmer-chat-history-more" style="padding: 6px 10px; margin-top: 4px; border-top: 1px dashed rgba(148, 163, 184, 0.2);">
