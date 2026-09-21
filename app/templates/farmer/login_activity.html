@@ -3,78 +3,331 @@
 
 {% block content %}
 <style>
-    .login-activity-container { max-width: 740px; margin: 0 auto; padding: 1.25rem 1rem 80px; }
-    .login-activity-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
-    .login-activity-title { margin: 0; font-size: 1.6rem; font-weight: 800; color: var(--text-main, #1e293b); }
-    .login-activity-subtitle { margin: .35rem 0 0; color: var(--text-muted, #64748b); font-size: .9rem; }
-    .login-activity-card { background: var(--card-bg, #fff); border: 1px solid var(--border-light, #e2e8f0); border-radius: 18px; overflow: hidden; }
-    .dark-mode .login-activity-card { background: #1e293b; border-color: #334155; }
-    .login-activity-item { display: flex; gap: 14px; align-items: center; padding: 16px 18px; border-bottom: 1px solid var(--border-light, #e2e8f0); }
-    .login-activity-item:last-child { border-bottom: 0; }
-    .dark-mode .login-activity-item { border-bottom-color: #334155; }
-    .login-activity-icon { width: 42px; height: 42px; border-radius: 13px; display: grid; place-items: center; color: #2563eb; background: rgba(37, 99, 235, .12); flex: 0 0 auto; }
-    .login-activity-main { min-width: 0; flex: 1; }
-    .login-activity-device { font-weight: 750; color: var(--text-main, #1e293b); }
-    .dark-mode .login-activity-device { color: #f8fafc; }
-    .login-activity-meta, .login-activity-route { color: var(--text-muted, #64748b); font-size: .8rem; margin-top: 3px; overflow-wrap: anywhere; }
-    .login-activity-current { color: #059669; font-size: .78rem; font-weight: 700; white-space: nowrap; }
-    .login-activity-empty { padding: 32px 20px; text-align: center; color: var(--text-muted, #64748b); }
-    @media (max-width: 575.98px) { .login-activity-container { padding: 1rem .75rem 90px; } .login-activity-header { align-items: flex-start; } .login-activity-item { padding: 14px; } }
+    .login-activity-container {
+        max-width: 760px;
+        margin: 0 auto;
+        padding: 1.5rem 1rem 90px;
+    }
+    .login-activity-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+    }
+    .login-activity-title {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--text-main, #1e293b);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .login-activity-subtitle {
+        margin: 0.35rem 0 0;
+        color: var(--text-muted, #64748b);
+        font-size: 0.88rem;
+    }
+    .login-activity-header-actions {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    .login-activity-card {
+        background: var(--card-bg, #fff);
+        border: 1px solid var(--border-light, #e2e8f0);
+        border-radius: 18px;
+        overflow: hidden;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.03);
+    }
+    .dark-mode .login-activity-card {
+        background: #1e293b;
+        border-color: #334155;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.2);
+    }
+    .login-activity-item {
+        display: flex;
+        gap: 16px;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--border-light, #e2e8f0);
+        transition: background 0.15s ease;
+    }
+    .login-activity-item:hover {
+        background: rgba(0, 0, 0, 0.015);
+    }
+    .dark-mode .login-activity-item:hover {
+        background: rgba(255, 255, 255, 0.02);
+    }
+    .login-activity-item:last-child {
+        border-bottom: 0;
+    }
+    .dark-mode .login-activity-item {
+        border-bottom-color: #334155;
+    }
+    .login-activity-item-content {
+        display: flex;
+        gap: 14px;
+        align-items: center;
+        flex: 1;
+        min-width: 0;
+    }
+    .login-activity-icon {
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+        border-radius: 13px;
+        display: grid;
+        place-items: center;
+        color: #0284c7;
+        background: rgba(14, 165, 233, 0.12);
+        font-size: 1.15rem;
+        flex-shrink: 0;
+    }
+    .login-activity-main {
+        min-width: 0;
+        flex: 1;
+    }
+    .login-activity-device {
+        font-weight: 750;
+        color: var(--text-main, #1e293b);
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    .dark-mode .login-activity-device {
+        color: #f8fafc;
+    }
+    .login-activity-meta {
+        color: var(--text-muted, #64748b);
+        font-size: 0.82rem;
+        margin-top: 4px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    .login-activity-meta-sep {
+        opacity: 0.4;
+    }
+    .login-activity-route {
+        margin-top: 5px;
+    }
+    .login-activity-route-badge {
+        display: inline-block;
+        font-size: 0.72rem;
+        color: var(--text-muted, #64748b);
+        background: rgba(0, 0, 0, 0.04);
+        padding: 2px 8px;
+        border-radius: 6px;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .dark-mode .login-activity-route-badge {
+        background: rgba(255, 255, 255, 0.07);
+        color: #94a3b8;
+    }
+    .login-activity-action {
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+    }
+    .realtime-live-dot {
+        width: 8px;
+        height: 8px;
+        background-color: #10b981;
+        border-radius: 50%;
+        display: inline-block;
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+        animation: realtimePulse 2s infinite;
+    }
+    @keyframes realtimePulse {
+        0% {
+            transform: scale(0.95);
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+        }
+        70% {
+            transform: scale(1);
+            box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+        }
+        100% {
+            transform: scale(0.95);
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+        }
+    }
+    .login-activity-empty {
+        padding: 40px 20px;
+        text-align: center;
+        color: var(--text-muted, #64748b);
+    }
+
+    /* Mobile Responsive Optimizations (< 576px) */
+    @media (max-width: 575.98px) {
+        .login-activity-container {
+            padding: 1rem 0.75rem 90px;
+        }
+        .login-activity-header {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 12px;
+            margin-bottom: 1.2rem;
+        }
+        .login-activity-title {
+            font-size: 1.35rem;
+        }
+        .login-activity-subtitle {
+            font-size: 0.82rem;
+        }
+        .login-activity-header-actions {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .login-activity-header-actions .btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 7px 14px;
+            font-size: 0.82rem;
+        }
+        .login-activity-item {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 12px;
+            padding: 14px 15px;
+        }
+        .login-activity-item-content {
+            align-items: flex-start;
+            gap: 12px;
+            width: 100%;
+        }
+        .login-activity-icon {
+            width: 40px;
+            height: 40px;
+            min-width: 40px;
+            font-size: 1.05rem;
+            margin-top: 2px;
+        }
+        .login-activity-device {
+            font-size: 0.92rem;
+        }
+        .login-activity-meta {
+            font-size: 0.78rem;
+            gap: 6px;
+        }
+        .login-activity-action {
+            width: 100%;
+            padding-top: 10px;
+            border-top: 1px dashed var(--border-light, #f1f5f9);
+        }
+        .dark-mode .login-activity-action {
+            border-top-color: #334155;
+        }
+        .login-activity-action .btn-logout-device-action {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 7px 14px;
+            font-size: 0.82rem;
+        }
+        .login-activity-action .text-success {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px 0;
+            font-size: 0.82rem;
+        }
+    }
 </style>
 
 <div class="login-activity-container">
     <div class="login-activity-header">
         <div>
-            <h1 class="login-activity-title"><i class="fas fa-laptop-house mr-2 text-primary"></i>{{ t("login_activity") }}</h1>
+            <h1 class="login-activity-title"><i class="fas fa-laptop-house text-primary"></i><span>{{ t("login_activity") }}</span></h1>
             <p class="login-activity-subtitle">{{ t("login_activity_desc") }}</p>
         </div>
-        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+        <div class="login-activity-header-actions">
             {% set other_active_count = activities|rejectattr('current')|list|length %}
             {% if other_active_count > 0 %}
             <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3 font-weight-bold" id="btnRevokeAllOthersHeader" onclick="revokeAllOtherSessions()">
                 <i class="fas fa-power-off mr-1"></i>{{ t("log_out_all_other_devices") }}
             </button>
             {% endif %}
-            <a class="btn btn-sm btn-outline-secondary rounded-pill px-3 font-weight-bold" href="{{ url_for('user.settings') }}">{{ t("settings") }}</a>
+            <a class="btn btn-sm btn-outline-secondary rounded-pill px-3 font-weight-bold" href="{{ url_for('user.settings') }}">
+                <i class="fas fa-arrow-left mr-1"></i>{{ t("settings") }}
+            </a>
         </div>
     </div>
 
     <div class="login-activity-card" id="loginActivityCard">
         {% for activity in activities %}
         <div class="login-activity-item" id="device-row-{{ activity.activity_id }}">
-            <div class="login-activity-icon">
-                <i class="fas {% if 'phone' in activity.device_type|lower or 'mobile' in activity.device_type|lower %}fa-mobile-alt{% elif 'tablet' in activity.device_type|lower %}fa-tablet-alt{% else %}fa-laptop{% endif %}"></i>
-            </div>
-            <div class="login-activity-main">
-                <div class="login-activity-device">
-                    {% if 'phone' in activity.device_type|lower or 'mobile' in activity.device_type|lower %}
-                        {{ t("mobile_phone")|default("Mobile Phone") }}
-                    {% elif 'tablet' in activity.device_type|lower %}
-                        {{ t("tablet_device")|default("Tablet") }}
-                    {% else %}
-                        {{ t("laptop_computer")|default("Laptop / Computer") }}
+            <div class="login-activity-item-content">
+                <div class="login-activity-icon">
+                    <i class="fas {% if 'phone' in activity.device_type|lower or 'mobile' in activity.device_type|lower %}fa-mobile-alt{% elif 'tablet' in activity.device_type|lower %}fa-tablet-alt{% else %}fa-laptop{% endif %}"></i>
+                </div>
+                <div class="login-activity-main">
+                    <div class="login-activity-device">
+                        <span>
+                            {% if 'phone' in activity.device_type|lower or 'mobile' in activity.device_type|lower %}
+                                {{ t("mobile_phone")|default("Mobile Phone") }}
+                            {% elif 'tablet' in activity.device_type|lower %}
+                                {{ t("tablet_device")|default("Tablet") }}
+                            {% else %}
+                                {{ t("laptop_computer")|default("Laptop / Computer") }}
+                            {% endif %}
+                            · {{ activity.browser }} ({{ activity.platform }})
+                        </span>
+                        {% if activity.current %}
+                            <span class="badge badge-success px-2 py-0.5" style="font-size: 0.72rem; border-radius: 12px; font-weight: 700;">
+                                <i class="fas fa-circle mr-1" style="font-size: 0.45rem; vertical-align: middle;"></i>{{ t("this_device") }}
+                            </span>
+                        {% endif %}
+                    </div>
+                    <div class="login-activity-meta">
+                        <span><i class="fas fa-network-wired mr-1 text-muted"></i>{{ activity.ip_address }}</span>
+                        <span class="login-activity-meta-sep">·</span>
+                        <span class="activity-realtime-badge" data-iso-time="{{ activity.created_at or '' }}">
+                            <i class="far fa-clock mr-1 text-muted"></i><span class="time-display">{{ (activity.created_at|replace('T', ' ')|replace('Z', ' UTC')) if activity.created_at else '' }}</span>
+                        </span>
+                    </div>
+                    {% if activity.route and activity.route != '-' %}
+                    <div class="login-activity-route">
+                        <span class="login-activity-route-badge"><i class="fas fa-map-marker-alt mr-1"></i>{{ activity.route }}</span>
+                    </div>
                     {% endif %}
-                    · {{ activity.browser }} · {{ activity.platform }}
                 </div>
-                <div class="login-activity-meta">
-                    <span>{{ activity.ip_address }}</span>
-                    <span>·</span>
-                    <span class="activity-realtime-badge" data-iso-time="{{ activity.created_at or '' }}">
-                        <span class="time-display">{{ (activity.created_at|replace('T', ' ')|replace('Z', ' UTC')) if activity.created_at else '' }}</span>
-                    </span>
-                </div>
-                <div class="login-activity-route">{{ activity.route }}</div>
             </div>
-            {% if activity.current %}
-                <span class="login-activity-current"><i class="fas fa-circle mr-1" style="font-size: 0.45rem; vertical-align: middle;"></i>{{ t("this_device") }}</span>
-            {% else %}
-                <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3 font-weight-bold btn-logout-device-action" onclick="revokeDeviceSession('{{ activity.activity_id }}')" style="font-size: 0.78rem;">
-                    <i class="fas fa-sign-out-alt mr-1"></i>{{ t("log_out_device") }}
-                </button>
-            {% endif %}
+            <div class="login-activity-action">
+                {% if activity.current %}
+                    <span class="text-success font-weight-bold d-inline-flex align-items-center" style="font-size: 0.8rem; white-space: nowrap; gap: 5px;">
+                        <span class="realtime-live-dot"></span>
+                        <span>{{ t("active_now") }}</span>
+                    </span>
+                {% else %}
+                    <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3 font-weight-bold btn-logout-device-action" onclick="revokeDeviceSession('{{ activity.activity_id }}')">
+                        <i class="fas fa-sign-out-alt mr-1"></i>{{ t("log_out_device") }}
+                    </button>
+                {% endif %}
+            </div>
         </div>
         {% else %}
-        <div class="login-activity-empty">{{ t("no_login_activity") }}</div>
+        <div class="login-activity-empty">
+            <i class="fas fa-laptop-house fa-2x mb-2 text-muted" style="opacity: 0.4;"></i>
+            <p class="mb-0" style="font-size: 0.88rem;">{{ t("no_login_activity") }}</p>
+        </div>
         {% endfor %}
     </div>
 </div>

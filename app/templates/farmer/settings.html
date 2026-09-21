@@ -941,6 +941,61 @@ input:checked + .ios-slider:before {
         width: 100%;
         border-radius: 8px;
     }
+
+    /* Device Activity Mobile Responsive */
+    .device-activity-row {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        padding: 14px 14px !important;
+        gap: 12px !important;
+    }
+    .device-activity-row .settings-row-left {
+        width: 100%;
+        align-items: flex-start;
+    }
+    .device-activity-action {
+        width: 100%;
+        display: flex;
+        justify-content: flex-end;
+        padding-top: 8px;
+        border-top: 1px dashed var(--border-light, #f1f5f9);
+    }
+    .dark-mode .device-activity-action {
+        border-top-color: #334155;
+    }
+    .device-activity-action .btn-logout-device-action {
+        width: 100%;
+        justify-content: center;
+        margin-left: 0 !important;
+        padding: 6px 14px !important;
+        font-size: 0.8rem !important;
+    }
+    .device-activity-action .text-success {
+        width: 100%;
+        justify-content: center;
+        margin-left: 0 !important;
+        padding: 4px 0 !important;
+    }
+    .device-activity-footer {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 10px !important;
+    }
+    .device-activity-footer > div {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        width: 100%;
+        gap: 8px !important;
+    }
+    .device-activity-footer .btn,
+    .device-activity-footer .btn-view-all-activity {
+        width: 100% !important;
+        text-align: center;
+        justify-content: center;
+        display: flex;
+        align-items: center;
+        padding: 7px 14px !important;
+    }
 }
 
 /* =========================================
@@ -1239,7 +1294,7 @@ input:checked + .ios-slider:before {
         <div class="settings-card">
             {% if activities and activities|length > 0 %}
                 {% for act in activities %}
-                <div class="settings-row" id="device-row-{{ act.activity_id }}" style="align-items: flex-start; padding: 14px 18px;">
+                <div class="settings-row device-activity-row" id="device-row-{{ act.activity_id }}" style="align-items: flex-start; padding: 14px 18px;">
                     <div class="settings-row-left" style="gap: 14px; flex: 1;">
                         <div class="settings-icon" style="background: rgba(14, 165, 233, 0.12); color: #0284c7; flex-shrink: 0; margin-top: 2px;">
                             <i class="fas {% if 'phone' in act.device_type|lower or 'mobile' in act.device_type|lower %}fa-mobile-alt{% elif 'tablet' in act.device_type|lower %}fa-tablet-alt{% else %}fa-laptop{% endif %}"></i>
@@ -1271,20 +1326,22 @@ input:checked + .ios-slider:before {
                             </div>
                         </div>
                     </div>
-                    {% if act.current %}
-                    <span class="text-success font-weight-bold ml-2 d-inline-flex align-items-center" style="font-size: 0.78rem; white-space: nowrap; align-self: center; gap: 5px;">
-                        <span class="realtime-live-dot"></span>
-                        <span>{{ t("active_now") }}</span>
-                    </span>
-                    {% else %}
-                    <button type="button" class="btn btn-sm btn-outline-danger ml-2 btn-logout-device-action" onclick="revokeDeviceSession('{{ act.activity_id }}')" style="font-size: 0.75rem; border-radius: 20px; padding: 3px 12px; font-weight: 700; white-space: nowrap; align-self: center;">
-                        <i class="fas fa-sign-out-alt mr-1"></i>{{ t("log_out_device") }}
-                    </button>
-                    {% endif %}
+                    <div class="device-activity-action">
+                        {% if act.current %}
+                        <span class="text-success font-weight-bold d-inline-flex align-items-center" style="font-size: 0.78rem; white-space: nowrap; gap: 5px;">
+                            <span class="realtime-live-dot"></span>
+                            <span>{{ t("active_now") }}</span>
+                        </span>
+                        {% else %}
+                        <button type="button" class="btn btn-sm btn-outline-danger btn-logout-device-action" onclick="revokeDeviceSession('{{ act.activity_id }}')" style="font-size: 0.75rem; border-radius: 20px; padding: 4px 12px; font-weight: 700; white-space: nowrap;">
+                            <i class="fas fa-sign-out-alt mr-1"></i>{{ t("log_out_device") }}
+                        </button>
+                        {% endif %}
+                    </div>
                 </div>
                 {% endfor %}
 
-                <div style="padding: 12px 18px; background: rgba(0, 0, 0, 0.02); border-top: 1px solid var(--border-light, #e2e8f0); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                <div class="device-activity-footer" style="padding: 12px 18px; background: rgba(0, 0, 0, 0.02); border-top: 1px solid var(--border-light, #e2e8f0); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
                     <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
                         <span class="text-muted" style="font-size: 0.82rem;">{{ t("login_activity_desc") }}</span>
                         {% set other_active_count = activities|rejectattr('current')|list|length %}
@@ -1294,7 +1351,7 @@ input:checked + .ios-slider:before {
                         </button>
                         {% endif %}
                     </div>
-                    <a href="{{ url_for('user.login_activity') }}" class="btn btn-sm btn-outline-primary rounded-pill px-3 font-weight-bold" style="font-size: 0.8rem; text-decoration: none;">
+                    <a href="{{ url_for('user.login_activity') }}" class="btn btn-sm btn-outline-primary rounded-pill px-3 font-weight-bold btn-view-all-activity" style="font-size: 0.8rem; text-decoration: none;">
                         {{ t("view_all") }} <i class="fas fa-chevron-right ml-1"></i>
                     </a>
                 </div>
