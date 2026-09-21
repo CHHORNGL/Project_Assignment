@@ -1,5 +1,7 @@
+import time
 import unittest
 from datetime import datetime, timezone
+from pathlib import Path
 from flask import Flask, session
 from flask_login import LoginManager, UserMixin, login_user
 
@@ -20,14 +22,26 @@ class UserStub(UserMixin):
     def __init__(self, user_id=1, username="farmer1"):
         self.id = user_id
         self.username = username
+        self.password_hash = "fake-hash"
 
     def has_role(self, role):
         return False
 
+    def get_route_role_name(self, role):
+        return None
+
+    def has_route_access(self, role):
+        return True
+
+    @property
+    def roles(self):
+        return []
+
 
 class LoginActivityTests(unittest.TestCase):
     def setUp(self):
-        self.app = Flask(__name__)
+        templates_dir = Path(__file__).resolve().parent.parent / "app" / "templates"
+        self.app = Flask(__name__, template_folder=str(templates_dir))
         self.app.config.update(
             TESTING=True,
             SECRET_KEY="test-login-activity-secret",
@@ -36,11 +50,33 @@ class LoginActivityTests(unittest.TestCase):
         )
         db.init_app(self.app)
 
+        @self.app.context_processor
+        def inject_helpers():
+            from app.utils.i18n import t, get_current_language
+            return {
+                "t": t,
+                "current_lang": get_current_language(),
+                "get_current_language": get_current_language,
+                "static_version": 1,
+            }
+
         login_manager = LoginManager()
         login_manager.init_app(self.app)
         login_manager.user_loader(lambda uid: UserStub(int(uid)))
 
+        # Fallback handler for any url_for() calls in rendered templates
+        self.app.url_build_error_handlers.append(lambda error, endpoint, values: f"/{endpoint}")
+
         # Register routes matching the user and api blueprints
+        @self.app.route("/users/settings", endpoint="user.settings")
+        def dummy_settings():
+            return ""
+
+        @self.app.route("/users/login-activity")
+        def users_login_activity():
+            from app.blueprints.user.routes import login_activity
+            return login_activity()
+
         @self.app.route("/api/login-activity")
         def api_login_activity():
             from app.blueprints.api.routes import login_activity_api
@@ -262,6 +298,31 @@ class LoginActivityTests(unittest.TestCase):
             self.assertEqual(users_resp.status_code, 200)
             users_data = users_resp.get_json()
             self.assertTrue(users_data["ok"])
+
+    def test_users_login_activity_page_render_success(self):
+        with self.app.app_context():
+            log = AuditLog(
+                user_id=1,
+                action="AUTH_SESSION_CREATED",
+                target_user="farmer1",
+                detail="ip=127.0.0.1 Session initialized activity_id=act_page_1 device=desktop browser=Chrome os=macOS login_route=/auth/login",
+                created_at=datetime.now(timezone.utc),
+            )
+            db.session.add(log)
+            db.session.commit()
+
+        with self.client.session_transaction() as sess:
+            sess["_user_id"] = "1"
+            sess["_fresh"] = True
+            sess["_authenticated_at"] = time.time()
+            sess["_last_seen_at"] = time.time()
+
+        resp = self.client.get("/users/login-activity")
+        self.assertEqual(resp.status_code, 200)
+        html = resp.data.decode("utf-8")
+        self.assertIn("login-activity-container", html)
+        self.assertIn("login-activity-card", html)
+        self.assertIn("act_page_1", html)
 
 
 if __name__ == "__main__":

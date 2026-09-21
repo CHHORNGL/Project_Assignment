@@ -59,8 +59,8 @@
                 <div class="login-activity-meta">
                     <span>{{ activity.ip_address }}</span>
                     <span>·</span>
-                    <span class="activity-realtime-badge" data-iso-time="{{ activity.created_at }}">
-                        <span class="time-display">{{ activity.created_at|replace('T', ' ')|replace('Z', ' UTC') }}</span>
+                    <span class="activity-realtime-badge" data-iso-time="{{ activity.created_at or '' }}">
+                        <span class="time-display">{{ (activity.created_at|replace('T', ' ')|replace('Z', ' UTC')) if activity.created_at else '' }}</span>
                     </span>
                 </div>
                 <div class="login-activity-route">{{ activity.route }}</div>
@@ -82,7 +82,7 @@
 <script>
 function revokeDeviceSession(activityId) {
     if (!activityId) return;
-    if (!confirm('{{ t("log_out_device_confirm") }}')) return;
+    if (!confirm({{ t("log_out_device_confirm")|tojson }})) return;
 
     fetch('/users/login-activity/revoke', {
         method: 'POST',
@@ -119,7 +119,7 @@ function revokeDeviceSession(activityId) {
 }
 
 function revokeAllOtherSessions() {
-    if (!confirm('{{ t("log_out_all_other_confirm") }}')) return;
+    if (!confirm({{ t("log_out_all_other_confirm")|tojson }})) return;
 
     fetch('/users/login-activity/revoke-others', {
         method: 'POST',
@@ -147,7 +147,7 @@ function revokeAllOtherSessions() {
     // =========================================
     // REAL-TIME LOCAL ACTIVITY TIMESTAMPS
     // =========================================
-    const isKhmerLang = document.documentElement.lang === "km" || {{ (get_current_language() == 'km')|tojson }};
+    const isKhmerLang = document.documentElement.lang === "km" || {{ (current_lang == 'km')|tojson }};
 
     function formatRealTimeAgo(isoString) {
         if (!isoString) return "";

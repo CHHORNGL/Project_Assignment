@@ -385,6 +385,7 @@ def login_activity():
         "farmer/login_activity.html",
         activities=list_login_activity(current_user.id, current_activity_id=session.get("_login_activity_id")),
         layout_shell=layout_shell,
+        current_lang=get_current_language(),
     )
 
 

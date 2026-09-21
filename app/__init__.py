@@ -436,6 +436,7 @@ def create_app():
         return {
             "t": t,
             "current_lang": get_current_language(),
+            "get_current_language": get_current_language,
             "localize": localize,
             "translate_symptoms": translate_symptoms,
             "static_version": _static_version(),
