@@ -4,7 +4,7 @@
 {% block content %}
 <style>
     .login-activity-container { max-width: 740px; margin: 0 auto; padding: 1.25rem 1rem 80px; }
-    .login-activity-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; }
+    .login-activity-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
     .login-activity-title { margin: 0; font-size: 1.6rem; font-weight: 800; color: var(--text-main, #1e293b); }
     .login-activity-subtitle { margin: .35rem 0 0; color: var(--text-muted, #64748b); font-size: .9rem; }
     .login-activity-card { background: var(--card-bg, #fff); border: 1px solid var(--border-light, #e2e8f0); border-radius: 18px; overflow: hidden; }
@@ -13,11 +13,12 @@
     .login-activity-item:last-child { border-bottom: 0; }
     .dark-mode .login-activity-item { border-bottom-color: #334155; }
     .login-activity-icon { width: 42px; height: 42px; border-radius: 13px; display: grid; place-items: center; color: #2563eb; background: rgba(37, 99, 235, .12); flex: 0 0 auto; }
+    .login-activity-icon.is-revoked { color: #94a3b8; background: rgba(148, 163, 184, .15); }
     .login-activity-main { min-width: 0; flex: 1; }
     .login-activity-device { font-weight: 750; color: var(--text-main, #1e293b); }
     .dark-mode .login-activity-device { color: #f8fafc; }
     .login-activity-meta, .login-activity-route { color: var(--text-muted, #64748b); font-size: .8rem; margin-top: 3px; overflow-wrap: anywhere; }
-    .login-activity-current { color: #059669; font-size: .75rem; font-weight: 700; white-space: nowrap; }
+    .login-activity-current { color: #059669; font-size: .78rem; font-weight: 700; white-space: nowrap; }
     .login-activity-empty { padding: 32px 20px; text-align: center; color: var(--text-muted, #64748b); }
     @media (max-width: 575.98px) { .login-activity-container { padding: 1rem .75rem 90px; } .login-activity-header { align-items: flex-start; } .login-activity-item { padding: 14px; } }
 </style>
@@ -28,13 +29,30 @@
             <h1 class="login-activity-title"><i class="fas fa-laptop-house mr-2 text-primary"></i>{{ t("login_activity") }}</h1>
             <p class="login-activity-subtitle">{{ t("login_activity_desc") }}</p>
         </div>
-        <a class="btn btn-sm btn-outline-secondary rounded-pill px-3" href="{{ url_for('user.settings') }}">{{ t("settings") }}</a>
+        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+            {% set has_other_active = false %}
+            {% if activities %}
+                {% for act in activities %}
+                    {% if not act.current and not act.revoked %}
+                        {% set has_other_active = true %}
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+            {% if has_other_active %}
+            <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3 font-weight-bold" onclick="revokeAllOtherSessions()">
+                <i class="fas fa-power-off mr-1"></i>{{ t("log_out_all_other_devices") }}
+            </button>
+            {% endif %}
+            <a class="btn btn-sm btn-outline-secondary rounded-pill px-3 font-weight-bold" href="{{ url_for('user.settings') }}">{{ t("settings") }}</a>
+        </div>
     </div>
 
     <div class="login-activity-card">
         {% for activity in activities %}
         <div class="login-activity-item">
-            <div class="login-activity-icon"><i class="fas {% if 'phone' in activity.device_type|lower or 'mobile' in activity.device_type|lower %}fa-mobile-alt{% elif 'tablet' in activity.device_type|lower %}fa-tablet-alt{% else %}fa-laptop{% endif %}"></i></div>
+            <div class="login-activity-icon {% if activity.revoked %}is-revoked{% endif %}">
+                <i class="fas {% if 'phone' in activity.device_type|lower or 'mobile' in activity.device_type|lower %}fa-mobile-alt{% elif 'tablet' in activity.device_type|lower %}fa-tablet-alt{% else %}fa-laptop{% endif %}"></i>
+            </div>
             <div class="login-activity-main">
                 <div class="login-activity-device">
                     {% if 'phone' in activity.device_type|lower or 'mobile' in activity.device_type|lower %}
@@ -49,11 +67,65 @@
                 <div class="login-activity-meta">{{ activity.ip_address }} · {{ activity.created_at|replace('T', ' ')|replace('Z', ' UTC') }}</div>
                 <div class="login-activity-route">{{ activity.route }}</div>
             </div>
-            {% if activity.current %}<span class="login-activity-current">{{ t("this_device") }}</span>{% endif %}
+            {% if activity.current %}
+                <span class="login-activity-current"><i class="fas fa-circle mr-1" style="font-size: 0.45rem; vertical-align: middle;"></i>{{ t("this_device") }}</span>
+            {% elif activity.revoked %}
+                <span class="badge badge-secondary" style="font-size: 0.72rem; padding: 5px 9px; border-radius: 12px;"><i class="fas fa-ban mr-1"></i>{{ t("signed_out") }}</span>
+            {% else %}
+                <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3 font-weight-bold" onclick="revokeDeviceSession('{{ activity.activity_id }}')" style="font-size: 0.78rem;">
+                    <i class="fas fa-sign-out-alt mr-1"></i>{{ t("log_out_device") }}
+                </button>
+            {% endif %}
         </div>
         {% else %}
         <div class="login-activity-empty">{{ t("no_login_activity") }}</div>
         {% endfor %}
     </div>
 </div>
+
+<script>
+function revokeDeviceSession(activityId) {
+    if (!activityId) return;
+    if (!confirm('{{ t("log_out_device_confirm") }}')) return;
+
+    fetch('/users/login-activity/revoke', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ activity_id: activityId })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.ok) {
+            window.location.reload();
+        } else {
+            alert(data.error || 'Failed to log out device.');
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert('Network error while logging out device.');
+    });
+}
+
+function revokeAllOtherSessions() {
+    if (!confirm('{{ t("log_out_all_other_confirm") }}')) return;
+
+    fetch('/users/login-activity/revoke-others', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.ok) {
+            window.location.reload();
+        } else {
+            alert(data.error || 'Failed to log out other devices.');
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert('Network error while logging out other devices.');
+    });
+}
+</script>
 {% endblock %}

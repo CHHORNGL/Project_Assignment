@@ -271,6 +271,56 @@ class ApiService {
     return [];
   }
 
+  static Future<bool> revokeLoginActivity(String activityId) async {
+    try {
+      final headers = await _getHeaders();
+      http.Response response = await http.post(
+        Uri.parse('$baseUrl/login-activity/revoke'),
+        headers: headers,
+        body: jsonEncode({'activity_id': activityId}),
+      );
+      if (response.statusCode != 200) {
+        final usersBaseUrl = baseUrl.replaceAll('/api', '/users');
+        response = await http.post(
+          Uri.parse('$usersBaseUrl/login-activity/revoke'),
+          headers: headers,
+          body: jsonEncode({'activity_id': activityId}),
+        );
+      }
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        return data['ok'] == true;
+      }
+    } catch (e) {
+      debugPrint('Revoke login activity error: $e');
+    }
+    return false;
+  }
+
+  static Future<bool> revokeOtherLoginActivities() async {
+    try {
+      final headers = await _getHeaders();
+      http.Response response = await http.post(
+        Uri.parse('$baseUrl/login-activity/revoke-others'),
+        headers: headers,
+      );
+      if (response.statusCode != 200) {
+        final usersBaseUrl = baseUrl.replaceAll('/api', '/users');
+        response = await http.post(
+          Uri.parse('$usersBaseUrl/login-activity/revoke-others'),
+          headers: headers,
+        );
+      }
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        return data['ok'] == true;
+      }
+    } catch (e) {
+      debugPrint('Revoke other activities error: $e');
+    }
+    return false;
+  }
+
   static Future<bool> setLanguage(String langCode) async {
     try {
       final headers = await _getHeaders();

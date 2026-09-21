@@ -109,6 +109,8 @@ def register_session_security(app):
         # Never allow a legacy remember cookie to recreate a revoked session.
         session['_remember'] = 'clear'
         app.session_interface.regenerate(session)
+        sid = getattr(session, 'sid', None)
+        sid_str = f" sid={sid}" if sid else ""
         try:
             from app.utils.audit import audit_log
             audit_log(
@@ -117,7 +119,8 @@ def register_session_security(app):
                 user_id=getattr(user, "id", None),
                 detail=(
                     "Session initialized "
-                    f"activity_id={device_metadata['activity_id']} "
+                    f"activity_id={device_metadata['activity_id']}"
+                    f"{sid_str} "
                     f"device={device_metadata['device'].replace(' ', '_')} "
                     f"browser={device_metadata['browser'].replace(' ', '_')} "
                     f"os={device_metadata['os'].replace(' ', '_')} "
@@ -128,6 +131,13 @@ def register_session_security(app):
             pass
 
     def logged_out(sender, user=None, **extra):
+        act_id = session.get('_login_activity_id')
+        if act_id:
+            try:
+                from app.services.login_activity import _REVOKED_ACTIVITIES
+                _REVOKED_ACTIVITIES.add(act_id)
+            except Exception:
+                pass
         # regenerate() only acts on nonempty sessions; revoke the old SID first.
         session['_revoking'] = True
         app.session_interface.regenerate(session)
@@ -136,11 +146,12 @@ def register_session_security(app):
         g.session_revoked = True
         try:
             from app.utils.audit import audit_log
+            act_str = f" activity_id={act_id}" if act_id else ""
             audit_log(
                 "AUTH_LOGOUT",
                 target_user=getattr(user, "username", None) if user else None,
                 user_id=getattr(user, "id", None) if user else None,
-                detail="User signed out",
+                detail=f"User signed out{act_str}",
             )
         except Exception:
             pass
@@ -157,6 +168,36 @@ def register_session_security(app):
             session['_remember'] = 'clear'
         if '_user_id' not in session:
             return
+
+        cur_act = session.get('_login_activity_id')
+        if cur_act:
+            try:
+                from app.services.login_activity import is_activity_revoked
+                if is_activity_revoked(cur_act, user_id=session.get('_user_id')):
+                    try:
+                        from app.utils.audit import audit_log
+                        audit_log(
+                            "AUTH_SESSION_EXPIRED",
+                            target_user=getattr(current_user, "username", None) if current_user.is_authenticated else None,
+                            user_id=session.get('_user_id'),
+                            detail=f"Session revoked by user activity_id={cur_act}",
+                            status="REVOKED",
+                            severity="WARNING",
+                        )
+                    except Exception:
+                        pass
+                    logout_user()
+                    session.clear()
+                    session['_remember'] = 'clear'
+                    g.session_revoked = True
+                    if request.path.startswith('/api/') or request.is_json:
+                        return jsonify(error='This device session has been logged out.', code='session_revoked'), 401
+                    from flask import flash, redirect, url_for
+                    flash('This device was logged out from another session.', 'info')
+                    return redirect(url_for('auth.login'))
+            except Exception:
+                pass
+
         now = time.time()
         authenticated_at = session.get('_authenticated_at', 0)
         last_seen = session.get('_last_seen_at', 0)

@@ -4,7 +4,7 @@ from flask_login import login_user, current_user, logout_user, login_required
 from sqlalchemy import or_
 from app.models.user import User
 from app import db
-from app.services.login_activity import list_login_activity
+from app.services.login_activity import list_login_activity, revoke_login_activity, revoke_all_other_sessions
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
@@ -19,6 +19,34 @@ def login_activity_api():
             current_activity_id=session.get('_login_activity_id'),
         ),
     })
+
+
+@api_bp.route('/login-activity/revoke', methods=['POST'])
+@login_required
+def login_activity_revoke_api():
+    data = request.get_json(silent=True) or request.form or {}
+    activity_id = (data.get('activity_id') or '').strip()
+    if not activity_id:
+        return jsonify({'ok': False, 'error': 'activity_id is required'}), 400
+
+    is_current = bool(activity_id == session.get('_login_activity_id'))
+    ok = revoke_login_activity(current_user.id, activity_id, actor_username=current_user.username)
+    if not ok:
+        return jsonify({'ok': False, 'error': 'Session not found or already revoked'}), 404
+
+    if is_current:
+        logout_user()
+        return jsonify({'ok': True, 'logged_out_self': True, 'message': 'Current session logged out'})
+
+    return jsonify({'ok': True, 'message': 'Device logged out successfully'})
+
+
+@api_bp.route('/login-activity/revoke-others', methods=['POST'])
+@login_required
+def login_activity_revoke_others_api():
+    cur_id = session.get('_login_activity_id')
+    count = revoke_all_other_sessions(current_user.id, cur_id, actor_username=current_user.username)
+    return jsonify({'ok': True, 'count': count, 'message': 'All other devices logged out successfully'})
 
 from app.services.rule_engine import diagnose as rule_diagnose
 from app.models.diagnosis import Diagnosis

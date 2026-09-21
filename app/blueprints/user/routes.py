@@ -27,7 +27,7 @@ from app.services.notification_service import serialize_notification
 from app.services.khmer_calendar import build_khmer_calendar_month
 from app.services.theme_manager import resolve_active_runtime
 from app.services.translator import translate_to_khmer, translate_audio_to_khmer
-from app.services.login_activity import list_login_activity
+from app.services.login_activity import list_login_activity, revoke_login_activity, revoke_all_other_sessions
 from app.utils.i18n import set_current_language, get_current_language
 import tempfile
 
@@ -376,6 +376,35 @@ def login_activity_data():
         "ok": True,
         "activities": list_login_activity(current_user.id, current_activity_id=session.get("_login_activity_id")),
     })
+
+
+@user_bp.route("/login-activity/revoke", methods=["POST"])
+@login_required
+def login_activity_revoke():
+    data = request.get_json(silent=True) or request.form or {}
+    activity_id = (data.get("activity_id") or "").strip()
+    if not activity_id:
+        return jsonify({"ok": False, "error": "activity_id is required"}), 400
+
+    is_current = bool(activity_id == session.get("_login_activity_id"))
+    ok = revoke_login_activity(current_user.id, activity_id, actor_username=current_user.username)
+    if not ok:
+        return jsonify({"ok": False, "error": "Session not found or already revoked"}), 404
+
+    if is_current:
+        from flask_login import logout_user
+        logout_user()
+        return jsonify({"ok": True, "logged_out_self": True, "message": "Current session logged out"})
+
+    return jsonify({"ok": True, "message": "Device logged out successfully"})
+
+
+@user_bp.route("/login-activity/revoke-others", methods=["POST"])
+@login_required
+def login_activity_revoke_others():
+    cur_id = session.get("_login_activity_id")
+    count = revoke_all_other_sessions(current_user.id, cur_id, actor_username=current_user.username)
+    return jsonify({"ok": True, "count": count, "message": "All other devices logged out successfully"})
 
 
 # ===============================

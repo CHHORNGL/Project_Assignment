@@ -1076,12 +1076,12 @@ input:checked + .ios-slider:before {
                 {% for act in activities %}
                 <div class="settings-row" style="align-items: flex-start; padding: 14px 18px;">
                     <div class="settings-row-left" style="gap: 14px; flex: 1;">
-                        <div class="settings-icon" style="background: rgba(14, 165, 233, 0.12); color: #0284c7; flex-shrink: 0; margin-top: 2px;">
+                        <div class="settings-icon" style="background: {% if act.revoked %}rgba(148, 163, 184, 0.15); color: #94a3b8;{% else %}rgba(14, 165, 233, 0.12); color: #0284c7;{% endif %} flex-shrink: 0; margin-top: 2px;">
                             <i class="fas {% if 'phone' in act.device_type|lower or 'mobile' in act.device_type|lower %}fa-mobile-alt{% elif 'tablet' in act.device_type|lower %}fa-tablet-alt{% else %}fa-laptop{% endif %}"></i>
                         </div>
                         <div style="flex: 1; min-width: 0;">
                             <div class="settings-label" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                                <span class="font-weight-bold">
+                                <span class="font-weight-bold" {% if act.revoked %}style="color: var(--text-muted, #64748b);"{% endif %}>
                                     {% if 'phone' in act.device_type|lower or 'mobile' in act.device_type|lower %}
                                         {{ t("mobile_phone") }}
                                     {% elif 'tablet' in act.device_type|lower %}
@@ -1094,6 +1094,10 @@ input:checked + .ios-slider:before {
                                 {% if act.current %}
                                     <span class="badge badge-success px-2 py-0.5" style="font-size: 0.72rem; border-radius: 12px; font-weight: 700;">
                                         <i class="fas fa-circle mr-1" style="font-size: 0.45rem; vertical-align: middle;"></i>{{ t("this_device") }}
+                                    </span>
+                                {% elif act.revoked %}
+                                    <span class="badge badge-secondary px-2 py-0.5" style="font-size: 0.72rem; border-radius: 12px;">
+                                        <i class="fas fa-ban mr-1"></i>{{ t("signed_out") }}
                                     </span>
                                 {% endif %}
                             </div>
@@ -1108,12 +1112,24 @@ input:checked + .ios-slider:before {
                     <span class="text-success font-weight-bold ml-2" style="font-size: 0.78rem; white-space: nowrap; align-self: center;">
                         <i class="fas fa-signal mr-1"></i>{{ t("active_now") }}
                     </span>
+                    {% elif not act.revoked %}
+                    <button type="button" class="btn btn-sm btn-outline-danger ml-2" onclick="revokeDeviceSession('{{ act.activity_id }}')" style="font-size: 0.75rem; border-radius: 20px; padding: 3px 12px; font-weight: 700; white-space: nowrap; align-self: center;">
+                        <i class="fas fa-sign-out-alt mr-1"></i>{{ t("log_out_device") }}
+                    </button>
                     {% endif %}
                 </div>
                 {% endfor %}
 
-                <div style="padding: 12px 18px; background: rgba(0, 0, 0, 0.02); border-top: 1px solid var(--border-light, #e2e8f0); display: flex; justify-content: space-between; align-items: center;">
-                    <span class="text-muted" style="font-size: 0.82rem;">{{ t("login_activity_desc") }}</span>
+                <div style="padding: 12px 18px; background: rgba(0, 0, 0, 0.02); border-top: 1px solid var(--border-light, #e2e8f0); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                        <span class="text-muted" style="font-size: 0.82rem;">{{ t("login_activity_desc") }}</span>
+                        {% set other_active_count = activities|rejectattr('current')|rejectattr('revoked')|list|length %}
+                        {% if other_active_count > 0 %}
+                        <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3 font-weight-bold" onclick="revokeAllOtherSessions()" style="font-size: 0.78rem;">
+                            <i class="fas fa-power-off mr-1"></i>{{ t("log_out_all_other_devices") }}
+                        </button>
+                        {% endif %}
+                    </div>
                     <a href="{{ url_for('user.login_activity') }}" class="btn btn-sm btn-outline-primary rounded-pill px-3 font-weight-bold" style="font-size: 0.8rem; text-decoration: none;">
                         {{ t("view_all") }} <i class="fas fa-chevron-right ml-1"></i>
                     </a>
@@ -1354,5 +1370,49 @@ input:checked + .ios-slider:before {
         }
     }
 })();
+
+function revokeDeviceSession(activityId) {
+    if (!activityId) return;
+    if (!confirm('{{ t("log_out_device_confirm") }}')) return;
+
+    fetch('/users/login-activity/revoke', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ activity_id: activityId })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.ok) {
+            window.location.reload();
+        } else {
+            alert(data.error || 'Failed to log out device.');
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert('Network error while logging out device.');
+    });
+}
+
+function revokeAllOtherSessions() {
+    if (!confirm('{{ t("log_out_all_other_confirm") }}')) return;
+
+    fetch('/users/login-activity/revoke-others', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.ok) {
+            window.location.reload();
+        } else {
+            alert(data.error || 'Failed to log out other devices.');
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert('Network error while logging out other devices.');
+    });
+}
 </script>
 {% endblock %}
