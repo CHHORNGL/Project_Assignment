@@ -1465,8 +1465,7 @@ def chat(session_id=None):
     if request.method == "POST":
         user_message = request.form.get("message", "").strip()
         wants_json = request.headers.get("X-Requested-With") == "XMLHttpRequest"
-        draft_redirect = url_for("farmer.chat", draft="1")
-        session_redirect = url_for("farmer.chat", session_id=session.id) if session else draft_redirect
+        session_redirect = url_for("farmer.chat", session_id=session.id) if session else url_for("farmer.chat", draft="1")
 
         attachment = request.files.get("attachment")
         image_bytes = None

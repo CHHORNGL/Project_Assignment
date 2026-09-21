@@ -38,7 +38,7 @@ class ApiService {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/login'),
-        headers: {'Content-Type': 'application/json'},
+        headers: {'Content-Type': 'application/json', 'X-Client-Platform': 'flutter'},
         body: jsonEncode({
           'username': username,
           'password': password,
@@ -62,7 +62,7 @@ class ApiService {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/register'),
-        headers: {'Content-Type': 'application/json'},
+        headers: {'Content-Type': 'application/json', 'X-Client-Platform': 'flutter'},
         body: jsonEncode({
           'email': email,
           'full_name': fullName,
@@ -91,6 +91,7 @@ class ApiService {
         Uri.parse('$baseUrl/verify-code'),
         headers: {
           'Content-Type': 'application/json',
+          'X-Client-Platform': 'flutter',
           'Cookie': ?cookie,
         },
         body: jsonEncode({'code': code}),
@@ -242,6 +243,32 @@ class ApiService {
     } catch (e) {
       return 0;
     }
+  }
+
+  static Future<List<Map<String, dynamic>>> getLoginActivity() async {
+    try {
+      final headers = await _getHeaders();
+      http.Response response = await http.get(
+        Uri.parse('$baseUrl/login-activity'),
+        headers: headers,
+      );
+      if (response.statusCode != 200) {
+        final usersBaseUrl = baseUrl.replaceAll('/api', '/users');
+        response = await http.get(
+          Uri.parse('$usersBaseUrl/login-activity/data'),
+          headers: headers,
+        );
+      }
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        return (data['activities'] as List<dynamic>? ?? [])
+            .whereType<Map<String, dynamic>>()
+            .toList();
+      }
+    } catch (e) {
+      debugPrint('Login activity error: $e');
+    }
+    return [];
   }
 
   static Future<bool> setLanguage(String langCode) async {
@@ -426,7 +453,7 @@ class ApiService {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/google-login'),
-        headers: {'Content-Type': 'application/json'},
+        headers: {'Content-Type': 'application/json', 'X-Client-Platform': 'flutter'},
         body: json.encode({'id_token': idToken}),
       );
       

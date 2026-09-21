@@ -2,13 +2,69 @@
 import hashlib
 import hmac
 import os
+import re
 import time
+from uuid import uuid4
 
 from cachelib.file import FileSystemCache
 from flask import current_app, g, jsonify, request, session
 from flask_login import current_user, logout_user, user_logged_in, user_logged_out
 from flask_session import Session
 from redis import Redis
+
+
+def _login_device_metadata() -> dict[str, str]:
+    """Classify the client without storing the full user-agent string."""
+    user_agent = (request.headers.get("User-Agent") or "").lower()
+    client_platform = (request.headers.get("X-Client-Platform") or "").lower()
+    route = request.path or "-"
+
+    if client_platform == "flutter" or any(token in user_agent for token in ("iphone", "ipad", "android", "mobile")):
+        device = "mobile"
+    elif "tablet" in user_agent:
+        device = "tablet"
+    else:
+        device = "desktop"
+
+    if client_platform == "flutter" or "dart" in user_agent:
+        browser = "Mobile App"
+    elif "edg/" in user_agent:
+        browser = "Edge"
+    elif "opr/" in user_agent or "opera" in user_agent:
+        browser = "Opera"
+    elif "chrome/" in user_agent or "crios/" in user_agent:
+        browser = "Chrome"
+    elif "firefox/" in user_agent or "fxios/" in user_agent:
+        browser = "Firefox"
+    elif "safari/" in user_agent:
+        browser = "Safari"
+    elif "curl/" in user_agent:
+        browser = "API client"
+    else:
+        browser = "Unknown"
+
+    if client_platform == "flutter":
+        platform = "Flutter"
+    elif "android" in user_agent:
+        platform = "Android"
+    elif "iphone" in user_agent or "ipad" in user_agent:
+        platform = "iOS"
+    elif "windows" in user_agent:
+        platform = "Windows"
+    elif "mac os" in user_agent or "macintosh" in user_agent:
+        platform = "macOS"
+    elif "linux" in user_agent:
+        platform = "Linux"
+    else:
+        platform = "Unknown"
+
+    return {
+        "activity_id": uuid4().hex,
+        "device": device,
+        "browser": browser,
+        "os": platform,
+        "login_route": re.sub(r"[^a-zA-Z0-9_./-]", "", route)[:80] or "-",
+    }
 
 
 def credential_stamp(user):
@@ -48,6 +104,8 @@ def register_session_security(app):
         session.permanent = True
         session['_authenticated_at'] = session['_last_seen_at'] = time.time()
         session['_credential_stamp'] = credential_stamp(user)
+        device_metadata = _login_device_metadata()
+        session['_login_activity_id'] = device_metadata['activity_id']
         # Never allow a legacy remember cookie to recreate a revoked session.
         session['_remember'] = 'clear'
         app.session_interface.regenerate(session)
@@ -57,7 +115,14 @@ def register_session_security(app):
                 "AUTH_SESSION_CREATED",
                 target_user=getattr(user, "username", None),
                 user_id=getattr(user, "id", None),
-                detail="Session initialized",
+                detail=(
+                    "Session initialized "
+                    f"activity_id={device_metadata['activity_id']} "
+                    f"device={device_metadata['device'].replace(' ', '_')} "
+                    f"browser={device_metadata['browser'].replace(' ', '_')} "
+                    f"os={device_metadata['os'].replace(' ', '_')} "
+                    f"login_route={device_metadata['login_route']}"
+                ),
             )
         except Exception:
             pass

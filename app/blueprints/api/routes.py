@@ -4,8 +4,21 @@ from flask_login import login_user, current_user, logout_user, login_required
 from sqlalchemy import or_
 from app.models.user import User
 from app import db
+from app.services.login_activity import list_login_activity
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
+
+
+@api_bp.route('/login-activity', methods=['GET'])
+@login_required
+def login_activity_api():
+    return jsonify({
+        'ok': True,
+        'activities': list_login_activity(
+            current_user.id,
+            current_activity_id=session.get('_login_activity_id'),
+        ),
+    })
 
 from app.services.rule_engine import diagnose as rule_diagnose
 from app.models.diagnosis import Diagnosis

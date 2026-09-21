@@ -1,0 +1,50 @@
+{% extends layout_shell|default("layouts/farmer_shell.html") %}
+{% block title %}{{ t("login_activity") }} | Agri System{% endblock %}
+
+{% block content %}
+<style>
+    .login-activity-container { max-width: 740px; margin: 0 auto; padding: 1.25rem 1rem 80px; }
+    .login-activity-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; }
+    .login-activity-title { margin: 0; font-size: 1.6rem; font-weight: 800; color: var(--text-main, #1e293b); }
+    .login-activity-subtitle { margin: .35rem 0 0; color: var(--text-muted, #64748b); font-size: .9rem; }
+    .login-activity-card { background: var(--card-bg, #fff); border: 1px solid var(--border-light, #e2e8f0); border-radius: 18px; overflow: hidden; }
+    .dark-mode .login-activity-card { background: #1e293b; border-color: #334155; }
+    .login-activity-item { display: flex; gap: 14px; align-items: center; padding: 16px 18px; border-bottom: 1px solid var(--border-light, #e2e8f0); }
+    .login-activity-item:last-child { border-bottom: 0; }
+    .dark-mode .login-activity-item { border-bottom-color: #334155; }
+    .login-activity-icon { width: 42px; height: 42px; border-radius: 13px; display: grid; place-items: center; color: #2563eb; background: rgba(37, 99, 235, .12); flex: 0 0 auto; }
+    .login-activity-main { min-width: 0; flex: 1; }
+    .login-activity-device { font-weight: 750; color: var(--text-main, #1e293b); }
+    .dark-mode .login-activity-device { color: #f8fafc; }
+    .login-activity-meta, .login-activity-route { color: var(--text-muted, #64748b); font-size: .8rem; margin-top: 3px; overflow-wrap: anywhere; }
+    .login-activity-current { color: #059669; font-size: .75rem; font-weight: 700; white-space: nowrap; }
+    .login-activity-empty { padding: 32px 20px; text-align: center; color: var(--text-muted, #64748b); }
+    @media (max-width: 575.98px) { .login-activity-container { padding: 1rem .75rem 90px; } .login-activity-header { align-items: flex-start; } .login-activity-item { padding: 14px; } }
+</style>
+
+<div class="login-activity-container">
+    <div class="login-activity-header">
+        <div>
+            <h1 class="login-activity-title"><i class="fas fa-laptop-house mr-2 text-primary"></i>{{ t("login_activity") }}</h1>
+            <p class="login-activity-subtitle">{{ t("login_activity_desc") }}</p>
+        </div>
+        <a class="btn btn-sm btn-outline-secondary rounded-pill px-3" href="{{ url_for('user.settings') }}">{{ t("settings") }}</a>
+    </div>
+
+    <div class="login-activity-card">
+        {% for activity in activities %}
+        <div class="login-activity-item">
+            <div class="login-activity-icon"><i class="fas {% if activity.device_type|lower == 'mobile' %}fa-mobile-alt{% elif activity.device_type|lower == 'tablet' %}fa-tablet-alt{% else %}fa-desktop{% endif %}"></i></div>
+            <div class="login-activity-main">
+                <div class="login-activity-device">{{ activity.device_type }} · {{ activity.browser }} · {{ activity.platform }}</div>
+                <div class="login-activity-meta">{{ activity.ip_address }} · {{ activity.created_at|replace('T', ' ')|replace('Z', ' UTC') }}</div>
+                <div class="login-activity-route">{{ activity.route }}</div>
+            </div>
+            {% if activity.current %}<span class="login-activity-current">{{ t("this_device") }}</span>{% endif %}
+        </div>
+        {% else %}
+        <div class="login-activity-empty">{{ t("no_login_activity") }}</div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

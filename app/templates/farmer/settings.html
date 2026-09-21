@@ -1058,6 +1058,17 @@ input:checked + .ios-slider:before {
                     <i class="fas fa-plus mr-1"></i> Add
                 </span>
             </div>
+
+            <a class="settings-row" href="{{ url_for('user.login_activity') }}" style="text-decoration: none; color: inherit;">
+                <div class="settings-row-left">
+                    <div class="settings-icon" style="background: linear-gradient(135deg, #0ea5e9, #2563eb);"><i class="fas fa-laptop-house"></i></div>
+                    <div>
+                        <div class="settings-label">{{ t("login_activity") }}</div>
+                        <div class="settings-sublabel">{{ t("login_activity_desc") }}</div>
+                    </div>
+                </div>
+                <span class="text-primary font-weight-bold"><i class="fas fa-chevron-right"></i></span>
+            </a>
         </div>
 
         <!-- 3. DYNAMIC PASSKEYS LIST CONTAINER -->

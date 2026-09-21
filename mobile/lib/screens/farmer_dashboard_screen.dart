@@ -17,6 +17,7 @@ import '../services/api_service.dart';
 import 'chat_screen.dart';
 import 'ai_settings_screen.dart';
 import 'manual_diagnosis_screen.dart';
+import 'login_activity_screen.dart';
 
 class FarmerDashboardScreen extends StatefulWidget {
   const FarmerDashboardScreen({super.key});
@@ -570,6 +571,13 @@ class _ProfileViewState extends State<_ProfileView> {
                         icon: Icons.smart_toy_outlined,
                         title: tr('ai_settings', lang),
                         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AISettingsScreen())),
+                      ),
+                      Divider(height: 1, color: Theme.of(context).colorScheme.surfaceContainerHighest, indent: 64),
+                      _buildSettingsTile(
+                        context,
+                        icon: Icons.devices_other_rounded,
+                        title: tr('login_activity', lang),
+                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginActivityScreen())),
                       ),
                     ],
                   ),

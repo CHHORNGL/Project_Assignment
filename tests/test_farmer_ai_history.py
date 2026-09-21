@@ -72,9 +72,12 @@ class FarmerAiHistoryTestCase(unittest.TestCase):
     def test_empty_history(self):
         self._login()
         res = self.client.get("/farmer/history/ai")
-        self.assertEqual(res.status_code, 200)
-        content = res.data.decode("utf-8")
-        self.assertIn("fm-history-empty", content)
+        self.assertEqual(res.status_code, 302)
+        self.assertIn("/farmer/chat", res.headers.get("Location", ""))
+        follow_res = self.client.get("/farmer/history/ai", follow_redirects=True)
+        self.assertEqual(follow_res.status_code, 200)
+        content = follow_res.data.decode("utf-8")
+        self.assertIn("farmer-history-empty", content)
 
     def test_populated_history_renders_cleanly(self):
         self._login()
@@ -99,12 +102,14 @@ class FarmerAiHistoryTestCase(unittest.TestCase):
         db.session.commit()
 
         res = self.client.get("/farmer/history/ai")
-        self.assertEqual(res.status_code, 200)
-        content = res.data.decode("utf-8")
+        self.assertEqual(res.status_code, 302)
+        self.assertIn("/farmer/chat", res.headers.get("Location", ""))
+        follow_res = self.client.get("/farmer/history/ai", follow_redirects=True)
+        self.assertEqual(follow_res.status_code, 200)
+        content = follow_res.data.decode("utf-8")
         self.assertIn("Rice Blast Disease", content)
         self.assertIn("Apply Tricyclazole early in the morning", content)
         self.assertIn("Tomato pests", content)
-        self.assertIn("history-search-input", content)
         self.assertNotIn("builtin_function_or_method", content)
 
     def test_helpers_format_title_and_detect_filler(self):

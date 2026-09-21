@@ -8,7 +8,9 @@ from app.blueprints.farmer import routes
 class AsyncChatTests(unittest.TestCase):
     def call_chat(self, message, ajax=True):
         app = Flask(__name__)
-        app.add_url_rule('/farmer/chat/<int:session_id>', endpoint='farmer.chat', view_func=lambda session_id: '')
+        chat_dummy = lambda session_id=None: ''
+        app.add_url_rule('/farmer/chat', endpoint='farmer.chat', defaults={'session_id': None}, view_func=chat_dummy)
+        app.add_url_rule('/farmer/chat/<int:session_id>', endpoint='farmer.chat', view_func=chat_dummy)
         session = MagicMock(id=7, title='New Chat')
         with ExitStack() as stack:
             for name in ('_ensure_legacy_session', 'db', 'notify_role', 'ChatMessage'):

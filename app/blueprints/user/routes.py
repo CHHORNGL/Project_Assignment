@@ -14,7 +14,8 @@ from flask import (
     url_for,
     flash,
     abort,
-    send_file
+    send_file,
+    session,
 )
 from flask_login import login_required, current_user
 
@@ -26,6 +27,7 @@ from app.services.notification_service import serialize_notification
 from app.services.khmer_calendar import build_khmer_calendar_month
 from app.services.theme_manager import resolve_active_runtime
 from app.services.translator import translate_to_khmer, translate_audio_to_khmer
+from app.services.login_activity import list_login_activity
 from app.utils.i18n import set_current_language, get_current_language
 import tempfile
 
@@ -346,6 +348,29 @@ def settings():
         current_lang=get_current_language(),
         layout_shell=layout_shell
     )
+
+
+# ===============================
+# DEVICE LOGIN ACTIVITY
+# ===============================
+@user_bp.route("/login-activity")
+@login_required
+def login_activity():
+    layout_shell = "layouts/base.html" if current_user.has_role("admin") or current_user.has_role("expert") else "layouts/farmer_shell.html"
+    return render_template(
+        "farmer/login_activity.html",
+        activities=list_login_activity(current_user.id, current_activity_id=session.get("_login_activity_id")),
+        layout_shell=layout_shell,
+    )
+
+
+@user_bp.route("/login-activity/data")
+@login_required
+def login_activity_data():
+    return jsonify({
+        "ok": True,
+        "activities": list_login_activity(current_user.id, current_activity_id=session.get("_login_activity_id")),
+    })
 
 
 # ===============================
