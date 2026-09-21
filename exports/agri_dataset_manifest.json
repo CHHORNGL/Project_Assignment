@@ -1,0 +1,18 @@
+{
+  "generated_at": "2026-09-21T14:16:21Z",
+  "source_date": "2026-09-21",
+  "record_count": 1150,
+  "train_count": 929,
+  "validation_count": 221,
+  "validation_ratio": 0.2,
+  "categories": {
+    "crop": 16,
+    "diagnostic_rule": 126,
+    "disease": 1008
+  },
+  "files": [
+    "agri_train_data.jsonl",
+    "agri_validation_data.jsonl"
+  ],
+  "private_data_excluded": true
+}
