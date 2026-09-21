@@ -302,6 +302,34 @@
         },
         "description": "Destroys the active session."
       }
+    },
+    {
+      "name": "12. Ask Agricultural AI",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"message\": \"What are the symptoms of rice blast?\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/chat/ask",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "chat",
+            "ask"
+          ]
+        },
+        "description": "Run this after Login. Flask uses the configured remote Hugging Face endpoint when AI_PROVIDER=huggingface, otherwise it uses the existing configured provider."
+      }
     }
   ]
 }

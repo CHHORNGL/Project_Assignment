@@ -344,6 +344,49 @@
           }
         }
       }
+    },
+    "/api/chat/ask": {
+      "post": {
+        "tags": [
+          "Agricultural AI"
+        ],
+        "summary": "Ask Agricultural AI",
+        "description": "Returns an agricultural answer for the authenticated user. The server selects the configured remote model or existing provider; no model token is accepted from the client.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "message"
+                ],
+                "properties": {
+                  "message": {
+                    "type": "string",
+                    "maxLength": 4000,
+                    "example": "What are the symptoms of rice blast?"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Agricultural answer returned"
+          },
+          "400": {
+            "description": "Message is missing or invalid"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "500": {
+            "description": "No configured AI provider returned a response"
+          }
+        }
+      }
     }
   }
 }

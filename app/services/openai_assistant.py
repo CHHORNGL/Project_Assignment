@@ -569,7 +569,30 @@ def generate_assistant_reply(
     kb_context, crop = _build_kb_context(user_message)
     lang = get_current_language()
     lang_name = "Khmer" if lang == "km" else "English"
-    
+
+    # Keep model hosting outside Flask. When configured, this remote provider
+    # is attempted first; existing OpenAI/Gemini/Groq handling remains the
+    # fallback so deployments can switch providers without changing clients.
+    try:
+        from app.services.ai_expert_service import generate_reply as generate_remote_reply
+
+        remote_reply = generate_remote_reply(
+            user_message,
+            context=kb_context,
+            language=lang,
+        )
+        if remote_reply:
+            if charges_farmer_credits:
+                tokens_used = (len(kb_context) + len(user_message) + len(remote_reply)) // 4
+                current_user.ai_credits = max(0, current_user.ai_credits - tokens_used)
+                try:
+                    db.session.commit()
+                except Exception:
+                    db.session.rollback()
+            return remote_reply
+    except Exception as exc:
+        current_app.logger.warning("Remote agricultural AI provider unavailable: %s", exc)
+
     system_prompt = (
         f"You are a helpful agricultural expert assistant named 'AgriSystem AI', created by your Team Leader, Mao Seavik. "
         f"Respond in {lang_name}. "

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useCallback, useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { askAgriExpert } from "@/lib/aiApi";
 
 function useAutoResizeTextarea({ minHeight, maxHeight }) {
   const textareaRef = useRef(null);
@@ -41,7 +42,7 @@ function useAutoResizeTextarea({ minHeight, maxHeight }) {
   return { textareaRef, adjustHeight };
 }
 
-export function VercelV0Chat({ onSend, placeholder = "Ask Agri Expert a question..." }) {
+export function VercelV0Chat({ onSend, onReply, placeholder = "Ask Agri Expert a question..." }) {
   const [value, setValue] = useState("");
   const { textareaRef, adjustHeight } = useAutoResizeTextarea({
     minHeight: 60,
@@ -52,7 +53,11 @@ export function VercelV0Chat({ onSend, placeholder = "Ask Agri Expert a question
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       if (value.trim()) {
-        if (onSend) onSend(value);
+        if (onSend) {
+          onSend(value);
+        } else {
+          askAgriExpert(value).then(onReply).catch((error) => onReply?.(null, error));
+        }
         setValue("");
         adjustHeight(true);
       }
@@ -96,7 +101,11 @@ export function VercelV0Chat({ onSend, placeholder = "Ask Agri Expert a question
                 type="button"
                 onClick={() => {
                   if (value.trim()) {
-                    if (onSend) onSend(value);
+                    if (onSend) {
+                      onSend(value);
+                    } else {
+                      askAgriExpert(value).then(onReply).catch((error) => onReply?.(null, error));
+                    }
                     setValue("");
                     adjustHeight(true);
                   }

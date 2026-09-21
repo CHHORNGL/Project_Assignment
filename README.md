@@ -133,6 +133,23 @@ Project_Assignment/
 └── seed_*.py                         # System default seeding utilities (Admin, Expert, Farmer, Rules)
 ```
 
+### AI dataset export and remote model
+
+The agricultural knowledge tables can be exported for supervised fine-tuning
+with:
+
+```bash
+python scripts/export_to_jsonl.py --out-dir exports
+```
+
+This creates `exports/agri_train_data.jsonl`,
+`exports/agri_validation_data.jsonl`, and a dataset manifest. The exporter
+excludes users, chat messages, diagnoses, and secrets. After a model is
+deployed separately, set `AI_PROVIDER=huggingface`, `HF_INFERENCE_URL`, and
+`HF_TOKEN` in the backend environment. Flask will call that endpoint while
+keeping model weights out of the web process; existing chat URLs remain
+unchanged.
+
 ---
 
 ## ⚙️ Installation & Local Setup
