@@ -1290,6 +1290,14 @@ input:checked + .ios-slider:before {
     const registerBtn = document.getElementById("btn-register-passkey");
     if (registerBtn) {
         registerBtn.addEventListener("click", async () => {
+            if (!window.PublicKeyCredential) {
+                alert("Passkeys are not supported on this browser or device.");
+                return;
+            }
+            if (!window.isSecureContext) {
+                alert("Passkeys require a secure connection (HTTPS).");
+                return;
+            }
             if (window.location.hostname === "127.0.0.1") {
                 const port = window.location.port ? ":" + window.location.port : "";
                 alert(`Redirecting to localhost...`);

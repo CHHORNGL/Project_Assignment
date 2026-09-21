@@ -627,115 +627,74 @@ def google_callback():
 # ==========================================
 # WEBAUTHN PASSKEYS ROUTES 🔑
 # ==========================================
-import base64
-from webauthn import (
-    generate_registration_options,
-    verify_registration_response,
-    generate_authentication_options,
-    verify_authentication_response,
-    options_to_json
+from app.services.passkey_service import (
+    get_registration_options_json,
+    verify_and_save_registration,
+    get_authentication_options_json,
+    verify_authentication,
 )
-from webauthn.helpers.structs import (
-    AuthenticatorSelectionCriteria,
-    UserVerificationRequirement,
-    RegistrationCredential,
-    AuthenticationCredential
-)
-from app.models.passkey import UserPasskey
 
 @auth_bp.route("/passkey/register/options", methods=["GET"])
 @login_required
 def passkey_register_options():
-    rp_id = request.host.split(":")[0]
-    user_id = str(current_user.id).encode("utf-8")
-    
-    options = generate_registration_options(
-        rp_id=rp_id,
-        rp_name="Agri System",
-        user_id=user_id,
-        user_name=current_user.username,
-        user_display_name=current_user.full_name or current_user.username,
-        authenticator_selection=AuthenticatorSelectionCriteria(
-            user_verification=UserVerificationRequirement.PREFERRED
-        )
-    )
-    session["passkey_registration_challenge"] = base64.b64encode(options.challenge).decode("utf-8")
-    return options_to_json(options)
+    try:
+        options_json, challenge_str = get_registration_options_json(current_user, request)
+        session["passkey_registration_challenge"] = challenge_str
+        return options_json, 200, {"Content-Type": "application/json"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}, 400
 
 @auth_bp.route("/passkey/register/verify", methods=["POST"])
 @login_required
 def passkey_register_verify():
     payload = request.get_json()
-    expected_challenge = base64.b64decode(session.get("passkey_registration_challenge", ""))
-    
+    challenge_b64 = session.get("passkey_registration_challenge")
+    if not challenge_b64:
+        return {"status": "error", "message": "Passkey registration session expired or missing challenge."}, 400
+
     try:
-        registration_verification = verify_registration_response(
-            credential=RegistrationCredential.parse_obj(payload),
-            expected_challenge=expected_challenge,
-            expected_rp_id=request.host.split(":")[0],
-            expected_origin=request.host_url.rstrip("/"),
-        )
-        
-        # Save to db
-        passkey = UserPasskey(
+        passkey = verify_and_save_registration(current_user, payload, challenge_b64, request)
+        session.pop("passkey_registration_challenge", None)
+        audit_log(
+            "PASSKEY_REGISTER_SUCCESS",
+            target_user=current_user.username,
             user_id=current_user.id,
-            credential_id=registration_verification.credential_id,
-            public_key=registration_verification.public_key,
-            sign_count=registration_verification.sign_count,
-            name=payload.get("name") or "My Passkey"
+            detail=f"Passkey '{passkey.name}' registered successfully",
         )
-        db.session.add(passkey)
-        db.session.commit()
-        return {"status": "ok"}
+        return {"status": "ok", "message": "Passkey registered successfully."}
     except Exception as e:
         return {"status": "error", "message": str(e)}, 400
 
 @auth_bp.route("/passkey/login/options", methods=["GET"])
 def passkey_login_options():
-    rp_id = request.host.split(":")[0]
-    options = generate_authentication_options(
-        rp_id=rp_id,
-        user_verification=UserVerificationRequirement.PREFERRED
-    )
-    session["passkey_login_challenge"] = base64.b64encode(options.challenge).decode("utf-8")
-    return options_to_json(options)
+    try:
+        options_json, challenge_str = get_authentication_options_json(request)
+        session["passkey_login_challenge"] = challenge_str
+        return options_json, 200, {"Content-Type": "application/json"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}, 400
 
 @auth_bp.route("/passkey/login/verify", methods=["POST"])
 def passkey_login_verify():
     payload = request.get_json()
-    credential_id = payload.get("id")
-    
-    passkey = UserPasskey.query.filter_by(credential_id=credential_id).first()
-    if not passkey:
-         return {"status": "error", "message": "Passkey not registered on this server"}, 400
-         
-    user = User.query.get(passkey.user_id)
-    if not user:
-         return {"status": "error", "message": "User not found"}, 400
-    if not user.is_active:
-         return {"status": "error", "message": "User is inactive"}, 400
-         
-    if not (user.has_role("farmer") or any(r.route_type == "farmer" for r in user.roles)):
-         return {"status": "error", "message": "This passkey is for Farmers only."}, 403
-         
-    expected_challenge = base64.b64decode(session.get("passkey_login_challenge", ""))
-    
+    challenge_b64 = session.get("passkey_login_challenge")
+    if not challenge_b64:
+        return {"status": "error", "message": "Passkey login session expired or missing challenge."}, 400
+
     try:
-        auth_verification = verify_authentication_response(
-            credential=AuthenticationCredential.parse_obj(payload),
-            expected_challenge=expected_challenge,
-            expected_rp_id=request.host.split(":")[0],
-            expected_origin=request.host_url.rstrip("/"),
-            credential_public_key=passkey.public_key,
-            credential_current_sign_count=passkey.sign_count,
-        )
-        
-        passkey.sign_count = auth_verification.new_sign_count
-        db.session.commit()
-        
+        user, passkey = verify_authentication(payload, challenge_b64, request)
+        session.pop("passkey_login_challenge", None)
+
         login_user(user, remember=False)
+        audit_log(
+            "AUTH_PASSKEY_LOGIN_SUCCESS",
+            target_user=user.username,
+            user_id=user.id,
+            detail=f"Passkey '{passkey.name}' authentication success",
+        )
         flash("Logged in successfully via Passkey!", "success")
-        return {"status": "ok"}
+        redirect_url = url_for("main.index")
+        return {"status": "ok", "redirect_url": redirect_url}
     except Exception as e:
         return {"status": "error", "message": str(e)}, 400
 

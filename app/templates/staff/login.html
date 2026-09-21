@@ -203,6 +203,10 @@
     const btn = document.getElementById("btn-login-passkey");
     if (btn) {
         btn.addEventListener("click", async () => {
+            if (!window.PublicKeyCredential) {
+                alert("Passkeys are not supported on this browser or device.");
+                return;
+            }
             try {
                 const optionsResp = await fetch("{{ url_for('staff.passkey_login_options') }}");
                 if (!optionsResp.ok) throw new Error("Failed to get passkey options.");
@@ -211,6 +215,8 @@
                 const credential = await navigator.credentials.get({
                     publicKey: prepareAuthenticationOptions(options)
                 });
+
+                if (!credential) return;
 
                 const payload = {
                     id: credential.id,
@@ -232,7 +238,7 @@
 
                 const verifyResult = await verifyResp.json();
                 if (verifyResult.status === "ok") {
-                    window.location.href = "{{ url_for('main.index') }}";
+                    window.location.href = verifyResult.redirect_url || "{{ url_for('main.index') }}";
                 } else {
                     alert(verifyResult.message || "Login failed.");
                 }

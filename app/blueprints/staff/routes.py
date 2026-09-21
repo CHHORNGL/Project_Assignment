@@ -6,21 +6,14 @@ import datetime
 from flask import Blueprint, render_template, redirect, url_for, flash, request, session
 from flask_login import login_user, current_user
 
-from webauthn import (
-    generate_authentication_options,
-    verify_authentication_response,
-    options_to_json
-)
-from webauthn.helpers.structs import (
-    UserVerificationRequirement,
-    AuthenticationCredential
-)
-
 from app.extensions import db
 from app.models.user import User
-from app.models.passkey import UserPasskey
 from app.forms.auth_forms import LoginForm
 from app.services.theme_manager import resolve_active_runtime
+from app.services.passkey_service import (
+    get_authentication_options_json,
+    verify_authentication,
+)
 from app.blueprints.auth.routes import _send_verification_email, _safe_next_url
 from app.utils.audit import audit_log
 
@@ -104,49 +97,36 @@ def login():
 
 @staff_bp.route("/passkey/login/options", methods=["GET"])
 def passkey_login_options():
-    rp_id = request.host.split(":")[0]
-    options = generate_authentication_options(
-        rp_id=rp_id,
-        user_verification=UserVerificationRequirement.PREFERRED
-    )
-    session["staff_passkey_login_challenge"] = base64.b64encode(options.challenge).decode("utf-8")
-    return options_to_json(options)
+    try:
+        options_json, challenge_str = get_authentication_options_json(request)
+        session["staff_passkey_login_challenge"] = challenge_str
+        return options_json, 200, {"Content-Type": "application/json"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}, 400
 
 @staff_bp.route("/passkey/login/verify", methods=["POST"])
 def passkey_login_verify():
     payload = request.get_json()
-    credential_id = payload.get("id")
-    
-    passkey = UserPasskey.query.filter_by(credential_id=credential_id).first()
-    if not passkey:
-         return {"status": "error", "message": "Passkey not registered on this server"}, 400
-         
-    user = User.query.get(passkey.user_id)
-    if not user:
-         return {"status": "error", "message": "User not found"}, 400
-    if not user.is_active:
-         return {"status": "error", "message": "User is inactive"}, 400
-         
-    if not (user.has_role("expert") or user.has_role("admin") or any(r.route_type in ["expert", "admin"] for r in user.roles)):
-         return {"status": "error", "message": "This passkey is for Staff only."}, 403
-         
-    expected_challenge = base64.b64decode(session.get("staff_passkey_login_challenge", ""))
-    
+    challenge_b64 = session.get("staff_passkey_login_challenge")
+    if not challenge_b64:
+        return {"status": "error", "message": "Staff passkey login session expired or missing challenge."}, 400
+
     try:
-        auth_verification = verify_authentication_response(
-            credential=AuthenticationCredential.parse_obj(payload),
-            expected_challenge=expected_challenge,
-            expected_rp_id=request.host.split(":")[0],
-            expected_origin=request.host_url.rstrip("/"),
-            credential_public_key=passkey.public_key,
-            credential_current_sign_count=passkey.sign_count,
-        )
-        
-        passkey.sign_count = auth_verification.new_sign_count
-        db.session.commit()
-        
+        user, passkey = verify_authentication(payload, challenge_b64, request)
+
+        if not (user.has_role("expert") or user.has_role("admin") or any(r.route_type in ["expert", "admin"] for r in user.roles)):
+            return {"status": "error", "message": "This passkey is for Staff only."}, 403
+
+        session.pop("staff_passkey_login_challenge", None)
         login_user(user, remember=False)
-        flash("Logged in successfully via Passkey!", "success")
-        return {"status": "ok"}
+        audit_log(
+            "STAFF_PASSKEY_LOGIN_SUCCESS",
+            target_user=user.username,
+            user_id=user.id,
+            detail=f"Staff passkey '{passkey.name}' authentication",
+        )
+        flash("Welcome back!", "success")
+        redirect_url = url_for("main.index")
+        return {"status": "ok", "redirect_url": redirect_url}
     except Exception as e:
         return {"status": "error", "message": str(e)}, 400
