@@ -346,7 +346,12 @@ def settings():
     return render_template(
         "farmer/settings.html",
         current_lang=get_current_language(),
-        layout_shell=layout_shell
+        layout_shell=layout_shell,
+        activities=list_login_activity(
+            current_user.id,
+            current_activity_id=session.get("_login_activity_id"),
+            limit=5,
+        ),
     )
 
 

@@ -1059,21 +1059,62 @@ input:checked + .ios-slider:before {
                 </span>
             </div>
 
-            <a class="settings-row" href="{{ url_for('user.login_activity') }}" style="text-decoration: none; color: inherit;">
-                <div class="settings-row-left">
-                    <div class="settings-icon" style="background: linear-gradient(135deg, #0ea5e9, #2563eb);"><i class="fas fa-laptop-house"></i></div>
-                    <div>
-                        <div class="settings-label">{{ t("login_activity") }}</div>
-                        <div class="settings-sublabel">{{ t("login_activity_desc") }}</div>
-                    </div>
-                </div>
-                <span class="text-primary font-weight-bold"><i class="fas fa-chevron-right"></i></span>
-            </a>
         </div>
 
         <!-- 3. DYNAMIC PASSKEYS LIST CONTAINER -->
         <div id="passkeys-list-container">
             <!-- Dynamically populated via JS -->
+        </div>
+
+        <!-- 4. DEVICE LOGIN ACTIVITY SECTION -->
+        <div class="settings-section-title">
+            <i class="fas fa-laptop-house text-primary"></i>
+            <span>{{ t("login_activity") }}</span>
+        </div>
+        <div class="settings-card">
+            {% if activities and activities|length > 0 %}
+                {% for act in activities %}
+                <div class="settings-row" style="align-items: flex-start; padding: 14px 18px;">
+                    <div class="settings-row-left" style="gap: 14px; flex: 1;">
+                        <div class="settings-icon" style="background: rgba(14, 165, 233, 0.12); color: #0284c7; flex-shrink: 0; margin-top: 2px;">
+                            <i class="fas {% if act.device_type|lower == 'mobile' %}fa-mobile-alt{% elif act.device_type|lower == 'tablet' %}fa-tablet-alt{% else %}fa-desktop{% endif %}"></i>
+                        </div>
+                        <div style="flex: 1; min-width: 0;">
+                            <div class="settings-label" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                <span class="font-weight-bold">{{ act.device_type }} · {{ act.browser }} ({{ act.platform }})</span>
+                                {% if act.current %}
+                                    <span class="badge badge-success px-2 py-0.5" style="font-size: 0.72rem; border-radius: 12px; font-weight: 700;">
+                                        <i class="fas fa-circle mr-1" style="font-size: 0.45rem; vertical-align: middle;"></i>{{ t("this_device") }}
+                                    </span>
+                                {% endif %}
+                            </div>
+                            <div class="settings-sublabel" style="margin-top: 3px; font-size: 0.82rem;">
+                                <span><i class="fas fa-network-wired mr-1 text-muted"></i>{{ act.ip_address }}</span>
+                                <span class="mx-1 text-muted">·</span>
+                                <span><i class="far fa-clock mr-1 text-muted"></i>{{ act.created_at|replace('T', ' ')|replace('Z', ' UTC') }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% if act.current %}
+                    <span class="text-success font-weight-bold ml-2" style="font-size: 0.78rem; white-space: nowrap; align-self: center;">
+                        <i class="fas fa-signal mr-1"></i>{{ t("active_now") }}
+                    </span>
+                    {% endif %}
+                </div>
+                {% endfor %}
+
+                <div style="padding: 12px 18px; background: rgba(0, 0, 0, 0.02); border-top: 1px solid var(--border-light, #e2e8f0); display: flex; justify-content: space-between; align-items: center;">
+                    <span class="text-muted" style="font-size: 0.82rem;">{{ t("login_activity_desc") }}</span>
+                    <a href="{{ url_for('user.login_activity') }}" class="btn btn-sm btn-outline-primary rounded-pill px-3 font-weight-bold" style="font-size: 0.8rem; text-decoration: none;">
+                        {{ t("view_all") }} <i class="fas fa-chevron-right ml-1"></i>
+                    </a>
+                </div>
+            {% else %}
+                <div style="padding: 24px 18px; text-align: center;" class="text-muted">
+                    <i class="fas fa-laptop-house fa-2x mb-2 text-muted" style="opacity: 0.4;"></i>
+                    <p class="mb-0" style="font-size: 0.88rem;">{{ t("no_login_activity") }}</p>
+                </div>
+            {% endif %}
         </div>
 
         <!-- 4. CLEAN FLOATING SAVE DOCK -->
