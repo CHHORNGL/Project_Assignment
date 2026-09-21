@@ -13,7 +13,6 @@
     .login-activity-item:last-child { border-bottom: 0; }
     .dark-mode .login-activity-item { border-bottom-color: #334155; }
     .login-activity-icon { width: 42px; height: 42px; border-radius: 13px; display: grid; place-items: center; color: #2563eb; background: rgba(37, 99, 235, .12); flex: 0 0 auto; }
-    .login-activity-icon.is-revoked { color: #94a3b8; background: rgba(148, 163, 184, .15); }
     .login-activity-main { min-width: 0; flex: 1; }
     .login-activity-device { font-weight: 750; color: var(--text-main, #1e293b); }
     .dark-mode .login-activity-device { color: #f8fafc; }
@@ -30,16 +29,9 @@
             <p class="login-activity-subtitle">{{ t("login_activity_desc") }}</p>
         </div>
         <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-            {% set has_other_active = false %}
-            {% if activities %}
-                {% for act in activities %}
-                    {% if not act.current and not act.revoked %}
-                        {% set has_other_active = true %}
-                    {% endif %}
-                {% endfor %}
-            {% endif %}
-            {% if has_other_active %}
-            <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3 font-weight-bold" onclick="revokeAllOtherSessions()">
+            {% set other_active_count = activities|rejectattr('current')|list|length %}
+            {% if other_active_count > 0 %}
+            <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3 font-weight-bold" id="btnRevokeAllOthersHeader" onclick="revokeAllOtherSessions()">
                 <i class="fas fa-power-off mr-1"></i>{{ t("log_out_all_other_devices") }}
             </button>
             {% endif %}
@@ -47,10 +39,10 @@
         </div>
     </div>
 
-    <div class="login-activity-card">
+    <div class="login-activity-card" id="loginActivityCard">
         {% for activity in activities %}
-        <div class="login-activity-item">
-            <div class="login-activity-icon {% if activity.revoked %}is-revoked{% endif %}">
+        <div class="login-activity-item" id="device-row-{{ activity.activity_id }}">
+            <div class="login-activity-icon">
                 <i class="fas {% if 'phone' in activity.device_type|lower or 'mobile' in activity.device_type|lower %}fa-mobile-alt{% elif 'tablet' in activity.device_type|lower %}fa-tablet-alt{% else %}fa-laptop{% endif %}"></i>
             </div>
             <div class="login-activity-main">
@@ -69,10 +61,8 @@
             </div>
             {% if activity.current %}
                 <span class="login-activity-current"><i class="fas fa-circle mr-1" style="font-size: 0.45rem; vertical-align: middle;"></i>{{ t("this_device") }}</span>
-            {% elif activity.revoked %}
-                <span class="badge badge-secondary" style="font-size: 0.72rem; padding: 5px 9px; border-radius: 12px;"><i class="fas fa-ban mr-1"></i>{{ t("signed_out") }}</span>
             {% else %}
-                <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3 font-weight-bold" onclick="revokeDeviceSession('{{ activity.activity_id }}')" style="font-size: 0.78rem;">
+                <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3 font-weight-bold btn-logout-device-action" onclick="revokeDeviceSession('{{ activity.activity_id }}')" style="font-size: 0.78rem;">
                     <i class="fas fa-sign-out-alt mr-1"></i>{{ t("log_out_device") }}
                 </button>
             {% endif %}
@@ -96,7 +86,22 @@ function revokeDeviceSession(activityId) {
     .then(res => res.json())
     .then(data => {
         if (data.ok) {
-            window.location.reload();
+            const row = document.getElementById('device-row-' + activityId);
+            if (row) {
+                row.style.transition = 'all 0.3s ease';
+                row.style.opacity = '0';
+                row.style.transform = 'translateY(-10px)';
+                setTimeout(() => {
+                    row.remove();
+                    const remainingOthers = document.querySelectorAll('.btn-logout-device-action');
+                    if (remainingOthers.length === 0) {
+                        const btnAll = document.getElementById('btnRevokeAllOthersHeader');
+                        if (btnAll) btnAll.remove();
+                    }
+                }, 300);
+            } else {
+                window.location.reload();
+            }
         } else {
             alert(data.error || 'Failed to log out device.');
         }
@@ -117,7 +122,13 @@ function revokeAllOtherSessions() {
     .then(res => res.json())
     .then(data => {
         if (data.ok) {
-            window.location.reload();
+            const rows = document.querySelectorAll('.btn-logout-device-action');
+            rows.forEach(btn => {
+                const row = btn.closest('.login-activity-item');
+                if (row) row.remove();
+            });
+            const btnAll = document.getElementById('btnRevokeAllOthersHeader');
+            if (btnAll) btnAll.remove();
         } else {
             alert(data.error || 'Failed to log out other devices.');
         }

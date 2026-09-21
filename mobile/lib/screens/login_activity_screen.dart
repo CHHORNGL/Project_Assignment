@@ -168,13 +168,14 @@ class _LoginActivityScreenState extends State<LoginActivityScreen> {
           if (snapshot.hasError) {
             return Center(child: Text(tr('login_activity_error', lang)));
           }
-          final activities = snapshot.data ?? [];
+          final allActivities = snapshot.data ?? [];
+          final activities = allActivities.where((a) => a['revoked'] != true).toList();
           if (activities.isEmpty) {
             return Center(child: Text(tr('no_login_activity', lang)));
           }
 
           final hasOtherActive = activities.any(
-            (a) => a['current'] != true && a['revoked'] != true,
+            (a) => a['current'] != true,
           );
 
           return RefreshIndicator(
@@ -202,7 +203,6 @@ class _LoginActivityScreenState extends State<LoginActivityScreen> {
                   ),
                 ...activities.map((activity) {
                   final current = activity['current'] == true;
-                  final revoked = activity['revoked'] == true;
                   final activityId = activity['activity_id']?.toString() ?? '';
                   final device = activity['device_type']?.toString() ?? 'Unknown';
                   final browser = activity['browser']?.toString() ?? 'Unknown';
@@ -213,11 +213,6 @@ class _LoginActivityScreenState extends State<LoginActivityScreen> {
                     trailingWidget = Text(
                       tr('this_device', lang),
                       style: TextStyle(color: Colors.green.shade700, fontSize: 12, fontWeight: FontWeight.w700),
-                    );
-                  } else if (revoked) {
-                    trailingWidget = Text(
-                      tr('signed_out', lang),
-                      style: const TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.w600),
                     );
                   } else {
                     trailingWidget = TextButton.icon(
@@ -239,18 +234,13 @@ class _LoginActivityScreenState extends State<LoginActivityScreen> {
                       child: ListTile(
                         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         leading: CircleAvatar(
-                          backgroundColor: revoked
-                              ? Colors.grey.withValues(alpha: 0.12)
-                              : colors.primary.withValues(alpha: 0.12),
-                          foregroundColor: revoked ? Colors.grey : colors.primary,
+                          backgroundColor: colors.primary.withValues(alpha: 0.12),
+                          foregroundColor: colors.primary,
                           child: Icon(_deviceIcon(device)),
                         ),
                         title: Text(
                           '${_deviceLabel(device, lang)} · $browser · $platform',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                            color: revoked ? Colors.grey : null,
-                          ),
+                          style: const TextStyle(fontWeight: FontWeight.w700),
                         ),
                         subtitle: Padding(
                           padding: const EdgeInsets.only(top: 5),

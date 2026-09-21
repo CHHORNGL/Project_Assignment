@@ -174,8 +174,14 @@ def revoke_all_other_sessions(user_id: int, current_activity_id: str | None = No
     return revoked_count
 
 
-def list_login_activity(user_id: int, *, current_activity_id: str | None = None, limit: int = 50) -> list[dict]:
-    """Return recent successful sessions for one user from the audit trail."""
+def list_login_activity(
+    user_id: int,
+    *,
+    current_activity_id: str | None = None,
+    limit: int = 50,
+    include_revoked: bool = False,
+) -> list[dict]:
+    """Return active login sessions for one user, hiding logged-out/revoked devices."""
     limit = max(1, min(int(limit or 50), 100))
     rows = (
         AuditLog.query
@@ -204,32 +210,58 @@ def list_login_activity(user_id: int, *, current_activity_id: str | None = None,
         if aid:
             revoked_ids.add(aid)
 
-    activities = []
+    raw_items = []
     seen_activity_ids = set()
     for row in rows:
         values = _detail_values(row.detail)
         activity_id = values.get("activity_id")
-        if activity_id and activity_id in seen_activity_ids:
+        if not activity_id or activity_id in seen_activity_ids:
             continue
-        if activity_id:
-            seen_activity_ids.add(activity_id)
+        seen_activity_ids.add(activity_id)
 
         device_type = _format_device_type(values.get("device", ""), values.get("os", ""))
-        is_current = bool(activity_id and activity_id == current_activity_id)
-        is_revoked = bool(not is_current and (activity_id in revoked_ids or is_activity_revoked(activity_id, user_id=user_id)))
+        browser = values.get("browser", "Unknown").replace("_", " ")
+        platform = values.get("os", "Unknown").replace("_", " ")
 
-        activities.append({
+        is_current = bool(activity_id and activity_id == current_activity_id)
+        is_rev = bool(not is_current and (activity_id in revoked_ids or is_activity_revoked(activity_id, user_id=user_id)))
+
+        # Hide logged-out / revoked devices unless explicitly requested
+        if not include_revoked and is_rev:
+            continue
+
+        raw_items.append({
             "id": row.id,
             "activity_id": activity_id,
             "device_type": device_type,
-            "browser": values.get("browser", "Unknown").replace("_", " "),
-            "platform": values.get("os", "Unknown").replace("_", " "),
+            "browser": browser,
+            "platform": platform,
             "route": values.get("login_route", "-"),
             "ip_address": values.get("ip", "-"),
             "created_at": row.created_at.isoformat() + "Z" if row.created_at else None,
             "current": is_current,
-            "revoked": is_revoked,
+            "revoked": is_rev,
         })
+
+    # Deduplicate active devices by (device_type, browser, platform) so multiple
+    # historical logins from the same device don't clutter the active list.
+    activities = []
+    seen_signatures = set()
+
+    # Prioritize current device first
+    current_item = next((item for item in raw_items if item.get("current")), None)
+    if current_item:
+        sig = (current_item["device_type"], current_item["browser"], current_item["platform"])
+        seen_signatures.add(sig)
+        activities.append(current_item)
+
+    for item in raw_items:
+        if item.get("current"):
+            continue
+        sig = (item["device_type"], item["browser"], item["platform"])
+        if sig not in seen_signatures:
+            seen_signatures.add(sig)
+            activities.append(item)
 
     has_current = any(act.get("current") for act in activities)
     if not has_current:
@@ -272,7 +304,7 @@ def list_login_activity(user_id: int, *, current_activity_id: str | None = None,
                     except Exception:
                         pass
 
-                    activities.insert(0, {
+                    new_current = {
                         "id": 0,
                         "activity_id": cur_id,
                         "device_type": _format_device_type(meta.get("device", ""), meta.get("os", "")),
@@ -283,7 +315,10 @@ def list_login_activity(user_id: int, *, current_activity_id: str | None = None,
                         "created_at": datetime.now(timezone.utc).isoformat() + "Z",
                         "current": True,
                         "revoked": False,
-                    })
+                    }
+                    cur_sig = (new_current["device_type"], new_current["browser"], new_current["platform"])
+                    activities = [a for a in activities if (a["device_type"], a["browser"], a["platform"]) != cur_sig]
+                    activities.insert(0, new_current)
         except Exception:
             pass
 

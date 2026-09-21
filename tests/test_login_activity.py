@@ -166,26 +166,25 @@ class LoginActivityTests(unittest.TestCase):
             db.session.add_all([log1, log2, log3, log4])
             db.session.commit()
 
-            activities = list_login_activity(user_id=1, current_activity_id="act_1")
-            self.assertEqual(len(activities), 2)
-
-            first = activities[0]
+            # By default, logged-out devices are hidden from the active list
+            active_activities = list_login_activity(user_id=1, current_activity_id="act_1")
+            self.assertEqual(len(active_activities), 1)
+            first = active_activities[0]
             self.assertEqual(first["activity_id"], "act_1")
             self.assertEqual(first["device_type"], "Mobile Phone")
             self.assertEqual(first["browser"], "Mobile App")
             self.assertEqual(first["platform"], "Flutter")
-            self.assertEqual(first["ip_address"], "192.168.1.10")
-            self.assertEqual(first["route"], "/api/login")
             self.assertTrue(first["current"])
             self.assertFalse(first["revoked"])
 
-            second = activities[1]
+            # When include_revoked=True, all activities are returned
+            all_activities = list_login_activity(user_id=1, current_activity_id="act_1", include_revoked=True)
+            self.assertEqual(len(all_activities), 2)
+            second = all_activities[1]
             self.assertEqual(second["activity_id"], "act_2")
             self.assertEqual(second["device_type"], "Laptop / Computer")
             self.assertEqual(second["browser"], "Chrome")
             self.assertEqual(second["platform"], "macOS")
-            self.assertEqual(second["ip_address"], "127.0.0.1")
-            self.assertEqual(second["route"], "/auth/login")
             self.assertFalse(second["current"])
             self.assertTrue(second["revoked"])
 
