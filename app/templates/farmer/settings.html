@@ -1077,11 +1077,20 @@ input:checked + .ios-slider:before {
                 <div class="settings-row" style="align-items: flex-start; padding: 14px 18px;">
                     <div class="settings-row-left" style="gap: 14px; flex: 1;">
                         <div class="settings-icon" style="background: rgba(14, 165, 233, 0.12); color: #0284c7; flex-shrink: 0; margin-top: 2px;">
-                            <i class="fas {% if act.device_type|lower == 'mobile' %}fa-mobile-alt{% elif act.device_type|lower == 'tablet' %}fa-tablet-alt{% else %}fa-desktop{% endif %}"></i>
+                            <i class="fas {% if 'phone' in act.device_type|lower or 'mobile' in act.device_type|lower %}fa-mobile-alt{% elif 'tablet' in act.device_type|lower %}fa-tablet-alt{% else %}fa-laptop{% endif %}"></i>
                         </div>
                         <div style="flex: 1; min-width: 0;">
                             <div class="settings-label" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                                <span class="font-weight-bold">{{ act.device_type }} · {{ act.browser }} ({{ act.platform }})</span>
+                                <span class="font-weight-bold">
+                                    {% if 'phone' in act.device_type|lower or 'mobile' in act.device_type|lower %}
+                                        {{ t("mobile_phone") }}
+                                    {% elif 'tablet' in act.device_type|lower %}
+                                        {{ t("tablet_device") }}
+                                    {% else %}
+                                        {{ t("laptop_computer") }}
+                                    {% endif %}
+                                    · {{ act.browser }} ({{ act.platform }})
+                                </span>
                                 {% if act.current %}
                                     <span class="badge badge-success px-2 py-0.5" style="font-size: 0.72rem; border-radius: 12px; font-weight: 700;">
                                         <i class="fas fa-circle mr-1" style="font-size: 0.45rem; vertical-align: middle;"></i>{{ t("this_device") }}

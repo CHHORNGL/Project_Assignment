@@ -21,13 +21,24 @@ class _LoginActivityScreenState extends State<LoginActivityScreen> {
   }
 
   IconData _deviceIcon(String value) {
-    switch (value.toLowerCase()) {
-      case 'mobile':
-        return Icons.smartphone_rounded;
-      case 'tablet':
-        return Icons.tablet_rounded;
-      default:
-        return Icons.desktop_windows_rounded;
+    final lower = value.toLowerCase();
+    if (lower.contains('phone') || lower.contains('mobile')) {
+      return Icons.smartphone_rounded;
+    } else if (lower.contains('tablet') || lower.contains('pad')) {
+      return Icons.tablet_rounded;
+    } else {
+      return Icons.laptop_mac_rounded;
+    }
+  }
+
+  String _deviceLabel(String device, String lang) {
+    final lower = device.toLowerCase();
+    if (lower.contains('phone') || lower.contains('mobile')) {
+      return tr('mobile_phone', lang);
+    } else if (lower.contains('tablet') || lower.contains('pad')) {
+      return tr('tablet_device', lang);
+    } else {
+      return tr('laptop_computer', lang);
     }
   }
 
@@ -86,7 +97,7 @@ class _LoginActivityScreenState extends State<LoginActivityScreen> {
                       foregroundColor: colors.primary,
                       child: Icon(_deviceIcon(device)),
                     ),
-                    title: Text('$device · $browser · $platform', style: const TextStyle(fontWeight: FontWeight.w700)),
+                    title: Text('${_deviceLabel(device, lang)} · $browser · $platform', style: const TextStyle(fontWeight: FontWeight.w700)),
                     subtitle: Padding(
                       padding: const EdgeInsets.only(top: 5),
                       child: Text('${activity['ip_address'] ?? '-'}\n${_dateLabel(activity['created_at'])}'),

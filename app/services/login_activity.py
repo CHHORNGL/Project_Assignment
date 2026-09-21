@@ -14,6 +14,19 @@ def _detail_values(detail: str | None) -> dict[str, str]:
     return {key: value for key, value in _DETAIL_VALUE.findall(detail)}
 
 
+def _format_device_type(device_raw: str, platform_raw: str) -> str:
+    dev = (device_raw or "").lower()
+    plat = (platform_raw or "").lower()
+
+    if "tablet" in dev or "ipad" in dev or "ipad" in plat:
+        return "Tablet"
+    elif "mobile" in dev or "phone" in dev or plat in ("ios", "android", "flutter"):
+        return "Mobile Phone"
+    elif "desktop" in dev or "computer" in dev or "laptop" in dev or plat in ("macos", "windows", "linux"):
+        return "Laptop / Computer"
+    return dev.replace("_", " ").title() or "Laptop / Computer"
+
+
 def list_login_activity(user_id: int, *, current_activity_id: str | None = None, limit: int = 50) -> list[dict]:
     """Return recent successful sessions for one user from the audit trail."""
     limit = max(1, min(int(limit or 50), 100))
@@ -32,7 +45,7 @@ def list_login_activity(user_id: int, *, current_activity_id: str | None = None,
     for row in rows:
         values = _detail_values(row.detail)
         activity_id = values.get("activity_id")
-        device_type = values.get("device", "unknown").replace("_", " ").title()
+        device_type = _format_device_type(values.get("device", ""), values.get("os", ""))
         activities.append({
             "id": row.id,
             "activity_id": activity_id,
@@ -88,7 +101,7 @@ def list_login_activity(user_id: int, *, current_activity_id: str | None = None,
                     activities.insert(0, {
                         "id": 0,
                         "activity_id": cur_id,
-                        "device_type": meta["device"].replace("_", " ").title(),
+                        "device_type": _format_device_type(meta.get("device", ""), meta.get("os", "")),
                         "browser": meta["browser"].replace("_", " "),
                         "platform": meta["os"].replace("_", " "),
                         "route": meta["login_route"],

@@ -19,12 +19,12 @@ def _login_device_metadata() -> dict[str, str]:
     client_platform = (request.headers.get("X-Client-Platform") or "").lower()
     route = request.path or "-"
 
-    if client_platform == "flutter" or any(token in user_agent for token in ("iphone", "ipad", "android", "mobile")):
-        device = "mobile"
-    elif "tablet" in user_agent:
+    if "tablet" in user_agent or "ipad" in user_agent:
         device = "tablet"
+    elif client_platform == "flutter" or any(token in user_agent for token in ("iphone", "android", "mobile")):
+        device = "mobile_phone"
     else:
-        device = "desktop"
+        device = "laptop_computer"
 
     if client_platform == "flutter" or "dart" in user_agent:
         browser = "Mobile App"

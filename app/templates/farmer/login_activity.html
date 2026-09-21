@@ -34,9 +34,18 @@
     <div class="login-activity-card">
         {% for activity in activities %}
         <div class="login-activity-item">
-            <div class="login-activity-icon"><i class="fas {% if activity.device_type|lower == 'mobile' %}fa-mobile-alt{% elif activity.device_type|lower == 'tablet' %}fa-tablet-alt{% else %}fa-desktop{% endif %}"></i></div>
+            <div class="login-activity-icon"><i class="fas {% if 'phone' in activity.device_type|lower or 'mobile' in activity.device_type|lower %}fa-mobile-alt{% elif 'tablet' in activity.device_type|lower %}fa-tablet-alt{% else %}fa-laptop{% endif %}"></i></div>
             <div class="login-activity-main">
-                <div class="login-activity-device">{{ activity.device_type }} · {{ activity.browser }} · {{ activity.platform }}</div>
+                <div class="login-activity-device">
+                    {% if 'phone' in activity.device_type|lower or 'mobile' in activity.device_type|lower %}
+                        {{ t("mobile_phone")|default("Mobile Phone") }}
+                    {% elif 'tablet' in activity.device_type|lower %}
+                        {{ t("tablet_device")|default("Tablet") }}
+                    {% else %}
+                        {{ t("laptop_computer")|default("Laptop / Computer") }}
+                    {% endif %}
+                    · {{ activity.browser }} · {{ activity.platform }}
+                </div>
                 <div class="login-activity-meta">{{ activity.ip_address }} · {{ activity.created_at|replace('T', ' ')|replace('Z', ' UTC') }}</div>
                 <div class="login-activity-route">{{ activity.route }}</div>
             </div>

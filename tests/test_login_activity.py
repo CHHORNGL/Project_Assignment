@@ -58,31 +58,31 @@ class LoginActivityTests(unittest.TestCase):
         cases = [
             (
                 {"User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148 Safari/604.1"},
-                "mobile", "Safari", "iOS"
+                "mobile_phone", "Safari", "iOS"
             ),
             (
                 {"User-Agent": "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 Chrome/120.0.0.0 Mobile Safari/537.36"},
-                "mobile", "Chrome", "Android"
+                "mobile_phone", "Chrome", "Android"
             ),
             (
                 {"User-Agent": "Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148 Safari/604.1"},
-                "mobile", "Safari", "iOS"
+                "tablet", "Safari", "iOS"
             ),
             (
                 {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36"},
-                "desktop", "Chrome", "macOS"
+                "laptop_computer", "Chrome", "macOS"
             ),
             (
                 {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0"},
-                "desktop", "Firefox", "Windows"
+                "laptop_computer", "Firefox", "Windows"
             ),
             (
                 {"X-Client-Platform": "flutter", "User-Agent": "Dart/3.3 (dart:io)"},
-                "mobile", "Mobile App", "Flutter"
+                "mobile_phone", "Mobile App", "Flutter"
             ),
             (
                 {"User-Agent": "curl/7.88.1"},
-                "desktop", "API client", "Unknown"
+                "laptop_computer", "API client", "Unknown"
             ),
         ]
 
@@ -140,7 +140,7 @@ class LoginActivityTests(unittest.TestCase):
 
             first = activities[0]
             self.assertEqual(first["activity_id"], "act_1")
-            self.assertEqual(first["device_type"], "Mobile")
+            self.assertEqual(first["device_type"], "Mobile Phone")
             self.assertEqual(first["browser"], "Mobile App")
             self.assertEqual(first["platform"], "Flutter")
             self.assertEqual(first["ip_address"], "192.168.1.10")
@@ -149,7 +149,7 @@ class LoginActivityTests(unittest.TestCase):
 
             second = activities[1]
             self.assertEqual(second["activity_id"], "act_2")
-            self.assertEqual(second["device_type"], "Desktop")
+            self.assertEqual(second["device_type"], "Laptop / Computer")
             self.assertEqual(second["browser"], "Chrome")
             self.assertEqual(second["platform"], "macOS")
             self.assertEqual(second["ip_address"], "127.0.0.1")
