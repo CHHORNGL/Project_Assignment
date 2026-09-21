@@ -593,6 +593,16 @@ def generate_assistant_reply(
     except Exception as exc:
         current_app.logger.warning("Remote agricultural AI provider unavailable: %s", exc)
 
+    # In HF-only mode, never silently send farmer questions to a legacy model.
+    # Returning None lets the existing route show its safe unavailable message
+    # until the configured endpoint is healthy.
+    from app.services.ai_expert_service import (
+        is_huggingface_provider,
+        legacy_fallback_enabled,
+    )
+    if is_huggingface_provider() and not legacy_fallback_enabled():
+        return None
+
     system_prompt = (
         f"You are a helpful agricultural expert assistant named 'AgriSystem AI', created by your Team Leader, Mao Seavik. "
         f"Respond in {lang_name}. "

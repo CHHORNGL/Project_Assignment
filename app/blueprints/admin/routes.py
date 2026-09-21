@@ -972,6 +972,46 @@ def translations_ai():
 @permission_required("manage_roles")
 def settings():
     if request.method == "POST":
+        # The current configuration screen manages the separately hosted,
+        # fine-tuned agricultural model. Keep the older provider fields below
+        # for backwards compatibility with existing installations.
+        own_ai_form = any(
+            key in request.form
+            for key in ("hf_model_id", "hf_inference_url", "hf_api_key", "legacy_fallback_enabled")
+        )
+
+        def update_setting(k, v):
+            setting = SiteSetting.query.get(k)
+            if setting:
+                setting.value = v
+            else:
+                db.session.add(SiteSetting(key=k, value=v))
+
+        if own_ai_form:
+            hf_model_id = request.form.get("hf_model_id", "").strip()
+            hf_inference_url = request.form.get("hf_inference_url", "").strip()
+            hf_api_key = request.form.get("hf_api_key", "").strip()
+            fallback_enabled = "true" if request.form.get("legacy_fallback_enabled") else "false"
+
+            update_setting("AI_PROVIDER", "huggingface")
+            update_setting("HF_MODEL_ID", hf_model_id)
+            update_setting("HF_INFERENCE_URL", hf_inference_url)
+            update_setting("AI_LEGACY_FALLBACK_ENABLED", fallback_enabled)
+            # An empty password means “keep the existing secret”.
+            if hf_api_key:
+                update_setting("HF_API_KEY", hf_api_key)
+
+            db.session.commit()
+            # Apply values immediately; the saved settings are also read after
+            # restarts and by other workers.
+            current_app.config["AI_PROVIDER"] = "huggingface"
+            current_app.config["HF_INFERENCE_URL"] = hf_inference_url
+            current_app.config["AI_LEGACY_FALLBACK_ENABLED"] = fallback_enabled == "true"
+            if hf_api_key:
+                current_app.config["HF_TOKEN"] = hf_api_key
+            flash("Own AI engine settings saved successfully.", "success")
+            return redirect(url_for("admin.settings"))
+
         openai_keys = [k.strip() for k in request.form.getlist("openai_key[]") if k.strip()]
         groq_keys = [k.strip() for k in request.form.getlist("groq_key[]") if k.strip()]
         gemini_keys = [k.strip() for k in request.form.getlist("gemini_key[]") if k.strip()]
@@ -1041,6 +1081,25 @@ def settings():
     expert_provider_setting = SiteSetting.query.get("EXPERT_PROVIDER")
     expert_model_setting = SiteSetting.query.get("EXPERT_MODEL")
 
+    hf_model_setting = SiteSetting.query.get("HF_MODEL_ID")
+    hf_url_setting = SiteSetting.query.get("HF_INFERENCE_URL")
+    hf_key_setting = SiteSetting.query.get("HF_API_KEY") or SiteSetting.query.get("HF_TOKEN")
+    fallback_setting = SiteSetting.query.get("AI_LEGACY_FALLBACK_ENABLED")
+
+    hf_model_id = (
+        hf_model_setting.value.strip() if hf_model_setting and hf_model_setting.value.strip()
+        else os.getenv("HF_MODEL_ID", "Maoseavik/agri-expert-adapter").strip()
+    )
+    hf_inference_url = (
+        hf_url_setting.value.strip() if hf_url_setting and hf_url_setting.value.strip()
+        else current_app.config.get("HF_INFERENCE_URL", "")
+    )
+    fallback_value = (
+        fallback_setting.value.strip().lower()
+        if fallback_setting and fallback_setting.value
+        else str(current_app.config.get("AI_LEGACY_FALLBACK_ENABLED", False)).lower()
+    )
+
     active_provider = active_provider_setting.value.strip() if active_provider_setting and active_provider_setting.value.strip() else "groq"
     
     # Resolve groq_model default
@@ -1073,6 +1132,12 @@ def settings():
         gemini_model=gemini_model,
         expert_provider=expert_provider_setting.value if expert_provider_setting else "",
         expert_model=expert_model_setting.value if expert_model_setting else "",
+        hf_model_id=hf_model_id,
+        hf_inference_url=hf_inference_url,
+        hf_key_configured=bool(hf_key_setting and hf_key_setting.value.strip()) or bool(
+            current_app.config.get("HF_TOKEN")
+        ),
+        legacy_fallback_enabled=fallback_value in {"1", "true", "yes", "on"},
     )
 
 
@@ -1085,6 +1150,49 @@ def test_ai_connection():
     provider = (data.get("provider") or "groq").strip().lower()
     api_key = (data.get("api_key") or "").strip()
     model = (data.get("model") or "").strip()
+
+    if provider in {"huggingface", "hf", "hugging_face"}:
+        import requests
+        from app.services.ai_expert_service import is_valid_inference_endpoint
+
+        saved_url = SiteSetting.query.get("HF_INFERENCE_URL")
+        endpoint = (data.get("endpoint") or data.get("url") or "").strip()
+        endpoint = endpoint or (saved_url.value.strip() if saved_url and saved_url.value else "")
+        if not endpoint:
+            endpoint = (current_app.config.get("HF_INFERENCE_URL") or "").strip()
+        if not is_valid_inference_endpoint(endpoint):
+            return jsonify({
+                "success": False,
+                "error": "Enter the deployed inference endpoint URL (for example https://.../generate), not a Hugging Face model ID.",
+            }), 400
+
+        saved_key = SiteSetting.query.get("HF_API_KEY") or SiteSetting.query.get("HF_TOKEN")
+        token = api_key or (saved_key.value.strip() if saved_key and saved_key.value else "")
+        token = token or (current_app.config.get("HF_TOKEN") or "").strip()
+        headers = {"Content-Type": "application/json"}
+        if token:
+            headers["Authorization"] = f"Bearer {token}"
+        start_time = time.time()
+        try:
+            response = requests.post(
+                endpoint,
+                json={
+                    "inputs": "Reply with exactly: AgriSystem AI connection OK.",
+                    "parameters": {"max_new_tokens": 24, "temperature": 0.1, "return_full_text": False},
+                },
+                headers=headers,
+                timeout=12,
+            )
+            response.raise_for_status()
+            elapsed = round((time.time() - start_time) * 1000)
+            return jsonify({
+                "success": True,
+                "message": f"Own AI endpoint connected ({elapsed}ms latency).",
+                "latency_ms": elapsed,
+            })
+        except Exception as exc:
+            elapsed = round((time.time() - start_time) * 1000)
+            return jsonify({"success": False, "error": str(exc), "latency_ms": elapsed}), 200
 
     # Fallback to saved DB key if not passed
     if not api_key:

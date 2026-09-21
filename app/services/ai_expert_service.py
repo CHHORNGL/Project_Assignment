@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import os
 from typing import Any, Optional
+from urllib.parse import urlparse
 
 import requests
 from flask import current_app
@@ -20,20 +21,68 @@ MAX_MESSAGE_CHARS = 4_000
 
 
 def _setting(name: str, default: str = "") -> str:
-    """Read an environment setting without ever exposing its value in logs."""
+    """Read runtime settings, preferring the protected admin configuration.
+
+    A saved value allows an admin change to persist across Railway restarts.
+    If it has not been saved in the admin screen, normal deployment
+    environment variables remain the fallback.
+    """
+    try:
+        from app.models.site_setting import SiteSetting
+
+        aliases = {
+            "HF_TOKEN": ("HF_API_KEY", "HF_TOKEN"),
+            "HUGGINGFACEHUB_API_TOKEN": ("HF_API_KEY", "HF_TOKEN"),
+        }
+        keys = aliases.get(name, (name,))
+        for key in keys:
+            saved = SiteSetting.query.get(key)
+            if saved and saved.value and saved.value.strip():
+                return saved.value.strip()
+    except Exception:
+        # Settings lookup must never prevent the chat endpoint from starting.
+        pass
+
     try:
         configured = current_app.config.get(name)
         if configured is not None and str(configured).strip():
             return str(configured).strip()
     except RuntimeError:
         pass
-    return os.getenv(name, default).strip()
+    configured = os.getenv(name, "").strip()
+    if configured:
+        return configured
+
+    return default.strip()
+
+
+def legacy_fallback_enabled() -> bool:
+    """Whether farmer chat may fall back to a legacy hosted provider."""
+    return _setting("AI_LEGACY_FALLBACK_ENABLED", "true").lower() in {
+        "1", "true", "yes", "on"
+    }
+
+
+def is_huggingface_provider() -> bool:
+    return _setting("AI_PROVIDER", "").lower() in {
+        "huggingface", "hf", "hugging_face"
+    }
+
+
+def is_valid_inference_endpoint(endpoint: str) -> bool:
+    """Reject a Hugging Face model-page URL; it cannot perform inference."""
+    parsed = urlparse((endpoint or "").strip())
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        return False
+    return parsed.hostname not in {"huggingface.co", "www.huggingface.co"}
 
 
 def is_configured() -> bool:
     provider = _setting("AI_PROVIDER", "").lower()
-    return provider in {"huggingface", "hf", "hugging_face"} and bool(
-        _setting("HF_INFERENCE_URL") or _setting("HUGGINGFACE_INFERENCE_URL")
+    endpoint = _setting("HF_INFERENCE_URL") or _setting("HUGGINGFACE_INFERENCE_URL")
+    return (
+        provider in {"huggingface", "hf", "hugging_face"}
+        and is_valid_inference_endpoint(endpoint)
     )
 
 

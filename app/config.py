@@ -56,6 +56,9 @@ class Config:
     HF_TOKEN = (os.getenv("HF_TOKEN", "") or "").strip()
     HUGGINGFACEHUB_API_TOKEN = (os.getenv("HUGGINGFACEHUB_API_TOKEN", "") or "").strip()
     AI_REQUEST_TIMEOUT_SECONDS = max(2.0, _float_env("AI_REQUEST_TIMEOUT_SECONDS", 30.0))
+    AI_LEGACY_FALLBACK_ENABLED = (
+        os.getenv("AI_LEGACY_FALLBACK_ENABLED", "true") or "true"
+    ).strip().lower() in {"1", "true", "yes", "on"}
 
     # Weather intelligence microservice settings.
     WEATHER_PROVIDER_BASE_URL = os.getenv(

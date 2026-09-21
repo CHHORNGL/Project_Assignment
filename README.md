@@ -148,7 +148,8 @@ excludes users, chat messages, diagnoses, and secrets. After a model is
 deployed separately, set `AI_PROVIDER=huggingface`, `HF_INFERENCE_URL`, and
 `HF_TOKEN` in the backend environment. Flask will call that endpoint while
 keeping model weights out of the web process; existing chat URLs remain
-unchanged.
+unchanged. Set `AI_LEGACY_FALLBACK_ENABLED=false` when you want farmer chat
+to use only the new endpoint and never fall back to the older providers.
 
 ---
 
