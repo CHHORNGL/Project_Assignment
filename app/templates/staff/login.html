@@ -204,7 +204,8 @@
     if (btn) {
         btn.addEventListener("click", async () => {
             if (!window.PublicKeyCredential) {
-                alert("Passkeys are not supported on this browser or device.");
+                if (window.showToast) showToast("Passkeys are not supported on this browser or device.", "warning");
+                else alert("Passkeys are not supported on this browser or device.");
                 return;
             }
             try {
@@ -240,11 +241,15 @@
                 if (verifyResult.status === "ok") {
                     window.location.href = verifyResult.redirect_url || "{{ url_for('main.index') }}";
                 } else {
-                    alert(verifyResult.message || "Login failed.");
+                    const msg = verifyResult.message || "Login failed.";
+                    if (window.showToast) showToast(msg, "error");
+                    else alert(msg);
                 }
             } catch (err) {
                 if (err.name !== "NotAllowedError") {
-                    alert("Passkey login error: " + err.message);
+                    const msg = "Passkey login error: " + err.message;
+                    if (window.showToast) showToast(msg, "error");
+                    else alert(msg);
                 }
             }
         });

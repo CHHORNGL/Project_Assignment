@@ -733,6 +733,177 @@ input:checked + .ios-slider:before {
 }
 
 /* =========================================
+   CLEAN & PROFESSIONAL MODALS (OK / CANCEL)
+   ========================================= */
+.clean-app-modal .modal-content {
+    border-radius: 22px;
+    border: 1px solid var(--border-light, #e2e8f0);
+    background: var(--card-bg, #ffffff);
+    box-shadow: 0 24px 48px -12px rgba(15, 23, 42, 0.22);
+    padding: 10px 14px;
+    overflow: hidden;
+    transition: all 0.2s ease;
+}
+
+.dark-mode .clean-app-modal .modal-content {
+    background: #1e293b;
+    border-color: #334155;
+    box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.6);
+    color: #f1f5f9;
+}
+
+.clean-modal-header-content {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex: 1;
+}
+
+.clean-modal-badge {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.35rem;
+}
+
+.clean-modal-close {
+    padding: 0;
+    margin: -8px -4px 0 0;
+    font-size: 1.5rem;
+    color: var(--text-muted, #94a3b8);
+    opacity: 0.6;
+    transition: opacity 0.15s ease;
+}
+
+.clean-modal-close:hover {
+    opacity: 1;
+}
+
+.clean-modal-label {
+    font-size: 0.86rem;
+    font-weight: 700;
+    color: var(--text-main, #334155);
+    margin-bottom: 7px;
+    display: block;
+}
+
+.dark-mode .clean-modal-label {
+    color: #cbd5e1;
+}
+
+.clean-input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.clean-input-icon {
+    position: absolute;
+    left: 15px;
+    color: #94a3b8;
+    font-size: 1rem;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.clean-modal-input {
+    padding: 10px 14px 10px 42px !important;
+    height: 46px !important;
+    border-radius: 13px !important;
+    border: 1.5px solid var(--border-light, #cbd5e1) !important;
+    background: var(--input-bg, #f8fafc) !important;
+    color: var(--text-main, #1e293b) !important;
+    font-size: 0.95rem !important;
+    font-weight: 600 !important;
+    transition: all 0.2s ease !important;
+}
+
+.clean-modal-input:focus {
+    border-color: #10b981 !important;
+    background: #ffffff !important;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.18) !important;
+    outline: none !important;
+}
+
+.dark-mode .clean-modal-input {
+    background: #0f172a !important;
+    border-color: #334155 !important;
+    color: #f8fafc !important;
+}
+
+.dark-mode .clean-modal-input:focus {
+    border-color: #10b981 !important;
+    background: #0f172a !important;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25) !important;
+}
+
+.clean-btn-cancel {
+    background: transparent !important;
+    border: 1.5px solid var(--border-light, #cbd5e1) !important;
+    color: var(--text-muted, #64748b) !important;
+    font-weight: 600 !important;
+    border-radius: 11px !important;
+    padding: 9px 20px !important;
+    font-size: 0.9rem !important;
+    transition: all 0.15s ease !important;
+}
+
+.clean-btn-cancel:hover {
+    background: rgba(148, 163, 184, 0.12) !important;
+    color: var(--text-main, #1e293b) !important;
+}
+
+.dark-mode .clean-btn-cancel {
+    border-color: #475569 !important;
+    color: #94a3b8 !important;
+}
+
+.dark-mode .clean-btn-cancel:hover {
+    color: #f1f5f9 !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+}
+
+.clean-btn-ok {
+    background: linear-gradient(135deg, #10b981, #059669) !important;
+    border: none !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    border-radius: 11px !important;
+    padding: 10px 24px !important;
+    font-size: 0.9rem !important;
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3) !important;
+    transition: all 0.18s ease !important;
+}
+
+.clean-btn-ok:hover {
+    background: linear-gradient(135deg, #059669, #047857) !important;
+    box-shadow: 0 6px 18px rgba(16, 185, 129, 0.4) !important;
+    transform: translateY(-1px);
+}
+
+.clean-btn-danger {
+    background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+    border: none !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    border-radius: 11px !important;
+    padding: 10px 24px !important;
+    font-size: 0.9rem !important;
+    box-shadow: 0 4px 14px rgba(239, 68, 68, 0.3) !important;
+    transition: all 0.18s ease !important;
+}
+
+.clean-btn-danger:hover {
+    background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
+    box-shadow: 0 6px 18px rgba(239, 68, 68, 0.4) !important;
+    transform: translateY(-1px);
+}
+
+/* =========================================
    CLEAN FLOATING ACTION BAR
    ========================================= */
 .settings-save-dock {
@@ -1149,7 +1320,252 @@ input:checked + .ios-slider:before {
     </form>
 </div>
 
+<!-- =========================================
+     CLEAN & PROFESSIONAL MODAL FORMS
+     ========================================= -->
+
+<!-- 1. REGISTER PASSKEY FORM MODAL (OK / CANCEL) -->
+<div class="modal fade clean-app-modal" id="registerPasskeyModal" tabindex="-1" role="dialog" aria-labelledby="registerPasskeyTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 440px;">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <div class="clean-modal-header-content">
+                    <div class="clean-modal-badge" style="background: rgba(16, 185, 129, 0.12); color: #10b981;">
+                        <i class="fas fa-fingerprint"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title font-weight-bold" id="registerPasskeyTitle">{{ t("register_passkey")|default("Register Passkey") }}</h5>
+                        <p class="text-muted small mb-0">{{ t("register_passkey_sublabel")|default("Add biometric sign-in to this device") }}</p>
+                    </div>
+                </div>
+                <button type="button" class="close clean-modal-close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="form-register-passkey" onsubmit="return false;">
+                <div class="modal-body py-3">
+                    <div class="form-group mb-0">
+                        <label for="passkey-name-input" class="clean-modal-label">{{ t("device_name")|default("Device / Passkey Name") }}</label>
+                        <div class="clean-input-wrap">
+                            <i class="fas fa-laptop-code clean-input-icon"></i>
+                            <input type="text"
+                                   class="form-control clean-modal-input"
+                                   id="passkey-name-input"
+                                   maxlength="50"
+                                   placeholder="e.g. My MacBook, iPhone Face ID, Work PC"
+                                   value="My Device"
+                                   required>
+                        </div>
+                        <small class="text-muted mt-2 d-block" style="font-size: 0.8rem; line-height: 1.4;">
+                            {{ t("passkey_name_hint")|default("Name this passkey to easily recognize it in your device list.") }}
+                        </small>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn clean-btn-cancel" data-dismiss="modal">
+                        {{ t("cancel")|default("Cancel") }}
+                    </button>
+                    <button type="submit" class="btn clean-btn-ok" id="btn-submit-register-passkey">
+                        <i class="fas fa-check mr-1"></i> {{ t("ok")|default("OK") }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 2. CLEAN ACTION CONFIRMATION MODAL (OK / CANCEL) -->
+<div class="modal fade clean-app-modal" id="cleanConfirmModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 420px;">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <div class="clean-modal-header-content">
+                    <div class="clean-modal-badge" id="cleanConfirmBadge" style="background: rgba(239, 68, 68, 0.12); color: #ef4444;">
+                        <i class="fas fa-trash-alt" id="cleanConfirmIcon"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title font-weight-bold" id="cleanConfirmTitle">Confirm</h5>
+                        <p class="text-muted small mb-0" id="cleanConfirmSublabel">Please confirm your action</p>
+                    </div>
+                </div>
+                <button type="button" class="close clean-modal-close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body py-3">
+                <p class="mb-0 text-secondary" id="cleanConfirmMessage" style="font-size: 0.92rem; line-height: 1.5;"></p>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn clean-btn-cancel" data-dismiss="modal" id="cleanConfirmCancelBtn">
+                    {{ t("cancel")|default("Cancel") }}
+                </button>
+                <button type="button" class="btn clean-btn-danger" id="cleanConfirmOkBtn">
+                    {{ t("ok")|default("OK") }}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3. CLEAN NOTICE MODAL (OK) -->
+<div class="modal fade clean-app-modal" id="cleanNoticeModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 420px;">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <div class="clean-modal-header-content">
+                    <div class="clean-modal-badge" id="cleanNoticeBadge" style="background: rgba(59, 130, 246, 0.12); color: #3b82f6;">
+                        <i class="fas fa-info-circle" id="cleanNoticeIcon"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title font-weight-bold" id="cleanNoticeTitle">Notice</h5>
+                    </div>
+                </div>
+                <button type="button" class="close clean-modal-close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body py-3">
+                <p class="mb-0 text-secondary" id="cleanNoticeMessage" style="font-size: 0.92rem; line-height: 1.5;"></p>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn clean-btn-ok" data-dismiss="modal" id="cleanNoticeOkBtn">
+                    {{ t("ok")|default("OK") }}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
+function openCleanNotice({ title, message, type = "info", okText = "OK" }) {
+    return new Promise((resolve) => {
+        const modalEl = $('#cleanNoticeModal');
+        if (!modalEl.length) {
+            alert(message);
+            resolve();
+            return;
+        }
+        $('#cleanNoticeTitle').text(title || "Notice");
+        $('#cleanNoticeMessage').text(message || "");
+        $('#cleanNoticeOkBtn').text(okText);
+
+        const badge = $('#cleanNoticeBadge');
+        const icon = $('#cleanNoticeIcon');
+
+        if (type === "success") {
+            badge.css({ background: 'rgba(16, 185, 129, 0.12)', color: '#10b981' });
+            icon.attr('class', 'fas fa-check-circle');
+        } else if (type === "error" || type === "danger") {
+            badge.css({ background: 'rgba(239, 68, 68, 0.12)', color: '#ef4444' });
+            icon.attr('class', 'fas fa-exclamation-circle');
+        } else if (type === "warning") {
+            badge.css({ background: 'rgba(245, 158, 11, 0.12)', color: '#f59e0b' });
+            icon.attr('class', 'fas fa-exclamation-triangle');
+        } else {
+            badge.css({ background: 'rgba(59, 130, 246, 0.12)', color: '#3b82f6' });
+            icon.attr('class', 'fas fa-info-circle');
+        }
+
+        modalEl.one('hidden.bs.modal', function () {
+            resolve();
+        });
+
+        modalEl.modal('show');
+    });
+}
+
+function openCleanConfirm({ title, message, sublabel = "Please confirm your choice", okText = "OK", cancelText = "Cancel", isDanger = true }) {
+    return new Promise((resolve) => {
+        const modalEl = $('#cleanConfirmModal');
+        if (!modalEl.length) {
+            resolve(confirm(message));
+            return;
+        }
+        $('#cleanConfirmTitle').text(title || "Confirm");
+        $('#cleanConfirmSublabel').text(sublabel || "");
+        $('#cleanConfirmMessage').text(message || "Are you sure you want to proceed?");
+        $('#cleanConfirmCancelBtn').text(cancelText);
+        const okBtn = $('#cleanConfirmOkBtn');
+        okBtn.text(okText);
+
+        const badge = $('#cleanConfirmBadge');
+        const icon = $('#cleanConfirmIcon');
+
+        if (isDanger) {
+            badge.css({ background: 'rgba(239, 68, 68, 0.12)', color: '#ef4444' });
+            icon.attr('class', 'fas fa-trash-alt');
+            okBtn.attr('class', 'btn clean-btn-danger');
+        } else {
+            badge.css({ background: 'rgba(16, 185, 129, 0.12)', color: '#10b981' });
+            icon.attr('class', 'fas fa-shield-alt');
+            okBtn.attr('class', 'btn clean-btn-ok');
+        }
+
+        let confirmed = false;
+
+        const handleOk = () => {
+            confirmed = true;
+            modalEl.modal('hide');
+        };
+
+        okBtn.off('click').on('click', handleOk);
+
+        modalEl.one('hidden.bs.modal', function () {
+            okBtn.off('click', handleOk);
+            resolve(confirmed);
+        });
+
+        modalEl.modal('show');
+    });
+}
+
+function promptPasskeyName() {
+    return new Promise((resolve) => {
+        const modalEl = $('#registerPasskeyModal');
+        const input = document.getElementById('passkey-name-input');
+        const form = document.getElementById('form-register-passkey');
+        
+        let defaultName = "My Device";
+        const ua = navigator.userAgent || "";
+        if (/iPhone/i.test(ua)) defaultName = "iPhone";
+        else if (/iPad/i.test(ua)) defaultName = "iPad";
+        else if (/Macintosh|Mac OS/i.test(ua)) defaultName = "MacBook";
+        else if (/Windows/i.test(ua)) defaultName = "Windows PC";
+        else if (/Android/i.test(ua)) defaultName = "Android Phone";
+        
+        if (input) input.value = defaultName;
+
+        let submitted = false;
+        let resultName = null;
+
+        const handleSubmit = (e) => {
+            if (e) e.preventDefault();
+            const val = (input ? input.value : "").trim();
+            resultName = val || defaultName;
+            submitted = true;
+            modalEl.modal('hide');
+        };
+
+        $(form).off('submit').on('submit', handleSubmit);
+        $('#btn-submit-register-passkey').off('click').on('click', handleSubmit);
+
+        modalEl.one('shown.bs.modal', function () {
+            if (input) {
+                input.focus();
+                input.select();
+            }
+        });
+
+        modalEl.one('hidden.bs.modal', function () {
+            $(form).off('submit', handleSubmit);
+            $('#btn-submit-register-passkey').off('click', handleSubmit);
+            resolve(submitted ? resultName : null);
+        });
+
+        modalEl.modal('show');
+    });
+}
+
 (() => {
     // 0. Live Real-Time Theme Preview Switcher
     const themeCards = document.querySelectorAll(".theme-preview-card");
@@ -1276,12 +1692,25 @@ input:checked + .ios-slider:before {
             container.innerHTML = html;
             container.querySelectorAll(".btn-delete-passkey").forEach(btn => {
                 btn.addEventListener("click", async () => {
-                    if (!confirm("Are you sure you want to remove this passkey?")) return;
+                    const ok = await openCleanConfirm({
+                        title: "Remove Passkey",
+                        message: "Are you sure you want to remove this passkey? You will no longer be able to use it to sign in.",
+                        sublabel: "Device passkey removal",
+                        okText: "Delete",
+                        cancelText: "Cancel",
+                        isDanger: true
+                    });
+                    if (!ok) return;
                     try {
                         const deleteRes = await fetch(`/users/passkeys/${btn.dataset.id}`, { method: "DELETE" });
-                        if (deleteRes.ok) loadPasskeysList();
-                        else alert("Failed to delete passkey.");
-                    } catch (err) { alert("Error: " + err.message); }
+                        if (deleteRes.ok) {
+                            loadPasskeysList();
+                        } else {
+                            openCleanNotice({ title: "Error", message: "Failed to delete passkey.", type: "error" });
+                        }
+                    } catch (err) {
+                        openCleanNotice({ title: "Error", message: err.message, type: "error" });
+                    }
                 });
             });
         } catch (err) { console.error("Passkey list error:", err); }
@@ -1291,27 +1720,36 @@ input:checked + .ios-slider:before {
     if (registerBtn) {
         registerBtn.addEventListener("click", async () => {
             if (!window.PublicKeyCredential) {
-                alert("Passkeys are not supported on this browser or device.");
+                openCleanNotice({
+                    title: "Not Supported",
+                    message: "Passkeys are not supported on this browser or device. Please use Safari, Chrome, or Edge on a supported device.",
+                    type: "warning"
+                });
                 return;
             }
             if (!window.isSecureContext) {
-                alert("Passkeys require a secure connection (HTTPS).");
+                openCleanNotice({
+                    title: "Security Required",
+                    message: "Passkeys require a secure connection (HTTPS).",
+                    type: "warning"
+                });
                 return;
             }
             if (window.location.hostname === "127.0.0.1") {
-                const port = window.location.port ? ":" + window.location.port : "";
-                alert(`Redirecting to localhost...`);
                 window.location.hostname = "localhost";
                 return;
             }
-            const passkeyName = prompt("Enter a name for this device/passkey:", "My Device");
-            if (passkeyName === null) return;
-            const name = passkeyName.trim() || "My Device";
+
+            const name = await promptPasskeyName();
+            if (!name) return; // User canceled the modal form
+
             try {
                 const optionsResp = await fetch("{{ url_for('auth.passkey_register_options') }}");
-                if (!optionsResp.ok) throw new Error("Failed to load options.");
+                if (!optionsResp.ok) throw new Error("Failed to load registration options.");
                 const options = await optionsResp.json();
                 const credential = await navigator.credentials.create({ publicKey: prepareRegistrationOptions(options) });
+                if (!credential) return;
+
                 const payload = {
                     id: credential.id,
                     rawId: bytesToBase64url(credential.rawId),
@@ -1329,11 +1767,29 @@ input:checked + .ios-slider:before {
                     body: JSON.stringify(payload)
                 });
                 const verifyResult = await verifyResp.json();
-                if (verifyResult.status === "ok") { alert("Passkey registered!"); loadPasskeysList(); }
-                else alert(verifyResult.message || "Failed to verify.");
+                if (verifyResult.status === "ok") {
+                    await openCleanNotice({
+                        title: "Passkey Registered",
+                        message: `Passkey "${escapeHtml(name)}" has been registered successfully! You can now use biometric sign-in across your devices.`,
+                        type: "success"
+                    });
+                    loadPasskeysList();
+                } else {
+                    openCleanNotice({
+                        title: "Registration Failed",
+                        message: verifyResult.message || "Failed to verify passkey with server.",
+                        type: "error"
+                    });
+                }
             } catch (err) {
                 console.error(err);
-                if (err.name !== "NotAllowedError") alert("Registration failed: " + err.message);
+                if (err.name !== "NotAllowedError") {
+                    openCleanNotice({
+                        title: "Passkey Error",
+                        message: "Registration failed: " + err.message,
+                        type: "error"
+                    });
+                }
             }
         });
     }
@@ -1375,9 +1831,17 @@ input:checked + .ios-slider:before {
     }
 })();
 
-function revokeDeviceSession(activityId) {
+async function revokeDeviceSession(activityId) {
     if (!activityId) return;
-    if (!confirm('{{ t("log_out_device_confirm") }}')) return;
+    const ok = await openCleanConfirm({
+        title: "Log Out Device",
+        message: '{{ t("log_out_device_confirm")|default("Are you sure you want to log out this device?") }}',
+        sublabel: "End device session",
+        okText: "Log Out",
+        cancelText: "Cancel",
+        isDanger: true
+    });
+    if (!ok) return;
 
     fetch('/users/login-activity/revoke', {
         method: 'POST',
@@ -1404,17 +1868,25 @@ function revokeDeviceSession(activityId) {
                 window.location.reload();
             }
         } else {
-            alert(data.error || 'Failed to log out device.');
+            openCleanNotice({ title: "Error", message: data.error || 'Failed to log out device.', type: "error" });
         }
     })
     .catch(err => {
         console.error(err);
-        alert('Network error while logging out device.');
+        openCleanNotice({ title: "Network Error", message: 'Network error while logging out device.', type: "error" });
     });
 }
 
-function revokeAllOtherSessions() {
-    if (!confirm('{{ t("log_out_all_other_confirm") }}')) return;
+async function revokeAllOtherSessions() {
+    const ok = await openCleanConfirm({
+        title: "Log Out All Devices",
+        message: '{{ t("log_out_all_other_confirm")|default("Are you sure you want to log out all other active sessions?") }}',
+        sublabel: "End all other sessions",
+        okText: "Log Out All",
+        cancelText: "Cancel",
+        isDanger: true
+    });
+    if (!ok) return;
 
     fetch('/users/login-activity/revoke-others', {
         method: 'POST',
@@ -1431,12 +1903,12 @@ function revokeAllOtherSessions() {
             const btnAll = document.getElementById('btnRevokeAllOthers');
             if (btnAll) btnAll.remove();
         } else {
-            alert(data.error || 'Failed to log out other devices.');
+            openCleanNotice({ title: "Error", message: data.error || 'Failed to log out other devices.', type: "error" });
         }
     })
     .catch(err => {
         console.error(err);
-        alert('Network error while logging out other devices.');
+        openCleanNotice({ title: "Network Error", message: 'Network error while logging out other devices.', type: "error" });
     });
 }
 </script>
