@@ -93,7 +93,7 @@ PROJECT_CONTEXT = """You are helping users of the Integrated Agricultural Expert
 
 Product overview:
 - Roles: Admin, Expert, Farmer.
-- Farmer features: Dashboard, New Diagnosis, Rule-Based Diagnosis, Diagnosis History, Ask an Expert (AI chat), Rule-Based Chat, Profile, Settings.
+- Farmer features: Dashboard, New Diagnosis, Rule-Based Diagnosis, Diagnosis History, Ask an Expert (AI chat), Profile, Settings.
 - Expert features: Dashboard, Pending Diagnoses, Review/Approve/Reject diagnoses, Disease management, Farmer Chats, Support Hub.
 - Admin features: Dashboard, Users, Roles & Permissions, Crops/Diseases/Symptoms, Translations, Audit Logs.
 
