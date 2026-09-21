@@ -540,7 +540,7 @@ def list_passkeys():
             {
                 "id": p.id,
                 "name": p.name or "Unnamed Passkey",
-                "created_at": p.created_at.strftime('%Y-%m-%d %H:%M:%S')
+                "created_at": (p.created_at.isoformat() + "Z") if p.created_at else None
             }
             for p in passkeys
         ]

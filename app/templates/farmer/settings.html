@@ -942,13 +942,54 @@ input:checked + .ios-slider:before {
         border-radius: 8px;
     }
 }
+
+/* =========================================
+   REAL-TIME CLOCK & LIVE TIME BADGES
+   ========================================= */
+.live-realtime-clock {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 5px 12px;
+    border-radius: 20px;
+    background: rgba(16, 185, 129, 0.08);
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    color: #059669;
+    letter-spacing: 0.02em;
+    font-variant-numeric: tabular-nums;
+}
+.dark-mode .live-realtime-clock {
+    background: rgba(16, 185, 129, 0.15);
+    border-color: rgba(16, 185, 129, 0.35);
+    color: #34d399;
+}
+.realtime-live-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #10b981;
+    display: inline-block;
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    animation: livePulse 2s infinite;
+}
+@keyframes livePulse {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+    70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
 </style>
 
 <div class="settings-container">
     <!-- Header -->
     <div class="settings-header-wrap">
-        <div class="settings-title-group">
+        <div class="settings-title-group" style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
             <h1 class="settings-page-title">{{ t("settings") }}</h1>
+            <div class="live-realtime-clock" id="liveRealtimeClock" title="Local real time">
+                <span class="realtime-live-dot"></span>
+                <span id="liveClockText">--:--:--</span>
+            </div>
         </div>
         <a class="btn btn-sm btn-outline-secondary rounded-pill px-3 shadow-sm font-weight-bold" href="{{ url_for('user.profile') }}">
             <i class="fas fa-user-circle mr-1"></i> {{ t("profile") }}
@@ -1224,13 +1265,16 @@ input:checked + .ios-slider:before {
                             <div class="settings-sublabel" style="margin-top: 3px; font-size: 0.82rem;">
                                 <span><i class="fas fa-network-wired mr-1 text-muted"></i>{{ act.ip_address }}</span>
                                 <span class="mx-1 text-muted">·</span>
-                                <span><i class="far fa-clock mr-1 text-muted"></i>{{ act.created_at|replace('T', ' ')|replace('Z', ' UTC') }}</span>
+                                <span class="activity-realtime-badge" data-iso-time="{{ act.created_at }}">
+                                    <i class="far fa-clock mr-1 text-muted"></i><span class="time-display">{{ act.created_at|replace('T', ' ')|replace('Z', ' UTC') }}</span>
+                                </span>
                             </div>
                         </div>
                     </div>
                     {% if act.current %}
-                    <span class="text-success font-weight-bold ml-2" style="font-size: 0.78rem; white-space: nowrap; align-self: center;">
-                        <i class="fas fa-signal mr-1"></i>{{ t("active_now") }}
+                    <span class="text-success font-weight-bold ml-2 d-inline-flex align-items-center" style="font-size: 0.78rem; white-space: nowrap; align-self: center; gap: 5px;">
+                        <span class="realtime-live-dot"></span>
+                        <span>{{ t("active_now") }}</span>
                     </span>
                     {% else %}
                     <button type="button" class="btn btn-sm btn-outline-danger ml-2 btn-logout-device-action" onclick="revokeDeviceSession('{{ act.activity_id }}')" style="font-size: 0.75rem; border-radius: 20px; padding: 3px 12px; font-weight: 700; white-space: nowrap; align-self: center;">
@@ -1512,6 +1556,95 @@ function promptPasskeyName() {
 }
 
 (() => {
+    // =========================================
+    // REAL-TIME LOCAL CLOCK & ACTIVITY TIMESTAMPS
+    // =========================================
+    const isKhmerLang = document.documentElement.lang === "km" || {{ (current_lang == 'km')|tojson }};
+
+    function updateLiveClock() {
+        const clockEl = document.getElementById("liveClockText");
+        if (!clockEl) return;
+        const now = new Date();
+        const timeStr = new Intl.DateTimeFormat(isKhmerLang ? "km-KH" : undefined, {
+            hour: "numeric",
+            minute: "2-digit",
+            second: "2-digit",
+            hour12: true
+        }).format(now);
+        clockEl.textContent = timeStr;
+    }
+    updateLiveClock();
+    setInterval(updateLiveClock, 1000);
+
+    function formatRealTimeAgo(isoString) {
+        if (!isoString) return "";
+        const date = new Date(isoString);
+        if (Number.isNaN(date.getTime())) return isoString.replace('T', ' ').replace('Z', ' UTC');
+
+        const now = new Date();
+        const diffSeconds = Math.floor((now - date) / 1000);
+
+        const timeFormatter = new Intl.DateTimeFormat(isKhmerLang ? "km-KH" : undefined, {
+            hour: "numeric",
+            minute: "2-digit",
+            hour12: true
+        });
+        const timeStr = timeFormatter.format(date);
+
+        if (diffSeconds < 45) {
+            return isKhmerLang ? `អម្បាញ់មិញ (${timeStr})` : `Just now (${timeStr})`;
+        }
+        if (diffSeconds < 3600) {
+            const mins = Math.max(1, Math.floor(diffSeconds / 60));
+            return isKhmerLang ? `${mins} នាទីមុន (${timeStr})` : `${mins} min${mins > 1 ? 's' : ''} ago (${timeStr})`;
+        }
+
+        const isToday = date.toDateString() === now.toDateString();
+        if (isToday) {
+            return isKhmerLang ? `ថ្ងៃនេះ ម៉ោង ${timeStr}` : `Today at ${timeStr}`;
+        }
+
+        const yesterday = new Date(now);
+        yesterday.setDate(now.getDate() - 1);
+        const isYesterday = date.toDateString() === yesterday.toDateString();
+        if (isYesterday) {
+            return isKhmerLang ? `ម្សិលមិញ ម៉ោង ${timeStr}` : `Yesterday at ${timeStr}`;
+        }
+
+        const dateFormatter = new Intl.DateTimeFormat(isKhmerLang ? "km-KH" : undefined, {
+            month: "short",
+            day: "numeric",
+            year: date.getFullYear() !== now.getFullYear() ? "numeric" : undefined
+        });
+        return `${dateFormatter.format(date)}, ${timeStr}`;
+    }
+
+    function formatPasskeyDate(isoString) {
+        if (!isoString) return "";
+        const date = new Date(isoString);
+        if (Number.isNaN(date.getTime())) return isoString;
+        return new Intl.DateTimeFormat(isKhmerLang ? "km-KH" : undefined, {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+            hour: "numeric",
+            minute: "2-digit",
+            hour12: true
+        }).format(date);
+    }
+
+    function refreshAllActivityTimes() {
+        document.querySelectorAll(".activity-realtime-badge").forEach((el) => {
+            const iso = el.getAttribute("data-iso-time");
+            const displaySpan = el.querySelector(".time-display") || el;
+            if (iso) {
+                displaySpan.textContent = formatRealTimeAgo(iso);
+            }
+        });
+    }
+    refreshAllActivityTimes();
+    setInterval(refreshAllActivityTimes, 30000);
+
     // 0. Live Real-Time Theme Preview Switcher
     const themeCards = document.querySelectorAll(".theme-preview-card");
     themeCards.forEach(card => {
@@ -1651,7 +1784,7 @@ function promptPasskeyName() {
                         <div class="settings-icon" style="background: rgba(139, 92, 246, 0.12); color: #8b5cf6;"><i class="fas fa-key"></i></div>
                         <div>
                             <div class="settings-label">${escapeHtml(key.name)}</div>
-                            <div class="settings-sublabel">Added on ${escapeHtml(key.created_at)}</div>
+                            <div class="settings-sublabel">Added on ${escapeHtml(formatPasskeyDate(key.created_at))}</div>
                         </div>
                     </div>
                     <button type="button" class="btn-delete-passkey" data-id="${key.id}" title="Delete Passkey"><i class="fas fa-trash-alt"></i> <span>Delete</span></button>

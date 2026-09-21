@@ -56,7 +56,13 @@
                     {% endif %}
                     · {{ activity.browser }} · {{ activity.platform }}
                 </div>
-                <div class="login-activity-meta">{{ activity.ip_address }} · {{ activity.created_at|replace('T', ' ')|replace('Z', ' UTC') }}</div>
+                <div class="login-activity-meta">
+                    <span>{{ activity.ip_address }}</span>
+                    <span>·</span>
+                    <span class="activity-realtime-badge" data-iso-time="{{ activity.created_at }}">
+                        <span class="time-display">{{ activity.created_at|replace('T', ' ')|replace('Z', ' UTC') }}</span>
+                    </span>
+                </div>
                 <div class="login-activity-route">{{ activity.route }}</div>
             </div>
             {% if activity.current %}
@@ -138,5 +144,64 @@ function revokeAllOtherSessions() {
         alert('Network error while logging out other devices.');
     });
 }
+    // =========================================
+    // REAL-TIME LOCAL ACTIVITY TIMESTAMPS
+    // =========================================
+    const isKhmerLang = document.documentElement.lang === "km" || {{ (get_current_language() == 'km')|tojson }};
+
+    function formatRealTimeAgo(isoString) {
+        if (!isoString) return "";
+        const date = new Date(isoString);
+        if (Number.isNaN(date.getTime())) return isoString.replace('T', ' ').replace('Z', ' UTC');
+
+        const now = new Date();
+        const diffSeconds = Math.floor((now - date) / 1000);
+
+        const timeFormatter = new Intl.DateTimeFormat(isKhmerLang ? "km-KH" : undefined, {
+            hour: "numeric",
+            minute: "2-digit",
+            hour12: true
+        });
+        const timeStr = timeFormatter.format(date);
+
+        if (diffSeconds < 45) {
+            return isKhmerLang ? `អម្បាញ់មិញ (${timeStr})` : `Just now (${timeStr})`;
+        }
+        if (diffSeconds < 3600) {
+            const mins = Math.max(1, Math.floor(diffSeconds / 60));
+            return isKhmerLang ? `${mins} នាទីមុន (${timeStr})` : `${mins} min${mins > 1 ? 's' : ''} ago (${timeStr})`;
+        }
+
+        const isToday = date.toDateString() === now.toDateString();
+        if (isToday) {
+            return isKhmerLang ? `ថ្ងៃនេះ ម៉ោង ${timeStr}` : `Today at ${timeStr}`;
+        }
+
+        const yesterday = new Date(now);
+        yesterday.setDate(now.getDate() - 1);
+        const isYesterday = date.toDateString() === yesterday.toDateString();
+        if (isYesterday) {
+            return isKhmerLang ? `ម្សិលមិញ ម៉ោង ${timeStr}` : `Yesterday at ${timeStr}`;
+        }
+
+        const dateFormatter = new Intl.DateTimeFormat(isKhmerLang ? "km-KH" : undefined, {
+            month: "short",
+            day: "numeric",
+            year: date.getFullYear() !== now.getFullYear() ? "numeric" : undefined
+        });
+        return `${dateFormatter.format(date)}, ${timeStr}`;
+    }
+
+    function refreshAllActivityTimes() {
+        document.querySelectorAll(".activity-realtime-badge").forEach((el) => {
+            const iso = el.getAttribute("data-iso-time");
+            const displaySpan = el.querySelector(".time-display") || el;
+            if (iso) {
+                displaySpan.textContent = formatRealTimeAgo(iso);
+            }
+        });
+    }
+    refreshAllActivityTimes();
+    setInterval(refreshAllActivityTimes, 30000);
 </script>
 {% endblock %}
