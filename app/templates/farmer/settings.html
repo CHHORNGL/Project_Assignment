@@ -9,7 +9,7 @@
 .settings-container {
     max-width: 740px;
     margin: 0 auto;
-    padding: 1.25rem 1rem 80px;
+    padding: 1.25rem 1rem 40px;
     box-sizing: border-box;
     width: 100%;
 }
@@ -904,25 +904,11 @@ input:checked + .ios-slider:before {
 }
 
 /* =========================================
-   CLEAN FLOATING ACTION BAR
-   ========================================= */
-.settings-save-dock {
-    position: sticky;
-    bottom: 20px;
-    z-index: 100;
-    margin-top: 2rem;
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    transition: all 0.2s ease;
-}
-
-/* =========================================
    RESPONSIVE OVERRIDES (< 576px)
    ========================================= */
 @media (max-width: 575.98px) {
     .settings-container {
-        padding: 1rem 0.75rem 90px;
+        padding: 1rem 0.75rem 40px;
     }
 
     .settings-card {
@@ -954,37 +940,6 @@ input:checked + .ios-slider:before {
     .reward-code-btn {
         width: 100%;
         border-radius: 8px;
-    }
-
-    .settings-save-dock {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        margin: 0;
-        padding: 12px 16px max(14px, env(safe-area-inset-bottom, 14px));
-        background: rgba(255, 255, 255, 0.94);
-        -webkit-backdrop-filter: blur(14px);
-        backdrop-filter: blur(14px);
-        border-top: 1px solid var(--border-light, #e2e8f0);
-        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
-        justify-content: center;
-    }
-
-    .dark-mode .settings-save-dock {
-        background: rgba(15, 23, 42, 0.95);
-        border-top-color: #334155;
-        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
-    }
-
-    .settings-save-dock .btn-save-clean {
-        width: 100%;
-        min-height: 48px;
-        font-size: 1rem;
-        border-radius: 12px;
-    }
-}
-        border-radius: 12px;
     }
 }
 </style>
@@ -1073,8 +1028,6 @@ input:checked + .ios-slider:before {
     </div>
     {% endif %}
 
-    <!-- SETTINGS FORM -->
-    <form method="POST" action="{{ url_for('user.settings') }}" id="settingsForm">
 
         <!-- 1. APPEARANCE & THEME SECTION -->
         <div class="settings-section-title">
@@ -1212,7 +1165,7 @@ input:checked + .ios-slider:before {
                     </div>
                 </div>
                 <label class="ios-switch">
-                    <input type="checkbox" name="two_factor_enabled" value="y" {% if current_user.two_factor_enabled %}checked{% endif %} aria-label="Toggle Two-Step Verification">
+                    <input type="checkbox" id="twoFactorToggle" name="two_factor_enabled" value="y" {% if current_user.two_factor_enabled %}checked{% endif %} aria-label="Toggle Two-Step Verification">
                     <span class="ios-slider"></span>
                 </label>
             </div>
@@ -1309,15 +1262,7 @@ input:checked + .ios-slider:before {
             {% endif %}
         </div>
 
-        <!-- 4. CLEAN FLOATING SAVE DOCK -->
-        <div class="settings-save-dock">
-            <button type="submit" class="btn-save-clean" id="btnSaveSettings">
-                <i class="fas fa-check"></i>
-                <span>{{ t("save_settings") }}</span>
-            </button>
-        </div>
 
-    </form>
 </div>
 
 <!-- =========================================
@@ -1626,13 +1571,37 @@ function promptPasskeyName() {
         }
     }
 
-    // 2. Form submit loading feedback
-    const settingsForm = document.getElementById("settingsForm");
-    const btnSave = document.getElementById("btnSaveSettings");
-    if (settingsForm && btnSave) {
-        settingsForm.addEventListener("submit", () => {
-            btnSave.disabled = true;
-            btnSave.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Saving...';
+    // 2. Real-time Two-Step Verification (2FA) Auto-Save
+    const twoFactorToggle = document.getElementById("twoFactorToggle");
+    if (twoFactorToggle) {
+        twoFactorToggle.addEventListener("change", async function () {
+            const isEnabled = this.checked;
+            try {
+                const res = await fetch("/users/2fa", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ enabled: isEnabled })
+                });
+                const data = await res.json();
+                if (!res.ok || data.status !== "success") {
+                    throw new Error(data.message || "Failed to update Two-Step Verification");
+                }
+                openCleanNotice({
+                    title: "{{ t('two_factor_auth') }}",
+                    message: isEnabled
+                        ? '{{ t("two_factor_enabled_notice") }}'
+                        : '{{ t("two_factor_disabled_notice") }}',
+                    type: isEnabled ? "success" : "info"
+                });
+            } catch (err) {
+                console.error("2FA toggle error:", err);
+                this.checked = !isEnabled; // Revert switch state
+                openCleanNotice({
+                    title: "Error",
+                    message: err.message || "Could not update security settings.",
+                    type: "error"
+                });
+            }
         });
     }
 

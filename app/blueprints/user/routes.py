@@ -125,6 +125,25 @@ def update_theme():
 
 
 # ===============================
+# 🔒 UPDATE TWO-FACTOR AUTH
+# ===============================
+@user_bp.route("/2fa", methods=["POST"])
+@login_required
+def update_2fa():
+    """
+    Toggle user two-factor authentication preference.
+    """
+    data = request.get_json(silent=True) or {}
+    enabled = bool(data.get("enabled"))
+    current_user.two_factor_enabled = enabled
+    db.session.commit()
+    return jsonify({
+        "status": "success",
+        "two_factor_enabled": enabled
+    })
+
+
+# ===============================
 # 🌐 UPDATE GLOBAL LANGUAGE
 # ===============================
 @user_bp.route("/language", methods=["GET", "POST"])

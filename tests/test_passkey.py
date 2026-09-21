@@ -22,6 +22,7 @@ class DummyUser(UserMixin):
         self.full_name = full_name
         self._is_active = is_active
         self.roles = roles or []
+        self.two_factor_enabled = False
 
     @property
     def is_active(self):
@@ -189,6 +190,24 @@ class PasskeyServiceAndRoutesTest(unittest.TestCase):
         data = res.get_json()
         self.assertEqual(data["status"], "error")
         self.assertIn("not registered", data["message"].lower())
+
+    def test_update_2fa_toggle(self):
+        client = self.app.test_client()
+        with client.session_transaction() as sess:
+            sess["_user_id"] = "1"
+            sess["_fresh"] = True
+
+        res = client.post("/users/2fa", json={"enabled": True})
+        self.assertEqual(res.status_code, 200)
+        data = res.get_json()
+        self.assertEqual(data["status"], "success")
+        self.assertTrue(data["two_factor_enabled"])
+
+        res2 = client.post("/users/2fa", json={"enabled": False})
+        self.assertEqual(res2.status_code, 200)
+        data2 = res2.get_json()
+        self.assertEqual(data2["status"], "success")
+        self.assertFalse(data2["two_factor_enabled"])
 
 
 if __name__ == "__main__":
