@@ -1,0 +1,101 @@
+"""Gradio demo for the AgriSystem Qwen LoRA adapter."""
+
+# ZeroGPU requires this import before torch/transformers imports.
+import spaces
+import torch
+import gradio as gr
+from peft import AutoPeftModelForCausalLM
+from transformers import AutoTokenizer
+
+
+MODEL_ID = "Maoseavik/agrisystem-adapter"
+SYSTEM_PROMPT = (
+    "You are AgriSystem, a careful agricultural assistant. Give practical, "
+    "clear advice about crop diseases, pests, soil, irrigation, and safe "
+    "treatment. Ask for missing details, mention uncertainty, and recommend "
+    "a local agronomist for dangerous or severe cases. Never invent a diagnosis."
+)
+
+
+def _hf_token() -> str | None:
+    # The token is optional for this public adapter, but supports gated bases.
+    import os
+
+    return os.getenv("HF_TOKEN") or None
+
+
+tokenizer = AutoTokenizer.from_pretrained(MODEL_ID, token=_hf_token())
+model = AutoPeftModelForCausalLM.from_pretrained(
+    MODEL_ID,
+    token=_hf_token(),
+    torch_dtype=torch.bfloat16,
+    device_map="auto",
+)
+model.eval()
+
+
+@spaces.GPU(duration=120)
+def answer(
+    question: str,
+    temperature: float = 0.25,
+    max_new_tokens: int = 400,
+) -> str:
+    """Answer an agricultural question with the fine-tuned AgriSystem model."""
+    question = (question or "").strip()
+    if not question:
+        return "Please enter an agricultural question."
+
+    max_new_tokens = max(32, min(int(max_new_tokens), 800))
+    temperature = max(0.05, min(float(temperature), 1.2))
+    messages = [
+        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "user", "content": question},
+    ]
+    prompt = tokenizer.apply_chat_template(
+        messages, tokenize=False, add_generation_prompt=True
+    )
+    encoded = tokenizer(prompt, return_tensors="pt")
+    device = next(model.parameters()).device
+    encoded = {key: value.to(device) for key, value in encoded.items()}
+    with torch.inference_mode():
+        generated = model.generate(
+            **encoded,
+            max_new_tokens=max_new_tokens,
+            temperature=temperature,
+            top_p=0.9,
+            do_sample=temperature > 0.05,
+            repetition_penalty=1.05,
+            pad_token_id=tokenizer.eos_token_id,
+        )
+    new_tokens = generated[0][encoded["input_ids"].shape[-1] :]
+    return tokenizer.decode(new_tokens, skip_special_tokens=True).strip()
+
+
+examples = [
+    ["My rice leaves have brown spots and are turning yellow. What should I check first?"],
+    ["How can I reduce pest damage on tomato plants safely?"],
+    ["What information do you need to help diagnose a disease in my crop?"],
+]
+
+demo = gr.Interface(
+    fn=answer,
+    inputs=[
+        gr.Textbox(
+            label="Agricultural question",
+            placeholder="Describe your crop, symptoms, location, and growing conditions…",
+            lines=5,
+        ),
+        gr.Slider(0.05, 1.2, value=0.25, step=0.05, label="Creativity"),
+        gr.Slider(32, 800, value=400, step=16, label="Maximum answer tokens"),
+    ],
+    outputs=gr.Markdown(label="AgriSystem answer"),
+    examples=examples,
+    title="🌾 AgriSystem Agricultural Assistant",
+    description=(
+        "A demonstration of Maoseavik/agrisystem-adapter. Advice is informational; "
+        "confirm diagnosis and treatment with a qualified local expert."
+    ),
+    api_name="answer",
+)
+
+demo.launch(mcp_server=True)
