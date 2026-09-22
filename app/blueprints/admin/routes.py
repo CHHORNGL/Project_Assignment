@@ -3,6 +3,7 @@
 import os
 import csv
 import json
+import secrets
 import zipfile
 import re
 from datetime import datetime
@@ -972,6 +973,89 @@ def translations_ai():
 @permission_required("manage_roles")
 def settings():
     if request.method == "POST":
+        model_action = (request.form.get("model_action") or "").strip().lower()
+
+        if model_action:
+            # Store model metadata as JSON so adding trained models does not
+            # require a database migration. API keys are stored separately.
+            models_setting = SiteSetting.query.get("HF_MODELS")
+            try:
+                profiles = json.loads(models_setting.value) if models_setting and models_setting.value else []
+            except (TypeError, ValueError):
+                profiles = []
+            if not isinstance(profiles, list):
+                profiles = []
+
+            def save_profiles():
+                payload = json.dumps(profiles, ensure_ascii=False)
+                if models_setting:
+                    models_setting.value = payload
+                else:
+                    db.session.add(SiteSetting(key="HF_MODELS", value=payload))
+
+            profile_id = re.sub(r"[^a-z0-9-]+", "-", (request.form.get("profile_id") or "").lower()).strip("-")
+            if model_action == "delete":
+                deleted = next((p for p in profiles if p.get("id") == profile_id), None)
+                profiles = [p for p in profiles if p.get("id") != profile_id]
+                if deleted and deleted.get("token_key"):
+                    token_setting = SiteSetting.query.get(deleted["token_key"])
+                    if token_setting:
+                        db.session.delete(token_setting)
+                active_setting = SiteSetting.query.get("HF_ACTIVE_MODEL")
+                if active_setting and active_setting.value == profile_id:
+                    active_setting.value = profiles[0].get("id", "") if profiles else ""
+                save_profiles()
+                db.session.commit()
+                flash("Trained AI model removed.", "success")
+                return redirect(url_for("admin.settings"))
+
+            model_id = (request.form.get("model_id") or "").strip()
+            endpoint = (request.form.get("endpoint") or "").strip()
+            label = (request.form.get("label") or model_id or "Trained model").strip()[:120]
+            api_key = (request.form.get("model_api_key") or "").strip()
+            from app.services.ai_expert_service import is_valid_inference_endpoint
+
+            if not model_id or not endpoint or not is_valid_inference_endpoint(endpoint):
+                flash("Enter a model ID and a valid deployed inference endpoint URL.", "danger")
+                return redirect(url_for("admin.settings"))
+            if not profile_id:
+                profile_id = re.sub(r"[^a-z0-9-]+", "-", model_id.lower()).strip("-") or "trained-model"
+                profile_id = profile_id[:32].strip("-") or "trained-model"
+                base_id, suffix = profile_id, 2
+                while any(p.get("id") == profile_id for p in profiles):
+                    profile_id = f"{base_id}-{suffix}"
+                    suffix += 1
+            token_key = f"HF_API_KEY_{profile_id.upper().replace('-', '_')}"
+            existing = next((p for p in profiles if p.get("id") == profile_id), None)
+            if not existing:
+                existing = {"id": profile_id, "token_key": token_key}
+                profiles.append(existing)
+            existing.update({"label": label, "model_id": model_id, "endpoint": endpoint, "token_key": token_key})
+            if api_key:
+                token_setting = SiteSetting.query.get(token_key)
+                if token_setting:
+                    token_setting.value = api_key
+                else:
+                    db.session.add(SiteSetting(key=token_key, value=api_key))
+            if model_action == "activate" or request.form.get("activate_model"):
+                for profile in profiles:
+                    profile["active"] = profile.get("id") == profile_id
+                active_setting = SiteSetting.query.get("HF_ACTIVE_MODEL")
+                if active_setting:
+                    active_setting.value = profile_id
+                else:
+                    db.session.add(SiteSetting(key="HF_ACTIVE_MODEL", value=profile_id))
+                # Keep the provider switch explicit and backwards compatible.
+                provider_setting = SiteSetting.query.get("AI_PROVIDER")
+                if provider_setting:
+                    provider_setting.value = "huggingface"
+                else:
+                    db.session.add(SiteSetting(key="AI_PROVIDER", value="huggingface"))
+            save_profiles()
+            db.session.commit()
+            flash("Trained AI model saved and activated." if model_action == "activate" or request.form.get("activate_model") else "Trained AI model saved.", "success")
+            return redirect(url_for("admin.settings"))
+
         # The current configuration screen manages the separately hosted,
         # fine-tuned agricultural model. Keep the older provider fields below
         # for backwards compatibility with existing installations.
@@ -1088,7 +1172,7 @@ def settings():
 
     hf_model_id = (
         hf_model_setting.value.strip() if hf_model_setting and hf_model_setting.value.strip()
-        else os.getenv("HF_MODEL_ID", "Maoseavik/agri-expert-adapter").strip()
+        else os.getenv("HF_MODEL_ID", "Maoseavik/agrisystem-adapter").strip()
     )
     hf_inference_url = (
         hf_url_setting.value.strip() if hf_url_setting and hf_url_setting.value.strip()
@@ -1098,6 +1182,26 @@ def settings():
         fallback_setting.value.strip().lower()
         if fallback_setting and fallback_setting.value
         else str(current_app.config.get("AI_LEGACY_FALLBACK_ENABLED", False)).lower()
+    )
+
+    hf_models_setting = SiteSetting.query.get("HF_MODELS")
+    try:
+        hf_models = json.loads(hf_models_setting.value) if hf_models_setting and hf_models_setting.value else []
+    except (TypeError, ValueError):
+        hf_models = []
+    if not isinstance(hf_models, list):
+        hf_models = []
+    active_model_setting = SiteSetting.query.get("HF_ACTIVE_MODEL")
+    active_model_id = active_model_setting.value.strip() if active_model_setting and active_model_setting.value else ""
+    active_model = next((p for p in hf_models if p.get("id") == active_model_id), None)
+    if active_model:
+        hf_model_id = (active_model.get("model_id") or hf_model_id).strip()
+        hf_inference_url = (active_model.get("endpoint") or hf_inference_url).strip()
+    edit_model_id = (request.args.get("edit_model_id") or "").strip()
+    editing_model = next((p for p in hf_models if p.get("id") == edit_model_id), None)
+    active_token_setting = (
+        SiteSetting.query.get(active_model.get("token_key"))
+        if active_model and active_model.get("token_key") else None
     )
 
     active_provider = active_provider_setting.value.strip() if active_provider_setting and active_provider_setting.value.strip() else "groq"
@@ -1134,10 +1238,13 @@ def settings():
         expert_model=expert_model_setting.value if expert_model_setting else "",
         hf_model_id=hf_model_id,
         hf_inference_url=hf_inference_url,
-        hf_key_configured=bool(hf_key_setting and hf_key_setting.value.strip()) or bool(
-            current_app.config.get("HF_TOKEN")
+        hf_key_configured=bool(hf_key_setting and hf_key_setting.value.strip()) or bool(current_app.config.get("HF_TOKEN")) or bool(
+            active_token_setting and active_token_setting.value.strip()
         ),
         legacy_fallback_enabled=fallback_value in {"1", "true", "yes", "on"},
+        hf_models=hf_models,
+        active_model_id=active_model_id,
+        editing_model=editing_model,
     )
 
 
@@ -1152,8 +1259,7 @@ def test_ai_connection():
     model = (data.get("model") or "").strip()
 
     if provider in {"huggingface", "hf", "hugging_face"}:
-        import requests
-        from app.services.ai_expert_service import is_valid_inference_endpoint
+        from app.services.ai_expert_service import is_valid_inference_endpoint, request_endpoint
 
         saved_url = SiteSetting.query.get("HF_INFERENCE_URL")
         endpoint = (data.get("endpoint") or data.get("url") or "").strip()
@@ -1166,28 +1272,50 @@ def test_ai_connection():
                 "error": "Enter the deployed inference endpoint URL (for example https://.../generate), not a Hugging Face model ID.",
             }), 400
 
-        saved_key = SiteSetting.query.get("HF_API_KEY") or SiteSetting.query.get("HF_TOKEN")
-        token = api_key or (saved_key.value.strip() if saved_key and saved_key.value else "")
+        token = api_key
+        # The trained-model form stores each endpoint key under its profile's
+        # token_key. Reuse that key when the password field is intentionally
+        # left blank (the normal edit/test workflow).
+        if not token:
+            models_setting = SiteSetting.query.get("HF_MODELS")
+            try:
+                profiles = json.loads(models_setting.value) if models_setting and models_setting.value else []
+            except (TypeError, ValueError):
+                profiles = []
+            if isinstance(profiles, list):
+                endpoint_normalized = endpoint.rstrip("/")
+                matching_profile = next(
+                    (
+                        profile for profile in profiles
+                        if isinstance(profile, dict)
+                        and str(profile.get("endpoint") or "").strip().rstrip("/") == endpoint_normalized
+                    ),
+                    None,
+                )
+                token_key = matching_profile.get("token_key") if matching_profile else ""
+                profile_key = SiteSetting.query.get(token_key) if token_key else None
+                if profile_key and profile_key.value:
+                    token = profile_key.value.strip()
+        if not token:
+            saved_key = SiteSetting.query.get("HF_API_KEY") or SiteSetting.query.get("HF_TOKEN")
+            token = saved_key.value.strip() if saved_key and saved_key.value else ""
         token = token or (current_app.config.get("HF_TOKEN") or "").strip()
-        headers = {"Content-Type": "application/json"}
-        if token:
-            headers["Authorization"] = f"Bearer {token}"
         start_time = time.time()
         try:
-            response = requests.post(
+            reply = request_endpoint(
                 endpoint,
-                json={
-                    "inputs": "Reply with exactly: AgriSystem AI connection OK.",
-                    "parameters": {"max_new_tokens": 24, "temperature": 0.1, "return_full_text": False},
-                },
-                headers=headers,
-                timeout=12,
+                token,
+                "Reply with exactly: AgriSystem AI connection OK.",
+                # CPU model cold-start/generation can exceed the old 12s
+                # timeout. The inference service itself remains protected by
+                # its API key and request limits.
+                timeout=180,
+                max_new_tokens=24,
             )
-            response.raise_for_status()
             elapsed = round((time.time() - start_time) * 1000)
             return jsonify({
                 "success": True,
-                "message": f"Own AI endpoint connected ({elapsed}ms latency).",
+                "message": f"Own AI endpoint connected ({elapsed}ms latency). Reply: {reply[:120]}",
                 "latency_ms": elapsed,
             })
         except Exception as exc:
@@ -1267,6 +1395,14 @@ def test_ai_connection():
             "error": str(e),
             "latency_ms": elapsed
         }), 200
+
+
+@admin_bp.route("/api/generate_inference_key", methods=["POST"])
+@login_required
+@permission_required("manage_roles")
+def generate_inference_key():
+    """Generate a high-entropy shared secret for the model inference API."""
+    return jsonify({"success": True, "api_key": secrets.token_urlsafe(32)})
 
 
 @admin_bp.route("/api/fetch_provider_models", methods=["POST"])

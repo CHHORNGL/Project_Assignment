@@ -5,6 +5,7 @@
 {% block content %}
 <style>
   .ai-wrap{max-width:1080px;margin:0 auto;padding:1.5rem 0 3rem}.ai-hero,.ai-card{background:var(--admin-card,#fff);border:1px solid var(--admin-border,#e2e8f0);border-radius:18px;box-shadow:0 8px 26px rgba(15,23,42,.06)}.ai-hero{padding:2rem;margin-bottom:1.25rem;background:linear-gradient(135deg,rgba(22,163,74,.1),rgba(14,165,233,.08))}.ai-hero h1{margin:0 0 .5rem;color:var(--admin-text,#0f172a);font-size:clamp(1.55rem,3vw,2.2rem);font-weight:800}.ai-hero p{margin:0;color:var(--admin-muted,#64748b);max-width:760px}.ai-badge{display:inline-flex;align-items:center;gap:.4rem;border-radius:999px;padding:.35rem .75rem;margin-bottom:.8rem;background:#dcfce7;color:#166534;font-weight:700;font-size:.78rem;text-transform:uppercase;letter-spacing:.05em}.ai-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.25rem}.ai-stat{padding:1.1rem 1.25rem}.ai-stat small{display:block;color:var(--admin-muted,#64748b);font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;font-weight:700}.ai-stat strong{display:block;margin-top:.35rem;color:var(--admin-text,#0f172a);overflow-wrap:anywhere}.ai-card{padding:1.5rem;margin-bottom:1.25rem}.ai-card h2{margin:0 0 .35rem;color:var(--admin-text,#0f172a);font-size:1.2rem;font-weight:800}.ai-card .lead{color:var(--admin-muted,#64748b);margin:0 0 1.25rem}.ai-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}.ai-field{display:flex;flex-direction:column;gap:.4rem}.ai-field.full{grid-column:1/-1}.ai-field label{color:var(--admin-text,#0f172a);font-size:.86rem;font-weight:700}.ai-field input{width:100%;box-sizing:border-box;border:1px solid var(--admin-border,#cbd5e1);border-radius:10px;padding:.7rem .8rem;background:var(--admin-bg,#f8fafc);color:var(--admin-text,#0f172a)}.ai-field input:focus{outline:2px solid rgba(14,165,233,.25);border-color:#0ea5e9}.ai-help{color:var(--admin-muted,#64748b);font-size:.78rem;line-height:1.45}.ai-secret{display:flex;align-items:center;gap:.6rem;color:#166534;font-size:.8rem;font-weight:700}.ai-check{display:flex;align-items:flex-start;gap:.6rem;padding:.85rem 1rem;border-radius:10px;background:rgba(245,158,11,.1);color:#92400e;font-size:.84rem;line-height:1.45}.ai-check input{margin-top:.2rem}.ai-actions{display:flex;align-items:center;flex-wrap:wrap;gap:.7rem;margin-top:1.25rem}.ai-btn{border:0;border-radius:10px;padding:.68rem 1rem;font-weight:700;cursor:pointer}.ai-btn-primary{background:#15803d;color:#fff}.ai-btn-secondary{background:#e0f2fe;color:#075985}.ai-btn:disabled{opacity:.65;cursor:wait}.ai-result{display:none;width:100%;padding:.75rem .9rem;border-radius:9px;font-size:.84rem}.ai-result.ok,.ai-result.error{display:block}.ai-result.ok{background:#dcfce7;color:#166534}.ai-result.error{background:#fee2e2;color:#991b1b}.ai-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin:0;padding:0;list-style:none}.ai-steps li{padding:1rem;border-radius:12px;background:var(--admin-bg,#f8fafc);color:var(--admin-muted,#64748b);font-size:.85rem;line-height:1.5}.ai-steps b{display:block;color:var(--admin-text,#0f172a);margin-bottom:.25rem}.dark-mode .ai-hero,.dark-mode .ai-card{background:#18181b;border-color:#27272a}.dark-mode .ai-field input,.dark-mode .ai-steps li{background:#09090b;border-color:#3f3f46}@media(max-width:760px){.ai-grid,.ai-form-grid,.ai-steps{grid-template-columns:1fr}.ai-field.full{grid-column:auto}.ai-wrap{padding-left:.75rem;padding-right:.75rem}}
+ .ai-btn-danger{background:#fee2e2;color:#991b1b}.ai-model-list{display:grid;gap:.75rem;margin:0 0 1.25rem;padding:0;list-style:none}.ai-model-row{display:flex;justify-content:space-between;gap:1rem;align-items:center;padding:1rem;border:1px solid var(--admin-border,#e2e8f0);border-radius:12px;background:var(--admin-bg,#f8fafc)}.ai-model-meta{min-width:0}.ai-model-meta strong,.ai-model-meta small{display:block;overflow-wrap:anywhere}.ai-model-meta small{color:var(--admin-muted,#64748b);margin-top:.25rem}.ai-active{color:#166534;font-weight:800;font-size:.78rem}.dark-mode .ai-model-row{background:#09090b;border-color:#3f3f46}@media(max-width:760px){.ai-model-row{align-items:flex-start;flex-direction:column}}
 </style>
 
 <div class="ai-wrap">
@@ -21,35 +22,69 @@
   </div>
 
   <form method="post" class="ai-card" autocomplete="off">
-    <h2><i class="fas fa-sliders-h mr-1"></i> Own AI connection</h2>
-    <p class="lead">These values are used by the farmer chat service. A model repository ID and an inference endpoint URL are different: the URL must point to a running Space, Endpoint, or compatible <code>/generate</code> API.</p>
+    <h2><i class="fas fa-sliders-h mr-1"></i> Smart Agri Assistant — LLM connection</h2>
+    <p class="lead">Configure the LLM providers used only by the Smart Agri Assistant. These keys are separate from your self-trained Ark Expert models below.</p>
     <div class="ai-form-grid">
       <div class="ai-field">
-        <label for="hf_model_id">Hugging Face model / adapter ID</label>
-        <input id="hf_model_id" name="hf_model_id" value="{{ hf_model_id|e }}" placeholder="Maoseavik/agri-expert-adapter">
-        <span class="ai-help">Reference only; useful for documentation and deployment.</span>
+        <label for="active_provider">Default LLM provider</label>
+        <select id="active_provider" name="active_provider" style="width:100%;box-sizing:border-box;border:1px solid var(--admin-border,#cbd5e1);border-radius:10px;padding:.7rem .8rem;background:var(--admin-bg,#f8fafc);color:var(--admin-text,#0f172a)">
+          <option value="groq" {% if active_provider == 'groq' %}selected{% endif %}>Groq</option>
+          <option value="openai" {% if active_provider == 'openai' %}selected{% endif %}>OpenAI</option>
+          <option value="gemini" {% if active_provider == 'gemini' %}selected{% endif %}>Google Gemini</option>
+        </select>
       </div>
-      <div class="ai-field">
-        <label for="hf_inference_url">Inference endpoint URL <span class="text-danger">*</span></label>
-        <input id="hf_inference_url" name="hf_inference_url" type="url" value="{{ hf_inference_url|e }}" placeholder="https://your-space.hf.space/generate" required>
-        <span class="ai-help">Use your deployed FastAPI/TGI endpoint, not <code>Maoseavik/agri-expert-adapter</code>.</span>
-      </div>
-      <div class="ai-field">
-        <label for="hf_api_key">Inference API key</label>
-        <input id="hf_api_key" name="hf_api_key" type="password" placeholder="Leave blank to keep the saved key" autocomplete="new-password">
-        {% if hf_key_configured %}<span class="ai-secret"><i class="fas fa-lock"></i> A server-side key is already saved</span>{% else %}<span class="ai-help">Optional for a public endpoint. Never put this key in React or Flutter.</span>{% endif %}
-      </div>
-      <div class="ai-field">
-        <label>Legacy provider fallback</label>
-        <label class="ai-check"><input type="checkbox" name="legacy_fallback_enabled" value="1" {% if legacy_fallback_enabled %}checked{% endif %}> Allow farmer chat to use old OpenAI/Groq/Gemini providers if your own endpoint fails. Leave disabled to guarantee that only your trained model answers farmers.</label>
-      </div>
+      <div class="ai-field"><label for="expert_provider">Smart Agri Assistant provider override</label><input id="expert_provider" name="expert_provider" value="{{ expert_provider|e }}" placeholder="groq, openai, or gemini"><span class="ai-help">Leave blank to use the default provider.</span></div>
+      <div class="ai-field"><label for="groq_key">Groq API key(s)</label><input id="groq_key" name="groq_key" type="password" value="{{ groq_key|e }}" placeholder="gsk_…" autocomplete="new-password"><span class="ai-help">Multiple keys may be comma-separated for fallback.</span></div>
+      <div class="ai-field"><label for="groq_model">Groq model</label><input id="groq_model" name="groq_model" value="{{ groq_model|e }}" placeholder="openai/gpt-oss-120b"></div>
+      <div class="ai-field"><label for="openai_key">OpenAI API key(s)</label><input id="openai_key" name="openai_key" type="password" value="{{ openai_key|e }}" placeholder="sk-…" autocomplete="new-password"></div>
+      <div class="ai-field"><label for="openai_model">OpenAI model</label><input id="openai_model" name="openai_model" value="{{ openai_model|e }}" placeholder="gpt-4o-mini"></div>
+      <div class="ai-field"><label for="gemini_key">Google Gemini API key(s)</label><input id="gemini_key" name="gemini_key" type="password" value="{{ gemini_key|e }}" placeholder="AIza…" autocomplete="new-password"></div>
+      <div class="ai-field"><label for="gemini_model">Gemini model</label><input id="gemini_model" name="gemini_model" value="{{ gemini_model|e }}" placeholder="gemini-2.5-flash"></div>
+      <div class="ai-field"><label for="expert_model">Smart Agri Assistant model override</label><input id="expert_model" name="expert_model" value="{{ expert_model|e }}" placeholder="Optional model name"></div>
     </div>
     <div class="ai-actions">
-      <button class="ai-btn ai-btn-primary" type="submit"><i class="fas fa-save mr-1"></i> Save own AI settings</button>
+      <button class="ai-btn ai-btn-primary" type="submit"><i class="fas fa-save mr-1"></i> Save LLM settings</button>
       <button class="ai-btn ai-btn-secondary" type="button" id="test-own-ai"><i class="fas fa-plug mr-1"></i> Test endpoint</button>
       <div id="own-ai-result" class="ai-result" role="status"></div>
     </div>
   </form>
+
+  <section class="ai-card">
+    <h2><i class="fas fa-layer-group mr-1"></i> Ark Expert — my trained AI models</h2>
+    <p class="lead">Register every trained adapter or merged model with its deployed inference endpoint. Activating one model makes it the model used by Farm Ark Expert AI.</p>
+    {% if hf_models %}
+    <ul class="ai-model-list">
+      {% for model in hf_models %}
+      <li class="ai-model-row">
+        <div class="ai-model-meta">
+          <strong>{{ model.label or model.model_id }}</strong>
+          <small>{{ model.model_id }} · {{ model.endpoint }}</small>
+          {% if model.id == active_model_id or model.active %}<span class="ai-active"><i class="fas fa-check-circle"></i> Active model</span>{% endif %}
+        </div>
+        <div class="ai-actions" style="margin-top:0">
+          <a class="ai-btn ai-btn-secondary" href="{{ url_for('admin.settings', edit_model_id=model.id) }}">Edit</a>
+          {% if model.id != active_model_id %}
+          <form method="post" style="display:inline"><input type="hidden" name="model_action" value="activate"><input type="hidden" name="profile_id" value="{{ model.id }}"><input type="hidden" name="label" value="{{ model.label }}"><input type="hidden" name="model_id" value="{{ model.model_id }}"><input type="hidden" name="endpoint" value="{{ model.endpoint }}"><button class="ai-btn ai-btn-primary" type="submit">Use this model</button></form>
+          {% endif %}
+          <form method="post" style="display:inline" onsubmit="return confirm('Remove this trained model from the project?')"><input type="hidden" name="model_action" value="delete"><input type="hidden" name="profile_id" value="{{ model.id }}"><button class="ai-btn ai-btn-danger" type="submit">Remove</button></form>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+    <form method="post" autocomplete="off">
+      <input type="hidden" name="model_action" value="save">
+      <input type="hidden" name="profile_id" value="{{ editing_model.id if editing_model else '' }}">
+      <div class="ai-form-grid">
+        <div class="ai-field"><label for="model_label">Display name</label><input id="model_label" name="label" value="{{ editing_model.label if editing_model else '' }}" placeholder="Rice disease model"></div>
+        <div class="ai-field"><label for="trained_model_id">Hugging Face model / adapter ID</label><input id="trained_model_id" name="model_id" value="{{ editing_model.model_id if editing_model else '' }}" placeholder="Maoseavik/agrisystem-adapter" required></div>
+        <div class="ai-field full"><label for="trained_endpoint">Inference endpoint URL</label><input id="trained_endpoint" name="endpoint" type="url" value="{{ editing_model.endpoint if editing_model else '' }}" placeholder="https://your-space.hf.space or https://your-server/generate" required></div>
+        <div class="ai-field"><label for="model_api_key">Endpoint API key</label><div style="display:flex;gap:.5rem"><input id="model_api_key" name="model_api_key" type="password" placeholder="Leave blank to keep the saved key" autocomplete="new-password"><button class="ai-btn ai-btn-secondary" type="button" id="generate-model-key">Generate</button></div><span class="ai-help">Stored server-side; never sent to the browser chat.</span></div>
+        <label class="ai-check"><input type="checkbox" name="activate_model" value="1" {% if editing_model and editing_model.id == active_model_id %}checked{% endif %}> Activate this model for Farm Ark Expert AI</label>
+      </div>
+      <div class="ai-actions"><button class="ai-btn ai-btn-primary" type="submit">{{ 'Update trained model' if editing_model else 'Add trained model' }}</button><button class="ai-btn ai-btn-secondary" type="button" id="test-trained-ai">Test endpoint</button><div id="trained-ai-result" class="ai-result" role="status"></div>{% if editing_model %}<a class="ai-btn ai-btn-secondary" href="{{ url_for('admin.settings') }}">Cancel edit</a>{% endif %}</div>
+    </form>
+  </section>
 
   <section class="ai-card">
     <h2><i class="fas fa-route mr-1"></i> Training to production</h2>
@@ -57,23 +92,51 @@
     <ol class="ai-steps">
       <li><b>1. Dataset</b>Add verified agricultural knowledge to <code>exports/agri_train_data.jsonl</code> and validation examples to <code>exports/agri_validation_data.jsonl</code>.</li>
       <li><b>2. Train</b>Run <code>training/colab_train_agri_lora.py</code> in Google Colab, then upload the adapter to your Hugging Face account.</li>
-      <li><b>3. Deploy</b>Run the inference service from <code>deployment/inference_api.py</code>, then paste its public <code>/generate</code> URL above.</li>
+      <li><b>3. Deploy</b>Use a public Gradio Space URL such as <code>https://your-space.hf.space</code>, or paste a custom service's <code>/generate</code> URL above.</li>
     </ol>
   </section>
 </div>
 
 <script>
 (() => {
-  const button=document.getElementById('test-own-ai'), result=document.getElementById('own-ai-result'), endpoint=document.getElementById('hf_inference_url'), key=document.getElementById('hf_api_key');
+  const button=document.getElementById('test-own-ai'), result=document.getElementById('own-ai-result');
   if (!button) return;
   button.addEventListener('click', async () => {
     result.className='ai-result ok'; result.textContent='Testing endpoint…'; button.disabled=true;
     try {
-      const response=await fetch('{{ url_for("admin.test_ai_connection") }}',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({provider:'huggingface',endpoint:endpoint.value.trim(),api_key:key.value.trim()})});
+      const provider=document.getElementById('active_provider').value.trim();
+      const keyField=document.getElementById(provider+'_key');
+      const modelField=document.getElementById(provider+'_model');
+      const response=await fetch('{{ url_for("admin.test_ai_connection") }}',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({provider:provider,api_key:keyField ? keyField.value.trim() : '',model:modelField ? modelField.value.trim() : ''})});
       const data=await response.json(); result.className=data.success?'ai-result ok':'ai-result error'; result.textContent=data.success?data.message:(data.error||'Connection failed.');
     } catch(error) { result.className='ai-result error'; result.textContent='Could not reach the Flask API: '+error; }
     finally { button.disabled=false; }
   });
+  const modelButton=document.getElementById('test-trained-ai'), modelResult=document.getElementById('trained-ai-result');
+  if (modelButton) modelButton.addEventListener('click', async () => {
+    modelResult.className='ai-result ok'; modelResult.textContent='Testing endpoint…'; modelButton.disabled=true;
+    try {
+      const response=await fetch('{{ url_for("admin.test_ai_connection") }}',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({provider:'huggingface',endpoint:document.getElementById('trained_endpoint').value.trim(),api_key:document.getElementById('model_api_key').value.trim()})});
+      const data=await response.json(); modelResult.className=data.success?'ai-result ok':'ai-result error'; modelResult.textContent=data.success?data.message:(data.error||'Connection failed.');
+    } catch(error) { modelResult.className='ai-result error'; modelResult.textContent='Could not reach the Flask API: '+error; }
+    finally { modelButton.disabled=false; }
+  });
+  const generateUrl='{{ url_for("admin.generate_inference_key") }}';
+  const wireKeyGenerator=(buttonId,inputId) => {
+    const generator=document.getElementById(buttonId), input=document.getElementById(inputId);
+    if (!generator || !input) return;
+    generator.addEventListener('click', async () => {
+      generator.disabled=true; generator.textContent='Generating…';
+      try {
+        const response=await fetch(generateUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({})});
+        const data=await response.json();
+        if (!response.ok || !data.success) throw new Error(data.error || 'Could not generate a key.');
+        input.type='text'; input.value=data.api_key; input.focus(); input.select();
+      } catch (error) { window.alert(error.message); }
+      finally { generator.disabled=false; generator.textContent='Generate'; }
+    });
+  };
+  wireKeyGenerator('generate-model-key','model_api_key');
 })();
 </script>
 {% endblock %}

@@ -8,6 +8,7 @@ used by Text Generation Inference, Spaces, and OpenAI-compatible gateways.
 from __future__ import annotations
 
 import os
+import json
 from typing import Any, Optional
 from urllib.parse import urlparse
 
@@ -20,6 +21,32 @@ MAX_CONTEXT_CHARS = 12_000
 MAX_MESSAGE_CHARS = 4_000
 
 
+def _active_model_profile() -> dict[str, str] | None:
+    """Return the admin-selected trained-model profile, if one exists."""
+    try:
+        from app.models.site_setting import SiteSetting
+
+        raw = SiteSetting.query.get("HF_MODELS")
+        if not raw or not raw.value:
+            return None
+        profiles = json.loads(raw.value)
+        if not isinstance(profiles, list):
+            return None
+        active_setting = SiteSetting.query.get("HF_ACTIVE_MODEL")
+        active_id = active_setting.value.strip() if active_setting and active_setting.value else ""
+        for profile in profiles:
+            if not isinstance(profile, dict):
+                continue
+            if active_id and profile.get("id") == active_id:
+                return profile
+        for profile in profiles:
+            if isinstance(profile, dict) and profile.get("active"):
+                return profile
+        return next((p for p in profiles if isinstance(p, dict)), None)
+    except Exception:
+        return None
+
+
 def _setting(name: str, default: str = "") -> str:
     """Read runtime settings, preferring the protected admin configuration.
 
@@ -27,6 +54,30 @@ def _setting(name: str, default: str = "") -> str:
     If it has not been saved in the admin screen, normal deployment
     environment variables remain the fallback.
     """
+    # A selected profile overrides the legacy single-model settings. Secrets
+    # remain in their own protected SiteSetting rather than in the JSON list.
+    if name in {"HF_MODEL_ID", "HF_INFERENCE_URL", "HF_TOKEN"}:
+        profile = _active_model_profile()
+        if profile:
+            if name == "HF_MODEL_ID":
+                value = str(profile.get("model_id") or "").strip()
+                if value:
+                    return value
+            elif name == "HF_INFERENCE_URL":
+                value = str(profile.get("endpoint") or "").strip()
+                if value:
+                    return value
+            else:
+                try:
+                    from app.models.site_setting import SiteSetting
+
+                    token_key = str(profile.get("token_key") or "").strip()
+                    token_setting = SiteSetting.query.get(token_key) if token_key else None
+                    if token_setting and token_setting.value and token_setting.value.strip():
+                        return token_setting.value.strip()
+                except Exception:
+                    pass
+
     try:
         from app.models.site_setting import SiteSetting
 
@@ -77,6 +128,14 @@ def is_valid_inference_endpoint(endpoint: str) -> bool:
     return parsed.hostname not in {"huggingface.co", "www.huggingface.co"}
 
 
+def is_gradio_endpoint(endpoint: str) -> bool:
+    """Return whether an endpoint is a public Gradio Space/API URL."""
+    parsed = urlparse((endpoint or "").strip())
+    hostname = (parsed.hostname or "").lower()
+    path = parsed.path.rstrip("/")
+    return hostname.endswith(".hf.space") or "/gradio_api/call/" in path or "/call/" in path
+
+
 def is_configured() -> bool:
     provider = _setting("AI_PROVIDER", "").lower()
     endpoint = _setting("HF_INFERENCE_URL") or _setting("HUGGINGFACE_INFERENCE_URL")
@@ -119,6 +178,8 @@ def _build_prompt(message: str, context: str, language: Optional[str]) -> str:
 
 
 def _extract_text(payload: Any) -> str:
+    if isinstance(payload, str):
+        return payload.strip()
     if isinstance(payload, list):
         if not payload:
             return ""
@@ -143,6 +204,107 @@ def _remove_prompt_echo(reply: str, prompt: str) -> str:
     return cleaned
 
 
+def _gradio_call_urls(endpoint: str) -> list[str]:
+    """Build Gradio 6 and legacy Gradio queue endpoint candidates."""
+    parsed = urlparse((endpoint or "").strip())
+    base = f"{parsed.scheme}://{parsed.netloc}".rstrip("/")
+    path = parsed.path.rstrip("/")
+    if "/gradio_api/call/" in path or path.endswith("/call/answer"):
+        return [endpoint.rstrip("/")]
+    if path and path not in {"/", "/en"}:
+        base = f"{base}{path}"
+    return [
+        f"{base}/gradio_api/call/answer",
+        f"{base}/call/answer",
+    ]
+
+
+def _gradio_reply(endpoint: str, token: str, prompt: str, timeout: float, max_new_tokens: int) -> str:
+    """Call a Gradio Space's queued API and read its final SSE event."""
+    headers = {"Content-Type": "application/json"}
+    # A public Space does not need the admin-generated endpoint key. Only send
+    # a token there when it is actually a Hugging Face token, otherwise an
+    # unrelated bearer key can turn a public request into a 401.
+    hostname = (urlparse(endpoint).hostname or "").lower()
+    if token and (not hostname.endswith(".hf.space") or token.startswith("hf_")):
+        headers["Authorization"] = f"Bearer {token}"
+    payload = {"data": [prompt, 0.25, max(32, min(int(max_new_tokens), 800))]}
+
+    call_urls = _gradio_call_urls(endpoint)
+    last_response = None
+    call_url = call_urls[-1]
+    for candidate in call_urls:
+        response = requests.post(candidate, json=payload, headers=headers, timeout=timeout)
+        last_response = response
+        call_url = candidate
+        if response.status_code == 404 and candidate != call_urls[-1]:
+            continue
+        response.raise_for_status()
+        break
+    else:
+        last_response.raise_for_status()
+
+    event_id = (last_response.json() or {}).get("event_id")
+    if not event_id:
+        raise RuntimeError("Gradio endpoint did not return an event ID")
+
+    with requests.get(
+        f"{call_url}/{event_id}",
+        headers=headers,
+        stream=True,
+        timeout=timeout,
+    ) as stream:
+        stream.raise_for_status()
+        event_name = ""
+        for raw_line in stream.iter_lines(decode_unicode=True):
+            line = (raw_line or "").strip()
+            if line.startswith("event:"):
+                event_name = line[6:].strip()
+                continue
+            if not line.startswith("data:"):
+                continue
+            data = line[5:].strip()
+            if event_name == "error":
+                raise RuntimeError(data or "Gradio generation failed")
+            if event_name == "complete":
+                return _extract_text(json.loads(data))
+
+    raise RuntimeError("Gradio endpoint closed before returning a result")
+
+
+def request_endpoint(
+    endpoint: str,
+    token: str,
+    prompt: str,
+    *,
+    timeout: float = DEFAULT_TIMEOUT_SECONDS,
+    max_new_tokens: int = 600,
+) -> str:
+    """Call either the custom TGI-compatible service or a Gradio Space."""
+    if is_gradio_endpoint(endpoint):
+        return _gradio_reply(endpoint, token, prompt, timeout, max_new_tokens)
+
+    headers = {"Content-Type": "application/json"}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    response = requests.post(
+        endpoint,
+        json={
+            "inputs": prompt,
+            "parameters": {
+                "max_new_tokens": max_new_tokens,
+                "temperature": 0.25,
+                "top_p": 0.9,
+                "return_full_text": False,
+            },
+        },
+        headers=headers,
+        timeout=timeout,
+    )
+    response.raise_for_status()
+    return _remove_prompt_echo(_extract_text(response.json()), prompt)
+
+
 def generate_reply(
     user_message: str,
     *,
@@ -160,32 +322,16 @@ def generate_reply(
     endpoint = _endpoint()
     token = _setting("HF_TOKEN") or _setting("HUGGINGFACEHUB_API_TOKEN")
     prompt = _build_prompt(user_message, context, language)
-    headers = {"Content-Type": "application/json"}
-    if token:
-        headers["Authorization"] = f"Bearer {token}"
-
-    # This is the standard Text Generation Inference payload. A custom Space
-    # can accept the same fields and return {"generated_text": "..."}.
-    payload = {
-        "inputs": prompt,
-        "parameters": {
-            "max_new_tokens": 600,
-            "temperature": 0.25,
-            "top_p": 0.9,
-            "return_full_text": False,
-        },
-    }
     try:
-        response = requests.post(
+        reply = request_endpoint(
             endpoint,
-            json=payload,
-            headers=headers,
+            token,
+            prompt,
             timeout=_timeout(),
+            max_new_tokens=600,
         )
-        response.raise_for_status()
-        reply = _remove_prompt_echo(_extract_text(response.json()), prompt)
         return reply or None
-    except (requests.RequestException, ValueError) as exc:
+    except (requests.RequestException, RuntimeError, ValueError) as exc:
         try:
             current_app.logger.warning("Remote agricultural AI request failed: %s", exc)
         except RuntimeError:
