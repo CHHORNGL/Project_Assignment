@@ -3,18 +3,18 @@ FROM python:3.11-slim
 ENV PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     PORT=7860 \
-    HF_HOME=/data/huggingface
+    HF_HOME=/data/huggingface \
+    MODEL_CACHE_DIR=/data/models
 
 WORKDIR /app
 
 COPY requirements.txt ./requirements.txt
 RUN pip install --upgrade pip \
-    && pip install --index-url https://download.pytorch.org/whl/cpu torch==2.2.2 \
-    && pip install -r requirements.txt
+    && pip install --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cpu -r requirements.txt
 
 COPY inference_api.py ./inference_api.py
 
-RUN mkdir -p /data/huggingface
+RUN mkdir -p /data/huggingface /data/models
 
 EXPOSE 7860
 

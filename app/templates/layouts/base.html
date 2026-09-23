@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ current_lang }}">
+<html lang="{{ current_lang }}" class="{{ theme_html_class }}">
 <head>
 <meta charset="UTF-8">
 <title>{% block title %}Dashboard{% endblock %} | AGRI SYSTEM</title>
@@ -98,25 +98,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 700; }
 
 {% block head %}{% endblock %}
 
-<!-- ===============================
-     NO-FLASH THEME LOADER
-     Priority: DB > localStorage > OS
-=============================== -->
-<script>
-(function () {
-    const userTheme = "{{ current_user.theme if current_user.is_authenticated else '' }}";
-    const storedTheme = localStorage.getItem("theme");
-    const activeTheme = (storedTheme === "dark" || storedTheme === "light") 
-        ? storedTheme 
-        : (userTheme === "dark" ? "dark" : "light");
-
-    if (activeTheme === "dark") {
-        document.documentElement.classList.add("dark-mode");
-    } else {
-        document.documentElement.classList.remove("dark-mode");
-    }
-})();
-</script>
+{% include "partials/theme_head.html" %}
 {% if current_user.is_authenticated and request.endpoint == 'admin.dashboard' %}
 <script>
 (function () {
@@ -135,7 +117,7 @@ h1,h2,h3,h4,h5,h6 { font-weight: 700; }
 {% if ('expert-simple' in _raw_body_class or 'farmer-dash-theme' in _raw_body_class) and ('admin-theme' not in _raw_body_class) %}
     {% set _body_class = (_raw_body_class ~ ' admin-theme')|trim %}
 {% endif %}
-<body id="page-top" class="app-shell {{ _body_class }}">
+<body id="page-top" class="app-shell {{ _body_class }} {{ theme_body_class }}">
 <div id="wrapper">
 
 {% include "partials/flash_notices.html" %}
@@ -179,83 +161,20 @@ $(document).on('show.bs.modal', '.modal', function () {
 </script>
 
 
-<!-- ===============================
-     THEME SWITCH HANDLER
-=============================== -->
-<script>
-(function () {
-    const iconMap = { light: "fa-sun text-warning", dark: "fa-moon text-primary" };
-
-    function syncThemeUI(theme) {
-        const isDark = (theme === "dark");
-        document.querySelectorAll(".theme-toggle-input, .toggle-state").forEach(input => {
-            input.checked = isDark;
-        });
-        document.querySelectorAll(".theme-switcher-btn[data-theme], .theme-option[data-theme]").forEach(btn => {
-            btn.classList.toggle("is-active", btn.dataset.theme === theme);
-        });
-        const iconEl = document.getElementById("themeCurrentIconEl");
-        if (iconEl) {
-            iconEl.className = "fas " + (isDark ? "fa-moon text-primary" : "fa-sun text-warning");
-        }
-    }
-
-    const storedTheme = localStorage.getItem("theme");
-    const dbTheme = "{{ current_user.theme if current_user.is_authenticated else '' }}";
-    const currentTheme = (storedTheme === "dark" || storedTheme === "light")
-        ? storedTheme
-        : (dbTheme === "dark" ? "dark" : "light");
-    syncThemeUI(currentTheme);
-
-    function applyAndSaveTheme(theme) {
-        if (theme === "dark") {
-            document.documentElement.classList.add("dark-mode");
-        } else {
-            document.documentElement.classList.remove("dark-mode");
-        }
-
-        localStorage.setItem("theme", theme);
-        syncThemeUI(theme);
-
-        try {
-            fetch("/users/theme", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ theme })
-            }).catch(() => {});
-        } catch (err) {}
-    }
-
-    // 1. Neumorphic Toggle Checkbox Listener
-    document.querySelectorAll(".theme-toggle-input, .toggle-state").forEach(input => {
-        input.addEventListener("change", () => {
-            const theme = input.checked ? "dark" : "light";
-            applyAndSaveTheme(theme);
-        });
-    });
-
-    // 2. Button Option Listeners
-    document.querySelectorAll(".theme-option[data-theme], .theme-switcher-btn[data-theme]").forEach(btn => {
-        btn.addEventListener("click", (e) => {
-            e.preventDefault();
-            const theme = (btn.dataset.theme === "dark") ? "dark" : "light";
-            applyAndSaveTheme(theme);
-        });
-    });
-})();
-</script>
+{% include "partials/theme_script.html" %}
 
 <script>
 (function () {
     const body = document.body;
     const path = window.location.pathname || "";
     const isThemedRoute = !!body && (
-        body.classList.contains("admin-theme")
-        || body.classList.contains("expert-simple")
-        || body.classList.contains("farmer-dash-theme")
-        || path.startsWith("/admin")
-        || path.startsWith("/expert")
-        || path.startsWith("/farmer")
+        path.startsWith("/admin")
+        || (body.classList.contains("admin-theme")
+            && !body.classList.contains("farmer-dash-theme")
+            && !body.classList.contains("expert-theme")
+            && !body.classList.contains("expert-simple")
+            && !path.startsWith("/farmer")
+            && !path.startsWith("/expert"))
     );
     const root = document.documentElement;
     const cacheKey = "global_admin_theme_runtime_cache_v2";

@@ -33,7 +33,7 @@
         <i class="fas fa-columns"></i>
     </button>
 
-    {% if request.blueprint == 'farmer' or (request.blueprint == 'user' and not current_user.has_role('admin') and not current_user.has_role('expert')) %}
+    {% if request.blueprint == 'farmer' or (request.blueprint == 'user' and (not current_user.is_authenticated or (not current_user.has_role('admin') and not current_user.has_role('expert')))) %}
     <!-- ===============================
          BRAND LOGO (farmer routes only)
     =============================== -->
@@ -55,6 +55,7 @@
         <!-- ===============================
              NOTIFICATIONS
         =============================== -->
+        {% if current_user.is_authenticated %}
         <li class="nav-item dropdown no-arrow mx-3">
             <a class="nav-link dropdown-toggle p-0"
                href="#"
@@ -130,23 +131,23 @@
                 {% endif %}
             </div>
         </li>
+        {% endif %}
 
         <!-- ===============================
              LIVE CHAT
         =============================== -->
         {% if current_user.is_authenticated and current_user.has_route_access('farmer') %}
-        <li class="nav-item dropdown no-arrow mx-1">
-            <a class="nav-link dropdown-toggle p-0"
-               href="#"
+        <li class="nav-item dropdown no-arrow mx-1" id="support-chat-item">
+            <a class="nav-link p-0"
+               href="javascript:void(0)"
                id="supportDropdown"
                role="button"
-               data-toggle="dropdown"
                aria-haspopup="true"
                aria-expanded="false"
                title="Live Support">
 
                 <span class="notification-wrapper">
-                    <span class="icon-btn notification-btn">
+                    <span class="icon-btn notification-btn" id="support-chat-icon-btn">
                         <i class="fas fa-comment-dots"></i>
                     </span>
                 </span>
@@ -156,20 +157,24 @@
                     width: 360px;
                     border-radius: 16px;
                     overflow: hidden;
-                    z-index: 1050;
+                    z-index: 1060;
                     border: 1px solid var(--admin-border, #e2e8f0);
-                    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+                    box-shadow: 0 12px 48px rgba(15, 23, 42, 0.22);
                     background: var(--admin-card, #ffffff);
+                    margin-top: 8px;
+                }
+                .farmer-chat-widget.show {
+                    display: block !important;
                 }
                 .farmer-chat-header {
                     background: var(--admin-card, #ffffff);
-                    padding: 16px 20px;
+                    padding: 14px 16px;
                     border-bottom: 1px solid var(--admin-border, #e2e8f0);
                     display: flex;
                     align-items: center;
                     font-weight: 600;
                     color: var(--admin-text, #1e293b);
-                    font-size: 1.05rem;
+                    font-size: 0.95rem;
                 }
                 .farmer-chat-header .icon-wrap {
                     width: 32px;
@@ -182,14 +187,57 @@
                     justify-content: center;
                     margin-right: 12px;
                     font-size: 0.9rem;
+                    flex-shrink: 0;
                 }
                 .farmer-chat-header .status-dot {
                     width: 8px;
                     height: 8px;
                     background: var(--admin-accent, #10b981);
                     border-radius: 50%;
-                    margin-left: auto;
+                    flex-shrink: 0;
                     box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+                }
+                .farmer-chat-close-btn {
+                    width: 28px;
+                    height: 28px;
+                    border-radius: 50%;
+                    border: 1px solid var(--admin-border, #e2e8f0);
+                    background: var(--admin-bg, #f1f5f9);
+                    color: #64748b;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    cursor: pointer;
+                    font-size: 0.8rem;
+                    transition: background 0.15s ease, color 0.15s ease, transform 0.1s ease;
+                    padding: 0;
+                    flex-shrink: 0;
+                }
+                .farmer-chat-close-btn:hover {
+                    background: #fee2e2;
+                    color: #ef4444;
+                    border-color: #fca5a5;
+                    transform: scale(1.08);
+                }
+                .dark-mode .farmer-chat-close-btn {
+                    background: #1e293b;
+                    border-color: #334155;
+                    color: #94a3b8;
+                }
+                .dark-mode .farmer-chat-close-btn:hover {
+                    background: rgba(239, 68, 68, 0.25);
+                    color: #fca5a5;
+                    border-color: #ef4444;
+                }
+                @media (max-width: 576px) {
+                    .farmer-chat-widget {
+                        position: fixed !important;
+                        top: 60px !important;
+                        right: 8px !important;
+                        left: 8px !important;
+                        width: auto !important;
+                        max-width: calc(100vw - 16px) !important;
+                    }
                 }
                 .farmer-chat-body {
                     height: 340px;
@@ -263,14 +311,17 @@
                     transform: scale(1.05);
                 }
             </style>
-            <div class="dropdown-menu dropdown-menu-right p-0 farmer-chat-widget animated--grow-in" aria-labelledby="supportDropdown">
+            <div class="dropdown-menu dropdown-menu-right p-0 farmer-chat-widget animated--grow-in" id="support-chat-menu" aria-labelledby="supportDropdown">
                 <div class="farmer-chat-header">
                     <div class="icon-wrap"><i class="fas fa-headset"></i></div>
-                    <div>
-                        <div style="line-height: 1;">{{ t('admin_support_chat') | default('Admin Support') }}</div>
-                        <div style="font-size: 0.75rem; color: #64748b; font-weight: 400; margin-top: 4px;">We usually reply in minutes</div>
+                    <div style="flex-grow: 1; min-width: 0;">
+                        <div style="line-height: 1.2; font-weight: 700;">{{ t('admin_support_chat') | default('Admin Support') }}</div>
+                        <div style="font-size: 0.75rem; color: #64748b; font-weight: 400; margin-top: 2px;">We usually reply in minutes</div>
                     </div>
-                    <div class="status-dot"></div>
+                    <div class="status-dot" title="Online" style="margin-left: 8px; margin-right: 12px;"></div>
+                    <button type="button" class="farmer-chat-close-btn" id="support-chat-close-btn" aria-label="Close Chat" title="Close Chat">
+                        <i class="fas fa-times"></i>
+                    </button>
                 </div>
                 <div id="support-chat-body" class="farmer-chat-body">
                     <!-- Messages will appear here -->
@@ -286,7 +337,7 @@
                     </div>
                     <div class="farmer-chat-input-wrapper">
                         <input type="text" id="support-chat-input" class="farmer-chat-input" placeholder="Type a message...">
-                        <button id="support-chat-send" class="farmer-chat-send-btn">
+                        <button id="support-chat-send" class="farmer-chat-send-btn" title="Send">
                             <i class="fas fa-paper-plane" style="font-size: 0.85rem;"></i>
                         </button>
                     </div>
@@ -308,9 +359,59 @@
             const audioInput = document.getElementById("support-chat-audio");
             const chatStatus = document.getElementById("support-chat-status");
             
-            const chatMenu = document.querySelector('.dropdown-menu[aria-labelledby="supportDropdown"]');
-            if (chatMenu) {
-                chatMenu.addEventListener('click', function (e) {
+            const supportTrigger = document.getElementById("supportDropdown");
+            const chatCloseBtn = document.getElementById("support-chat-close-btn");
+            const chatWidget = document.getElementById("support-chat-menu");
+            const chatNavItem = document.getElementById("support-chat-item");
+
+            function isChatOpen() {
+                return chatWidget && chatWidget.classList.contains("show");
+            }
+
+            function openSupportChat() {
+                if (!chatWidget) return;
+                chatWidget.classList.add("show");
+                if (chatNavItem) chatNavItem.classList.add("show");
+                if (supportTrigger) supportTrigger.setAttribute("aria-expanded", "true");
+                fetchMessages();
+                if (chatInput) {
+                    setTimeout(() => chatInput.focus(), 80);
+                }
+            }
+
+            function closeSupportChat() {
+                if (!chatWidget) return;
+                chatWidget.classList.remove("show");
+                if (chatNavItem) chatNavItem.classList.remove("show");
+                if (supportTrigger) supportTrigger.setAttribute("aria-expanded", "false");
+            }
+
+            function toggleSupportChat(e) {
+                if (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+                if (isChatOpen()) {
+                    closeSupportChat();
+                } else {
+                    openSupportChat();
+                }
+            }
+
+            if (supportTrigger) {
+                supportTrigger.addEventListener("click", toggleSupportChat);
+            }
+
+            if (chatCloseBtn) {
+                chatCloseBtn.addEventListener("click", function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    closeSupportChat();
+                });
+            }
+
+            if (chatWidget) {
+                chatWidget.addEventListener("click", function(e) {
                     e.stopPropagation();
                 });
             }
@@ -395,18 +496,14 @@
             });
             
             window.initSupportAttachments({
-        imgBtn, micBtn, locBtn, fileInput,
-        uploadUrl: '/farmer/support_chat/upload',
-        getSendUrl: () => '/farmer/support_chat/send',
-        onSent: fetchMessages,
-    });
-
-            document.getElementById("supportDropdown").addEventListener("click", () => {
-                fetchMessages();
+                imgBtn, micBtn, locBtn, fileInput,
+                uploadUrl: '/farmer/support_chat/upload',
+                getSendUrl: () => '/farmer/support_chat/send',
+                onSent: fetchMessages,
             });
+
             setInterval(() => {
-                const menu = document.querySelector('.dropdown-menu[aria-labelledby="supportDropdown"]');
-                if (menu && menu.classList.contains("show")) {
+                if (isChatOpen()) {
                     fetchMessages();
                 }
             }, 3000);
@@ -470,6 +567,16 @@
         <!-- ===============================
              USER PROFILE / LOGIN
         =============================== -->
+        {% if not current_user.is_authenticated %}
+        <li class="nav-item ml-2 d-flex align-items-center">
+            <a href="{{ url_for('auth.login') }}" class="btn btn-sm btn-outline-success mr-2 font-weight-bold px-3 py-1 fm-topbar-signin-btn" style="border-radius: 8px; font-size: 0.85rem;">
+                <i class="fas fa-sign-in-alt mr-1"></i>{% if current_lang == 'km' %}ចូលគណនី{% else %}Sign In{% endif %}
+            </a>
+            <a href="{{ url_for('auth.register') }}" class="btn btn-sm btn-success font-weight-bold px-3 py-1 text-white fm-topbar-signup-btn" style="border-radius: 8px; font-size: 0.85rem;">
+                <i class="fas fa-user-plus mr-1"></i>{% if current_lang == 'km' %}ចុះឈ្មោះ{% else %}Sign Up{% endif %}
+            </a>
+        </li>
+        {% else %}
         <li class="nav-item dropdown no-arrow topbar-profile-item ml-2">
             <a class="topbar-profile-pill dropdown-toggle"
                href="#"
@@ -662,6 +769,7 @@
                 </div>
             </div>
         </li>
+        {% endif %}
 
     </ul>
 </nav>

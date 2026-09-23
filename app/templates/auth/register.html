@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ current_lang }}">
+<html lang="{{ current_lang }}" class="{{ theme_html_class }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -18,18 +18,9 @@
     <link href="{{ url_for('static', filename='css/neumorphic_toggle.css', v=static_version) }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/notifications.css', v=static_version) }}" rel="stylesheet">
 
-    <script>
-    (function () {
-        const storedTheme = localStorage.getItem("theme");
-        if (storedTheme === "dark") {
-            document.documentElement.classList.add("dark-mode", "auth-panel-dark");
-        } else {
-            document.documentElement.classList.remove("dark-mode", "auth-panel-dark");
-        }
-    })();
-    </script>
+    {% include "partials/theme_head.html" %}
 </head>
-<body class="auth-clean-body">
+<body class="auth-clean-body {{ theme_body_class }}">
 
 {% include "partials/flash_notices.html" %}
 
@@ -189,26 +180,9 @@
 </div>
 
 <script src="{{ url_for('static', filename='js/toast.js') }}"></script>
+{% include "partials/theme_script.html" %}
 <script>
 (function () {
-    // Theme sync
-    const toggleInput = document.getElementById("authThemeToggle");
-    const currentTheme = localStorage.getItem("theme") === "dark" ? "dark" : "light";
-    if (toggleInput) {
-        toggleInput.checked = (currentTheme === "dark");
-        toggleInput.addEventListener("change", () => {
-            const isDark = toggleInput.checked;
-            const theme = isDark ? "dark" : "light";
-            document.documentElement.classList.toggle("dark-mode", isDark);
-            document.documentElement.classList.toggle("auth-panel-dark", isDark);
-            localStorage.setItem("theme", theme);
-            fetch("/users/theme", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ theme })
-            }).catch(() => {});
-        });
-    }
 
     // Password visibility toggle
     document.querySelectorAll(".auth-password-toggle-btn").forEach(btn => {

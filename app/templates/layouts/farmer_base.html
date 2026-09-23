@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ current_lang }}">
+<html lang="{{ current_lang }}" class="{{ theme_html_class }}">
 <head>
     <meta charset="UTF-8">
     <title>{% block title %}Ask Expert{% endblock %} | AGRI SYSTEM</title>
@@ -27,25 +27,10 @@
         body { margin: 0; overflow: hidden; }
     </style>
 
-    <!-- Theme loader (sync with global setting) -->
-    <script>
-    (function () {
-        const userTheme = "{{ current_user.theme if current_user.is_authenticated else '' }}";
-        const storedTheme = localStorage.getItem("theme");
-        const activeTheme = (storedTheme === "dark" || storedTheme === "light")
-            ? storedTheme
-            : (userTheme === "dark" ? "dark" : "light");
-
-        if (activeTheme === "dark") {
-            document.documentElement.classList.add("dark-mode");
-        } else {
-            document.documentElement.classList.remove("dark-mode");
-        }
-    })();
-    </script>
+    {% include "partials/theme_head.html" %}
 </head>
 
-<body class="farmer-chat-theme">
+<body class="farmer-chat-theme {{ theme_body_class }}">
 
 <div class="farmer-chat-shell">
 
@@ -684,62 +669,7 @@
 })();
 </script>
 
-<script>
-(function () {
-    function syncThemeUI(theme) {
-        const isDark = (theme === "dark");
-        document.querySelectorAll(".theme-toggle-input, .toggle-state").forEach(input => {
-            input.checked = isDark;
-        });
-        document.querySelectorAll(".theme-option[data-theme]").forEach(btn => {
-            btn.classList.toggle("is-active", btn.dataset.theme === theme);
-        });
-    }
-
-    const storedTheme = localStorage.getItem("theme");
-    const dbTheme = "{{ current_user.theme if current_user.is_authenticated else '' }}";
-    const currentTheme = (storedTheme === "dark" || storedTheme === "light")
-        ? storedTheme
-        : (dbTheme === "dark" ? "dark" : "light");
-    syncThemeUI(currentTheme);
-
-    function applyAndSaveTheme(theme) {
-        if (theme === "dark") {
-            document.documentElement.classList.add("dark-mode");
-        } else {
-            document.documentElement.classList.remove("dark-mode");
-        }
-
-        localStorage.setItem("theme", theme);
-        syncThemeUI(theme);
-
-        try {
-            fetch("/users/theme", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ theme })
-            }).catch(() => {});
-        } catch (e) {}
-    }
-
-    // Neumorphic Toggle Checkbox Listener
-    document.querySelectorAll(".theme-toggle-input, .toggle-state").forEach(input => {
-        input.addEventListener("change", () => {
-            const theme = input.checked ? "dark" : "light";
-            applyAndSaveTheme(theme);
-        });
-    });
-
-    // Button Option Listeners
-    document.querySelectorAll(".theme-option[data-theme]").forEach(btn => {
-        btn.addEventListener("click", (e) => {
-            e.preventDefault();
-            const theme = (btn.dataset.theme === "dark") ? "dark" : "light";
-            applyAndSaveTheme(theme);
-        });
-    });
-})();
-</script>
+{% include "partials/theme_script.html" %}
 
 <script src="{{ url_for('static', filename='js/system_status.js', v=static_version) }}"></script>
 

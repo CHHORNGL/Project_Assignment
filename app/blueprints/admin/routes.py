@@ -972,7 +972,37 @@ def translations_ai():
 @login_required
 @permission_required("manage_roles")
 def settings():
+    def update_setting(k, v):
+        setting = SiteSetting.query.get(k)
+        if setting:
+            setting.value = v
+        else:
+            setting = SiteSetting(key=k, value=v)
+            db.session.add(setting)
+
     if request.method == "POST":
+        form_type = (request.form.get("form_type") or "").strip()
+
+        # General System & Location Settings
+        if form_type == "general" or "server_location_name" in request.form:
+            system_name = request.form.get("system_name", "").strip()
+            server_loc_name = request.form.get("server_location_name", "").strip()
+            server_loc_lat = request.form.get("server_location_lat", "").strip()
+            server_loc_lon = request.form.get("server_location_lon", "").strip()
+
+            if system_name:
+                update_setting("SYSTEM_NAME", system_name)
+            if server_loc_name:
+                update_setting("SERVER_LOCATION_NAME", server_loc_name)
+            if server_loc_lat:
+                update_setting("SERVER_LOCATION_LAT", server_loc_lat)
+            if server_loc_lon:
+                update_setting("SERVER_LOCATION_LON", server_loc_lon)
+
+            db.session.commit()
+            flash("General system & server location settings saved successfully.", "success")
+            return redirect(url_for("admin.settings", tab="general"))
+
         model_action = (request.form.get("model_action") or "").strip().lower()
 
         if model_action:
@@ -1007,7 +1037,7 @@ def settings():
                 save_profiles()
                 db.session.commit()
                 flash("Trained AI model removed.", "success")
-                return redirect(url_for("admin.settings"))
+                return redirect(url_for("admin.settings", tab="trained"))
 
             model_id = (request.form.get("model_id") or "").strip()
             endpoint = (request.form.get("endpoint") or "").strip()
@@ -1017,7 +1047,7 @@ def settings():
 
             if not model_id or not endpoint or not is_valid_inference_endpoint(endpoint):
                 flash("Enter a model ID and a valid deployed inference endpoint URL.", "danger")
-                return redirect(url_for("admin.settings"))
+                return redirect(url_for("admin.settings", tab="trained"))
             if not profile_id:
                 profile_id = re.sub(r"[^a-z0-9-]+", "-", model_id.lower()).strip("-") or "trained-model"
                 profile_id = profile_id[:32].strip("-") or "trained-model"
@@ -1054,7 +1084,7 @@ def settings():
             save_profiles()
             db.session.commit()
             flash("Trained AI model saved and activated." if model_action == "activate" or request.form.get("activate_model") else "Trained AI model saved.", "success")
-            return redirect(url_for("admin.settings"))
+            return redirect(url_for("admin.settings", tab="trained"))
 
         # The current configuration screen manages the separately hosted,
         # fine-tuned agricultural model. Keep the older provider fields below
@@ -1063,13 +1093,6 @@ def settings():
             key in request.form
             for key in ("hf_model_id", "hf_inference_url", "hf_api_key", "legacy_fallback_enabled")
         )
-
-        def update_setting(k, v):
-            setting = SiteSetting.query.get(k)
-            if setting:
-                setting.value = v
-            else:
-                db.session.add(SiteSetting(key=k, value=v))
 
         if own_ai_form:
             hf_model_id = request.form.get("hf_model_id", "").strip()
@@ -1094,7 +1117,7 @@ def settings():
             if hf_api_key:
                 current_app.config["HF_TOKEN"] = hf_api_key
             flash("Own AI engine settings saved successfully.", "success")
-            return redirect(url_for("admin.settings"))
+            return redirect(url_for("admin.settings", tab="trained"))
 
         openai_keys = [k.strip() for k in request.form.getlist("openai_key[]") if k.strip()]
         groq_keys = [k.strip() for k in request.form.getlist("groq_key[]") if k.strip()]
@@ -1115,15 +1138,6 @@ def settings():
         active_provider = request.form.get("active_provider", "").strip()
         expert_provider = request.form.get("expert_provider", "").strip()
         expert_model = request.form.get("expert_model", "").strip()
-
-        # Helper to update or create
-        def update_setting(k, v):
-            setting = SiteSetting.query.get(k)
-            if setting:
-                setting.value = v
-            else:
-                setting = SiteSetting(key=k, value=v)
-                db.session.add(setting)
 
         if active_provider:
             update_setting("ACTIVE_PROVIDER", active_provider)
@@ -1150,7 +1164,7 @@ def settings():
 
         db.session.commit()
         flash("AI System settings & credentials saved successfully.", "success")
-        return redirect(url_for("admin.settings"))
+        return redirect(url_for("admin.settings", tab="llm"))
 
     # GET
     active_provider_setting = SiteSetting.query.get("ACTIVE_PROVIDER")
@@ -1225,8 +1239,30 @@ def settings():
     # Resolve gemini_model default
     gemini_model = gemini_model_setting.value.strip() if gemini_model_setting and gemini_model_setting.value.strip() else "gemini-2.5-flash"
 
+    # General / Server Location Settings
+    system_name_setting = SiteSetting.query.get("SYSTEM_NAME")
+    system_name = system_name_setting.value.strip() if system_name_setting and system_name_setting.value else "AgriSystem"
+
+    server_loc_name_setting = SiteSetting.query.get("SERVER_LOCATION_NAME")
+    server_location_name = server_loc_name_setting.value.strip() if server_loc_name_setting and server_loc_name_setting.value else "Phnom Penh, Cambodia"
+
+    server_loc_lat_setting = SiteSetting.query.get("SERVER_LOCATION_LAT")
+    server_location_lat = server_loc_lat_setting.value.strip() if server_loc_lat_setting and server_loc_lat_setting.value else "11.5564"
+
+    server_loc_lon_setting = SiteSetting.query.get("SERVER_LOCATION_LON")
+    server_location_lon = server_loc_lon_setting.value.strip() if server_loc_lon_setting and server_loc_lon_setting.value else "104.9282"
+
+    from app.blueprints.farmer.support_chat import CAMBODIA_PROVINCES
+    active_tab = request.args.get("tab", "general")
+
     return render_template(
         "admin/settings.html",
+        active_tab=active_tab,
+        system_name=system_name,
+        server_location_name=server_location_name,
+        server_location_lat=server_location_lat,
+        server_location_lon=server_location_lon,
+        cambodia_provinces=CAMBODIA_PROVINCES,
         active_provider=active_provider,
         groq_key=groq_setting.value if groq_setting else "",
         openai_key=openai_setting.value if openai_setting else "",

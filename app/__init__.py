@@ -6,7 +6,7 @@ from uuid import uuid4
 import logging
 from logging.handlers import RotatingFileHandler
 
-from flask import Flask, jsonify, url_for, request, render_template, redirect, g, send_from_directory, has_request_context
+from flask import Flask, jsonify, url_for, request, render_template, redirect, g, send_from_directory, has_request_context, session
 from flask_login import current_user, login_required
 
 from .extensions import db, login_manager, migrate, oauth
@@ -303,6 +303,17 @@ def create_app():
         if request.endpoint not in {"static", "healthz"} and not (request.path or "").startswith("/static/"):
             duration = (time.time() - getattr(g, "start_time", time.time())) * 1000
             app.logger.info(f"Completed {response.status_code} in {duration:.1f}ms")
+        try:
+            if current_user and current_user.is_authenticated:
+                cookie_theme = request.cookies.get("theme")
+                if cookie_theme in ("light", "dark", "system"):
+                    if getattr(current_user, "theme", None) != cookie_theme:
+                        current_user.theme = cookie_theme
+                        db.session.commit()
+                elif getattr(current_user, "theme", None):
+                    response.set_cookie("theme", current_user.theme, max_age=31536000, path="/", samesite="Lax")
+        except Exception:
+            pass
         return response
 
     @app.teardown_request
@@ -507,11 +518,32 @@ def create_app():
         }
 
     @app.context_processor
+    def inject_theme():
+        try:
+            cookie_theme = request.cookies.get("theme")
+            session_theme = session.get("theme")
+            user_theme = getattr(current_user, "theme", None) if current_user.is_authenticated else None
+            active_theme = cookie_theme or session_theme or user_theme or "system"
+            if active_theme not in ("light", "dark", "system"):
+                active_theme = "system"
+        except Exception:
+            active_theme = "system"
+
+        is_dark = (active_theme == "dark")
+        theme_class = "dark-mode auth-panel-dark" if is_dark else ""
+        return {
+            "active_theme": active_theme,
+            "theme_is_dark": is_dark,
+            "theme_html_class": theme_class,
+            "theme_body_class": "dark-mode auth-panel-dark" if is_dark else "",
+        }
+
+    @app.context_processor
     def inject_body_class():
         body_class = ""
         try:
+            path = (request.path or "").lower()
             if current_user.is_authenticated:
-                path = (request.path or "").lower()
                 if path.startswith("/farmer") and current_user.has_role("farmer"):
                     body_class = "farmer-dash-theme"
                 elif path.startswith("/admin") and current_user.has_role("admin"):
@@ -524,6 +556,9 @@ def create_app():
                     body_class = "expert-simple"
                 elif current_user.has_role("farmer"):
                     body_class = "farmer-dash-theme"
+            else:
+                if path.startswith("/farmer"):
+                    body_class = "farmer-dash-theme farmer-no-sidebar"
         except Exception:
             body_class = ""
         return {"body_class": body_class}

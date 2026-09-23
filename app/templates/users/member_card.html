@@ -12,25 +12,7 @@
     {% set tokens = profile.get("tokens", {}) if profile else {} %}
 
     <script>
-    (function () {
-        const userTheme = "{{ current_user.theme if current_user.is_authenticated else 'system' }}";
-        const storedTheme = localStorage.getItem("theme");
-
-        function prefersDark() {
-            return window.matchMedia("(prefers-color-scheme: dark)").matches;
-        }
-
-        function applyTheme(theme) {
-            document.documentElement.classList.remove("dark-mode");
-            if (theme === "dark") document.documentElement.classList.add("dark-mode");
-            if (theme === "system" && prefersDark()) document.documentElement.classList.add("dark-mode");
-        }
-
-        if (userTheme && userTheme !== "system") applyTheme(userTheme);
-        else if (storedTheme) applyTheme(storedTheme);
-        else applyTheme("system");
-    })();
-    </script>
+    {% include "partials/theme_head.html" %}
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -784,16 +766,16 @@
 
     function toggleCardTheme() {
         const isDark = document.documentElement.classList.contains("dark-mode");
-        const icon = document.getElementById("theme-icon");
-        if (isDark) {
-            document.documentElement.classList.remove("dark-mode");
-            localStorage.setItem("theme", "light");
-            if (icon) icon.className = "fas fa-moon";
+        const nextTheme = isDark ? "light" : "dark";
+        if (typeof window.setAgriTheme === "function") {
+            window.setAgriTheme(nextTheme);
         } else {
-            document.documentElement.classList.add("dark-mode");
-            localStorage.setItem("theme", "dark");
-            if (icon) icon.className = "fas fa-sun";
+            localStorage.setItem("theme", nextTheme);
+            document.cookie = "theme=" + nextTheme + "; path=/; max-age=31536000; SameSite=Lax";
+            document.documentElement.classList.toggle("dark-mode", !isDark);
         }
+        const icon = document.getElementById("theme-icon");
+        if (icon) icon.className = isDark ? "fas fa-moon" : "fas fa-sun";
     }
 
     // Sync theme icon on load
@@ -806,6 +788,7 @@
         }
     });
     </script>
+    {% include "partials/theme_script.html" %}
 </body>
 </html>
 

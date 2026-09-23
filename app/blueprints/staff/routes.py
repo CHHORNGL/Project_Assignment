@@ -3,7 +3,7 @@ import random
 import string
 import datetime
 
-from flask import Blueprint, render_template, redirect, url_for, flash, request, session
+from flask import Blueprint, render_template, redirect, url_for, flash, request, session, make_response, jsonify
 from flask_login import login_user, current_user
 
 from app.extensions import db
@@ -14,7 +14,7 @@ from app.services.passkey_service import (
     get_authentication_options_json,
     verify_authentication,
 )
-from app.blueprints.auth.routes import _send_verification_email, _safe_next_url
+from app.blueprints.auth.routes import _send_verification_email, _safe_next_url, _sync_client_theme_to_user, _redirect_with_theme
 from app.utils.audit import audit_log
 
 staff_bp = Blueprint("staff", __name__, url_prefix="/staff")
@@ -82,6 +82,7 @@ def login():
             flash("Verification code sent to your email.", "info")
             return redirect(url_for("auth.verify_code"))
 
+        _sync_client_theme_to_user(user)
         db.session.commit()  # Persist any password hash upgrade.
         login_user(user, remember=False)
         audit_log(
@@ -91,7 +92,7 @@ def login():
             detail="Staff password authentication",
         )
         flash("Welcome back!", "success")
-        return redirect(next_url or url_for("main.index"))
+        return _redirect_with_theme(next_url or url_for("main.index"), user)
 
     return render_template("staff/login.html", form=form, active_role="expert", next_url=next_url, auth_theme_runtime=auth_theme_runtime)
 
@@ -117,6 +118,7 @@ def passkey_login_verify():
         if not (user.has_role("expert") or user.has_role("admin") or any(r.route_type in ["expert", "admin"] for r in user.roles)):
             return {"status": "error", "message": "This passkey is for Staff only."}, 403
 
+        _sync_client_theme_to_user(user)
         session.pop("staff_passkey_login_challenge", None)
         login_user(user, remember=False)
         audit_log(
@@ -127,6 +129,9 @@ def passkey_login_verify():
         )
         flash("Welcome back!", "success")
         redirect_url = url_for("main.index")
-        return {"status": "ok", "redirect_url": redirect_url}
+        resp = make_response(jsonify({"status": "ok", "redirect_url": redirect_url}))
+        if user.theme in ("light", "dark", "system"):
+            resp.set_cookie("theme", user.theme, max_age=31536000, path="/", samesite="Lax")
+        return resp
     except Exception as e:
         return {"status": "error", "message": str(e)}, 400

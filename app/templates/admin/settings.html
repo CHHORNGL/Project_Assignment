@@ -1,142 +1,1238 @@
 {% extends "layouts/base.html" %}
-{% block title %}System Configuration & Own AI Engine - Admin{% endblock %}
 {% set body_class = "admin-theme" %}
+{% block title %}System Settings &amp; AI Engine - Admin{% endblock %}
 
 {% block content %}
-<style>
-  .ai-wrap{max-width:1080px;margin:0 auto;padding:1.5rem 0 3rem}.ai-hero,.ai-card{background:var(--admin-card,#fff);border:1px solid var(--admin-border,#e2e8f0);border-radius:18px;box-shadow:0 8px 26px rgba(15,23,42,.06)}.ai-hero{padding:2rem;margin-bottom:1.25rem;background:linear-gradient(135deg,rgba(22,163,74,.1),rgba(14,165,233,.08))}.ai-hero h1{margin:0 0 .5rem;color:var(--admin-text,#0f172a);font-size:clamp(1.55rem,3vw,2.2rem);font-weight:800}.ai-hero p{margin:0;color:var(--admin-muted,#64748b);max-width:760px}.ai-badge{display:inline-flex;align-items:center;gap:.4rem;border-radius:999px;padding:.35rem .75rem;margin-bottom:.8rem;background:#dcfce7;color:#166534;font-weight:700;font-size:.78rem;text-transform:uppercase;letter-spacing:.05em}.ai-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.25rem}.ai-stat{padding:1.1rem 1.25rem}.ai-stat small{display:block;color:var(--admin-muted,#64748b);font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;font-weight:700}.ai-stat strong{display:block;margin-top:.35rem;color:var(--admin-text,#0f172a);overflow-wrap:anywhere}.ai-card{padding:1.5rem;margin-bottom:1.25rem}.ai-card h2{margin:0 0 .35rem;color:var(--admin-text,#0f172a);font-size:1.2rem;font-weight:800}.ai-card .lead{color:var(--admin-muted,#64748b);margin:0 0 1.25rem}.ai-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}.ai-field{display:flex;flex-direction:column;gap:.4rem}.ai-field.full{grid-column:1/-1}.ai-field label{color:var(--admin-text,#0f172a);font-size:.86rem;font-weight:700}.ai-field input{width:100%;box-sizing:border-box;border:1px solid var(--admin-border,#cbd5e1);border-radius:10px;padding:.7rem .8rem;background:var(--admin-bg,#f8fafc);color:var(--admin-text,#0f172a)}.ai-field input:focus{outline:2px solid rgba(14,165,233,.25);border-color:#0ea5e9}.ai-help{color:var(--admin-muted,#64748b);font-size:.78rem;line-height:1.45}.ai-secret{display:flex;align-items:center;gap:.6rem;color:#166534;font-size:.8rem;font-weight:700}.ai-check{display:flex;align-items:flex-start;gap:.6rem;padding:.85rem 1rem;border-radius:10px;background:rgba(245,158,11,.1);color:#92400e;font-size:.84rem;line-height:1.45}.ai-check input{margin-top:.2rem}.ai-actions{display:flex;align-items:center;flex-wrap:wrap;gap:.7rem;margin-top:1.25rem}.ai-btn{border:0;border-radius:10px;padding:.68rem 1rem;font-weight:700;cursor:pointer}.ai-btn-primary{background:#15803d;color:#fff}.ai-btn-secondary{background:#e0f2fe;color:#075985}.ai-btn:disabled{opacity:.65;cursor:wait}.ai-result{display:none;width:100%;padding:.75rem .9rem;border-radius:9px;font-size:.84rem}.ai-result.ok,.ai-result.error{display:block}.ai-result.ok{background:#dcfce7;color:#166534}.ai-result.error{background:#fee2e2;color:#991b1b}.ai-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin:0;padding:0;list-style:none}.ai-steps li{padding:1rem;border-radius:12px;background:var(--admin-bg,#f8fafc);color:var(--admin-muted,#64748b);font-size:.85rem;line-height:1.5}.ai-steps b{display:block;color:var(--admin-text,#0f172a);margin-bottom:.25rem}.dark-mode .ai-hero,.dark-mode .ai-card{background:#18181b;border-color:#27272a}.dark-mode .ai-field input,.dark-mode .ai-steps li{background:#09090b;border-color:#3f3f46}@media(max-width:760px){.ai-grid,.ai-form-grid,.ai-steps{grid-template-columns:1fr}.ai-field.full{grid-column:auto}.ai-wrap{padding-left:.75rem;padding-right:.75rem}}
- .ai-btn-danger{background:#fee2e2;color:#991b1b}.ai-model-list{display:grid;gap:.75rem;margin:0 0 1.25rem;padding:0;list-style:none}.ai-model-row{display:flex;justify-content:space-between;gap:1rem;align-items:center;padding:1rem;border:1px solid var(--admin-border,#e2e8f0);border-radius:12px;background:var(--admin-bg,#f8fafc)}.ai-model-meta{min-width:0}.ai-model-meta strong,.ai-model-meta small{display:block;overflow-wrap:anywhere}.ai-model-meta small{color:var(--admin-muted,#64748b);margin-top:.25rem}.ai-active{color:#166534;font-weight:800;font-size:.78rem}.dark-mode .ai-model-row{background:#09090b;border-color:#3f3f46}@media(max-width:760px){.ai-model-row{align-items:flex-start;flex-direction:column}}
-</style>
+<div class="admin-board settings-page">
 
-<div class="ai-wrap">
-  <section class="ai-hero">
-    <div class="ai-badge"><i class="fas fa-seedling"></i> Own model active</div>
-    <h1>System Configuration &amp; AI Engine</h1>
-    <p>Configure the fine-tuned AgriSystem model you trained yourself. Flask stays lightweight: it sends farmer prompts to your separate Hugging Face inference service and never loads model weights.</p>
-  </section>
-
-  <div class="ai-grid">
-    <div class="ai-card ai-stat"><small>Provider</small><strong>Hugging Face inference</strong></div>
-    <div class="ai-card ai-stat"><small>Model adapter</small><strong>{{ hf_model_id or 'Not configured' }}</strong></div>
-    <div class="ai-card ai-stat"><small>Endpoint status</small><strong>{{ 'Configured' if hf_inference_url else 'Needs endpoint URL' }}</strong></div>
-  </div>
-
-  <form method="post" class="ai-card" autocomplete="off">
-    <h2><i class="fas fa-sliders-h mr-1"></i> Smart Agri Assistant — LLM connection</h2>
-    <p class="lead">Configure the LLM providers used only by the Smart Agri Assistant. These keys are separate from your self-trained Ark Expert models below.</p>
-    <div class="ai-form-grid">
-      <div class="ai-field">
-        <label for="active_provider">Default LLM provider</label>
-        <select id="active_provider" name="active_provider" style="width:100%;box-sizing:border-box;border:1px solid var(--admin-border,#cbd5e1);border-radius:10px;padding:.7rem .8rem;background:var(--admin-bg,#f8fafc);color:var(--admin-text,#0f172a)">
-          <option value="groq" {% if active_provider == 'groq' %}selected{% endif %}>Groq</option>
-          <option value="openai" {% if active_provider == 'openai' %}selected{% endif %}>OpenAI</option>
-          <option value="gemini" {% if active_provider == 'gemini' %}selected{% endif %}>Google Gemini</option>
-        </select>
-      </div>
-      <div class="ai-field"><label for="expert_provider">Smart Agri Assistant provider override</label><input id="expert_provider" name="expert_provider" value="{{ expert_provider|e }}" placeholder="groq, openai, or gemini"><span class="ai-help">Leave blank to use the default provider.</span></div>
-      <div class="ai-field"><label for="groq_key">Groq API key(s)</label><input id="groq_key" name="groq_key" type="password" value="{{ groq_key|e }}" placeholder="gsk_…" autocomplete="new-password"><span class="ai-help">Multiple keys may be comma-separated for fallback.</span></div>
-      <div class="ai-field"><label for="groq_model">Groq model</label><input id="groq_model" name="groq_model" value="{{ groq_model|e }}" placeholder="openai/gpt-oss-120b"></div>
-      <div class="ai-field"><label for="openai_key">OpenAI API key(s)</label><input id="openai_key" name="openai_key" type="password" value="{{ openai_key|e }}" placeholder="sk-…" autocomplete="new-password"></div>
-      <div class="ai-field"><label for="openai_model">OpenAI model</label><input id="openai_model" name="openai_model" value="{{ openai_model|e }}" placeholder="gpt-4o-mini"></div>
-      <div class="ai-field"><label for="gemini_key">Google Gemini API key(s)</label><input id="gemini_key" name="gemini_key" type="password" value="{{ gemini_key|e }}" placeholder="AIza…" autocomplete="new-password"></div>
-      <div class="ai-field"><label for="gemini_model">Gemini model</label><input id="gemini_model" name="gemini_model" value="{{ gemini_model|e }}" placeholder="gemini-2.5-flash"></div>
-      <div class="ai-field"><label for="expert_model">Smart Agri Assistant model override</label><input id="expert_model" name="expert_model" value="{{ expert_model|e }}" placeholder="Optional model name"></div>
-    </div>
-    <div class="ai-actions">
-      <button class="ai-btn ai-btn-primary" type="submit"><i class="fas fa-save mr-1"></i> Save LLM settings</button>
-      <button class="ai-btn ai-btn-secondary" type="button" id="test-own-ai"><i class="fas fa-plug mr-1"></i> Test endpoint</button>
-      <div id="own-ai-result" class="ai-result" role="status"></div>
-    </div>
-  </form>
-
-  <section class="ai-card">
-    <h2><i class="fas fa-layer-group mr-1"></i> Ark Expert — my trained AI models</h2>
-    <p class="lead">Register every trained adapter or merged model with its deployed inference endpoint. Activating one model makes it the model used by Farm Ark Expert AI.</p>
-    {% if hf_models %}
-    <ul class="ai-model-list">
-      {% for model in hf_models %}
-      <li class="ai-model-row">
-        <div class="ai-model-meta">
-          <strong>{{ model.label or model.model_id }}</strong>
-          <small>{{ model.model_id }} · {{ model.endpoint }}</small>
-          {% if model.id == active_model_id or model.active %}<span class="ai-active"><i class="fas fa-check-circle"></i> Active model</span>{% endif %}
+    <!-- ===============================
+         ADMIN HEADER / HERO
+    =============================== -->
+    <div class="admin-hero mb-4">
+        <div>
+            <div class="admin-title">
+                <i class="fas fa-cogs text-primary mr-2"></i>System Configuration &amp; AI Engine
+            </div>
+            <div class="admin-sub">
+                Manage global system identity, server GPS anchor coordinates, assistant LLM keys, and self-trained Ark Expert AI models.
+            </div>
         </div>
-        <div class="ai-actions" style="margin-top:0">
-          <a class="ai-btn ai-btn-secondary" href="{{ url_for('admin.settings', edit_model_id=model.id) }}">Edit</a>
-          {% if model.id != active_model_id %}
-          <form method="post" style="display:inline"><input type="hidden" name="model_action" value="activate"><input type="hidden" name="profile_id" value="{{ model.id }}"><input type="hidden" name="label" value="{{ model.label }}"><input type="hidden" name="model_id" value="{{ model.model_id }}"><input type="hidden" name="endpoint" value="{{ model.endpoint }}"><button class="ai-btn ai-btn-primary" type="submit">Use this model</button></form>
-          {% endif %}
-          <form method="post" style="display:inline" onsubmit="return confirm('Remove this trained model from the project?')"><input type="hidden" name="model_action" value="delete"><input type="hidden" name="profile_id" value="{{ model.id }}"><button class="ai-btn ai-btn-danger" type="submit">Remove</button></form>
+        <div class="admin-actions">
+            <a class="btn btn-admin-outline" href="{{ url_for('admin.dashboard') }}">
+                <i class="fas fa-arrow-left mr-1"></i>{{ t("dashboard") if t else "Dashboard" }}
+            </a>
+            <a class="btn btn-admin-outline" href="{{ url_for('admin.premium_settings') }}">
+                <i class="fas fa-crown text-warning mr-1"></i>Premium Settings
+            </a>
+            <a class="btn btn-admin-outline" href="{{ url_for('admin.settings') }}" title="Refresh Settings">
+                <i class="fas fa-sync-alt mr-1"></i>Refresh
+            </a>
         </div>
-      </li>
-      {% endfor %}
-    </ul>
-    {% endif %}
-    <form method="post" autocomplete="off">
-      <input type="hidden" name="model_action" value="save">
-      <input type="hidden" name="profile_id" value="{{ editing_model.id if editing_model else '' }}">
-      <div class="ai-form-grid">
-        <div class="ai-field"><label for="model_label">Display name</label><input id="model_label" name="label" value="{{ editing_model.label if editing_model else '' }}" placeholder="Rice disease model"></div>
-        <div class="ai-field"><label for="trained_model_id">Hugging Face model / adapter ID</label><input id="trained_model_id" name="model_id" value="{{ editing_model.model_id if editing_model else '' }}" placeholder="Maoseavik/agrisystem-adapter" required></div>
-        <div class="ai-field full"><label for="trained_endpoint">Inference endpoint URL</label><input id="trained_endpoint" name="endpoint" type="url" value="{{ editing_model.endpoint if editing_model else '' }}" placeholder="https://your-space.hf.space or https://your-server/generate" required></div>
-        <div class="ai-field"><label for="model_api_key">Endpoint API key</label><div style="display:flex;gap:.5rem"><input id="model_api_key" name="model_api_key" type="password" placeholder="Leave blank to keep the saved key" autocomplete="new-password"><button class="ai-btn ai-btn-secondary" type="button" id="generate-model-key">Generate</button></div><span class="ai-help">Stored server-side; never sent to the browser chat.</span></div>
-        <label class="ai-check"><input type="checkbox" name="activate_model" value="1" {% if editing_model and editing_model.id == active_model_id %}checked{% endif %}> Activate this model for Farm Ark Expert AI</label>
-      </div>
-      <div class="ai-actions"><button class="ai-btn ai-btn-primary" type="submit">{{ 'Update trained model' if editing_model else 'Add trained model' }}</button><button class="ai-btn ai-btn-secondary" type="button" id="test-trained-ai">Test endpoint</button><div id="trained-ai-result" class="ai-result" role="status"></div>{% if editing_model %}<a class="ai-btn ai-btn-secondary" href="{{ url_for('admin.settings') }}">Cancel edit</a>{% endif %}</div>
-    </form>
-  </section>
+    </div>
 
-  <section class="ai-card">
-    <h2><i class="fas fa-route mr-1"></i> Training to production</h2>
-    <p class="lead">Keep improving the model by exporting new records, retraining the adapter in Colab, uploading the new adapter, and updating the endpoint deployment.</p>
-    <ol class="ai-steps">
-      <li><b>1. Dataset</b>Add verified agricultural knowledge to <code>exports/agri_train_data.jsonl</code> and validation examples to <code>exports/agri_validation_data.jsonl</code>.</li>
-      <li><b>2. Train</b>Run <code>training/colab_train_agri_lora.py</code> in Google Colab, then upload the adapter to your Hugging Face account.</li>
-      <li><b>3. Deploy</b>Use a public Gradio Space URL such as <code>https://your-space.hf.space</code>, or paste a custom service's <code>/generate</code> URL above.</li>
-    </ol>
-  </section>
+    <!-- ===============================
+         ANALYTICS & STATUS KPIS
+    =============================== -->
+    <div class="row mb-4">
+        <!-- Default Assistant LLM -->
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="admin-kpi">
+                <div>
+                    <div class="admin-kpi-label">Assistant Provider</div>
+                    <div class="admin-kpi-value text-capitalize">{{ active_provider }}</div>
+                    <div class="admin-kpi-sub">
+                        {% if active_provider == 'groq' %}
+                            Fast LPU Inference
+                        {% elif active_provider == 'openai' %}
+                            GPT-4o Intelligent Engine
+                        {% elif active_provider == 'gemini' %}
+                            Google Gemini Flash
+                        {% else %}
+                            Configured Provider
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="admin-kpi-icon" style="background: rgba(14, 165, 233, 0.15); color: #0284c7;">
+                    <i class="fas fa-robot"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Server Anchor Location -->
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="admin-kpi">
+                <div>
+                    <div class="admin-kpi-label">Server Location Anchor</div>
+                    <div class="admin-kpi-value" style="font-size: 1.15rem; word-break: break-word;">{{ server_location_name.split(',')[0] if server_location_name else 'Phnom Penh' }}</div>
+                    <div class="admin-kpi-sub">{{ server_location_lat }}, {{ server_location_lon }}</div>
+                </div>
+                <div class="admin-kpi-icon" style="background: rgba(16, 185, 129, 0.15); color: #059669;">
+                    <i class="fas fa-map-marker-alt"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ark Expert Model -->
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="admin-kpi">
+                <div>
+                    <div class="admin-kpi-label">Active Expert Model</div>
+                    <div class="admin-kpi-value" style="font-size: 1.15rem; word-break: break-word;">
+                        {{ active_model_id if active_model_id else 'Maoseavik Model' }}
+                    </div>
+                    <div class="admin-kpi-sub">Ark Fine-Tuned Adapter</div>
+                </div>
+                <div class="admin-kpi-icon" style="background: rgba(168, 85, 247, 0.15); color: #9333ea;">
+                    <i class="fas fa-brain"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Inference Endpoint Status -->
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="admin-kpi">
+                <div>
+                    <div class="admin-kpi-label">Endpoint Status</div>
+                    <div class="admin-kpi-value" style="font-size: 1.15rem;">
+                        {% if hf_inference_url %}
+                            <span class="text-success"><i class="fas fa-check-circle mr-1"></i>Active</span>
+                        {% else %}
+                            <span class="text-warning"><i class="fas fa-exclamation-triangle mr-1"></i>Pending</span>
+                        {% endif %}
+                    </div>
+                    <div class="admin-kpi-sub">
+                        {{ 'Hugging Face Space / API' if hf_inference_url else 'Set endpoint URL below' }}
+                    </div>
+                </div>
+                <div class="admin-kpi-icon" style="background: rgba(245, 158, 11, 0.15); color: #d97706;">
+                    <i class="fas fa-network-wired"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===============================
+         NAVIGATION TABS
+    =============================== -->
+    <div class="settings-tabs-wrapper mb-4">
+        <ul class="nav nav-pills settings-nav" id="settingsTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <a class="nav-link {% if active_tab == 'general' or not active_tab %}active{% endif %}" 
+                   id="tab-btn-general" data-toggle="pill" href="#tab-general" role="tab" aria-controls="tab-general" 
+                   aria-selected="{% if active_tab == 'general' or not active_tab %}true{% else %}false{% endif %}">
+                    <i class="fas fa-sliders-h mr-2"></i>General &amp; Server Location
+                </a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link {% if active_tab == 'llm' %}active{% endif %}" 
+                   id="tab-btn-llm" data-toggle="pill" href="#tab-llm" role="tab" aria-controls="tab-llm" 
+                   aria-selected="{% if active_tab == 'llm' %}true{% else %}false{% endif %}">
+                    <i class="fas fa-comments mr-2"></i>Smart Agri Assistant (LLM)
+                </a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link {% if active_tab == 'trained' %}active{% endif %}" 
+                   id="tab-btn-trained" data-toggle="pill" href="#tab-trained" role="tab" aria-controls="tab-trained" 
+                   aria-selected="{% if active_tab == 'trained' %}true{% else %}false{% endif %}">
+                    <i class="fas fa-brain mr-2"></i>Ark Expert AI (Trained Models)
+                    {% if hf_models %}
+                        <span class="badge badge-pill badge-info ml-1">{{ hf_models|length }}</span>
+                    {% endif %}
+                </a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link {% if active_tab == 'guide' %}active{% endif %}" 
+                   id="tab-btn-guide" data-toggle="pill" href="#tab-guide" role="tab" aria-controls="tab-guide" 
+                   aria-selected="{% if active_tab == 'guide' %}true{% else %}false{% endif %}">
+                    <i class="fas fa-graduation-cap mr-2"></i>Training &amp; Deployment Guide
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- ===============================
+         TAB PANES CONTENT
+    =============================== -->
+    <div class="tab-content" id="settingsTabContent">
+
+        <!-- ==============================================================
+             TAB 1: GENERAL SYSTEM & SERVER LOCATION
+        ============================================================== -->
+        <div class="tab-pane fade {% if active_tab == 'general' or not active_tab %}show active{% endif %}" 
+             id="tab-general" role="tabpanel" aria-labelledby="tab-btn-general">
+            
+            <div class="row">
+                <div class="col-lg-8 mb-4">
+                    <div class="admin-panel shadow-sm">
+                        <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom" style="border-color: var(--admin-border) !important;">
+                            <h6 class="mb-0 font-weight-bold" style="color: var(--admin-text);">
+                                <i class="fas fa-map-marked-alt text-primary mr-2"></i>System Identity &amp; Server GPS Anchor
+                            </h6>
+                            <span class="badge badge-pill badge-light text-muted border">Core Configuration</span>
+                        </div>
+                        <p class="text-muted small mb-4">
+                            When farmers or local clients submit chats, diagnoses, or farm reports without a hardware GPS module or when GPS signals are restricted, AgriSystem utilizes this configured Server Location as the real-world agricultural baseline.
+                        </p>
+
+                        <form method="post" action="{{ url_for('admin.settings') }}" autocomplete="off">
+                            <input type="hidden" name="form_type" value="general">
+
+                            <!-- System Name -->
+                            <div class="form-group mb-4">
+                                <label for="system_name" class="font-weight-bold small text-uppercase" style="letter-spacing: 0.05em; color: var(--admin-text);">
+                                    <i class="fas fa-building text-muted mr-1"></i>System / Organization Name
+                                </label>
+                                <input type="text" class="form-control admin-input" id="system_name" name="system_name" 
+                                       value="{{ system_name|e }}" placeholder="e.g. AgriSystem Cambodia" required>
+                                <small class="form-text text-muted">Displayed across admin dashboards, farmer headers, and exported reports.</small>
+                            </div>
+
+                            <hr style="border-color: var(--admin-border); margin: 1.5rem 0;">
+
+                            <!-- Cambodia Province Quick Selector -->
+                            <div class="form-group mb-4">
+                                <div class="d-flex align-items-center justify-content-between mb-1">
+                                    <label for="cambodia_province_select" class="font-weight-bold small text-uppercase mb-0" style="letter-spacing: 0.05em; color: var(--admin-text);">
+                                        <i class="fas fa-compass text-info mr-1"></i>Cambodia Province Quick Selector
+                                    </label>
+                                    <span class="badge badge-light text-primary font-weight-normal border">
+                                        <i class="fas fa-magic mr-1"></i>Auto-fills Coordinates
+                                    </span>
+                                </div>
+                                <select class="form-control admin-input" id="cambodia_province_select">
+                                    <option value="" disabled selected>-- Choose a Cambodian Province to Auto-Fill Coordinates --</option>
+                                    {% if cambodia_provinces %}
+                                        {% for prov_name, prov_lat, prov_lon in cambodia_provinces %}
+                                            <option value="{{ prov_name }}" data-lat="{{ prov_lat }}" data-lon="{{ prov_lon }}"
+                                                    {% if prov_name in server_location_name %}selected{% endif %}>
+                                                {{ prov_name }} (Lat: {{ prov_lat }}, Lon: {{ prov_lon }})
+                                            </option>
+                                        {% endfor %}
+                                    {% endif %}
+                                </select>
+                                <small class="form-text text-muted">Select any of the 25 Cambodian provinces to populate official geographic farm coordinates.</small>
+                            </div>
+
+                            <!-- Server Location Name -->
+                            <div class="form-group mb-3">
+                                <label for="server_location_name" class="font-weight-bold small text-uppercase" style="letter-spacing: 0.05em; color: var(--admin-text);">
+                                    <i class="fas fa-tag text-muted mr-1"></i>Location / Farm Place Name
+                                </label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control admin-input" id="server_location_name" name="server_location_name" 
+                                           value="{{ server_location_name|e }}" placeholder="e.g. Phnom Penh, Cambodia" required>
+                                    <div class="input-group-append">
+                                        <button class="btn btn-outline-secondary" type="button" id="btn-detect-gps" title="Detect from Admin Browser Location">
+                                            <i class="fas fa-crosshairs text-primary mr-1"></i>Detect GPS
+                                        </button>
+                                    </div>
+                                </div>
+                                <small class="form-text text-muted">Descriptive name for the farm headquarters or datacenter.</small>
+                            </div>
+
+                            <!-- Coordinate Row -->
+                            <div class="form-row mb-4">
+                                <div class="col-md-6 mb-3">
+                                    <label for="server_location_lat" class="font-weight-bold small text-uppercase" style="letter-spacing: 0.05em; color: var(--admin-text);">
+                                        Latitude (Decimal Degrees)
+                                    </label>
+                                    <input type="number" step="any" class="form-control admin-input" id="server_location_lat" name="server_location_lat" 
+                                           value="{{ server_location_lat|e }}" placeholder="11.5564" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="server_location_lon" class="font-weight-bold small text-uppercase" style="letter-spacing: 0.05em; color: var(--admin-text);">
+                                        Longitude (Decimal Degrees)
+                                    </label>
+                                    <input type="number" step="any" class="form-control admin-input" id="server_location_lon" name="server_location_lon" 
+                                           value="{{ server_location_lon|e }}" placeholder="104.9282" required>
+                                </div>
+                            </div>
+
+                            <div class="d-flex align-items-center justify-content-between flex-wrap pt-2">
+                                <button type="submit" class="btn btn-primary btn-admin px-4 py-2 font-weight-bold">
+                                    <i class="fas fa-save mr-1"></i>Save General Settings
+                                </button>
+                                <a id="link-gmaps-preview" href="https://maps.google.com/?q={{ server_location_lat }},{{ server_location_lon }}" 
+                                   target="_blank" rel="noopener noreferrer" class="btn btn-admin-outline btn-sm mt-2 mt-sm-0">
+                                    <i class="fas fa-external-link-alt text-primary mr-1"></i>Preview on Google Maps
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Info / Help Sidebar -->
+                <div class="col-lg-4 mb-4">
+                    <div class="admin-panel shadow-sm mb-3">
+                        <h6 class="font-weight-bold mb-3" style="color: var(--admin-text);">
+                            <i class="fas fa-info-circle text-info mr-2"></i>Why Configure GPS?
+                        </h6>
+                        <ul class="list-unstyled small text-muted mb-0" style="line-height: 1.6;">
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success mr-2"></i><strong>Real Location in Farmer Chat:</strong> Ensures messages show real province and weather info even if farmers connect from desktop PCs without GPS chips.
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success mr-2"></i><strong>Disease Geo-Tracking:</strong> Used as the default location anchor for regional crop disease outbreak maps.
+                            </li>
+                            <li class="mb-0">
+                                <i class="fas fa-check text-success mr-2"></i><strong>Agricultural Advisory:</strong> Feeds real climate and soil zone data to the AI assistant for contextual advice.
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="admin-panel shadow-sm">
+                        <h6 class="font-weight-bold mb-2" style="color: var(--admin-text);">
+                            <i class="fas fa-satellite text-warning mr-2"></i>Hardware GPS Detection
+                        </h6>
+                        <p class="small text-muted mb-3">
+                            Click <strong>"Detect GPS"</strong> above to utilize your current device's geolocation sensors to lock in exact field coordinates.
+                        </p>
+                        <div id="gps-status-feedback" class="alert alert-secondary small py-2 px-3 mb-0" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==============================================================
+             TAB 2: SMART AGRI ASSISTANT (LLM)
+        ============================================================== -->
+        <div class="tab-pane fade {% if active_tab == 'llm' %}show active{% endif %}" 
+             id="tab-llm" role="tabpanel" aria-labelledby="tab-btn-llm">
+
+            <div class="row">
+                <div class="col-lg-8 mb-4">
+                    <div class="admin-panel shadow-sm">
+                        <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom" style="border-color: var(--admin-border) !important;">
+                            <h6 class="mb-0 font-weight-bold" style="color: var(--admin-text);">
+                                <i class="fas fa-robot text-primary mr-2"></i>Assistant LLM Credentials &amp; Provider Configuration
+                            </h6>
+                            <span class="badge badge-pill badge-light text-muted border">Smart Agri Assistant</span>
+                        </div>
+                        <p class="text-muted small mb-4">
+                            Configure LLM providers powering the conversational Smart Agri Assistant. You can test latency and connection status in real-time before saving.
+                        </p>
+
+                        <form method="post" action="{{ url_for('admin.settings') }}" autocomplete="off" id="llm-settings-form">
+                            <!-- Active Provider Radio Cards -->
+                            <label class="font-weight-bold small text-uppercase mb-2" style="letter-spacing: 0.05em; color: var(--admin-text);">
+                                Select Active Primary LLM Provider
+                            </label>
+                            <div class="row mb-4">
+                                <!-- Groq -->
+                                <div class="col-md-4 mb-2">
+                                    <label class="provider-card p-3 border rounded w-100 text-center cursor-pointer {% if active_provider == 'groq' %}border-primary bg-primary-soft shadow-sm{% endif %}" 
+                                           style="cursor: pointer; transition: all 0.2s;" for="provider_groq">
+                                        <input type="radio" name="active_provider" id="provider_groq" value="groq" 
+                                               {% if active_provider == 'groq' %}checked{% endif %} class="d-none provider-radio">
+                                        <div class="h5 mb-1 font-weight-bold text-dark">
+                                            <i class="fas fa-bolt text-warning mr-1"></i>Groq
+                                        </div>
+                                        <div class="small text-muted">Ultra-fast LPU (Llama / OSS)</div>
+                                        {% if active_provider == 'groq' %}
+                                            <span class="badge badge-primary mt-2">Active</span>
+                                        {% endif %}
+                                    </label>
+                                </div>
+                                <!-- OpenAI -->
+                                <div class="col-md-4 mb-2">
+                                    <label class="provider-card p-3 border rounded w-100 text-center cursor-pointer {% if active_provider == 'openai' %}border-primary bg-primary-soft shadow-sm{% endif %}" 
+                                           style="cursor: pointer; transition: all 0.2s;" for="provider_openai">
+                                        <input type="radio" name="active_provider" id="provider_openai" value="openai" 
+                                               {% if active_provider == 'openai' %}checked{% endif %} class="d-none provider-radio">
+                                        <div class="h5 mb-1 font-weight-bold text-dark">
+                                            <i class="fas fa-brain text-success mr-1"></i>OpenAI
+                                        </div>
+                                        <div class="small text-muted">GPT-4o &amp; GPT-4o-mini</div>
+                                        {% if active_provider == 'openai' %}
+                                            <span class="badge badge-primary mt-2">Active</span>
+                                        {% endif %}
+                                    </label>
+                                </div>
+                                <!-- Gemini -->
+                                <div class="col-md-4 mb-2">
+                                    <label class="provider-card p-3 border rounded w-100 text-center cursor-pointer {% if active_provider == 'gemini' %}border-primary bg-primary-soft shadow-sm{% endif %}" 
+                                           style="cursor: pointer; transition: all 0.2s;" for="provider_gemini">
+                                        <input type="radio" name="active_provider" id="provider_gemini" value="gemini" 
+                                               {% if active_provider == 'gemini' %}checked{% endif %} class="d-none provider-radio">
+                                        <div class="h5 mb-1 font-weight-bold text-dark">
+                                            <i class="fab fa-google text-danger mr-1"></i>Gemini
+                                        </div>
+                                        <div class="small text-muted">Gemini 2.5 Flash / Pro</div>
+                                        {% if active_provider == 'gemini' %}
+                                            <span class="badge badge-primary mt-2">Active</span>
+                                        {% endif %}
+                                    </label>
+                                </div>
+                            </div>
+
+                            <hr style="border-color: var(--admin-border); margin: 1.5rem 0;">
+
+                            <!-- Groq Settings -->
+                            <div class="provider-config-box mb-4 p-3 rounded border" style="background: var(--admin-bg);">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <h6 class="font-weight-bold mb-0" style="color: var(--admin-text);">
+                                        <i class="fas fa-bolt text-warning mr-1"></i>Groq API Configuration
+                                    </h6>
+                                    <button type="button" class="btn btn-xs btn-outline-info btn-fetch-models" data-provider="groq">
+                                        <i class="fas fa-sync-alt mr-1"></i>Fetch Models
+                                    </button>
+                                </div>
+                                <div class="form-group mb-2">
+                                    <label for="groq_key" class="small font-weight-bold text-muted">Groq API Key(s)</label>
+                                    <div class="input-group">
+                                        <input type="password" class="form-control admin-input" id="groq_key" name="groq_key" 
+                                               value="{{ groq_key|e }}" placeholder="gsk_…" autocomplete="new-password">
+                                        <div class="input-group-append">
+                                            <button class="btn btn-outline-secondary toggle-pwd-btn" type="button" data-target="groq_key">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <small class="form-text text-muted">Multiple keys may be comma-separated for automatic failover.</small>
+                                </div>
+                                <div class="form-group mb-0">
+                                    <label for="groq_model" class="small font-weight-bold text-muted">Groq Model Identifier</label>
+                                    <input type="text" class="form-control admin-input" id="groq_model" name="groq_model" 
+                                           value="{{ groq_model|e }}" placeholder="openai/gpt-oss-120b" list="groq-model-suggestions">
+                                    <datalist id="groq-model-suggestions">
+                                        <option value="openai/gpt-oss-120b">
+                                        <option value="llama-3.3-70b-versatile">
+                                        <option value="llama-3.1-8b-instant">
+                                        <option value="mixtral-8x7b-32768">
+                                    </datalist>
+                                </div>
+                            </div>
+
+                            <!-- OpenAI Settings -->
+                            <div class="provider-config-box mb-4 p-3 rounded border" style="background: var(--admin-bg);">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <h6 class="font-weight-bold mb-0" style="color: var(--admin-text);">
+                                        <i class="fas fa-brain text-success mr-1"></i>OpenAI API Configuration
+                                    </h6>
+                                    <button type="button" class="btn btn-xs btn-outline-info btn-fetch-models" data-provider="openai">
+                                        <i class="fas fa-sync-alt mr-1"></i>Fetch Models
+                                    </button>
+                                </div>
+                                <div class="form-group mb-2">
+                                    <label for="openai_key" class="small font-weight-bold text-muted">OpenAI API Key(s)</label>
+                                    <div class="input-group">
+                                        <input type="password" class="form-control admin-input" id="openai_key" name="openai_key" 
+                                               value="{{ openai_key|e }}" placeholder="sk-…" autocomplete="new-password">
+                                        <div class="input-group-append">
+                                            <button class="btn btn-outline-secondary toggle-pwd-btn" type="button" data-target="openai_key">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group mb-0">
+                                    <label for="openai_model" class="small font-weight-bold text-muted">OpenAI Model Identifier</label>
+                                    <input type="text" class="form-control admin-input" id="openai_model" name="openai_model" 
+                                           value="{{ openai_model|e }}" placeholder="gpt-4o-mini" list="openai-model-suggestions">
+                                    <datalist id="openai-model-suggestions">
+                                        <option value="gpt-4o-mini">
+                                        <option value="gpt-4o">
+                                        <option value="o3-mini">
+                                        <option value="gpt-3.5-turbo">
+                                    </datalist>
+                                </div>
+                            </div>
+
+                            <!-- Google Gemini Settings -->
+                            <div class="provider-config-box mb-4 p-3 rounded border" style="background: var(--admin-bg);">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <h6 class="font-weight-bold mb-0" style="color: var(--admin-text);">
+                                        <i class="fab fa-google text-danger mr-1"></i>Google Gemini Configuration
+                                    </h6>
+                                    <button type="button" class="btn btn-xs btn-outline-info btn-fetch-models" data-provider="gemini">
+                                        <i class="fas fa-sync-alt mr-1"></i>Fetch Models
+                                    </button>
+                                </div>
+                                <div class="form-group mb-2">
+                                    <label for="gemini_key" class="small font-weight-bold text-muted">Gemini API Key(s)</label>
+                                    <div class="input-group">
+                                        <input type="password" class="form-control admin-input" id="gemini_key" name="gemini_key" 
+                                               value="{{ gemini_key|e }}" placeholder="AIza…" autocomplete="new-password">
+                                        <div class="input-group-append">
+                                            <button class="btn btn-outline-secondary toggle-pwd-btn" type="button" data-target="gemini_key">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group mb-0">
+                                    <label for="gemini_model" class="small font-weight-bold text-muted">Gemini Model Identifier</label>
+                                    <input type="text" class="form-control admin-input" id="gemini_model" name="gemini_model" 
+                                           value="{{ gemini_model|e }}" placeholder="gemini-2.5-flash" list="gemini-model-suggestions">
+                                    <datalist id="gemini-model-suggestions">
+                                        <option value="gemini-2.5-flash">
+                                        <option value="gemini-1.5-flash">
+                                        <option value="gemini-1.5-pro">
+                                        <option value="gemini-2.0-flash">
+                                    </datalist>
+                                </div>
+                            </div>
+
+                            <!-- Collapsible Advanced Overrides -->
+                            <div class="mb-4">
+                                <a class="small font-weight-bold text-muted" data-toggle="collapse" href="#advanced-overrides-collapse" role="button" aria-expanded="false">
+                                    <i class="fas fa-chevron-down mr-1"></i>Advanced Provider &amp; Model Overrides (Optional)
+                                </a>
+                                <div class="collapse mt-2" id="advanced-overrides-collapse">
+                                    <div class="p-3 border rounded" style="background: var(--admin-bg);">
+                                        <div class="form-group mb-2">
+                                            <label for="expert_provider" class="small font-weight-bold text-muted">Provider Override</label>
+                                            <input type="text" class="form-control admin-input" id="expert_provider" name="expert_provider" 
+                                                   value="{{ expert_provider|e }}" placeholder="Leave blank to use default (groq, openai, or gemini)">
+                                        </div>
+                                        <div class="form-group mb-0">
+                                            <label for="expert_model" class="small font-weight-bold text-muted">Model Override</label>
+                                            <input type="text" class="form-control admin-input" id="expert_model" name="expert_model" 
+                                                   value="{{ expert_model|e }}" placeholder="Optional custom model name">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Action & Test Row -->
+                            <div class="d-flex align-items-center justify-content-between flex-wrap pt-2">
+                                <div class="d-flex align-items-center flex-wrap">
+                                    <button type="submit" class="btn btn-primary btn-admin px-4 py-2 font-weight-bold mr-2 mb-2">
+                                        <i class="fas fa-save mr-1"></i>Save LLM Settings
+                                    </button>
+                                    <button type="button" class="btn btn-admin-outline px-3 py-2 mr-2 mb-2" id="test-own-ai">
+                                        <i class="fas fa-plug text-primary mr-1"></i>Test Selected Connection
+                                    </button>
+                                </div>
+                                <div id="own-ai-result" class="alert small py-2 px-3 mb-2 w-100" style="display: none;" role="status"></div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- LLM Provider Details / Guide -->
+                <div class="col-lg-4 mb-4">
+                    <div class="admin-panel shadow-sm mb-3">
+                        <h6 class="font-weight-bold mb-3" style="color: var(--admin-text);">
+                            <i class="fas fa-lightbulb text-warning mr-2"></i>Provider Recommendations
+                        </h6>
+                        <div class="mb-3 small">
+                            <strong class="text-primary d-block mb-1">Groq (Recommended for Speed):</strong>
+                            <p class="text-muted mb-0">Sub-second generation latency, ideal for rapid farmer chat responses and high concurrency.</p>
+                        </div>
+                        <div class="mb-3 small">
+                            <strong class="text-success d-block mb-1">OpenAI (High Reasoning):</strong>
+                            <p class="text-muted mb-0">Best for complex multi-turn diagnosis inquiries and scientific agricultural data validation.</p>
+                        </div>
+                        <div class="small">
+                            <strong class="text-danger d-block mb-1">Google Gemini (High Context):</strong>
+                            <p class="text-muted mb-0">Generous rate limits, multimodal capability, and native Khmer / multilingual understanding.</p>
+                        </div>
+                    </div>
+
+                    <div class="admin-panel shadow-sm">
+                        <h6 class="font-weight-bold mb-2" style="color: var(--admin-text);">
+                            <i class="fas fa-shield-alt text-success mr-2"></i>Security &amp; Encryption
+                        </h6>
+                        <p class="small text-muted mb-0">
+                            API keys are securely stored server-side in the database. Secrets are never exposed to browser clients or farmer sessions.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==============================================================
+             TAB 3: ARK EXPERT AI (TRAINED MODELS)
+        ============================================================== -->
+        <div class="tab-pane fade {% if active_tab == 'trained' %}show active{% endif %}" 
+             id="tab-trained" role="tabpanel" aria-labelledby="tab-btn-trained">
+
+            <div class="row">
+                <!-- Left: Catalog of Models & Add/Edit Form -->
+                <div class="col-lg-8 mb-4">
+                    <!-- Registered Models Catalog -->
+                    <div class="admin-panel shadow-sm mb-4">
+                        <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom" style="border-color: var(--admin-border) !important;">
+                            <div>
+                                <h6 class="mb-0 font-weight-bold" style="color: var(--admin-text);">
+                                    <i class="fas fa-layer-group text-primary mr-2"></i>Registered Farm Ark Models
+                                </h6>
+                                <small class="text-muted">Self-trained adapters and custom inference microservices</small>
+                            </div>
+                            <span class="badge badge-pill badge-primary">{{ hf_models|length if hf_models else 0 }} Models</span>
+                        </div>
+
+                        {% if hf_models %}
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0" style="color: var(--admin-text);">
+                                    <thead class="small text-uppercase text-muted border-top-0">
+                                        <tr>
+                                            <th>Model &amp; Adapter</th>
+                                            <th>Inference Endpoint</th>
+                                            <th>Status</th>
+                                            <th class="text-right">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for model in hf_models %}
+                                            {% set is_active = (model.id == active_model_id or model.active) %}
+                                            <tr class="{% if is_active %}table-success-soft{% endif %}">
+                                                <td>
+                                                    <div class="font-weight-bold">{{ model.label or model.model_id }}</div>
+                                                    <small class="text-muted font-monospace">{{ model.model_id }}</small>
+                                                </td>
+                                                <td>
+                                                    <span class="small font-monospace text-truncate d-inline-block" style="max-width: 220px;" title="{{ model.endpoint }}">
+                                                        {{ model.endpoint }}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    {% if is_active %}
+                                                        <span class="badge badge-success px-2 py-1">
+                                                            <i class="fas fa-check-circle mr-1"></i>Active Engine
+                                                        </span>
+                                                    {% else %}
+                                                        <span class="badge badge-secondary px-2 py-1">Standby</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td class="text-right">
+                                                    <div class="d-inline-flex gap-1">
+                                                        <a href="{{ url_for('admin.settings', edit_model_id=model.id, tab='trained') }}" 
+                                                           class="btn btn-sm btn-admin-outline mr-1" title="Edit Model Configuration">
+                                                            <i class="fas fa-edit"></i>
+                                                        </a>
+                                                        {% if not is_active %}
+                                                            <form method="post" action="{{ url_for('admin.settings') }}" style="display:inline;">
+                                                                <input type="hidden" name="model_action" value="activate">
+                                                                <input type="hidden" name="profile_id" value="{{ model.id }}">
+                                                                <input type="hidden" name="label" value="{{ model.label }}">
+                                                                <input type="hidden" name="model_id" value="{{ model.model_id }}">
+                                                                <input type="hidden" name="endpoint" value="{{ model.endpoint }}">
+                                                                <button type="submit" class="btn btn-sm btn-primary mr-1" title="Set as Active Model">
+                                                                    <i class="fas fa-power-off"></i>
+                                                                </button>
+                                                            </form>
+                                                        {% endif %}
+                                                        <form method="post" action="{{ url_for('admin.settings') }}" style="display:inline;" 
+                                                              onsubmit="return confirm('Permanently remove model \'{{ model.label or model.model_id }}\'?');">
+                                                            <input type="hidden" name="model_action" value="delete">
+                                                            <input type="hidden" name="profile_id" value="{{ model.id }}">
+                                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Model">
+                                                                <i class="fas fa-trash-alt"></i>
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4 text-muted">
+                                <i class="fas fa-brain fa-3x mb-3 text-secondary" style="opacity: 0.4;"></i>
+                                <p class="mb-1 font-weight-bold">No custom models registered yet.</p>
+                                <p class="small mb-0">Use the form below to register your first fine-tuned Hugging Face Space or Railway inference endpoint.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Add or Edit Model Form -->
+                    <div class="admin-panel shadow-sm">
+                        <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom" style="border-color: var(--admin-border) !important;">
+                            <h6 class="mb-0 font-weight-bold" style="color: var(--admin-text);">
+                                <i class="fas fa-{% if editing_model %}edit text-warning{% else %}plus-circle text-primary{% endif %} mr-2"></i>
+                                {{ 'Edit Trained Model Profile' if editing_model else 'Register New Trained AI Model' }}
+                            </h6>
+                            {% if editing_model %}
+                                <a href="{{ url_for('admin.settings', tab='trained') }}" class="btn btn-xs btn-outline-secondary">
+                                    <i class="fas fa-times mr-1"></i>Cancel Edit
+                                </a>
+                            {% endif %}
+                        </div>
+
+                        <form method="post" action="{{ url_for('admin.settings') }}" autocomplete="off">
+                            <input type="hidden" name="model_action" value="save">
+                            <input type="hidden" name="profile_id" value="{{ editing_model.id if editing_model else '' }}">
+
+                            <div class="form-row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="model_label" class="small font-weight-bold text-muted">Display Name / Label</label>
+                                    <input type="text" class="form-control admin-input" id="model_label" name="label" 
+                                           value="{{ editing_model.label if editing_model else '' }}" 
+                                           placeholder="e.g. Rice &amp; Cassava LoRA Adapter" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="trained_model_id" class="small font-weight-bold text-muted">Hugging Face Model / Adapter ID</label>
+                                    <input type="text" class="form-control admin-input" id="trained_model_id" name="model_id" 
+                                           value="{{ editing_model.model_id if editing_model else '' }}" 
+                                           placeholder="e.g. Maoseavik/agrisystem-adapter" required>
+                                </div>
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label for="trained_endpoint" class="small font-weight-bold text-muted">Deployed Inference Endpoint URL</label>
+                                <input type="url" class="form-control admin-input font-monospace" id="trained_endpoint" name="endpoint" 
+                                       value="{{ editing_model.endpoint if editing_model else '' }}" 
+                                       placeholder="https://your-space.hf.space or https://your-server.railway.app/generate" required>
+                                <small class="form-text text-muted">Direct public URL of the Hugging Face Space or Docker container hosting the model.</small>
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label for="model_api_key" class="small font-weight-bold text-muted">Endpoint Secret Token / API Key</label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control admin-input" id="model_api_key" name="model_api_key" 
+                                           placeholder="Leave blank to retain saved key" autocomplete="new-password">
+                                    <div class="input-group-append">
+                                        <button class="btn btn-outline-secondary toggle-pwd-btn" type="button" data-target="model_api_key">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="btn btn-outline-primary" type="button" id="generate-model-key">
+                                            <i class="fas fa-key mr-1"></i>Generate Token
+                                        </button>
+                                    </div>
+                                </div>
+                                <small class="form-text text-muted">High-entropy bearer token sent in HTTP Authorization headers for inference verification.</small>
+                            </div>
+
+                            <div class="custom-control custom-checkbox mb-4">
+                                <input type="checkbox" class="custom-control-input" id="activate_model" name="activate_model" value="1" 
+                                       {% if (editing_model and editing_model.id == active_model_id) or not hf_models %}checked{% endif %}>
+                                <label class="custom-control-label small font-weight-bold cursor-pointer" for="activate_model" style="color: var(--admin-text);">
+                                    Activate this model immediately for Farm Ark Expert AI
+                                </label>
+                            </div>
+
+                            <div class="d-flex align-items-center justify-content-between flex-wrap pt-2">
+                                <div class="d-flex align-items-center flex-wrap">
+                                    <button type="submit" class="btn btn-primary btn-admin px-4 py-2 font-weight-bold mr-2 mb-2">
+                                        <i class="fas fa-save mr-1"></i>{{ 'Update Model Profile' if editing_model else 'Save &amp; Register Model' }}
+                                    </button>
+                                    <button type="button" class="btn btn-admin-outline px-3 py-2 mr-2 mb-2" id="test-trained-ai">
+                                        <i class="fas fa-plug text-primary mr-1"></i>Test Endpoint
+                                    </button>
+                                    {% if editing_model %}
+                                        <a href="{{ url_for('admin.settings', tab='trained') }}" class="btn btn-secondary px-3 py-2 mb-2">
+                                            Cancel
+                                        </a>
+                                    {% endif %}
+                                </div>
+                                <div id="trained-ai-result" class="alert small py-2 px-3 mb-2 w-100" style="display: none;" role="status"></div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Right: Architecture Details & Quick Status -->
+                <div class="col-lg-4 mb-4">
+                    <div class="admin-panel shadow-sm mb-3">
+                        <h6 class="font-weight-bold mb-3" style="color: var(--admin-text);">
+                            <i class="fas fa-microchip text-primary mr-2"></i>Lightweight Architecture
+                        </h6>
+                        <p class="small text-muted mb-2">
+                            AgriSystem is architected so that large model weights (7B+ parameters) are hosted in standalone GPU inference environments (Hugging Face ZeroGPU, Railway, or RunPod).
+                        </p>
+                        <p class="small text-muted mb-0">
+                            The main Flask web server remains lightweight and snappy (&lt; 200MB RAM), proxying farmer diagnosis prompts securely via HTTPS.
+                        </p>
+                    </div>
+
+                    <div class="admin-panel shadow-sm">
+                        <h6 class="font-weight-bold mb-3" style="color: var(--admin-text);">
+                            <i class="fas fa-shield-alt text-success mr-2"></i>Secure Token Authentication
+                        </h6>
+                        <p class="small text-muted mb-2">
+                            When deploying your container or Space, pass the generated token as the environment variable <code>INFERENCE_API_KEY</code>.
+                        </p>
+                        <div class="p-2 rounded bg-light border small font-monospace text-break">
+                            Authorization: Bearer &lt;YOUR_SECRET_TOKEN&gt;
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==============================================================
+             TAB 4: TRAINING & DEPLOYMENT GUIDE
+        ============================================================== -->
+        <div class="tab-pane fade {% if active_tab == 'guide' %}show active{% endif %}" 
+             id="tab-guide" role="tabpanel" aria-labelledby="tab-btn-guide">
+
+            <div class="admin-panel shadow-sm mb-4">
+                <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom" style="border-color: var(--admin-border) !important;">
+                    <div>
+                        <h6 class="mb-0 font-weight-bold" style="color: var(--admin-text);">
+                            <i class="fas fa-rocket text-primary mr-2"></i>End-to-End Fine-Tuning &amp; Deployment Pipeline
+                        </h6>
+                        <small class="text-muted">Step-by-step workflow from dataset export to production deployment</small>
+                    </div>
+                    <span class="badge badge-pill badge-success">Production Ready</span>
+                </div>
+
+                <div class="row">
+                    <!-- Step 1 -->
+                    <div class="col-lg-4 mb-4">
+                        <div class="card h-100 border rounded p-3" style="background: var(--admin-bg);">
+                            <div class="d-flex align-items-center mb-3">
+                                <span class="badge badge-primary rounded-circle p-2 mr-2" style="width: 32px; height: 32px; display: grid; place-items: center; font-size: 1rem;">1</span>
+                                <h6 class="font-weight-bold mb-0 text-dark">Data Curation &amp; Export</h6>
+                            </div>
+                            <p class="small text-muted mb-3">
+                                Agricultural diagnosis histories, confirmed pathogen cases, and farmer Q&amp;A pairs are exported into formatted JSONL training datasets.
+                            </p>
+                            <div class="small p-2 bg-dark text-light rounded font-monospace mb-2">
+                                exports/agri_train_data.jsonl<br>
+                                exports/agri_validation_data.jsonl
+                            </div>
+                            <div class="mt-auto pt-2">
+                                <span class="badge badge-light text-muted border">Format: JSONL</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="col-lg-4 mb-4">
+                        <div class="card h-100 border rounded p-3" style="background: var(--admin-bg);">
+                            <div class="d-flex align-items-center mb-3">
+                                <span class="badge badge-primary rounded-circle p-2 mr-2" style="width: 32px; height: 32px; display: grid; place-items: center; font-size: 1rem;">2</span>
+                                <h6 class="font-weight-bold mb-0 text-dark">Google Colab LoRA Fine-Tuning</h6>
+                            </div>
+                            <p class="small text-muted mb-3">
+                                Run the automated PEFT/LoRA training script on a free or Pro T4/A100 GPU. Fine-tunes specialized agricultural knowledge while preserving base model fluency.
+                            </p>
+                            <div class="small p-2 bg-dark text-light rounded font-monospace mb-2">
+                                python training/colab_train_agri_lora.py
+                            </div>
+                            <div class="mt-auto pt-2">
+                                <span class="badge badge-light text-muted border">Adapter: Hugging Face Hub</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="col-lg-4 mb-4">
+                        <div class="card h-100 border rounded p-3" style="background: var(--admin-bg);">
+                            <div class="d-flex align-items-center mb-3">
+                                <span class="badge badge-primary rounded-circle p-2 mr-2" style="width: 32px; height: 32px; display: grid; place-items: center; font-size: 1rem;">3</span>
+                                <h6 class="font-weight-bold mb-0 text-dark">Deploy Inference Microservice</h6>
+                            </div>
+                            <p class="small text-muted mb-3">
+                                Host your model with Gradio or FastAPI on Hugging Face Spaces (ZeroGPU) or Railway. Connect the <code>/generate</code> endpoint URL directly to AgriSystem.
+                            </p>
+                            <div class="small p-2 bg-dark text-light rounded font-monospace mb-2">
+                                https://&lt;your-space&gt;.hf.space/generate
+                            </div>
+                            <div class="mt-auto pt-2">
+                                <span class="badge badge-light text-muted border">Zero-Downtime Deployment</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-info border-0 mb-0 d-flex align-items-center">
+                    <i class="fas fa-info-circle fa-2x mr-3 text-info"></i>
+                    <div class="small">
+                        <strong>Need help fine-tuning or deploying?</strong> Check the repository's <code>deployment/README.md</code> for pre-configured Dockerfile recipes, Railway deployment templates, and Hugging Face ZeroGPU configuration snippets.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
 </div>
 
+<!-- ===============================
+     INLINE STYLES FOR ADMIN SETTINGS
+=============================== -->
+<style>
+.settings-tabs-wrapper {
+    background: var(--admin-card);
+    border: 1px solid var(--admin-border);
+    border-radius: var(--admin-radius-md, 12px);
+    padding: 6px;
+}
+.settings-nav .nav-link {
+    color: var(--admin-muted);
+    font-weight: 600;
+    font-size: 0.92rem;
+    padding: 0.65rem 1.15rem;
+    border-radius: 8px;
+    transition: all 0.15s ease-in-out;
+}
+.settings-nav .nav-link:hover {
+    color: var(--admin-text);
+    background: rgba(14, 165, 233, 0.08);
+}
+.settings-nav .nav-link.active {
+    color: #ffffff !important;
+    background: var(--admin-accent, #2563eb) !important;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+}
+.admin-input {
+    background: var(--admin-bg, #f8fafc);
+    border: 1px solid var(--admin-border, #cbd5e1);
+    color: var(--admin-text, #0f172a);
+    border-radius: 8px;
+    padding: 0.65rem 0.85rem;
+}
+.admin-input:focus {
+    background: var(--admin-card, #ffffff);
+    border-color: var(--admin-accent, #2563eb);
+    color: var(--admin-text, #0f172a);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+.provider-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--admin-accent) !important;
+}
+.cursor-pointer {
+    cursor: pointer;
+}
+.table-success-soft {
+    background-color: rgba(16, 185, 129, 0.08) !important;
+}
+.btn-xs {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    line-height: 1.3;
+    border-radius: 6px;
+}
+.dark-mode .settings-tabs-wrapper,
+.dark-mode .admin-panel {
+    background: #18181b;
+    border-color: #27272a !important;
+}
+.dark-mode .admin-input {
+    background: #09090b;
+    border-color: #3f3f46;
+    color: #f4f4f5;
+}
+.dark-mode .provider-card {
+    background: #18181b;
+    border-color: #27272a;
+}
+.dark-mode .provider-card .text-dark {
+    color: #f4f4f5 !important;
+}
+</style>
+
+<!-- ===============================
+     INTERACTIVE JAVASCRIPT
+=============================== -->
 <script>
 (() => {
-  const button=document.getElementById('test-own-ai'), result=document.getElementById('own-ai-result');
-  if (!button) return;
-  button.addEventListener('click', async () => {
-    result.className='ai-result ok'; result.textContent='Testing endpoint…'; button.disabled=true;
-    try {
-      const provider=document.getElementById('active_provider').value.trim();
-      const keyField=document.getElementById(provider+'_key');
-      const modelField=document.getElementById(provider+'_model');
-      const response=await fetch('{{ url_for("admin.test_ai_connection") }}',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({provider:provider,api_key:keyField ? keyField.value.trim() : '',model:modelField ? modelField.value.trim() : ''})});
-      const data=await response.json(); result.className=data.success?'ai-result ok':'ai-result error'; result.textContent=data.success?data.message:(data.error||'Connection failed.');
-    } catch(error) { result.className='ai-result error'; result.textContent='Could not reach the Flask API: '+error; }
-    finally { button.disabled=false; }
-  });
-  const modelButton=document.getElementById('test-trained-ai'), modelResult=document.getElementById('trained-ai-result');
-  if (modelButton) modelButton.addEventListener('click', async () => {
-    modelResult.className='ai-result ok'; modelResult.textContent='Testing endpoint…'; modelButton.disabled=true;
-    try {
-      const response=await fetch('{{ url_for("admin.test_ai_connection") }}',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({provider:'huggingface',endpoint:document.getElementById('trained_endpoint').value.trim(),api_key:document.getElementById('model_api_key').value.trim()})});
-      const data=await response.json(); modelResult.className=data.success?'ai-result ok':'ai-result error'; modelResult.textContent=data.success?data.message:(data.error||'Connection failed.');
-    } catch(error) { modelResult.className='ai-result error'; modelResult.textContent='Could not reach the Flask API: '+error; }
-    finally { modelButton.disabled=false; }
-  });
-  const generateUrl='{{ url_for("admin.generate_inference_key") }}';
-  const wireKeyGenerator=(buttonId,inputId) => {
-    const generator=document.getElementById(buttonId), input=document.getElementById(inputId);
-    if (!generator || !input) return;
-    generator.addEventListener('click', async () => {
-      generator.disabled=true; generator.textContent='Generating…';
-      try {
-        const response=await fetch(generateUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({})});
-        const data=await response.json();
-        if (!response.ok || !data.success) throw new Error(data.error || 'Could not generate a key.');
-        input.type='text'; input.value=data.api_key; input.focus(); input.select();
-      } catch (error) { window.alert(error.message); }
-      finally { generator.disabled=false; generator.textContent='Generate'; }
+    // -------------------------------------------------------------
+    // 1. Cambodia Province Quick Selector & GPS Auto-Fill
+    // -------------------------------------------------------------
+    const provSelect = document.getElementById('cambodia_province_select');
+    const nameInput = document.getElementById('server_location_name');
+    const latInput = document.getElementById('server_location_lat');
+    const lonInput = document.getElementById('server_location_lon');
+    const gmapsLink = document.getElementById('link-gmaps-preview');
+    const gpsBtn = document.getElementById('btn-detect-gps');
+    const gpsStatus = document.getElementById('gps-status-feedback');
+
+    function updateMapPreview() {
+        const lat = latInput ? latInput.value.trim() : '';
+        const lon = lonInput ? lonInput.value.trim() : '';
+        if (gmapsLink && lat && lon) {
+            gmapsLink.href = `https://maps.google.com/?q=${encodeURIComponent(lat)},${encodeURIComponent(lon)}`;
+        }
+    }
+
+    if (provSelect) {
+        provSelect.addEventListener('change', () => {
+            const opt = provSelect.selectedOptions[0];
+            if (opt && opt.dataset.lat && opt.dataset.lon) {
+                if (latInput) latInput.value = opt.dataset.lat;
+                if (lonInput) lonInput.value = opt.dataset.lon;
+                if (nameInput) nameInput.value = `${opt.value}, Cambodia`;
+                updateMapPreview();
+            }
+        });
+    }
+
+    if (latInput) latInput.addEventListener('input', updateMapPreview);
+    if (lonInput) lonInput.addEventListener('input', updateMapPreview);
+
+    if (gpsBtn) {
+        gpsBtn.addEventListener('click', () => {
+            if (!navigator.geolocation) {
+                alert('Geolocation is not supported by your browser.');
+                return;
+            }
+            if (gpsStatus) {
+                gpsStatus.style.display = 'block';
+                gpsStatus.className = 'alert alert-info small py-2 px-3 mb-0';
+                gpsStatus.textContent = 'Acquiring browser GPS coordinates…';
+            }
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    const lat = pos.coords.latitude.toFixed(6);
+                    const lon = pos.coords.longitude.toFixed(6);
+                    if (latInput) latInput.value = lat;
+                    if (lonInput) lonInput.value = lon;
+                    if (nameInput && (!nameInput.value || nameInput.value.includes('Cambodia'))) {
+                        nameInput.value = `Farm Site (${lat}, ${lon})`;
+                    }
+                    updateMapPreview();
+                    if (gpsStatus) {
+                        gpsStatus.className = 'alert alert-success small py-2 px-3 mb-0';
+                        gpsStatus.textContent = `Coordinates locked: ${lat}, ${lon}`;
+                    }
+                },
+                (err) => {
+                    if (gpsStatus) {
+                        gpsStatus.className = 'alert alert-warning small py-2 px-3 mb-0';
+                        gpsStatus.textContent = `Location access denied or unavailable (${err.message}).`;
+                    }
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
+        });
+    }
+
+    // -------------------------------------------------------------
+    // 2. Provider Radio Card Visual Selector
+    // -------------------------------------------------------------
+    const providerRadios = document.querySelectorAll('.provider-radio');
+    providerRadios.forEach(radio => {
+        radio.addEventListener('change', () => {
+            document.querySelectorAll('.provider-card').forEach(card => {
+                card.classList.remove('border-primary', 'bg-primary-soft', 'shadow-sm');
+                const badge = card.querySelector('.badge');
+                if (badge) badge.remove();
+            });
+            if (radio.checked) {
+                const parent = radio.closest('.provider-card');
+                if (parent) {
+                    parent.classList.add('border-primary', 'bg-primary-soft', 'shadow-sm');
+                    const badge = document.createElement('span');
+                    badge.className = 'badge badge-primary mt-2';
+                    badge.textContent = 'Active';
+                    parent.appendChild(badge);
+                }
+            }
+        });
     });
-  };
-  wireKeyGenerator('generate-model-key','model_api_key');
+
+    // -------------------------------------------------------------
+    // 3. Password Visibility Toggles
+    // -------------------------------------------------------------
+    document.querySelectorAll('.toggle-pwd-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const targetId = btn.getAttribute('data-target');
+            const input = document.getElementById(targetId);
+            if (!input) return;
+            const icon = btn.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                if (icon) {
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                }
+            } else {
+                input.type = 'password';
+                if (icon) {
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                }
+            }
+        });
+    });
+
+    // -------------------------------------------------------------
+    // 4. Test Assistant LLM Connection
+    // -------------------------------------------------------------
+    const testLlmBtn = document.getElementById('test-own-ai');
+    const llmResult = document.getElementById('own-ai-result');
+
+    if (testLlmBtn && llmResult) {
+        testLlmBtn.addEventListener('click', async () => {
+            llmResult.style.display = 'block';
+            llmResult.className = 'alert alert-info small py-2 px-3 mb-2 w-100';
+            llmResult.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Testing connection to provider…';
+            testLlmBtn.disabled = true;
+
+            try {
+                const selectedRadio = document.querySelector('input[name="active_provider"]:checked');
+                const provider = selectedRadio ? selectedRadio.value : 'groq';
+                const keyInput = document.getElementById(`${provider}_key`);
+                const modelInput = document.getElementById(`${provider}_model`);
+
+                const payload = {
+                    provider: provider,
+                    api_key: keyInput ? keyInput.value.trim() : '',
+                    model: modelInput ? modelInput.value.trim() : ''
+                };
+
+                const res = await fetch('{{ url_for("admin.test_ai_connection") }}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    llmResult.className = 'alert alert-success small py-2 px-3 mb-2 w-100';
+                    llmResult.innerHTML = `<i class="fas fa-check-circle mr-1"></i> <strong>Success:</strong> ${data.message || 'Connection verified successfully.'}`;
+                } else {
+                    llmResult.className = 'alert alert-danger small py-2 px-3 mb-2 w-100';
+                    llmResult.innerHTML = `<i class="fas fa-exclamation-circle mr-1"></i> <strong>Failed:</strong> ${data.error || 'Connection failed.'}`;
+                }
+            } catch (err) {
+                llmResult.className = 'alert alert-danger small py-2 px-3 mb-2 w-100';
+                llmResult.innerHTML = `<i class="fas fa-exclamation-triangle mr-1"></i> Could not reach server: ${err}`;
+            } finally {
+                testLlmBtn.disabled = false;
+            }
+        });
+    }
+
+    // -------------------------------------------------------------
+    // 5. Test Trained AI Model Endpoint
+    // -------------------------------------------------------------
+    const testTrainedBtn = document.getElementById('test-trained-ai');
+    const trainedResult = document.getElementById('trained-ai-result');
+
+    if (testTrainedBtn && trainedResult) {
+        testTrainedBtn.addEventListener('click', async () => {
+            trainedResult.style.display = 'block';
+            trainedResult.className = 'alert alert-info small py-2 px-3 mb-2 w-100';
+            trainedResult.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Pinging inference endpoint…';
+            testTrainedBtn.disabled = true;
+
+            try {
+                const endpointInput = document.getElementById('trained_endpoint');
+                const keyInput = document.getElementById('model_api_key');
+
+                const payload = {
+                    provider: 'huggingface',
+                    endpoint: endpointInput ? endpointInput.value.trim() : '',
+                    api_key: keyInput ? keyInput.value.trim() : ''
+                };
+
+                const res = await fetch('{{ url_for("admin.test_ai_connection") }}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    trainedResult.className = 'alert alert-success small py-2 px-3 mb-2 w-100';
+                    trainedResult.innerHTML = `<i class="fas fa-check-circle mr-1"></i> <strong>Success:</strong> ${data.message || 'Endpoint responded successfully.'}`;
+                } else {
+                    trainedResult.className = 'alert alert-danger small py-2 px-3 mb-2 w-100';
+                    trainedResult.innerHTML = `<i class="fas fa-exclamation-circle mr-1"></i> <strong>Failed:</strong> ${data.error || 'Could not reach endpoint.'}`;
+                }
+            } catch (err) {
+                trainedResult.className = 'alert alert-danger small py-2 px-3 mb-2 w-100';
+                trainedResult.innerHTML = `<i class="fas fa-exclamation-triangle mr-1"></i> Error contacting server: ${err}`;
+            } finally {
+                testTrainedBtn.disabled = false;
+            }
+        });
+    }
+
+    // -------------------------------------------------------------
+    // 6. Generate Secure Model Key
+    // -------------------------------------------------------------
+    const genKeyBtn = document.getElementById('generate-model-key');
+    const modelKeyInput = document.getElementById('model_api_key');
+
+    if (genKeyBtn && modelKeyInput) {
+        genKeyBtn.addEventListener('click', async () => {
+            genKeyBtn.disabled = true;
+            genKeyBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Generating…';
+
+            try {
+                const res = await fetch('{{ url_for("admin.generate_inference_key") }}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({})
+                });
+                const data = await res.json();
+
+                if (data.success && data.api_key) {
+                    modelKeyInput.type = 'text';
+                    modelKeyInput.value = data.api_key;
+                    modelKeyInput.focus();
+                    modelKeyInput.select();
+                } else {
+                    alert(data.error || 'Could not generate token.');
+                }
+            } catch (err) {
+                alert('Request failed: ' + err);
+            } finally {
+                genKeyBtn.disabled = false;
+                genKeyBtn.innerHTML = '<i class="fas fa-key mr-1"></i>Generate Token';
+            }
+        });
+    }
+
+    // -------------------------------------------------------------
+    // 7. Fetch Available Models Dynamically
+    // -------------------------------------------------------------
+    document.querySelectorAll('.btn-fetch-models').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const provider = btn.getAttribute('data-provider');
+            const keyInput = document.getElementById(`${provider}_key`);
+            const origHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Fetching…';
+
+            try {
+                const res = await fetch('{{ url_for("admin.fetch_provider_models") }}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        provider: provider,
+                        api_key: keyInput ? keyInput.value.trim() : ''
+                    })
+                });
+                const data = await res.json();
+
+                if (data.success && Array.isArray(data.models) && data.models.length > 0) {
+                    const datalist = document.getElementById(`${provider}-model-suggestions`);
+                    if (datalist) {
+                        datalist.innerHTML = '';
+                        data.models.forEach(m => {
+                            const opt = document.createElement('option');
+                            opt.value = m;
+                            datalist.appendChild(opt);
+                        });
+                    }
+                    const modelInput = document.getElementById(`${provider}_model`);
+                    if (modelInput && !modelInput.value) {
+                        modelInput.value = data.models[0];
+                    }
+                    alert(`Loaded ${data.models.length} available models for ${provider.toUpperCase()}.`);
+                } else {
+                    alert(data.error || `Could not fetch models for ${provider}. Ensure API key is entered.`);
+                }
+            } catch (err) {
+                alert('Fetch failed: ' + err);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = origHtml;
+            }
+        });
+    });
+
+    // -------------------------------------------------------------
+    // 8. Tab History & State Preservation
+    // -------------------------------------------------------------
+    $('a[data-toggle="pill"]').on('shown.bs.tab', function (e) {
+        const hash = $(e.target).attr('href').replace('#tab-', '');
+        if (history.replaceState) {
+            const url = new URL(window.location);
+            url.searchParams.set('tab', hash);
+            history.replaceState(null, '', url);
+        }
+    });
 })();
 </script>
 {% endblock %}

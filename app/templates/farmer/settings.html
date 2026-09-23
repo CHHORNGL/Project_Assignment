@@ -1710,29 +1710,23 @@ function promptPasskeyName() {
             if (radio) radio.checked = true;
             themeCards.forEach(c => c.classList.remove("is-active"));
             card.classList.add("is-active");
-            const selectedTheme = (card.dataset.themeVal === "dark") ? "dark" : "light";
-            
-            if (selectedTheme === "dark") {
-                document.documentElement.classList.add("dark-mode");
-            } else {
-                document.documentElement.classList.remove("dark-mode");
-            }
-            
-            localStorage.setItem("theme", selectedTheme);
-            
-            // Sync all neumorphic switches on page
-            document.querySelectorAll(".theme-toggle-input, .toggle-state").forEach(input => {
-                input.checked = (selectedTheme === "dark");
-            });
+            const selectedTheme = card.dataset.themeVal || "system";
 
-            // Persist immediately via API
-            try {
-                fetch("/users/theme", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ theme: selectedTheme })
-                }).catch(() => {});
-            } catch (err) {}
+            if (typeof window.setAgriTheme === "function") {
+                window.setAgriTheme(selectedTheme);
+            } else {
+                localStorage.setItem("theme", selectedTheme);
+                document.cookie = "theme=" + selectedTheme + "; path=/; max-age=31536000; SameSite=Lax";
+                const isDark = (selectedTheme === "dark") || (selectedTheme === "system" && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
+                document.documentElement.classList.toggle("dark-mode", isDark);
+                try {
+                    fetch("/users/theme", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ theme: selectedTheme })
+                    }).catch(() => {});
+                } catch (err) {}
+            }
         });
     });
 

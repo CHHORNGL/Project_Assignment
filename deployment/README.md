@@ -1,63 +1,72 @@
-# Remote inference deployment
+# GGUF inference deployment
 
-This service is intentionally separate from Flask. Deploy it to a GPU-backed
-Hugging Face Space or another host with:
+This service uses `llama-cpp-python` and a quantized GGUF model. The Flask web
+process remains lightweight and calls this service over HTTP; it does not load
+model weights itself.
+
+## 1. Create the GGUF model artifact
+
+The current `Maoseavik/agri-expert-adapter` Hub repository is only a tokenizer
+repository at the moment. It does not contain `adapter_model.safetensors` or
+`adapter_config.json`, so it cannot be converted until those training artifacts
+are uploaded.
+
+After the adapter repository contains its weights, run the conversion script on
+a machine with enough RAM or a Colab GPU:
 
 ```bash
-pip install --index-url https://download.pytorch.org/whl/cpu torch==2.2.2
-pip install -r deployment/requirements.txt
-MODEL_ID=your-account/agrisystem-adapter \
-INFERENCE_API_KEY=replace-with-a-long-random-secret \
-uvicorn deployment.inference_api:app --host 0.0.0.0 --port 7860
+HF_TOKEN=hf_... \
+ADAPTER_ID=Maoseavik/agri-expert-adapter \
+python scripts/convert_lora_to_gguf.py
 ```
 
-## Railway
+The script merges the LoRA adapter into `Qwen/Qwen2.5-1.5B-Instruct`, converts
+the merged model to GGUF, quantizes it to `Q4_K_M`, and prints the Hub upload
+command. Upload the resulting file to a separate model repository, for
+example `Maoseavik/agrisystem-gguf`.
 
-Create a separate Railway service from this repository and set its **Root
-Directory** to `deployment`. Railway will then use `deployment/Dockerfile`
-and `deployment/railway.json`. Set these variables:
+llama.cpp requires the model to already be in GGUF format; it cannot load the
+original Transformers/PEFT adapter directly.
+
+## 2. Railway variables
+
+Create or select the separate Railway inference service, set its root directory
+to `deployment`, and use `deployment/Dockerfile`. Set:
 
 ```env
-MODEL_ID=Maoseavik/agrisystem-adapter
-MODEL_DTYPE=bfloat16
-MODEL_MAX_INPUT_TOKENS=1024
-MODEL_MAX_NEW_TOKENS=128
-INFERENCE_API_KEY=replace-with-a-long-random-secret
+GGUF_REPO_ID=Maoseavik/agrisystem-gguf
+GGUF_FILENAME=agrisystem-qwen2.5-1.5b-q4_k_m.gguf
+GGUF_REVISION=main
+MODEL_CONTEXT_SIZE=4096
+MODEL_MAX_NEW_TOKENS=256
+MODEL_THREADS=2
+MODEL_GPU_LAYERS=0
+INFERENCE_API_KEY=use-a-long-random-secret
 ```
 
-The `/health` endpoint is intentionally lightweight and does not load the
-model. The model is loaded on the first `/generate` request. A 1.5B model
-needs substantial memory on CPU; if Railway metrics show an OOM kill, use a
-GPU-backed host or deploy a quantized model instead of switching back to
-`MODEL_DTYPE=float32`.
+`MODEL_ID` is still accepted as an alias for `GGUF_REPO_ID`, but using the
+explicit GGUF names avoids accidentally pointing Railway at the old LoRA
+adapter repository. Set `HF_TOKEN` only when the GGUF repository is private.
 
-## Connect it to the admin settings
+Railway uses `/ready` as its health check. That endpoint downloads the model
+and loads it into llama.cpp, so a bad GGUF file fails deployment validation
+instead of appearing healthy until the first farmer request:
 
-The admin settings are stored in the Flask application's database. They select
-which remote endpoint the Flask app calls; they do not provide environment
-variables to this separate Railway container. Configure both sides:
-
-1. In this Railway inference service, set `MODEL_ID` and `INFERENCE_API_KEY`.
-2. In Admin → Settings → Trained AI model, use the same model ID, set the
-   public Gradio Space URL (for example `https://username-space-name.hf.space`),
-   leave the API key blank for a public Space, and activate it. The Flask
-   client automatically calls the Space's `/gradio_api/call/answer` endpoint.
-
-For the current model:
-
-```text
-Model ID: Maoseavik/agrisystem-adapter
-Endpoint: https://<username-space-name>.hf.space
+```bash
+curl https://YOUR-RAILWAY-INFERENCE-DOMAIN/ready
+curl -X POST https://YOUR-RAILWAY-INFERENCE-DOMAIN/generate \
+  -H "Authorization: Bearer YOUR_INFERENCE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"inputs":"How can I identify rice blast disease?","parameters":{"max_new_tokens":64}}'
 ```
 
-Configure the Flask server with the same URL and key:
+The lightweight `/health` endpoint only checks that the process is running.
+`/ready` and `/generate` are the checks that prove the GGUF file is valid and
+llama.cpp can load it.
 
-```env
-AI_PROVIDER=huggingface
-HF_INFERENCE_URL=https://<username-space-name>.hf.space
-# Only needed for a private Space or gated base model.
-HF_TOKEN=optional-huggingface-token
-```
+## 3. Connect Flask to Railway
 
-The Flask client supports both the custom `/generate` service and Gradio's
-queued `/gradio_api/call/answer` API.
+In the Flask admin settings, configure the inference endpoint as the Railway
+URL ending in `/generate`, set the same API key, activate the model profile,
+and keep the provider set to Hugging Face/custom remote inference. The model
+ID shown in the profile should be the GGUF repository ID.

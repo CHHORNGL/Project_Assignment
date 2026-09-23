@@ -2,7 +2,7 @@ const {test} = require('node:test');
 const assert = require('node:assert/strict');
 const vm = require('node:vm');
 const fs = require('node:fs');
-function setup() {
+function setup(customGeo = null) {
   const nodes = new Map();
   function node() {
     return { handlers: {}, value: '', files: [], disabled: false, open: false,
@@ -14,10 +14,11 @@ function setup() {
   }
   let dialog;
   const calls = [];
+  const nav = customGeo ? { geolocation: customGeo } : {};
   const context = {window: {addEventListener(){}}, document: {body: node(), createElement(tag) {const n = node(); if(tag === 'dialog') dialog = n; return n;}},
     URL: {createObjectURL: ()=>'blob:test', revokeObjectURL(){}}, FormData: class {append(){}},
-    clearInterval(){}, setInterval(){}, navigator: {},
-    fetch: async (url, options) => {calls.push({url, options}); return {ok: true, json: async()=>url === '/upload' ? {url:'/static/uploads/chats/test.png'} : {success:true}};}
+    clearInterval(){}, setInterval(){}, navigator: nav,
+    fetch: async (url, options) => {calls.push({url, options}); return {ok: true, json: async()=>url === '/upload' ? {url:'/static/uploads/chats/test.png'} : {success:true, display_name: "Phnom Penh, Cambodia"}};}
   };
   vm.createContext(context);
   vm.runInContext(fs.readFileSync('app/static/js/support_chat_attachments.js','utf8'), context);
@@ -50,3 +51,41 @@ test('voice and location failures show status without sending', async () => {
   assert.match(s.nodes.get('[role="status"]').textContent,/unavailable/);
   assert.equal(s.calls.length,0);
 });
+
+test('location success prepares map preview and sends location payload', async () => {
+  const mockGeo = {
+    getCurrentPosition(success) { success({ coords: { latitude: 11.5564, longitude: 104.9282, accuracy: 15 } }); }
+  };
+  const s = setup(mockGeo);
+  s.controls.locBtn.click();
+  await new Promise(r => setTimeout(r, 20));
+  assert.equal(s.dialog.open, true);
+  // Send button should be enabled
+  const send = s.nodes.get('[data-send]');
+  assert.equal(send.disabled, false);
+  await send.click();
+  assert.equal(s.sent(), 1);
+  const sendCall = s.calls.find(c => c.url === '/send');
+  assert.ok(sendCall);
+  const payload = JSON.parse(sendCall.options.body);
+  assert.equal(payload.attachment_type, 'location');
+  assert.equal(payload.attachment_url, '11.556400,104.928200');
+});
+
+test('location without hardware GPS prepares map preview and allows sending', async () => {
+  const s = setup(); // No geolocation
+  s.controls.locBtn.click();
+  assert.equal(s.dialog.open, true);
+  const send = s.nodes.get('[data-send]');
+  assert.equal(send.disabled, false);
+  await send.click();
+  assert.equal(s.sent(), 1);
+  const sendCall = s.calls.find(c => c.url === '/send');
+  assert.ok(sendCall);
+  const payload = JSON.parse(sendCall.options.body);
+  assert.equal(payload.attachment_type, 'location');
+  assert.equal(payload.attachment_url, '11.556400,104.928200');
+});
+
+
+

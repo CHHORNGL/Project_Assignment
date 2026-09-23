@@ -32,6 +32,7 @@ test('unsafe attachment URLs create no media nodes', () => {
 });
 
 test('valid uploaded images, audio and coordinates still render', () => {
+    assert.equal(typeof context.window.openSupportImageFullscreen, 'function');
     for (const [kind, tag, url] of [
         ['image', 'img', '/static/uploads/chats/' + 'a'.repeat(32) + '.png'],
         ['audio', 'audio', '/static/uploads/chats/' + 'b'.repeat(32) + '.webm'],
@@ -43,6 +44,15 @@ test('valid uploaded images, audio and coordinates still render', () => {
         if (tag === 'a') {
             assert.equal(root.children[1].href, 'https://maps.google.com/?q=11.55%2C104.92');
             assert.equal(root.children[1].rel, 'noopener noreferrer');
-        } else assert.equal(root.children[1].src, url);
+            assert.equal(root.children[1].className, 'support-location-link');
+            assert.match(root.children[1].textContent, /View on Map/);
+        } else if (tag === 'img') {
+            assert.equal(root.children[1].src, url);
+            assert.equal(root.children[1].className, 'support-chat-image');
+            assert.equal(root.children[1].style.cursor, 'zoom-in');
+        } else {
+            assert.equal(root.children[1].src, url);
+        }
     }
 });
+

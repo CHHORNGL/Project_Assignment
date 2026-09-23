@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ current_lang }}" class="{{ theme_html_class }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -13,8 +13,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;500;600;700&family=Noto+Sans+Khmer:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <link href="{{ url_for('static', filename='sb-admin/vendor/fontawesome-free/css/all.min.css') }}" rel="stylesheet">
-    <link href="{{ url_for('static', filename='css/auth.css') }}" rel="stylesheet">
-    <link href="{{ url_for('static', filename='css/notifications.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/auth.css', v=static_version) }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/neumorphic_toggle.css', v=static_version) }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/notifications.css', v=static_version) }}" rel="stylesheet">
     <style>
         :root {
             --auth-accent: #22c55e;
@@ -82,25 +83,9 @@
             }
         }
     </style>
-    <script>
-    (function () {
-        const storedTheme = localStorage.getItem("theme");
-        const mq = window.matchMedia("(prefers-color-scheme: dark)");
-        function applyTheme(theme) {
-            document.documentElement.classList.toggle(
-                "auth-panel-dark",
-                theme === "dark" || (theme === "system" && mq.matches)
-            );
-        }
-        if (storedTheme === "light" || storedTheme === "dark" || storedTheme === "system") {
-            applyTheme(storedTheme);
-        } else {
-            applyTheme("light");
-        }
-    })();
-    </script>
+    {% include "partials/theme_head.html" %}
 </head>
-<body class="auth-body">
+<body class="auth-body {{ theme_body_class }}">
 
 {% include "partials/flash_notices.html" %}
 
@@ -121,7 +106,15 @@
             </div>
         </div>
 
-        <div class="auth-panel">
+        <div class="auth-panel" style="position: relative;">
+            <div class="auth-theme-pill" style="position: absolute; top: 1.25rem; right: 1.25rem; z-index: 10;">
+                <label class="label mb-0" for="authThemeToggle" title="Toggle Light/Dark Mode">
+                    <div class="toggle">
+                        <input class="toggle-state" type="checkbox" id="authThemeToggle" name="check" value="dark">
+                        <div class="indicator"></div>
+                    </div>
+                </label>
+            </div>
             <div class="auth-panel-head auth-stagger delay-1" style="margin-top: 2rem;">
                 <h2 class="auth-title">
                     {% if purpose == 'register' %}
@@ -216,5 +209,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+{% include "partials/theme_script.html" %}
 </body>
 </html>

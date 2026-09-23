@@ -62,6 +62,15 @@ def admin_send_message(farmer_id):
     if not message_text and not attachment_url:
         return jsonify({"error": "Empty message"}), 400
     
+    if attachment_type == "location" and not message_text and attachment_url:
+        try:
+            from app.blueprints.farmer.support_chat import resolve_real_location
+            lat, lon = map(float, attachment_url.split(","))
+            loc = resolve_real_location(lat=lat, lon=lon)
+            message_text = f"📍 Location: {loc.get('display_name') or f'{lat:.4f}, {lon:.4f}'}"
+        except Exception:
+            message_text = "📍 Shared location"
+
     msg = AdminChatMessage(
         sender_id=current_user.id,
         receiver_id=farmer_id,
@@ -72,6 +81,27 @@ def admin_send_message(farmer_id):
     db.session.add(msg)
     db.session.commit()
     return jsonify({"success": True})
+
+
+@admin_bp.route("/support_chat/location", methods=["GET"])
+@login_required
+@role_required("admin")
+def admin_get_location():
+    from app.blueprints.farmer.support_chat import resolve_real_location
+    lat = request.args.get("lat", type=float)
+    lon = request.args.get("lon", type=float)
+    client_ip = request.headers.get("X-Forwarded-For", request.remote_addr or "")
+    if client_ip and "," in client_ip:
+        client_ip = client_ip.split(",")[0].strip()
+    return jsonify(resolve_real_location(lat=lat, lon=lon, ip_address=client_ip))
+
+
+@admin_bp.route("/support_chat/location/search", methods=["GET"])
+@login_required
+@role_required("admin")
+def admin_search_location():
+    from app.blueprints.farmer.support_chat import search_support_location
+    return search_support_location()
 
 @admin_bp.route("/support_chat/upload", methods=["POST"])
 @login_required

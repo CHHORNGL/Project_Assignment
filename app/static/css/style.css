@@ -9168,6 +9168,61 @@ body.dark-mode.admin-theme[data-admin-theme="lunar_festival"],
 .dropdown.show .topbar-profile-caret { transform: rotate(180deg); color: #2563eb; }
 
 /* =========================================
+   TOPBAR GUEST ACTION BUTTONS
+========================================= */
+.fm-topbar-signin-btn {
+    border-color: #10b981 !important;
+    color: #059669 !important;
+    background: transparent !important;
+    transition: all 0.2s ease;
+}
+
+.fm-topbar-signin-btn:hover {
+    background: #10b981 !important;
+    color: #ffffff !important;
+    transform: translateY(-1px);
+}
+
+.dark-mode .fm-topbar-signin-btn {
+    border-color: #34d399 !important;
+    color: #34d399 !important;
+    background: rgba(52, 211, 153, 0.1) !important;
+}
+
+.dark-mode .fm-topbar-signin-btn:hover {
+    background: #10b981 !important;
+    color: #ffffff !important;
+    border-color: #10b981 !important;
+}
+
+.fm-topbar-signup-btn {
+    background: #10b981 !important;
+    border-color: #10b981 !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
+    transition: all 0.2s ease;
+}
+
+.fm-topbar-signup-btn:hover {
+    background: #059669 !important;
+    border-color: #059669 !important;
+    color: #ffffff !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(16, 185, 129, 0.4);
+}
+
+.dark-mode .fm-topbar-signup-btn {
+    background: #059669 !important;
+    border-color: #059669 !important;
+    color: #ffffff !important;
+}
+
+.dark-mode .fm-topbar-signup-btn:hover {
+    background: #10b981 !important;
+    border-color: #10b981 !important;
+}
+
+/* =========================================
    CLEAN COMPACT USER DROPDOWN MENU
 ========================================= */
 .user-dropdown-menu {

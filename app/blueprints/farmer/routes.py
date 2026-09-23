@@ -479,6 +479,26 @@ def dashboard():
         diagnoses = []
         ai_questions = []
 
+    from app.models.site_setting import SiteSetting
+    price_setting = SiteSetting.query.get("premium_price")
+    ydisc_setting = SiteSetting.query.get("premium_yearly_discount_percent")
+    disc_setting = SiteSetting.query.get("premium_discount_percent")
+
+    premium_price = price_setting.value.strip() if price_setting and price_setting.value else "20.00"
+    yearly_discount = ydisc_setting.value.strip() if ydisc_setting and ydisc_setting.value else "20"
+    discount_pct = disc_setting.value.strip() if disc_setting and disc_setting.value else "0"
+
+    try:
+        base_p = float(premium_price)
+        sale_p = base_p * (1.0 - float(discount_pct) / 100.0)
+        final_monthly = f"{sale_p:.2f}"
+        yearly_monthly = f"{sale_p * (1.0 - float(yearly_discount) / 100.0):.2f}"
+        yearly_total = f"{float(yearly_monthly) * 12:.2f}"
+    except (ValueError, TypeError):
+        final_monthly = "20.00"
+        yearly_monthly = "16.00"
+        yearly_total = "192.00"
+
     from app.models.marquee import Marquee
     active_marquees = Marquee.query.filter_by(is_active=True).order_by(Marquee.sort_order).all()
 
@@ -487,8 +507,60 @@ def dashboard():
         diagnoses=diagnoses,
         ai_questions=ai_questions,
         crops=crops,
-        marquees=active_marquees
+        marquees=active_marquees,
+        premium_price=final_monthly,
+        yearly_monthly=yearly_monthly,
+        yearly_total=yearly_total,
+        yearly_discount_percent=yearly_discount,
+        supervisor=PROJECT_SUPERVISOR,
+        team=PROJECT_TEAM,
     )
+
+
+@farmer_bp.route("/guest-chat", methods=["POST"])
+def guest_chat():
+    """
+    Allow guest users to test the interactive AI crop consultation preview (up to 5 inquiries).
+    """
+    from flask import session, jsonify
+    data = request.get_json(silent=True) or {}
+    message = (data.get("message") or "").strip()
+    if not message:
+        return jsonify({"error": "Message is required"}), 400
+
+    count = session.get("guest_chat_count", 0)
+    if count >= 5:
+        return jsonify({
+            "limit_reached": True,
+            "reply": "You have completed your 5 free guest inquiries! Create a free account to unlock unlimited AI agricultural consultations."
+        })
+    session["guest_chat_count"] = count + 1
+
+    from app.services.openai_assistant import generate_assistant_reply
+    reply = None
+    try:
+        reply = generate_assistant_reply(message)
+    except Exception:
+        reply = None
+
+    if not reply:
+        msg_lower = message.lower()
+        if any(w in msg_lower for w in ("rice", "blast", "ស្រូវ")):
+            reply = "Rice Blast (Magnaporthe oryzae): Symptoms include spindle-shaped lesions with grey centres and brown margins. Recommendation: Drain standing water temporarily, avoid excess nitrogen, and apply Tricyclazole 75% WP (15-20g per 16L sprayer) or Azoxystrobin."
+        elif any(w in msg_lower for w in ("cassava", "mosaic", "ដំឡូង")):
+            reply = "Cassava Mosaic Disease (CMD): Symptoms include asymmetrical leaf curling and yellow chlorosis. Recommendation: Rogue and incinerate infected plants immediately; control whitefly vectors and plant certified virus-free varieties (KU50, Rayong)."
+        elif any(w in msg_lower for w in ("corn", "maize", "blight", "ពោត")):
+            reply = "Northern Corn Leaf Blight (Exserohilum turcicum): Long elliptical lesions on leaves. Recommendation: Rotate fields with non-host crops and apply Mancozeb 80% WP or Pyraclostrobin during initial spotting."
+        elif any(w in msg_lower for w in ("tomato", "blight", "ប៉េងប៉ោះ")):
+            reply = "Tomato Late Blight: Dark water-soaked lesions with white mold in humid weather. Recommendation: Ensure wide spacing for airflow, avoid overhead irrigation, and apply Metalaxyl + Mancozeb."
+        else:
+            reply = "AgriSystem AI Assistant: For accurate crop diagnosis, please select your crop in the Diagnose tool or snap a photo. Create an account for complete customized spray guides and 24/7 expert advice!"
+
+    return jsonify({
+        "success": True,
+        "reply": reply,
+        "remaining": max(0, 5 - session["guest_chat_count"])
+    })
 
 
 # ===============================
@@ -717,16 +789,17 @@ def _process_diagnose_post():
             level="warning",
             source_id=diagnosis.id,
         )
-        notify_user(
-            user_id=current_user.id,
-            kind="diagnosis_submitted",
-            title="Diagnosis submitted",
-            subtitle=f"{crop.name}: Symptoms submitted and queued for review.",
-            url=url_for("farmer.diagnosis_result", diagnosis_id=diagnosis.id),
-            icon="fas fa-clipboard-check",
-            level="success",
-            source_id=diagnosis.id,
-        )
+        if current_user.is_authenticated:
+            notify_user(
+                user_id=current_user.id,
+                kind="diagnosis_submitted",
+                title="Diagnosis submitted",
+                subtitle=f"{crop.name}: Symptoms submitted and queued for review.",
+                url=url_for("farmer.diagnosis_result", diagnosis_id=diagnosis.id),
+                icon="fas fa-clipboard-check",
+                level="success",
+                source_id=diagnosis.id,
+            )
         db.session.commit()
     except Exception:
         db.session.rollback()
@@ -1027,16 +1100,17 @@ def diagnose_rule_based():
                 level="warning",
                 source_id=diagnosis.id,
             )
-            notify_user(
-                user_id=current_user.id,
-                kind="diagnosis_submitted",
-                title="Diagnosis completed",
-                subtitle=f"{crop.name}: Rule-based analysis is ready.",
-                url=url_for("farmer.diagnosis_result", diagnosis_id=diagnosis.id),
-                icon="fas fa-clipboard-check",
-                level="success",
-                source_id=diagnosis.id,
-            )
+            if current_user.is_authenticated:
+                notify_user(
+                    user_id=current_user.id,
+                    kind="diagnosis_submitted",
+                    title="Diagnosis completed",
+                    subtitle=f"{crop.name}: Rule-based analysis is ready.",
+                    url=url_for("farmer.diagnosis_result", diagnosis_id=diagnosis.id),
+                    icon="fas fa-clipboard-check",
+                    level="success",
+                    source_id=diagnosis.id,
+                )
             db.session.commit()
         except Exception:
             db.session.rollback()

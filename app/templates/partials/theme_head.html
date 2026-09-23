@@ -1,0 +1,52 @@
+<!-- ==========================================================================
+     UNIFIED NO-FLASH THEME LOADER
+     Priority: localStorage > Cookie > User DB Profile > System/OS Preference
+     Applies immediately in <head> to prevent Flash of Unstyled Content (FOUC).
+========================================================================== -->
+<script>
+(function () {
+    try {
+        function getCookie(name) {
+            var v = "; " + document.cookie;
+            var parts = v.split("; " + name + "=");
+            if (parts.length === 2) return parts.pop().split(";").shift();
+            return null;
+        }
+
+        var userTheme = "{{ current_user.theme if (current_user and current_user.is_authenticated) else '' }}";
+        var localTheme = null;
+        try { localTheme = localStorage.getItem("theme"); } catch (e) {}
+        var cookieTheme = getCookie("theme");
+
+        // Hierarchy: localStorage (user's immediate interaction) > cookie > userTheme > system
+        var active = localTheme || cookieTheme || userTheme || "system";
+        if (active !== "dark" && active !== "light" && active !== "system") {
+            active = "system";
+        }
+
+        var mql = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)");
+        var isDark = (active === "dark") || (active === "system" && mql && mql.matches);
+
+        function applyThemeClasses(el) {
+            if (!el) return;
+            if (isDark) {
+                el.classList.add("dark-mode");
+                el.classList.add("auth-panel-dark");
+            } else {
+                el.classList.remove("dark-mode");
+                el.classList.remove("auth-panel-dark");
+            }
+        }
+
+        applyThemeClasses(document.documentElement);
+
+        if (document.body) {
+            applyThemeClasses(document.body);
+        } else {
+            document.addEventListener("DOMContentLoaded", function () {
+                applyThemeClasses(document.body);
+            });
+        }
+    } catch (err) {}
+})();
+</script>

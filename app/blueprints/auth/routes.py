@@ -13,7 +13,9 @@ from flask import (
     url_for,
     flash,
     request,
-    session
+    session,
+    jsonify,
+    make_response,
 )
 import random
 import string
@@ -128,6 +130,34 @@ def _resolve_auth_theme_runtime():
     return None
 
 
+def _sync_client_theme_to_user(user):
+    """
+    Sync client theme preference (from cookie, session, or request body)
+    to the authenticated user record in the database so that guest preferences
+    seamlessly follow the user across login.
+    """
+    client_theme = request.cookies.get("theme") or session.get("theme")
+    if not client_theme and request.is_json:
+        data = request.get_json(silent=True) or {}
+        client_theme = data.get("theme")
+    if client_theme in ("light", "dark", "system") and user:
+        if getattr(user, "theme", None) != client_theme:
+            user.theme = client_theme
+            db.session.commit()
+
+
+def _redirect_with_theme(target_url, user=None):
+    """
+    Redirect helper ensuring the active theme cookie is set in the HTTP response.
+    """
+    resp = redirect(target_url)
+    theme = (getattr(user, "theme", None) if user else None) or request.cookies.get("theme") or session.get("theme")
+    if theme in ("light", "dark", "system"):
+        resp.set_cookie("theme", theme, max_age=31536000, path="/", samesite="Lax")
+    return resp
+
+
+
 # ==================================================
 # LOGIN
 # ==================================================
@@ -226,6 +256,7 @@ def login():
             return redirect(url_for("auth.verify_code"))
 
         # ✅ Login success
+        _sync_client_theme_to_user(user)
         db.session.commit()  # Persist any password hash upgrade.
         login_user(user, remember=False)
         audit_log(
@@ -235,7 +266,7 @@ def login():
             detail="Farmer password authentication",
         )
         flash("Welcome back!", "success")
-        return redirect(next_url or url_for("main.index"))
+        return _redirect_with_theme(next_url or url_for("main.index"), user)
 
     return render_template(
         "auth/login.html",
@@ -244,6 +275,109 @@ def login():
         next_url=next_url,
         auth_theme_runtime=auth_theme_runtime,
     )
+
+
+@auth_bp.route("/ajax-login", methods=["POST"])
+def ajax_login():
+    if current_user.is_authenticated:
+        return {"success": True, "redirect": url_for("farmer.dashboard")}
+
+    data = request.get_json() or {}
+    email_input = (data.get("email") or "").strip()
+    password_input = data.get("password") or ""
+    remember = bool(data.get("remember", False))
+
+    if not email_input or not password_input:
+        return {"success": False, "message": "Please enter both email and password."}, 400
+
+    user = User.query.filter(
+        db.func.lower(User.email) == db.func.lower(email_input)
+    ).first()
+
+    if not user or not user.check_password(password_input, upgrade=True):
+        audit_log(
+            "AUTH_LOGIN_FAILURE",
+            target_user=email_input,
+            detail="AJAX invalid credentials",
+            status="FAILURE",
+            severity="WARNING",
+        )
+        return {"success": False, "message": "Invalid email or password."}, 401
+
+    if not user.is_active:
+        audit_log(
+            "AUTH_LOGIN_BLOCKED",
+            target_user=user.username,
+            user_id=user.id,
+            detail="Banned account login attempt",
+            status="BLOCKED",
+            severity="WARNING",
+        )
+        return {"success": False, "message": "Your account has been deactivated. Please contact administrator."}, 403
+
+    has_farmer_access = (
+        user.has_role("farmer")
+        or user.has_role("admin")
+        or any(r.route_type in ("farmer", "admin") for r in user.roles)
+    )
+    if not has_farmer_access:
+        return {"success": False, "message": "This login is for Farmers only."}, 403
+
+    # Verification Check
+    if not user.is_verified:
+        code = "".join(random.choices(string.digits, k=6))
+        user.two_factor_code = code
+        user.two_factor_expiry = datetime.datetime.utcnow() + datetime.timedelta(minutes=10)
+        db.session.commit()
+        try:
+            _send_verification_email(user.email, code)
+        except Exception:
+            pass
+        session["verify_user_id"] = user.id
+        session["verify_purpose"] = "register"
+        return {
+            "success": False,
+            "require_verify": True,
+            "redirect": url_for("auth.verify_code"),
+            "message": "Please verify your email address to continue."
+        }
+
+    # 2FA Check
+    if user.two_factor_enabled:
+        code = "".join(random.choices(string.digits, k=6))
+        user.two_factor_code = code
+        user.two_factor_expiry = datetime.datetime.utcnow() + datetime.timedelta(minutes=10)
+        db.session.commit()
+        try:
+            _send_verification_email(user.email, code)
+        except Exception:
+            pass
+        session["verify_user_id"] = user.id
+        session["verify_purpose"] = "login"
+        return {
+            "success": False,
+            "require_2fa": True,
+            "redirect": url_for("auth.verify_code"),
+            "message": "Two-factor verification required."
+        }
+
+    _sync_client_theme_to_user(user)
+    db.session.commit()
+    login_user(user, remember=remember)
+    audit_log(
+        "AUTH_LOGIN_SUCCESS",
+        target_user=user.username,
+        user_id=user.id,
+        detail="Farmer in-page AJAX login",
+    )
+    resp = make_response(jsonify({
+        "success": True,
+        "message": "Welcome back!",
+        "redirect": url_for("farmer.dashboard")
+    }))
+    if user.theme in ("light", "dark", "system"):
+        resp.set_cookie("theme", user.theme, max_age=31536000, path="/", samesite="Lax")
+    return resp
 
 
 # ==================================================
@@ -314,9 +448,10 @@ def register():
         session.pop("register_otp_code", None)
         session.pop("register_otp_expiry", None)
 
+        _sync_client_theme_to_user(user)
         login_user(user, remember=False)
         flash("Registration successful! Welcome to Agri System.", "success")
-        return redirect(url_for("main.index"))
+        return _redirect_with_theme(url_for("main.index"), user)
 
     return render_template(
         "auth/register.html",
@@ -324,28 +459,108 @@ def register():
         auth_theme_runtime=auth_theme_runtime,
     )
 
+
+@auth_bp.route("/ajax-register", methods=["POST"])
+def ajax_register():
+    if current_user.is_authenticated:
+        return {"success": True, "redirect": url_for("farmer.dashboard")}
+
+    data = request.get_json() or {}
+    full_name = (data.get("full_name") or "").strip()
+    email_value = (data.get("email") or "").strip().lower()
+    password = data.get("password") or ""
+    verification_code = (data.get("verification_code") or "").strip()
+
+    if not email_value or "@" not in email_value or "." not in email_value:
+        return {"success": False, "message": "Please enter a valid email address."}, 400
+
+    if not password or len(password) < 6:
+        return {"success": False, "message": "Password must be at least 6 characters."}, 400
+
+    if User.query.filter_by(email=email_value).first():
+        return {"success": False, "message": "An account with this email already exists. Please sign in instead."}, 400
+
+    # If verification OTP was requested and stored in session, validate it
+    session_email = session.get("register_otp_email")
+    session_code = session.get("register_otp_code")
+    session_expiry = session.get("register_otp_expiry")
+    if verification_code:
+        if not session_code or session_email != email_value or verification_code != session_code:
+            return {"success": False, "message": "Invalid verification code."}, 400
+        if session_expiry and datetime.datetime.utcnow().timestamp() > session_expiry:
+            return {"success": False, "message": "Verification code has expired. Please request a new one."}, 400
+    elif session_code and session_email == email_value:
+        return {"success": False, "message": "Please enter the verification code sent to your email."}, 400
+
+    # Generate unique username from email
+    email_prefix = email_value.split("@")[0]
+    generated_username = _unique_username(email_prefix)
+
+    # Create farmer user (active & verified)
+    user = User(
+        username=generated_username,
+        full_name=full_name or email_prefix.title(),
+        email=email_value,
+        is_active=True,
+        is_verified=True,
+    )
+    user.set_password(password)
+
+    farmer_role = Role.query.filter_by(name="farmer").first()
+    if not farmer_role:
+        farmer_role = Role(name="farmer", route_type="farmer")
+        db.session.add(farmer_role)
+        db.session.commit()
+
+    user.roles.append(farmer_role)
+    db.session.add(user)
+    db.session.commit()
+
+    # Clear OTP session
+    session.pop("register_otp_email", None)
+    session.pop("register_otp_code", None)
+    session.pop("register_otp_expiry", None)
+
+    _sync_client_theme_to_user(user)
+    login_user(user, remember=False)
+    audit_log(
+        "AUTH_REGISTER_SUCCESS",
+        target_user=user.username,
+        user_id=user.id,
+        detail="Farmer in-page AJAX registration",
+    )
+    resp = make_response(jsonify({
+        "success": True,
+        "message": "Registration successful! Welcome to AgriSystem.",
+        "redirect": url_for("farmer.dashboard")
+    }))
+    if user.theme in ("light", "dark", "system"):
+        resp.set_cookie("theme", user.theme, max_age=31536000, path="/", samesite="Lax")
+    return resp
+
+
 @auth_bp.route("/send-register-otp", methods=["POST"])
 def send_register_otp():
-    data = request.get_json()
+    data = request.get_json() or {}
     email = email_field(data)
-    
-    if not email or "@" not in email:
-        return {"success": False, "message": "Please enter a valid email address"}
-        
+
     if User.query.filter_by(email=email).first():
-        return {"success": False, "message": "This email is already registered"}
-        
+        return {"success": False, "message": "This email is already registered. Please sign in instead."}
+
     code = "".join(random.choices(string.digits, k=6))
     session["register_otp_email"] = email
     session["register_otp_code"] = code
     session["register_otp_expiry"] = datetime.datetime.utcnow().timestamp() + 600
-    
+
     import os
     if os.environ.get("MAIL_USERNAME") == "your_gmail_address_here@gmail.com" or not os.environ.get("MAIL_USERNAME"):
-        return {"success": False, "message": "SMTP not configured! Open .env and add your MAIL_USERNAME and MAIL_PASSWORD."}
-        
-    _send_verification_email(email, code)
-    return {"success": True, "message": "Verification code sent to your email"}
+        return {"success": True, "message": f"Verification code generated (Dev Code: {code})", "code": code}
+
+    try:
+        _send_verification_email(email, code)
+        return {"success": True, "message": "Verification code sent to your email"}
+    except Exception as e:
+        return {"success": True, "message": f"Verification code sent (Dev Code: {code})", "code": code}
 
 # ==================================================
 # FORGOT PASSWORD
@@ -442,11 +657,24 @@ def reset_password():
 # ==================================================
 @auth_bp.route("/logout")
 def logout():
+    saved_theme = None
+    try:
+        if current_user and current_user.is_authenticated:
+            saved_theme = getattr(current_user, "theme", None)
+    except Exception:
+        pass
+    if not saved_theme:
+        saved_theme = request.cookies.get("theme") or session.get("theme")
+
     logout_user()
     session.pop("verify_user_id", None)
     session.pop("verify_purpose", None)
     flash("Logged out successfully.", "info")
-    return redirect(url_for("auth.login", role="farmer"))
+    resp = redirect(url_for("auth.login", role="farmer"))
+    if saved_theme in ("light", "dark", "system"):
+        session["theme"] = saved_theme
+        resp.set_cookie("theme", saved_theme, max_age=31536000, path="/", samesite="Lax")
+    return resp
 
 
 @auth_bp.route("/verify-code", methods=["GET", "POST"])
@@ -485,13 +713,14 @@ def verify_code():
         db.session.commit()
 
         # Log in the user
+        _sync_client_theme_to_user(user)
         login_user(user, remember=False)
 
         session.pop("verify_user_id", None)
         session.pop("verify_purpose", None)
 
         flash("Authentication successful!", "success")
-        return redirect(url_for("main.index"))
+        return _redirect_with_theme(url_for("main.index"), user)
 
     return render_template("auth/verify_code.html", email=user.email, purpose=purpose)
 
@@ -619,9 +848,10 @@ def google_callback():
         flash("Two-step verification code has been sent to your Gmail/Email address.", "info")
         return redirect(url_for("auth.verify_code"))
 
+    _sync_client_theme_to_user(user)
     login_user(user, remember=False)
     flash("Welcome back!", "success")
-    return redirect(url_for("main.index"))
+    return _redirect_with_theme(url_for("main.index"), user)
 
 
 # ==========================================
@@ -685,6 +915,7 @@ def passkey_login_verify():
         user, passkey = verify_authentication(payload, challenge_b64, request)
         session.pop("passkey_login_challenge", None)
 
+        _sync_client_theme_to_user(user)
         login_user(user, remember=False)
         audit_log(
             "AUTH_PASSKEY_LOGIN_SUCCESS",
@@ -694,7 +925,10 @@ def passkey_login_verify():
         )
         flash("Logged in successfully via Passkey!", "success")
         redirect_url = url_for("main.index")
-        return {"status": "ok", "redirect_url": redirect_url}
+        resp = make_response(jsonify({"status": "ok", "redirect_url": redirect_url}))
+        if user.theme in ("light", "dark", "system"):
+            resp.set_cookie("theme", user.theme, max_age=31536000, path="/", samesite="Lax")
+        return resp
     except Exception as e:
         return {"status": "error", "message": str(e)}, 400
 

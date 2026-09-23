@@ -1,0 +1,178 @@
+<!-- ==========================================================================
+     UNIFIED THEME SYNCHRONIZATION & EVENT HANDLER
+     Handles:
+     - Neumorphic switches (#topbarThemeToggle, #authThemeToggle, #staffThemeToggle, etc.)
+     - Button switchers (.theme-option, .theme-switcher-btn)
+     - Cookie + LocalStorage dual persistence
+     - Cross-tab 'storage' event synchronization
+     - Live OS prefers-color-scheme listener
+     - Seamless background API sync (/users/theme)
+========================================================================== -->
+<script>
+(function () {
+    function getCookie(name) {
+        var v = "; " + document.cookie;
+        var parts = v.split("; " + name + "=");
+        if (parts.length === 2) return parts.pop().split(";").shift();
+        return null;
+    }
+
+    function setCookie(name, val, days) {
+        days = days || 365;
+        var d = new Date();
+        d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
+        document.cookie = name + "=" + val + "; expires=" + d.toUTCString() + "; path=/; SameSite=Lax";
+    }
+
+    var mql = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)");
+
+    function resolveTheme() {
+        var local = null;
+        try { local = localStorage.getItem("theme"); } catch (e) {}
+        var cookie = getCookie("theme");
+        var user = "{{ current_user.theme if (current_user and current_user.is_authenticated) else '' }}";
+        var chosen = local || cookie || user || "system";
+        return (chosen === "dark" || chosen === "light" || chosen === "system") ? chosen : "system";
+    }
+
+    function isDarkTheme(theme) {
+        if (theme === "dark") return true;
+        if (theme === "light") return false;
+        return !!(mql && mql.matches);
+    }
+
+    function syncThemeUI(theme) {
+        var isDark = isDarkTheme(theme);
+
+        // 1. Classes on <html> and <body> elements
+        document.documentElement.classList.toggle("dark-mode", isDark);
+        document.documentElement.classList.toggle("auth-panel-dark", isDark);
+        if (document.body) {
+            document.body.classList.toggle("dark-mode", isDark);
+            document.body.classList.toggle("auth-panel-dark", isDark);
+        }
+
+        // 2. All neumorphic toggle checkboxes
+        var toggleSelectors = [
+            ".theme-toggle-input",
+            ".toggle-state",
+            "#topbarThemeToggle",
+            "#authThemeToggle",
+            "#staffThemeToggle",
+            "#farmerChatThemeToggle",
+            "#farmerDashThemeToggle"
+        ].join(", ");
+
+        document.querySelectorAll(toggleSelectors).forEach(function (input) {
+            input.checked = isDark;
+        });
+
+        // 3. Button switchers & radio previews
+        document.querySelectorAll(".theme-switcher-btn[data-theme], .theme-option[data-theme]").forEach(function (btn) {
+            btn.classList.toggle("is-active", btn.dataset.theme === theme);
+        });
+
+        // 4. Update preview cards in farmer settings if present
+        document.querySelectorAll(".theme-preview-card[data-theme-val]").forEach(function (card) {
+            var active = (card.dataset.themeVal === theme);
+            card.classList.toggle("is-active", active);
+            var radio = card.querySelector("input[type='radio']");
+            if (radio && active) radio.checked = true;
+        });
+
+        // 5. Update topbar icon if present
+        var iconEl = document.getElementById("themeCurrentIconEl");
+        if (iconEl) {
+            iconEl.className = "fas " + (isDark ? "fa-moon text-primary" : "fa-sun text-warning");
+        }
+    }
+
+    function applyAndPersistTheme(theme) {
+        try {
+            localStorage.setItem("theme", theme);
+        } catch (e) {}
+        setCookie("theme", theme);
+        syncThemeUI(theme);
+
+        // Background server sync (works for both guests and authenticated users)
+        try {
+            fetch("/users/theme", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ theme: theme })
+            }).catch(function () {});
+        } catch (err) {}
+    }
+
+    // Initialize UI on DOM load
+    var initialTheme = resolveTheme();
+    syncThemeUI(initialTheme);
+
+    // Neumorphic switch direct listeners
+    var allToggles = [
+        ".theme-toggle-input",
+        ".toggle-state",
+        "#topbarThemeToggle",
+        "#authThemeToggle",
+        "#staffThemeToggle",
+        "#farmerChatThemeToggle",
+        "#farmerDashThemeToggle"
+    ].join(", ");
+
+    document.querySelectorAll(allToggles).forEach(function (input) {
+        input.addEventListener("change", function () {
+            var nextTheme = input.checked ? "dark" : "light";
+            applyAndPersistTheme(nextTheme);
+        });
+    });
+
+    // Delegated listener for any dynamically inserted or missed toggles
+    document.addEventListener("change", function (e) {
+        var t = e.target;
+        if (t && (t.classList.contains("theme-toggle-input") || t.classList.contains("toggle-state") || t.id === "topbarThemeToggle" || t.id === "authThemeToggle" || t.id === "staffThemeToggle" || t.id === "farmerChatThemeToggle" || t.id === "farmerDashThemeToggle")) {
+            var nextTheme = t.checked ? "dark" : "light";
+            applyAndPersistTheme(nextTheme);
+        }
+    });
+
+    // Option button listeners
+    document.querySelectorAll(".theme-option[data-theme], .theme-switcher-btn[data-theme]").forEach(function (btn) {
+        btn.addEventListener("click", function (e) {
+            e.preventDefault();
+            var theme = btn.dataset.theme;
+            if (theme) applyAndPersistTheme(theme);
+        });
+    });
+
+    // Settings preview cards listeners
+    document.querySelectorAll(".theme-preview-card[data-theme-val]").forEach(function (card) {
+        card.addEventListener("click", function () {
+            var theme = card.dataset.themeVal;
+            if (theme) applyAndPersistTheme(theme);
+        });
+    });
+
+    // Cross-tab synchronization
+    window.addEventListener("storage", function (e) {
+        if (e.key === "theme") {
+            var newTheme = e.newValue || "system";
+            setCookie("theme", newTheme);
+            syncThemeUI(newTheme);
+        }
+    });
+
+    // Dynamic OS color-scheme change
+    if (mql && mql.addEventListener) {
+        mql.addEventListener("change", function () {
+            var current = resolveTheme();
+            if (current === "system") {
+                syncThemeUI("system");
+            }
+        });
+    }
+
+    // Export global helper for programmatic use
+    window.setAgriTheme = applyAndPersistTheme;
+    window.syncAgriThemeUI = syncThemeUI;
+})();
+</script>

@@ -64,8 +64,22 @@ window.initSupportAttachments = function ({ imgBtn, micBtn, locBtn, fileInput, u
         objectUrl = URL.createObjectURL(file);
         const media = document.createElement(type === 'image' ? 'img' : 'audio');
         media.src = objectUrl;
-        if (type === 'image') media.alt = 'Photo preview';
-        else media.controls = true;
+        if (type === 'image') {
+            media.alt = 'Photo preview';
+            if (media.style) media.style.cursor = 'zoom-in';
+            media.title = 'Click to view full screen';
+            if (typeof media.addEventListener === 'function') {
+                media.addEventListener('click', () => {
+                    if (typeof window.openSupportImageFullscreen === 'function' && objectUrl) {
+                        window.openSupportImageFullscreen(objectUrl);
+                    }
+                });
+            }
+        } else {
+            media.controls = true;
+            media.preload = 'auto';
+            media.className = 'support-preview-audio';
+        }
         preview.replaceChildren(media);
         status.textContent = type === 'image' ? file.name : 'Listen before sending.';
         send.disabled = false;
@@ -88,18 +102,60 @@ window.initSupportAttachments = function ({ imgBtn, micBtn, locBtn, fileInput, u
         status.textContent = 'Connecting to microphone…';
         try {
             if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) throw new Error('Voice recording is unavailable in this browser.');
-            const nextStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            let nextStream;
+            try {
+                // Natural audio capture parameters to avoid software resampling jitter and distortion
+                nextStream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true
+                    }
+                });
+            } catch (constraintsErr) {
+                nextStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            }
             if (token !== version) { nextStream.getTracks().forEach(track => track.stop()); return; }
             stream = nextStream;
-            recorder = new MediaRecorder(stream);
+
+            let mimeType = '';
+            const candidates = [
+                'audio/webm;codecs=opus',
+                'audio/mp4',
+                'audio/webm',
+                'audio/ogg;codecs=opus',
+                'audio/ogg'
+            ];
+            if (typeof window.MediaRecorder.isTypeSupported === 'function') {
+                for (const cand of candidates) {
+                    if (window.MediaRecorder.isTypeSupported(cand)) {
+                        mimeType = cand;
+                        break;
+                    }
+                }
+            }
+            const recorderOpts = {};
+            if (mimeType) recorderOpts.mimeType = mimeType;
+            recorderOpts.audioBitsPerSecond = 96000;
+
+            recorder = new MediaRecorder(stream, recorderOpts);
             const chunks = [];
             const activeRecorder = recorder;
-            recorder.addEventListener('dataavailable', event => { if (event.data.size) chunks.push(event.data); });
+            recorder.addEventListener('dataavailable', event => {
+                if (event.data && event.data.size > 0) chunks.push(event.data);
+            });
             recorder.addEventListener('stop', () => {
                 nextStream.getTracks().forEach(track => track.stop()); clearInterval(timer);
                 if (token !== version) return;
-                const mime = activeRecorder.mimeType || chunks[0]?.type || 'audio/webm';
-                const extension = mime.includes('mp4') ? 'm4a' : mime.includes('ogg') ? 'ogg' : 'webm';
+                const mime = activeRecorder.mimeType || chunks[0]?.type || mimeType || 'audio/webm';
+                let extension = 'weba';
+                if (mime.includes('mp4') || mime.includes('m4a') || mime.includes('aac')) {
+                    extension = 'm4a';
+                } else if (mime.includes('ogg')) {
+                    extension = 'ogg';
+                } else if (mime.includes('webm')) {
+                    extension = 'weba';
+                }
                 const file = new File(chunks, `voice.${extension}`, { type: mime });
                 if (file.size) showFile(file, 'audio');
                 else status.textContent = 'No audio recorded. Try again.';
@@ -108,13 +164,14 @@ window.initSupportAttachments = function ({ imgBtn, micBtn, locBtn, fileInput, u
             recorder.addEventListener('error', () => {
                 release(); status.textContent = 'Recording failed. Please try again.'; record.disabled = false;
             });
+            // Continuous single-stream recording avoids timeslice packet boundaries that cause clicks and stutter
             recorder.start();
             record.disabled = false; record.textContent = 'Stop recording';
             preview.replaceChildren();
             const started = Date.now();
             const update = () => {
                 const seconds = Math.floor((Date.now() - started) / 1000);
-                status.textContent = `Recording · ${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+                status.textContent = `Recording (HD Voice) · ${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
             };
             update(); timer = setInterval(update, 1000);
         } catch (error) {
@@ -123,26 +180,297 @@ window.initSupportAttachments = function ({ imgBtn, micBtn, locBtn, fileInput, u
             status.textContent = error.message || 'Microphone access is unavailable.';
         }
     });
+
+    const CAMBODIA_PROVINCES = [
+        ['Phnom Penh', 11.5564, 104.9282],
+        ['Siem Reap', 13.3671, 103.8448],
+        ['Battambang', 13.0957, 103.2022],
+        ['Kandal', 11.4555, 104.9458],
+        ['Kampong Cham', 11.9924, 105.4645],
+        ['Kampong Chhnang', 12.2500, 104.6667],
+        ['Kampong Speu', 11.4533, 104.5209],
+        ['Kampong Thom', 12.7111, 104.8887],
+        ['Kampot', 10.6104, 104.1815],
+        ['Kep', 10.4829, 104.3167],
+        ['Koh Kong', 11.6153, 102.9838],
+        ['Kratie', 12.4881, 106.0188],
+        ['Mondulkiri', 12.4558, 107.1881],
+        ['Oddar Meanchey', 14.1817, 103.5176],
+        ['Pailin', 12.8489, 102.6093],
+        ['Preah Sihanouk', 10.6253, 103.5234],
+        ['Preah Vihear', 13.8073, 104.9817],
+        ['Prey Veng', 11.4851, 105.3253],
+        ['Pursat', 12.5333, 103.9167],
+        ['Ratanakiri', 13.7394, 106.9873],
+        ['Stung Treng', 13.5259, 105.9683],
+        ['Svay Rieng', 11.0879, 105.7993],
+        ['Takeo', 10.9908, 104.7850],
+        ['Tboung Khmum', 11.9167, 105.6500],
+        ['Banteay Meanchey', 13.5859, 102.9737]
+    ];
+
     locBtn.addEventListener('click', () => {
         if (!open('location')) return;
         const token = version;
-        status.textContent = 'Finding your current location…';
-        if (!navigator.geolocation) { status.textContent = 'Location is unavailable in this browser.'; return; }
-        navigator.geolocation.getCurrentPosition(position => {
-            if (token !== version) return;
-            const { latitude, longitude, accuracy } = position.coords;
-            draft.url = `${latitude},${longitude}`;
-            const card = document.createElement('a');
-            card.className = 'support-location-card';
-            card.href = 'https://maps.google.com/?q=' + encodeURIComponent(draft.url);
-            card.target = '_blank'; card.rel = 'noopener noreferrer';
-            card.textContent = `📍 Current location\n${latitude.toFixed(5)}, ${longitude.toFixed(5)}\nOpen map preview ↗`;
-            preview.replaceChildren(card);
-            status.textContent = `Accuracy: about ${Math.round(accuracy)} m. Your location is shared only when you press Send.`;
+        const baseEndpoint = uploadUrl ? uploadUrl.replace(/\/upload$/, '') : '/farmer/support_chat';
+
+        function setLocationDraft(latitude, longitude, accuracy, placeName) {
+            draft.url = `${latitude.toFixed(6)},${longitude.toFixed(6)}`;
+
+            const container = document.createElement('div');
+            container.className = 'support-map-wrapper';
+
+            // Top controls: Province Quick Select & Search
+            const toolbar = document.createElement('div');
+            toolbar.className = 'support-map-toolbar';
+
+            const selectProvince = document.createElement('select');
+            selectProvince.className = 'support-map-province-select';
+            selectProvince.setAttribute('aria-label', 'Select Cambodia Province');
+
+            const optDefault = document.createElement('option');
+            optDefault.value = '';
+            optDefault.textContent = '📍 Quick Province Select…';
+            selectProvince.appendChild(optDefault);
+
+            CAMBODIA_PROVINCES.forEach(([name, pLat, pLon]) => {
+                const opt = document.createElement('option');
+                opt.value = `${pLat.toFixed(6)},${pLon.toFixed(6)}`;
+                opt.textContent = name;
+                if (placeName && placeName.includes(name)) opt.selected = true;
+                selectProvince.appendChild(opt);
+            });
+
+            const searchRow = document.createElement('div');
+            searchRow.className = 'support-map-search-row';
+
+            const searchInput = document.createElement('input');
+            searchInput.type = 'text';
+            searchInput.className = 'support-map-search-input';
+            searchInput.placeholder = 'Search town, district, or place…';
+
+            const searchBtn = document.createElement('button');
+            searchBtn.type = 'button';
+            searchBtn.className = 'support-map-btn support-btn-search';
+            searchBtn.textContent = '🔍 Search';
+
+            searchRow.appendChild(searchInput);
+            searchRow.appendChild(searchBtn);
+
+            toolbar.appendChild(selectProvince);
+            toolbar.appendChild(searchRow);
+
+            // Interactive Map Iframe Container
+            const mapFrameWrap = document.createElement('div');
+            mapFrameWrap.className = 'support-map-container';
+
+            const iframe = document.createElement('iframe');
+            iframe.className = 'support-map-iframe';
+            iframe.title = 'Current Location Map';
+            iframe.loading = 'lazy';
+            iframe.setAttribute('referrerpolicy', 'no-referrer-when-downgrade');
+            iframe.src = `https://maps.google.com/maps?q=${latitude.toFixed(6)},${longitude.toFixed(6)}&hl=en&z=15&output=embed`;
+            mapFrameWrap.appendChild(iframe);
+
+            // Card with place title, map link & coordinate controls
+            const card = document.createElement('div');
+            card.className = 'support-map-card';
+
+            const placeRow = document.createElement('div');
+            placeRow.className = 'support-map-place';
+
+            const placeText = document.createElement('span');
+            placeText.textContent = `📍 ${placeName || `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`}`;
+
+            const mapLink = document.createElement('a');
+            mapLink.className = 'support-map-link';
+            mapLink.href = 'https://maps.google.com/?q=' + encodeURIComponent(draft.url);
+            mapLink.target = '_blank';
+            mapLink.rel = 'noopener noreferrer';
+            mapLink.textContent = 'Open in Google Maps ↗';
+
+            placeRow.appendChild(placeText);
+            placeRow.appendChild(mapLink);
+
+            const controls = document.createElement('div');
+            controls.className = 'support-map-controls';
+
+            const coordInputs = document.createElement('div');
+            coordInputs.className = 'support-map-coord-inputs';
+
+            const latLabel = document.createElement('label');
+            latLabel.textContent = 'Lat: ';
+            const latInput = document.createElement('input');
+            latInput.type = 'number';
+            latInput.step = '0.000001';
+            latInput.value = latitude.toFixed(6);
+            latLabel.appendChild(latInput);
+
+            const lonLabel = document.createElement('label');
+            lonLabel.textContent = 'Lng: ';
+            const lonInput = document.createElement('input');
+            lonInput.type = 'number';
+            lonInput.step = '0.000001';
+            lonInput.value = longitude.toFixed(6);
+            lonLabel.appendChild(lonInput);
+
+            const btnApply = document.createElement('button');
+            btnApply.type = 'button';
+            btnApply.className = 'support-map-btn support-btn-apply';
+            btnApply.textContent = 'Update Map';
+
+            const btnGps = document.createElement('button');
+            btnGps.type = 'button';
+            btnGps.className = 'support-map-btn';
+            btnGps.textContent = '🎯 My GPS';
+
+            coordInputs.appendChild(latLabel);
+            coordInputs.appendChild(lonLabel);
+            coordInputs.appendChild(btnApply);
+            coordInputs.appendChild(btnGps);
+            controls.appendChild(coordInputs);
+
+            card.appendChild(placeRow);
+            card.appendChild(controls);
+
+            container.appendChild(toolbar);
+            container.appendChild(mapFrameWrap);
+            container.appendChild(card);
+
+            preview.replaceChildren(container);
+
+            if (typeof selectProvince.addEventListener === 'function') {
+                selectProvince.addEventListener('change', () => {
+                    const val = selectProvince.value;
+                    if (!val) return;
+                    const [pLat, pLon] = val.split(',').map(Number);
+                    const selOpt = selectProvince.options ? selectProvince.options[selectProvince.selectedIndex] : null;
+                    const pName = selOpt ? selOpt.textContent : '';
+                    resolvePlaceName(pLat, pLon, null, pName ? `${pName}, Cambodia` : null);
+                });
+            }
+
+            const executeSearch = () => {
+                const q = searchInput.value.trim();
+                if (!q) return;
+                status.textContent = `Searching "${q}"…`;
+                const qLower = q.toLowerCase();
+                const matched = CAMBODIA_PROVINCES.find(p => p[0].toLowerCase().includes(qLower));
+                if (matched) {
+                    resolvePlaceName(matched[1], matched[2], null, `${matched[0]}, Cambodia`);
+                    return;
+                }
+                fetch(`${baseEndpoint}/location/search?q=${encodeURIComponent(q)}`, { credentials: 'same-origin' })
+                    .then(r => r.ok ? r.json() : [])
+                    .then(results => {
+                        if (token !== version) return;
+                        if (Array.isArray(results) && results.length > 0) {
+                            resolvePlaceName(results[0].latitude, results[0].longitude, null, results[0].name);
+                        } else {
+                            status.textContent = `No location found for "${q}". Try selecting a province above.`;
+                        }
+                    })
+                    .catch(() => {
+                        if (token === version) status.textContent = `Search error. Select a province or enter coordinates.`;
+                    });
+            };
+
+            if (typeof searchBtn.addEventListener === 'function') {
+                searchBtn.addEventListener('click', executeSearch);
+            }
+            if (typeof searchInput.addEventListener === 'function') {
+                searchInput.addEventListener('keydown', e => {
+                    if (e.key === 'Enter') { e.preventDefault(); executeSearch(); }
+                });
+            }
+
+            if (typeof btnApply.addEventListener === 'function') {
+                btnApply.addEventListener('click', () => {
+                    const newLat = parseFloat(latInput.value);
+                    const newLon = parseFloat(lonInput.value);
+                    if (!isNaN(newLat) && !isNaN(newLon) && -90 <= newLat && newLat <= 90 && -180 <= newLon && newLon <= 180) {
+                        resolvePlaceName(newLat, newLon, null);
+                    }
+                });
+            }
+
+            if (typeof btnGps.addEventListener === 'function') {
+                btnGps.addEventListener('click', () => {
+                    detectLocation();
+                });
+            }
+
+            const accLabel = typeof accuracy === 'number' && accuracy > 0 ? ` (±${Math.round(accuracy)}m)` : '';
+            status.textContent = placeName
+                ? `Location: ${placeName}${accLabel}. Ready to send or adjust above.`
+                : `Coordinates: ${latitude.toFixed(5)}, ${longitude.toFixed(5)}${accLabel}. Ready to send or adjust above.`;
+
+            if (caption && !caption.value.trim() && placeName) {
+                caption.value = `📍 Location: ${placeName}`;
+            }
             send.disabled = false;
-        }, error => {
-            if (token === version) status.textContent = 'Could not get your location: ' + error.message;
-        }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
+        }
+
+        function resolvePlaceName(lat, lon, acc, knownName) {
+            if (knownName) {
+                setLocationDraft(lat, lon, acc, knownName);
+                return;
+            }
+            setLocationDraft(lat, lon, acc, null);
+            fetch(`${baseEndpoint}/location?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`, { credentials: 'same-origin' })
+                .then(r => r.ok ? r.json() : null)
+                .then(data => {
+                    if (token !== version || !data) return;
+                    const name = data.display_name || data.city || '';
+                    if (name) {
+                        setLocationDraft(lat, lon, acc, name);
+                    }
+                })
+                .catch(() => {});
+        }
+
+        if (!navigator.geolocation) {
+            setLocationDraft(11.5564, 104.9282, null, 'Phnom Penh, Cambodia');
+            status.textContent = 'Location is unavailable in this browser. Select your province or search on the map below.';
+            return;
+        }
+
+        function detectLocation() {
+            status.textContent = 'Finding your real location…';
+            navigator.geolocation.getCurrentPosition(position => {
+                if (token !== version) return;
+                const { latitude, longitude, accuracy } = position.coords;
+                resolvePlaceName(latitude, longitude, accuracy);
+            }, error => {
+                if (token !== version) return;
+                navigator.geolocation.getCurrentPosition(position => {
+                    if (token !== version) return;
+                    const { latitude, longitude, accuracy } = position.coords;
+                    resolvePlaceName(latitude, longitude, accuracy);
+                }, () => {
+                    if (token !== version) return;
+                    fetch(`${baseEndpoint}/location`, { credentials: 'same-origin' })
+                        .then(r => r.ok ? r.json() : null)
+                        .then(data => {
+                            if (token !== version) return;
+                            if (data && typeof data.latitude === 'number' && typeof data.longitude === 'number') {
+                                resolvePlaceName(data.latitude, data.longitude, null, data.display_name);
+                            } else {
+                                setLocationDraft(11.5564, 104.9282, null, 'Phnom Penh, Cambodia');
+                                status.textContent = 'GPS signal unavailable. You can select your province or search above.';
+                            }
+                        })
+                        .catch(() => {
+                            if (token === version) {
+                                setLocationDraft(11.5564, 104.9282, null, 'Phnom Penh, Cambodia');
+                                status.textContent = 'GPS signal unavailable. You can select your province or search above.';
+                            }
+                        });
+                }, { enableHighAccuracy: false, timeout: 6000, maximumAge: 300000 });
+            }, { enableHighAccuracy: true, timeout: 6000, maximumAge: 60000 });
+        }
+
+        detectLocation();
     });
     async function request(url, options) {
         const response = await fetch(url, options);

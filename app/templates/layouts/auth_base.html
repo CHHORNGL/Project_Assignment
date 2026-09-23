@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ current_lang }}">
+<html lang="{{ current_lang }}" class="{{ theme_html_class }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -25,33 +25,9 @@
 
     {% block head %}{% endblock %}
 
-    <script>
-    (function () {
-        const storedTheme = localStorage.getItem("theme");
-        const mq = window.matchMedia("(prefers-color-scheme: dark)");
-
-        function applyTheme(theme) {
-            document.documentElement.classList.toggle(
-                "dark-mode",
-                theme === "dark" || (theme === "system" && mq.matches)
-            );
-        }
-
-        if (storedTheme === "light" || storedTheme === "dark" || storedTheme === "system") {
-            applyTheme(storedTheme);
-        } else {
-            // Auth pages default to Light mode unless the user explicitly chose otherwise.
-            applyTheme("light");
-        }
-
-        mq.addEventListener("change", e => {
-            const now = localStorage.getItem("theme");
-            if (now === "system") document.documentElement.classList.toggle("dark-mode", e.matches);
-        });
-    })();
-    </script>
+    {% include "partials/theme_head.html" %}
 </head>
-<body class="auth-body">
+<body class="auth-body {{ theme_body_class }}">
 
 <main class="auth-shell">
     <section class="auth-card">
@@ -69,6 +45,7 @@
 {% block scripts %}{% endblock %}
 <script src="{{ url_for('static', filename='js/toast.js') }}"></script>
 <script src="{{ url_for('static', filename='js/system_status.js', v=static_version) }}"></script>
+{% include "partials/theme_script.html" %}
 
 </body>
 </html>

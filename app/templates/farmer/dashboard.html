@@ -289,54 +289,759 @@
 </div>
 
 {% else %}
-{# ── Guest view ── #}
-<div class="fm-page">
-    <section class="fm-hero">
-        <div class="fm-hero-icon"><i class="fas fa-leaf"></i></div>
-        <h1 class="fm-hero-title">
-            {% if current_lang == 'km' %}សូមស្វាគមន៍មកកាន់ប្រព័ន្ធអ្នកជំនាញកសិកម្ម{% else %}Welcome to Agri Expert System{% endif %}
-        </h1>
-        <p class="fm-hero-sub">
-            {% if current_lang == 'km' %}
-            ធ្វើការវិភាគជំងឺដំណាំរបស់អ្នកដោយឥតគិតថ្លៃ និងទទួលបានការណែនាំពីអ្នកជំនាញ។ ចុះឈ្មោះថ្ងៃនេះដើម្បីទទួលបានអត្ថប្រយោជន៍ពេញលេញដូចជា ការជជែកជាមួយ AI និងការព្យាករណ៍អាកាសធាតុ!
-            {% else %}
-            Diagnose crop diseases instantly for free. Create an account to unlock unlimited AI consultations, local weather intelligence, and save your diagnosis history.
-            {% endif %}
-        </p>
-        <div class="fm-hero-actions">
-            <a class="fm-btn fm-btn-primary fm-btn-lg" href="{{ url_for('farmer.diagnose') }}">
-                <i class="fas fa-stethoscope"></i>{% if current_lang == 'km' %}វិភាគជំងឺឥឡូវនេះ{% else %}Diagnose Now{% endif %}
-            </a>
-            <a class="fm-btn fm-btn-ghost fm-btn-lg" href="{{ url_for('auth.register') }}">
-                <i class="fas fa-user-plus"></i>{% if current_lang == 'km' %}បង្កើតគណនី{% else %}Create Account{% endif %}
-            </a>
+{# ── GUEST USER LANDING & WORKFLOW (NEXUSAI ARCHITECTURE) ── #}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/guest_landing.css', v=static_version) }}">
+
+<div class="nx-landing-wrap">
+    <!-- Clean Ambient Animated Background System -->
+    <div class="nx-bg-grid"></div>
+    <div class="nx-aurora-ambient">
+        <div class="nx-hero-glow nx-aurora nx-aurora-1"></div>
+        <div class="nx-aurora-orb nx-aurora-2"></div>
+        <div class="nx-aurora-orb nx-aurora-3"></div>
+    </div>
+
+    <!-- ==========================================
+         HERO SECTION
+    ========================================== -->
+    <section class="text-center pt-5 pb-4 position-relative" style="z-index: 2;">
+        <div class="container">
+            <!-- Pulsing Status Badge -->
+            <div class="nx-badge">
+                <span class="nx-dot"></span>
+                {% if current_lang == 'km' %}
+                    ប្រព័ន្ធបញ្ញាសិប្បនិម្មិតកសិកម្ម 2.0 • វិភាគជំងឺដំណាំ &amp; អាកាសធាតុ
+                {% else %}
+                    AgriSystem AI 2.0 • Real-Time Diagnostics &amp; Agronomy Engine
+                {% endif %}
+            </div>
+
+            <!-- Hero Headline -->
+            <h1 class="nx-title">
+                {% if current_lang == 'km' %}
+                    វិភាគជំងឺដំណាំ &amp; ថែទាំកសិដ្ឋានជាមួយ <br><span class="nx-gradient-text">AgriSystem AI</span>
+                {% else %}
+                    Intelligent Plant Health &amp; Diagnostics with <br><span class="nx-gradient-text">AgriSystem AI</span>
+                {% endif %}
+            </h1>
+
+            <!-- Subtitle -->
+            <p class="nx-sub">
+                {% if current_lang == 'km' %}
+                    ប្រើប្រាស់បញ្ញាសិប្បនិម្មិតដើម្បីកំណត់អត្តសញ្ញាណជំងឺដំណាំ ពិនិត្យអាកាសធាតុក្នុងតំបន់ និងទទួលបានវេជ្ជបញ្ជាព្យាបាលត្រឹមត្រូវ — វិភាគជំងឺដំណាំបានភ្លាមៗដោយឥតគិតថ្លៃ!
+                {% else %}
+                    Automate crop disease detection, micro-climate alerts, and certified treatment plans in seconds. Trusted by farmers and agronomy specialists nationwide.
+                {% endif %}
+            </p>
+
+            <!-- Hero Action Buttons -->
+            <div class="nx-hero-actions d-flex align-items-center justify-content-center gap-3 flex-wrap mb-3">
+                <a class="nx-btn-primary" href="{{ url_for('farmer.diagnose') }}">
+                    <i class="fas fa-stethoscope mr-1"></i>
+                    {% if current_lang == 'km' %}សាកល្បងវិភាគជំងឺឥតគិតថ្លៃ{% else %}Try Free Diagnosis Now{% endif %}
+                    <i class="fas fa-arrow-right ml-1"></i>
+                </a>
+                <a class="nx-btn-outline" href="{{ url_for('auth.register') }}">
+                    <i class="fas fa-user-plus mr-1"></i>
+                    {% if current_lang == 'km' %}បង្កើតគណនីឥតគិតថ្លៃ{% else %}Create Free Account{% endif %}
+                </a>
+                <a class="nx-btn-outline" href="{{ url_for('auth.login') }}">
+                    <i class="fas fa-sign-in-alt mr-1"></i>
+                    {% if current_lang == 'km' %}ចូលប្រើប្រាស់{% else %}Sign In{% endif %}
+                </a>
+            </div>
+
+            <!-- Trust Indicators -->
+            <div class="nx-trust-strip">
+                <span class="nx-trust-item">
+                    <i class="fas fa-check-circle"></i>
+                    {% if current_lang == 'km' %}ឥតគិតថ្លៃ ៣ ដងសម្រាប់ភ្ញៀវ{% else %}3 Free Guest Scans{% endif %}
+                </span>
+                <span class="nx-trust-item">
+                    <i class="fas fa-check-circle"></i>
+                    {% if current_lang == 'km' %}គាំទ្រ ២៥ ខេត្តក្រុង{% else %}25 Cambodian Provinces{% endif %}
+                </span>
+                <span class="nx-trust-item">
+                    <i class="fas fa-check-circle"></i>
+                    {% if current_lang == 'km' %}ជំងឺដំណាំជាង ១២៦ ប្រភេទ{% else %}126+ Pathogens Covered{% endif %}
+                </span>
+                <span class="nx-trust-item">
+                    <i class="fas fa-check-circle"></i>
+                    {% if current_lang == 'km' %}ភាសាខ្មែរ &amp; អង់គ្លេស{% else %}Khmer &amp; English AI{% endif %}
+                </span>
+            </div>
+
+            <!-- ==========================================
+                 3D INTERACTIVE AI AGRONOMY SCANNER & HOLOGRAM
+            ========================================== -->
+            <div class="nx-3d-showcase-container mb-5" id="nx3DShowcase">
+                <!-- Particle Neural Canvas Background -->
+                <canvas id="nx3dCanvas" class="nx-3d-canvas" aria-hidden="true"></canvas>
+
+                <!-- 3D Hologram Header / Status Bar -->
+                <div class="nx-3d-header">
+                    <div class="nx-3d-status-pill">
+                        <span class="nx-dot"></span>
+                        <span class="nx-3d-status-text">
+                            {% if current_lang == 'km' %}ប្រព័ន្ធវិភាគរូបភាព 3D AI កសិកម្ម{% else %}3D Neural Agronomy Vision Scanner{% endif %}
+                        </span>
+                        <span class="nx-3d-fps-badge"><i class="fas fa-microchip mr-1"></i>Active 60 FPS</span>
+                    </div>
+
+                    <!-- 3D Interactive Crop Selector -->
+                    <div class="nx-3d-crop-selector">
+                        <button type="button" class="nx-3d-pill-btn active" data-scan-crop="rice" onclick="trigger3DScan('rice')">
+                            <i class="fas fa-seedling mr-1"></i>{% if current_lang == 'km' %}ស្រូវ{% else %}Rice{% endif %}
+                        </button>
+                        <button type="button" class="nx-3d-pill-btn" data-scan-crop="cassava" onclick="trigger3DScan('cassava')">
+                            <i class="fas fa-spa mr-1"></i>{% if current_lang == 'km' %}ដំឡូងមី{% else %}Cassava{% endif %}
+                        </button>
+                        <button type="button" class="nx-3d-pill-btn" data-scan-crop="corn" onclick="trigger3DScan('corn')">
+                            <i class="fas fa-leaf mr-1"></i>{% if current_lang == 'km' %}ពោត{% else %}Corn{% endif %}
+                        </button>
+                        <button type="button" class="nx-3d-pill-btn" data-scan-crop="tomato" onclick="trigger3DScan('tomato')">
+                            <i class="fas fa-apple-alt mr-1"></i>{% if current_lang == 'km' %}ប៉េងប៉ោះ{% else %}Tomato{% endif %}
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 3D Interactive Perspective Viewport -->
+                <div class="nx-3d-viewport" id="nx3dViewport">
+                    <div class="nx-3d-scene" id="nx3dScene">
+                        <!-- Holographic Floor & Radar Grid -->
+                        <div class="nx-3d-floor">
+                            <div class="nx-3d-radar-ring"></div>
+                            <div class="nx-3d-radar-ring r2"></div>
+                            <div class="nx-3d-radar-sweep"></div>
+                        </div>
+
+                        <!-- 3D Orbital Gyroscope Rings -->
+                        <div class="nx-3d-gyro">
+                            <div class="nx-3d-ring nx-ring-outer"></div>
+                            <div class="nx-3d-ring nx-ring-mid"></div>
+                            <div class="nx-3d-ring nx-ring-inner"></div>
+                        </div>
+
+                        <!-- Center 3D AI Agronomy Core (Wireframe Plant & Neural Hotspots) -->
+                        <div class="nx-3d-core-box">
+                            <div class="nx-3d-core-glow"></div>
+                            <svg class="nx-3d-leaf-svg" viewBox="0 0 240 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <defs>
+                                    <linearGradient id="nxLeafGrad" x1="120" y1="20" x2="120" y2="260" gradientUnits="userSpaceOnUse">
+                                        <stop offset="0%" stop-color="#60a5fa" stop-opacity="0.95" />
+                                        <stop offset="50%" stop-color="#3b82f6" stop-opacity="0.85" />
+                                        <stop offset="100%" stop-color="#6366f1" stop-opacity="0.95" />
+                                    </linearGradient>
+                                    <linearGradient id="nxVeinGrad" x1="0" y1="0" x2="1" y2="1">
+                                        <stop offset="0%" stop-color="#38bdf8" />
+                                        <stop offset="100%" stop-color="#60a5fa" />
+                                    </linearGradient>
+                                    <filter id="nxNeonGlow" x="-20%" y="-20%" width="140%" height="140%">
+                                        <feGaussianBlur stdDeviation="5" result="blur" />
+                                        <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                                    </filter>
+                                </defs>
+                                <!-- Leaf Silhouette & Outer Border -->
+                                <path d="M120 20 C180 60 215 130 185 200 C160 250 125 265 120 265 C115 265 80 250 55 200 C25 130 60 60 120 20 Z" 
+                                      stroke="url(#nxLeafGrad)" stroke-width="2.5" fill="rgba(59, 130, 246, 0.08)" filter="url(#nxNeonGlow)" />
+                                <!-- Stem -->
+                                <line x1="120" y1="30" x2="120" y2="255" stroke="url(#nxVeinGrad)" stroke-width="2" stroke-dasharray="4 3" />
+                                <!-- Secondary Veins -->
+                                <path d="M120 70 Q155 85 180 100" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="3 3" opacity="0.85" />
+                                <path d="M120 70 Q85 85 60 100" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="3 3" opacity="0.85" />
+                                <path d="M120 120 Q165 135 185 160" stroke="#60a5fa" stroke-width="1.5" stroke-dasharray="3 3" opacity="0.85" />
+                                <path d="M120 120 Q75 135 55 160" stroke="#60a5fa" stroke-width="1.5" stroke-dasharray="3 3" opacity="0.85" />
+                                <path d="M120 175 Q155 190 170 215" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="3 3" opacity="0.85" />
+                                <path d="M120 175 Q85 190 70 215" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="3 3" opacity="0.85" />
+                                <!-- Neural Node Hotspots -->
+                                <circle cx="120" cy="70" r="4" fill="#38bdf8" class="nx-node-pulse" />
+                                <circle cx="120" cy="120" r="5" fill="#60a5fa" class="nx-node-pulse" />
+                                <circle cx="120" cy="175" r="4" fill="#38bdf8" class="nx-node-pulse" />
+                                <circle cx="180" cy="100" r="3.5" fill="#3b82f6" class="nx-node-pulse" />
+                                <circle cx="60" cy="100" r="3.5" fill="#3b82f6" class="nx-node-pulse" />
+                                <!-- Infection Cluster Target Hotspot -->
+                                <circle id="nx3dHotspot" cx="185" cy="160" r="6" fill="#f59e0b" class="nx-target-hotspot" />
+                                <circle cx="185" cy="160" r="14" stroke="#f59e0b" stroke-width="1.2" stroke-dasharray="3 2" class="nx-target-ripple" />
+                            </svg>
+
+                            <!-- Vertical Scanning Laser Beam -->
+                            <div class="nx-3d-laser" id="nx3dLaser">
+                                <div class="nx-3d-laser-line"></div>
+                                <div class="nx-3d-laser-glare"></div>
+                            </div>
+                        </div>
+
+                        <!-- Floating 3D Telemetry Cards (Layered in Z-Space) -->
+                        <div class="nx-3d-card nx-3d-card-left" id="nx3dCardLeft">
+                            <div class="nx-3d-card-eyebrow">
+                                <i class="fas fa-brain text-primary"></i>
+                                <span>Vision Neural Matrix</span>
+                            </div>
+                            <div class="nx-3d-card-title" id="nx3dDiagnosisName">Rice Blast (Magnaporthe)</div>
+                            <div class="nx-3d-card-metrics">
+                                <div class="nx-3d-metric-box">
+                                    <span class="lbl">Confidence</span>
+                                    <strong class="val text-primary" id="nx3dConfidenceVal">98.4%</strong>
+                                </div>
+                                <div class="nx-3d-metric-box">
+                                    <span class="lbl">Latency</span>
+                                    <strong class="val text-info">&lt; 1.4s</strong>
+                                </div>
+                            </div>
+                            <div class="nx-3d-waveform">
+                                <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+                                <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+                                <span class="bar"></span><span class="bar"></span>
+                            </div>
+                        </div>
+
+                        <div class="nx-3d-card nx-3d-card-right" id="nx3dCardRight">
+                            <div class="nx-3d-card-eyebrow">
+                                <i class="fas fa-shield-virus text-info"></i>
+                                <span>Pathogen Telemetry</span>
+                            </div>
+                            <div class="nx-3d-card-title" id="nx3dTargetCrop">Crop: Oryza Sativa</div>
+                            <div class="nx-3d-card-prescription">
+                                <span class="lbl"><i class="fas fa-prescription mr-1"></i>Prescription:</span>
+                                <span class="val" id="nx3dPrescriptionText">Tricyclazole 75% WP (15-20g/16L)</span>
+                            </div>
+                            <div class="nx-3d-card-action">
+                                <a href="{{ url_for('farmer.diagnose') }}" class="nx-3d-card-btn">
+                                    <i class="fas fa-camera mr-1"></i>
+                                    {% if current_lang == 'km' %}ស្កេនដំណាំផ្ទាល់ខ្លួន{% else %}Try Instant Scan{% endif %}
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3D Interactive Footer Info -->
+                <div class="nx-3d-footer">
+                    <span class="nx-3d-hint">
+                        <i class="fas fa-cube text-primary mr-1"></i>
+                        {% if current_lang == 'km' %}
+                            អន្តរកម្ម 3D ៖ រំកិលកណ្ដុរ ឬប៉ះអេក្រង់ដើម្បីបង្វិលពិនិត្យគ្រប់ជ្រុង
+                        {% else %}
+                            Interactive 3D Hologram: Move mouse or drag to tilt and inspect angles in 3D
+                        {% endif %}
+                    </span>
+                    <button type="button" class="nx-3d-rescan-btn" onclick="rescan3DModel()">
+                        <i class="fas fa-sync-alt mr-1"></i>
+                        {% if current_lang == 'km' %}ដំណើរការស្កេនឡើងវិញ{% else %}Trigger Laser Scan{% endif %}
+                    </button>
+                </div>
+            </div>
+
+            <!-- ==========================================
+                 DASHBOARD WINDOW MOCKUP (CLEAN HIGH-END SAAS)
+            ========================================== -->
+            <div class="nx-dwrap">
+                <!-- Professional Telemetry & Live Status Header -->
+                <div class="nx-dtbar">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="nx-dot"></span>
+                        <strong style="color: var(--nx-text); font-size: 0.85rem;">Ark Agronomy AI Engine</strong>
+                        <span class="badge badge-primary ml-2 py-1 px-2 font-weight-normal" style="font-size: 0.72rem; background: var(--nx-emerald);">Active • v2.4</span>
+                    </div>
+                    <div class="nx-dtbar-status">
+                        <i class="fas fa-satellite-dish text-primary mr-1"></i> Live Agronomy Diagnostics
+                    </div>
+                </div>
+
+                <!-- Window Content Grid -->
+                <div class="nx-dgrid">
+                    <!-- Main Dashboard Panel -->
+                    <div class="nx-dmain">
+                        <!-- 4 Stat Pills -->
+                        <div class="row g-2 mb-2">
+                            <div class="col-6 col-md-3 mb-2">
+                                <div class="nx-stpill">
+                                    <div class="nx-stpill-val nx-gradient-text">98.4%</div>
+                                    <div class="nx-stpill-lbl">Diagnosis Accuracy</div>
+                                    <div class="nx-stpill-badge text-primary"><i class="fas fa-arrow-up"></i> +3.1% precision</div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3 mb-2">
+                                <div class="nx-stpill">
+                                    <div class="nx-stpill-val">&lt; 1.8s</div>
+                                    <div class="nx-stpill-lbl">Inference Latency</div>
+                                    <div class="nx-stpill-badge text-info"><i class="fas fa-bolt"></i> Real-time AI</div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3 mb-2">
+                                <div class="nx-stpill">
+                                    <div class="nx-stpill-val">25</div>
+                                    <div class="nx-stpill-lbl">Provinces Covered</div>
+                                    <div class="nx-stpill-badge text-primary"><i class="fas fa-map-marker-alt"></i> GPS Weather</div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3 mb-2">
+                                <div class="nx-stpill">
+                                    <div class="nx-stpill-val">100% Free</div>
+                                    <div class="nx-stpill-lbl">Guest Trial Access</div>
+                                    <div class="nx-stpill-badge text-warning"><i class="fas fa-star"></i> 3 Scans included</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2-Column Split: Activity Ticker & Interactive AI Chat -->
+                        <div class="row">
+                            <!-- Live Activity Ticker -->
+                            <div class="col-lg-6 mb-3">
+                                <div class="nx-activity-box h-100">
+                                    <div class="nx-activity-header">
+                                        <div class="nx-activity-title">
+                                            <i class="fas fa-rss text-primary"></i> Real-Time Field Activity
+                                        </div>
+                                        <span class="badge badge-pill badge-primary font-weight-normal px-2 py-1" style="background: var(--nx-emerald);">Live</span>
+                                    </div>
+                                     <div id="nxLiveActivity">
+                                        <div class="nx-activity-item">
+                                            <span class="nx-activity-dot" style="background:#3b82f6;"></span>
+                                            <span class="nx-activity-text"><i class="fas fa-seedling text-primary mr-1"></i>Rice Blast detected in Battambang • Treatment generated in 1.4s</span>
+                                            <span class="nx-activity-time">Just now</span>
+                                        </div>
+                                        <div class="nx-activity-item">
+                                            <span class="nx-activity-dot" style="background:#0ea5e9;"></span>
+                                            <span class="nx-activity-text"><i class="fas fa-cloud-sun-rain text-info mr-1"></i>Rain alert delivered to 42 rice farmers in Siem Reap</span>
+                                            <span class="nx-activity-time">2s ago</span>
+                                        </div>
+                                        <div class="nx-activity-item">
+                                            <span class="nx-activity-dot" style="background:#8b5cf6;"></span>
+                                            <span class="nx-activity-text"><i class="fas fa-user-shield mr-1" style="color:#8b5cf6;"></i>Cassava Mosaic advisory verified by Expert Agronomist</span>
+                                            <span class="nx-activity-time">5s ago</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Interactive Live AI Crop Assistant -->
+                            <div class="col-lg-6 mb-3" id="nxInteractiveChat">
+                                <div class="nx-chat-box">
+                                    <div class="nx-chat-header">
+                                        <div class="nx-chat-title">
+                                            <span class="nx-dot mr-1"></span> Ark Agri Assistant (Live Preview)
+                                        </div>
+                                        <span class="badge badge-pill badge-info font-weight-normal px-2 py-1">Online</span>
+                                    </div>
+
+                                    <!-- Chat Messages -->
+                                    <div class="nx-chat-body" id="nxChatBody">
+                                        <div class="nx-cbbl nx-cbai">
+                                            <i class="fas fa-robot text-primary mr-1"></i> <strong>ជំរាបសួរ / Hello!</strong> I am your AgriSystem AI Assistant. You can test asking about crop diseases, pest outbreaks, or spray schedules right here.
+                                        </div>
+                                    </div>
+
+                                    <!-- Quick Prompt Chips -->
+                                    <div class="nx-chips-wrap">
+                                        <button type="button" class="nx-chip" onclick="quickCropQuery('What are symptoms of Rice Blast?')">
+                                            <i class="fas fa-seedling text-primary mr-1"></i>Rice Blast
+                                        </button>
+                                        <button type="button" class="nx-chip" onclick="quickCropQuery('How to treat Cassava Mosaic Disease?')">
+                                            <i class="fas fa-spa text-info mr-1"></i>Cassava Mosaic
+                                        </button>
+                                        <button type="button" class="nx-chip" onclick="quickCropQuery('Best weather for spraying pesticide?')">
+                                            <i class="fas fa-cloud-sun text-warning mr-1"></i>Spray Timing
+                                        </button>
+                                    </div>
+
+                                    <!-- Chat Input Bar -->
+                                    <div class="nx-chat-input-row">
+                                        <input type="text" class="nx-chat-input" id="nxChatInput" 
+                                               placeholder="Ask agricultural question (e.g. rice blast symptoms)...">
+                                        <button class="nx-chat-send" type="button" id="nxChatSendBtn" title="Send Question">
+                                            <i class="fas fa-paper-plane" style="font-size: 0.85rem;"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
 
-    <div class="fm-feature-grid">
-        <div class="fm-feature fm-feature-info">
-            <div class="fm-feature-icon"><i class="fas fa-robot"></i></div>
-            <h2 class="fm-feature-title">{% if current_lang == 'km' %}ជជែកជាមួយ AI{% else %}AI Chat Assistant{% endif %}</h2>
-            <p class="fm-feature-text">
-                {% if current_lang == 'km' %}ចុះឈ្មោះគណនីដើម្បីពិភាក្សាផ្ទាល់ជាមួយអ្នកជំនាញ AI។{% else %}Register to chat directly with our agronomy AI model.{% endif %}
+    <!-- ==========================================
+         HOW IT WORKS WORKFLOW
+    ========================================== -->
+    <section class="py-5 position-relative" id="nxWorkflow" style="z-index: 2;">
+        <div class="container text-center">
+            <div class="nx-section-label">Automated Workflow</div>
+            <h2 class="nx-title">
+                {% if current_lang == 'km' %}របៀបដំណើរការវិភាគជំងឺ ៣ ជំហានងាយៗ{% else %}How AgriSystem Works in 3 Simple Steps{% endif %}
+            </h2>
+            <p class="nx-sub">
+                Designed for field usability by Cambodian farmers. Fast, accessible on any smartphone, and requires zero technical background.
             </p>
+
+            <div class="row g-4 mt-2">
+                <!-- Step 1 -->
+                <div class="col-md-4 mb-4">
+                    <div class="nx-card text-left">
+                        <div class="nx-card-step-badge">Step 01</div>
+                        <div class="nx-icon-wrap" style="background: var(--nx-emerald-bg); color: var(--nx-emerald);">
+                            <i class="fas fa-camera"></i>
+                        </div>
+                        <h4 class="font-weight-bold mb-2" style="color: var(--nx-text);">1. Snap or Upload Photo</h4>
+                        <p class="small text-muted mb-0">
+                            Use your mobile camera directly in the field or upload existing photos of leaves, stems, and fruits showing signs of discoloration or fungal spots.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="col-md-4 mb-4">
+                    <div class="nx-card text-left">
+                        <div class="nx-card-step-badge">Step 02</div>
+                        <div class="nx-icon-wrap" style="background: var(--nx-sky-bg); color: var(--nx-sky);">
+                            <i class="fas fa-brain"></i>
+                        </div>
+                        <h4 class="font-weight-bold mb-2" style="color: var(--nx-text);">2. Neural Vision Diagnosis</h4>
+                        <p class="small text-muted mb-0">
+                            Our fine-tuned vision models evaluate morphological patterns across 126+ regional crop pathogens, providing diagnostic confidence in under 2 seconds.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="col-md-4 mb-4">
+                    <div class="nx-card text-left">
+                        <div class="nx-card-step-badge">Step 03</div>
+                        <div class="nx-icon-wrap" style="background: var(--nx-purple-bg); color: var(--nx-purple);">
+                            <i class="fas fa-prescription-bottle-alt"></i>
+                        </div>
+                        <h4 class="font-weight-bold mb-2" style="color: var(--nx-text);">3. Verified Treatment Plan</h4>
+                        <p class="small text-muted mb-0">
+                            Receive certified chemical, biological, and cultural prescriptions with exact sprayer dosages, safety withholding periods, and prevention tips.
+                        </p>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="fm-feature fm-feature-warn">
-            <div class="fm-feature-icon"><i class="fas fa-cloud-sun-rain"></i></div>
-            <h2 class="fm-feature-title">{% if current_lang == 'km' %}ព័ត៌មានអាកាសធាតុ{% else %}Weather Intelligence{% endif %}</h2>
-            <p class="fm-feature-text">
-                {% if current_lang == 'km' %}ទទួលបានការព្យាករណ៍អាកាសធាតុរយៈពេល ៧ ថ្ងៃ។{% else %}Get detailed 7-day crop-specific weather forecasts.{% endif %}
+    </section>
+
+    <!-- ==========================================
+         INTERACTIVE SAMPLE DISEASE DIAGNOSIS
+    ========================================== -->
+    <section class="py-5 position-relative" style="z-index: 2;">
+        <div class="container text-center">
+            <div class="nx-section-label">Interactive Crop Showcase</div>
+            <h2 class="nx-title">
+                {% if current_lang == 'km' %}សាកល្បងពិនិត្យរោគសញ្ញាជំងឺដំណាំ{% else %}Test Diagnosis on Common Regional Crops{% endif %}
+            </h2>
+            <p class="nx-sub">Click any crop below to view the simulated AI detection and certified prescription.</p>
+
+            <!-- Pill Selector -->
+            <div class="nx-sample-pills">
+                <button type="button" class="nx-sample-pill active" data-crop="rice" onclick="selectSampleDisease('rice')">
+                    <i class="fas fa-seedling mr-1 text-primary"></i> Rice / ស្រូវ
+                </button>
+                <button type="button" class="nx-sample-pill" data-crop="cassava" onclick="selectSampleDisease('cassava')">
+                    <i class="fas fa-spa mr-1 text-info"></i> Cassava / ដំឡូងមី
+                </button>
+                <button type="button" class="nx-sample-pill" data-crop="corn" onclick="selectSampleDisease('corn')">
+                    <i class="fas fa-leaf mr-1 text-warning"></i> Corn / ពោត
+                </button>
+                <button type="button" class="nx-sample-pill" data-crop="tomato" onclick="selectSampleDisease('tomato')">
+                    <i class="fas fa-apple-alt mr-1 text-danger"></i> Tomato / ប៉េងប៉ោះ
+                </button>
+            </div>
+
+            <!-- Dynamic Sample Report Box -->
+            <div class="nx-report-card" id="nxSampleReport">
+                <div class="nx-report-header">
+                    <div>
+                        <span class="nx-report-pill">Rice / ស្រូវ</span>
+                        <h4 class="nx-report-title">Rice Blast (Magnaporthe oryzae)</h4>
+                    </div>
+                    <div class="nx-confidence-meter">
+                        <div class="nx-conf-val">98.4%</div>
+                        <div class="nx-conf-bar-wrap"><div class="nx-conf-bar" style="width: 98.4%;"></div></div>
+                    </div>
+                </div>
+                <div class="small text-muted mb-2">
+                    <strong>Symptoms:</strong> Diamond or spindle-shaped lesions on leaves with white-grey centres and dark brown margins.
+                </div>
+                <div class="nx-rx-box">
+                    <div class="nx-rx-title"><i class="fas fa-prescription-bottle-alt"></i> Certified Prescription:</div>
+                    <div class="small" style="color:var(--nx-text);">
+                        Drain excess standing water temporarily. Avoid high-nitrogen topdressing. Apply Tricyclazole 75% WP (15-20g per 16L sprayer) or Azoxystrobin early in the morning.
+                    </div>
+                </div>
+                <div class="mt-3 text-right">
+                    <a href="{{ url_for('farmer.diagnose') }}" class="nx-btn-primary" style="padding: 0.55rem 1.15rem; font-size: 0.85rem;">
+                        <i class="fas fa-camera mr-1"></i> Scan Your Own Crop Image
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==========================================
+         PRICING SECTION (CLEAN & SYMMETRICAL)
+    ========================================== -->
+    <section class="py-5 position-relative" id="nxPricing" style="z-index: 2;">
+        <div class="container text-center">
+            <div class="nx-section-label">Transparent Plans</div>
+            <h2 class="nx-title">
+                {% if current_lang == 'km' %}តម្លៃ និងកញ្ចប់សមាជិកភាព{% else %}Simple &amp; Flexible Plans for Every Farmer{% endif %}
+            </h2>
+            <p class="nx-sub">Start with free guest diagnoses, then upgrade whenever your farm is ready to scale.</p>
+
+            <!-- Billing Toggle Switch -->
+            <div class="nx-ptog-wrap">
+                <span class="small font-weight-bold" style="color: var(--nx-text);">Monthly Billing</span>
+                <label class="nx-switch mb-0">
+                    <input type="checkbox" id="nxPriceToggle">
+                    <span class="nx-slider"></span>
+                </label>
+                <span class="small font-weight-bold" style="color: var(--nx-text);">
+                    Annual Billing
+                    <span class="badge badge-pill badge-primary ml-1" style="background: var(--nx-emerald);">{{ yearly_discount_percent }}% OFF</span>
+                </span>
+            </div>
+
+            <div class="row justify-content-center g-4">
+                <!-- Free Starter Plan (Guest) -->
+                <div class="col-md-5 mb-4">
+                    <div class="nx-price-card">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <h4 class="font-weight-bold mb-0" style="color: var(--nx-text);">Starter Guest</h4>
+                            <span class="badge badge-secondary px-2 py-1">Free</span>
+                        </div>
+                        <div class="nx-price-amt">$0.00</div>
+                        <p class="small text-muted mb-0">Instant trial access for visiting growers</p>
+                        <ul class="nx-price-list">
+                            <li><i class="fas fa-check"></i> <strong>3 Instant</strong> Crop Disease Diagnoses</li>
+                            <li><i class="fas fa-check"></i> Agricultural News &amp; Market Alerts</li>
+                            <li><i class="fas fa-check"></i> Regional Weather Advisory</li>
+                            <li class="muted"><i class="fas fa-times"></i> Unlimited AI Agronomist Consultations</li>
+                            <li class="muted"><i class="fas fa-times"></i> Permanent Cloud History &amp; PDF Export</li>
+                        </ul>
+                        <div class="mt-auto">
+                            <a href="{{ url_for('farmer.diagnose') }}" class="btn btn-outline-primary btn-block py-2 font-weight-bold" style="border-radius: var(--nx-radius-md);">
+                                Start Free Trial Now
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pro Member Plan -->
+                <div class="col-md-5 mb-4">
+                    <div class="nx-price-card featured">
+                        <div class="nx-price-badge">RECOMMENDED</div>
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <h4 class="font-weight-bold mb-0" style="color: var(--nx-text);">Pro Membership</h4>
+                            <span class="badge badge-primary px-2 py-1" style="background: var(--nx-emerald);">All Features</span>
+                        </div>
+                        <div class="d-flex align-items-baseline">
+                            <span class="nx-price-amt">$<span id="nxProPlanPrice" data-monthly="{{ premium_price }}" data-yearly="{{ yearly_monthly }}">{{ premium_price }}</span></span>
+                            <span class="small text-muted ml-2" id="nxProPlanPeriod">/month</span>
+                        </div>
+                        <p class="small text-muted mb-0">Complete diagnostic suite for commercial producers</p>
+                        <ul class="nx-price-list">
+                            <li><i class="fas fa-check"></i> <strong>Unlimited</strong> AI Disease Diagnoses</li>
+                            <li><i class="fas fa-check"></i> <strong>24/7</strong> Smart AI Agronomist Chat &amp; Voice</li>
+                            <li><i class="fas fa-check"></i> 7-Day High-Resolution Rain &amp; Spray Radar</li>
+                            <li><i class="fas fa-check"></i> Human Expert Agronomist Secondary Review</li>
+                            <li><i class="fas fa-check"></i> Permanent Cloud History &amp; PDF Export</li>
+                        </ul>
+                        <div class="mt-auto">
+                            <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-block py-2 font-weight-bold" style="border-radius: var(--nx-radius-md); background: var(--nx-emerald); text-decoration: none;">
+                                Upgrade to Pro <i class="fas fa-arrow-right ml-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==========================================
+         PROJECT DETAILS & TEAM (SHOWN IN BODY)
+    ========================================== -->
+    <section class="py-5 position-relative" id="nxProjectDetail" style="z-index: 2;">
+        <div class="container text-center">
+            <div class="nx-section-label">{% if current_lang == 'km' %}ព័ត៌មានលម្អិតពីគម្រោង{% else %}Project Details{% endif %}</div>
+            <h2 class="nx-title">
+                {% if current_lang == 'km' %}ប្រព័ន្ធអ្នកជំនាញកសិកម្ម &mdash; ក្រុមការងារគម្រោង{% else %}Agri Expert System &mdash; Project Team &amp; Supervisor{% endif %}
+            </h2>
+            <p class="nx-sub">
+                {% if current_lang == 'km' %}
+                    ព័ត៌មានលម្អិតអំពីសាស្រ្តាចារ្យណែនាំ និងក្រុមការងារស្រាវជ្រាវអភិវឌ្ឍន៍ប្រព័ន្ធបញ្ញាសិប្បនិម្មិតកសិកម្មកម្ពុជា។
+                {% else %}
+                    Engineered under faculty supervision to empower Cambodian farmers with real-time AI disease diagnosis, smart crop advisories, and weather intelligence.
+                {% endif %}
             </p>
+
+            {% if supervisor %}
+            {# ── Supervisor: Lead Card ── #}
+            <div class="text-left mb-4">
+                <div class="fm-team-label">
+                    <h2>{% if current_lang == 'km' %}សាស្រ្តាចារ្យណែនាំ{% else %}Project Supervisor{% endif %}</h2>
+                </div>
+                <div class="fm-team-card fm-team-lead">
+                    <img class="fm-team-avatar"
+                         src="{{ url_for('static', filename='img/image_detail/' ~ supervisor.photo) }}"
+                         alt="{{ supervisor.name }}">
+                    <div class="fm-team-meta">
+                        <span class="fm-team-rank is-lead">{% if current_lang == 'km' and supervisor.rank_kh %}{{ supervisor.rank_kh }}{% else %}{{ supervisor.rank }}{% endif %}</span>
+                        <h3 class="fm-team-name">{% if current_lang == 'km' and supervisor.name_kh %}{{ supervisor.name_kh | safe }}{% else %}{{ supervisor.name }}{% endif %}</h3>
+                        {% if supervisor.task %}
+                        <div class="fm-team-task">{% if current_lang == 'km' and supervisor.task_kh %}{{ supervisor.task_kh }}{% else %}{{ supervisor.task }}{% endif %}</div>
+                        {% endif %}
+                        <div class="fm-team-divider"></div>
+                        <ul class="fm-team-facts">
+                            {% if supervisor.student_id %}
+                            <li><i class="fas fa-id-card"></i><span>{{ supervisor.student_id }}</span></li>
+                            {% endif %}
+                            {% if supervisor.department %}
+                            <li><i class="fas fa-university"></i><span>{% if current_lang == 'km' and supervisor.department_kh %}{{ supervisor.department_kh }}{% else %}{{ supervisor.department }}{% endif %}</span></li>
+                            {% endif %}
+                            {% if supervisor.email %}
+                            <li><i class="fas fa-envelope"></i><a class="fm-team-link" href="mailto:{{ supervisor.email }}">{{ supervisor.email }}</a></li>
+                            {% endif %}
+                            {% if supervisor.phone %}
+                            <li><i class="fas fa-phone"></i><a class="fm-team-link" href="tel:{{ supervisor.phone | replace(' ', '') }}">{{ supervisor.phone }}</a></li>
+                            {% endif %}
+                            {% if supervisor.telegram %}
+                            <li><i class="fab fa-telegram-plane"></i><span>{{ supervisor.telegram }}</span></li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if team %}
+            {# ── Members: Grid Layout ── #}
+            <div class="text-left">
+                <div class="fm-team-label">
+                    <h2>{% if current_lang == 'km' %}សមាជិកក្រុមស្រាវជ្រាវ{% else %}Development Team{% endif %}</h2>
+                </div>
+                <div class="fm-team-grid">
+                    {% for person in team %}
+                    <div class="fm-team-card fm-team-member">
+                        <div class="fm-team-member-head">
+                            <img class="fm-team-avatar"
+                                 src="{{ url_for('static', filename='img/image_detail/' ~ person.photo) }}"
+                                 alt="{{ person.name }}">
+                            <div class="fm-team-meta">
+                                {% set role_class = "is-lead" if loop.index == 1 else ("is-frontend" if loop.index == 2 else ("is-mobile" if loop.index == 3 else "is-data")) %}
+                                <span class="fm-team-rank {{ role_class }}">{% if current_lang == 'km' and person.rank_kh %}{{ person.rank_kh }}{% else %}{{ person.rank }}{% endif %}</span>
+                                <h3 class="fm-team-name">{% if current_lang == 'km' and person.name_kh %}{{ person.name_kh | safe }}{% else %}{{ person.name }}{% endif %}</h3>
+                            </div>
+                        </div>
+                        {% if person.task %}
+                        <div class="fm-team-task-box">
+                            <span class="fm-team-task-label"><i class="fas fa-tasks mr-1"></i>{% if current_lang == 'km' %}ការទទួលខុសត្រូវ{% else %}Role &amp; Contributions{% endif %}</span>
+                            <p class="fm-team-task">{% if current_lang == 'km' and person.task_kh %}{{ person.task_kh }}{% else %}{{ person.task }}{% endif %}</p>
+                        </div>
+                        {% endif %}
+                        <div class="fm-team-divider"></div>
+                        <ul class="fm-team-facts">
+                            {% if person.student_id %}
+                            <li><i class="fas fa-id-card"></i><span>ID {{ person.student_id }}</span></li>
+                            {% endif %}
+                            {% if person.department %}
+                            <li><i class="fas fa-university"></i><span>{% if current_lang == 'km' and person.department_kh %}{{ person.department_kh }}{% else %}{{ person.department }}{% endif %}</span></li>
+                            {% endif %}
+                            {% if person.email %}
+                            <li><i class="fas fa-envelope"></i><a class="fm-team-link" href="mailto:{{ person.email }}">{{ person.email }}</a></li>
+                            {% endif %}
+                            {% if person.phone %}
+                            <li><i class="fas fa-phone"></i><a class="fm-team-link" href="tel:{{ person.phone | replace(' ', '') }}">{{ person.phone }}</a></li>
+                            {% endif %}
+                            {% if person.telegram %}
+                            <li><i class="fab fa-telegram-plane"></i><span>{{ person.telegram }}</span></li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
         </div>
-        <div class="fm-feature fm-feature-ok">
-            <div class="fm-feature-icon"><i class="fas fa-history"></i></div>
-            <h2 class="fm-feature-title">{% if current_lang == 'km' %}រក្សាទុកប្រវត្តិ{% else %}Save History{% endif %}</h2>
-            <p class="fm-feature-text">
-                {% if current_lang == 'km' %}រក្សាទុកគ្រប់កំណត់ត្រាវិភាគ និងការជជែករបស់អ្នកដោយសុវត្ថិភាព។{% else %}Keep all your crop diagnoses securely backed up on the cloud.{% endif %}
-            </p>
+    </section>
+
+    <!-- ==========================================
+         FAQ ACCORDION (MODERN & BORDERLESS)
+    ========================================== -->
+    <section class="py-5 position-relative" style="z-index: 2;">
+        <div class="container text-center">
+            <div class="nx-section-label">Questions &amp; Answers</div>
+            <h2 class="nx-title">
+                {% if current_lang == 'km' %}សំណួរដែលសួរញឹកញាប់{% else %}Frequently Asked Questions{% endif %}
+            </h2>
+            <p class="nx-sub">Everything you need to know about AgriSystem's guest access and capabilities.</p>
+
+            <div class="nx-faq-wrap mt-4" id="nxFaqAccordion">
+                <div class="nx-faq-item">
+                    <button class="nx-faq-btn" type="button" data-toggle="collapse" data-target="#faqCollapse1" aria-expanded="true" aria-controls="faqCollapse1">
+                        <span><i class="fas fa-question-circle text-primary mr-2"></i>Can I use the diagnosis feature as a guest?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div id="faqCollapse1" class="collapse show" data-parent="#nxFaqAccordion">
+                        <div class="nx-faq-body">
+                            Yes! Every visiting guest can perform up to 3 complete crop disease diagnoses with photo uploads completely free of charge. No credit card or registration is required to get started.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="nx-faq-item">
+                    <button class="nx-faq-btn collapsed" type="button" data-toggle="collapse" data-target="#faqCollapse2" aria-expanded="false" aria-controls="faqCollapse2">
+                        <span><i class="fas fa-question-circle text-primary mr-2"></i>Which crops and languages are supported?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div id="faqCollapse2" class="collapse" data-parent="#nxFaqAccordion">
+                        <div class="nx-faq-body">
+                            AgriSystem is customized for Southeast Asian agriculture, specifically supporting Rice (ស្រូវ), Cassava (ដំឡូងមី), Corn/Maize (ពោត), Tomato, Mango, and more. It natively supports both Khmer (ភាសាខ្មែរ) and English.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="nx-faq-item">
+                    <button class="nx-faq-btn collapsed" type="button" data-toggle="collapse" data-target="#faqCollapse3" aria-expanded="false" aria-controls="faqCollapse3">
+                        <span><i class="fas fa-question-circle text-primary mr-2"></i>How accurate is the AI agronomy model?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div id="faqCollapse3" class="collapse" data-parent="#nxFaqAccordion">
+                        <div class="nx-faq-body">
+                            Our proprietary fine-tuned Ark Vision Agronomy engine achieves over 98.4% diagnostic accuracy across common fungal, bacterial, and viral crop diseases, backed by secondary human agronomist reviews.
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
+    </section>
+
+    <!-- ==========================================
+         CALL TO ACTION FOOTER BANNER
+    ========================================== -->
+    <section class="py-5 text-center position-relative" style="z-index: 2;">
+        <div class="container">
+            <div class="nx-cta-banner">
+                <h2 class="font-weight-bold mb-3" style="color: var(--nx-text);">
+                    Ready to Protect Your Harvest with AI?
+                </h2>
+                <p class="nx-sub mb-4">
+                    Join thousands of Cambodian farmers diagnosing diseases early and optimizing crop yields with AgriSystem.
+                </p>
+                <div class="nx-cta-actions d-flex align-items-center justify-content-center gap-3 flex-wrap">
+                    <a class="nx-btn-primary" href="{{ url_for('farmer.diagnose') }}">
+                        <i class="fas fa-stethoscope mr-1"></i>Start Free Diagnosis
+                    </a>
+                    <a class="nx-btn-outline" href="{{ url_for('auth.register') }}">
+                        <i class="fas fa-user-plus mr-1"></i>Create Free Account
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
 </div>
+
+<script src="{{ url_for('static', filename='js/guest_landing.js', v=static_version) }}"></script>
 {% endif %}
 
 {# Announcement detail — Bootstrap 4 modal; the bridge in farmer.css themes it. #}

@@ -16,6 +16,7 @@ from flask import (
     abort,
     send_file,
     session,
+    make_response,
 )
 from flask_login import login_required, current_user
 
@@ -98,30 +99,46 @@ def index():
 # ===============================
 # 🌗 UPDATE USER THEME
 # ===============================
-@user_bp.route("/theme", methods=["POST"])
+@user_bp.route("/theme", methods=["GET", "POST"])
 def update_theme():
     """
     Save user theme preference
     Accepted values: light | dark | system
+    Supports both guest visitors and authenticated users.
     """
-    data = request.get_json(silent=True) or {}
-    theme = data.get("theme")
+    if request.method == "POST":
+        if request.is_json:
+            data = request.get_json(silent=True) or {}
+            theme = data.get("theme")
+        else:
+            theme = request.form.get("theme")
+    else:
+        theme = request.args.get("theme")
 
-    if theme not in ("light", "dark", "system"):
+    if not theme or theme not in ("light", "dark", "system"):
         return jsonify({
             "status": "error",
             "message": "Invalid theme value"
         }), 400
+
+    # Save in session for both guest and authenticated sessions
+    session["theme"] = theme
 
     # Save preference if user is authenticated
     if current_user.is_authenticated:
         current_user.theme = theme
         db.session.commit()
 
-    return jsonify({
-        "status": "success",
-        "theme": theme
-    })
+    next_url = request.args.get("next") or (request.form.get("next") if request.method == "POST" else None)
+    if next_url and next_url.startswith("/"):
+        resp = redirect(next_url)
+    else:
+        resp = make_response(jsonify({
+            "status": "success",
+            "theme": theme
+        }))
+    resp.set_cookie("theme", theme, max_age=31536000, path="/", samesite="Lax")
+    return resp
 
 
 # ===============================
@@ -354,8 +371,11 @@ def settings():
             current_user.ai_api_key = ai_api_key.strip()
 
         db.session.commit()
+        session["theme"] = theme
         flash("Settings saved.", "success")
-        return redirect(url_for("user.settings"))
+        resp = redirect(url_for("user.settings"))
+        resp.set_cookie("theme", theme, max_age=31536000, path="/", samesite="Lax")
+        return resp
 
     if current_user.has_role("admin") or current_user.has_role("expert"):
         layout_shell = "layouts/base.html"

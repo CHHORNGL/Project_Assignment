@@ -936,8 +936,9 @@ html.dark-mode .flash-success {
     min-height: 100vh;
     min-height: 100dvh;
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     background-color: #0b1117;
     background-image: 
         linear-gradient(180deg, rgba(9, 14, 19, 0.70), rgba(9, 14, 19, 0.88)),
@@ -948,10 +949,11 @@ html.dark-mode .flash-success {
     background-attachment: fixed;
     font-family: "Plus Jakarta Sans", "Inter", "Kantumruy Pro", sans-serif;
     color: #0f172a;
-    padding: 24px 16px;
+    padding: max(32px, env(safe-area-inset-top)) 16px max(40px, env(safe-area-inset-bottom));
     box-sizing: border-box;
     position: relative;
     overflow-x: hidden;
+    overflow-y: auto;
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
@@ -999,7 +1001,7 @@ html.auth-panel-dark .auth-clean-body {
 .auth-clean-container {
     width: 100%;
     max-width: 440px;
-    margin: 0 auto;
+    margin: auto 0;
     display: flex;
     flex-direction: column;
     gap: 16px;

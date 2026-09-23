@@ -729,9 +729,23 @@ body.icon-nav .app-sidebar .nav-link[data-tooltip]:hover::after,
     </li>
     {% endif %}
 
+    <!-- Live Support (Simple Top-Level Item) -->
+    {% if current_user.has_role("admin") %}
+    <li class="nav-item">
+        <a class="nav-link {% if path.startswith("/admin/support_chats") %}active{% endif %}"
+           href="{{ url_for("admin.support_chats") }}"
+           data-tooltip="Live Support"
+           aria-label="Live Support">
+            <span class="nav-icon"><i class="fas fa-comments text-success"></i></span>
+            <span class="nav-label">Live Support</span>
+            <span class="nav-chevron"><i class="fas fa-chevron-right"></i></span>
+        </a>
+    </li>
+    {% endif %}
+
     <!-- Controller Tree View -->
     {% if current_user.has_role("admin") %}
-    {% set is_controller_active = path.startswith("/admin/premium-settings") or path.startswith("/admin/marquees") or path.startswith("/admin/support_chats") or path.startswith("/admin/support-requests") or path.startswith("/admin/promo-codes") %}
+    {% set is_controller_active = path.startswith("/admin/premium-settings") or path.startswith("/admin/marquees") or path.startswith("/admin/support-requests") or path.startswith("/admin/promo-codes") %}
     <li class="nav-item">
         <a class="nav-link {% if not is_controller_active %}collapsed{% else %}active{% endif %}"
            href="#"
@@ -752,9 +766,6 @@ body.icon-nav .app-sidebar .nav-link[data-tooltip]:hover::after,
                 </a>
                 <a class="collapse-item {% if path.startswith("/admin/marquees") %}active{% endif %}" href="{{ url_for("admin.marquees") }}">
                     <i class="fas fa-bullhorn text-info"></i> <span>Marquees</span>
-                </a>
-                <a class="collapse-item {% if path.startswith("/admin/support_chats") %}active{% endif %}" href="{{ url_for("admin.support_chats") }}">
-                    <i class="fas fa-comments text-success"></i> <span>Live Support</span>
                 </a>
                 <a class="collapse-item {% if path.startswith("/admin/support-requests") %}active{% endif %}" href="{{ url_for("admin.support_requests") }}">
                     <i class="fas fa-life-ring text-danger"></i> <span>Support Requests</span>
