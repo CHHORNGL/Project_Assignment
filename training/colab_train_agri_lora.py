@@ -126,7 +126,7 @@ def main() -> None:
         report_to="none",
         seed=42,
         dataset_text_field="text",
-        max_seq_length=1024,
+        max_length=1024,
         packing=False,
     )
     
