@@ -5,20 +5,14 @@ files. It trains a LoRA adapter rather than copying full model weights. Keep
 the Hugging Face token in a Colab secret or an environment variable; never
 commit it to the repository.
 
-Typical Colab setup::
-
-    !pip install -U transformers datasets peft trl bitsandbytes accelerate huggingface_hub
-    !git clone https://github.com/YOUR_ACCOUNT/YOUR_REPOSITORY.git /content/agri-project
-    %run /content/agri-project/training/colab_train_agri_lora.py
-
 Required environment variables:
     HF_TOKEN       Hugging Face write token
     HF_REPO_ID     e.g. your-account/agrisystem-adapter
 
 Optional variables:
-    DATA_DIR       defaults to /content/agri-project/exports
-    BASE_MODEL     defaults to Qwen/Qwen2.5-1.5B-Instruct
-    OUTPUT_DIR     defaults to /content/agri-agri-lora
+    DATA_DIR       defaults to /workspace/Project_Assignment/exports
+    BASE_MODEL     defaults to Qwen/Qwen2.5-3B-Instruct
+    OUTPUT_DIR     defaults to /workspace/agri-qwen3b-lora
 """
 
 from __future__ import annotations
@@ -27,9 +21,9 @@ import os
 from pathlib import Path
 
 
-DATA_DIR = Path(os.getenv("DATA_DIR", "/content/agri-project/exports"))
-BASE_MODEL = os.getenv("BASE_MODEL", "Qwen/Qwen2.5-1.5B-Instruct")
-OUTPUT_DIR = Path(os.getenv("OUTPUT_DIR", "/content/agri-lora-output"))
+DATA_DIR = Path(os.getenv("DATA_DIR", "/workspace/Project_Assignment/exports"))
+BASE_MODEL = os.getenv("BASE_MODEL", "Qwen/Qwen2.5-3B-Instruct")
+OUTPUT_DIR = Path(os.getenv("OUTPUT_DIR", "/workspace/agri-qwen3b-lora"))
 HF_REPO_ID = os.getenv("HF_REPO_ID", "").strip()
 HF_TOKEN = os.getenv("HF_TOKEN", "").strip()
 
@@ -65,9 +59,8 @@ def main() -> None:
         AutoModelForCausalLM,
         AutoTokenizer,
         BitsAndBytesConfig,
-        TrainingArguments,
     )
-    from trl import SFTTrainer
+    from trl import SFTConfig, SFTTrainer
 
     train_file = DATA_DIR / "agri_train_data.jsonl"
     validation_file = DATA_DIR / "agri_validation_data.jsonl"
@@ -90,8 +83,7 @@ def main() -> None:
         remove_columns=dataset["train"].column_names,
     )
 
-    # QLoRA keeps Colab GPU memory manageable. If the selected model does not
-    # support 4-bit loading, remove quantization_config and use a smaller model.
+    # QLoRA keeps GPU memory manageable.
     quantization_config = BitsAndBytesConfig(
         load_in_4bit=True,
         bnb_4bit_quant_type="nf4",
@@ -114,7 +106,9 @@ def main() -> None:
         task_type="CAUSAL_LM",
         target_modules=["q_proj", "k_proj", "v_proj", "o_proj"],
     )
-    training_args = TrainingArguments(
+    
+    # Use SFTConfig instead of TrainingArguments in newer TRL versions
+    training_args = SFTConfig(
         output_dir=str(OUTPUT_DIR),
         num_train_epochs=3,
         per_device_train_batch_size=2,
@@ -131,18 +125,20 @@ def main() -> None:
         gradient_checkpointing=True,
         report_to="none",
         seed=42,
-    )
-    trainer = SFTTrainer(
-        model=model,
-        tokenizer=tokenizer,
-        train_dataset=dataset["train"],
-        eval_dataset=dataset["validation"],
         dataset_text_field="text",
         max_seq_length=1024,
         packing=False,
+    )
+    
+    trainer = SFTTrainer(
+        model=model,
+        processing_class=tokenizer,
+        train_dataset=dataset["train"],
+        eval_dataset=dataset["validation"],
         args=training_args,
         peft_config=lora_config,
     )
+    
     trainer.train()
     metrics = trainer.evaluate()
     print("Validation metrics:", metrics)
