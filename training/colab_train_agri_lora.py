@@ -18,6 +18,7 @@ Optional variables:
 from __future__ import annotations
 
 import os
+import json
 from pathlib import Path
 
 
@@ -26,6 +27,38 @@ BASE_MODEL = os.getenv("BASE_MODEL", "Qwen/Qwen2.5-3B-Instruct")
 OUTPUT_DIR = Path(os.getenv("OUTPUT_DIR", "/workspace/agri-qwen3b-lora"))
 HF_REPO_ID = os.getenv("HF_REPO_ID", "").strip()
 HF_TOKEN = os.getenv("HF_TOKEN", "").strip()
+
+
+def _validate_jsonl(path: Path) -> tuple[int, set[str]]:
+    """Validate the instruction schema before loading the model or using GPU."""
+    records = 0
+    fingerprints: set[str] = set()
+    with path.open("r", encoding="utf-8") as handle:
+        for line_number, raw_line in enumerate(handle, start=1):
+            if not raw_line.strip():
+                continue
+            try:
+                example = json.loads(raw_line)
+            except json.JSONDecodeError as exc:
+                raise ValueError(f"Invalid JSON in {path}:{line_number}: {exc}") from exc
+            messages = example.get("messages")
+            if not isinstance(messages, list) or not messages:
+                raise ValueError(f"Missing messages list in {path}:{line_number}")
+            roles = [item.get("role") for item in messages if isinstance(item, dict)]
+            if roles != ["system", "user", "assistant"]:
+                raise ValueError(
+                    f"Expected system/user/assistant roles in {path}:{line_number}; got {roles}"
+                )
+            if any(not isinstance(item.get("content"), str) or not item["content"].strip() for item in messages):
+                raise ValueError(f"Blank message content in {path}:{line_number}")
+            fingerprint = json.dumps(example, ensure_ascii=False, sort_keys=True)
+            if fingerprint in fingerprints:
+                raise ValueError(f"Duplicate record in {path}:{line_number}")
+            fingerprints.add(fingerprint)
+            records += 1
+    if records == 0:
+        raise ValueError(f"No training records found in {path}")
+    return records, fingerprints
 
 
 def _format_messages(example, tokenizer):
@@ -71,6 +104,16 @@ def main() -> None:
             f"Expected {train_file} and {validation_file}. Run scripts/export_to_jsonl.py first."
         )
 
+    train_count, train_fingerprints = _validate_jsonl(train_file)
+    validation_count, validation_fingerprints = _validate_jsonl(validation_file)
+    overlap = train_fingerprints & validation_fingerprints
+    if overlap:
+        raise ValueError(f"Found {len(overlap)} records duplicated across train and validation")
+    print(
+        f"Validated dataset: {train_count} train records, "
+        f"{validation_count} validation records, no overlap"
+    )
+
     login(token=HF_TOKEN, add_to_git_credential=False)
     dataset = load_dataset(
         "json",
@@ -85,11 +128,15 @@ def main() -> None:
         remove_columns=dataset["train"].column_names,
     )
 
+    # Use bfloat16 only when the runtime supports it (for example, A100/L4).
+    # T4 runtimes should use float16 for bitsandbytes compute.
+    use_bf16 = torch.cuda.is_available() and torch.cuda.is_bf16_supported()
+
     # QLoRA keeps GPU memory manageable.
     quantization_config = BitsAndBytesConfig(
         load_in_4bit=True,
         bnb_4bit_quant_type="nf4",
-        bnb_4bit_compute_dtype=torch.bfloat16,
+        bnb_4bit_compute_dtype=torch.bfloat16 if use_bf16 else torch.float16,
         bnb_4bit_use_double_quant=True,
     )
     model = AutoModelForCausalLM.from_pretrained(
@@ -117,8 +164,6 @@ def main() -> None:
         ],
     )
     
-    use_bf16 = torch.cuda.is_available() and torch.cuda.is_bf16_supported()
-
     # Use SFTConfig with cosine learning rate decay and warmup
     training_args = SFTConfig(
         output_dir=str(OUTPUT_DIR),
@@ -144,6 +189,8 @@ def main() -> None:
         dataset_text_field="text",
         max_length=1024,
         packing=False,
+        hub_model_id=HF_REPO_ID,
+        hub_token=HF_TOKEN,
     )
     
     trainer = SFTTrainer(
@@ -161,7 +208,10 @@ def main() -> None:
 
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     trainer.save_model(str(OUTPUT_DIR))
-    trainer.push_to_hub(HF_REPO_ID, token=HF_TOKEN)
+    trainer.push_to_hub(
+        commit_message="Update AgriSystem LoRA adapter",
+        token=HF_TOKEN,
+    )
     print(f"LoRA Adapter uploaded successfully to https://huggingface.co/{HF_REPO_ID}")
 
 

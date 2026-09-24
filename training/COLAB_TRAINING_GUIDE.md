@@ -38,11 +38,15 @@ Add your Hugging Face write token (get it from [Hugging Face Settings > Tokens](
 ```python
 import os
 
-# Your Hugging Face repository where the fine-tuned LoRA will be uploaded
+# Your Hugging Face repository where the fine-tuned LoRA will be uploaded.
+# This replaces the adapter currently used by the Space; use a new repo ID
+# first if you want to evaluate without changing production.
 os.environ["HF_REPO_ID"] = "Maoseavik/agri-qwen3b-lora"
 
-# Your Hugging Face write token (e.g. hf_xxxx...)
-os.environ["HF_TOKEN"] = "PASTE_YOUR_HF_WRITE_TOKEN_HERE"
+# Read the token from a Colab Secret named HF_TOKEN. Do not save a token in
+# the notebook or commit it to Git.
+from google.colab import userdata
+os.environ["HF_TOKEN"] = userdata.get("HF_TOKEN")
 
 # Base model and export paths
 os.environ["BASE_MODEL"] = "Qwen/Qwen2.5-3B-Instruct"
@@ -70,4 +74,5 @@ Once training finishes, the script automatically:
 1. Evaluates validation loss and metrics.
 2. Saves the fine-tuned LoRA weights.
 3. Pushes the adapter directly to your Hugging Face repository: `https://huggingface.co/Maoseavik/agri-qwen3b-lora`.
-4. Your Hugging Face Space (`Maoseavik/agrisystem-agricultural-assistant`) will automatically reload the newly updated adapter!
+4. Verify that `adapter_model.safetensors` and `adapter_config.json` are present in the target repository.
+5. Restart the Hugging Face Space (`Maoseavik/agrisystem-agricultural-assistant`) so its process loads the new adapter, then test a Khmer farming question, a casual/empathy message, and an agricultural-insight question. Pushing the model repository alone does not prove that the already-running Space has reloaded it.
