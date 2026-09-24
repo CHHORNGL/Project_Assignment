@@ -56,16 +56,34 @@ def plan_request(
         "remind", "reminder", "create task", "set task", "send alert",
         "រំលឹក", "បង្កើតភារកិច្ច", "ជូនដំណឹង",
     )
+    identity_terms = (
+        "who are you", "who created you", "who made you", "who developed you",
+        "what is your name", "what is your model", "model name", "who is your leader",
+        "team leader", "who is mao seavik", "about you",
+        "តើអ្នកជាអ្នកណា", "អ្នកជាអ្នកណា", "តើអ្នកជាអ្វី", "អ្នកជាអ្វី", "អ្នកណាបង្កើត",
+        "នរណាបង្កើត", "តើអ្នកណាបង្កើតអ្នក", "តើនរណាបង្កើតអ្នក", "តើម៉ូឌែលឈ្មោះអ្វី",
+        "ម៉ូឌែលឈ្មោះអ្វី", "តើ ai នេះឈ្មោះអ្វី", "ប្រធានក្រុម", "ម៉ៅ សៀវីក", "mao seavik",
+    )
     greeting_terms = (
-        "hi", "hello", "hey", "សួស្តី", "សួរស្តី", "ជំរាបសួរ",
+        "hi", "hello", "hey", "greetings", "good morning", "good afternoon", "good evening",
+        "how are you", "សួស្តី", "សួរស្តី", "ជំរាបសួរ", "ជំរាបសួរបង", "សួស្តីបង", "សួស្តីប្អូន",
+        "អរុណសួស្តី", "ទិវាសួស្តី", "សាយណ្ហសួស្តី", "សុខសប្បាយជាទេ", "សុខសប្បាយ",
+        "អ្នកសុខសប្បាយទេ",
     )
 
-    is_greeting = text in greeting_terms or any(
-        text.startswith(term + " ") for term in greeting_terms if " " not in term
+    clean_text = re.sub(r"[!?,.។៕\s]+", " ", text).strip()
+    is_greeting = any(
+        clean_text == term
+        or clean_text.startswith(term + " ")
+        or (term in {"សួស្តី", "សួរស្តី", "ជំរាបសួរ"} and text.startswith(term) and len(text) <= len(term) + 20)
+        for term in greeting_terms
     )
-    if is_greeting and len(text) <= 40:
-        intent = "greeting"
+    if _has_any(text, identity_terms):
+        intent = "agent_identity"
         tools: tuple[str, ...] = ()
+    elif is_greeting and len(clean_text) <= 50:
+        intent = "greeting"
+        tools = ()
     elif _has_any(text, weather_terms):
         intent = "weather_advice"
         tools = ("weather", "knowledge_base")
@@ -158,17 +176,33 @@ def build_agent_context(
         elif "weather" in plan.tools and latitude is not None and longitude is not None:
             sections.append("លទ្ធផលអាកាសធាតុ៖\n" + _weather_tool(latitude, longitude, language))
 
-        try:
-            from app.services.openai_assistant import _build_kb_context
-            knowledge_context, crop = _build_kb_context(message)
-            sections.append("ព័ត៌មានពីមូលដ្ឋានចំណេះដឹងកសិកម្ម៖")
-            sections.append(knowledge_context or "រកមិនឃើញព័ត៌មានដែលត្រូវគ្នានៅក្នុងមូលដ្ឋានចំណេះដឹងឡើយ។")
-            if crop:
-                crop_title = getattr(crop, "name_kh", None) or crop.name
-                sections.append(f"ដំណាំដែលត្រូវគ្នា៖ {crop_title}")
-        except Exception:
-            sections.append("មិនអាចទាញយកព័ត៌មានពីមូលដ្ឋានចំណេះដឹងបានឡើយ។ សូមបញ្ជាក់ថាមិនមានព័ត៌មានគ្រប់គ្រាន់។")
+        if plan.intent not in {"greeting", "agent_identity"}:
+            try:
+                from app.services.openai_assistant import _build_kb_context
+                knowledge_context, crop = _build_kb_context(message)
+                sections.append("ព័ត៌មានពីមូលដ្ឋានចំណេះដឹងកសិកម្ម៖")
+                sections.append(knowledge_context or "រកមិនឃើញព័ត៌មានដែលត្រូវគ្នានៅក្នុងមូលដ្ឋានចំណេះដឹងឡើយ។")
+                if crop:
+                    crop_title = getattr(crop, "name_kh", None) or crop.name
+                    sections.append(f"ដំណាំដែលត្រូវគ្នា៖ {crop_title}")
+            except Exception:
+                sections.append("មិនអាចទាញយកព័ត៌មានពីមូលដ្ឋានចំណេះដឹងបានឡើយ។ សូមបញ្ជាក់ថាមិនមានព័ត៌មានគ្រប់គ្រាន់។")
 
+        if plan.intent == "greeting":
+            sections.append(
+                "គោលការណ៍ឆ្លើយតបការស្វាគមន៍ (Greeting Policy)៖\n"
+                "កសិករកំពុងស្វាគមន៍ ឬសួរសួស្តី (Hello / Greetings)។ "
+                "សូមឆ្លើយតបការស្វាគមន៍ដោយភាពរាក់ទាក់ កក់ក្តៅ និងគួរសមបំផុតជាភាសាខ្មែរ ណែនាំខ្លួនថាជា AgriSystem AI (ម៉ូឌែល AGY V1.0.0) បង្កើតឡើងដោយប្រធានក្រុម ម៉ៅ សៀវីក (Team Leader Mao Seavik) និងសួរបញ្ជាក់ថាតើមានបញ្ហាដំណាំ ការដាំដុះ ឬជំងឺរុក្ខជាតិអ្វីដែលកសិករចង់ឱ្យជួយប្រឹក្សាដែរឬទេ។"
+            )
+        if plan.intent == "agent_identity":
+            sections.append(
+                "ព័ត៌មានអត្តសញ្ញាណ AI៖\n"
+                "- ឈ្មោះ AI៖ AgriSystem AI\n"
+                "- ឈ្មោះម៉ូឌែល៖ AGY V1.0.0\n"
+                "- អ្នកបង្កើត៖ បង្កើត និងអភិវឌ្ឍឡើងដោយប្រធានក្រុម ម៉ៅ សៀវីក (Team Leader Mao Seavik)\n"
+                "- តួនាទី៖ ជំនួយការកសិកម្មឆ្លាតវៃ ផ្តល់ការប្រឹក្សាអំពីដំណាំ ជំងឺដំណាំ ដី និងការព្យាបាលប្រកបដោយសុវត្ថិភាព។\n"
+                "សូមបញ្ជាក់ដោយច្បាស់លាស់ថា AI នេះមានម៉ូឌែលឈ្មោះ AGY V1.0.0 បង្កើតឡើងដោយប្រធានក្រុម ម៉ៅ សៀវីក (Team Leader Mao Seavik)។"
+            )
         if plan.intent == "crop_health":
             sections.append(
                 "ដំណើរការវិនិច្ឆ័យ៖ សូមពន្យល់ពីមូលហេតុនិងរោគសញ្ញាដែលអាចកើតមាន រួចណែនាំកសិករឱ្យប្រើទំព័រធ្វើរោគវិនិច្ឆ័យក្នុងប្រព័ន្ធដើម្បីទទួលបានលទ្ធផលជាក់លាក់។"
@@ -193,19 +227,34 @@ def build_agent_context(
         elif "weather" in plan.tools and latitude is not None and longitude is not None:
             sections.append("Weather tool result:\n" + _weather_tool(latitude, longitude, language))
 
-        try:
-            # Import lazily to avoid the existing assistant module importing itself
-            # while Flask is registering services.
-            from app.services.openai_assistant import _build_kb_context
+        if plan.intent not in {"greeting", "agent_identity"}:
+            try:
+                # Import lazily to avoid the existing assistant module importing itself
+                # while Flask is registering services.
+                from app.services.openai_assistant import _build_kb_context
 
-            knowledge_context, crop = _build_kb_context(message)
-            sections.append("Knowledge-base tool result:")
-            sections.append(knowledge_context or "No matching knowledge-base context was found.")
-            if crop:
-                sections.append(f"Matched crop record: {crop.name}")
-        except Exception:
-            sections.append("Knowledge-base tool unavailable; say when the available information is insufficient.")
+                knowledge_context, crop = _build_kb_context(message)
+                sections.append("Knowledge-base tool result:")
+                sections.append(knowledge_context or "No matching knowledge-base context was found.")
+                if crop:
+                    sections.append(f"Matched crop record: {crop.name}")
+            except Exception:
+                sections.append("Knowledge-base tool unavailable; say when the available information is insufficient.")
 
+        if plan.intent == "greeting":
+            sections.append(
+                "Greeting Policy:\n"
+                "The farmer is greeting you (Hello / Hi). Respond warmly, politely, and helpfully. Introduce yourself as AgriSystem AI (model: AGY V1.0.0), created by Team Leader Mao Seavik, and ask how you can assist with their crops or farming today."
+            )
+        if plan.intent == "agent_identity":
+            sections.append(
+                "AI Identity Information:\n"
+                "- AI Name: AgriSystem AI\n"
+                "- Model Name: AGY V1.0.0\n"
+                "- Creator: Created and developed by Team Leader Mao Seavik\n"
+                "- Role: Smart agricultural assistant providing advice on crops, plant diseases, soil, and safe farming practices.\n"
+                "Please state clearly that you are AgriSystem AI (model: AGY V1.0.0), created by Team Leader Mao Seavik."
+            )
         if plan.intent == "crop_health":
             sections.append(
                 "Diagnosis workflow: explain possible causes and evidence, then direct the farmer to the app's Diagnose page for the authoritative rule-based result."
@@ -227,8 +276,9 @@ def build_agent_context(
     if history:
         sections.append("Recent conversation context:\n" + "\n".join(history))
 
-    # Keep the context under the remote client's 4,000-character safety bound.
-    return "\n\n".join(sections)[:3900], plan
+    # Keep the context under the remote client's expanded 8,000-character
+    # safety bound while preserving enough disease and prevention details.
+    return "\n\n".join(sections)[:7800], plan
 
 
 def agent_metadata(plan: AgentPlan) -> dict[str, object]:

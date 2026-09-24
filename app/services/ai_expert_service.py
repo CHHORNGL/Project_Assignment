@@ -18,10 +18,10 @@ from flask import current_app
 
 
 DEFAULT_TIMEOUT_SECONDS = 30.0
-# Remote inference is intentionally bounded: long retrieval context and large
-# generations increase latency and can exceed the backend timeout.
-MAX_CONTEXT_CHARS = 4_000
-MAX_MESSAGE_CHARS = 2_000
+# Keep enough retrieval context and generation budget for complete agricultural
+# answers while retaining a hard upper bound for the remote request.
+MAX_CONTEXT_CHARS = 8_000
+MAX_MESSAGE_CHARS = 4_000
 
 
 def _active_model_profile() -> dict[str, str] | None:
@@ -155,7 +155,7 @@ def _endpoint() -> str:
 def _timeout() -> float:
     raw = _setting("AI_REQUEST_TIMEOUT_SECONDS", str(DEFAULT_TIMEOUT_SECONDS))
     try:
-        return max(2.0, min(float(raw), 120.0))
+        return max(2.0, min(float(raw), 180.0))
     except (TypeError, ValueError):
         return DEFAULT_TIMEOUT_SECONDS
 
@@ -175,12 +175,14 @@ def _build_prompt(message: str, context: str, language: Optional[str]) -> str:
     if _is_khmer(language, message):
         bounded_context = (context or "រកមិនឃើញព័ត៌មាននៅក្នុងមូលដ្ឋានចំណេះដឹងទេ។").strip()[:MAX_CONTEXT_CHARS]
         return (
-            "អ្នកគឺជា AgriSystem AI ដែលជាជំនួយការកសិកម្មឆ្លាតវៃ និងយកចិត្តទុកដាក់។ "
-            "សូមឆ្លើយជាភាសាខ្មែរឱ្យបានត្រឹមត្រូវ ច្បាស់លាស់ និងរលូន។ "
-            "សូមប្រើប្រាស់តែព័ត៌មានពីបរិបទចំណេះដឹងខាងក្រោម។ "
+            "អ្នកគឺជា AgriSystem AI (ម៉ូឌែលឈ្មោះ AGY V1.0.0) ដែលត្រូវបានបង្កើត និងអភិវឌ្ឍឡើងដោយប្រធានក្រុម ម៉ៅ សៀវីក (Team Leader Mao Seavik)។ "
+            "ប្រសិនបើអ្នកប្រើប្រាស់សួរអំពីអត្តសញ្ញាណរបស់អ្នក អ្នកណាបង្កើតអ្នក ឬម៉ូឌែលឈ្មោះអ្វី សូមបញ្ជាក់ដោយច្បាស់លាស់ថា អ្នកគឺជា AgriSystem AI (ម៉ូឌែល AGY V1.0.0) បង្កើតឡើងដោយប្រធានក្រុម ម៉ៅ សៀវីក (Team Leader Mao Seavik)។ "
+            "ប្រសិនបើអ្នកប្រើប្រាស់គ្រាន់តែស្វាគមន៍ គួរសម ឬសួរសួស្តី (ដូចជា សួស្តី, ជំរាបសួរ, Hello) សូមឆ្លើយតបស្វាគមន៍ដោយរាក់ទាក់ កក់ក្តៅជាភាសាខ្មែរ ហើយសួរថាតើមានបញ្ហាដំណាំ ឬការងារកសិកម្មអ្វីដែលអ្នកអាចជួយបាន។ "
+            "សូមឆ្លើយជាភាសាខ្មែរឱ្យបានត្រឹមត្រូវ ច្បាស់លាស់ និងរលូនជានិច្ច។ "
+            "សម្រាប់ការសាកសួរអំពីបច្ចេកទេសកសិកម្ម សូមប្រើប្រាស់ព័ត៌មានពីបរិបទចំណេះដឹងខាងក្រោម។ "
             "កុំបង្កើតកម្រិតថ្នាំគីមី ឬការធ្វើរោគវិនិច្ឆ័យដោយគ្មានមូលដ្ឋានច្បាស់លាស់។ "
-            "ប្រសិនបើព័ត៌មានមិនគ្រប់គ្រាន់ សូមបញ្ជាក់ និងណែនាំឱ្យកសិករពិគ្រោះជាមួយអ្នកជំនាញកសិកម្មក្នុងតំបន់។ "
-            "ផ្តល់ដំបូន្មានខ្លី ខ្លឹម និងអនុវត្តបានជាក់ស្តែង។\n\n"
+            "ប្រសិនបើព័ត៌មានកសិកម្មមិនគ្រប់គ្រាន់ សូមបញ្ជាក់ និងណែនាំឱ្យកសិករពិគ្រោះជាមួយអ្នកជំនាញកសិកម្មក្នុងតំបន់។ "
+            "ផ្តល់ចម្លើយពេញលេញ រៀបចំជាចំណុច និងអនុវត្តបានជាក់ស្តែង។ សម្រាប់សំណួរដែលស្មុគស្មាញ សូមរួមបញ្ចូលសេចក្តីសង្ខេប មូលហេតុដែលអាចកើតមាន ជំហានអនុវត្ត ការប្រុងប្រយ័ត្ន និងពេលណាត្រូវពិគ្រោះអ្នកជំនាញ។ កុំកាត់ចម្លើយមុនពេលឆ្លើយគ្រប់ផ្នែកនៃសំណួរ។\n\n"
             f"បរិបទចំណេះដឹងកសិកម្ម៖\n{bounded_context}\n\n"
             f"សំណួររបស់កសិករ៖\n{bounded_message}\n\n"
             "ចម្លើយ៖\n"
@@ -189,12 +191,14 @@ def _build_prompt(message: str, context: str, language: Optional[str]) -> str:
     language_name = _language_name(language)
     bounded_context = (context or "No matching knowledge-base context was found.").strip()[:MAX_CONTEXT_CHARS]
     return (
-        "You are AgriSystem AI, a careful agricultural assistant. "
-        f"Answer in {language_name}. Use only the knowledge-base context below; "
+        "You are AgriSystem AI (model name: AGY V1.0.0), created and developed by Team Leader Mao Seavik. "
+        "If the user asks who you are, who created you, or what model you are, clearly state that you are AgriSystem AI (model: AGY V1.0.0), created by Team Leader Mao Seavik. "
+        "If the user greets you or says hello (e.g. Hello, Hi), greet them back warmly and ask how you can help with their crops or farming today. "
+        f"Answer in {language_name}. Use the knowledge-base context below for agricultural inquiries; "
         "follow the trusted agent instructions and do not invent pesticide doses, "
         "diagnoses, live weather, or guarantees. If the context is insufficient, "
         "say that more information or a local expert is needed. "
-        "Give concise, practical advice and mention uncertainty when appropriate.\n\n"
+        "Give complete, well-structured, practical advice and mention uncertainty when appropriate. For complex questions, include a summary, possible causes, actionable steps, safety precautions, and when to contact an expert. Address every part of the question before stopping.\n\n"
         f"Knowledge-base context:\n{bounded_context}\n\n"
         f"Farmer question:\n{bounded_message}\n\nAnswer:\n"
     )
@@ -252,7 +256,7 @@ def _gradio_reply(endpoint: str, token: str, prompt: str, timeout: float, max_ne
     hostname = (urlparse(endpoint).hostname or "").lower()
     if token and (not hostname.endswith(".hf.space") or token.startswith("hf_")):
         headers["Authorization"] = f"Bearer {token}"
-    payload = {"data": [prompt, 0.25, max(32, min(int(max_new_tokens), 800))]}
+    payload = {"data": [prompt, 0.25, max(32, min(int(max_new_tokens), 1024))]}
 
     call_urls = _gradio_call_urls(endpoint)
     last_response = None
@@ -302,7 +306,7 @@ def request_endpoint(
     prompt: str,
     *,
     timeout: float = DEFAULT_TIMEOUT_SECONDS,
-    max_new_tokens: int = 128,
+    max_new_tokens: int = 768,
 ) -> str:
     """Call either the custom TGI-compatible service or a Gradio Space."""
     if is_gradio_endpoint(endpoint):
@@ -347,7 +351,7 @@ def generate_reply(
     token = _setting("HF_TOKEN") or _setting("HUGGINGFACEHUB_API_TOKEN")
     prompt = _build_prompt(user_message, context, language)
     try:
-        max_tokens = 384 if _is_khmer(language, user_message) else 256
+        max_tokens = 768
         reply = request_endpoint(
             endpoint,
             token,

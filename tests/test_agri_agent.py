@@ -35,6 +35,12 @@ class AgriAgentPlanningTestCase(unittest.TestCase):
         self.assertIn("confirmation_gate", plan.tools)
         self.assertEqual(agent_metadata(plan)["intent"], "action_request")
 
+    def test_identity_request_does_not_load_irrelevant_disease_context(self):
+        plan = plan_request("តើអ្នកណាបង្កើតអ្នក?", language="km")
+
+        self.assertEqual(plan.intent, "agent_identity")
+        self.assertEqual(plan.tools, ())
+
 
 if __name__ == "__main__":
     unittest.main()
