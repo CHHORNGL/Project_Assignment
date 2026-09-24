@@ -16,7 +16,7 @@ Flask-WTF==1.2.1
 WTForms==3.1.2
 email-validator==2.1.0.post1
 Authlib==1.8.0
-webauthn==2.8.0
+webauthn==3.0.0
 Flask-CORS==6.0.5
 Flask-Limiter[redis]==4.1.1
 Flask-Session==0.8.0
