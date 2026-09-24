@@ -163,13 +163,22 @@ def _clean_text(text: str) -> str:
 
 def _is_valid_output(text: str, is_khmer: bool) -> bool:
     cleaned = text.strip()
-    if len(cleaned) < 15:
+    if len(cleaned) < 25:
         return False
-    # Check if a single character dominates >40% of the text
+    # Reject broken unicode replacement chars, raw template leftovers, and hybrid artifacts
+    if "\ufffd" in cleaned or "example_video_id" in cleaned or "ជំ-ngឺ" in cleaned or "ngឺ" in cleaned:
+        return False
+    # Reject Japanese kana or Cyrillic characters
+    if bool(re.search(r"[\u3040-\u30ff\u0400-\u04ff]", cleaned)):
+        return False
+    # Reject Chinese character leakage
+    if bool(re.search(r"[\u4e00-\u9fff]", cleaned)):
+        return False
+    # Check if a single character dominates >35% of the text
     counts = Counter(cleaned)
     if counts:
         most_common_char, count = counts.most_common(1)[0]
-        if count / len(cleaned) > 0.4 and most_common_char not in {" ", "\n", "-"}:
+        if count / len(cleaned) > 0.35 and most_common_char not in {" ", "\n", "-"}:
             return False
     # If query is Khmer, verify response has Khmer characters
     if is_khmer and not bool(re.search(r"[\u1780-\u17ff]", cleaned)):

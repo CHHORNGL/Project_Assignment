@@ -250,11 +250,25 @@ def _is_valid_reply(reply: str, user_message: str = "", language: Optional[str] 
         return False
     cleaned = reply.strip()
 
-    # Check if a single character dominates >40% of the entire text
+    # Reject broken unicode replacement chars, raw template leftovers, and hybrid artifacts
+    if "\ufffd" in cleaned or "example_video_id" in cleaned or "ជំ-ngឺ" in cleaned or "ngឺ" in cleaned:
+        return False
+
+    # Reject Japanese kana or Cyrillic characters
+    if bool(re.search(r"[\u3040-\u30ff\u0400-\u04ff]", cleaned)):
+        return False
+
+    # Reject Chinese character leakage unless user actually wrote Chinese
+    has_zh = bool(re.search(r"[\u4e00-\u9fff]", cleaned))
+    user_zh = bool(re.search(r"[\u4e00-\u9fff]", user_message))
+    if has_zh and not user_zh:
+        return False
+
+    # Check if a single character dominates >35% of the entire text
     counts = Counter(cleaned)
     if counts:
         most_common_char, count = counts.most_common(1)[0]
-        if count / len(cleaned) > 0.4 and most_common_char not in {" ", "\n", "-", "*"}:
+        if count / len(cleaned) > 0.35 and most_common_char not in {" ", "\n", "-", "*"}:
             return False
 
     is_km = _is_khmer(language, user_message)
@@ -262,15 +276,141 @@ def _is_valid_reply(reply: str, user_message: str = "", language: Optional[str] 
     if is_km and not bool(re.search(r"[\u1780-\u17ff]", cleaned)):
         return False
 
-    # Check for hallucinated Chinese boilerplate when user wrote Khmer or English
-    has_zh = bool(re.search(r"[\u4e00-\u9fff]", cleaned))
-    user_zh = bool(re.search(r"[\u4e00-\u9fff]", user_message))
-    if has_zh and not user_zh:
-        zh_count = len(re.findall(r"[\u4e00-\u9fff]", cleaned))
-        if zh_count / len(cleaned) > 0.2:
-            return False
-
     return True
+
+
+CAMBODIAN_AGRI_KB = [
+    {
+        "keywords": ["ទុរេន", "ធូរេន", "durian", "រលួយឬស", "រលួយដើម", "phytophthora", "fitora", "ជ័រ"],
+        "title_km": "ជំងឺរលួយឫស និងគល់ទុរេន (Durian Root Rot & Stem Canker - Phytophthora palmivora)",
+        "title_en": "Durian Root Rot & Stem Canker (Phytophthora palmivora)",
+        "crop_km": "ទុរេន",
+        "crop_en": "Durian",
+        "symptoms_km": "ស្លឹកប្រែជាពណ៌លឿងស្រពោន ជ្រុះស្លឹក សំបកដើមប្រេះហៀរជ័រពណ៌ត្នោតចាស់ ឬខ្មៅ ឫសតូចៗរលួយខ្មៅស្អុយ។",
+        "symptoms_en": "Yellowing and drop of foliage, stem oozing reddish-brown gum, rot of feeder roots.",
+        "treatment_km": "កាត់ក្រីមែកខូច និងកោសសម្អាតដំបៅលើដើម រួចលាបថ្នាំ Metalaxyl ឬ Copper Oxychloride។ ស្រោចគល់ដោយ Fosetyl-Al (៣០-៤០ក្រាម/ទឹក ២០លីត្រ) ឬចាក់ថ្នាំ Phosphorous acid (Phyto-Fos) ចូលដើម។",
+        "treatment_en": "Scrape stem lesions and apply Metalaxyl or Copper paste. Drench root zone with Fosetyl-Aluminium (30-40g/20L) or trunk injection with Phosphorous acid.",
+        "prevention_km": "ដាំលើរងខ្ពស់រៀបចំប្រព័ន្ធបង្ហូរទឹកកុំឱ្យជាំទឹក កែតម្រូវកម្រិត pH ដីឱ្យបាន ៥.៥-៦.៥ ដោយប្រើកំបោរកសិកម្ម (Dolomite) និងប្រើផ្សិត Trichoderma ស្រោចការពារគល់រៀងរាល់ ២-៣ខែ។",
+        "prevention_en": "Plant on raised mounds, ensure excellent field drainage, maintain soil pH 5.5-6.5 using agricultural lime, and apply Trichoderma as a preventative soil drench.",
+    },
+    {
+        "keywords": ["ស្រូវ", "rice", "ប្លាស់", "blast", "ខ្លោចស្លឹក"],
+        "title_km": "ជំងឺប្លាស់ស្រូវ (Rice Blast - Magnaporthe oryzae)",
+        "title_en": "Rice Blast Disease (Magnaporthe oryzae)",
+        "crop_km": "ស្រូវ",
+        "crop_en": "Rice",
+        "symptoms_km": "ស្នាមដំបៅរាងដូចកូនទូក កណ្តាលពណ៌ប្រផេះ គែមពណ៌ត្នោតចាស់លើស្លឹក និងអាចរលួយកួរស្រូវ (Neck blast)។",
+        "symptoms_en": "Spindle-shaped elliptical lesions with grey centers and brown margins on leaves; rotting of panicle neck.",
+        "treatment_km": "បាញ់ថ្នាំ Tricyclazole 75% WP (១៥-២០ក្រាម/ធុង ២០លីត្រ) ឬ Azoxystrobin + Difenoconazole។ បញ្ឈប់ការដាក់ជីអ៊ុយរ៉េ (N) បន្ថែមជាបន្ទាន់។",
+        "treatment_en": "Spray Tricyclazole 75% WP (15-20g per 20L water) or Azoxystrobin + Difenoconazole. Stop all nitrogen top-dressing immediately.",
+        "prevention_km": "ប្រើពូជស្រូវធន់នឹងជំងឺ កុំសាបព្រោះញឹកពេក រក្សាកម្រិតទឹកក្នុងស្រែឱ្យបានត្រឹមត្រូវ និងដាក់ជី NPK ឱ្យមានតុល្យភាព (ជីបាត DAP, បំប៉ន Urea + Potassium)។",
+        "prevention_en": "Use resistant rice varieties, avoid dense sowing, balance NPK fertilizers with split potassium, and maintain proper water levels.",
+    },
+    {
+        "keywords": ["ដំឡូងមី", "cassava", "ម៉ូសេក", "mosaic", "រួញស្លឹក"],
+        "title_km": "ជំងឺម៉ូសេកដំឡូងមី (Cassava Mosaic Disease - CMD)",
+        "title_en": "Cassava Mosaic Disease (CMD)",
+        "crop_km": "ដំឡូងមី",
+        "crop_en": "Cassava",
+        "symptoms_km": "ស្លឹកមានស្នាមអុចពណ៌លឿងលាយបៃតង ស្លឹកកោងរួញខូចទ្រង់ទ្រាយ ដើមក្រិនទិន្នផលមើមថយចុះយ៉ាងខ្លាំង។",
+        "symptoms_en": "Mottled yellow-green patches, asymmetric leaf curling, severe stunting, and root yield collapse.",
+        "treatment_km": "គ្មានថ្នាំគីមីព្យាបាលមេរោគវីរុសនេះទេ។ ត្រូវដកដើមដែលកើតជំងឺដុតកម្ទេចចោលជាបន្ទាន់ និងបាញ់កម្ចាត់សត្វល្អិតមមាចស (Whitefly) ដែលជាភ្នាក់ងារចម្លងដោយប្រើ Dinotefuran ឬ Thiamethoxam។",
+        "treatment_en": "No chemical cure exists for viral CMD. Rogue and burn infected plants immediately. Control whitefly insect vectors using Dinotefuran or Thiamethoxam.",
+        "prevention_km": "ជ្រើសរើសដើមពូជស្អាតគ្មានមេរោគ (ដូចជា KU50, Rayong 9) និងមិនត្រូវកាត់ដើមពូជពីចម្ការដែលមានជំងឺមកដាំបន្តឡើយ។",
+        "prevention_en": "Plant only certified virus-free stem cuttings (e.g. KU50, Rayong 9). Never take cuttings from infected fields.",
+    },
+    {
+        "keywords": ["ពោត", "corn", "maize", "ដង្កូវហ្វូង", "armyworm", "ចោះដើម"],
+        "title_km": "ដង្កូវហ្វូងរដូវស្លឹកឈើជ្រុះលើពោត (Fall Armyworm - Spodoptera frugiperda)",
+        "title_en": "Fall Armyworm in Corn (Spodoptera frugiperda)",
+        "crop_km": "ពោត",
+        "crop_en": "Corn",
+        "symptoms_km": "ស្លឹកធ្លុះធ្លាយរហែកធំៗ មានកាកលាមកដូចកំទេចអាចម៍រណាលើត្រួយ និងដង្កូវស៊ីបំផ្លាញកួរពោតខ្ចី។",
+        "symptoms_en": "Windowpane damage on young leaves, large ragged holes, heavy sawdust-like frass inside whorls, feeding on tassels and ears.",
+        "treatment_km": "វិធានការជីវសាស្រ្ត៖ ប្រើបាក់តេរី Bacillus thuringiensis (Bt) ឬផ្សិត Beauveria bassiana។ វិធានការគីមី៖ បាញ់ថ្នាំ Emamectin benzoate (៥-១០ក្រាម/២០លីត្រ) ឬ Chlorantraniliprole ចូលត្រួយពោតនៅពេលល្ងាច។",
+        "treatment_en": "Bio-control: Bacillus thuringiensis (Bt) or Beauveria bassiana. Chemical control: Spray Emamectin benzoate (5-10g/20L) or Chlorantraniliprole directly into whorls late in the afternoon.",
+        "prevention_km": "ភ្ជួរដីហាលឱ្យបានយូរដើម្បីកម្ទេចដុកឌឿ ដាក់អន្ទាក់ស្អិត និងដាំដំណាំចម្រុះដើម្បីកាត់ផ្តាច់វដ្តជីវិតសត្វល្អិត។",
+        "prevention_en": "Deep plowing to expose pupae, pheromone monitoring traps, and intercropping to break the pest cycle.",
+    },
+    {
+        "keywords": ["ម្រេច", "pepper", "ងាប់រហ័ស", "ងាប់យឺត", "quick wilt"],
+        "title_km": "ជំងឺងាប់រហ័សលើម្រេច (Pepper Quick Wilt - Phytophthora capsici)",
+        "title_en": "Pepper Quick Wilt (Phytophthora capsici)",
+        "crop_km": "ម្រេច",
+        "crop_en": "Pepper",
+        "symptoms_km": "ស្លឹកប្រែជាពណ៌បៃតងចាស់ ស្រពោន និងជ្រុះយ៉ាងលឿនក្នុងរយៈពេល ២-៣ថ្ងៃ ដើមនិងឬសប្រែពណ៌ខ្មៅរលួយ។",
+        "symptoms_en": "Rapid wilting and drop of leaves within 2-3 days while retaining dark color; collar and underground roots rot black.",
+        "treatment_km": "កាត់មែកដែលងាប់ចោល ដកដើមងាប់ដុតបំផ្លាញ ស្រោចថ្នាំ Metalaxyl ឬ Fosetyl-Al ជុំវិញគល់។",
+        "treatment_en": "Prune and destroy infected branches; drench root zones with Metalaxyl or Fosetyl-Al immediately.",
+        "prevention_km": "រៀបចំប្រព័ន្ធបង្ហូរទឹកកុំឱ្យដក់ជាំ កាត់ក្រីមែកទាបៗកុំឱ្យប៉ះដី និងស្រោចផ្សិត Trichoderma ជុំវិញគល់រៀងរាល់ ២-៣ខែម្តង។",
+        "prevention_en": "Ensure rapid drainage away from vines, prune lower foliage off soil contact, and drench with Trichoderma bio-fungicide every 2-3 months.",
+    },
+    {
+        "keywords": ["ប៉េងប៉ោះ", "tomato", "ខ្លោចស្លឹក", "រលួយផ្លែ", "blight"],
+        "title_km": "ជំងឺខ្លោចស្លឹក និងរលួយផ្លែប៉េងប៉ោះ (Tomato Late Blight - Phytophthora infestans)",
+        "title_en": "Tomato Late Blight (Phytophthora infestans)",
+        "crop_km": "ប៉េងប៉ោះ",
+        "crop_en": "Tomato",
+        "symptoms_km": "ស្នាមជាំទឹកពណ៌បៃតងចាស់លើស្លឹក រីករាលដាលខ្លោចខ្មៅ និងមានស្នាមរលួយពណ៌ត្នោតរឹងលើផ្លែ។",
+        "symptoms_en": "Water-soaked dark green lesions on leaves rapidly turning necrotic brown; firm brown rot on fruit.",
+        "treatment_km": "បាញ់ថ្នាំ Mancozeb ឬ Metalaxyl-Mancozeb ឬ Difenoconazole។ កាត់ស្លឹកដែលឆ្លងជំងឺខ្លាំងដុតកម្ទេចចោល។",
+        "treatment_en": "Apply Mancozeb or Metalaxyl-Mancozeb or Difenoconazole. Prune and destroy heavily infected lower foliage.",
+        "prevention_km": "ចងទ្រើងប៉េងប៉ោះកុំឱ្យស្លឹកប៉ះដី ស្រោចទឹកនៅគល់កុំឱ្យសើមស្លឹក និងដាំលើរងគ្របប្លាស្ទិកកសិកម្ម។",
+        "prevention_en": "Stake plants off ground, avoid overhead irrigation, and use plastic mulch to prevent splash infection.",
+    },
+    {
+        "keywords": ["ត្រសក់", "cucumber", "ផ្សិតម្សៅ", "រលួយ", "mildew"],
+        "title_km": "ជំងឺផ្សិតម្សៅ និងខ្លោចស្លឹកត្រសក់ (Cucumber Downy & Powdery Mildew)",
+        "title_en": "Cucumber Downy & Powdery Mildew",
+        "crop_km": "ត្រសក់",
+        "crop_en": "Cucumber",
+        "symptoms_km": "ស្នាមអុចពណ៌លឿងរាងជ្រុងតាមទ្រនុងស្លឹក ផ្នែកខាងក្រោមស្លឹកមានម្សៅពណ៌ស្វាយ ឬស។",
+        "symptoms_en": "Angular yellow spots bounded by leaf veins; purplish or white powdery down on leaf underside.",
+        "treatment_km": "បាញ់ថ្នាំ Dimethomorph ឬ Metalaxyl ឬ Azoxystrobin នៅពេលព្រឹកព្រលឹម។",
+        "treatment_en": "Spray Dimethomorph or Metalaxyl or Azoxystrobin in early morning hours.",
+        "prevention_km": "ដាំចន្លោះគុម្ពឱ្យបានសមស្របដើម្បីឱ្យមានខ្យល់ចេញចូលល្អ បាញ់ថ្នាំការពារផ្សិតជីវសាស្រ្តជាប្រចាំ។",
+        "prevention_en": "Maintain adequate row spacing for ventilation; apply bio-fungicide preventatively.",
+    },
+    {
+        "keywords": ["ម្ទេស", "chili", "chilli", "កន្ទុយបារី", "anthracnose", "រលួយផ្លែ"],
+        "title_km": "ជំងឺផ្សិតកន្ទុយបារី និងរលួយផ្លែម្ទេស (Chili Anthracnose - Colletotrichum)",
+        "title_en": "Chili Anthracnose (Colletotrichum spp.)",
+        "crop_km": "ម្ទេស",
+        "crop_en": "Chili Pepper",
+        "symptoms_km": "ស្នាមដំបៅមូលស្រុតចុះលើផ្លែម្ទេស មានរង្វង់មូលជង់ៗគ្នា និងចំណុចខ្មៅៗលើផ្លែបណ្តាលឱ្យស្វិតជ្រុះ។",
+        "symptoms_en": "Circular sunken lesions on fruit with concentric rings of dark acervuli, causing fruit rot and drop.",
+        "treatment_km": "បាញ់ថ្នាំ Azoxystrobin + Difenoconazole ឬ Mancozeb ឆ្លាស់គ្នា។ ប្រមូលផ្លែរលួយដុតចោល។",
+        "treatment_en": "Apply Azoxystrobin + Difenoconazole or Mancozeb in rotation. Collect and burn diseased fruits.",
+        "prevention_km": "ជ្រើសរើសគ្រាប់ពូជស្អាត ត្រាំទឹកក្តៅ ៥០អង្សាសេ រយៈពេល ២៥នាទីមុនបណ្តុះ និងដាំលើរងខ្ពស់។",
+        "prevention_en": "Soak seeds in 50°C hot water for 25 minutes prior to sowing; maintain well-drained raised beds.",
+    },
+    {
+        "keywords": ["ក្រូច", "ក្រូចឆ្មា", "lime", "lemon", "citrus", "ដំបៅ", "canker"],
+        "title_km": "ជំងឺដំបៅក្រូច និងក្រូចឆ្មា (Citrus Canker - Xanthomonas axonopodis)",
+        "title_en": "Citrus Canker (Xanthomonas axonopodis)",
+        "crop_km": "ក្រូច",
+        "crop_en": "Citrus",
+        "symptoms_km": "ដំបៅពកពណ៌ត្នោតរដុប មានរង្វង់លឿងព័ទ្ធជុំវិញលើស្លឹក មែកខ្ចី និងសម្បកផ្លែ។",
+        "symptoms_en": "Raised, corky brown lesions surrounded by oily water-soaked yellow halos on leaves, twigs, and fruit.",
+        "treatment_km": "កាត់មែកកើតដំបៅចោល បាញ់ថ្នាំពពួកទង់ដែងដូចជា Copper Hydroxide ឬ Copper Oxychloride។",
+        "treatment_en": "Prune out diseased shoots; spray preventative copper compounds such as Copper Hydroxide.",
+        "prevention_km": "កម្ចាត់សត្វល្អិតមមាចស៊ីត្រួយ និងដង្កូវស៊ីញ៉ែកស្លឹកដែលជាភ្នាក់ងារចម្លងរបួស។",
+        "prevention_en": "Control citrus leafminer insect pests that create entry wounds for the canker bacteria.",
+    },
+    {
+        "keywords": ["កំបោរ", "lime", "ដីជូរ", "acidic soil", "pH", "ជីកំប៉ុស", "compost"],
+        "title_km": "ការគ្រប់គ្រងដី និងកំបោរកសិកម្ម (Soil Management & Liming)",
+        "title_en": "Soil Management & Agricultural Liming",
+        "crop_km": "ដី និងកំបោរ",
+        "crop_en": "Soil",
+        "symptoms_km": "ដីជូរខ្លាំង (pH < 5.0) ដំណាំលូតលាស់យឺត ឫសមិនដើរ ស្លឹកលឿង និងខ្វះជីវជាតិ។",
+        "symptoms_en": "Acidic soil (pH < 5.0), stunted root development, phosphorus tie-up, leaf chlorosis.",
+        "treatment_km": "បាចកំបោរកសិកម្ម (Dolomite ឬ Calcite) ក្នុងកម្រិត ៥០០-១០០០គីឡូក្រាម/ហិកតា រួចភ្ជួរលុបមុនដាំដុះ ២-៣សប្តាហ៍។",
+        "treatment_en": "Apply agricultural lime (Dolomite or Calcite) at 500-1000 kg/ha, incorporate into soil 2-3 weeks prior to planting.",
+        "prevention_km": "បន្ថែមជីកំប៉ុស និងជីលាមកសត្វពុកផុយដើម្បីបង្កើនសារធាតុសរីរាង្គក្នុងដី និងធ្វើតេស្ត pH ដីជារៀងរាល់ឆ្នាំ។",
+        "prevention_en": "Incorporate mature organic compost regularly to buffer soil pH and test soil acidity annually.",
+    }
+]
 
 
 def _synthesize_local_expert_reply(user_message: str, context: str = "", language: Optional[str] = None) -> str:
@@ -279,47 +419,26 @@ def _synthesize_local_expert_reply(user_message: str, context: str = "", languag
 
     matched_crop = None
     matched_disease = None
+    matched_kb_item = None
     is_fertilizer_query = False
+
+    q_norm = user_message.lower()
+
+    # Check if user is asking about fertilizers, soil, or nutrition
+    fertilizer_keywords = ["ជី", "ជីគីមី", "ជីកំប៉ុស", "ដី", "កំបោរ", "លាមកសត្វ", "fertilizer", "npk", "urea", "compost", "soil", "nutrient", "nutrition"]
+    is_fertilizer_query = any(k in q_norm for k in fertilizer_keywords)
 
     try:
         from app.models.disease import Disease
         from app.models.crop import Crop
 
-        q_norm = user_message.lower()
-
-        # Check if user is asking about fertilizers, soil, or nutrition
-        fertilizer_keywords = ["ជី", "ជីគីមី", "ជីកំប៉ុស", "ដី", "កំបោរ", "លាមកសត្វ", "fertilizer", "npk", "urea", "compost", "soil", "nutrient", "nutrition"]
-        is_fertilizer_query = any(k in q_norm for k in fertilizer_keywords)
-
-        # 1. Match Crop First
-        crop_aliases = {
-            "durian": ["ទុរេន", "ធូរេន", "durian"],
-            "rice": ["ស្រូវ", "rice", "paddy"],
-            "cassava": ["ដំឡូង", "ដំឡូងមី", "cassava", "tapioca"],
-            "corn": ["ពោត", "corn", "maize"],
-            "pepper": ["ម្រេច", "pepper"],
-            "tomato": ["ប៉េងប៉ោះ", "tomato"],
-            "cucumber": ["ត្រសក់", "cucumber"],
-            "lime": ["ក្រូចឆ្មា", "ក្រូច", "lime", "lemon", "citrus"],
-            "mango": ["ស្វាយ", "mango"],
-            "chili": ["ម្ទេស", "chili", "chilli"],
-            "watermelon": ["ឪឡឹក", "watermelon"],
-            "cabbage": ["ស្ពៃ", "cabbage"],
-        }
-
+        # 1. Match Crop from Database
         all_crops = Crop.query.all()
         for c in all_crops:
             c_en = (c.name or "").lower()
             c_km = (c.name_kh or "").lower()
             if (c_en and c_en in q_norm) or (c_km and c_km in q_norm):
                 matched_crop = c
-                break
-            for alias_key, aliases in crop_aliases.items():
-                if alias_key in c_en or any(a in c_km for a in aliases):
-                    if any(a in q_norm for a in aliases):
-                        matched_crop = c
-                        break
-            if matched_crop:
                 break
 
         # 2. Match Disease within Crop (if crop matched)
@@ -355,7 +474,7 @@ def _synthesize_local_expert_reply(user_message: str, context: str = "", languag
             if not matched_disease and crop_diseases and not is_fertilizer_query:
                 matched_disease = crop_diseases[0]
 
-        # 3. If no crop matched, search globally across all diseases
+        # 3. If no crop matched, search globally across all database diseases
         if not matched_disease and not matched_crop:
             all_diseases = Disease.query.all()
             for d in all_diseases:
@@ -368,12 +487,24 @@ def _synthesize_local_expert_reply(user_message: str, context: str = "", languag
         matched_disease = None
         matched_crop = None
 
+    # 4. If still not matched, search Cambodian agronomic dictionary (Durian, Pepper, Lime, etc.)
+    if not matched_disease and not matched_crop:
+        for item in CAMBODIAN_AGRI_KB:
+            if any(k in q_norm for k in item["keywords"]):
+                matched_kb_item = item
+                break
+
     # Handle Crop Fertilizer / Nutrition Guidance
-    if matched_crop and is_fertilizer_query:
-        c_name = (matched_crop.name_kh or matched_crop.name) if is_khmer else (matched_crop.name or "Crop")
+    target_crop_name = ""
+    if matched_crop:
+        target_crop_name = (matched_crop.name_kh or matched_crop.name) if is_khmer else (matched_crop.name or "Crop")
+    elif matched_kb_item:
+        target_crop_name = matched_kb_item["crop_km"] if is_khmer else matched_kb_item["crop_en"]
+
+    if target_crop_name and is_fertilizer_query:
         if is_khmer:
             return (
-                f"## 🌾 ការណែនាំបច្ចេកទេសជី និងអាហារូបត្ថម្ភសម្រាប់ដំណាំ {c_name}\n\n"
+                f"## 🌾 ការណែនាំបច្ចេកទេសជី និងអាហារូបត្ថម្ភសម្រាប់ដំណាំ {target_crop_name}\n\n"
                 f"**ជំរាបសួរលោកអ្នក ឬបងប្អូនកសិករជាទីគោរព!** ខ្ញុំជា **AgriSystem AI (ម៉ូឌែល AGY V2.0.0)** បង្កើតឡើងដោយ **ប្រធានក្រុម ម៉ៅ សៀវអ៊ិ (Team Leader Mao Seavik)**។ "
                 f"ខាងក្រោមនេះជារូបមន្ត និងកាលវិភាគប្រើប្រាស់ជីប្រកបដោយប្រសិទ្ធភាពខ្ពស់៖\n\n"
                 f"### 🌱 ១. ដំណាក់កាលលូតលាស់ដើម និងស្លឹក (Vegetative Stage)\n"
@@ -388,7 +519,7 @@ def _synthesize_local_expert_reply(user_message: str, context: str = "", languag
             )
         else:
             return (
-                f"## 🌾 Fertilizer & Nutrient Management for {c_name}\n\n"
+                f"## 🌾 Fertilizer & Nutrient Management for {target_crop_name}\n\n"
                 f"**Greetings!** I am **AgriSystem AI (model: AGY V2.0.0)**, created and developed under the leadership of **Team Leader Mao Seavik**. "
                 f"Here is your customized nutrition program:\n\n"
                 f"### 🌱 1. Vegetative & Growth Stage\n"
@@ -402,6 +533,36 @@ def _synthesize_local_expert_reply(user_message: str, context: str = "", languag
                 f"⚠️ *Reminder: Always irrigate thoroughly after granular fertilizer application to prevent osmotic root shock.*"
             )
 
+    # Response from Knowledge Dictionary
+    if matched_kb_item:
+        if is_khmer:
+            return (
+                f"## 🌿 {matched_kb_item['title_km']}\n\n"
+                f"**ជំរាបសួរលោកអ្នក ឬបងប្អូនកសិករជាទីគោរព!** ខ្ញុំជា **AgriSystem AI (ម៉ូឌែល AGY V2.0.0)** បង្កើតឡើងដោយ **ប្រធានក្រុម ម៉ៅ សៀវអ៊ិ (Team Leader Mao Seavik)**។ "
+                f"ខាងក្រោមនេះជាវិធានការដោះស្រាយ និងការព្យាបាលប្រកបដោយវិជ្ជាជីវៈ៖\n\n"
+                f"### 🔍 ១. រោគសញ្ញាជាក់ស្តែង (Symptoms)\n"
+                f"- {matched_kb_item['symptoms_km']}\n\n"
+                f"### 💊 ២. វិធានការព្យាបាលបន្ទាន់ (Treatment)\n"
+                f"- {matched_kb_item['treatment_km']}\n\n"
+                f"### 🛡️ ៣. វិធានការបង្ការ និងថែទាំដី (Prevention & Soil Care)\n"
+                f"- {matched_kb_item['prevention_km']}\n\n"
+                f"⚠️ *ការណែនាំសុវត្ថិភាព៖ សូមពាក់ម៉ាស់ ស្រោមដៃ និងវ៉ែនតាការពារពេលប្រើប្រាស់ថ្នាំកសិកម្ម និងគោរពតាមរយៈពេលផ្អាកមុនប្រមូលផល (PHI)។*"
+            )
+        else:
+            return (
+                f"## 🌿 {matched_kb_item['title_en']}\n\n"
+                f"**Greetings!** I am **AgriSystem AI (model: AGY V2.0.0)**, created and developed under the leadership of **Team Leader Mao Seavik**. "
+                f"Here is the structured agronomic recommendation for your farm:\n\n"
+                f"### 🔍 1. Symptoms & Diagnosis\n"
+                f"- {matched_kb_item['symptoms_en']}\n\n"
+                f"### 💊 2. Immediate Treatment Strategy\n"
+                f"- {matched_kb_item['treatment_en']}\n\n"
+                f"### 🛡️ 3. Long-Term Prevention & Field Care\n"
+                f"- {matched_kb_item['prevention_en']}\n\n"
+                f"⚠️ *Safety Reminder: Always wear personal protective equipment (PPE) when applying crop protection chemicals and strictly observe pre-harvest intervals (PHI).* "
+            )
+
+    # Response from Database Match
     if matched_disease:
         if is_khmer:
             d_name = matched_disease.name_kh or matched_disease.name
@@ -476,19 +637,13 @@ def _gradio_client_reply(endpoint: str, token: str, question: str, context: str,
                 question=question,
                 temperature=0.2,
                 max_new_tokens=max_new_tokens,
-                context=context,
                 api_name="/answer",
             )
+            result = job.result(timeout=timeout)
+            if isinstance(result, str) and result.strip():
+                return result.strip()
         except Exception:
-            job = client.submit(
-                question=question,
-                temperature=0.2,
-                max_new_tokens=max_new_tokens,
-                api_name="/answer",
-            )
-        result = job.result(timeout=timeout)
-        if isinstance(result, str) and result.strip():
-            return result.strip()
+            pass
     except Exception as exc:
         try:
             current_app.logger.warning("gradio_client request failed: %s", exc)
