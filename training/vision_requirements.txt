@@ -1,5 +1,5 @@
-# Conversion/training environment only; do not add these to the Railway
-# llama.cpp runtime image.
+# Conversion/training environment only; do not add these to the hosted
+# inference runtime.
 torch>=2.2,<3
 torchvision>=0.17,<1
 pillow>=10,<12

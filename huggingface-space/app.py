@@ -4,11 +4,15 @@
 import spaces
 import torch
 import gradio as gr
-from peft import AutoPeftModelForCausalLM
-from transformers import AutoTokenizer
+from peft import PeftModel
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
 
-MODEL_ID = "Maoseavik/agrisystem-adapter"
+# This is the trained LoRA adapter. The similarly named
+# ``agrisystem-qwen2.5-3b-adapter`` repository contains tokenizer/config files
+# only and cannot be loaded as the trained model.
+MODEL_ID = "Maoseavik/agri-qwen3b-lora"
+BASE_MODEL_ID = "Qwen/Qwen2.5-3B-Instruct"
 SYSTEM_PROMPT = (
     "You are AgriSystem, a careful agricultural assistant. Give practical, "
     "clear advice about crop diseases, pests, soil, irrigation, and safe "
@@ -24,13 +28,21 @@ def _hf_token() -> str | None:
     return os.getenv("HF_TOKEN") or None
 
 
-tokenizer = AutoTokenizer.from_pretrained(MODEL_ID, token=_hf_token())
-model = AutoPeftModelForCausalLM.from_pretrained(
-    MODEL_ID,
+# The adapter repository contains copied tokenizer metadata that is not
+# compatible with the Space's Transformers runtime. The base tokenizer is
+# equivalent for this LoRA adapter and has the canonical Qwen files.
+tokenizer = AutoTokenizer.from_pretrained(BASE_MODEL_ID, token=_hf_token())
+base_model = AutoModelForCausalLM.from_pretrained(
+    BASE_MODEL_ID,
     token=_hf_token(),
     torch_dtype=torch.bfloat16,
-    device_map="auto",
 )
+model = PeftModel.from_pretrained(
+    base_model,
+    MODEL_ID,
+    token=_hf_token(),
+    torch_device="cpu",
+).to("cuda")
 model.eval()
 
 
@@ -92,7 +104,7 @@ demo = gr.Interface(
     examples=examples,
     title="🌾 AgriSystem Agricultural Assistant",
     description=(
-        "A demonstration of Maoseavik/agrisystem-adapter. Advice is informational; "
+        "A demonstration of Maoseavik/agri-qwen3b-lora. Advice is informational; "
         "confirm diagnosis and treatment with a qualified local expert."
     ),
     api_name="answer",

@@ -38,8 +38,8 @@ HF_TOKEN = os.getenv("HF_TOKEN", "").strip() or None
 INFERENCE_API_KEY = os.getenv("INFERENCE_API_KEY", "").strip()
 MODEL_CHAT_FORMAT = os.getenv("MODEL_CHAT_FORMAT", "").strip() or None
 MODEL_CONTEXT_SIZE = _env_int("MODEL_CONTEXT_SIZE", 4096, minimum=512)
-MODEL_MAX_NEW_TOKENS = _env_int("MODEL_MAX_NEW_TOKENS", 256, minimum=1)
-MODEL_THREADS = _env_int("MODEL_THREADS", max(os.cpu_count() or 2, 2), minimum=1)
+MODEL_MAX_NEW_TOKENS = _env_int("MODEL_MAX_NEW_TOKENS", 128, minimum=1)
+MODEL_THREADS = _env_int("MODEL_THREADS", 4, minimum=1)
 MODEL_BATCH_SIZE = _env_int("MODEL_BATCH_SIZE", 512, minimum=1)
 MODEL_GPU_LAYERS = _env_int("MODEL_GPU_LAYERS", 0, minimum=-1)
 MODEL_MAX_INPUT_CHARS = _env_int("MODEL_MAX_INPUT_CHARS", 16_000, minimum=1_000)

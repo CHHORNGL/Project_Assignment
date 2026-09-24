@@ -1,29 +1,35 @@
 # GGUF inference deployment
 
+> Legacy path: production AI inference now runs in the protected Hugging Face
+> Gradio Space `Maoseavik/agrisystem-agricultural-assistant`. The Railway
+> instructions below are retained only as a recoverable GGUF/llama.cpp
+> alternative and are not used by the current backend.
+
 This service uses `llama-cpp-python` and a quantized GGUF model. The Flask web
 process remains lightweight and calls this service over HTTP; it does not load
 model weights itself.
 
 ## 1. Create the GGUF model artifact
 
-The current `Maoseavik/agri-expert-adapter` Hub repository is only a tokenizer
-repository at the moment. It does not contain `adapter_model.safetensors` or
-`adapter_config.json`, so it cannot be converted until those training artifacts
-are uploaded.
+The trained `Maoseavik/agri-qwen3b-lora` Hub repository contains the Qwen2.5-3B
+LoRA adapter files (`adapter_model.safetensors` and `adapter_config.json`). It
+can now be converted into a standalone GGUF artifact.
 
 After the adapter repository contains its weights, run the conversion script on
 a machine with enough RAM or a Colab GPU:
 
 ```bash
 HF_TOKEN=hf_... \
-ADAPTER_ID=Maoseavik/agri-expert-adapter \
+ADAPTER_ID=Maoseavik/agri-qwen3b-lora \
+GGUF_REPO_ID=Maoseavik/agrisystem-qwen2.5-3b-gguf \
 python scripts/convert_lora_to_gguf.py
 ```
 
-The script merges the LoRA adapter into `Qwen/Qwen2.5-1.5B-Instruct`, converts
+The script merges the LoRA adapter into `Qwen/Qwen2.5-3B-Instruct`, converts
 the merged model to GGUF, quantizes it to `Q4_K_M`, and prints the Hub upload
-command. Upload the resulting file to a separate model repository, for
-example `Maoseavik/agrisystem-gguf`.
+command. The conversion produces
+`agrisystem-qwen2.5-3b-q4_k_m.gguf` for the repository
+`Maoseavik/agrisystem-qwen2.5-3b-gguf`.
 
 llama.cpp requires the model to already be in GGUF format; it cannot load the
 original Transformers/PEFT adapter directly.
@@ -34,12 +40,12 @@ Create or select the separate Railway inference service, set its root directory
 to `deployment`, and use `deployment/Dockerfile`. Set:
 
 ```env
-GGUF_REPO_ID=Maoseavik/agrisystem-gguf
-GGUF_FILENAME=agrisystem-qwen2.5-1.5b-q4_k_m.gguf
+GGUF_REPO_ID=Maoseavik/agrisystem-qwen2.5-3b-gguf
+GGUF_FILENAME=agrisystem-qwen2.5-3b-q4_k_m.gguf
 GGUF_REVISION=main
 MODEL_CONTEXT_SIZE=4096
-MODEL_MAX_NEW_TOKENS=256
-MODEL_THREADS=2
+MODEL_MAX_NEW_TOKENS=128
+MODEL_THREADS=4
 MODEL_GPU_LAYERS=0
 INFERENCE_API_KEY=use-a-long-random-secret
 ```

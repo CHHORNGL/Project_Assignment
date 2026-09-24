@@ -7,7 +7,7 @@ commit it to the repository.
 
 Required environment variables:
     HF_TOKEN       Hugging Face write token
-    HF_REPO_ID     e.g. your-account/agrisystem-adapter
+    HF_REPO_ID     e.g. your-account/agri-qwen3b-lora
 
 Optional variables:
     DATA_DIR       defaults to /workspace/Project_Assignment/exports
@@ -47,7 +47,9 @@ def _format_messages(example, tokenizer):
 
 def main() -> None:
     if not HF_REPO_ID:
-        raise RuntimeError("Set HF_REPO_ID before training, for example account/agrisystem-adapter")
+        raise RuntimeError(
+            "Set HF_REPO_ID before training, for example account/agri-qwen3b-lora"
+        )
     if not HF_TOKEN:
         raise RuntimeError("Set HF_TOKEN using a Colab secret or environment variable")
 

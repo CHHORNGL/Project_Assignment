@@ -17,8 +17,10 @@ from flask import current_app
 
 
 DEFAULT_TIMEOUT_SECONDS = 30.0
-MAX_CONTEXT_CHARS = 12_000
-MAX_MESSAGE_CHARS = 4_000
+# Remote inference is intentionally bounded: long retrieval context and large
+# generations increase latency and can exceed the backend timeout.
+MAX_CONTEXT_CHARS = 4_000
+MAX_MESSAGE_CHARS = 2_000
 
 
 def _active_model_profile() -> dict[str, str] | None:
@@ -50,7 +52,7 @@ def _active_model_profile() -> dict[str, str] | None:
 def _setting(name: str, default: str = "") -> str:
     """Read runtime settings, preferring the protected admin configuration.
 
-    A saved value allows an admin change to persist across Railway restarts.
+    A saved value allows an admin change to persist across backend restarts.
     If it has not been saved in the admin screen, normal deployment
     environment variables remain the fallback.
     """
@@ -278,7 +280,7 @@ def request_endpoint(
     prompt: str,
     *,
     timeout: float = DEFAULT_TIMEOUT_SECONDS,
-    max_new_tokens: int = 600,
+    max_new_tokens: int = 128,
 ) -> str:
     """Call either the custom TGI-compatible service or a Gradio Space."""
     if is_gradio_endpoint(endpoint):
@@ -328,7 +330,7 @@ def generate_reply(
             token,
             prompt,
             timeout=_timeout(),
-            max_new_tokens=600,
+            max_new_tokens=128,
         )
         return reply or None
     except (requests.RequestException, RuntimeError, ValueError) as exc:

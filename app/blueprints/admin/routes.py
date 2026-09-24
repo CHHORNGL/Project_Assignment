@@ -1186,7 +1186,7 @@ def settings():
 
     hf_model_id = (
         hf_model_setting.value.strip() if hf_model_setting and hf_model_setting.value.strip()
-        else os.getenv("HF_MODEL_ID", "Maoseavik/agrisystem-adapter").strip()
+        else os.getenv("HF_MODEL_ID", "Maoseavik/agri-qwen3b-lora").strip()
     )
     hf_inference_url = (
         hf_url_setting.value.strip() if hf_url_setting and hf_url_setting.value.strip()

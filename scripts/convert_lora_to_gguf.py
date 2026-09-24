@@ -21,7 +21,12 @@ def _run(command: list[str]) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--adapter-id", default=os.getenv("ADAPTER_ID", "Maoseavik/agri-expert-adapter"))
+    parser.add_argument(
+        "--adapter-id",
+        default=os.getenv(
+            "ADAPTER_ID", "Maoseavik/agrisystem-qwen2.5-3b-adapter"
+        ),
+    )
     parser.add_argument("--output-dir", type=Path, default=Path(os.getenv("OUTPUT_DIR", "exports/gguf")))
     parser.add_argument("--llama-cpp-dir", type=Path, default=Path(os.getenv("LLAMA_CPP_DIR", "llama.cpp")))
     parser.add_argument("--quantization", default=os.getenv("GGUF_QUANTIZATION", "Q4_K_M"))
@@ -69,8 +74,8 @@ def main() -> None:
         merged.save_pretrained(merged_dir, safe_serialization=True, max_shard_size="2GB")
         tokenizer.save_pretrained(merged_dir)
 
-        f16_file = args.output_dir / "agrisystem-qwen2.5-1.5b-f16.gguf"
-        quantized_file = args.output_dir / f"agrisystem-qwen2.5-1.5b-{args.quantization.lower()}.gguf"
+        f16_file = args.output_dir / "agrisystem-qwen2.5-3b-f16.gguf"
+        quantized_file = args.output_dir / f"agrisystem-qwen2.5-3b-{args.quantization.lower()}.gguf"
         _run([
             "python",
             str(converter),
