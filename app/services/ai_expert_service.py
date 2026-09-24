@@ -54,6 +54,13 @@ def _active_model_profile() -> dict[str, str] | None:
 
 def _setting(name: str, default: str = "") -> str:
     """Read runtime settings, preferring the protected admin configuration."""
+    # Provider selection is not user-switchable anymore.  Older installations
+    # can still have ACTIVE_PROVIDER/AI_PROVIDER rows containing ``groq`` or
+    # ``openai``; never let those stale values route a request away from the
+    # owner's trained endpoint.
+    if name == "AI_PROVIDER":
+        return "own-ai"
+
     if name in {"HF_MODEL_ID", "HF_INFERENCE_URL", "HF_TOKEN"}:
         profile = _active_model_profile()
         if profile:
@@ -80,7 +87,7 @@ def _setting(name: str, default: str = "") -> str:
         from app.models.site_setting import SiteSetting
 
         aliases = {
-            "AI_PROVIDER": ("AI_PROVIDER", "EXPERT_PROVIDER", "ACTIVE_PROVIDER"),
+            "AI_PROVIDER": ("AI_PROVIDER",),
             "HF_INFERENCE_URL": ("HF_INFERENCE_URL", "HUGGINGFACE_INFERENCE_URL"),
             "HF_TOKEN": ("HF_API_KEY", "HF_TOKEN"),
             "HUGGINGFACEHUB_API_TOKEN": ("HF_API_KEY", "HF_TOKEN"),
@@ -107,17 +114,12 @@ def _setting(name: str, default: str = "") -> str:
 
 
 def legacy_fallback_enabled() -> bool:
-    """Whether farmer chat may fall back to an external commercial provider."""
-    return _setting("AI_LEGACY_FALLBACK_ENABLED", "false").lower() in {
-        "1", "true", "yes", "on"
-    }
+    """Commercial-provider fallback is permanently disabled."""
+    return False
 
 
 def is_huggingface_provider() -> bool:
-    provider = _setting("AI_PROVIDER", "huggingface").lower()
-    return provider in {
-        "huggingface", "hf", "hugging_face", "trained-ai", "trained_ai", "own-ai"
-    }
+    return True
 
 
 def is_valid_inference_endpoint(endpoint: str) -> bool:

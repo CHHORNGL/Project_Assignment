@@ -353,22 +353,11 @@ def settings():
         two_factor_enabled = (request.form.get("two_factor_enabled") == "y")
         current_user.two_factor_enabled = two_factor_enabled
         
-        # 🤖 AI Settings
-        ai_model = request.form.get("ai_model")
-        ai_api_key = request.form.get("ai_api_key")
-        
-        if ai_model in ["original-ai", "gemini-1.5-flash", "gemini-1.5-pro", "gemini-1.0-pro"]:
-            new_key = ai_api_key.strip() if ai_api_key is not None else (current_user.ai_api_key or "")
-            
-            # Enforce API key requirement for Gemini models
-            if ai_model != "original-ai" and current_user.has_role("farmer") and not new_key:
-                flash("Gemini API Key is required when using a Gemini model.", "danger")
-                return redirect(url_for("user.settings"))
-                
-            current_user.ai_model = ai_model
-            
-        if ai_api_key is not None:
-            current_user.ai_api_key = ai_api_key.strip()
+        # The application uses the owner's trained agricultural AI only.
+        # Ignore legacy per-user model/key fields and remove any stale
+        # commercial-provider credential when the settings form is saved.
+        current_user.ai_model = "own-ai"
+        current_user.ai_api_key = None
 
         db.session.commit()
         session["theme"] = theme

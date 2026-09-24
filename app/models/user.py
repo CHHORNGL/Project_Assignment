@@ -68,7 +68,7 @@ class User(db.Model, UserMixin):
     # ===============================
     ai_model = db.Column(
         db.String(50),
-        default="gemini-1.5-flash",
+        default="own-ai",
         nullable=True
     )
     

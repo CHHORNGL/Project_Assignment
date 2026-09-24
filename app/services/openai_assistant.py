@@ -291,6 +291,15 @@ def suggest_symptoms_from_image(
     max_suggestions:
         Maximum returned matches.
     """
+    # The current self-trained endpoint is text-only. Do not silently send
+    # crop images to a commercial vision provider; return an explicit empty
+    # result until the owner's own model has a vision adapter.
+    return {
+        "matched_symptoms": [],
+        "notes": "Image suggestions require the owner's trained vision model.",
+        "confidence": None,
+    }
+
     client = _get_client()
     if not client:
         return None
@@ -896,14 +905,10 @@ def generate_assistant_reply(
     if model_choice_clean not in {"", "auto", "original-ai", "trained-ai", "gemini-2.5-flash", "gemini-2.5-pro", "gemini-3.5-flash", "gemini-3.6-flash"}:
         model_choice_clean = ""
 
-    provider = configured_provider
-    if model_choice_clean in {"trained-ai", "auto"} or not model_choice_clean:
-        if is_huggingface_provider() or configured_provider in {"huggingface", "hf", "trained-ai", "trained_ai", "own-ai"}:
-            provider = "huggingface"
-    elif model_choice_clean.startswith("gemini-"):
-        provider = "gemini"
-    elif model_choice_clean == "original-ai":
-        provider = "openai"
+    # Model selection is intentionally locked to the owner's self-trained
+    # endpoint. Legacy UI values such as "original-ai" or Gemini names are
+    # ignored instead of routing user data to a commercial provider.
+    provider = "huggingface"
 
     # Prioritize the user's trained agricultural AI assistant
     if provider in {"huggingface", "hf", "trained-ai", "trained_ai", "own-ai"}:
@@ -1228,6 +1233,26 @@ def _batch_translate_to_khmer(items: list) -> dict:
     Falls back across candidate Groq models (preferred -> qwen3.8-27b -> openai/gpt-oss-120b -> qwen3.6-27b)
     to guarantee high-availability even during rate limit (429) peaks.
     """
+    # Use the owner's model only. The legacy provider implementation below is
+    # intentionally unreachable and retained temporarily for source-level
+    # compatibility with older imports.
+    from app.services.translator import translate_to_khmer
+    for item in items or []:
+        if isinstance(item, dict):
+            title = str(item.get("title") or "").strip()
+            summary = str(item.get("summary") or "").strip()
+        else:
+            title, summary = str(item or "").strip(), ""
+        if not title or title in _KM_NEWS_CACHE:
+            continue
+        translated_title = translate_to_khmer(title)
+        translated_summary = translate_to_khmer(summary) if summary else ""
+        _KM_NEWS_CACHE[title] = {
+            "title": translated_title or title,
+            "summary": translated_summary or summary,
+        }
+    return _KM_NEWS_CACHE
+
     import re
     import os
     from concurrent.futures import ThreadPoolExecutor

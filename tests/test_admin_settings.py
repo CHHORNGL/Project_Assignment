@@ -78,7 +78,7 @@ class AdminSettingsTestCase(unittest.TestCase):
         self.assertIn("admin-board", html)
         self.assertIn("settings-nav", html)
         self.assertIn("tab-general", html)
-        self.assertIn("tab-llm", html)
+        self.assertNotIn("tab-llm", html)
         self.assertIn("tab-trained", html)
         self.assertIn("tab-guide", html)
 
@@ -89,11 +89,11 @@ class AdminSettingsTestCase(unittest.TestCase):
         self.assertIn("server_location_lon", html)
         self.assertIn("link-gmaps-preview", html)
 
-        # Smart Agri Assistant LLM Controls
-        self.assertIn("provider_groq", html)
-        self.assertIn("provider_openai", html)
-        self.assertIn("provider_gemini", html)
-        self.assertIn("test-own-ai", html)
+        # Only the owner's self-trained model controls are exposed.
+        self.assertNotIn("provider_groq", html)
+        self.assertNotIn("provider_openai", html)
+        self.assertNotIn("provider_gemini", html)
+        self.assertIn("test-trained-ai", html)
 
         # Ark Expert AI Controls
         self.assertIn("generate-model-key", html)

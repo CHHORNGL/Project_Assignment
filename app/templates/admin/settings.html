@@ -14,7 +14,7 @@
                 <i class="fas fa-cogs text-primary mr-2"></i>System Configuration &amp; AI Engine
             </div>
             <div class="admin-sub">
-                Manage global system identity, server GPS anchor coordinates, assistant LLM keys, and self-trained Ark Expert AI models.
+                Manage global system identity, server GPS anchor coordinates, and your self-trained agricultural AI.
             </div>
         </div>
         <div class="admin-actions">
@@ -34,23 +34,13 @@
          ANALYTICS & STATUS KPIS
     =============================== -->
     <div class="row mb-4">
-        <!-- Default Assistant LLM -->
+        <!-- Self-trained assistant -->
         <div class="col-xl-3 col-md-6 mb-3">
             <div class="admin-kpi">
                 <div>
                     <div class="admin-kpi-label">Assistant Provider</div>
-                    <div class="admin-kpi-value text-capitalize">{{ active_provider }}</div>
-                    <div class="admin-kpi-sub">
-                        {% if active_provider == 'groq' %}
-                            Fast LPU Inference
-                        {% elif active_provider == 'openai' %}
-                            GPT-4o Intelligent Engine
-                        {% elif active_provider == 'gemini' %}
-                            Google Gemini Flash
-                        {% else %}
-                            Configured Provider
-                        {% endif %}
-                    </div>
+                    <div class="admin-kpi-value">Your trained AI</div>
+                    <div class="admin-kpi-sub">Self-hosted inference only</div>
                 </div>
                 <div class="admin-kpi-icon" style="background: rgba(14, 165, 233, 0.15); color: #0284c7;">
                     <i class="fas fa-robot"></i>
@@ -123,18 +113,19 @@
                     <i class="fas fa-sliders-h mr-2"></i>General &amp; Server Location
                 </a>
             </li>
-            <li class="nav-item" role="presentation">
+            {# Legacy commercial LLM selector intentionally removed. #}
+            {% if false %}<li class="nav-item" role="presentation">
                 <a class="nav-link {% if active_tab == 'llm' %}active{% endif %}" 
                    id="tab-btn-llm" data-toggle="pill" href="#tab-llm" role="tab" aria-controls="tab-llm" 
                    aria-selected="{% if active_tab == 'llm' %}true{% else %}false{% endif %}">
                     <i class="fas fa-comments mr-2"></i>Smart Agri Assistant (LLM)
                 </a>
-            </li>
+            </li>{% endif %}
             <li class="nav-item" role="presentation">
                 <a class="nav-link {% if active_tab == 'trained' %}active{% endif %}" 
                    id="tab-btn-trained" data-toggle="pill" href="#tab-trained" role="tab" aria-controls="tab-trained" 
                    aria-selected="{% if active_tab == 'trained' %}true{% else %}false{% endif %}">
-                    <i class="fas fa-brain mr-2"></i>Ark Expert AI (Trained Models)
+                    <i class="fas fa-brain mr-2"></i>Your Trained AI Models
                     {% if hf_models %}
                         <span class="badge badge-pill badge-info ml-1">{{ hf_models|length }}</span>
                     {% endif %}
@@ -296,7 +287,7 @@
         <!-- ==============================================================
              TAB 2: SMART AGRI ASSISTANT (LLM)
         ============================================================== -->
-        <div class="tab-pane fade {% if active_tab == 'llm' %}show active{% endif %}" 
+        {% if false %}<div class="tab-pane fade {% if active_tab == 'llm' %}show active{% endif %}"
              id="tab-llm" role="tabpanel" aria-labelledby="tab-btn-llm">
 
             <div class="row">
@@ -540,7 +531,7 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </div>{% endif %}
 
         <!-- ==============================================================
              TAB 3: ARK EXPERT AI (TRAINED MODELS)

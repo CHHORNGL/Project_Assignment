@@ -1,245 +1,31 @@
-# app/services/translator.py
+"""Translation through the owner's self-trained agricultural model only."""
 
-import os
 from typing import Optional
-
-try:
-    from openai import OpenAI
-except Exception:  # pragma: no cover - optional dependency for local/dev environments
-    OpenAI = None
-
-try:
-    from google import genai
-except Exception:
-    genai = None
-
-from flask_login import current_user
-import logging
-import time
-
-DEFAULT_TRANSLATE_MODEL = "gpt-4o-mini"
-
-_cached_openai_client = None
-_cached_openai_key = None
-
-class MultiKeyOpenAIChatCompletions:
-    def __init__(self, clients):
-        self.clients = clients
-    def create(self, **kwargs):
-        last_exception = None
-        for client in self.clients:
-            try:
-                return client.chat.completions.create(**kwargs)
-            except Exception as e:
-                last_exception = e
-                print(f"API key failed, falling back to next: {e}")
-        if last_exception:
-            raise last_exception
-        return None
-
-class MultiKeyOpenAIChat:
-    def __init__(self, clients):
-        self.completions = MultiKeyOpenAIChatCompletions(clients)
-
-class MultiKeyOpenAI:
-    def __init__(self, clients):
-        self.chat = MultiKeyOpenAIChat(clients)
-
-def _get_client() -> Optional[MultiKeyOpenAI]:
-    global _cached_openai_client, _cached_openai_key
-    if OpenAI is None:
-        return None
-
-    from app.models.site_setting import SiteSetting
-    keys_list = []
-    base_url = None
-    try:
-        db_provider = SiteSetting.query.get("ACTIVE_PROVIDER")
-        db_groq = SiteSetting.query.get("API_KEY_GROQ")
-        db_openai = SiteSetting.query.get("API_KEY_OPENAI")
-        
-        provider = db_provider.value.strip() if db_provider else "groq"
-
-        if provider == "groq" and db_groq and db_groq.value.strip():
-            keys_list = [k.strip() for k in db_groq.value.split(",") if k.strip()]
-            base_url = "https://api.groq.com/openai/v1"
-        elif provider == "openai" and db_openai and db_openai.value.strip():
-            keys_list = [k.strip() for k in db_openai.value.split(",") if k.strip()]
-            base_url = None
-        else:
-            # Fallback if the chosen provider has no keys, try the other
-            if db_groq and db_groq.value.strip():
-                keys_list = [k.strip() for k in db_groq.value.split(",") if k.strip()]
-                base_url = "https://api.groq.com/openai/v1"
-            elif db_openai and db_openai.value.strip():
-                keys_list = [k.strip() for k in db_openai.value.split(",") if k.strip()]
-                base_url = None
-    except Exception:
-        pass
-
-    if not keys_list:
-        env_key = os.getenv("OPENAI_API_KEY", "").strip()
-        if env_key and not env_key.startswith("sk-your-") and "your-api-key" not in env_key:
-            keys_list = [env_key]
-        base_url = os.getenv("OPENAI_BASE_URL", "").strip() or None
-
-    keys_list = [k for k in keys_list if k and not k.startswith("sk-your-") and "your-api-key" not in k]
-    if not keys_list:
-        return None
-
-    cache_key = f"{','.join(keys_list)}|{base_url or ''}"
-    if _cached_openai_client is None or _cached_openai_key != cache_key:
-        clients = [OpenAI(api_key=k, base_url=base_url) for k in keys_list]
-        _cached_openai_client = MultiKeyOpenAI(clients)
-        _cached_openai_key = cache_key
-        
-    return _cached_openai_client
 
 
 def translate_to_khmer(text: str, model_choice: Optional[str] = None) -> Optional[str]:
-    from flask import has_request_context
-    from app.models.site_setting import SiteSetting
-    
-    # 1. Determine Model Name
-    model_name = model_choice
-    
-    # If no explicit model choice, check current_user if in request context
-    if not model_name and has_request_context() and current_user.is_authenticated:
-        model_name = getattr(current_user, 'ai_model', '')
-        
-    # If still no model, check global settings
-    if not model_name:
-        try:
-            db_provider = SiteSetting.query.get("ACTIVE_PROVIDER")
-            provider = db_provider.value.strip() if db_provider else "groq"
-            if provider == "groq":
-                groq_model = SiteSetting.query.get("GROQ_MODEL")
-                model_name = groq_model.value.strip() if groq_model and groq_model.value else "qwen/qwen3.8-27b"
-            else:
-                db_model = SiteSetting.query.get("OPENAI_MODEL")
-                if db_model and db_model.value:
-                    model_name = db_model.value.strip()
-        except Exception:
-            pass
-            
-    # Ultimate fallback
-    if not model_name or model_name == "original-ai":
-        model_name = os.getenv("OPENAI_TRANSLATE_MODEL", "").strip() or "qwen/qwen3.8-27b"
+    """Translate text with the configured custom endpoint.
 
-    # 2. If it's a Gemini model, try Gemini API first
-    if "gemini" in model_name.lower():
-        try:
-            keys = []
-            if has_request_context() and current_user.is_authenticated and getattr(current_user, 'ai_api_key', None):
-                keys = [k.strip() for k in current_user.ai_api_key.split(',') if k.strip()]
-            if not keys:
-                try:
-                    db_gemini = SiteSetting.query.get("API_KEY_GEMINI")
-                    if db_gemini and db_gemini.value:
-                        keys = [k.strip() for k in db_gemini.value.split(',') if k.strip()]
-                except Exception:
-                    pass
-            if not keys:
-                env_gemini = os.getenv("GEMINI_API_KEY", "").strip()
-                if env_gemini:
-                    keys = [env_gemini]
-                    
-            if keys and genai:
-                import random
-                client = genai.Client(api_key=random.choice(keys))
-                prompt = (
-                    "Translate the user's text into Khmer. "
-                    "Preserve technical terms and crop/disease names if they are already Khmer. "
-                    "Return only the translated text.\\n\\n"
-                    f"Text to translate:\\n{text}"
-                )
-                response = client.models.generate_content(model=model_name, contents=prompt)
-                if response and response.text:
-                    return response.text.strip()
-        except Exception as e:
-            logging.warning(f"Gemini translation failed for model {model_name}: {e}")
-
-    # 3. Fallback to OpenAI / Groq Compatible Client
-    client = _get_client()
-    if not client:
+    ``model_choice`` remains accepted for API compatibility, but it cannot
+    select an external provider or override the owner's active model.
+    """
+    value = (text or "").strip()
+    if not value:
         return None
-
-    # Ensure model_name is compatible with OpenAI / Groq provider
-    if not model_name or "gemini" in model_name.lower():
-        try:
-            db_provider = SiteSetting.query.get("ACTIVE_PROVIDER")
-            provider = db_provider.value.strip() if db_provider else "groq"
-            if provider == "groq":
-                groq_model = SiteSetting.query.get("GROQ_MODEL")
-                model_name = groq_model.value.strip() if groq_model and groq_model.value else "qwen/qwen3.8-27b"
-            else:
-                db_model = SiteSetting.query.get("OPENAI_MODEL")
-                model_name = db_model.value.strip() if db_model and db_model.value else DEFAULT_TRANSLATE_MODEL
-        except Exception:
-            model_name = "qwen/qwen3.8-27b"
-
-    system_prompt = (
-        "Translate the user's text into Khmer. "
-        "Preserve technical terms and crop/disease names if they are already Khmer. "
-        "Return only the translated text."
-    )
-
     try:
-        response = client.chat.completions.create(
-            model=model_name,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": text},
-            ],
-            temperature=0.2,
-            max_tokens=300,
+        from app.services.ai_expert_service import generate_reply
+
+        prompt = (
+            "Translate the following text into natural Khmer for Cambodian farmers. "
+            "Preserve crop, disease, pesticide, and scientific names. Return only the translation.\n\n"
+            f"Text:\n{value[:4000]}"
         )
-    except Exception as e:
-        logging.warning(f"OpenAI/Groq translation failed for model {model_name}: {e}")
+        reply = generate_reply(prompt, context="Translation task: do not add explanations.", language="km")
+        return reply.strip() if reply else None
+    except Exception:
         return None
 
-    if not response or not response.choices:
-        return None
-    content = response.choices[0].message.content if response.choices[0].message else None
-    return content.strip() if content else None
 
 def translate_audio_to_khmer(file_path: str) -> Optional[str]:
-    """Translates an audio file to Khmer using Gemini API."""
-    try:
-        from flask import has_request_context
-        model_name = 'original-ai'
-        if has_request_context() and current_user.is_authenticated:
-            model_name = getattr(current_user, 'ai_model', 'original-ai')
-            
-        if model_name != "original-ai" and has_request_context() and current_user.is_authenticated and getattr(current_user, 'ai_api_key', None) and genai:
-            keys = [k.strip() for k in current_user.ai_api_key.split(',') if k.strip()]
-            if not keys:
-                return None
-            import random
-            client = genai.Client(api_key=random.choice(keys))
-            
-            # gemini-1.0-pro does not support audio well, fallback to 1.5-flash
-            if model_name == "gemini-1.0-pro":
-                model_name = "gemini-1.5-flash"
-                
-            audio_file = client.files.upload(file=file_path)
-            
-            while audio_file.state.name == 'PROCESSING':
-                time.sleep(1)
-                audio_file = client.files.get(name=audio_file.name)
-                
-            prompt = "Listen to this audio and translate what is being said into Khmer language. Only provide the Khmer text translation, no extra explanations."
-            
-            response = client.models.generate_content(
-                model=model_name,
-                contents=[audio_file, prompt]
-            )
-            
-            client.files.delete(name=audio_file.name)
-            
-            if response and response.text:
-                return response.text.strip()
-    except Exception as e:
-        logging.warning(f"Gemini audio translation failed: {e}")
-        
+    """Audio translation is unavailable until the custom model supports audio."""
     return None

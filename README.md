@@ -19,7 +19,7 @@ flowchart TD
     subgraph Backend [Flask Application Boundary]
         API[Blueprints / Routes]
         RE[Rule Engine Service]
-        AI[OpenAI Assistant Service]
+        AI[Self-trained Agricultural AI]
         WM[Weather Intelligence Service]
         TM[Seasonal Theme Manager]
     end
@@ -31,7 +31,7 @@ flowchart TD
     subgraph External [External Services]
         OM[Open-Meteo API]
         CL[Calendarific / Nager.at API]
-        OA[OpenAI API]
+        OA[Your protected inference endpoint]
         GD[Google OAuth]
     end
 
@@ -92,7 +92,7 @@ flowchart TD
 | **Database & ORM** | [PostgreSQL 15](https://www.postgresql.org/) • [SQLAlchemy 2.0](https://www.sqlalchemy.org/) • [Flask-SQLAlchemy](https://flask-sqlalchemy.palletsprojects.com/) |
 | **Migrations** | [Alembic](https://alembic.sqlalchemy.org/) • [Flask-Migrate](https://flask-migrate.readthedocs.io/) |
 | **Frontend UI** | [React 18](https://react.dev/) • [Vite 5](https://vitejs.dev/) • [Tailwind CSS 3](https://tailwindcss.com/) • [PostCSS](https://postcss.org/) |
-| **Integration APIs** | [OpenAI (GPT-4o-mini)](https://openai.com/) • [Open-Meteo](https://open-meteo.com/) • [Calendarific](https://calendarific.com/) • [Authlib](https://authlib.org/) |
+| **Integration APIs** | [Your self-trained AI endpoint](deployment/README.md) • [Open-Meteo](https://open-meteo.com/) • [Calendarific](https://calendarific.com/) • [Authlib](https://authlib.org/) |
 | **Localization** | Custom i18n subsystem (English/Khmer translation matrix with Khmer text normalizer) |
 | **DevOps** | [Docker](https://www.docker.com/) • [Docker Compose](https://docs.docker.com/compose/) |
 
@@ -116,7 +116,7 @@ Project_Assignment/
 │   │   ├── weather_intelligence/     # Open-Meteo clients, warning limits, caching
 │   │   ├── theme_manager.py          # Theme state transitions
 │   │   ├── seasonal_theme.py         # Cambodia holiday lookups (Calendarific/Nager)
-│   │   └── openai_assistant.py       # OpenAI GPT assistance integrations
+│   │   └── openai_assistant.py       # Compatibility wrapper for trained AI flow
 │   ├── static/                       # Compiled assets (CSS, JS, SVGs)
 │   ├── templates/                    # Jinja2 HTML5 Layouts & Components
 │   └── utils/                        # Internationalization, decorators, and layout helpers
@@ -145,12 +145,10 @@ python scripts/export_to_jsonl.py --out-dir exports
 This creates `exports/agri_train_data.jsonl`,
 `exports/agri_validation_data.jsonl`, and a dataset manifest. The exporter
 excludes users, chat messages, diagnoses, and secrets. The trained model is
-served separately by the Hugging Face Gradio Space. Set
-`AI_PROVIDER=huggingface`, `HF_INFERENCE_URL`, and `HF_TOKEN` in the backend
-environment. Flask calls that endpoint while keeping model weights out of the
-web process; existing chat URLs remain unchanged. Set
-`AI_LEGACY_FALLBACK_ENABLED=false` to keep farmer chat on the trained
-agricultural model only.
+served separately by your protected inference endpoint. Set
+`AI_PROVIDER=own-ai`, `HF_INFERENCE_URL`, and `HF_TOKEN` in the backend
+environment. Flask calls only that endpoint while keeping model weights out
+of the web process; commercial providers and fallback chains are disabled.
 
 ### Agricultural agent
 
@@ -191,7 +189,7 @@ cp .env.example .env
 ```
 Update the connection string and API key values in `.env`:
 * Configure `DATABASE_URL` to point to your local PostgreSQL instance (e.g., `postgresql+psycopg2://postgres:123@localhost:5432/AssExpertsystem`).
-* Provide your `OPENAI_API_KEY` for AI assistant capabilities.
+* Configure `HF_INFERENCE_URL` and the matching `HF_TOKEN` for your trained AI endpoint.
 * Provide your `CALENDARIFIC_API_KEY` or set `THEME_EVENTS_PROVIDER=auto`.
 
 #### 3. Build React Frontend

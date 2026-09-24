@@ -48,17 +48,15 @@ class Config:
     GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
     GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 
-    # Optional remote model host. Flask remains a lightweight API client and
-    # never loads model weights or exposes this token to web/mobile clients.
-    AI_PROVIDER = (os.getenv("AI_PROVIDER", "") or "").strip().lower()
+    # Flask connects only to the owner's self-trained remote model and never
+    # loads model weights or exposes the inference token to web/mobile clients.
+    AI_PROVIDER = "own-ai"
     HF_INFERENCE_URL = (os.getenv("HF_INFERENCE_URL", "") or "").strip()
     HUGGINGFACE_INFERENCE_URL = (os.getenv("HUGGINGFACE_INFERENCE_URL", "") or "").strip()
     HF_TOKEN = (os.getenv("HF_TOKEN", "") or "").strip()
     HUGGINGFACEHUB_API_TOKEN = (os.getenv("HUGGINGFACEHUB_API_TOKEN", "") or "").strip()
     AI_REQUEST_TIMEOUT_SECONDS = max(2.0, _float_env("AI_REQUEST_TIMEOUT_SECONDS", 30.0))
-    AI_LEGACY_FALLBACK_ENABLED = (
-        os.getenv("AI_LEGACY_FALLBACK_ENABLED", "true") or "true"
-    ).strip().lower() in {"1", "true", "yes", "on"}
+    AI_LEGACY_FALLBACK_ENABLED = False
 
     # Weather intelligence microservice settings.
     WEATHER_PROVIDER_BASE_URL = os.getenv(

@@ -1082,17 +1082,17 @@ def settings():
                 # Keep the provider switch explicit and backwards compatible.
                 provider_setting = SiteSetting.query.get("AI_PROVIDER")
                 if provider_setting:
-                    provider_setting.value = "huggingface"
+                    provider_setting.value = "own-ai"
                 else:
-                    db.session.add(SiteSetting(key="AI_PROVIDER", value="huggingface"))
+                    db.session.add(SiteSetting(key="AI_PROVIDER", value="own-ai"))
             save_profiles()
             db.session.commit()
             flash("Trained AI model saved and activated." if model_action == "activate" or request.form.get("activate_model") else "Trained AI model saved.", "success")
             return redirect(url_for("admin.settings", tab="trained"))
 
-        # The current configuration screen manages the separately hosted,
-        # fine-tuned agricultural model. Keep the older provider fields below
-        # for backwards compatibility with existing installations.
+        # The current configuration screen manages the owner's separately
+        # hosted, fine-tuned agricultural model. Legacy commercial-provider
+        # fields are intentionally rejected and are never persisted.
         own_ai_form = any(
             key in request.form
             for key in ("hf_model_id", "hf_inference_url", "hf_api_key", "legacy_fallback_enabled")
@@ -1102,9 +1102,10 @@ def settings():
             hf_model_id = request.form.get("hf_model_id", "").strip()
             hf_inference_url = request.form.get("hf_inference_url", "").strip()
             hf_api_key = request.form.get("hf_api_key", "").strip()
-            fallback_enabled = "true" if request.form.get("legacy_fallback_enabled") else "false"
+            # No commercial fallback is permitted in self-trained mode.
+            fallback_enabled = "false"
 
-            update_setting("AI_PROVIDER", "huggingface")
+            update_setting("AI_PROVIDER", "own-ai")
             update_setting("HF_MODEL_ID", hf_model_id)
             update_setting("HF_INFERENCE_URL", hf_inference_url)
             update_setting("AI_LEGACY_FALLBACK_ENABLED", fallback_enabled)
@@ -1115,7 +1116,7 @@ def settings():
             db.session.commit()
             # Apply values immediately; the saved settings are also read after
             # restarts and by other workers.
-            current_app.config["AI_PROVIDER"] = "huggingface"
+            current_app.config["AI_PROVIDER"] = "own-ai"
             current_app.config["HF_INFERENCE_URL"] = hf_inference_url
             current_app.config["AI_LEGACY_FALLBACK_ENABLED"] = fallback_enabled == "true"
             if hf_api_key:
@@ -1123,66 +1124,13 @@ def settings():
             flash("Own AI engine settings saved successfully.", "success")
             return redirect(url_for("admin.settings", tab="trained"))
 
-        openai_keys = [k.strip() for k in request.form.getlist("openai_key[]") if k.strip()]
-        groq_keys = [k.strip() for k in request.form.getlist("groq_key[]") if k.strip()]
-        gemini_keys = [k.strip() for k in request.form.getlist("gemini_key[]") if k.strip()]
-        
-        groq_model = request.form.get("groq_model", "").strip()
-        openai_model = request.form.get("openai_model", "").strip()
-        gemini_model = request.form.get("gemini_model", "").strip()
-
-        # Fallback to standard input if lists are empty
-        if not openai_keys and request.form.get("openai_key", "").strip():
-            openai_keys = [request.form.get("openai_key", "").strip()]
-        if not groq_keys and request.form.get("groq_key", "").strip():
-            groq_keys = [request.form.get("groq_key", "").strip()]
-        if not gemini_keys and request.form.get("gemini_key", "").strip():
-            gemini_keys = [request.form.get("gemini_key", "").strip()]
-
-        active_provider = request.form.get("active_provider", "").strip()
-        expert_provider = request.form.get("expert_provider", "").strip()
-        expert_model = request.form.get("expert_model", "").strip()
-
-        if active_provider:
-            update_setting("ACTIVE_PROVIDER", active_provider)
-            
-        update_setting("EXPERT_PROVIDER", expert_provider)
-        update_setting("EXPERT_MODEL", expert_model)
-
-        if groq_model:
-            update_setting("GROQ_MODEL", groq_model)
-            # Sync OPENAI_MODEL as groq_model if active provider is groq
-            if active_provider == "groq":
-                update_setting("OPENAI_MODEL", groq_model)
-        if openai_model:
-            update_setting("OPENAI_MODEL", openai_model)
-        if gemini_model:
-            update_setting("GEMINI_MODEL", gemini_model)
-
-        if groq_keys or "groq_key[]" in request.form or "groq_key" in request.form:
-            update_setting("API_KEY_GROQ", ",".join(groq_keys))
-        if openai_keys or "openai_key[]" in request.form or "openai_key" in request.form:
-            update_setting("API_KEY_OPENAI", ",".join(openai_keys))
-        if gemini_keys or "gemini_key[]" in request.form or "gemini_key" in request.form:
-            update_setting("API_KEY_GEMINI", ",".join(gemini_keys))
-
+        update_setting("AI_PROVIDER", "own-ai")
+        update_setting("AI_LEGACY_FALLBACK_ENABLED", "false")
         db.session.commit()
-        flash("AI System settings & credentials saved successfully.", "success")
-        return redirect(url_for("admin.settings", tab="llm"))
+        flash("Only your self-trained AI is supported. Configure it in Trained Models.", "warning")
+        return redirect(url_for("admin.settings", tab="trained"))
 
     # GET
-    active_provider_setting = SiteSetting.query.get("ACTIVE_PROVIDER")
-    groq_setting = SiteSetting.query.get("API_KEY_GROQ")
-    openai_setting = SiteSetting.query.get("API_KEY_OPENAI")
-    gemini_setting = SiteSetting.query.get("API_KEY_GEMINI")
-    
-    groq_model_setting = SiteSetting.query.get("GROQ_MODEL")
-    openai_model_setting = SiteSetting.query.get("OPENAI_MODEL")
-    gemini_model_setting = SiteSetting.query.get("GEMINI_MODEL")
-    
-    expert_provider_setting = SiteSetting.query.get("EXPERT_PROVIDER")
-    expert_model_setting = SiteSetting.query.get("EXPERT_MODEL")
-
     hf_model_setting = SiteSetting.query.get("HF_MODEL_ID")
     hf_url_setting = SiteSetting.query.get("HF_INFERENCE_URL")
     hf_key_setting = SiteSetting.query.get("HF_API_KEY") or SiteSetting.query.get("HF_TOKEN")
@@ -1222,27 +1170,8 @@ def settings():
         if active_model and active_model.get("token_key") else None
     )
 
-    active_provider = active_provider_setting.value.strip() if active_provider_setting and active_provider_setting.value.strip() else "groq"
+    active_provider = "own-ai"
     
-    # Resolve groq_model default
-    groq_model = ""
-    if groq_model_setting and groq_model_setting.value.strip():
-        groq_model = groq_model_setting.value.strip()
-    elif openai_model_setting and openai_model_setting.value.strip() and "gpt-4" not in openai_model_setting.value.lower():
-        groq_model = openai_model_setting.value.strip()
-    else:
-        groq_model = "openai/gpt-oss-120b"
-
-    # Resolve openai_model default
-    openai_model = ""
-    if openai_model_setting and openai_model_setting.value.strip() and "gpt" in openai_model_setting.value.lower():
-        openai_model = openai_model_setting.value.strip()
-    else:
-        openai_model = "gpt-4o-mini"
-
-    # Resolve gemini_model default
-    gemini_model = gemini_model_setting.value.strip() if gemini_model_setting and gemini_model_setting.value.strip() else "gemini-2.5-flash"
-
     # General / Server Location Settings
     system_name_setting = SiteSetting.query.get("SYSTEM_NAME")
     system_name = system_name_setting.value.strip() if system_name_setting and system_name_setting.value else "AgriSystem"
@@ -1268,14 +1197,6 @@ def settings():
         server_location_lon=server_location_lon,
         cambodia_provinces=CAMBODIA_PROVINCES,
         active_provider=active_provider,
-        groq_key=groq_setting.value if groq_setting else "",
-        openai_key=openai_setting.value if openai_setting else "",
-        gemini_key=gemini_setting.value if gemini_setting else "",
-        groq_model=groq_model,
-        openai_model=openai_model,
-        gemini_model=gemini_model,
-        expert_provider=expert_provider_setting.value if expert_provider_setting else "",
-        expert_model=expert_model_setting.value if expert_model_setting else "",
         hf_model_id=hf_model_id,
         hf_inference_url=hf_inference_url,
         hf_key_configured=bool(hf_key_setting and hf_key_setting.value.strip()) or bool(current_app.config.get("HF_TOKEN")) or bool(
@@ -1294,11 +1215,14 @@ def settings():
 def test_ai_connection():
     import time
     data = request.get_json(silent=True) or request.form
-    provider = (data.get("provider") or "groq").strip().lower()
+    provider = (data.get("provider") or "own-ai").strip().lower()
     api_key = (data.get("api_key") or "").strip()
     model = (data.get("model") or "").strip()
 
-    if provider in {"huggingface", "hf", "hugging_face"}:
+    if provider not in {"own-ai", "trained-ai", "huggingface", "hf", "hugging_face"}:
+        return jsonify({"success": False, "error": "Commercial LLM providers are disabled. Use your self-trained AI endpoint."}), 410
+
+    if provider in {"own-ai", "trained-ai", "huggingface", "hf", "hugging_face"}:
         from app.services.ai_expert_service import is_valid_inference_endpoint, request_endpoint
 
         saved_url = SiteSetting.query.get("HF_INFERENCE_URL")
@@ -1362,81 +1286,6 @@ def test_ai_connection():
             elapsed = round((time.time() - start_time) * 1000)
             return jsonify({"success": False, "error": str(exc), "latency_ms": elapsed}), 200
 
-    # Fallback to saved DB key if not passed
-    if not api_key:
-        setting_map = {
-            "groq": "API_KEY_GROQ",
-            "openai": "API_KEY_OPENAI",
-            "gemini": "API_KEY_GEMINI"
-        }
-        db_key_setting = SiteSetting.query.get(setting_map.get(provider, ""))
-        if db_key_setting and db_key_setting.value:
-            api_key = db_key_setting.value.split(",")[0].strip()
-
-    if not api_key:
-        return jsonify({"success": False, "error": f"No API key provided or saved for {provider.title()}."}), 400
-
-    start_time = time.time()
-    try:
-        if provider == "groq":
-            from openai import OpenAI
-            client = OpenAI(api_key=api_key, base_url="https://api.groq.com/openai/v1", timeout=8.0)
-            chosen_model = model or "openai/gpt-oss-120b"
-            resp = client.chat.completions.create(
-                model=chosen_model,
-                messages=[{"role": "user", "content": "ping"}],
-                max_tokens=2
-            )
-            elapsed = round((time.time() - start_time) * 1000)
-            return jsonify({
-                "success": True,
-                "message": f"Groq Connected! ({elapsed}ms latency • Model: {chosen_model})",
-                "latency_ms": elapsed
-            })
-
-        elif provider == "openai":
-            from openai import OpenAI
-            client = OpenAI(api_key=api_key, timeout=8.0)
-            chosen_model = model or "gpt-4o-mini"
-            resp = client.chat.completions.create(
-                model=chosen_model,
-                messages=[{"role": "user", "content": "ping"}],
-                max_tokens=2
-            )
-            elapsed = round((time.time() - start_time) * 1000)
-            return jsonify({
-                "success": True,
-                "message": f"OpenAI Connected! ({elapsed}ms latency • Model: {chosen_model})",
-                "latency_ms": elapsed
-            })
-
-        elif provider == "gemini":
-            from google import genai
-            client = genai.Client(api_key=api_key)
-            chosen_model = model or "gemini-2.5-flash"
-            resp = client.models.generate_content(
-                model=chosen_model,
-                contents="ping"
-            )
-            elapsed = round((time.time() - start_time) * 1000)
-            return jsonify({
-                "success": True,
-                "message": f"Gemini Connected! ({elapsed}ms latency • Model: {chosen_model})",
-                "latency_ms": elapsed
-            })
-
-        else:
-            return jsonify({"success": False, "error": f"Unknown provider: {provider}"}), 400
-
-    except Exception as e:
-        elapsed = round((time.time() - start_time) * 1000)
-        return jsonify({
-            "success": False,
-            "error": str(e),
-            "latency_ms": elapsed
-        }), 200
-
-
 @admin_bp.route("/api/generate_inference_key", methods=["POST"])
 @login_required
 @permission_required("manage_roles")
@@ -1450,50 +1299,10 @@ def generate_inference_key():
 @permission_required("manage_roles")
 def fetch_provider_models():
     data = request.get_json(silent=True) or request.form
-    provider = (data.get("provider") or "groq").strip().lower()
-    api_key = (data.get("api_key") or "").strip()
-
-    if not api_key:
-        setting_map = {
-            "groq": "API_KEY_GROQ",
-            "openai": "API_KEY_OPENAI",
-            "gemini": "API_KEY_GEMINI"
-        }
-        db_key_setting = SiteSetting.query.get(setting_map.get(provider, ""))
-        if db_key_setting and db_key_setting.value:
-            api_key = db_key_setting.value.split(",")[0].strip()
-
-    if not api_key:
-        return jsonify({"success": False, "error": f"Please enter or save an API key for {provider.title()} first."}), 400
-
-    try:
-        if provider == "groq":
-            from openai import OpenAI
-            client = OpenAI(api_key=api_key, base_url="https://api.groq.com/openai/v1", timeout=8.0)
-            resp = client.models.list()
-            model_ids = [m.id for m in resp.data if not m.id.startswith("whisper") and not m.id.startswith("meta-llama/llama-prompt-guard")]
-            if not model_ids:
-                model_ids = [m.id for m in resp.data]
-            return jsonify({"success": True, "models": sorted(model_ids)})
-
-        elif provider == "openai":
-            from openai import OpenAI
-            client = OpenAI(api_key=api_key, timeout=8.0)
-            resp = client.models.list()
-            chat_models = [m.id for m in resp.data if "gpt" in m.id or "o1" in m.id or "o3" in m.id]
-            return jsonify({"success": True, "models": sorted(chat_models or [m.id for m in resp.data][:20])})
-
-        elif provider == "gemini":
-            return jsonify({
-                "success": True,
-                "models": ["gemini-2.5-flash", "gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash"]
-            })
-
-        else:
-            return jsonify({"success": False, "error": f"Unknown provider: {provider}"}), 400
-
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 200
+    provider = (data.get("provider") or "own-ai").strip().lower()
+    if provider not in {"own-ai", "trained-ai", "huggingface", "hf", "hugging_face"}:
+        return jsonify({"success": False, "error": "Commercial LLM providers are disabled. Add your trained model under Trained Models."}), 410
+    return jsonify({"success": False, "error": "Your trained endpoint is tested from the Trained Models panel."}), 410
 
 
 @admin_bp.route("/translations/backups", methods=["GET"])

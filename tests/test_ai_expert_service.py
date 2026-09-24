@@ -20,6 +20,7 @@ _build_prompt = _SERVICE._build_prompt
 _extract_text = _SERVICE._extract_text
 generate_reply = _SERVICE.generate_reply
 is_configured = _SERVICE.is_configured
+_setting = _SERVICE._setting
 
 
 class AiExpertServiceTestCase(unittest.TestCase):
@@ -68,6 +69,11 @@ class AiExpertServiceTestCase(unittest.TestCase):
     def test_unconfigured_provider_is_disabled(self):
         self.assertFalse(is_configured())
         self.assertIsNone(generate_reply("hello"))
+
+    def test_legacy_provider_value_cannot_override_owner_model(self):
+        # A stale deployment variable must not re-enable a commercial model.
+        with patch.dict(os.environ, {"AI_PROVIDER": "openai"}, clear=False):
+            self.assertEqual(_setting("AI_PROVIDER"), "own-ai")
 
 
 if __name__ == "__main__":

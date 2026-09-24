@@ -29,7 +29,6 @@ Flask-SQLAlchemy==3.1.1
 Flask-WTF==1.2.1
 fonttools==4.64.0
 google-auth==2.57.0
-google-genai==2.20.0
 gunicorn==23.0.0
 h11==0.16.0
 httpcore==1.0.9
@@ -50,7 +49,6 @@ MarkupSafe==3.0.3
 mdurl==0.1.2
 msgpack==1.2.2
 msgspec==0.21.1
-openai==3.5.0
 ordered-set==4.1.0
 packageurl-python==0.17.6
 packaging==26.3

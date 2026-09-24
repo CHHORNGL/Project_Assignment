@@ -25,29 +25,12 @@
                 </div>
                 <div>
                     <h6 class="mb-0 font-weight-bold">{{ t("ai_translation_model") | default("AI Translation Model") }}</h6>
-                    <div class="small text-muted">{{ t("ai_translation_model_hint") | default("Choose the AI model to use when clicking the robot icon.") }}</div>
+                    <div class="small text-muted">Your self-trained agricultural AI is used for translations.</div>
                 </div>
             </div>
             <div style="min-width: 200px;">
                 <select class="form-control form-control-sm font-weight-bold" id="ai-translation-model">
-                    <option value="">Auto (Default Settings)</option>
-                    <optgroup label="Groq (Currently Available)">
-                        <option value="qwen/qwen3.8-27b" selected>Qwen 3.8 27B (Groq Fast)</option>
-                        <option value="openai/gpt-oss-20b">GPT-OSS 20B (Groq)</option>
-                    </optgroup>
-                    <optgroup label="Groq (Standard)">
-                        <option value="llama-3.3-70b-versatile">Llama 3.3 70B</option>
-                        <option value="llama-3.1-8b-instant">Llama 3.1 8B</option>
-                        <option value="mixtral-8x7b-32768">Mixtral 8x7B</option>
-                    </optgroup>
-                    <optgroup label="Google Gemini">
-                        <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
-                        <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
-                    </optgroup>
-                    <optgroup label="OpenAI GPT">
-                        <option value="gpt-4o-mini">GPT-4o Mini</option>
-                        <option value="gpt-4o">GPT-4o</option>
-                    </optgroup>
+                    <option value="own-ai" selected>Your trained agricultural AI</option>
                 </select>
             </div>
         </div>

@@ -74,5 +74,5 @@ llama.cpp can load it.
 
 In the Flask admin settings, configure the inference endpoint as the Railway
 URL ending in `/generate`, set the same API key, activate the model profile,
-and keep the provider set to Hugging Face/custom remote inference. The model
+and keep the provider set to `own-ai` (your protected custom endpoint). The model
 ID shown in the profile should be the GGUF repository ID.

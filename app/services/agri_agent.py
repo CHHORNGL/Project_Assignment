@@ -265,7 +265,7 @@ def build_agent_context(
             )
         if has_image:
             sections.append(
-                "Image attached: A crop image has been provided. If your model supports vision (e.g. Gemini), examine the visible symptoms on leaves, stems, or fruits in the image to inform your diagnosis. Always advise the farmer on safe management steps."
+                "Image attached: A crop image has been provided. The current self-trained endpoint is text-only, so do not invent visual findings. Ask the farmer to describe visible symptoms or use the rule-based image review flow, then advise safe management steps."
             )
 
     history = []
