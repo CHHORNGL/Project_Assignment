@@ -14,6 +14,36 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 MODEL_ID = "Maoseavik/agri-qwen3b-lora"
 BASE_MODEL_ID = "Qwen/Qwen2.5-3B-Instruct"
 
+EMOJI_PATTERN = re.compile(
+    r"["
+    r"\U00010000-\U0010ffff"
+    r"\u2600-\u27bf"
+    r"\u2300-\u23ff"
+    r"\u2b50\u2b55\u200d\ufe0f\u3030\u303d\u00a9\u00ae\u2122"
+    r"]+",
+    flags=re.UNICODE,
+)
+
+
+def clean_professional_text(text: str) -> str:
+    """Normalize text into smooth, professional language with zero ###, **, or emojis."""
+    if not text:
+        return ""
+    # Strip emojis
+    text = EMOJI_PATTERN.sub("", text)
+    # Strip markdown headers (e.g. ###, ##, #)
+    text = re.sub(r"(?m)^\s*#{1,6}\s*", "", text)
+    text = re.sub(r"#{2,}", "", text)
+    # Strip markdown bold/italic asterisks (**, *, ***)
+    text = re.sub(r"\*{1,3}(.*?)\*{1,3}", r"\1", text)
+    text = text.replace("**", "").replace("*", "")
+    # Clean up double spaces within lines
+    lines = [re.sub(r"[ \t]+", " ", line).strip() for line in text.split("\n")]
+    text = "\n".join(lines)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    return text.strip()
+
+
 SYSTEM_PROMPT_EN = (
     "You are AgriSystem AI (model name: AGY V2.0.0), created and developed under the leadership of Team Leader Mao Seavik. "
     "You are a warm, polite, empathetic, and professional human agricultural expert. "
@@ -22,7 +52,9 @@ SYSTEM_PROMPT_EN = (
     "2. If the user greets you or says hello (e.g. Hello, Hi), always say 'Hi there!' or 'Hello!' warmly and ask how you can help their farm. "
     "3. If the user asks who you are or who created you, state clearly that you are AgriSystem AI (model: AGY V2.0.0), created by Team Leader Mao Seavik. "
     "4. For agricultural questions, give practical, structured advice using clear bullet points, actionable steps, and safety precautions. "
-    "5. Recommend consulting a local agronomist for severe cases. Never invent an unsupported diagnosis or chemical dosage."
+    "5. Recommend consulting a local agronomist for severe cases. Never invent an unsupported diagnosis or chemical dosage. "
+    "6. Do not use markdown headers, bold formatting, asterisks, or emojis in your response. "
+    "Deliver smooth, clean, plain text that looks natural and professional."
 )
 
 SYSTEM_PROMPT_KH = (
@@ -33,7 +65,8 @@ SYSTEM_PROMPT_KH = (
     "២. ប្រសិនបើមានគេស្វាគមន៍ ឬសួរសួស្តី (ដូចជា សួស្តី, ជំរាបសួរ, Hello) សូមឆ្លើយតប 'សួស្តីបាទ/ចាស!' ឬ 'ជំរាបសួរ!' ដោយកក់ក្តៅជានិច្ច កុំប្រើពាក្យ 'សូមប្រាកដ' ឡើយ។ "
     "៣. ប្រសិនបើមានគេសួរអំពីអត្តសញ្ញាណរបស់អ្នក ឬអ្នកណាបង្កើតអ្នក សូមបញ្ជាក់យ៉ាងច្បាស់ថា អ្នកគឺជា AgriSystem AI (ម៉ូឌែល AGY V2.0.0) បង្កើតឡើងដោយប្រធានក្រុម ម៉ៅ សៀវអ៊ិ (Team Leader Mao Seavik)។ "
     "៤. សម្រាប់សំណើរបច្ចេកទេសកសិកម្ម សូមផ្តល់ដំបូន្មានជាក់ស្តែង រៀបចំជាចំណុចៗ វិធីព្យាបាល និងវិធានការបង្ការប្រកបដោយសុវត្ថិភាព។ "
-    "៥. ករណីធ្ងន់ធ្ងរ សូមណែនាំឱ្យកសិករទាក់ទងអ្នកជំនាញកសិកម្មក្នុងតំបន់។ មិនត្រូវបង្កើតការធ្វើរោគវិនិច្ឆ័យដោយគ្មានមូលដ្ឋានឡើយ។"
+    "៥. ករណីធ្ងន់ធ្ងរ សូមណែនាំឱ្យកសិករទាក់ទងអ្នកជំនាញកសិកម្មក្នុងតំបន់។ មិនត្រូវបង្កើតការធ្វើរោគវិនិច្ឆ័យដោយគ្មានមូលដ្ឋានឡើយ។ "
+    "៦. សូមកុំប្រើសញ្ញាក្បាលចំណងជើងម៉ាកដោន សញ្ញាផ្កាយដិត និងកុំប្រើរូបភាពអារម្មណ៍ emoji នៅក្នុងចម្លើយឡើយ ដោយផ្តល់ចម្លើយជាអត្ថបទធម្មតាយ៉ាងរលូន និងប្រកបដោយវិជ្ជាជីវៈ។"
 )
 
 GREETINGS_KM = {
@@ -158,7 +191,7 @@ def _clean_text(text: str) -> str:
     for marker in ("\nAnswer:\n", "\nចម្លើយ៖\n", "\nចម្លើយ:\n", "Answer:\n", "ចម្លើយ៖\n", "ចម្លើយ:\n"):
         if marker in text:
             text = text.rsplit(marker, 1)[-1]
-    return text.strip()
+    return clean_professional_text(text)
 
 
 def _is_valid_output(text: str, is_khmer: bool) -> bool:
@@ -212,19 +245,19 @@ def answer(
     # Fast, warm, and 100% human-like response for greetings and identity queries
     if "hello in khmer" in q_norm or "say hello in khmer" in q_norm:
         if is_khmer:
-            return (
+            return clean_professional_text(
                 "សួស្តីបាទ/ចាស! ជាភាសាខ្មែរយើងប្រើពាក្យ 'សួស្តី' (សម្រាប់ភាពស្និទ្ធស្នាល ឬទូទៅ) ឬ 'ជំរាបសួរ' (ប្រកបដោយការគួរសម និងការគោរព)។ "
                 "ខ្ញុំជា AgriSystem AI (ម៉ូឌែលឈ្មោះ AGY V2.0.0) បង្កើតឡើងដោយប្រធានក្រុម ម៉ៅ សៀវអ៊ិ (Team Leader Mao Seavik)។ "
                 "តើដំណាំ ឬការងារកសិកម្មរបស់អ្នកមានបញ្ហាអ្វីដែលខ្ញុំអាចជួយបានដែរទេបាទ/ចាស?"
             )
-        return (
+        return clean_professional_text(
             "In Khmer, you can say 'សួស្តី' (Suosdei - casual hello) or 'ជំរាបសួរ' (Choumreabsour - polite/respectful greeting)! "
             "I am AgriSystem AI (model: AGY V2.0.0), created under the leadership of Team Leader Mao Seavik. "
             "How can I help you with your farming needs today?"
         )
 
     if "hello in english" in q_norm or "say hello in english" in q_norm:
-        return (
+        return clean_professional_text(
             "Hi there! In English, we greet with 'Hello' or 'Hi'! "
             "I am AgriSystem AI (model name: AGY V2.0.0), created and developed under the leadership of Team Leader Mao Seavik. "
             "How can I assist you with your crops or farm today?"
@@ -234,13 +267,13 @@ def answer(
         identity_set = IDENTITY_KM if is_khmer else (IDENTITY_KM | IDENTITY_EN)
         if any(phrase in q_norm for phrase in identity_set):
             if is_khmer:
-                return (
-                    "ជំរាបសួរលោកអ្នក! ខ្ញុំគឺជា **AgriSystem AI** (ម៉ូឌែលឈ្មោះ **AGY V2.0.0**) ដែលត្រូវបានបង្កើត និងអភិវឌ្ឍឡើងដោយ**ប្រធានក្រុម ម៉ៅ សៀវអ៊ិ (Team Leader Mao Seavik)**។ "
+                return clean_professional_text(
+                    "ជំរាបសួរលោកអ្នក! ខ្ញុំគឺជា AgriSystem AI (ម៉ូឌែលឈ្មោះ AGY V2.0.0) ដែលត្រូវបានបង្កើត និងអភិវឌ្ឍឡើងដោយប្រធានក្រុម ម៉ៅ សៀវអ៊ិ (Team Leader Mao Seavik)។ "
                     "ខ្ញុំជាជំនួយការកសិកម្មឆ្លាតវៃ ត្រៀមខ្លួនជានិច្ចក្នុងការជួយពិនិត្យជំងឺដំណាំ វិភាគរោគសញ្ញា ផ្តល់បច្ចេកទេសដាំដុះ និងចែករំលែកវិធីសាស្រ្តការពារ និងការព្យាបាលប្រកបដោយសុវត្ថិភាពខ្ពស់។ "
                     "តើថ្ងៃនេះខ្ញុំអាចជួយអ្វីដល់លោកអ្នកបានខ្លះដែរ?"
                 )
-            return (
-                "Hello! I am **AgriSystem AI** (model name: **AGY V2.0.0**), created and developed under the leadership of **Team Leader Mao Seavik**. "
+            return clean_professional_text(
+                "Hello! I am AgriSystem AI (model name: AGY V2.0.0), created and developed under the leadership of Team Leader Mao Seavik. "
                 "I am an intelligent agricultural assistant dedicated to helping farmers diagnose plant diseases, improve crop health, and adopt safe, sustainable farming practices. "
                 "How can I help you and your farm today?"
             )
@@ -248,12 +281,12 @@ def answer(
         greeting_set = GREETINGS_KM if is_khmer else GREETINGS_EN
         if any(q_norm == g or q_norm.startswith(g + " ") for g in greeting_set):
             if is_khmer:
-                return (
+                return clean_professional_text(
                     "សួស្តីបាទ/ចាស! ខ្ញុំជា AgriSystem AI (ម៉ូឌែលឈ្មោះ AGY V2.0.0) ដែលត្រូវបានបង្កើត និងអភិវឌ្ឍឡើងដោយប្រធានក្រុម ម៉ៅ សៀវអ៊ិ (Team Leader Mao Seavik)។ "
                     "ខ្ញុំរីករាយណាស់ដែលបានជួយលោកអ្នកនៅថ្ងៃនេះ។ តើដំណាំ ឬការងារកសិកម្មរបស់អ្នកដំណើរការយ៉ាងណាដែរ? "
                     "តើមានបញ្ហាជំងឺដំណាំ ឬការដាំដុះអ្វីដែលខ្ញុំអាចជួយផ្តល់ដំបូន្មាន ឬដោះស្រាយជូនបានដែរទេ?"
                 )
-            return (
+            return clean_professional_text(
                 "Hi there! Warm greetings to you! I am AgriSystem AI (model: AGY V2.0.0), created and developed under the leadership of Team Leader Mao Seavik. "
                 "It's a pleasure to assist you! How are your crops doing today, and how can I help you with your farming needs?"
             )
@@ -312,44 +345,44 @@ def answer(
             )
         new_tokens = generated[0][encoded["input_ids"].shape[-1]:]
         raw_output = tokenizer.decode(new_tokens, skip_special_tokens=True).strip()
-    except Exception as exc:
+    except Exception:
         raw_output = ""
 
     cleaned_reply = _clean_text(raw_output)
 
     if _is_valid_output(cleaned_reply, is_khmer):
-        return cleaned_reply
+        return clean_professional_text(cleaned_reply)
 
     # Fallback to structured knowledge synthesis if model generated degenerate output
     if matched_kb:
         if is_khmer:
-            return (
-                f"## 🌿 {matched_kb['title_km']}\n\n"
-                f"**ជំរាបសួរលោកអ្នក ឬបងប្អូនកសិករជាទីគោរព!** ខ្ញុំជា **AgriSystem AI (AGY V2.0.0)** បង្កើតឡើងដោយ **ប្រធានក្រុម ម៉ៅ សៀវអ៊ិ**។ "
+            return clean_professional_text(
+                f"{matched_kb['title_km']}\n\n"
+                f"ជំរាបសួរលោកអ្នក ឬបងប្អូនកសិករជាទីគោរព! ខ្ញុំជា AgriSystem AI (ម៉ូឌែល AGY V2.0.0) បង្កើតឡើងដោយ ប្រធានក្រុម ម៉ៅ សៀវអ៊ិ (Team Leader Mao Seavik)។ "
                 f"ខាងក្រោមនេះជាការណែនាំបច្ចេកទេស និងវិធានការដោះស្រាយ៖\n\n"
-                f"### 📋 ១. រោគសញ្ញាសម្គាល់ (Symptoms)\n- {matched_kb['symptoms_km']}\n\n"
-                f"### 💊 ២. វិធានការព្យាបាល (Treatment)\n- {matched_kb['treatment_km']}\n\n"
-                f"### 🛡️ ៣. វិធានការការពារ និងថែទាំ (Prevention & Soil Care)\n- {matched_kb['prevention_km']}\n\n"
-                f"⚠️ *ចំណាំ៖ សូមពាក់សម្ភារៈការពារខ្លួន (ម៉ាស់ ស្រោមដៃ) ពេលប្រើប្រាស់ថ្នាំកសិកម្ម និងគោរពតាមការណែនាំលើស្លាកផលិតផលជានិច្ច។*"
+                f"១. រោគសញ្ញាសម្គាល់ (Symptoms)\n- {matched_kb['symptoms_km']}\n\n"
+                f"២. វិធានការព្យាបាល (Treatment)\n- {matched_kb['treatment_km']}\n\n"
+                f"៣. វិធានការការពារ និងថែទាំ (Prevention & Soil Care)\n- {matched_kb['prevention_km']}\n\n"
+                f"ចំណាំ៖ សូមពាក់សម្ភារៈការពារខ្លួន (ម៉ាស់ ស្រោមដៃ) ពេលប្រើប្រាស់ថ្នាំកសិកម្ម និងគោរពតាមការណែនាំលើស្លាកផលិតផលជានិច្ច។"
             )
         else:
-            return (
-                f"## 🌿 {matched_kb['title_en']}\n\n"
-                f"**Greetings!** I am **AgriSystem AI (model: AGY V2.0.0)**, created and developed under the leadership of **Team Leader Mao Seavik**. "
+            return clean_professional_text(
+                f"{matched_kb['title_en']}\n\n"
+                f"Greetings! I am AgriSystem AI (model: AGY V2.0.0), created and developed under the leadership of Team Leader Mao Seavik. "
                 f"Here is the recommended technical guidance for your crops:\n\n"
-                f"### 📋 1. Observable Symptoms\n- {matched_kb['symptoms_en']}\n\n"
-                f"### 💊 2. Treatment Strategy\n- {matched_kb['treatment_en']}\n\n"
-                f"### 🛡️ 3. Preventative Management & Soil Care\n- {matched_kb['prevention_en']}\n\n"
-                f"⚠️ *Safety Notice: Always wear PPE (gloves, mask) and strictly observe pre-harvest intervals (PHI) indicated on product labels.*"
+                f"1. Observable Symptoms\n- {matched_kb['symptoms_en']}\n\n"
+                f"2. Treatment Strategy\n- {matched_kb['treatment_en']}\n\n"
+                f"3. Preventative Management & Soil Care\n- {matched_kb['prevention_en']}\n\n"
+                f"Safety Notice: Always wear PPE (gloves, mask) and strictly observe pre-harvest intervals (PHI) indicated on product labels."
             )
 
     if is_khmer:
-        return (
-            "ជំរាបសួរលោកអ្នក! ខ្ញុំជា **AgriSystem AI (AGY V2.0.0)** បង្កើតឡើងដោយ**ប្រធានក្រុម ម៉ៅ សៀវអ៊ិ**។ "
+        return clean_professional_text(
+            "ជំរាបសួរលោកអ្នក! ខ្ញុំជា AgriSystem AI (ម៉ូឌែល AGY V2.0.0) បង្កើតឡើងដោយ ប្រធានក្រុម ម៉ៅ សៀវអ៊ិ (Team Leader Mao Seavik)។ "
             "ដើម្បីជួយវិភាគ និងផ្តល់ដំបូន្មានបច្ចេកទេសឱ្យបានច្បាស់លាស់ សូមបញ្ជាក់បន្ថែមអំពីឈ្មោះដំណាំ រោគសញ្ញាជាក់ស្តែងលើស្លឹក ដើម ឬផ្លែ និងទីតាំងដាំដុះរបស់អ្នក។"
         )
-    return (
-        "Hello! I am **AgriSystem AI (model AGY V2.0.0)**, created by **Team Leader Mao Seavik**. "
+    return clean_professional_text(
+        "Hello! I am AgriSystem AI (model AGY V2.0.0), created by Team Leader Mao Seavik. "
         "To provide you with the most precise diagnosis and agronomic guidance, please describe your crop name, specific leaf/stem symptoms, and current soil or field conditions."
     )
 
@@ -378,7 +411,7 @@ demo = gr.Interface(
     ],
     outputs=gr.Markdown(label="AgriSystem answer"),
     examples=examples,
-    title="🌾 AgriSystem Agricultural Assistant",
+    title="AgriSystem Agricultural Assistant",
     description=(
         "A demonstration of Maoseavik/agri-qwen3b-lora. Advice is informational; "
         "confirm diagnosis and treatment with a qualified local expert."
