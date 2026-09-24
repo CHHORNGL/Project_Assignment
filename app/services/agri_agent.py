@@ -62,7 +62,7 @@ def plan_request(
         "team leader", "who is mao seavik", "about you",
         "តើអ្នកជាអ្នកណា", "អ្នកជាអ្នកណា", "តើអ្នកជាអ្វី", "អ្នកជាអ្វី", "អ្នកណាបង្កើត",
         "នរណាបង្កើត", "តើអ្នកណាបង្កើតអ្នក", "តើនរណាបង្កើតអ្នក", "តើម៉ូឌែលឈ្មោះអ្វី",
-        "ម៉ូឌែលឈ្មោះអ្វី", "តើ ai នេះឈ្មោះអ្វី", "ប្រធានក្រុម", "ម៉ៅ សៀវីក", "mao seavik",
+        "ម៉ូឌែលឈ្មោះអ្វី", "តើ ai នេះឈ្មោះអ្វី", "ប្រធានក្រុម", "ម៉ៅ សៀវអ៊ិ", "mao seavik",
     )
     greeting_terms = (
         "hi", "hello", "hey", "greetings", "good morning", "good afternoon", "good evening",
@@ -192,16 +192,16 @@ def build_agent_context(
             sections.append(
                 "គោលការណ៍ឆ្លើយតបការស្វាគមន៍ (Greeting Policy)៖\n"
                 "កសិករកំពុងស្វាគមន៍ ឬសួរសួស្តី (Hello / Greetings)។ "
-                "សូមឆ្លើយតបការស្វាគមន៍ដោយភាពរាក់ទាក់ កក់ក្តៅ និងគួរសមបំផុតជាភាសាខ្មែរ ណែនាំខ្លួនថាជា AgriSystem AI (ម៉ូឌែល AGY V1.0.0) បង្កើតឡើងដោយប្រធានក្រុម ម៉ៅ សៀវីក (Team Leader Mao Seavik) និងសួរបញ្ជាក់ថាតើមានបញ្ហាដំណាំ ការដាំដុះ ឬជំងឺរុក្ខជាតិអ្វីដែលកសិករចង់ឱ្យជួយប្រឹក្សាដែរឬទេ។"
+                "សូមឆ្លើយតបការស្វាគមន៍ដោយភាពរាក់ទាក់ កក់ក្តៅ និងគួរសមបំផុតជាភាសាខ្មែរ ណែនាំខ្លួនថាជា AgriSystem AI (ម៉ូឌែល AGY V2.0.0) បង្កើតឡើងដោយប្រធានក្រុម ម៉ៅ សៀវអ៊ិ (Team Leader Mao Seavik) និងសួរបញ្ជាក់ថាតើមានបញ្ហាដំណាំ ការដាំដុះ ឬជំងឺរុក្ខជាតិអ្វីដែលកសិករចង់ឱ្យជួយប្រឹក្សាដែរឬទេ។"
             )
         if plan.intent == "agent_identity":
             sections.append(
                 "ព័ត៌មានអត្តសញ្ញាណ AI៖\n"
                 "- ឈ្មោះ AI៖ AgriSystem AI\n"
-                "- ឈ្មោះម៉ូឌែល៖ AGY V1.0.0\n"
-                "- អ្នកបង្កើត៖ បង្កើត និងអភិវឌ្ឍឡើងដោយប្រធានក្រុម ម៉ៅ សៀវីក (Team Leader Mao Seavik)\n"
+                "- ឈ្មោះម៉ូឌែល៖ AGY V2.0.0\n"
+                "- អ្នកបង្កើត៖ បង្កើត និងអភិវឌ្ឍឡើងដោយប្រធានក្រុម ម៉ៅ សៀវអ៊ិ (Team Leader Mao Seavik)\n"
                 "- តួនាទី៖ ជំនួយការកសិកម្មឆ្លាតវៃ ផ្តល់ការប្រឹក្សាអំពីដំណាំ ជំងឺដំណាំ ដី និងការព្យាបាលប្រកបដោយសុវត្ថិភាព។\n"
-                "សូមបញ្ជាក់ដោយច្បាស់លាស់ថា AI នេះមានម៉ូឌែលឈ្មោះ AGY V1.0.0 បង្កើតឡើងដោយប្រធានក្រុម ម៉ៅ សៀវីក (Team Leader Mao Seavik)។"
+                "សូមបញ្ជាក់ដោយច្បាស់លាស់ថា AI នេះមានម៉ូឌែលឈ្មោះ AGY V2.0.0 បង្កើតឡើងដោយប្រធានក្រុម ម៉ៅ សៀវអ៊ិ (Team Leader Mao Seavik)។"
             )
         if plan.intent == "crop_health":
             sections.append(
@@ -244,16 +244,16 @@ def build_agent_context(
         if plan.intent == "greeting":
             sections.append(
                 "Greeting Policy:\n"
-                "The farmer is greeting you (Hello / Hi). Respond warmly, politely, and helpfully. Introduce yourself as AgriSystem AI (model: AGY V1.0.0), created by Team Leader Mao Seavik, and ask how you can assist with their crops or farming today."
+                "The farmer is greeting you (Hello / Hi). Respond warmly, politely, and helpfully. Introduce yourself as AgriSystem AI (model: AGY V2.0.0), created by Team Leader Mao Seavik, and ask how you can assist with their crops or farming today."
             )
         if plan.intent == "agent_identity":
             sections.append(
                 "AI Identity Information:\n"
                 "- AI Name: AgriSystem AI\n"
-                "- Model Name: AGY V1.0.0\n"
+                "- Model Name: AGY V2.0.0\n"
                 "- Creator: Created and developed by Team Leader Mao Seavik\n"
                 "- Role: Smart agricultural assistant providing advice on crops, plant diseases, soil, and safe farming practices.\n"
-                "Please state clearly that you are AgriSystem AI (model: AGY V1.0.0), created by Team Leader Mao Seavik."
+                "Please state clearly that you are AgriSystem AI (model: AGY V2.0.0), created by Team Leader Mao Seavik."
             )
         if plan.intent == "crop_health":
             sections.append(

@@ -626,6 +626,9 @@ def generate_assistant_reply(
                 return "Sorry! You have run out of AI Credits (Tokens). Please upgrade to a Premium account for unlimited AI chat."
 
     lang = get_current_language()
+    if bool(re.search(r"[\u1780-\u17ff]", user_message)):
+        lang = "km"
+
     from app.services.agri_agent import build_agent_context
 
     agent_context, agent_plan = build_agent_context(
@@ -641,6 +644,40 @@ def generate_assistant_reply(
         agent_plan.intent,
         ",".join(agent_plan.tools) or "none",
     )
+
+    if agent_plan.intent == "agent_identity":
+        if lang == "km":
+            return (
+                "ជំរាបសួរលោកអ្នក! ខ្ញុំគឺជា **AgriSystem AI** (ម៉ូឌែលឈ្មោះ **AGY V2.0.0**) ដែលត្រូវបានបង្កើត និងអភិវឌ្ឍឡើងដោយ**ប្រធានក្រុម ម៉ៅ សៀវអ៊ិ (Team Leader Mao Seavik)**។ "
+                "ខ្ញុំជាជំនួយការកសិកម្មឆ្លាតវៃ ត្រៀមខ្លួនជានិច្ចក្នុងការជួយពិនិត្យជំងឺដំណាំ វិភាគរោគសញ្ញា ផ្តល់បច្ចេកទេសដាំដុះ និងចែករំលែកវិធីសាស្រ្តការពារ និងការព្យាបាលប្រកបដោយសុវត្ថិភាពខ្ពស់។ "
+                "តើថ្ងៃនេះខ្ញុំអាចជួយអ្វីដល់លោកអ្នកបានខ្លះដែរ?"
+            )
+        return (
+            "Hello! I am **AgriSystem AI** (model name: **AGY V2.0.0**), created and developed under the leadership of **Team Leader Mao Seavik**. "
+            "I am an intelligent agricultural assistant dedicated to helping farmers diagnose plant diseases, improve crop health, and adopt safe, sustainable farming practices. "
+            "How can I help you and your farm today?"
+        )
+
+    if agent_plan.intent == "greeting":
+        msg_clean = user_message.lower().strip()
+        if "hello in khmer" in msg_clean:
+            return (
+                "សួស្តីបាទ/ចាស! ជាភាសាខ្មែរយើងប្រើពាក្យ 'សួស្តី' (សម្រាប់ភាពស្និទ្ធស្នាល ឬទូទៅ) ឬ 'ជំរាបសួរ' (ប្រកបដោយការគួរសម និងការគោរព)។ ខ្ញុំជា AgriSystem AI (ម៉ូឌែល AGY V2.0.0) បង្កើតឡើងដោយប្រធានក្រុម ម៉ៅ សៀវអ៊ិ (Team Leader Mao Seavik)។ តើខ្ញុំអាចជួយអ្វីលោកអ្នកបានខ្លះនៅថ្ងៃនេះបាទ/ចាស?"
+            )
+        if "hello in english" in msg_clean:
+            return (
+                "Hi there! In English, we greet with 'Hello' or 'Hi'! I am AgriSystem AI (model name: AGY V2.0.0), created and developed under the leadership of Team Leader Mao Seavik. How can I assist you with your crops or farm today?"
+            )
+        if lang == "km":
+            return (
+                "សួស្តីបាទ/ចាស! ខ្ញុំជា AgriSystem AI (ម៉ូឌែលឈ្មោះ AGY V2.0.0) ដែលត្រូវបានបង្កើត និងអភិវឌ្ឍឡើងដោយប្រធានក្រុម ម៉ៅ សៀវអ៊ិ (Team Leader Mao Seavik)។ "
+                "ខ្ញុំរីករាយណាស់ដែលបានជួយលោកអ្នកនៅថ្ងៃនេះ។ តើដំណាំ ឬការងារកសិកម្មរបស់អ្នកដំណើរការយ៉ាងណាដែរ? "
+                "តើមានបញ្ហាជំងឺដំណាំ ឬការដាំដុះអ្វីដែលខ្ញុំអាចជួយផ្តល់ដំបូន្មាន ឬដោះស្រាយជូនបានដែរទេ?"
+            )
+        return (
+            "Hi there! Warm greetings to you! I am AgriSystem AI (model: AGY V2.0.0), created and developed under the leadership of Team Leader Mao Seavik. "
+            "It's a pleasure to assist you! How are your crops doing today, and how can I help you with your farming needs?"
+        )
 
     # Keep model hosting outside Flask. The agent selects trusted application
     # tools first, then the remote model explains their results in the user's

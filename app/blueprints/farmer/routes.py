@@ -516,80 +516,6 @@ def dashboard():
         team=PROJECT_TEAM,
     )
 
-
-@farmer_bp.route("/guest-chat", methods=["POST"])
-def guest_chat():
-    """
-    Allow guest users to test the interactive AI crop consultation preview (up to 5 inquiries).
-    """
-    from flask import session, jsonify
-    data = request.get_json(silent=True) or {}
-    message = (data.get("message") or "").strip()
-    if not message:
-        return jsonify({"error": "Message is required"}), 400
-
-    count = session.get("guest_chat_count", 0)
-    if count >= 5:
-        return jsonify({
-            "limit_reached": True,
-            "reply": "You have completed your 5 free guest inquiries! Create a free account to unlock unlimited AI agricultural consultations."
-        })
-    session["guest_chat_count"] = count + 1
-
-    from app.services.openai_assistant import generate_assistant_reply
-    reply = None
-    try:
-        reply = generate_assistant_reply(message)
-    except Exception:
-        reply = None
-
-    if not reply:
-        msg_lower = message.lower()
-        if any(w in msg_lower for w in ("rice", "blast", "ស្រូវ")):
-            reply = "Rice Blast (Magnaporthe oryzae): Symptoms include spindle-shaped lesions with grey centres and brown margins. Recommendation: Drain standing water temporarily, avoid excess nitrogen, and apply Tricyclazole 75% WP (15-20g per 16L sprayer) or Azoxystrobin."
-        elif any(w in msg_lower for w in ("cassava", "mosaic", "ដំឡូង")):
-            reply = "Cassava Mosaic Disease (CMD): Symptoms include asymmetrical leaf curling and yellow chlorosis. Recommendation: Rogue and incinerate infected plants immediately; control whitefly vectors and plant certified virus-free varieties (KU50, Rayong)."
-        elif any(w in msg_lower for w in ("corn", "maize", "blight", "ពោត")):
-            reply = "Northern Corn Leaf Blight (Exserohilum turcicum): Long elliptical lesions on leaves. Recommendation: Rotate fields with non-host crops and apply Mancozeb 80% WP or Pyraclostrobin during initial spotting."
-        elif any(w in msg_lower for w in ("tomato", "blight", "ប៉េងប៉ោះ")):
-            reply = "Tomato Late Blight: Dark water-soaked lesions with white mold in humid weather. Recommendation: Ensure wide spacing for airflow, avoid overhead irrigation, and apply Metalaxyl + Mancozeb."
-        else:
-            reply = "AgriSystem AI Assistant: For accurate crop diagnosis, please select your crop in the Diagnose tool or snap a photo. Create an account for complete customized spray guides and 24/7 expert advice!"
-
-    return jsonify({
-        "success": True,
-        "reply": reply,
-        "remaining": max(0, 5 - session["guest_chat_count"])
-    })
-
-
-# ===============================
-# FARMER CHAT HISTORY (VIEW ALL)
-# ===============================
-def _chat_history_icon(message: str) -> str:
-    """Choose a small visual cue for the most common agriculture questions."""
-    text = (message or "").lower()
-    if any(word in text for word in ("weather", "rain", "temperature", "drought", "អាកាសធាតុ", "ភ្លៀង")):
-        return "fas fa-cloud-sun"
-    if any(word in text for word in ("pest", "insect", "worm", "bug", "aphid", "caterpillar", "សត្វល្អិត")):
-        return "fas fa-bug"
-    if any(word in text for word in ("soil", "fertilizer", "nutrient", "water", "irrigat", "ដី", "ជី", "ទឹក")):
-        return "fas fa-flask"
-    if any(word in text for word in ("crop", "plant", "leaf", "rice", "corn", "tomato", "potato", "cassava", "seed", "ដំណាំ", "ស្រូវ")):
-        return "fas fa-seedling"
-    return "far fa-comment-dots"
-
-
-def _format_history_title(text: str, max_length: int = 30) -> str:
-    """Format and truncate history titles to at most max_length characters with an ellipsis (...)."""
-    if not text:
-        return "General Chat"
-    cleaned = re.sub(r"\s+", " ", text).strip()
-    if len(cleaned) <= max_length:
-        return cleaned
-    return cleaned[: max_length - 3].rstrip() + "..."
-
-
 def _is_greeting_or_filler(text: str) -> bool:
     """Determine whether text is a generic greeting, polite closing, or short filler without agricultural context."""
     if not text:
@@ -633,12 +559,148 @@ def _is_greeting_or_filler(text: str) -> bool:
         "good morning", "good afternoon", "good evening", "good day",
         "thank you", "thank you so much", "thanks a lot", "thanks expert",
         "can you help", "anyone there", "are you there", "hello there",
-        "hi there", "hey there", "how are you"
+        "hi there", "hey there", "how are you", "hello in english", "hello in khmer"
     }
     if stripped in exact_phrases:
         return True
 
     return False
+
+
+def _is_identity_query(text: str) -> bool:
+    """Check if the text is asking about the AI model, creator, or team leader."""
+    clean = re.sub(r"[^\w\s\u1780-\u17ff]", " ", (text or "").lower()).strip()
+    km_identity = [
+        "តើអ្នកជាអ្នកណា", "អ្នកជាអ្នកណា", "តើអ្នកជាអ្វី", "អ្នកជាអ្វី", "អ្នកណាបង្កើត", "នរណាបង្កើត",
+        "តើអ្នកណាបង្កើតអ្នក", "តើនរណាបង្កើតអ្នក", "តើម៉ូឌែលឈ្មោះអ្វី", "ម៉ូឌែលឈ្មោះអ្វី", "តើ ai នេះឈ្មោះអ្វី",
+        "ប្រធានក្រុម", "ម៉ៅ សៀវអ៊ិ", "ប្រាប់ខ្ញុំអំពីខ្លួនអ្នក", "សូមណែនាំខ្លួន", "តើអ្នកជាជំនាន់ទីប៉ុន្មាន",
+        "ម៉ូឌែល agy",
+    ]
+    en_identity = [
+        "who are you", "who created you", "who made you", "who developed you", "what is your name",
+        "what is your model", "what model are you", "model name", "who is your leader",
+        "who is your team leader", "team leader", "who is mao seavik", "about you",
+        "tell me about yourself", "introduce yourself", "what version are you", "what is agy",
+    ]
+    return any(p in clean for p in km_identity + en_identity)
+
+
+def _get_identity_reply(lang: str = "en") -> str:
+    if lang == "km":
+        return (
+            "ជំរាបសួរលោកអ្នក! ខ្ញុំគឺជា **AgriSystem AI** (ម៉ូឌែលឈ្មោះ **AGY V2.0.0**) ដែលត្រូវបានបង្កើត និងអភិវឌ្ឍឡើងដោយ**ប្រធានក្រុម ម៉ៅ សៀវអ៊ិ (Team Leader Mao Seavik)**។ "
+            "ខ្ញុំជាជំនួយការកសិកម្មឆ្លាតវៃ ត្រៀមខ្លួនជានិច្ចក្នុងការជួយពិនិត្យជំងឺដំណាំ វិភាគរោគសញ្ញា ផ្តល់បច្ចេកទេសដាំដុះ និងចែករំលែកវិធីសាស្រ្តការពារ និងការព្យាបាលប្រកបដោយសុវត្ថិភាពខ្ពស់។ "
+            "តើថ្ងៃនេះខ្ញុំអាចជួយអ្វីដល់លោកអ្នកបានខ្លះដែរ?"
+        )
+    return (
+        "Hello! I am **AgriSystem AI** (model name: **AGY V2.0.0**), created and developed under the leadership of **Team Leader Mao Seavik**. "
+        "I am an intelligent agricultural assistant dedicated to helping farmers diagnose plant diseases, improve crop health, and adopt safe, sustainable farming practices. "
+        "How can I help you and your farm today?"
+    )
+
+
+def _get_greeting_reply(message: str, lang: str = "en") -> str:
+    msg_clean = message.lower().strip()
+    if "hello in khmer" in msg_clean:
+        return (
+            "សួស្តីបាទ/ចាស! ជាភាសាខ្មែរយើងប្រើពាក្យ 'សួស្តី' (សម្រាប់ភាពស្និទ្ធស្នាល ឬទូទៅ) ឬ 'ជំរាបសួរ' (ប្រកបដោយការគួរសម និងការគោរព)។ ខ្ញុំជា AgriSystem AI (ម៉ូឌែល AGY V2.0.0) បង្កើតឡើងដោយប្រធានក្រុម ម៉ៅ សៀវអ៊ិ (Team Leader Mao Seavik)។ តើខ្ញុំអាចជួយអ្វីលោកអ្នកបានខ្លះនៅថ្ងៃនេះបាទ/ចាស?"
+        )
+    if "hello in english" in msg_clean:
+        return (
+            "Hi there! In English, we greet with 'Hello' or 'Hi'! I am AgriSystem AI (model name: AGY V2.0.0), created and developed under the leadership of Team Leader Mao Seavik. How can I assist you with your crops or farm today?"
+        )
+    if lang == "km":
+        return (
+            "សួស្តីបាទ/ចាស! ខ្ញុំជា AgriSystem AI (ម៉ូឌែលឈ្មោះ AGY V2.0.0) ដែលត្រូវបានបង្កើត និងអភិវឌ្ឍឡើងដោយប្រធានក្រុម ម៉ៅ សៀវអ៊ិ (Team Leader Mao Seavik)។ "
+            "ខ្ញុំរីករាយណាស់ដែលបានជួយលោកអ្នកនៅថ្ងៃនេះ។ តើដំណាំ ឬការងារកសិកម្មរបស់អ្នកដំណើរការយ៉ាងណាដែរ? "
+            "តើមានបញ្ហាជំងឺដំណាំ ឬការដាំដុះអ្វីដែលខ្ញុំអាចជួយផ្តល់ដំបូន្មាន ឬដោះស្រាយជូនបានដែរទេ?"
+        )
+    return (
+        "Hi there! Warm greetings to you! I am AgriSystem AI (model: AGY V2.0.0), created and developed under the leadership of Team Leader Mao Seavik. "
+        "It's a pleasure to assist you! How are your crops doing today, and how can I help you with your farming needs?"
+    )
+
+
+@farmer_bp.route("/guest-chat", methods=["POST"])
+def guest_chat():
+    """
+    Allow guest users to test the interactive AI crop consultation preview (up to 5 inquiries).
+    """
+    from flask import session, jsonify
+    data = request.get_json(silent=True) or {}
+    message = (data.get("message") or "").strip()
+    if not message:
+        return jsonify({"error": "Message is required"}), 400
+
+    count = session.get("guest_chat_count", 0)
+    if count >= 5:
+        return jsonify({
+            "limit_reached": True,
+            "reply": "You have completed your 5 free guest inquiries! Create a free account to unlock unlimited AI agricultural consultations."
+        })
+    session["guest_chat_count"] = count + 1
+
+    from app.services.openai_assistant import generate_assistant_reply
+    reply = None
+    try:
+        reply = generate_assistant_reply(message)
+    except Exception:
+        reply = None
+
+    if not reply:
+        lang = "km" if (get_current_language() == "km" or bool(re.search(r"[\u1780-\u17ff]", message))) else "en"
+        msg_lower = message.lower()
+        if _is_identity_query(message):
+            reply = _get_identity_reply(lang)
+        elif _is_greeting_or_filler(message) or "hello in khmer" in msg_lower or "hello in english" in msg_lower:
+            reply = _get_greeting_reply(message, lang)
+        elif any(w in msg_lower for w in ("rice", "blast", "ស្រូវ")):
+            reply = "Rice Blast (Magnaporthe oryzae): Symptoms include spindle-shaped lesions with grey centres and brown margins. Recommendation: Drain standing water temporarily, avoid excess nitrogen, and apply Tricyclazole 75% WP (15-20g per 16L sprayer) or Azoxystrobin."
+        elif any(w in msg_lower for w in ("cassava", "mosaic", "ដំឡូង")):
+            reply = "Cassava Mosaic Disease (CMD): Symptoms include asymmetrical leaf curling and yellow chlorosis. Recommendation: Rogue and incinerate infected plants immediately; control whitefly vectors and plant certified virus-free varieties (KU50, Rayong)."
+        elif any(w in msg_lower for w in ("corn", "maize", "blight", "ពោត")):
+            reply = "Northern Corn Leaf Blight (Exserohilum turcicum): Long elliptical lesions on leaves. Recommendation: Rotate fields with non-host crops and apply Mancozeb 80% WP or Pyraclostrobin during initial spotting."
+        elif any(w in msg_lower for w in ("tomato", "blight", "ប៉េងប៉ោះ")):
+            reply = "Tomato Late Blight: Dark water-soaked lesions with white mold in humid weather. Recommendation: Ensure wide spacing for airflow, avoid overhead irrigation, and apply Metalaxyl + Mancozeb."
+        else:
+            if lang == "km":
+                reply = "AgriSystem AI (ម៉ូឌែល AGY V2.0.0)៖ ដើម្បីវិភាគជំងឺដំណាំបានត្រឹមត្រូវ សូមជ្រើសរើសដំណាំក្នុងឧបករណ៍ធ្វើរោគវិនិច្ឆ័យ ឬថតរូបភាព។ សូមបង្កើតគណនីដើម្បីទទួលបានការណែនាំថ្នាំកសិកម្មលម្អិត និងការពិគ្រោះយោបល់ឥតគិតថ្លៃ!"
+            else:
+                reply = "AgriSystem AI Assistant (model AGY V2.0.0): For accurate crop diagnosis, please select your crop in the Diagnose tool or snap a photo. Create an account for complete customized spray guides and 24/7 expert advice!"
+
+    return jsonify({
+        "success": True,
+        "reply": reply,
+        "remaining": max(0, 5 - session["guest_chat_count"])
+    })
+
+
+# ===============================
+# FARMER CHAT HISTORY (VIEW ALL)
+# ===============================
+def _chat_history_icon(message: str) -> str:
+    """Choose a small visual cue for the most common agriculture questions."""
+    text = (message or "").lower()
+    if any(word in text for word in ("weather", "rain", "temperature", "drought", "អាកាសធាតុ", "ភ្លៀង")):
+        return "fas fa-cloud-sun"
+    if any(word in text for word in ("pest", "insect", "worm", "bug", "aphid", "caterpillar", "សត្វល្អិត")):
+        return "fas fa-bug"
+    if any(word in text for word in ("soil", "fertilizer", "nutrient", "water", "irrigat", "ដី", "ជី", "ទឹក")):
+        return "fas fa-flask"
+    if any(word in text for word in ("crop", "plant", "leaf", "rice", "corn", "tomato", "potato", "cassava", "seed", "ដំណាំ", "ស្រូវ")):
+        return "fas fa-seedling"
+    return "far fa-comment-dots"
+
+
+def _format_history_title(text: str, max_length: int = 30) -> str:
+    """Format and truncate history titles to at most max_length characters with an ellipsis (...)."""
+    if not text:
+        return "General Chat"
+    cleaned = re.sub(r"\s+", " ", text).strip()
+    if len(cleaned) <= max_length:
+        return cleaned
+    return cleaned[: max_length - 3].rstrip() + "..."
+
 
 
 @farmer_bp.route("/history/ai")
@@ -1572,10 +1634,13 @@ def chat(session_id=None):
                 )
 
             if not reply:
-                if is_greeting(message_lower):
-                    reply = t("chat_greeting")
+                lang = get_current_language()
+                if _is_identity_query(user_message):
+                    reply = _get_identity_reply(lang)
+                elif is_greeting(message_lower) or _is_greeting_or_filler(user_message) or "hello in khmer" in message_lower or "hello in english" in message_lower:
+                    reply = _get_greeting_reply(user_message, lang)
                 else:
-                    if get_current_language() == "km":
+                    if lang == "km":
                         reply = "សុំទោស ខ្ញុំមិនអាចដំណើរការសំណួរនេះបានទេ។ សូមសាកល្បងសួរម្តងទៀត ឬពិពណ៌នាអំពីដំណាំ និងរោគសញ្ញារបស់អ្នក។"
                     else:
                         reply = "I'm having trouble processing your question right now. Please try asking again or describe your crop symptoms in more detail."

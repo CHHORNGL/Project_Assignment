@@ -1,16 +1,16 @@
 {
-  "generated_at": "2026-09-24T06:45:35Z",
+  "generated_at": "2026-09-24T08:24:57Z",
   "source_date": "2026-09-24",
-  "record_count": 1313,
-  "train_count": 1041,
-  "validation_count": 272,
+  "record_count": 1583,
+  "train_count": 1270,
+  "validation_count": 313,
   "validation_ratio": 0.2,
   "categories": {
-    "agent_identity": 22,
+    "agent_identity": 31,
     "crop": 16,
     "diagnostic_rule": 252,
-    "disease": 1008,
-    "greeting": 15
+    "disease": 1260,
+    "greeting": 24
   },
   "files": [
     "agri_train_data.jsonl",
