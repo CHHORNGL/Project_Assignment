@@ -254,8 +254,12 @@ def _is_valid_reply(reply: str, user_message: str = "", language: Optional[str] 
     if "\ufffd" in cleaned or "example_video_id" in cleaned or "ជំ-ngឺ" in cleaned or "ngឺ" in cleaned:
         return False
 
-    # Reject Japanese kana or Cyrillic characters
-    if bool(re.search(r"[\u3040-\u30ff\u0400-\u04ff]", cleaned)):
+    # Reject placeholders like %%Crop%% or [Crop Name]
+    if "%%" in cleaned or bool(re.search(r"\[(Crop|List|Action|Insert|Your)[^\]]*\]", cleaned, flags=re.IGNORECASE)):
+        return False
+
+    # Reject Thai, Japanese kana, or Cyrillic characters
+    if bool(re.search(r"[\u0e00-\u0e7f\u3040-\u30ff\u0400-\u04ff]", cleaned)):
         return False
 
     # Reject Chinese character leakage unless user actually wrote Chinese
