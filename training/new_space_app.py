@@ -103,7 +103,7 @@ CASUAL_EMPATHY_EN = {"tired", "exhausted", "worried", "stress", "stressed", "bye
 
 AGRI_KNOWLEDGE_BASE = [
     {
-        "keywords": ["ទុរេន", "ធូរេន", "durian", "រលួយឬស", "រលួយដើម", "phytophthora", "fitora"],
+        "keywords": ["durian root rot", "durian stem canker", "phytophthora palmivora", "រលួយឬសទុរេន", "រលួយដើមទុរេន", "ទុរេនរលួយឬស", "ទុរេនហៀរជ័រ"],
         "title_km": "ជំងឺរលួយឬស និងដើមលើទុរេន (Phytophthora palmivora)",
         "title_en": "Durian Root Rot & Stem Canker (Phytophthora palmivora)",
         "symptoms_km": "ស្លឹកប្រែជាពណ៌លឿង ជ្រុះស្លឹក សំបកដើមប្រេះហៀរជ័រពណ៌ត្នោតចាស់ ឬខ្មៅ ឫសតូចៗរលួយខ្មៅ។",
@@ -114,7 +114,7 @@ AGRI_KNOWLEDGE_BASE = [
         "prevention_en": "Plant on raised mounds, ensure excellent field drainage, maintain soil pH 5.5-6.5 using agricultural lime, and apply Trichoderma as a preventative soil drench.",
     },
     {
-        "keywords": ["ស្រូវ", "rice", "ប្លាស់", "blast", "ខ្លោចស្លឹក"],
+        "keywords": ["rice blast", "neck blast", "magnaporthe oryzae", "blast disease", "ប្លាស់ស្រូវ", "ជំងឺប្លាស់ស្រូវ", "ជំងឺប្លាស់", "ស្រូវប្លាស់", "រលួយកួរស្រូវ"],
         "title_km": "ជំងឺប្លាស់ស្រូវ (Rice Blast - Magnaporthe oryzae)",
         "title_en": "Rice Blast Disease (Magnaporthe oryzae)",
         "symptoms_km": "ស្នាមដំបៅរាងដូចកូនទូក កណ្តាលពណ៌ប្រផេះ គែមពណ៌ត្នោតចាស់លើស្លឹក និងអាចរលួយកួរស្រូវ (Neck blast)។",
@@ -125,7 +125,7 @@ AGRI_KNOWLEDGE_BASE = [
         "prevention_en": "Use resistant rice varieties, avoid dense sowing, balance NPK fertilizers with split potassium, and maintain proper water levels.",
     },
     {
-        "keywords": ["ដំឡូងមី", "cassava", "ម៉ូសេក", "mosaic", "រួញស្លឹក"],
+        "keywords": ["cassava mosaic", "cassava cmd", "mosaic disease", "whitefly on cassava", "ម៉ូសេកដំឡូងមី", "ជំងឺម៉ូសេកដំឡូងមី", "ដំឡូងមីម៉ូសេក", "ដំឡូងមីរួញស្លឹក"],
         "title_km": "ជំងឺម៉ូសេកដំឡូងមី (Cassava Mosaic Disease - CMD)",
         "title_en": "Cassava Mosaic Disease (CMD)",
         "symptoms_km": "ស្លឹកមានស្នាមអុចពណ៌លឿងលាយបៃតង ស្លឹកកោងរួញខូចទ្រង់ទ្រាយ ដើមក្រិនទិន្នផលមើមថយចុះយ៉ាងខ្លាំង។",
@@ -136,7 +136,7 @@ AGRI_KNOWLEDGE_BASE = [
         "prevention_en": "Plant only certified virus-free stem cuttings (e.g. KU50, Rayong 9). Never take cuttings from infected fields.",
     },
     {
-        "keywords": ["ពោត", "corn", "maize", "ដង្កូវហ្វូង", "armyworm", "ចោះដើម"],
+        "keywords": ["fall armyworm", "corn armyworm", "armyworm on corn", "armyworm in corn", "spodoptera frugiperda", "ដង្កូវហ្វូងពោត", "ដង្កូវហ្វូងលើពោត", "ដង្កូវចោះដើមពោត", "ដង្កូវហ្វូង"],
         "title_km": "ដង្កូវហ្វូងរដូវស្លឹកឈើជ្រុះលើពោត (Fall Armyworm - Spodoptera frugiperda)",
         "title_en": "Fall Armyworm in Corn (Spodoptera frugiperda)",
         "symptoms_km": "ស្លឹកធ្លុះធ្លាយរហែកធំៗ មានកាកលាមកដូចកំទេចអាចម៍រណាលើត្រួយ និងដង្កូវស៊ីបំផ្លាញកួរពោតខ្ចី។",
@@ -147,7 +147,7 @@ AGRI_KNOWLEDGE_BASE = [
         "prevention_en": "Deep plowing to expose pupae, pheromone monitoring traps, and intercropping to break the pest cycle.",
     },
     {
-        "keywords": ["ម្រេច", "pepper", "ងាប់រហ័ស", "ងាប់យឺត", "quick wilt"],
+        "keywords": ["pepper quick wilt", "pepper slow wilt", "foot rot pepper", "phytophthora capsici", "ងាប់រហ័សម្រេច", "ងាប់យឺតម្រេច", "ម្រេចងាប់រហ័ស", "ម្រេចងាប់យឺត"],
         "title_km": "ជំងឺងាប់រហ័សលើម្រេច (Quick Wilt - Phytophthora capsici)",
         "title_en": "Pepper Quick Wilt (Phytophthora capsici)",
         "symptoms_km": "ស្លឹកប្រែជាពណ៌បៃតងចាស់ ស្រពោន និងជ្រុះយ៉ាងលឿនក្នុងរយៈពេល ២-៣ថ្ងៃ ដើមនិងឬសប្រែពណ៌ខ្មៅរលួយ។",
@@ -158,7 +158,7 @@ AGRI_KNOWLEDGE_BASE = [
         "prevention_en": "Ensure rapid drainage away from vines, prune lower foliage off soil contact, and drench with Trichoderma bio-fungicide every 2-3 months.",
     },
     {
-        "keywords": ["កំបោរ", "lime", "ដីជូរ", "acidic soil", "pH", "ជីកំប៉ុស", "compost"],
+        "keywords": ["acidic soil", "soil ph", "agricultural lime", "dolomite lime", "soil acidity", "កំបោរកសិកម្ម", "ដីជូរ", "កែប្រែដីជូរ", "កែតម្រូវ ph ដី"],
         "title_km": "ការគ្រប់គ្រងដី និងកំបោរកសិកម្ម (Soil Management & Liming)",
         "title_en": "Soil Management & Agricultural Liming",
         "symptoms_km": "ដីជូរខ្លាំង (pH < 5.0) ដំណាំលូតលាស់យឺត ឫសមិនដើរ ស្លឹកលឿង និងខ្វះជីវជាតិ។",
@@ -169,7 +169,7 @@ AGRI_KNOWLEDGE_BASE = [
         "prevention_en": "Incorporate mature organic compost regularly to buffer soil pH and test soil acidity annually.",
     },
     {
-        "keywords": ["ជី", "npk", "fertilizer", "ទិន្នផល", "yield", "អ៊ុយរ៉េ", "urea", "តុល្យភាពជី"],
+        "keywords": ["npk balance", "fertilizer balance", "npk ratio", "split application", "balanced fertilization", "តុល្យភាពជី", "សមាមាត្រជី", "តុល្យភាព npk"],
         "title_km": "តុល្យភាពសមាមាត្រជី N-P-K និងការបង្កើនទិន្នផលដំណាំផ្អែកលើទិន្នន័យ",
         "title_en": "Data-Driven N-P-K Fertilizer Balancing & Yield Optimization",
         "crop_km": "ជី និងទិន្នផល",
@@ -182,7 +182,7 @@ AGRI_KNOWLEDGE_BASE = [
         "prevention_en": "Calculate crop nutrient removal per ton of expected yield and integrate organic compost to lower synthetic fertilizer costs by 20-35%.",
     },
     {
-        "keywords": ["ប្តូរមុខដំណាំ", "crop rotation", "សណ្តែក", "legume", "ដីខូច", "ដង្កូវពកឫស"],
+        "keywords": ["crop rotation", "legume rotation", "rotate crops", "nitrogen fixation", "ប្តូរមុខដំណាំ", "ការប្តូរមុខដំណាំ", "បង្វិលមុខដំណាំ"],
         "title_km": "អត្ថប្រយោជន៍វិទ្យាសាស្រ្តនៃការប្តូរមុខដំណាំជាមួយដំណាំសណ្តែក",
         "title_en": "Agronomic Data on Crop Rotation & Legume Nitrogen Fixation",
         "crop_km": "ការប្តូរមុខដំណាំ",
@@ -195,7 +195,7 @@ AGRI_KNOWLEDGE_BASE = [
         "prevention_en": "Establish a multi-season rotation to break insect life cycles and reduce synthetic nitrogen fertilizer requirements for the next crop by 25-30%.",
     },
     {
-        "keywords": ["ipm", "កម្រិតសេដ្ឋកិច្ច", "economic threshold", "គ្រប់គ្រងសត្វល្អិត", "អន្ទាក់"],
+        "keywords": ["integrated pest management", "economic threshold", "ipm strategy", "គ្រប់គ្រងសត្វល្អិតចម្រុះ", "កម្រិតសេដ្ឋកិច្ច"],
         "title_km": "ការគ្រប់គ្រងសត្វល្អិតចម្រុះ (IPM) និងទិន្នន័យកម្រិតសេដ្ឋកិច្ច",
         "title_en": "Integrated Pest Management (IPM) & Economic Threshold Data",
         "crop_km": "ការគ្រប់គ្រងសត្វល្អិត",
@@ -286,10 +286,6 @@ def _match_knowledge(question: str) -> dict | None:
     for item in AGRI_KNOWLEDGE_BASE:
         if any(k in q_norm for k in item["keywords"]):
             return item
-
-    for cat in CROP_DISEASES_CATALOG:
-        if any(k in q_norm for k in cat["keywords"]):
-            return cat
 
     return None
 
@@ -428,9 +424,15 @@ def answer(
     sys_prompt = SYSTEM_PROMPT_KH if is_khmer else SYSTEM_PROMPT_EN
     if kb_context:
         if is_khmer:
-            sys_prompt += f"\n\nព័ត៌មានបច្ចេកទេសយោង៖\n{kb_context}"
+            sys_prompt += (
+                f"\n\nព័ត៌មានបច្ចេកទេសយោង៖\n{kb_context}\n\n"
+                "សូមប្រើព័ត៌មានយោងខាងលើជាជំនួយក្នុងការឆ្លើយតបសំណួរជាក់ស្តែងរបស់កសិករដោយផ្ទាល់ រលូន ធម្មជាតិ ដូចអ្នកជំនាញកសិកម្មពិតប្រាកដ ដោយមិនចាំបាច់រៀបចំតាមទម្រង់រូបមន្តរឹងឡើយ។"
+            )
         else:
-            sys_prompt += f"\n\nTechnical reference context:\n{kb_context}"
+            sys_prompt += (
+                f"\n\nTechnical reference context:\n{kb_context}\n\n"
+                "Use the factual reference above as background to provide a helpful, natural, and conversational response tailored to the farmer's specific question, avoiding rigid template formulas."
+            )
 
     max_new_tokens = max(32, min(int(max_new_tokens), 1024))
     temperature = max(0.05, min(float(temperature), 0.8))
@@ -455,13 +457,14 @@ def answer(
                 temperature=temperature,
                 top_p=0.9,
                 do_sample=temperature > 0.05,
-                repetition_penalty=1.2,
+                repetition_penalty=1.15,
                 no_repeat_ngram_size=4,
                 pad_token_id=tokenizer.eos_token_id,
             )
         new_tokens = generated[0][encoded["input_ids"].shape[-1]:]
         raw_output = tokenizer.decode(new_tokens, skip_special_tokens=True).strip()
-    except Exception:
+    except Exception as exc:
+        print(f"Generation error: {exc}")
         raw_output = ""
 
     cleaned_reply = _clean_text(raw_output)
@@ -469,7 +472,7 @@ def answer(
     if _is_valid_output(cleaned_reply, is_khmer):
         return clean_professional_text(cleaned_reply)
 
-    # Fallback to structured knowledge synthesis if model generated degenerate output
+    # Natural conversational fallback if model generation was truly empty or invalid
     if matched_kb:
         if matched_kb.get("is_catalog"):
             if is_khmer:
@@ -488,23 +491,17 @@ def answer(
                 )
         elif is_khmer:
             return clean_professional_text(
-                f"{matched_kb['title_km']}\n\n"
-                f"ជំរាបសួរលោកអ្នក ឬបងប្អូនកសិករជាទីគោរព! "
-                f"ខាងក្រោមនេះជាការណែនាំបច្ចេកទេស និងវិធានការដោះស្រាយ៖\n\n"
-                f"១. រោគសញ្ញាសម្គាល់ (Symptoms)\n- {matched_kb['symptoms_km']}\n\n"
-                f"២. វិធានការព្យាបាល (Treatment)\n- {matched_kb['treatment_km']}\n\n"
-                f"៣. វិធានការការពារ និងថែទាំ (Prevention & Soil Care)\n- {matched_kb['prevention_km']}\n\n"
-                f"ចំណាំ៖ សូមពាក់សម្ភារៈការពារខ្លួន (ម៉ាស់ ស្រោមដៃ) ពេលប្រើប្រាស់ថ្នាំកសិកម្ម និងគោរពតាមការណែនាំលើស្លាកផលិតផលជានិច្ច។"
+                f"ទាក់ទងនឹង{matched_kb['title_km']}៖ រោគសញ្ញាសំខាន់ៗគឺ {matched_kb['symptoms_km']} "
+                f"វិធានការព្យាបាលដែលបានណែនាំគឺ {matched_kb['treatment_km']} "
+                f"និងការបង្ការថែទាំ៖ {matched_kb['prevention_km']} "
+                f"សូមពាក់សម្ភារៈការពារខ្លួន និងពិគ្រោះជាមួយអ្នកជំនាញកសិកម្មក្នុងតំបន់បន្ថែម។"
             )
         else:
             return clean_professional_text(
-                f"{matched_kb['title_en']}\n\n"
-                f"Greetings! "
-                f"Here is the recommended technical guidance for your crops:\n\n"
-                f"1. Observable Symptoms\n- {matched_kb['symptoms_en']}\n\n"
-                f"2. Treatment Strategy\n- {matched_kb['treatment_en']}\n\n"
-                f"3. Preventative Management & Soil Care\n- {matched_kb['prevention_en']}\n\n"
-                f"Safety Notice: Always wear PPE (gloves, mask) and strictly observe pre-harvest intervals (PHI) indicated on product labels."
+                f"Regarding {matched_kb['title_en']}, the key symptoms to look for are: {matched_kb['symptoms_en']} "
+                f"For treatment: {matched_kb['treatment_en']} "
+                f"For long-term management and prevention: {matched_kb['prevention_en']} "
+                f"Always wear appropriate personal protective equipment when applying treatments."
             )
 
     if is_khmer:

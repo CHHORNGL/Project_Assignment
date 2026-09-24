@@ -386,7 +386,7 @@ CAMBODIAN_AGRI_KB = [
         "prevention_en": "Tie and prune lower runner vines away from soil contact, dig deep drainage channels between rows, and use certified healthy cuttings.",
     },
     {
-        "keywords": ["ទុរេន", "ធូរេន", "durian", "រលួយឬស", "រលួយដើម", "phytophthora", "fitora", "ជ័រ"],
+        "keywords": ["durian root rot", "durian stem canker", "phytophthora palmivora", "រលួយឬសទុរេន", "រលួយដើមទុរេន", "ទុរេនរលួយឬស", "ទុរេនរលួយដើម", "ទុរេនហៀរជ័រ"],
         "title_km": "ជំងឺរលួយឫស និងគល់ទុរេន (Durian Root Rot & Stem Canker - Phytophthora palmivora)",
         "title_en": "Durian Root Rot & Stem Canker (Phytophthora palmivora)",
         "crop_km": "ទុរេន",
@@ -399,7 +399,7 @@ CAMBODIAN_AGRI_KB = [
         "prevention_en": "Plant on raised mounds, ensure excellent field drainage, maintain soil pH 5.5-6.5 using agricultural lime, and apply Trichoderma as a preventative soil drench.",
     },
     {
-        "keywords": ["ស្រូវ", "rice", "ប្លាស់", "blast", "ខ្លោចស្លឹក"],
+        "keywords": ["rice blast", "neck blast", "magnaporthe oryzae", "blast disease", "ប្លាស់ស្រូវ", "ជំងឺប្លាស់ស្រូវ", "ជំងឺប្លាស់", "ស្រូវប្លាស់", "រលួយកួរស្រូវ"],
         "title_km": "ជំងឺប្លាស់ស្រូវ (Rice Blast - Magnaporthe oryzae)",
         "title_en": "Rice Blast Disease (Magnaporthe oryzae)",
         "crop_km": "ស្រូវ",
@@ -412,7 +412,7 @@ CAMBODIAN_AGRI_KB = [
         "prevention_en": "Use resistant rice varieties, avoid dense sowing, balance NPK fertilizers with split potassium, and maintain proper water levels.",
     },
     {
-        "keywords": ["ដំឡូងមី", "cassava", "ម៉ូសេក", "mosaic", "រួញស្លឹក"],
+        "keywords": ["cassava mosaic", "cassava cmd", "mosaic disease", "whitefly on cassava", "ម៉ូសេកដំឡូងមី", "ជំងឺម៉ូសេកដំឡូងមី", "ដំឡូងមីម៉ូសេក", "ដំឡូងមីរួញស្លឹក"],
         "title_km": "ជំងឺម៉ូសេកដំឡូងមី (Cassava Mosaic Disease - CMD)",
         "title_en": "Cassava Mosaic Disease (CMD)",
         "crop_km": "ដំឡូងមី",
@@ -425,7 +425,7 @@ CAMBODIAN_AGRI_KB = [
         "prevention_en": "Plant only certified virus-free stem cuttings (e.g. KU50, Rayong 9). Never take cuttings from infected fields.",
     },
     {
-        "keywords": ["ពោត", "corn", "maize", "ដង្កូវហ្វូង", "armyworm", "ចោះដើម"],
+        "keywords": ["fall armyworm", "corn armyworm", "armyworm on corn", "armyworm in corn", "spodoptera frugiperda", "ដង្កូវហ្វូងពោត", "ដង្កូវហ្វូងលើពោត", "ដង្កូវចោះដើមពោត", "ដង្កូវហ្វូង"],
         "title_km": "ដង្កូវហ្វូងរដូវស្លឹកឈើជ្រុះលើពោត (Fall Armyworm - Spodoptera frugiperda)",
         "title_en": "Fall Armyworm in Corn (Spodoptera frugiperda)",
         "crop_km": "ពោត",
@@ -438,7 +438,7 @@ CAMBODIAN_AGRI_KB = [
         "prevention_en": "Deep plowing to expose pupae, pheromone monitoring traps, and intercropping to break the pest cycle.",
     },
     {
-        "keywords": ["ម្រេច", "pepper", "ងាប់រហ័ស", "ងាប់យឺត", "quick wilt"],
+        "keywords": ["pepper quick wilt", "pepper slow wilt", "foot rot pepper", "phytophthora capsici", "ងាប់រហ័សម្រេច", "ងាប់យឺតម្រេច", "ម្រេចងាប់រហ័ស", "ម្រេចងាប់យឺត"],
         "title_km": "ជំងឺងាប់រហ័សលើម្រេច (Pepper Quick Wilt - Phytophthora capsici)",
         "title_en": "Pepper Quick Wilt (Phytophthora capsici)",
         "crop_km": "ម្រេច",
@@ -451,7 +451,7 @@ CAMBODIAN_AGRI_KB = [
         "prevention_en": "Ensure rapid drainage away from vines, prune lower foliage off soil contact, and drench with Trichoderma bio-fungicide every 2-3 months.",
     },
     {
-        "keywords": ["ប៉េងប៉ោះ", "tomato", "ខ្លោចស្លឹក", "រលួយផ្លែ", "blight"],
+        "keywords": ["tomato late blight", "late blight on tomato", "phytophthora infestans", "ខ្លោចស្លឹកប៉េងប៉ោះ", "រលួយផ្លែប៉េងប៉ោះ", "ប៉េងប៉ោះខ្លោចស្លឹក"],
         "title_km": "ជំងឺខ្លោចស្លឹក និងរលួយផ្លែប៉េងប៉ោះ (Tomato Late Blight - Phytophthora infestans)",
         "title_en": "Tomato Late Blight (Phytophthora infestans)",
         "crop_km": "ប៉េងប៉ោះ",
@@ -464,7 +464,7 @@ CAMBODIAN_AGRI_KB = [
         "prevention_en": "Stake plants off ground, avoid overhead irrigation, and use plastic mulch to prevent splash infection.",
     },
     {
-        "keywords": ["ត្រសក់", "cucumber", "ផ្សិតម្សៅ", "រលួយ", "mildew"],
+        "keywords": ["cucumber downy mildew", "cucumber powdery mildew", "ផ្សិតម្សៅត្រសក់", "ត្រសក់ផ្សិតម្សៅ", "រោមក្រោមស្លឹកត្រសក់"],
         "title_km": "ជំងឺផ្សិតម្សៅ និងខ្លោចស្លឹកត្រសក់ (Cucumber Downy & Powdery Mildew)",
         "title_en": "Cucumber Downy & Powdery Mildew",
         "crop_km": "ត្រសក់",
@@ -477,7 +477,7 @@ CAMBODIAN_AGRI_KB = [
         "prevention_en": "Maintain adequate row spacing for ventilation; apply bio-fungicide preventatively.",
     },
     {
-        "keywords": ["ម្ទេស", "chili", "chilli", "កន្ទុយបារី", "anthracnose", "រលួយផ្លែ"],
+        "keywords": ["chili anthracnose", "pepper anthracnose", "colletotrichum on chili", "កន្ទុយបារីម្ទេស", "រលួយផ្លែម្ទេស", "ម្ទេសកន្ទុយបារី"],
         "title_km": "ជំងឺផ្សិតកន្ទុយបារី និងរលួយផ្លែម្ទេស (Chili Anthracnose - Colletotrichum)",
         "title_en": "Chili Anthracnose (Colletotrichum spp.)",
         "crop_km": "ម្ទេស",
@@ -490,7 +490,7 @@ CAMBODIAN_AGRI_KB = [
         "prevention_en": "Soak seeds in 50°C hot water for 25 minutes prior to sowing; maintain well-drained raised beds.",
     },
     {
-        "keywords": ["ក្រូច", "ក្រូចឆ្មា", "lime", "lemon", "citrus", "ដំបៅ", "canker"],
+        "keywords": ["citrus canker", "lime canker", "xanthomonas on citrus", "ដំបៅក្រូច", "ដំបៅក្រូចឆ្មា", "ក្រូចកើតដំបៅ"],
         "title_km": "ជំងឺដំបៅក្រូច និងក្រូចឆ្មា (Citrus Canker - Xanthomonas axonopodis)",
         "title_en": "Citrus Canker (Xanthomonas axonopodis)",
         "crop_km": "ក្រូច",
