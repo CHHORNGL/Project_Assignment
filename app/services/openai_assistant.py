@@ -878,15 +878,18 @@ def generate_assistant_reply(
         return reply
 
     from app.models.site_setting import SiteSetting
+    from app.services.ai_expert_service import legacy_fallback_enabled, is_huggingface_provider
     try:
-        db_provider = SiteSetting.query.get("ACTIVE_PROVIDER")
+        db_ai_provider = SiteSetting.query.get("AI_PROVIDER")
         db_expert = SiteSetting.query.get("EXPERT_PROVIDER")
+        db_provider = SiteSetting.query.get("ACTIVE_PROVIDER")
         configured_provider = (
-            db_expert.value.strip() if db_expert and db_expert.value.strip()
-            else (db_provider.value.strip() if db_provider else "gemini")
+            db_ai_provider.value.strip() if db_ai_provider and db_ai_provider.value.strip()
+            else (db_expert.value.strip() if db_expert and db_expert.value.strip()
+            else (db_provider.value.strip() if db_provider and db_provider.value.strip() else "huggingface"))
         ).lower()
     except Exception:
-        configured_provider = "gemini"
+        configured_provider = "huggingface"
 
     # Allow user composer model override
     model_choice_clean = (model_choice or "").strip().lower()
@@ -894,41 +897,51 @@ def generate_assistant_reply(
         model_choice_clean = ""
 
     provider = configured_provider
-    if model_choice_clean.startswith("gemini-"):
+    if model_choice_clean in {"trained-ai", "auto"} or not model_choice_clean:
+        if is_huggingface_provider() or configured_provider in {"huggingface", "hf", "trained-ai", "trained_ai", "own-ai"}:
+            provider = "huggingface"
+    elif model_choice_clean.startswith("gemini-"):
         provider = "gemini"
     elif model_choice_clean == "original-ai":
         provider = "openai"
-    elif model_choice_clean == "trained-ai":
-        provider = "huggingface"
 
-    # Only call the remote trained Hugging Face endpoint if explicitly selected
-    if provider in {"huggingface", "hf"}:
+    # Prioritize the user's trained agricultural AI assistant
+    if provider in {"huggingface", "hf", "trained-ai", "trained_ai", "own-ai"}:
         try:
-            from app.services.ai_expert_service import generate_reply as generate_remote_reply
+            from app.services.ai_expert_service import generate_reply as generate_trained_reply
 
-            remote_reply = generate_remote_reply(
+            trained_reply = generate_trained_reply(
                 user_message,
                 context=agent_context,
                 language=lang,
             )
-            # Guard against untrained hallucinated output (e.g. random Chinese text or prompt echoes)
-            is_chinese = bool(re.search(r"[\u4e00-\u9fff]", remote_reply or ""))
-            user_has_chinese = bool(re.search(r"[\u4e00-\u9fff]", user_message or ""))
-            is_valid_reply = remote_reply and (user_has_chinese or not is_chinese) and len(remote_reply.strip()) > 10
-
-            if is_valid_reply:
+            if trained_reply:
                 if charges_farmer_credits:
-                    tokens_used = max(20, (len(agent_context) + len(user_message) + len(remote_reply)) // 4)
+                    tokens_used = max(20, (len(agent_context) + len(user_message) + len(trained_reply)) // 4)
                     current_user.ai_credits = max(0, (current_user.ai_credits or 0) - tokens_used)
                     try:
                         db.session.commit()
                     except Exception:
                         db.session.rollback()
-                return remote_reply
-            else:
-                current_app.logger.warning("Remote AI generated invalid or hallucinated output, falling back to expert provider")
+                return trained_reply
         except Exception as exc:
-            current_app.logger.warning("Remote agricultural AI provider unavailable: %s", exc)
+            try:
+                current_app.logger.warning("Trained agricultural AI provider error: %s", exc)
+            except RuntimeError:
+                pass
+
+        # If commercial LLM fallback is disabled, synthesize from local expert rules (no Gemini/Groq/ChatGPT)
+        if not legacy_fallback_enabled():
+            from app.services.ai_expert_service import _synthesize_local_expert_reply
+            local_reply = _synthesize_local_expert_reply(user_message, context=agent_context, language=lang)
+            if charges_farmer_credits:
+                tokens_used = max(20, (len(agent_context) + len(user_message) + len(local_reply)) // 4)
+                current_user.ai_credits = max(0, (current_user.ai_credits or 0) - tokens_used)
+                try:
+                    db.session.commit()
+                except Exception:
+                    db.session.rollback()
+            return local_reply
 
     reply_content = None
 

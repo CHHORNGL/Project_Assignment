@@ -267,17 +267,27 @@ def _disease_records(disease: Any) -> Iterable[dict[str, Any]]:
     template_defs = {
         "en": [
             ("symptoms", "What are the symptoms of {disease} in {crop}?"),
+            ("symptoms", "My {crop} leaves look sick. What are the signs of {disease}?"),
             ("treatment", "How do I treat {disease} in {crop}?"),
+            ("treatment", "What is the best way to cure {disease} affecting {crop}?"),
             ("prevention", "How can I prevent {disease} in {crop}?"),
+            ("prevention", "What preventive measures protect {crop} from {disease}?"),
             ("cause", "What causes {disease} in {crop}?"),
+            ("cause", "Why did my {crop} develop {disease}?"),
             ("general", "Please give me a complete overview of {disease} in {crop}."),
+            ("general", "I need agronomic advice for managing {disease} on {crop}."),
         ],
         "km": [
             ("symptoms", "តើ{disease}លើដំណាំ {crop} មានរោគសញ្ញាអ្វីខ្លះ?"),
+            ("symptoms", "ដំណាំ {crop} របស់ខ្ញុំមានរោគសញ្ញា {disease} តើគួរពិនិត្យចំណុចណាខ្លះ?"),
             ("treatment", "តើខ្ញុំគួរព្យាបាល{disease}លើដំណាំ {crop} ដូចម្តេច?"),
+            ("treatment", "តើមានថ្នាំ ឬវិធីណាសម្រាប់ព្យាបាល{disease}លើដំណាំ {crop}?"),
             ("prevention", "តើធ្វើដូចម្តេចដើម្បីការពារ{disease}លើដំណាំ {crop}?"),
+            ("prevention", "វិធានការបង្ការ និងការពារកុំឱ្យកើត{disease}លើដំណាំ {crop}"),
             ("cause", "តើអ្វីជាមូលហេតុនៃ{disease}លើដំណាំ {crop}?"),
+            ("cause", "ហេតុអ្វីបានជាដំណាំ {crop} កើតមាន{disease}?"),
             ("general", "សូមរៀបរាប់ព័ត៌មានលម្អិតអំពី{disease}លើដំណាំ {crop}។"),
+            ("general", "សូមផ្តល់ការណែនាំបច្ចេកទេសពេញលេញអំពី{disease}លើ{crop}"),
         ],
     }
 

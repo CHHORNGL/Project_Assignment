@@ -1,15 +1,15 @@
 {
-  "generated_at": "2026-09-24T08:24:57Z",
+  "generated_at": "2026-09-24T13:05:41Z",
   "source_date": "2026-09-24",
-  "record_count": 1583,
-  "train_count": 1270,
-  "validation_count": 313,
+  "record_count": 2845,
+  "train_count": 2307,
+  "validation_count": 538,
   "validation_ratio": 0.2,
   "categories": {
     "agent_identity": 31,
-    "crop": 16,
+    "crop": 18,
     "diagnostic_rule": 252,
-    "disease": 1260,
+    "disease": 2520,
     "greeting": 24
   },
   "files": [
