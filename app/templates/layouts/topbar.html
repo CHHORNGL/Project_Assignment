@@ -136,7 +136,7 @@
         <!-- ===============================
              LIVE CHAT
         =============================== -->
-        {% if current_user.is_authenticated and current_user.has_route_access('farmer') %}
+        {% if current_user.is_authenticated and current_user.has_route_access('farmer') and not request.path.startswith('/admin') %}
         <li class="nav-item dropdown no-arrow mx-1" id="support-chat-item">
             <a class="nav-link p-0"
                href="javascript:void(0)"
