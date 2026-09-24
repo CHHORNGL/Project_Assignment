@@ -295,7 +295,7 @@ def _match_knowledge(question: str) -> dict | None:
 @spaces.GPU(duration=180)
 def answer(
     question: str,
-    temperature: float = 0.2,
+    temperature: float = 0.5,
     max_new_tokens: int = 768,
     context: str = "",
 ) -> str:
@@ -536,7 +536,7 @@ demo = gr.Interface(
             placeholder="Describe your crop, symptoms, location, and growing conditions…",
             lines=5,
         ),
-        gr.Slider(0.05, 1.2, value=0.2, step=0.05, label="Creativity"),
+        gr.Slider(0.05, 1.2, value=0.5, step=0.05, label="Creativity"),
         gr.Slider(32, 1024, value=768, step=16, label="Maximum answer tokens"),
     ],
     outputs=gr.Markdown(label="AgriSystem answer"),

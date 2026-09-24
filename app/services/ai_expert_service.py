@@ -919,7 +919,7 @@ def _gradio_client_reply(endpoint: str, token: str, question: str, context: str,
         try:
             job = client.submit(
                 question=question,
-                temperature=0.2,
+                temperature=0.5,
                 max_new_tokens=max_new_tokens,
                 api_name="/answer",
             )
@@ -956,7 +956,7 @@ def _gradio_sse_reply(endpoint: str, token: str, prompt: str, timeout: float, ma
     hostname = (urlparse(endpoint).hostname or "").lower()
     if token and (not hostname.endswith(".hf.space") or token.startswith("hf_")):
         headers["Authorization"] = f"Bearer {token}"
-    payload = {"data": [prompt, 0.2, max(32, min(int(max_new_tokens), 1024))]}
+    payload = {"data": [prompt, 0.5, max(32, min(int(max_new_tokens), 1024))]}
 
     call_urls = _gradio_call_urls(endpoint)
     last_response = None
@@ -1027,7 +1027,7 @@ def request_endpoint(
             "inputs": prompt,
             "parameters": {
                 "max_new_tokens": max_new_tokens,
-                "temperature": 0.2,
+                "temperature": 0.5,
                 "top_p": 0.9,
                 "return_full_text": False,
             },
