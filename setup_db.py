@@ -17,6 +17,13 @@ def initialize_database(database, stamp_revision):
         )
     else:
         print('Existing database detected; pending migrations will run next')
+        try:
+            from sqlalchemy import text
+            with database.engine.begin() as conn:
+                conn.execute(text("ALTER TABLE diseases ADD COLUMN IF NOT EXISTS cause_explanation_kh TEXT;"))
+                conn.execute(text("ALTER TABLE diseases ADD COLUMN IF NOT EXISTS prevention_tips_kh TEXT;"))
+        except Exception:
+            pass
 
 
 if __name__ == '__main__':

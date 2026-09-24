@@ -25,7 +25,7 @@ window.initSupportAttachments = function ({ imgBtn, micBtn, locBtn, fileInput, u
     const closeButtons = [dialog.querySelector('[data-close]'), dialog.querySelector('[data-cancel]')];
     const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
     const MAX_RECORDING_SECONDS = 120;
-    let draft, recorder, stream, recordingStream, audioContext, timer, maxTimer, objectUrl, version = 0, busy = false;
+    let draft, recorder, stream, recordingStream, audioContext, fadeGain, stopRecording, timer, maxTimer, objectUrl, version = 0, busy = false;
     function release() {
         clearInterval(timer);
         if (typeof clearTimeout === 'function') clearTimeout(maxTimer);
@@ -35,7 +35,7 @@ window.initSupportAttachments = function ({ imgBtn, micBtn, locBtn, fileInput, u
         if (stream) stream.getTracks().forEach(track => track.stop());
         if (recordingStream && recordingStream !== stream) recordingStream.getTracks().forEach(track => track.stop());
         if (audioContext && typeof audioContext.close === 'function') audioContext.close().catch(() => {});
-        recorder = null; stream = null; recordingStream = null; audioContext = null;
+        recorder = null; stream = null; recordingStream = null; audioContext = null; fadeGain = null; stopRecording = null;
         if (objectUrl) URL.revokeObjectURL(objectUrl);
         objectUrl = null;
         preview.querySelectorAll('audio').forEach(audio => audio.pause());
@@ -109,7 +109,7 @@ window.initSupportAttachments = function ({ imgBtn, micBtn, locBtn, fileInput, u
         status.textContent = 'Record a voice message, then review it before sending.';
     });
     record.addEventListener('click', async () => {
-        if (recorder && recorder.state === 'recording') { recorder.stop(); return; }
+        if (recorder && recorder.state === 'recording') { if (stopRecording) stopRecording(); else recorder.stop(); return; }
         const token = version;
         record.disabled = true; send.disabled = true;
         status.textContent = 'Connecting to microphone…';
@@ -128,7 +128,11 @@ window.initSupportAttachments = function ({ imgBtn, micBtn, locBtn, fileInput, u
                         latency: { ideal: 0.02 },
                         echoCancellation: true,
                         noiseSuppression: true,
-                        autoGainControl: true
+                        autoGainControl: true,
+                        // Supported by newer Safari/Chromium builds; older browsers
+                        // safely ignore ideal/boolean constraints they do not know.
+                        voiceIsolation: { ideal: true },
+                        suppressLocalAudioPlayback: { ideal: true }
                     }
                 });
             } catch (constraintsErr) {
@@ -146,15 +150,20 @@ window.initSupportAttachments = function ({ imgBtn, micBtn, locBtn, fileInput, u
             if (AudioContextCtor && typeof AudioContextCtor === 'function') {
                 try {
                     audioContext = new AudioContextCtor({ sampleRate: 48000, latencyHint: 'interactive' });
-                    if (audioContext.state === 'suspended' && typeof audioContext.resume === 'function') audioContext.resume().catch(() => {});
+                    if (audioContext.state === 'suspended' && typeof audioContext.resume === 'function') await audioContext.resume();
                     const source = audioContext.createMediaStreamSource(nextStream);
                     const highPass = audioContext.createBiquadFilter();
                     highPass.type = 'highpass'; highPass.frequency.value = 75; highPass.Q.value = 0.7;
+                    const lowPass = audioContext.createBiquadFilter();
+                    lowPass.type = 'lowpass'; lowPass.frequency.value = 11000; lowPass.Q.value = 0.7;
                     const compressor = audioContext.createDynamicsCompressor();
-                    compressor.threshold.value = -28; compressor.knee.value = 18;
-                    compressor.ratio.value = 3; compressor.attack.value = 0.003; compressor.release.value = 0.25;
+                    compressor.threshold.value = -24; compressor.knee.value = 30;
+                    compressor.ratio.value = 2.2; compressor.attack.value = 0.008; compressor.release.value = 0.35;
+                    fadeGain = audioContext.createGain();
+                    fadeGain.gain.setValueAtTime(0, audioContext.currentTime);
+                    fadeGain.gain.linearRampToValueAtTime(1, audioContext.currentTime + 0.08);
                     const destination = audioContext.createMediaStreamDestination();
-                    source.connect(highPass); highPass.connect(compressor); compressor.connect(destination);
+                    source.connect(highPass); highPass.connect(lowPass); lowPass.connect(compressor); compressor.connect(fadeGain); fadeGain.connect(destination);
                     recorderInput = destination.stream;
                     recordingStream = recorderInput;
                 } catch (_) {
@@ -181,7 +190,7 @@ window.initSupportAttachments = function ({ imgBtn, micBtn, locBtn, fileInput, u
             }
             const recorderOpts = {};
             if (mimeType) recorderOpts.mimeType = mimeType;
-            recorderOpts.audioBitsPerSecond = 96000;
+            recorderOpts.audioBitsPerSecond = 128000;
 
             recorder = new MediaRecorder(recorderInput, recorderOpts);
             const chunks = [];
@@ -189,12 +198,27 @@ window.initSupportAttachments = function ({ imgBtn, micBtn, locBtn, fileInput, u
             recorder.addEventListener('dataavailable', event => {
                 if (event.data && event.data.size > 0) chunks.push(event.data);
             });
+            let stopRequested = false;
+            stopRecording = () => {
+                if (stopRequested || !recorder || recorder.state !== 'recording') return;
+                stopRequested = true;
+                // Fade the processed stream out before stopping MediaRecorder. This
+                // removes the click commonly caused by cutting a microphone track.
+                const finish = () => { try { if (recorder && recorder.state === 'recording') recorder.stop(); } catch (_) {} };
+                if (fadeGain && audioContext) {
+                    const now = audioContext.currentTime;
+                    fadeGain.gain.cancelScheduledValues(now);
+                    fadeGain.gain.setValueAtTime(fadeGain.gain.value, now);
+                    fadeGain.gain.linearRampToValueAtTime(0, now + 0.08);
+                    setTimeout(finish, 90);
+                } else finish();
+            };
             recorder.addEventListener('stop', () => {
                 nextStream.getTracks().forEach(track => track.stop());
                 if (recordingStream && recordingStream !== nextStream) recordingStream.getTracks().forEach(track => track.stop());
                 clearInterval(timer); if (typeof clearTimeout === 'function') clearTimeout(maxTimer);
                 if (audioContext && typeof audioContext.close === 'function') audioContext.close().catch(() => {});
-                audioContext = null; recordingStream = null; stream = null;
+                audioContext = null; recordingStream = null; stream = null; fadeGain = null; stopRecording = null;
                 if (token !== version) return;
                 const mime = activeRecorder.mimeType || chunks[0]?.type || mimeType || 'audio/webm';
                 let extension = 'webm';
@@ -227,7 +251,7 @@ window.initSupportAttachments = function ({ imgBtn, micBtn, locBtn, fileInput, u
             maxTimer = setTimeout(() => {
                 if (recorder && recorder.state === 'recording') {
                     status.textContent = 'Maximum 2-minute recording reached. Preparing preview…';
-                    recorder.stop();
+                    if (stopRecording) stopRecording(); else recorder.stop();
                 }
             }, MAX_RECORDING_SECONDS * 1000);
         } catch (error) {

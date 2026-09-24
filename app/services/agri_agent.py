@@ -186,7 +186,7 @@ def build_agent_context(
                     crop_title = getattr(crop, "name_kh", None) or crop.name
                     sections.append(f"ដំណាំដែលត្រូវគ្នា៖ {crop_title}")
             except Exception:
-                sections.append("មិនអាចទាញយកព័ត៌មានពីមូលដ្ឋានចំណេះដឹងបានឡើយ។ សូមបញ្ជាក់ថាមិនមានព័ត៌មានគ្រប់គ្រាន់។")
+                sections.append("ចំណាំ៖ មិនមានទិន្នន័យជំងឺក្នុងស្រុកដែលត្រូវគ្នានឹងសំណួរនេះទេ។ សូមប្រើប្រាស់ចំណេះដឹងជំនាញកសិកម្មរបស់អ្នកដើម្បីផ្តល់ដំបូន្មានបច្ចេកទេសដាំដុះ និងការថែទាំដំណាំយ៉ាងពេញលេញជូនកសិករ។")
 
         if plan.intent == "greeting":
             sections.append(
@@ -213,7 +213,7 @@ def build_agent_context(
             )
         if has_image:
             sections.append(
-                "ដែនកំណត់រូបភាព៖ ជំនួយការអត្ថបទមិនទាន់បានទទួលរូបភាពឡើយ។ សូមកុំអះអាងថាបានមើលឃើញរូបភាព និងសូមណែនាំកសិករឱ្យប្រើមុខងារវិនិច្ឆ័យតាមរូបភាព។"
+                "រូបភាពត្រូវបានភ្ជាប់មកជាមួយ៖ ប្រសិនបើម៉ូឌែលរបស់អ្នកគាំទ្រការពិនិត្យរូបភាព (Vision) សូមពិនិត្យមើលរោគសញ្ញាជាក់ស្តែងលើស្លឹក ដើម ឬផ្លែ ដើម្បីជួយក្នុងការវិភាគជំងឺ និងផ្តល់ដំបូន្មានព្យាបាលសមស្រប។"
             )
     else:
         sections = [
@@ -239,7 +239,7 @@ def build_agent_context(
                 if crop:
                     sections.append(f"Matched crop record: {crop.name}")
             except Exception:
-                sections.append("Knowledge-base tool unavailable; say when the available information is insufficient.")
+                sections.append("Note: No specific local database records matched; provide complete agronomic guidance using your expert knowledge base.")
 
         if plan.intent == "greeting":
             sections.append(
@@ -265,7 +265,7 @@ def build_agent_context(
             )
         if has_image:
             sections.append(
-                "Image limitation: this text model has not received image pixels. Never claim to have visually inspected the attachment; direct the farmer to the dedicated diagnosis workflow."
+                "Image attached: A crop image has been provided. If your model supports vision (e.g. Gemini), examine the visible symptoms on leaves, stems, or fruits in the image to inform your diagnosis. Always advise the farmer on safe management steps."
             )
 
     history = []

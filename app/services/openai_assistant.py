@@ -170,9 +170,12 @@ def _get_client():
 
     api_key = ""
     try:
+        from app.models.site_setting import SiteSetting
         db_gemini = SiteSetting.query.get("API_KEY_GEMINI")
         if db_gemini and db_gemini.value.strip():
-            api_key = db_gemini.value.strip()
+            keys = [k.strip() for k in db_gemini.value.split(",") if k.strip()]
+            if keys:
+                api_key = keys[0]
     except Exception:
         pass
 
@@ -180,24 +183,41 @@ def _get_client():
         api_key = os.getenv("GEMINI_API_KEY", "").strip()
         
     if api_key:
-        return genai.Client(api_key=api_key)
+        try:
+            return genai.Client(api_key=api_key)
+        except Exception as e:
+            try:
+                current_app.logger.warning("Failed to initialize genai.Client: %s", e)
+            except RuntimeError:
+                pass
+            return None
     return None
+
+def _normalize_gemini_model_name(name: str) -> str:
+    m = (name or "").strip()
+    if not m:
+        return "gemini-3.5-flash"
+    if m in {"gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"}:
+        return "gemini-3.5-flash"
+    if m in {"gemini-2.5-flash-lite", "gemini-2.0-flash-lite"}:
+        return "gemini-3.5-flash-lite"
+    return m
 
 def _get_model_name():
     from app.models.site_setting import SiteSetting
     try:
         expert_model = SiteSetting.query.get("EXPERT_MODEL")
         if expert_model and expert_model.value.strip() and "gemini" in expert_model.value.lower():
-            return expert_model.value.strip()
+            return _normalize_gemini_model_name(expert_model.value.strip())
         gemini_model = SiteSetting.query.get("GEMINI_MODEL")
         if gemini_model and gemini_model.value.strip():
-            return gemini_model.value.strip()
+            return _normalize_gemini_model_name(gemini_model.value.strip())
     except Exception:
         pass
         
     if current_user and current_user.is_authenticated and getattr(current_user, 'ai_model', None):
-        return current_user.ai_model
-    return os.getenv("GEMINI_MODEL", "gemini-2.5-flash").strip()
+        return _normalize_gemini_model_name(current_user.ai_model)
+    return _normalize_gemini_model_name(os.getenv("GEMINI_MODEL", "gemini-3.5-flash").strip())
 
 
 def _match_crop(message: str) -> Optional[Crop]:
@@ -397,8 +417,9 @@ def suggest_symptoms_from_image(
             return {"matched_symptoms": [], "notes": ""}
         try:
             image_part = types.Part.from_bytes(data=image_bytes, mime_type=mime_type or "image/jpeg")
+            gemini_model_choice = _normalize_gemini_model_name(model_name)
             response = client.models.generate_content(
-                model=model_name,
+                model=gemini_model_choice,
                 contents=[system_prompt, user_prompt, image_part],
                 config=types.GenerateContentConfig(
                     temperature=0.1,
@@ -622,6 +643,132 @@ def _uses_farmer_ai_credits(user) -> bool:
         return bool(user.has_role("farmer"))
 
 
+def _build_expert_system_prompt(language: str = "km", agent_context: str = "") -> str:
+    lang_name = "Khmer (ភាសាខ្មែរ)" if language == "km" else "English"
+
+    if language == "km":
+        structure_guide = (
+            "រៀបចំចម្លើយរបស់អ្នកជាទម្រង់ Markdown យ៉ាងមានរបៀបរៀបរយ ស្អាត និងងាយស្រួលយល់៖\n"
+            "1. **🔍 ១. ការវិភាគរោគសញ្ញា និងមូលហេតុ (Diagnosis & Root Cause):** កំណត់អត្តសញ្ញាណជំងឺ សត្វល្អិត ឬកង្វះជីវជាតិ (ភ្ជាប់ជាមួយឈ្មោះវិទ្យាសាស្ត្រជាអក្សរទ្រេត) និងពន្យល់ពីមូលហេតុដែលបង្កឡើង។\n"
+            "2. **⚡ ២. វិធានការសង្គ្រោះបន្ទាន់ (Immediate Action):** សកម្មភាពបន្ទាន់ដែលកសិករត្រូវអនុវត្តភ្លាមៗ (ដកស្លឹកឆ្លងចេញ, បន្ថយជីអាសូត, បង្ហូរទឹក ឬបន្ថយសំណើម)។\n"
+            "3. **🌿 ៣. វិធីសាស្ត្រធម្មជាតិ និងជីវសាស្ត្រ (Organic & IPM):** ការប្រើផ្សិត Trichoderma, Bacillus subtilis, ទឹកស្លឹកស្តៅ, ទឹកខ្មេះឈើ, អន្ទាក់ស្អិត។\n"
+            "4. **🧪 ៤. វិធានការគីមី និងកម្រិតប្រើប្រាស់ជាក់លាក់ (Chemical Treatment & Dosages):** ឈ្មោះសារធាតុសកម្ម (Active Ingredient) និងកម្រិតលាយជាក់លាក់ (ក្រាម/មីលីលីត្រ ក្នុងធុងបាញ់ ១៦-២០លីត្រ), ពេលវេលាបាញ់ថ្នាំ (ពេលព្រឹកព្រលឹម ឬរសៀលត្រជាក់), សម្ភារៈការពារ (PPE), និងរយៈពេលផ្អាកប្រើថ្នាំមុនប្រមូលផល (PHI)។\n"
+            "5. **🛡️ ៥. ការបង្ការ និងការគ្រប់គ្រងដីរយៈពេលវែង (Long-term Prevention & Soil Care):** ការបង្វិលមុខដំណាំ, ពូជធន់, ការកែប្រែដីអាស៊ីតដោយកំបោរកសិកម្ម (៣០០-៥០០ គ.ក្រ/ហ.ត), ការដាក់ជី NPK មានតុល្យភាព។"
+        )
+    else:
+        structure_guide = (
+            "Organize your answer cleanly with clear GitHub Markdown headers, bullet points, and tables where suitable:\n"
+            "1. **🔍 1. Diagnosis & Root Cause:** Identify the pathogen (fungal, bacterial, viral), insect pest, or physiological disorder (include scientific names in italics). Explain why it occurred.\n"
+            "2. **⚡ 2. Immediate / Emergency Action:** Urgent corrective steps the grower must take immediately (isolate infected foliage, stop excess nitrogen, improve drainage, regulate moisture).\n"
+            "3. **🌿 3. Organic & Bio-Control (IPM):** Biological agents (Trichoderma, Bacillus subtilis), botanical extracts (neem oil/leaves, wood vinegar), compost, sticky traps.\n"
+            "4. **🧪 4. Chemical Treatment & Exact Dosages:** Precise active ingredients and formulations (e.g., Mancozeb 80% WP, Tricyclazole 75% WP, Azoxystrobin, Metalaxyl, Validamycin, Chlorantraniliprole), dilution rates (per 16L–20L sprayer or per hectare), safe application timing, PPE, and Pre-Harvest Intervals (PHI).\n"
+            "5. **🛡️ 5. Long-term Prevention & Soil Management:** Crop rotation, certified resistant seeds, proper spacing for ventilation, correcting soil acidity with agricultural lime (300–500 kg/ha), balanced NPK fertilization."
+        )
+
+    return (
+        f"You are 'AgriSystem AI' (model: AGY V2.0.0), a world-class Senior Agricultural Expert, Agronomist, and Crop Health Specialist, "
+        f"developed and deployed under the leadership of Team Leader Mao Seavik (ប្រធានក្រុម ម៉ៅ សៀវអ៊ិ).\n\n"
+        f"### CORE IDENTITY & CREATOR ATTRIBUTION:\n"
+        f"- Your name is **AgriSystem AI** (Model: **AGY V2.0.0**).\n"
+        f"- You were created and trained under the visionary leadership of **Team Leader Mao Seavik** (ប្រធានក្រុម **ម៉ៅ សៀវអ៊ិ**).\n"
+        f"- Whenever asked who you are, what model you use, or who created you, proudly and politely state that you are AgriSystem AI (AGY V2.0.0), created by Team Leader Mao Seavik.\n\n"
+        f"### TONE & COMMUNICATION STYLE (PROFESSIONAL, HUMAN-LIKE, POLITE):\n"
+        f"- Target language: **{lang_name}**.\n"
+        f"- Embody the depth, intelligence, and clarity of Google Gemini, combined with the warmth, empathy, and practical wisdom of an experienced master farmer and agricultural scientist.\n"
+        f"- When responding in Khmer:\n"
+        f"  * Speak naturally, respectfully, and warmly using authentic Cambodian agricultural terms.\n"
+        f"  * Use polite honorifics such as 'ជំរាបសួរលោកអ្នក ឬបងប្អូនកសិករជាទីគោរព', 'បាទ/ចាស', and close with warm encouragement for high yields and prosperous farming (e.g., 'ជូនពរឱ្យដំណាំរបស់លោកអ្នកទទួលបានទិន្នផលខ្ពស់ និងជៀសផុតពីជំងឺទាំងពួង!')\n"
+        f"  * Avoid literal or unnatural translations. Use true Khmer farming terminology (e.g. ជីកំប៉ុស, ជីអ៊ុយរ៉េ, ជីបាត, ជីបំប៉ន, កំបោរកសិកម្ម, រោគសញ្ញាខ្លោចស្លឹក, ដង្កូវហ្វូង, មមាចត្នោត, កាត់ក្រីមែក, រយៈពេលផ្អាកថ្នាំមុនប្រមូលផល - PHI).\n"
+        f"- When responding in English:\n"
+        f"  * Be thorough, encouraging, precise, and practical.\n\n"
+        f"### RESPONSE ARCHITECTURE & STRUCTURE:\n"
+        f"{structure_guide}\n\n"
+        f"### COMPREHENSIVE AGRICULTURAL KNOWLEDGE BASE:\n"
+        f"You possess vast, specialized agronomic knowledge covering:\n"
+        f"- **Paddy Rice (ស្រូវ):** Wet/dry season varieties, Phka Rumduol, Sen Kra'op; Rice blast (*Magnaporthe oryzae*), Brown spot (*Bipolaris oryzae*), Sheath blight (*Rhizoctonia solani*), Bacterial leaf blight (*Xanthomonas oryzae*), Bakanae; Brown planthopper, Stem borers; NPK scheduling (basal DAP/16-20-0, split Urea 46-0-0 at tillering & panicle initiation, MOP 0-0-60 for grain filling).\n"
+        f"- **Cassava (ដំឡូងមី):** CMD (Cassava Mosaic Geminivirus - rogue infected plants, clean certified stems KU50/Rayong 9, control whitefly vectors), Witches' broom, Root rot, Mealybugs, Spidermites.\n"
+        f"- **Pepper (ម្រេច):** Foot rot (*Phytophthora*), Quick wilt, Slow wilt, Anthracnose, Nematodes, shade and root drainage.\n"
+        f"- **Cashew & Rubber (ស្វាយចន្ទី និងកៅស៊ូ):** Anthracnose on flowers/nuts, Tea mosquito bug, White root rot (*Rigidoporus*), Pink disease.\n"
+        f"- **Durian (ទុរេន):** Phytophthora root/stem canker (Fosetyl-Al / Metalaxyl drench, phosphorous acid injection), Anthracnose, Fruit borers, optimal soil pH 5.5–6.5, balanced micronutrients (Mg, Ca, B, Zn).\n"
+        f"- **Mango & Citrus (ស្វាយ និងក្រូច):** Mango anthracnose, Fruit flies (methyl eugenol pheromone traps), Blossom thrips; Citrus greening (HLB), Citrus canker (copper sprays), Leaf miners.\n"
+        f"- **Vegetables & Horticulture:** Tomato, Chili, Eggplant, Cucumber, Long beans, Cabbage, Morning glory; Bacterial wilt (*Ralstonia*), Late blight, Blossom end rot (Calcium deficiency - Ca-B foliar spray), Diamondback moth, Thrips, Aphids.\n"
+        f"- **Soil Health & Fertilization:** Acidic soil correction using agricultural lime (កំបោរកសិកម្ម), Organic compost fermentation, cow/poultry manure safety, balanced NPK nutrients, drip irrigation, drainage channels.\n"
+        f"- **Livestock & Aquaculture:** Backyard poultry (vaccinations, biosecurity), Cattle forage grasses, Pig disease prevention, Fish pond management (Tilapia, Catfish, water aeration, lime application).\n\n"
+        f"### UNIVERSAL ASSISTANCE DIRECTIVE:\n"
+        f"- You must answer ALL questions asked by farmers, growers, and users thoroughly, completely, and helpfully.\n"
+        f"- Combine the contextual knowledge below with your deep agronomic intelligence to provide the best possible guidance.\n\n"
+        f"### KNOWLEDGE CONTEXT:\n"
+        f"{agent_context or 'No specific local database context retrieved; provide complete agronomic guidance using your expert knowledge base.'}"
+    )
+
+
+def _generate_with_gemini(client, contents, preferred_model=None, max_output_tokens=2048, temperature=0.35) -> Optional[str]:
+    """Call Gemini with model fallback to handle 404s/503s."""
+    if not client or not types:
+        return None
+
+    candidates = []
+    if preferred_model:
+        candidates.append(_normalize_gemini_model_name(preferred_model))
+    for m in ["gemini-3.5-flash", "gemini-3.6-flash", "gemini-flash-latest"]:
+        if m not in candidates:
+            candidates.append(m)
+
+    last_error = None
+    for model in candidates:
+        try:
+            response = client.models.generate_content(
+                model=model,
+                contents=contents,
+                config=types.GenerateContentConfig(
+                    temperature=temperature,
+                    max_output_tokens=max_output_tokens,
+                ),
+            )
+            if response and response.text:
+                return response.text.strip()
+        except Exception as exc:
+            last_error = exc
+            try:
+                current_app.logger.warning("Gemini model %s call failed: %s; trying next model", model, exc)
+            except RuntimeError:
+                pass
+            continue
+
+    if last_error:
+        try:
+            current_app.logger.error("All Gemini model candidates failed: %s", last_error)
+        except RuntimeError:
+            pass
+    return None
+
+
+def _generate_with_openai_or_groq(client, system_prompt, user_content, model=None, max_tokens=2048, temperature=0.35) -> Optional[str]:
+    """Call Groq or OpenAI with error handling."""
+    if not client:
+        return None
+    model_to_use = model or _get_openai_model()
+    try:
+        response = client.chat.completions.create(
+            model=model_to_use,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_content},
+            ],
+            temperature=temperature,
+            max_tokens=max_tokens,
+        )
+        if response and response.choices and response.choices[0].message:
+            content = response.choices[0].message.content or ""
+            return content.strip()
+    except Exception as exc:
+        try:
+            current_app.logger.warning("OpenAI/Groq model %s failed: %s", model_to_use, exc)
+        except RuntimeError:
+            pass
+    return None
+
+
 def generate_assistant_reply(
     user_message: str,
     image_bytes: Optional[bytes] = None,
@@ -654,9 +801,13 @@ def generate_assistant_reply(
             else:
                 return "Sorry! You have run out of AI Credits (Tokens). Please upgrade to a Premium account for Unlimited AI chat and diagnoses."
 
-    lang = get_current_language()
-    if bool(re.search(r"[\u1780-\u17ff]", user_message)):
+    has_khmer = bool(re.search(r"[\u1780-\u17ff]", user_message))
+    if has_khmer:
         lang = "km"
+    elif bool(re.search(r"[a-zA-Z]{2,}", user_message)):
+        lang = "en"
+    else:
+        lang = get_current_language() or "en"
 
     from app.services.agri_agent import build_agent_context
 
@@ -726,129 +877,153 @@ def generate_assistant_reply(
                 db.session.rollback()
         return reply
 
-    # Keep model hosting outside Flask. The agent selects trusted application
-    # tools first, then the remote model explains their results in the user's
-    # language. No arbitrary model-selected tool call is executed here.
-    try:
-        from app.services.ai_expert_service import generate_reply as generate_remote_reply
-
-        remote_reply = generate_remote_reply(
-            user_message,
-            context=agent_context,
-            language=lang,
-        )
-        if remote_reply:
-            if charges_farmer_credits:
-                tokens_used = max(20, (len(agent_context) + len(user_message) + len(remote_reply)) // 4)
-                current_user.ai_credits = max(0, (current_user.ai_credits or 0) - tokens_used)
-                try:
-                    db.session.commit()
-                except Exception:
-                    db.session.rollback()
-            return remote_reply
-    except Exception as exc:
-        current_app.logger.warning("Remote agricultural AI provider unavailable: %s", exc)
-
-    # Ark Expert is intentionally trained-model-only. The legacy Groq/OpenAI/
-    # Gemini keys belong to the Smart Agri Assistant and must never be used as
-    # a silent fallback for this chat surface.
-    return None
-
-    system_prompt = (
-        f"You are a helpful agricultural expert assistant named 'AgriSystem AI', created by your Team Leader, Mao Seavik. "
-        f"Respond in {lang_name}. "
-        f"If the user asks who you are or who created you, proudly state your name and that you were created by Team Leader Mao Seavik. "
-        f"Use the following knowledge base context to answer the user's question accurately.\n\n"
-        f"Context:\n{kb_context}"
-    )
-    user_prompt = user_message
-    
     from app.models.site_setting import SiteSetting
     try:
         db_provider = SiteSetting.query.get("ACTIVE_PROVIDER")
         db_expert = SiteSetting.query.get("EXPERT_PROVIDER")
-        provider = db_expert.value.strip() if db_expert and db_expert.value.strip() else (db_provider.value.strip() if db_provider else "groq")
+        configured_provider = (
+            db_expert.value.strip() if db_expert and db_expert.value.strip()
+            else (db_provider.value.strip() if db_provider else "gemini")
+        ).lower()
     except Exception:
-        provider = "groq"
+        configured_provider = "gemini"
+
+    # Allow user composer model override
+    model_choice_clean = (model_choice or "").strip().lower()
+    if model_choice_clean not in {"", "auto", "original-ai", "trained-ai", "gemini-2.5-flash", "gemini-2.5-pro", "gemini-3.5-flash", "gemini-3.6-flash"}:
+        model_choice_clean = ""
+
+    provider = configured_provider
+    if model_choice_clean.startswith("gemini-"):
+        provider = "gemini"
+    elif model_choice_clean == "original-ai":
+        provider = "openai"
+    elif model_choice_clean == "trained-ai":
+        provider = "huggingface"
+
+    # Only call the remote trained Hugging Face endpoint if explicitly selected
+    if provider in {"huggingface", "hf"}:
+        try:
+            from app.services.ai_expert_service import generate_reply as generate_remote_reply
+
+            remote_reply = generate_remote_reply(
+                user_message,
+                context=agent_context,
+                language=lang,
+            )
+            # Guard against untrained hallucinated output (e.g. random Chinese text or prompt echoes)
+            is_chinese = bool(re.search(r"[\u4e00-\u9fff]", remote_reply or ""))
+            user_has_chinese = bool(re.search(r"[\u4e00-\u9fff]", user_message or ""))
+            is_valid_reply = remote_reply and (user_has_chinese or not is_chinese) and len(remote_reply.strip()) > 10
+
+            if is_valid_reply:
+                if charges_farmer_credits:
+                    tokens_used = max(20, (len(agent_context) + len(user_message) + len(remote_reply)) // 4)
+                    current_user.ai_credits = max(0, (current_user.ai_credits or 0) - tokens_used)
+                    try:
+                        db.session.commit()
+                    except Exception:
+                        db.session.rollback()
+                return remote_reply
+            else:
+                current_app.logger.warning("Remote AI generated invalid or hallucinated output, falling back to expert provider")
+        except Exception as exc:
+            current_app.logger.warning("Remote agricultural AI provider unavailable: %s", exc)
 
     reply_content = None
-    
-    # The composer can request a model for one message. Keep this allowlist
-    # small so a browser cannot inject arbitrary provider/model values.
-    model_choice = (model_choice or "").strip().lower()
-    if model_choice not in {"", "auto", "original-ai", "gemini-2.5-flash", "gemini-2.5-pro"}:
-        model_choice = ""
-    if model_choice.startswith("gemini-"):
+
+    # Allow user composer model override
+    model_choice_clean = (model_choice or "").strip().lower()
+    if model_choice_clean not in {"", "auto", "original-ai", "gemini-2.5-flash", "gemini-2.5-pro", "gemini-3.5-flash", "gemini-3.6-flash"}:
+        model_choice_clean = ""
+
+    provider = configured_provider
+    if model_choice_clean.startswith("gemini-"):
         provider = "gemini"
-    elif model_choice == "original-ai":
+    elif model_choice_clean == "original-ai":
         provider = "openai"
 
+    system_prompt = _build_expert_system_prompt(language=lang, agent_context=agent_context)
+    user_prompt = user_message
+
+    gemini_contents = [system_prompt, user_prompt]
+    if image_bytes and types:
+        gemini_contents.append(
+            types.Part.from_bytes(
+                data=image_bytes,
+                mime_type=image_mime_type or "image/jpeg",
+            )
+        )
+
+    openai_user_content = user_prompt
+    if image_bytes:
+        image_data_url = (
+            "data:"
+            + (image_mime_type or "image/jpeg")
+            + ";base64,"
+            + base64.b64encode(image_bytes).decode("utf-8")
+        )
+        openai_user_content = [
+            {"type": "text", "text": user_prompt},
+            {"type": "image_url", "image_url": {"url": image_data_url}},
+        ]
+
+    # Prioritize selected provider, automatically fall back to the other
     if provider == "gemini":
-        client = _get_client()
-        if client:
-            model = model_choice if model_choice.startswith("gemini-") else _get_model_name()
-            gemini_contents = [system_prompt, user_prompt]
-            if image_bytes and types:
-                gemini_contents.append(
-                    types.Part.from_bytes(
-                        data=image_bytes,
-                        mime_type=image_mime_type or "image/jpeg",
+        provider_chain = ["gemini", "openai"]
+    elif provider in {"groq", "openai"}:
+        provider_chain = ["openai", "gemini"]
+    else:
+        provider_chain = ["gemini", "openai"]
+
+    for prov in provider_chain:
+        if prov == "gemini":
+            gemini_client = _get_client()
+            if gemini_client:
+                preferred_m = model_choice_clean if model_choice_clean.startswith("gemini-") else _get_model_name()
+                reply_content = _generate_with_gemini(
+                    gemini_client,
+                    gemini_contents,
+                    preferred_model=preferred_m,
+                    max_output_tokens=2048,
+                    temperature=0.35,
+                )
+                if reply_content:
+                    break
+        elif prov in {"openai", "groq"}:
+            openai_client = _get_openai_client()
+            if openai_client:
+                reply_content = _generate_with_openai_or_groq(
+                    openai_client,
+                    system_prompt,
+                    openai_user_content,
+                    max_tokens=2048,
+                    temperature=0.35,
+                )
+                # If image input failed on text-only Groq model, retry with text-only user_prompt
+                if not reply_content and image_bytes:
+                    reply_content = _generate_with_openai_or_groq(
+                        openai_client,
+                        system_prompt,
+                        user_prompt + "\n[Note: The grower attached an image of their crop symptoms.]",
+                        max_tokens=2048,
+                        temperature=0.35,
                     )
-                )
-            try:
-                response = client.models.generate_content(
-                    model=model,
-                    contents=gemini_contents,
-                    config=types.GenerateContentConfig(
-                        temperature=0.3,
-                        max_output_tokens=600,
-                    )
-                )
-                reply_content = response.text if response else ""
-            except Exception as e:
-                current_app.logger.error(f"Error calling Gemini API: {e}")
-                
-    if not reply_content: # fallback or non-gemini provider
-        client = _get_openai_client()
-        if client:
-            model = _get_openai_model()
-            openai_user_content = user_prompt
-            if image_bytes:
-                image_data_url = (
-                    "data:"
-                    + (image_mime_type or "image/jpeg")
-                    + ";base64,"
-                    + base64.b64encode(image_bytes).decode("utf-8")
-                )
-                openai_user_content = [
-                    {"type": "text", "text": user_prompt},
-                    {"type": "image_url", "image_url": {"url": image_data_url}},
-                ]
-            try:
-                response = client.chat.completions.create(
-                    model=model,
-                    messages=[
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": openai_user_content},
-                    ],
-                    temperature=0.3,
-                    max_tokens=600,
-                )
-                reply_content = response.choices[0].message.content if response.choices and response.choices[0].message else ""
-            except Exception as e:
-                current_app.logger.error(f"Error calling OpenAI API: {e}")
+                if reply_content:
+                    break
 
     if reply_content:
         reply_content = reply_content.strip()
         if charges_farmer_credits:
-            tokens_used = (len(system_prompt) + len(user_prompt) + len(reply_content)) // 4
-            current_user.ai_credits = max(0, current_user.ai_credits - tokens_used)
+            tokens_used = max(20, (len(system_prompt) + len(user_prompt) + len(reply_content)) // 4)
+            current_user.ai_credits = max(0, (current_user.ai_credits or 0) - tokens_used)
             try:
                 from app.extensions import db
                 db.session.commit()
-            except:
+            except Exception:
                 db.session.rollback()
         return reply_content
+
     return None
 
 def _extract_json_array(text):
