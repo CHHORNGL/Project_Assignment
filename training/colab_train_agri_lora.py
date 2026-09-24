@@ -19,6 +19,8 @@ from __future__ import annotations
 
 import os
 import json
+import inspect
+import re
 from pathlib import Path
 
 
@@ -76,6 +78,163 @@ def _format_messages(example, tokenizer):
         # A base model without a chat template still receives a readable format.
         lines = [f"{item['role'].upper()}: {item['content']}" for item in messages]
         return {"text": "\n\n".join(lines)}
+
+
+def _build_training_args(
+    sft_config_cls,
+    output_dir: Path,
+    use_bf16: bool,
+    train_count: int,
+    epochs: int = 4,
+    batch_size: int = 2,
+    gradient_accumulation_steps: int = 4,
+):
+    """Build SFTConfig / TrainingArguments dynamically compatible with any trl/transformers version."""
+    steps_per_epoch = max(1, train_count // (batch_size * gradient_accumulation_steps))
+    total_steps = steps_per_epoch * epochs
+    warmup_steps = max(1, int(total_steps * 0.06))
+
+    candidate_kwargs = {
+        "output_dir": str(output_dir),
+        "num_train_epochs": epochs,
+        "per_device_train_batch_size": batch_size,
+        "per_device_eval_batch_size": batch_size,
+        "gradient_accumulation_steps": gradient_accumulation_steps,
+        "learning_rate": 1.5e-4,
+        "lr_scheduler_type": "cosine",
+        "weight_decay": 0.01,
+        "logging_steps": 10,
+        "eval_steps": 50,
+        "save_strategy": "steps",
+        "save_steps": 50,
+        "save_total_limit": 2,
+        "bf16": use_bf16,
+        "fp16": not use_bf16,
+        "gradient_checkpointing": True,
+        "report_to": "none",
+        "seed": 42,
+        "dataset_text_field": "text",
+        "packing": False,
+        "hub_model_id": HF_REPO_ID,
+    }
+
+    try:
+        init_params = inspect.signature(sft_config_cls.__init__).parameters
+        has_var_kwargs = any(
+            p.kind == inspect.Parameter.VAR_KEYWORD for p in init_params.values()
+        )
+    except Exception:
+        init_params = {}
+        has_var_kwargs = True
+
+    # Check parameter availability
+    if "warmup_ratio" in init_params:
+        candidate_kwargs["warmup_ratio"] = 0.06
+    else:
+        candidate_kwargs["warmup_steps"] = warmup_steps
+
+    if "eval_strategy" in init_params:
+        candidate_kwargs["eval_strategy"] = "steps"
+    elif "evaluation_strategy" in init_params:
+        candidate_kwargs["evaluation_strategy"] = "steps"
+    else:
+        candidate_kwargs["eval_strategy"] = "steps"
+
+    if "max_length" in init_params:
+        candidate_kwargs["max_length"] = 1024
+    elif "max_seq_length" in init_params:
+        candidate_kwargs["max_seq_length"] = 1024
+    else:
+        candidate_kwargs["max_length"] = 1024
+
+    if "hub_token" in init_params:
+        candidate_kwargs["hub_token"] = HF_TOKEN
+    elif "token" in init_params:
+        candidate_kwargs["token"] = HF_TOKEN
+    else:
+        candidate_kwargs["hub_token"] = HF_TOKEN
+
+    if init_params and not has_var_kwargs:
+        filtered_kwargs = {k: v for k, v in candidate_kwargs.items() if k in init_params}
+    else:
+        filtered_kwargs = dict(candidate_kwargs)
+
+    while True:
+        try:
+            training_args = sft_config_cls(**filtered_kwargs)
+            break
+        except TypeError as exc:
+            msg = str(exc)
+            if "unexpected keyword argument" in msg:
+                match = re.search(r"unexpected keyword argument '([^']+)'", msg)
+                if match:
+                    bad_arg = match.group(1)
+                    print(f"Adapting SFTConfig: removing unsupported argument '{bad_arg}'")
+                    filtered_kwargs.pop(bad_arg, None)
+                    continue
+            raise
+
+    if hasattr(training_args, "warmup_ratio") and getattr(training_args, "warmup_ratio", None) is None:
+        try:
+            training_args.warmup_ratio = 0.06
+        except Exception:
+            pass
+    if hasattr(training_args, "warmup_steps") and not getattr(training_args, "warmup_steps", 0):
+        try:
+            training_args.warmup_steps = warmup_steps
+        except Exception:
+            pass
+
+    return training_args
+
+
+def _build_trainer(
+    sft_trainer_cls,
+    model,
+    tokenizer,
+    dataset,
+    training_args,
+    lora_config,
+):
+    """Instantiate SFTTrainer with backwards/forwards-compatible argument mapping."""
+    trainer_kwargs = {
+        "model": model,
+        "train_dataset": dataset["train"],
+        "eval_dataset": dataset["validation"],
+        "args": training_args,
+        "peft_config": lora_config,
+    }
+    try:
+        sft_params = inspect.signature(sft_trainer_cls.__init__).parameters
+        if "processing_class" in sft_params:
+            trainer_kwargs["processing_class"] = tokenizer
+        else:
+            trainer_kwargs["tokenizer"] = tokenizer
+    except Exception:
+        trainer_kwargs["processing_class"] = tokenizer
+
+    while True:
+        try:
+            return sft_trainer_cls(**trainer_kwargs)
+        except TypeError as exc:
+            msg = str(exc)
+            if "unexpected keyword argument" in msg:
+                match = re.search(r"unexpected keyword argument '([^']+)'", msg)
+                if match:
+                    bad_arg = match.group(1)
+                    print(f"Adapting SFTTrainer: adjusting argument '{bad_arg}'")
+                    if bad_arg == "processing_class":
+                        trainer_kwargs.pop("processing_class", None)
+                        trainer_kwargs["tokenizer"] = tokenizer
+                        continue
+                    elif bad_arg == "tokenizer":
+                        trainer_kwargs.pop("tokenizer", None)
+                        trainer_kwargs["processing_class"] = tokenizer
+                        continue
+                    else:
+                        trainer_kwargs.pop(bad_arg, None)
+                        continue
+            raise
 
 
 def main() -> None:
@@ -164,42 +323,24 @@ def main() -> None:
         ],
     )
     
-    # Use SFTConfig with cosine learning rate decay and warmup
-    training_args = SFTConfig(
-        output_dir=str(OUTPUT_DIR),
-        num_train_epochs=4,
-        per_device_train_batch_size=2,
-        per_device_eval_batch_size=2,
+    # Build resilient training arguments and trainer
+    training_args = _build_training_args(
+        sft_config_cls=SFTConfig,
+        output_dir=OUTPUT_DIR,
+        use_bf16=use_bf16,
+        train_count=train_count,
+        epochs=4,
+        batch_size=2,
         gradient_accumulation_steps=4,
-        learning_rate=1.5e-4,
-        lr_scheduler_type="cosine",
-        warmup_ratio=0.06,
-        weight_decay=0.01,
-        logging_steps=10,
-        eval_strategy="steps",
-        eval_steps=50,
-        save_strategy="steps",
-        save_steps=50,
-        save_total_limit=2,
-        bf16=use_bf16,
-        fp16=not use_bf16,
-        gradient_checkpointing=True,
-        report_to="none",
-        seed=42,
-        dataset_text_field="text",
-        max_length=1024,
-        packing=False,
-        hub_model_id=HF_REPO_ID,
-        hub_token=HF_TOKEN,
     )
     
-    trainer = SFTTrainer(
+    trainer = _build_trainer(
+        sft_trainer_cls=SFTTrainer,
         model=model,
-        processing_class=tokenizer,
-        train_dataset=dataset["train"],
-        eval_dataset=dataset["validation"],
-        args=training_args,
-        peft_config=lora_config,
+        tokenizer=tokenizer,
+        dataset=dataset,
+        training_args=training_args,
+        lora_config=lora_config,
     )
     
     trainer.train()
@@ -208,10 +349,15 @@ def main() -> None:
 
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     trainer.save_model(str(OUTPUT_DIR))
-    trainer.push_to_hub(
-        commit_message="Update AgriSystem LoRA adapter",
-        token=HF_TOKEN,
-    )
+    try:
+        trainer.push_to_hub(
+            commit_message="Update AgriSystem LoRA adapter",
+            token=HF_TOKEN,
+        )
+    except TypeError:
+        trainer.push_to_hub(
+            commit_message="Update AgriSystem LoRA adapter",
+        )
     print(f"LoRA Adapter uploaded successfully to https://huggingface.co/{HF_REPO_ID}")
 
 
