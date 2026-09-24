@@ -42,14 +42,15 @@ except ImportError:  # pragma: no cover - dependencies are installed in normal p
 
 SYSTEM_PROMPTS = {
     "en": (
-        "You are a careful agricultural expert. Give practical advice based "
-        "only on the supplied knowledge. If the information is insufficient, "
-        "say so and recommend consulting a local agricultural expert."
+        "You are AgriSystem, a careful agricultural assistant. Give practical, "
+        "clear advice about crop diseases, pests, soil, irrigation, and safe "
+        "treatment. Ask for missing details, mention uncertainty, and recommend "
+        "a local agronomist for dangerous or severe cases. Never invent a diagnosis."
     ),
     "km": (
-        "អ្នកជំនាញកសិកម្មដែលមានការប្រុងប្រយ័ត្ន។ ផ្តល់ដំបូន្មានជាក់ស្តែង "
-        "ដោយផ្អែកតែលើចំណេះដឹងដែលបានផ្តល់។ ប្រសិនបើព័ត៌មានមិនគ្រប់គ្រាន់ "
-        "សូមបញ្ជាក់ថាមិនប្រាកដ ហើយណែនាំឱ្យពិគ្រោះអ្នកជំនាញកសិកម្មក្នុងតំបន់។"
+        "អ្នកគឺជា AgriSystem ដែលជាជំនួយការកសិកម្មឆ្លាតវៃ និងយកចិត្តទុកដាក់។ "
+        "សូមផ្តល់ដំបូន្មានជាក់ស្តែង និងច្បាស់លាស់អំពីជំងឺដំណាំ សត្វល្អិត ដី ការស្រោចស្រព និងការព្យាបាលប្រកបដោយសុវត្ថិភាពជាភាសាខ្មែរ។ "
+        "ប្រសិនបើព័ត៌មានមិនគ្រប់គ្រាន់ សូមបញ្ជាក់ និងណែនាំឱ្យពិគ្រោះអ្នកជំនាញកសិកម្មក្នុងតំបន់។"
     ),
 }
 
@@ -113,7 +114,6 @@ def _record(
 def _disease_answer(disease: Any, language: str, symptoms: list[str]) -> str:
     crop_name = _field(disease.crop, "name", language) if disease.crop else ""
     disease_name = _field(disease, "name", language)
-    sections = [f"Crop: {crop_name}" if crop_name else "", f"Disease: {disease_name}"]
 
     description = _field(disease, "description", language)
     cause = _field(disease, "cause_explanation", language)
@@ -121,6 +121,27 @@ def _disease_answer(disease: Any, language: str, symptoms: list[str]) -> str:
     prevention = _field(disease, "prevention_tips", language)
     category = _first(disease.agriculture_category, disease.agriculture_sub_category)
 
+    if language == "km":
+        sections = []
+        if crop_name:
+            sections.append(f"ដំណាំ៖ {crop_name}")
+        if disease_name:
+            sections.append(f"ជំងឺ៖ {disease_name}")
+        if description:
+            sections.append(f"ការពិពណ៌នា៖ {description}")
+        if symptoms:
+            sections.append(f"រោគសញ្ញា៖ {', '.join(symptoms)}")
+        if cause:
+            sections.append(f"មូលហេតុ៖ {cause}")
+        if treatment:
+            sections.append(f"ការព្យាបាល៖ {treatment}")
+        if prevention:
+            sections.append(f"ការបង្ការ៖ {prevention}")
+        if category:
+            sections.append(f"ប្រភេទ៖ {category}")
+        return "\n".join(section for section in sections if section)
+
+    sections = [f"Crop: {crop_name}" if crop_name else "", f"Disease: {disease_name}"]
     if description:
         sections.append(f"Description: {description}")
     if symptoms:
@@ -170,10 +191,10 @@ def _disease_records(disease: Any) -> Iterable[dict[str, Any]]:
             "What causes {disease} in {crop}?",
         ],
         "km": [
-            "តើជំងឺ {disease} លើដំណាំ {crop} មានរោគសញ្ញាអ្វីខ្លះ?",
-            "តើខ្ញុំគួរព្យាបាលជំងឺ {disease} លើដំណាំ {crop} ដូចម្តេច?",
-            "តើធ្វើដូចម្តេចដើម្បីការពារជំងឺ {disease} លើដំណាំ {crop}?",
-            "តើអ្វីជាមូលហេតុនៃជំងឺ {disease} លើដំណាំ {crop}?",
+            "តើ{disease}លើដំណាំ {crop} មានរោគសញ្ញាអ្វីខ្លះ?",
+            "តើខ្ញុំគួរព្យាបាល{disease}លើដំណាំ {crop} ដូចម្តេច?",
+            "តើធ្វើដូចម្តេចដើម្បីការពារ{disease}លើដំណាំ {crop}?",
+            "តើអ្វីជាមូលហេតុនៃ{disease}លើដំណាំ {crop}?",
         ],
     }
 
@@ -185,8 +206,14 @@ def _disease_records(disease: Any) -> Iterable[dict[str, Any]]:
         answer = _disease_answer(disease, language, symptoms_by_language[language])
         if not answer:
             continue
+        if language == "km":
+            d_display = disease_name if disease_name.startswith("ជំងឺ") else f"ជំងឺ{disease_name}"
+            c_display = crop_name or "ដំណាំនេះ"
+        else:
+            d_display = disease_name
+            c_display = crop_name or "this crop"
         for index, template in enumerate(templates[language]):
-            question = template.format(disease=disease_name, crop=crop_name or "this crop")
+            question = template.format(disease=d_display, crop=c_display)
             yield _record(
                 record_id=f"disease:{disease.id}:{language}:{index}",
                 language=language,
@@ -211,13 +238,15 @@ def _crop_records(crop: Any) -> Iterable[dict[str, Any]]:
             continue
         if language == "km":
             question = f"តើអ្វីជាព័ត៌មានសំខាន់អំពីដំណាំ {name}?"
+            answer = f"ដំណាំ៖ {name}\nការពិពណ៌នា៖ {description}"
         else:
             question = f"What should I know about growing {name}?"
+            answer = f"Crop: {name}\nDescription: {description}"
         yield _record(
             record_id=f"crop:{crop.id}:{language}",
             language=language,
             question=question,
-            answer=f"Crop: {name}\nDescription: {description}",
+            answer=answer,
             category="crop",
             metadata={"crop_id": crop.id, "crop": name},
         )
@@ -227,31 +256,56 @@ def _rule_records(disease: Any) -> Iterable[dict[str, Any]]:
     crop = disease.crop
     for rule in disease.rules:
         symptoms_en = sorted({_field(symptom, "name", "en") for symptom in rule.symptoms if _field(symptom, "name", "en")})
-        if not symptoms_en:
-            continue
-        crop_name = _field(crop, "name", "en") if crop else ""
-        disease_name = _field(disease, "name", "en")
-        rule_name = _field(rule, "name", "en")
-        question = f"Which agricultural condition may match these symptoms on {crop_name or 'a crop'}: {', '.join(symptoms_en)}?"
-        answer = (
-            f"The rule '{rule_name}' is associated with {disease_name}"
-            f"{f' on {crop_name}' if crop_name else ''}."
-            f" Relevant symptoms are: {', '.join(symptoms_en)}."
-            " Confirm the diagnosis with additional symptoms or a local expert before treatment."
-        )
-        yield _record(
-            record_id=f"rule:{rule.id}:en",
-            language="en",
-            question=question,
-            answer=answer,
-            category="diagnostic_rule",
-            metadata={
-                "crop_id": crop.id if crop else None,
-                "disease_id": disease.id,
-                "rule_id": rule.id,
-                "confidence": rule.confidence,
-            },
-        )
+        if symptoms_en:
+            crop_name = _field(crop, "name", "en") if crop else ""
+            disease_name = _field(disease, "name", "en")
+            rule_name = _field(rule, "name", "en")
+            question = f"Which agricultural condition may match these symptoms on {crop_name or 'a crop'}: {', '.join(symptoms_en)}?"
+            answer = (
+                f"The rule '{rule_name}' is associated with {disease_name}"
+                f"{f' on {crop_name}' if crop_name else ''}."
+                f" Relevant symptoms are: {', '.join(symptoms_en)}."
+                " Confirm the diagnosis with additional symptoms or a local expert before treatment."
+            )
+            yield _record(
+                record_id=f"rule:{rule.id}:en",
+                language="en",
+                question=question,
+                answer=answer,
+                category="diagnostic_rule",
+                metadata={
+                    "crop_id": crop.id if crop else None,
+                    "disease_id": disease.id,
+                    "rule_id": rule.id,
+                    "confidence": rule.confidence,
+                },
+            )
+
+        symptoms_km = sorted({_field(symptom, "name", "km") for symptom in rule.symptoms if _field(symptom, "name", "km")})
+        if symptoms_km:
+            crop_name_km = _field(crop, "name", "km") if crop else ""
+            disease_name_km = _field(disease, "name", "km")
+            d_km = disease_name_km if disease_name_km.startswith("ជំងឺ") else f"ជំងឺ{disease_name_km}"
+            target_crop = f"លើដំណាំ {crop_name_km}" if crop_name_km else "លើដំណាំ"
+            question_km = f"តើរោគសញ្ញាទាំងនេះ{target_crop} អាចជាជំងឺអ្វីខ្លះ៖ {', '.join(symptoms_km)}?"
+            answer_km = (
+                f"ផ្អែកលើរោគសញ្ញាជាក់ស្តែង លក្ខខណ្ឌនេះត្រូវគ្នានឹង {d_km}{f' លើដំណាំ {crop_name_km}' if crop_name_km else ''}។ "
+                f"រោគសញ្ញាសំខាន់ៗរួមមាន៖ {', '.join(symptoms_km)}។ "
+                "សូមពិនិត្យតាមដានបន្ថែម ឬពិគ្រោះជាមួយអ្នកជំនាញកសិកម្មក្នុងតំបន់មុនពេលប្រើប្រាស់វិធានការព្យាបាល។"
+            )
+            yield _record(
+                record_id=f"rule:{rule.id}:km",
+                language="km",
+                question=question_km,
+                answer=answer_km,
+                category="diagnostic_rule",
+                metadata={
+                    "crop_id": crop.id if crop else None,
+                    "disease_id": disease.id,
+                    "rule_id": rule.id,
+                    "confidence": rule.confidence,
+                },
+            )
 
 
 def _mixed_fact_records(fact: Any) -> Iterable[dict[str, Any]]:

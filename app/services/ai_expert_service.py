@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import os
 import json
+import re
 from typing import Any, Optional
 from urllib.parse import urlparse
 
@@ -159,15 +160,34 @@ def _timeout() -> float:
         return DEFAULT_TIMEOUT_SECONDS
 
 
+def _is_khmer(language: Optional[str], text: str = "") -> bool:
+    if (language or "").lower() in {"km", "kh", "khmer"}:
+        return True
+    return bool(re.search(r"[\u1780-\u17ff]", text))
+
+
 def _language_name(language: Optional[str]) -> str:
     return "Khmer" if (language or "").lower() in {"km", "kh", "khmer"} else "English"
 
 
 def _build_prompt(message: str, context: str, language: Optional[str]) -> str:
-    language_name = _language_name(language)
     bounded_message = message.strip()[:MAX_MESSAGE_CHARS]
-    bounded_context = (context or "No matching knowledge-base context was found.").strip()
-    bounded_context = bounded_context[:MAX_CONTEXT_CHARS]
+    if _is_khmer(language, message):
+        bounded_context = (context or "រកមិនឃើញព័ត៌មាននៅក្នុងមូលដ្ឋានចំណេះដឹងទេ។").strip()[:MAX_CONTEXT_CHARS]
+        return (
+            "អ្នកគឺជា AgriSystem AI ដែលជាជំនួយការកសិកម្មឆ្លាតវៃ និងយកចិត្តទុកដាក់។ "
+            "សូមឆ្លើយជាភាសាខ្មែរឱ្យបានត្រឹមត្រូវ ច្បាស់លាស់ និងរលូន។ "
+            "សូមប្រើប្រាស់តែព័ត៌មានពីបរិបទចំណេះដឹងខាងក្រោម។ "
+            "កុំបង្កើតកម្រិតថ្នាំគីមី ឬការធ្វើរោគវិនិច្ឆ័យដោយគ្មានមូលដ្ឋានច្បាស់លាស់។ "
+            "ប្រសិនបើព័ត៌មានមិនគ្រប់គ្រាន់ សូមបញ្ជាក់ និងណែនាំឱ្យកសិករពិគ្រោះជាមួយអ្នកជំនាញកសិកម្មក្នុងតំបន់។ "
+            "ផ្តល់ដំបូន្មានខ្លី ខ្លឹម និងអនុវត្តបានជាក់ស្តែង។\n\n"
+            f"បរិបទចំណេះដឹងកសិកម្ម៖\n{bounded_context}\n\n"
+            f"សំណួររបស់កសិករ៖\n{bounded_message}\n\n"
+            "ចម្លើយ៖\n"
+        )
+
+    language_name = _language_name(language)
+    bounded_context = (context or "No matching knowledge-base context was found.").strip()[:MAX_CONTEXT_CHARS]
     return (
         "You are AgriSystem AI, a careful agricultural assistant. "
         f"Answer in {language_name}. Use only the knowledge-base context below; "
@@ -202,8 +222,9 @@ def _remove_prompt_echo(reply: str, prompt: str) -> str:
     cleaned = reply.strip()
     if cleaned.startswith(prompt):
         cleaned = cleaned[len(prompt):].strip()
-    if "\nAnswer:\n" in cleaned:
-        cleaned = cleaned.rsplit("\nAnswer:\n", 1)[-1].strip()
+    for marker in ("\nAnswer:\n", "\nចម្លើយ៖\n", "\nចម្លើយ:\n", "Answer:\n", "ចម្លើយ៖\n", "ចម្លើយ:\n"):
+        if marker in cleaned:
+            cleaned = cleaned.rsplit(marker, 1)[-1].strip()
     return cleaned
 
 
@@ -326,12 +347,13 @@ def generate_reply(
     token = _setting("HF_TOKEN") or _setting("HUGGINGFACEHUB_API_TOKEN")
     prompt = _build_prompt(user_message, context, language)
     try:
+        max_tokens = 384 if _is_khmer(language, user_message) else 256
         reply = request_endpoint(
             endpoint,
             token,
             prompt,
             timeout=_timeout(),
-            max_new_tokens=128,
+            max_new_tokens=max_tokens,
         )
         return reply or None
     except (requests.RequestException, RuntimeError, ValueError) as exc:

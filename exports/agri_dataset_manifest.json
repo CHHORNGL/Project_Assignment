@@ -1,13 +1,13 @@
 {
-  "generated_at": "2026-09-21T14:16:21Z",
-  "source_date": "2026-09-21",
-  "record_count": 1150,
-  "train_count": 929,
-  "validation_count": 221,
+  "generated_at": "2026-09-24T05:34:46Z",
+  "source_date": "2026-09-24",
+  "record_count": 1276,
+  "train_count": 1010,
+  "validation_count": 266,
   "validation_ratio": 0.2,
   "categories": {
     "crop": 16,
-    "diagnostic_rule": 126,
+    "diagnostic_rule": 252,
     "disease": 1008
   },
   "files": [

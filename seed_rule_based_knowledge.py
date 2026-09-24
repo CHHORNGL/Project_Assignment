@@ -7,6 +7,13 @@ from app import create_app
 from app.extensions import db
 from app.models import Crop, Disease, Rule, Symptom
 from app.utils.i18n import normalize_display_text
+from app.utils.khmer_agri_knowledge import (
+    CROP_DESCRIPTION_KH,
+    DISEASE_CAUSE_KH,
+    SYMPTOM_CLEAN_KH,
+    clean_khmer_text,
+    has_english,
+)
 
 
 def norm(text: str | None) -> str:
@@ -774,7 +781,7 @@ PROFILES_KH = {
         "description": "ជំងឺវីរុសភាគច្រើនឆ្លងតាមសត្វល្អិតជាអ្នកផ្ទុករោគ។",
         "treatment": [
             "ដកដើមដែលឆ្លងចេញឱ្យបានឆាប់ ដើម្បីកាត់បន្ថយប្រភពរោគ។",
-            "គ្រប់គ្រងសត្វល្អិតផ្ទុករោគ តាមវិធី IPM។",
+            "គ្រប់គ្រងសត្វល្អិតផ្ទុករោគតាមវិធានការការពារចម្រុះ។",
             "ដាំឡើងវិញដោយប្រើពូជស្អាត បន្ទាប់ពីសម្ពាធសត្វល្អិតថយចុះ។",
         ],
         "prevention": [
@@ -860,14 +867,34 @@ def to_kh_phrase(text: str | None) -> str | None:
     cleaned = norm(text or "")
     if not cleaned:
         return None
+
+    # Check direct clean mapping first
+    raw_clean = (text or "").strip().lower()
+    if raw_clean in SYMPTOM_CLEAN_KH:
+        return normalize_display_text(SYMPTOM_CLEAN_KH[raw_clean], lang="km")
+    for s_clean, t_clean in SYMPTOM_CLEAN_KH.items():
+        if norm(s_clean) == cleaned:
+            return normalize_display_text(t_clean, lang="km")
+
+    # Check normalized fallback
+    for source, target in SYMPTOM_EXACT_KH_FALLBACK.items():
+        if norm(source) == cleaned:
+            if not has_english(target):
+                return normalize_display_text(target, lang="km")
+            for s_k, t_k in SYMPTOM_CLEAN_KH.items():
+                if norm(s_k) == cleaned:
+                    return normalize_display_text(t_k, lang="km")
+
     translated = f" {cleaned} "
     for source, target in SYMPTOM_EXACT_KH_FALLBACK.items():
-        translated = re.sub(
-            rf"\b{re.escape(source)}\b",
-            target,
-            translated,
-            flags=re.IGNORECASE,
-        )
+        s_norm = norm(source)
+        if s_norm:
+            translated = re.sub(
+                rf"\b{re.escape(s_norm)}\b",
+                target,
+                translated,
+                flags=re.IGNORECASE,
+            )
     for source, target in SYMPTOM_TOKEN_KH_FALLBACK.items():
         translated = re.sub(
             rf"\b{re.escape(source)}\b",
@@ -879,24 +906,35 @@ def to_kh_phrase(text: str | None) -> str | None:
         translated = re.sub(rf"\b{re.escape(token)}\b", KH_TOKEN_MAP[token], translated)
     translated = re.sub(r"[\u202a-\u202e]", "", translated)
     translated = re.sub(r"\s+", " ", translated).strip()
-    if translated == cleaned:
+    if translated == cleaned or has_english(translated):
+        for s_k, t_k in SYMPTOM_CLEAN_KH.items():
+            if norm(s_k) == cleaned:
+                return normalize_display_text(t_k, lang="km")
+        if has_english(translated):
+            kh_only = re.sub(r"[a-zA-Z\(\)\/]+", "", translated).strip()
+            kh_only = re.sub(r"\s+", " ", kh_only).strip()
+            if kh_only:
+                return normalize_display_text(kh_only, lang="km")
         return None
     return normalize_display_text(translated, lang="km")
 
 
 def is_placeholder_kh(text: str | None) -> bool:
     if not text or not isinstance(text, str):
-        return False
-    return "?" in text or "\ufffd" in text
+        return True
+    return "?" in text or "\ufffd" in text or has_english(text)
 
 
 def kh_symptom_fallback(text: str | None) -> str | None:
     cleaned = norm(text or "")
     if not cleaned:
         return None
-    translated = to_kh_phrase(cleaned)
+    translated = to_kh_phrase(text) or to_kh_phrase(cleaned)
     if translated:
         return normalize_display_text(translated, lang="km")
+    for s_clean, t_clean in SYMPTOM_CLEAN_KH.items():
+        if norm(s_clean) == cleaned:
+            return normalize_display_text(t_clean, lang="km")
     return normalize_display_text(f"រោគសញ្ញា៖ {cleaned}", lang="km")
 
 
@@ -915,8 +953,9 @@ def repair_kh_placeholders() -> dict[str, int]:
             mapped = CROP_NAME_KH.get(crop.name)
             candidate = normalize_display_text(mapped, lang="km") if mapped else None
             changed |= set_if_changed(crop, "name_kh", candidate)
-        if is_placeholder_kh(crop.description_kh):
-            changed |= set_if_changed(crop, "description_kh", None)
+        desc_kh = CROP_DESCRIPTION_KH.get(crop.name)
+        if desc_kh and (not crop.description_kh or is_placeholder_kh(crop.description_kh)):
+            changed |= set_if_changed(crop, "description_kh", normalize_display_text(desc_kh, lang="km"))
         if changed:
             counters["crop_repaired"] += 1
 
@@ -929,6 +968,22 @@ def repair_kh_placeholders() -> dict[str, int]:
             if candidate is None and is_placeholder_kh(disease.name_kh):
                 candidate = None
             changed |= set_if_changed(disease, "name_kh", candidate)
+
+        cause_kh = DISEASE_CAUSE_KH.get(disease.name)
+        if cause_kh and (not getattr(disease, "cause_explanation_kh", None) or is_placeholder_kh(disease.cause_explanation_kh)):
+            changed |= set_if_changed(disease, "cause_explanation_kh", normalize_display_text(cause_kh, lang="km"))
+
+        for cp in DATASET:
+            for dp in cp["diseases"]:
+                if dp["name"] == disease.name:
+                    p_kh = PROFILES_KH[dp["kind"]]
+                    if not disease.description_kh or is_placeholder_kh(disease.description_kh):
+                        changed |= set_if_changed(disease, "description_kh", normalize_display_text(p_kh["description"], lang="km"))
+                    if not disease.treatment_kh or is_placeholder_kh(disease.treatment_kh):
+                        changed |= set_if_changed(disease, "treatment_kh", lines_to_bullets([normalize_display_text(l, lang="km") for l in p_kh["treatment"]]))
+                    if not getattr(disease, "prevention_tips_kh", None) or is_placeholder_kh(disease.prevention_tips_kh):
+                        changed |= set_if_changed(disease, "prevention_tips_kh", lines_to_bullets([normalize_display_text(l, lang="km") for l in p_kh["prevention"]]))
+
         if is_placeholder_kh(disease.description_kh):
             changed |= set_if_changed(disease, "description_kh", None)
         if is_placeholder_kh(disease.treatment_kh):
@@ -945,16 +1000,10 @@ def repair_kh_placeholders() -> dict[str, int]:
         changed = False
         current_name_kh = (symptom.name_kh or "").strip()
         if not current_name_kh or is_placeholder_kh(symptom.name_kh):
-            candidate = kh_symptom_fallback(symptom.name)
+            candidate = to_kh_phrase(symptom.name) or kh_symptom_fallback(symptom.name)
             changed |= set_if_changed(symptom, "name_kh", candidate)
         if is_placeholder_kh(symptom.description_kh):
-            description_source = symptom.description or symptom.name
-            description_kh = (
-                normalize_display_text(f"ការពិពណ៌នារោគសញ្ញា៖ {description_source}", lang="km")
-                if description_source
-                else None
-            )
-            changed |= set_if_changed(symptom, "description_kh", description_kh)
+            changed |= set_if_changed(symptom, "description_kh", None)
         if changed:
             counters["symptom_repaired"] += 1
 
@@ -1810,6 +1859,9 @@ def seed(dry_run: bool = False):
         crop_changed |= set_if_changed(crop, "name", crop_name)
         crop_changed |= set_if_changed(crop, "name_kh", crop_name_kh)
         crop_changed |= set_if_changed(crop, "description", crop_payload.get("description"))
+        crop_desc_kh = CROP_DESCRIPTION_KH.get(crop_name)
+        if crop_desc_kh:
+            crop_changed |= set_if_changed(crop, "description_kh", normalize_display_text(crop_desc_kh, lang="km"))
         if crop_changed:
             counters["crop_updated"] += 1
 
@@ -1825,6 +1877,10 @@ def seed(dry_run: bool = False):
                 normalize_display_text(line, lang="km")
                 for line in profile_kh["treatment"]
             ]
+            profile_prevention_kh = [
+                normalize_display_text(line, lang="km")
+                for line in profile_kh["prevention"]
+            ]
 
             if disease is None:
                 disease = Disease(crop_id=crop.id, name=disease_name)
@@ -1838,9 +1894,13 @@ def seed(dry_run: bool = False):
             changed |= set_if_changed(disease, "description", profile["description"])
             changed |= set_if_changed(disease, "description_kh", profile_description_kh)
             changed |= set_if_changed(disease, "cause_explanation", disease_payload["cause"])
+            cause_kh = DISEASE_CAUSE_KH.get(disease_name)
+            if cause_kh:
+                changed |= set_if_changed(disease, "cause_explanation_kh", normalize_display_text(cause_kh, lang="km"))
             changed |= set_if_changed(disease, "treatment", lines_to_bullets(profile["treatment"]))
             changed |= set_if_changed(disease, "treatment_kh", lines_to_bullets(profile_treatment_kh))
             changed |= set_if_changed(disease, "prevention_tips", lines_to_bullets(profile["prevention"]))
+            changed |= set_if_changed(disease, "prevention_tips_kh", lines_to_bullets(profile_prevention_kh))
             changed |= set_if_changed(disease, "severity_level", disease_payload["severity"])
             if changed:
                 counters["disease_updated"] += 1
@@ -1855,7 +1915,7 @@ def seed(dry_run: bool = False):
                     db.session.flush()
                     symptom_cache[key] = row
                     counters["symptom_created"] += 1
-                symptom_name_kh = to_kh_phrase(symptom_name)
+                symptom_name_kh = to_kh_phrase(symptom_name) or kh_symptom_fallback(symptom_name)
                 if symptom_name_kh:
                     set_if_changed(row, "name_kh", normalize_display_text(symptom_name_kh, lang="km"))
                 symptom_rows.append(row)

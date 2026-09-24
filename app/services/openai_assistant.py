@@ -202,17 +202,25 @@ def _get_model_name():
 
 def _match_crop(message: str) -> Optional[Crop]:
     message_norm = _normalize(message)
+    message_raw = (message or "").strip().lower()
     crops = Crop.query.order_by(Crop.name.asc()).all()
     if not crops:
         return None
     for crop in sorted(crops, key=lambda c: len(c.name), reverse=True):
-        candidates = [crop.name, getattr(crop, "name_kh", None)]
+        candidates = [getattr(crop, "name_kh", None), crop.name]
         for candidate in candidates:
             if not candidate:
                 continue
-            pattern = r"\b" + re.escape(_normalize(normalize_display_text(candidate, lang="km"))) + r"\b"
-            if re.search(pattern, message_norm):
-                return crop
+            cand_clean = normalize_display_text(candidate, lang="km").strip()
+            # If candidate contains Khmer characters, use substring check
+            # because Khmer script has no word boundaries (\b fails)
+            if any("\u1780" <= ch <= "\u17ff" for ch in cand_clean):
+                if cand_clean.lower() in message_raw or _normalize(cand_clean) in message_norm:
+                    return crop
+            else:
+                pattern = r"\b" + re.escape(_normalize(cand_clean)) + r"\b"
+                if re.search(pattern, message_norm):
+                    return crop
     return None
 
 
@@ -464,6 +472,7 @@ def _build_kb_context(message: str) -> Tuple[str, Optional[Crop]]:
     Returns (context_text, matched_crop).
     """
     crop = _match_crop(message)
+    message_clean = (message or "").strip().lower()
 
     if crop:
         diseases = (
@@ -473,15 +482,37 @@ def _build_kb_context(message: str) -> Tuple[str, Optional[Crop]]:
             .all()
         )
     else:
-        diseases = (
-            Disease.query
-            .order_by(Disease.name.asc())
-            .limit(20)
-            .all()
-        )
+        # Check if message mentions any specific disease directly
+        all_diseases = Disease.query.all()
+        matched_disease = None
+        for d in sorted(all_diseases, key=lambda x: len(x.name), reverse=True):
+            cand_names = [getattr(d, "name_kh", None), d.name]
+            for cand in cand_names:
+                if cand:
+                    cand_clean = normalize_display_text(cand, lang="km").strip().lower()
+                    if any("\u1780" <= ch <= "\u17ff" for ch in cand_clean):
+                        if cand_clean in message_clean:
+                            matched_disease = d
+                            break
+                    elif _normalize(cand_clean) in _normalize(message):
+                        matched_disease = d
+                        break
+            if matched_disease:
+                crop = matched_disease.crop
+                diseases = [matched_disease]
+                break
+        else:
+            diseases = (
+                Disease.query
+                .order_by(Disease.name.asc())
+                .limit(20)
+                .all()
+            )
 
     if not diseases:
-        return "No diseases found in the knowledge base.", crop
+        lang = get_current_language()
+        empty_msg = "រកមិនឃើញព័ត៌មានជំងឺនៅក្នុងប្រព័ន្ធឡើយ។" if lang == "km" else "No diseases found in the knowledge base."
+        return empty_msg, crop
 
     disease_ids = [d.id for d in diseases]
     rules = (
@@ -496,25 +527,42 @@ def _build_kb_context(message: str) -> Tuple[str, Optional[Crop]]:
         rules_by_disease.setdefault(rule.disease_id, []).append(rule)
 
     lang = get_current_language()
+    is_km = lang == "km"
+
     def localize(obj, field, fallback=None):
         if not obj:
             return normalize_display_text(fallback or "", lang=lang)
-        if lang == "km":
+        if is_km:
             value = getattr(obj, f"{field}_kh", None)
             if value:
                 return normalize_display_text(value, lang=lang)
         value = getattr(obj, field, None)
         return normalize_display_text(value if value else (fallback or ""), lang=lang)
 
+    crop_lbl = "ដំណាំ៖" if is_km else "Crop:"
+    dis_lbl = "- ជំងឺ៖" if is_km else "- Disease:"
+    desc_lbl = "  ការពិពណ៌នា៖" if is_km else "  Description:"
+    cause_lbl = "  មូលហេតុ៖" if is_km else "  Cause:"
+    sym_lbl = "  រោគសញ្ញា៖" if is_km else "  Symptoms:"
+    treat_lbl = "  ការព្យាបាល៖" if is_km else "  Treatment:"
+    prev_lbl = "  ការបង្ការ៖" if is_km else "  Prevention:"
+
     lines = []
     if crop:
-        lines.append(f"Crop: {localize(crop, 'name', crop.name)}")
+        crop_desc = localize(crop, "description", crop.description or "")
+        lines.append(f"{crop_lbl} {localize(crop, 'name', crop.name)}")
+        if crop_desc:
+            lines.append(f"{desc_lbl} {crop_desc}")
 
     for disease in diseases:
-        lines.append(f"- Disease: {localize(disease, 'name', disease.name)}")
+        lines.append(f"{dis_lbl} {localize(disease, 'name', disease.name)}")
         description = localize(disease, "description", disease.description or "")
         if description:
-            lines.append(f"  Description: {description}")
+            lines.append(f"{desc_lbl} {description}")
+
+        cause = localize(disease, "cause_explanation", disease.cause_explanation or "")
+        if cause:
+            lines.append(f"{cause_lbl} {cause}")
 
         symptom_set = set()
         for rule in rules_by_disease.get(disease.id, []):
@@ -522,7 +570,15 @@ def _build_kb_context(message: str) -> Tuple[str, Optional[Crop]]:
                 if s and s.name:
                     symptom_set.add(localize(s, "name", s.name))
         if symptom_set:
-            lines.append(f"  Symptoms: {', '.join(sorted(symptom_set))}")
+            lines.append(f"{sym_lbl} {', '.join(sorted(symptom_set))}")
+
+        treatment = localize(disease, "treatment", disease.treatment or "")
+        if treatment:
+            lines.append(f"{treat_lbl} {treatment}")
+
+        prevention = localize(disease, "prevention_tips", disease.prevention_tips or "")
+        if prevention:
+            lines.append(f"{prev_lbl} {prevention}")
 
     return "\n".join(lines), crop
 

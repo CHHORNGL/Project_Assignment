@@ -24,10 +24,14 @@ is_configured = _SERVICE.is_configured
 
 class AiExpertServiceTestCase(unittest.TestCase):
     def test_prompt_contains_language_question_and_context(self):
-        prompt = _build_prompt("How do I treat rice blast?", "Disease: Rice Blast", "km")
-        self.assertIn("Answer in Khmer", prompt)
-        self.assertIn("Disease: Rice Blast", prompt)
-        self.assertIn("How do I treat rice blast?", prompt)
+        prompt_km = _build_prompt("តើខ្ញុំត្រូវព្យាបាលជំងឺនេះយ៉ាងដូចម្តេច?", "Disease: Rice Blast", "km")
+        self.assertIn("សូមឆ្លើយជាភាសាខ្មែរ", prompt_km)
+        self.assertIn("Disease: Rice Blast", prompt_km)
+        self.assertIn("តើខ្ញុំត្រូវព្យាបាលជំងឺនេះយ៉ាងដូចម្តេច?", prompt_km)
+
+        prompt_en = _build_prompt("How do I treat rice blast?", "Disease: Rice Blast", "en")
+        self.assertIn("Answer in English", prompt_en)
+        self.assertIn("How do I treat rice blast?", prompt_en)
 
     def test_extracts_common_response_shapes(self):
         self.assertEqual(_extract_text([{"generated_text": "reply"}]), "reply")

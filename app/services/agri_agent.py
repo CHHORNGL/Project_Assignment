@@ -148,45 +148,76 @@ def build_agent_context(
         latitude=latitude,
         longitude=longitude,
     )
-    sections = [
-        f"Agent intent: {plan.intent}",
-        "Trusted tools selected: " + (", ".join(plan.tools) if plan.tools else "none"),
-        "Safety policy: the rule/database diagnosis is authoritative. Do not invent a diagnosis, pesticide dose, guarantee, or live weather value.",
-    ]
+    if language == "km":
+        sections = [
+            f"គោលបំណងសំណួរ៖ {plan.intent}",
+            "គោលការណ៍សុវត្ថិភាព៖ ផ្អែកលើចំណេះដឹងដែលបានផ្ទៀងផ្ទាត់។ មិនត្រូវបង្កើតកម្រិតថ្នាំគីមី ការធ្វើរោគវិនិច្ឆ័យ ឬទិន្នន័យអាកាសធាតុដោយគ្មានមូលដ្ឋានឡើយ។",
+        ]
+        if plan.needs_location:
+            sections.append("ត្រូវការព័ត៌មានទីតាំងជាក់លាក់ដើម្បីផ្តល់ព័ត៌មានអាកាសធាតុ។ សូមស្នើឱ្យកសិករផ្តល់ទីតាំងឬខេត្ត។")
+        elif "weather" in plan.tools and latitude is not None and longitude is not None:
+            sections.append("លទ្ធផលអាកាសធាតុ៖\n" + _weather_tool(latitude, longitude, language))
 
-    if plan.needs_location:
-        if language == "km":
+        try:
+            from app.services.openai_assistant import _build_kb_context
+            knowledge_context, crop = _build_kb_context(message)
+            sections.append("ព័ត៌មានពីមូលដ្ឋានចំណេះដឹងកសិកម្ម៖")
+            sections.append(knowledge_context or "រកមិនឃើញព័ត៌មានដែលត្រូវគ្នានៅក្នុងមូលដ្ឋានចំណេះដឹងឡើយ។")
+            if crop:
+                crop_title = getattr(crop, "name_kh", None) or crop.name
+                sections.append(f"ដំណាំដែលត្រូវគ្នា៖ {crop_title}")
+        except Exception:
+            sections.append("មិនអាចទាញយកព័ត៌មានពីមូលដ្ឋានចំណេះដឹងបានឡើយ។ សូមបញ្ជាក់ថាមិនមានព័ត៌មានគ្រប់គ្រាន់។")
+
+        if plan.intent == "crop_health":
+            sections.append(
+                "ដំណើរការវិនិច្ឆ័យ៖ សូមពន្យល់ពីមូលហេតុនិងរោគសញ្ញាដែលអាចកើតមាន រួចណែនាំកសិករឱ្យប្រើទំព័រធ្វើរោគវិនិច្ឆ័យក្នុងប្រព័ន្ធដើម្បីទទួលបានលទ្ធផលជាក់លាក់។"
+            )
+        if plan.intent == "action_request":
+            sections.append(
+                "សំណើរសកម្មភាព៖ កុំទាន់បង្កើតការរំលឹក ឬការកែប្រែទិន្នន័យ។ សូមសួរការបញ្ជាក់បន្ថែមពីពេលវេលានិងព័ត៌មានលម្អិតពីកសិករ។"
+            )
+        if has_image:
+            sections.append(
+                "ដែនកំណត់រូបភាព៖ ជំនួយការអត្ថបទមិនទាន់បានទទួលរូបភាពឡើយ។ សូមកុំអះអាងថាបានមើលឃើញរូបភាព និងសូមណែនាំកសិករឱ្យប្រើមុខងារវិនិច្ឆ័យតាមរូបភាព។"
+            )
+    else:
+        sections = [
+            f"Agent intent: {plan.intent}",
+            "Trusted tools selected: " + (", ".join(plan.tools) if plan.tools else "none"),
+            "Safety policy: the rule/database diagnosis is authoritative. Do not invent a diagnosis, pesticide dose, guarantee, or live weather value.",
+        ]
+
+        if plan.needs_location:
             sections.append("Location is required for live weather. Ask the farmer to allow location access or provide a province/location before giving weather-specific advice.")
-        else:
-            sections.append("Location is required for live weather. Ask the farmer to allow location access or provide a province/location before giving weather-specific advice.")
-    elif "weather" in plan.tools and latitude is not None and longitude is not None:
-        sections.append("Weather tool result:\n" + _weather_tool(latitude, longitude, language))
+        elif "weather" in plan.tools and latitude is not None and longitude is not None:
+            sections.append("Weather tool result:\n" + _weather_tool(latitude, longitude, language))
 
-    try:
-        # Import lazily to avoid the existing assistant module importing itself
-        # while Flask is registering services.
-        from app.services.openai_assistant import _build_kb_context
+        try:
+            # Import lazily to avoid the existing assistant module importing itself
+            # while Flask is registering services.
+            from app.services.openai_assistant import _build_kb_context
 
-        knowledge_context, crop = _build_kb_context(message)
-        sections.append("Knowledge-base tool result:")
-        sections.append(knowledge_context or "No matching knowledge-base context was found.")
-        if crop:
-            sections.append(f"Matched crop record: {crop.name}")
-    except Exception:
-        sections.append("Knowledge-base tool unavailable; say when the available information is insufficient.")
+            knowledge_context, crop = _build_kb_context(message)
+            sections.append("Knowledge-base tool result:")
+            sections.append(knowledge_context or "No matching knowledge-base context was found.")
+            if crop:
+                sections.append(f"Matched crop record: {crop.name}")
+        except Exception:
+            sections.append("Knowledge-base tool unavailable; say when the available information is insufficient.")
 
-    if plan.intent == "crop_health":
-        sections.append(
-            "Diagnosis workflow: explain possible causes and evidence, then direct the farmer to the app's Diagnose page for the authoritative rule-based result."
-        )
-    if plan.intent == "action_request":
-        sections.append(
-            "Action workflow: do not create reminders, alerts, or database changes in this chat yet. Ask for explicit confirmation and required timing/details."
-        )
-    if has_image:
-        sections.append(
-            "Image limitation: this text model has not received image pixels. Never claim to have visually inspected the attachment; direct the farmer to the dedicated diagnosis workflow."
-        )
+        if plan.intent == "crop_health":
+            sections.append(
+                "Diagnosis workflow: explain possible causes and evidence, then direct the farmer to the app's Diagnose page for the authoritative rule-based result."
+            )
+        if plan.intent == "action_request":
+            sections.append(
+                "Action workflow: do not create reminders, alerts, or database changes in this chat yet. Ask for explicit confirmation and required timing/details."
+            )
+        if has_image:
+            sections.append(
+                "Image limitation: this text model has not received image pixels. Never claim to have visually inspected the attachment; direct the farmer to the dedicated diagnosis workflow."
+            )
 
     history = []
     for sender, text in list(conversation or [])[-6:]:

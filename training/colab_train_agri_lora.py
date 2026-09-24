@@ -109,6 +109,8 @@ def main() -> None:
         target_modules=["q_proj", "k_proj", "v_proj", "o_proj"],
     )
     
+    use_bf16 = torch.cuda.is_available() and torch.cuda.is_bf16_supported()
+
     # Use SFTConfig instead of TrainingArguments in newer TRL versions
     training_args = SFTConfig(
         output_dir=str(OUTPUT_DIR),
@@ -123,7 +125,8 @@ def main() -> None:
         save_strategy="steps",
         save_steps=50,
         save_total_limit=2,
-        bf16=True,
+        bf16=use_bf16,
+        fp16=not use_bf16,
         gradient_checkpointing=True,
         report_to="none",
         seed=42,
@@ -147,10 +150,8 @@ def main() -> None:
 
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     trainer.save_model(str(OUTPUT_DIR))
-    tokenizer.save_pretrained(str(OUTPUT_DIR))
     trainer.push_to_hub(HF_REPO_ID, token=HF_TOKEN)
-    tokenizer.push_to_hub(HF_REPO_ID, token=HF_TOKEN)
-    print(f"Adapter uploaded to https://huggingface.co/{HF_REPO_ID}")
+    print(f"LoRA Adapter uploaded successfully to https://huggingface.co/{HF_REPO_ID}")
 
 
 if __name__ == "__main__":

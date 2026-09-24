@@ -1,6 +1,7 @@
 """Gradio demo for the AgriSystem Qwen LoRA adapter."""
 
 # ZeroGPU requires this import before torch/transformers imports.
+import re
 import spaces
 import torch
 import gradio as gr
@@ -13,11 +14,19 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 # only and cannot be loaded as the trained model.
 MODEL_ID = "Maoseavik/agri-qwen3b-lora"
 BASE_MODEL_ID = "Qwen/Qwen2.5-3B-Instruct"
-SYSTEM_PROMPT = (
+
+SYSTEM_PROMPT_EN = (
     "You are AgriSystem, a careful agricultural assistant. Give practical, "
     "clear advice about crop diseases, pests, soil, irrigation, and safe "
     "treatment. Ask for missing details, mention uncertainty, and recommend "
     "a local agronomist for dangerous or severe cases. Never invent a diagnosis."
+)
+
+SYSTEM_PROMPT_KH = (
+    "អ្នកគឺជា AgriSystem ដែលជាជំនួយការកសិកម្មឆ្លាតវៃ និងយកចិត្តទុកដាក់។ "
+    "សូមផ្តល់ដំបូន្មានជាក់ស្តែង និងច្បាស់លាស់អំពីជំងឺដំណាំ សត្វល្អិត ដី ការស្រោចស្រព និងការព្យាបាលប្រកបដោយសុវត្ថិភាពជាភាសាខ្មែរ។ "
+    "ប្រសិនបើករណីធ្ងន់ធ្ងរ ឬមិនច្បាស់លាស់ សូមណែនាំឱ្យកសិករទាក់ទងអ្នកជំនាញកសិកម្មក្នុងតំបន់។ "
+    "សូមឆ្លើយជាភាសាខ្មែរឱ្យបានត្រឹមត្រូវ រលូន និងងាយយល់ដល់កសិករ។"
 )
 
 
@@ -59,8 +68,10 @@ def answer(
 
     max_new_tokens = max(32, min(int(max_new_tokens), 800))
     temperature = max(0.05, min(float(temperature), 1.2))
+    is_khmer = bool(re.search(r"[\u1780-\u17ff]", question))
+    sys_prompt = SYSTEM_PROMPT_KH if is_khmer else SYSTEM_PROMPT_EN
     messages = [
-        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "system", "content": sys_prompt},
         {"role": "user", "content": question},
     ]
     prompt = tokenizer.apply_chat_template(
@@ -84,9 +95,10 @@ def answer(
 
 
 examples = [
+    ["ស្រូវរបស់ខ្ញុំមានចំណុចពណ៌ត្នោតលើស្លឹក និងចាប់ផ្តើមឡើងលឿង។ តើខ្ញុំគួរពិនិត្យអ្វីខ្លះជាមុន?"],
+    ["តើខ្ញុំអាចកាត់បន្ថយសត្វល្អិតលើដើមប៉េងប៉ោះដោយសុវត្ថិភាពដោយរបៀបណា?"],
     ["My rice leaves have brown spots and are turning yellow. What should I check first?"],
     ["How can I reduce pest damage on tomato plants safely?"],
-    ["What information do you need to help diagnose a disease in my crop?"],
 ]
 
 demo = gr.Interface(
