@@ -399,6 +399,9 @@ def create_app():
                 os.path.join(static_root, "img", "logo-dark.svg"),
                 os.path.join(static_root, "img", "logo_icon.svg"),
                 os.path.join(static_root, "sw.js"),
+                os.path.join(static_root, "js", "support_chat_render.js"),
+                os.path.join(static_root, "js", "support_chat_attachments.js"),
+                os.path.join(static_root, "css", "support_chat_attachments.css"),
             ]
             mtimes = []
             for path in candidates:

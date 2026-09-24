@@ -23,12 +23,19 @@ window.initSupportAttachments = function ({ imgBtn, micBtn, locBtn, fileInput, u
     const send = dialog.querySelector('[data-send]');
     const record = dialog.querySelector('[data-record]');
     const closeButtons = [dialog.querySelector('[data-close]'), dialog.querySelector('[data-cancel]')];
-    let draft, recorder, stream, timer, objectUrl, version = 0, busy = false;
+    const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
+    const MAX_RECORDING_SECONDS = 120;
+    let draft, recorder, stream, recordingStream, audioContext, timer, maxTimer, objectUrl, version = 0, busy = false;
     function release() {
         clearInterval(timer);
-        if (recorder && recorder.state !== 'inactive') recorder.stop();
+        if (typeof clearTimeout === 'function') clearTimeout(maxTimer);
+        if (recorder && recorder.state !== 'inactive') {
+            try { recorder.stop(); } catch (_) {}
+        }
         if (stream) stream.getTracks().forEach(track => track.stop());
-        recorder = null; stream = null;
+        if (recordingStream && recordingStream !== stream) recordingStream.getTracks().forEach(track => track.stop());
+        if (audioContext && typeof audioContext.close === 'function') audioContext.close().catch(() => {});
+        recorder = null; stream = null; recordingStream = null; audioContext = null;
         if (objectUrl) URL.revokeObjectURL(objectUrl);
         objectUrl = null;
         preview.querySelectorAll('audio').forEach(audio => audio.pause());
@@ -78,6 +85,11 @@ window.initSupportAttachments = function ({ imgBtn, micBtn, locBtn, fileInput, u
         } else {
             media.controls = true;
             media.preload = 'auto';
+            media.setAttribute('aria-label', 'Voice message preview');
+            media.addEventListener?.('error', () => {
+                status.textContent = 'This recording cannot be decoded by your browser. Record again or use a different browser.';
+                send.disabled = true;
+            });
             media.className = 'support-preview-audio';
         }
         preview.replaceChildren(media);
@@ -89,6 +101,7 @@ window.initSupportAttachments = function ({ imgBtn, micBtn, locBtn, fileInput, u
         const file = fileInput.files[0]; fileInput.value = '';
         if (!file || !open('image')) return;
         if (!file.type.startsWith('image/')) { status.textContent = 'Please choose an image.'; return; }
+        if (file.size > MAX_ATTACHMENT_BYTES) { status.textContent = 'Photo is too large (maximum 10 MB).'; return; }
         showFile(file, 'image');
     });
     micBtn.addEventListener('click', () => {
@@ -104,9 +117,15 @@ window.initSupportAttachments = function ({ imgBtn, micBtn, locBtn, fileInput, u
             if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) throw new Error('Voice recording is unavailable in this browser.');
             let nextStream;
             try {
-                // Natural audio capture parameters to avoid software resampling jitter and distortion
+                // Ask the browser for a mono, 48 kHz voice track. Hardware may choose a
+                // different rate, but these constraints avoid unnecessary channel mixing
+                // and enable the browser's built-in acoustic echo/noise processing.
                 nextStream = await navigator.mediaDevices.getUserMedia({
                     audio: {
+                        sampleRate: { ideal: 48000 },
+                        sampleSize: { ideal: 16 },
+                        channelCount: { ideal: 1 },
+                        latency: { ideal: 0.02 },
                         echoCancellation: true,
                         noiseSuppression: true,
                         autoGainControl: true
@@ -118,12 +137,38 @@ window.initSupportAttachments = function ({ imgBtn, micBtn, locBtn, fileInput, u
             if (token !== version) { nextStream.getTracks().forEach(track => track.stop()); return; }
             stream = nextStream;
 
+            // Add a gentle high-pass filter and compressor when Web Audio is available.
+            // This removes handling/air-conditioner rumble and keeps speech intelligible
+            // without requiring a server-side transcoder. If unavailable, record the
+            // browser-cleaned microphone stream directly.
+            let recorderInput = nextStream;
+            const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+            if (AudioContextCtor && typeof AudioContextCtor === 'function') {
+                try {
+                    audioContext = new AudioContextCtor({ sampleRate: 48000, latencyHint: 'interactive' });
+                    if (audioContext.state === 'suspended' && typeof audioContext.resume === 'function') audioContext.resume().catch(() => {});
+                    const source = audioContext.createMediaStreamSource(nextStream);
+                    const highPass = audioContext.createBiquadFilter();
+                    highPass.type = 'highpass'; highPass.frequency.value = 75; highPass.Q.value = 0.7;
+                    const compressor = audioContext.createDynamicsCompressor();
+                    compressor.threshold.value = -28; compressor.knee.value = 18;
+                    compressor.ratio.value = 3; compressor.attack.value = 0.003; compressor.release.value = 0.25;
+                    const destination = audioContext.createMediaStreamDestination();
+                    source.connect(highPass); highPass.connect(compressor); compressor.connect(destination);
+                    recorderInput = destination.stream;
+                    recordingStream = recorderInput;
+                } catch (_) {
+                    if (audioContext && typeof audioContext.close === 'function') audioContext.close().catch(() => {});
+                    audioContext = null; recordingStream = null;
+                }
+            }
+
             let mimeType = '';
             const candidates = [
                 'audio/webm;codecs=opus',
+                'audio/ogg;codecs=opus',
                 'audio/mp4',
                 'audio/webm',
-                'audio/ogg;codecs=opus',
                 'audio/ogg'
             ];
             if (typeof window.MediaRecorder.isTypeSupported === 'function') {
@@ -138,26 +183,31 @@ window.initSupportAttachments = function ({ imgBtn, micBtn, locBtn, fileInput, u
             if (mimeType) recorderOpts.mimeType = mimeType;
             recorderOpts.audioBitsPerSecond = 96000;
 
-            recorder = new MediaRecorder(stream, recorderOpts);
+            recorder = new MediaRecorder(recorderInput, recorderOpts);
             const chunks = [];
             const activeRecorder = recorder;
             recorder.addEventListener('dataavailable', event => {
                 if (event.data && event.data.size > 0) chunks.push(event.data);
             });
             recorder.addEventListener('stop', () => {
-                nextStream.getTracks().forEach(track => track.stop()); clearInterval(timer);
+                nextStream.getTracks().forEach(track => track.stop());
+                if (recordingStream && recordingStream !== nextStream) recordingStream.getTracks().forEach(track => track.stop());
+                clearInterval(timer); if (typeof clearTimeout === 'function') clearTimeout(maxTimer);
+                if (audioContext && typeof audioContext.close === 'function') audioContext.close().catch(() => {});
+                audioContext = null; recordingStream = null; stream = null;
                 if (token !== version) return;
                 const mime = activeRecorder.mimeType || chunks[0]?.type || mimeType || 'audio/webm';
-                let extension = 'weba';
+                let extension = 'webm';
                 if (mime.includes('mp4') || mime.includes('m4a') || mime.includes('aac')) {
                     extension = 'm4a';
                 } else if (mime.includes('ogg')) {
                     extension = 'ogg';
                 } else if (mime.includes('webm')) {
-                    extension = 'weba';
+                    extension = 'webm';
                 }
                 const file = new File(chunks, `voice.${extension}`, { type: mime });
-                if (file.size) showFile(file, 'audio');
+                if (file.size > MAX_ATTACHMENT_BYTES) status.textContent = 'Recording is too large. Keep voice messages under 2 minutes.';
+                else if (file.size) showFile(file, 'audio');
                 else status.textContent = 'No audio recorded. Try again.';
                 record.textContent = 'Record again'; record.disabled = false;
             });
@@ -171,9 +221,15 @@ window.initSupportAttachments = function ({ imgBtn, micBtn, locBtn, fileInput, u
             const started = Date.now();
             const update = () => {
                 const seconds = Math.floor((Date.now() - started) / 1000);
-                status.textContent = `Recording (HD Voice) · ${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+                status.textContent = `Recording (noise reduced, 48 kHz) · ${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
             };
             update(); timer = setInterval(update, 1000);
+            maxTimer = setTimeout(() => {
+                if (recorder && recorder.state === 'recording') {
+                    status.textContent = 'Maximum 2-minute recording reached. Preparing preview…';
+                    recorder.stop();
+                }
+            }, MAX_RECORDING_SECONDS * 1000);
         } catch (error) {
             if (token !== version) return;
             release(); record.disabled = false;
@@ -472,11 +528,22 @@ window.initSupportAttachments = function ({ imgBtn, micBtn, locBtn, fileInput, u
 
         detectLocation();
     });
-    async function request(url, options) {
-        const response = await fetch(url, options);
-        const data = await response.json().catch(() => null);
-        if (!response.ok || !data || data.error) throw new Error(data?.error || 'Could not send. Check your connection and try again.');
-        return data;
+    async function request(url, options, { retries = 0, timeoutMs = 30000 } = {}) {
+        let lastError;
+        for (let attempt = 0; attempt <= retries; attempt += 1) {
+            const controller = typeof AbortController === 'function' ? new AbortController() : null;
+            const timeout = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
+            try {
+                const response = await fetch(url, { ...options, ...(controller ? { signal: controller.signal } : {}) });
+                const data = await response.json().catch(() => null);
+                if (!response.ok || !data || data.error) throw new Error(data?.error || `Request failed (${response.status}). Check your connection and try again.`);
+                return data;
+            } catch (error) {
+                lastError = error.name === 'AbortError' ? new Error('Upload timed out. Check your connection and try again.') : error;
+                if (attempt < retries) await new Promise(resolve => setTimeout(resolve, 500 * (attempt + 1)));
+            } finally { if (timeout) clearTimeout(timeout); }
+        }
+        throw lastError || new Error('Could not send. Check your connection and try again.');
     }
     send.addEventListener('click', async () => {
         if (busy || send.disabled || !draft) return;
@@ -485,8 +552,10 @@ window.initSupportAttachments = function ({ imgBtn, micBtn, locBtn, fileInput, u
         status.textContent = 'Sending…';
         try {
             if (!draft.url) {
-                const body = new FormData(); body.append('file', draft.file);
-                const uploaded = await request(uploadUrl, { method: 'POST', body });
+                if (!draft.file || (typeof draft.file.size === 'number' && !draft.file.size)) throw new Error('The recording is empty. Please record again.');
+                if (typeof draft.file.size === 'number' && draft.file.size > MAX_ATTACHMENT_BYTES) throw new Error('Audio is too large (maximum 10 MB).');
+                const body = new FormData(); body.append('file', draft.file, draft.file.name || 'voice.webm');
+                const uploaded = await request(uploadUrl, { method: 'POST', body }, { retries: 2, timeoutMs: 30000 });
                 if (!uploaded.url) throw new Error('Upload failed. Please try again.');
                 draft.url = uploaded.url;
             }

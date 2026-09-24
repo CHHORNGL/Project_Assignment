@@ -1,13 +1,12 @@
 from app.utils.input_validation import support_message_fields
 import os
-import uuid
-from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta
 from flask import request, jsonify, current_app
 from flask_login import current_user, login_required
 from app.extensions import db
 from app.models import User, AdminChatMessage
 from app.utils.decorators import role_required
+from app.utils.support_attachments import save_support_attachment, SupportAttachmentError
 from .routes import farmer_bp
 
 @farmer_bp.route("/support_chat/messages", methods=["GET"])
@@ -279,15 +278,13 @@ def send_support_message():
 def upload_support_attachment():
     if 'file' not in request.files:
         return jsonify({'error': 'No file part'}), 400
-    file = request.files['file']
-    if file.filename == '':
-        return jsonify({'error': 'No selected file'}), 400
-    if file:
-        filename = secure_filename(file.filename)
-        ext = filename.rsplit('.', 1)[1].lower() if '.' in filename else 'bin'
-        unique_name = f"{uuid.uuid4().hex}.{ext}"
+    try:
         upload_dir = os.path.join(current_app.root_path, 'static', 'uploads', 'chats')
-        os.makedirs(upload_dir, exist_ok=True)
-        file.save(os.path.join(upload_dir, unique_name))
-        from flask import url_for
-        return jsonify({'url': url_for('static', filename=f'uploads/chats/{unique_name}')})
+        filename, mime_type = save_support_attachment(request.files['file'], upload_dir)
+    except SupportAttachmentError as error:
+        return jsonify({'error': str(error)}), error.status_code
+    except Exception:
+        current_app.logger.exception("Support attachment upload failed")
+        return jsonify({'error': 'Could not save attachment'}), 500
+    from flask import url_for
+    return jsonify({'url': url_for('static', filename=f'uploads/chats/{filename}'), 'mime_type': mime_type})

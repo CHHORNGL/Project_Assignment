@@ -17,7 +17,7 @@ function setup(customGeo = null) {
   const nav = customGeo ? { geolocation: customGeo } : {};
   const context = {window: {addEventListener(){}}, document: {body: node(), createElement(tag) {const n = node(); if(tag === 'dialog') dialog = n; return n;}},
     URL: {createObjectURL: ()=>'blob:test', revokeObjectURL(){}}, FormData: class {append(){}},
-    clearInterval(){}, setInterval(){}, navigator: nav,
+    clearInterval(){}, setInterval(){}, clearTimeout(){}, navigator: nav,
     fetch: async (url, options) => {calls.push({url, options}); return {ok: true, json: async()=>url === '/upload' ? {url:'/static/uploads/chats/test.png'} : {success:true, display_name: "Phnom Penh, Cambodia"}};}
   };
   vm.createContext(context);

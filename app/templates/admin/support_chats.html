@@ -247,6 +247,16 @@
 }
 .chat-action-btn:hover {
     color: var(--admin-accent);
+}
+.support-chat-image {
+    cursor: zoom-in;
+    border-radius: 8px;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+}
+.support-chat-image:hover {
+    opacity: 0.92;
+    transform: scale(1.02);
+}
 .tg-unread-badge {
     background: #ef4444;
     color: #ffffff;
@@ -330,7 +340,7 @@
     </div>
 </div>
 
-<script src="{{ url_for('static', filename='js/support_chat_render.js') }}"></script>
+<script src="{{ url_for('static', filename='js/support_chat_render.js', v=static_version) }}"></script>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/support_chat_attachments.css', v=static_version) }}">
 <script src="{{ url_for('static', filename='js/support_chat_attachments.js', v=static_version) }}"></script>
 <script>
@@ -343,6 +353,17 @@ document.addEventListener("DOMContentLoaded", () => {
     const chatBody = document.getElementById("chat-body");
     const chatInput = document.getElementById("chat-input");
     const chatSend = document.getElementById("chat-send");
+
+    if (chatBody) {
+        chatBody.addEventListener("click", (e) => {
+            const img = e.target.closest("img.support-chat-image");
+            if (img && typeof window.openSupportImageFullscreen === "function") {
+                e.preventDefault();
+                e.stopPropagation();
+                window.openSupportImageFullscreen(img.currentSrc || img.src || img.getAttribute("src"));
+            }
+        });
+    }
     const chatTitle = document.getElementById("chat-title");
     const chatStatus = document.getElementById("chat-status");
     const userListContainer = document.getElementById("tg-user-list");

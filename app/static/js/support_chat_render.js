@@ -2,7 +2,11 @@
 
 function isSafeSupportImageUrl(src) {
     if (!src || typeof src !== 'string') return false;
+    src = src.trim();
     if (src.startsWith('blob:')) return true;
+    if (src.startsWith('data:image/')) return true;
+    if (/^(?:javascript|vbscript|file):/i.test(src)) return false;
+    if (/^\/\//.test(src)) return false; // avoid protocol-relative URLs
     try {
         let path = src;
         if (src.startsWith('http://') || src.startsWith('https://')) {
@@ -12,9 +16,15 @@ function isSafeSupportImageUrl(src) {
                 path = src.replace(/^https?:\/\/[^\/]+/, '').split('?')[0];
             }
         } else {
-            path = src.split('?')[0];
+            path = src.split('?')[0].split('#')[0];
         }
-        return /^\/static\/uploads\/chats\/[0-9a-fA-F]{32}\.[a-zA-Z0-9]{1,10}$/.test(path);
+        if (/^\/static\/uploads\/chats\/[0-9a-fA-F]{32}\.[a-zA-Z0-9]{1,10}$/.test(path)) {
+            return true;
+        }
+        if (/^\/static\/(?:uploads\/[a-zA-Z0-9_\-\/]+|[a-zA-Z0-9_\-\/]+)\.(?:jpe?g|png|webp|gif|svg|bmp)$/i.test(path)) {
+            return true;
+        }
+        return false;
     } catch (_) {
         return false;
     }
@@ -31,9 +41,6 @@ window.openSupportImageFullscreen = function (src) {
         modal = document.createElement('dialog');
         modal.id = 'support-image-fullscreen-modal';
         modal.className = 'support-fullscreen-modal';
-
-        const backdrop = document.createElement('div');
-        backdrop.className = 'support-fullscreen-backdrop';
 
         const toolbar = document.createElement('div');
         toolbar.className = 'support-fullscreen-toolbar';
@@ -61,7 +68,6 @@ window.openSupportImageFullscreen = function (src) {
         img.alt = 'Full screen view';
 
         imgContainer.appendChild(img);
-        modal.appendChild(backdrop);
         modal.appendChild(toolbar);
         modal.appendChild(imgContainer);
 
@@ -75,17 +81,33 @@ window.openSupportImageFullscreen = function (src) {
             if (typeof modal.close === 'function' && modal.open) {
                 try { modal.close(); } catch (_) {}
             }
-            setTimeout(function () {
-                img.src = '';
-                if (modal.style) modal.style.display = 'none';
-            }, 180);
+            modal.removeAttribute('open');
+            if (modal.style && typeof modal.style.removeProperty === 'function') {
+                modal.style.removeProperty('display');
+            }
+            img.src = '';
+            if (img.classList && typeof img.classList.remove === 'function') {
+                img.classList.remove('zoomed');
+            }
         }
 
-        if (typeof backdrop.addEventListener === 'function') {
-            backdrop.addEventListener('click', closeModal);
+        // Close on clicking modal background or wrapper outside the image and toolbar
+        if (typeof modal.addEventListener === 'function') {
+            modal.addEventListener('click', function (e) {
+                if (e.target && typeof e.target.closest === 'function') {
+                    if (e.target.closest('.support-fullscreen-toolbar') || e.target.closest('.support-fullscreen-image')) {
+                        return;
+                    }
+                }
+                closeModal();
+            });
         }
+
         if (typeof btnClose.addEventListener === 'function') {
-            btnClose.addEventListener('click', closeModal);
+            btnClose.addEventListener('click', function (e) {
+                if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+                closeModal();
+            });
         }
         if (typeof img.addEventListener === 'function') {
             img.addEventListener('click', function (e) {
@@ -115,7 +137,7 @@ window.openSupportImageFullscreen = function (src) {
         }
         if (typeof document.addEventListener === 'function') {
             document.addEventListener('keydown', function (e) {
-                if (e.key === 'Escape' && (modal.open || (modal.style && modal.style.display !== 'none'))) {
+                if (e.key === 'Escape' && (modal.open || (modal.classList && modal.classList.contains('active')))) {
                     closeModal();
                 }
             });
@@ -139,19 +161,26 @@ window.openSupportImageFullscreen = function (src) {
             fullImg.classList.remove('zoomed');
         }
     }
-    if (typeof modal.showModal === 'function' && !modal.open) {
-        try { modal.showModal(); } catch (_) { if (modal.style) modal.style.display = 'flex'; }
-    } else if (modal.style) {
-        modal.style.display = 'flex';
+
+    if (modal.style && typeof modal.style.removeProperty === 'function') {
+        modal.style.removeProperty('display');
     }
-    if (typeof requestAnimationFrame === 'function') {
-        requestAnimationFrame(function () {
-            if (modal.classList && typeof modal.classList.add === 'function') {
-                modal.classList.add('active');
-            }
-        });
-    } else if (modal.classList && typeof modal.classList.add === 'function') {
+    if (modal.classList && typeof modal.classList.add === 'function') {
         modal.classList.add('active');
+    }
+
+    if (typeof modal.showModal === 'function') {
+        if (!modal.open) {
+            try {
+                modal.showModal();
+            } catch (_) {
+                modal.setAttribute('open', '');
+                if (modal.style) modal.style.display = 'flex';
+            }
+        }
+    } else {
+        modal.setAttribute('open', '');
+        if (modal.style) modal.style.display = 'flex';
     }
 };
 
@@ -186,8 +215,9 @@ window.renderSupportMessage = function (container, message) {
             if (typeof element.addEventListener === 'function') {
                 element.addEventListener('click', function (e) {
                     if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+                    const targetSrc = this.currentSrc || this.src || attachment;
                     if (typeof window.openSupportImageFullscreen === 'function') {
-                        window.openSupportImageFullscreen(attachment);
+                        window.openSupportImageFullscreen(targetSrc);
                     }
                 });
             }
@@ -199,6 +229,12 @@ window.renderSupportMessage = function (container, message) {
             element.preload = 'metadata';
             element.className = 'support-chat-audio';
             element.src = attachment;
+            element.title = 'Voice message';
+            if (typeof element.addEventListener === 'function') {
+                element.addEventListener('error', function () {
+                    element.title = 'This voice message could not be decoded by your browser.';
+                });
+            }
         } else return;
     }
     element.style.maxWidth = '100%';
