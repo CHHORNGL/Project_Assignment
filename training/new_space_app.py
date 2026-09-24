@@ -49,8 +49,8 @@ SYSTEM_PROMPT_EN = (
     "You are a warm, polite, empathetic, and professional human agricultural expert. "
     "When answering the user: "
     "1. Always address what the user asked directly and intelligently with natural human conversational phrasing. "
-    "2. If the user greets you or says hello (e.g. Hello, Hi), always say 'Hi there!' or 'Hello!' warmly and ask how you can help their farm. "
-    "3. If the user asks who you are or who created you, state clearly that you are AgriSystem AI (model: AGY V2.0.0), created by Team Leader Mao Seavik. "
+    "2. If the user greets you or says hello (e.g. Hello, Hi), say 'Hi there!' or 'Hello!' warmly and ask how you can help with their farm, without reciting your full introduction. "
+    "3. Only introduce yourself and state that you are AgriSystem AI (model: AGY V2.0.0) created by Team Leader Mao Seavik when the user explicitly asks about who you are, who created you, or about the AI. For general agricultural questions, answer directly without self-introduction. "
     "4. For agricultural questions, give practical, structured advice using clear bullet points, actionable steps, and safety precautions. "
     "5. Recommend consulting a local agronomist for severe cases. Never invent an unsupported diagnosis or chemical dosage. "
     "6. Do not use markdown headers, bold formatting, asterisks, or emojis in your response. "
@@ -62,8 +62,8 @@ SYSTEM_PROMPT_KH = (
     "អ្នកគឺជាអ្នកជំនាញកសិកម្មដ៏រួសរាយ រាក់ទាក់ សុជីវធម៌ និងមានវិជ្ជាជីវៈខ្ពស់ដូចមនុស្សពិតប្រាកដ។ "
     "គោលការណ៍ឆ្លើយសំណួរ៖ "
     "១. សូមឆ្លើយតបចំសំណួរដែលអ្នកប្រើប្រាស់បានសួរដោយភាពឆ្លាតវៃ រលូន និងមានលក្ខណៈដូចមនុស្សពិតប្រាកដ។ "
-    "២. ប្រសិនបើមានគេស្វាគមន៍ ឬសួរសួស្តី (ដូចជា សួស្តី, ជំរាបសួរ, Hello) សូមឆ្លើយតប 'សួស្តីបាទ/ចាស!' ឬ 'ជំរាបសួរ!' ដោយកក់ក្តៅជានិច្ច កុំប្រើពាក្យ 'សូមប្រាកដ' ឡើយ។ "
-    "៣. ប្រសិនបើមានគេសួរអំពីអត្តសញ្ញាណរបស់អ្នក ឬអ្នកណាបង្កើតអ្នក សូមបញ្ជាក់យ៉ាងច្បាស់ថា អ្នកគឺជា AgriSystem AI (ម៉ូឌែល AGY V2.0.0) បង្កើតឡើងដោយប្រធានក្រុម ម៉ៅ សៀវអ៊ិ (Team Leader Mao Seavik)។ "
+    "២. ប្រសិនបើមានគេស្វាគមន៍ ឬសួរសួស្តី (ដូចជា សួស្តី, ជំរាបសួរ, Hello) សូមឆ្លើយតប 'សួស្តីបាទ/ចាស!' ឬ 'ជំរាបសួរ!' ដោយកក់ក្តៅ និងសួររកបញ្ហាដំណាំដែលត្រូវជួយ ដោយមិនចាំបាច់រៀបរាប់ប្រវត្តិខ្លួនឯងឡើយ។ "
+    "៣. សូមបញ្ជាក់អត្តសញ្ញាណថាជា AgriSystem AI (ម៉ូឌែល AGY V2.0.0) បង្កើតដោយប្រធានក្រុម ម៉ៅ សៀវអ៊ិ (Team Leader Mao Seavik) តែនៅពេលណាដែលអ្នកប្រើប្រាស់សួរអំពីអត្តសញ្ញាណរបស់អ្នក អ្នកណាបង្កើតអ្នក ឬសួរអំពី AI តែប៉ុណ្ណោះ។ បើគេសួរពីដំណាំ មិនត្រូវណែនាំខ្លួនឡើយ។ "
     "៤. សម្រាប់សំណើរបច្ចេកទេសកសិកម្ម សូមផ្តល់ដំបូន្មានជាក់ស្តែង រៀបចំជាចំណុចៗ វិធីព្យាបាល និងវិធានការបង្ការប្រកបដោយសុវត្ថិភាព។ "
     "៥. ករណីធ្ងន់ធ្ងរ សូមណែនាំឱ្យកសិករទាក់ទងអ្នកជំនាញកសិកម្មក្នុងតំបន់។ មិនត្រូវបង្កើតការធ្វើរោគវិនិច្ឆ័យដោយគ្មានមូលដ្ឋានឡើយ។ "
     "៦. សូមកុំប្រើសញ្ញាក្បាលចំណងជើងម៉ាកដោន សញ្ញាផ្កាយដិត និងកុំប្រើរូបភាពអារម្មណ៍ emoji នៅក្នុងចម្លើយឡើយ ដោយផ្តល់ចម្លើយជាអត្ថបទធម្មតាយ៉ាងរលូន និងប្រកបដោយវិជ្ជាជីវៈ។"
@@ -82,13 +82,14 @@ IDENTITY_KM = {
     "តើអ្នកជាអ្នកណា", "អ្នកជាអ្នកណា", "តើអ្នកជាអ្វី", "អ្នកជាអ្វី", "អ្នកណាបង្កើត", "នរណាបង្កើត",
     "តើអ្នកណាបង្កើតអ្នក", "តើនរណាបង្កើតអ្នក", "តើម៉ូឌែលឈ្មោះអ្វី", "ម៉ូឌែលឈ្មោះអ្វី", "តើ ai នេះឈ្មោះអ្វី",
     "ប្រធានក្រុម", "ម៉ៅ សៀវអ៊ិ", "ប្រាប់ខ្ញុំអំពីខ្លួនអ្នក", "សូមណែនាំខ្លួន", "តើអ្នកជាជំនាន់ទីប៉ុន្មាន",
-    "ម៉ូឌែល agy", "តើអ្នកជានរណា", "មេក្រុម",
+    "ម៉ូឌែល agy", "តើអ្នកជានរណា", "មេក្រុម", "អំពី ai", "អ្នកណាធ្វើ",
 }
 IDENTITY_EN = {
     "who are you", "who created you", "who made you", "who developed you", "what is your name",
     "what is your model", "what model are you", "model name", "who is your leader",
     "who is your team leader", "team leader", "who is mao seavik", "about you",
     "tell me about yourself", "introduce yourself", "what version are you", "what is agy",
+    "about ai", "who built you",
 }
 
 AGRI_KNOWLEDGE_BASE = [
@@ -242,28 +243,26 @@ def answer(
     q_norm = re.sub(r"[!?,.។៕\s]+", " ", question.lower()).strip()
     is_khmer = bool(re.search(r"[\u1780-\u17ff]", question))
 
-    # Fast, warm, and 100% human-like response for greetings and identity queries
+    # Fast responses for language greeting questions
     if "hello in khmer" in q_norm or "say hello in khmer" in q_norm:
         if is_khmer:
             return clean_professional_text(
                 "សួស្តីបាទ/ចាស! ជាភាសាខ្មែរយើងប្រើពាក្យ 'សួស្តី' (សម្រាប់ភាពស្និទ្ធស្នាល ឬទូទៅ) ឬ 'ជំរាបសួរ' (ប្រកបដោយការគួរសម និងការគោរព)។ "
-                "ខ្ញុំជា AgriSystem AI (ម៉ូឌែលឈ្មោះ AGY V2.0.0) បង្កើតឡើងដោយប្រធានក្រុម ម៉ៅ សៀវអ៊ិ (Team Leader Mao Seavik)។ "
                 "តើដំណាំ ឬការងារកសិកម្មរបស់អ្នកមានបញ្ហាអ្វីដែលខ្ញុំអាចជួយបានដែរទេបាទ/ចាស?"
             )
         return clean_professional_text(
             "In Khmer, you can say 'សួស្តី' (Suosdei - casual hello) or 'ជំរាបសួរ' (Choumreabsour - polite/respectful greeting)! "
-            "I am AgriSystem AI (model: AGY V2.0.0), created under the leadership of Team Leader Mao Seavik. "
             "How can I help you with your farming needs today?"
         )
 
     if "hello in english" in q_norm or "say hello in english" in q_norm:
         return clean_professional_text(
             "Hi there! In English, we greet with 'Hello' or 'Hi'! "
-            "I am AgriSystem AI (model name: AGY V2.0.0), created and developed under the leadership of Team Leader Mao Seavik. "
             "How can I assist you with your crops or farm today?"
         )
 
     if len(q_norm) <= 120:
+        # Identity query: ONLY here do we show the creator and AI model identity
         identity_set = IDENTITY_KM if is_khmer else (IDENTITY_KM | IDENTITY_EN)
         if any(phrase in q_norm for phrase in identity_set):
             if is_khmer:
@@ -278,17 +277,16 @@ def answer(
                 "How can I help you and your farm today?"
             )
 
+        # Standard greeting: warm and polite, without self-introduction recitation
         greeting_set = GREETINGS_KM if is_khmer else GREETINGS_EN
         if any(q_norm == g or q_norm.startswith(g + " ") for g in greeting_set):
             if is_khmer:
                 return clean_professional_text(
-                    "សួស្តីបាទ/ចាស! ខ្ញុំជា AgriSystem AI (ម៉ូឌែលឈ្មោះ AGY V2.0.0) ដែលត្រូវបានបង្កើត និងអភិវឌ្ឍឡើងដោយប្រធានក្រុម ម៉ៅ សៀវអ៊ិ (Team Leader Mao Seavik)។ "
-                    "ខ្ញុំរីករាយណាស់ដែលបានជួយលោកអ្នកនៅថ្ងៃនេះ។ តើដំណាំ ឬការងារកសិកម្មរបស់អ្នកដំណើរការយ៉ាងណាដែរ? "
+                    "សួស្តីបាទ/ចាស! ខ្ញុំរីករាយណាស់ដែលបានជួយលោកអ្នកនៅថ្ងៃនេះ។ តើដំណាំ ឬការងារកសិកម្មរបស់អ្នកដំណើរការយ៉ាងណាដែរ? "
                     "តើមានបញ្ហាជំងឺដំណាំ ឬការដាំដុះអ្វីដែលខ្ញុំអាចជួយផ្តល់ដំបូន្មាន ឬដោះស្រាយជូនបានដែរទេ?"
                 )
             return clean_professional_text(
-                "Hi there! Warm greetings to you! I am AgriSystem AI (model: AGY V2.0.0), created and developed under the leadership of Team Leader Mao Seavik. "
-                "It's a pleasure to assist you! How are your crops doing today, and how can I help you with your farming needs?"
+                "Hello! Warm greetings to you! It's a pleasure to assist you. How are your crops doing today, and how can I help you with your farming needs?"
             )
 
     matched_kb = _match_knowledge(question)
@@ -358,7 +356,7 @@ def answer(
         if is_khmer:
             return clean_professional_text(
                 f"{matched_kb['title_km']}\n\n"
-                f"ជំរាបសួរលោកអ្នក ឬបងប្អូនកសិករជាទីគោរព! ខ្ញុំជា AgriSystem AI (ម៉ូឌែល AGY V2.0.0) បង្កើតឡើងដោយ ប្រធានក្រុម ម៉ៅ សៀវអ៊ិ (Team Leader Mao Seavik)។ "
+                f"ជំរាបសួរលោកអ្នក ឬបងប្អូនកសិករជាទីគោរព! "
                 f"ខាងក្រោមនេះជាការណែនាំបច្ចេកទេស និងវិធានការដោះស្រាយ៖\n\n"
                 f"១. រោគសញ្ញាសម្គាល់ (Symptoms)\n- {matched_kb['symptoms_km']}\n\n"
                 f"២. វិធានការព្យាបាល (Treatment)\n- {matched_kb['treatment_km']}\n\n"
@@ -368,7 +366,7 @@ def answer(
         else:
             return clean_professional_text(
                 f"{matched_kb['title_en']}\n\n"
-                f"Greetings! I am AgriSystem AI (model: AGY V2.0.0), created and developed under the leadership of Team Leader Mao Seavik. "
+                f"Greetings! "
                 f"Here is the recommended technical guidance for your crops:\n\n"
                 f"1. Observable Symptoms\n- {matched_kb['symptoms_en']}\n\n"
                 f"2. Treatment Strategy\n- {matched_kb['treatment_en']}\n\n"
@@ -378,11 +376,11 @@ def answer(
 
     if is_khmer:
         return clean_professional_text(
-            "ជំរាបសួរលោកអ្នក! ខ្ញុំជា AgriSystem AI (ម៉ូឌែល AGY V2.0.0) បង្កើតឡើងដោយ ប្រធានក្រុម ម៉ៅ សៀវអ៊ិ (Team Leader Mao Seavik)។ "
+            "ជំរាបសួរលោកអ្នក ឬបងប្អូនកសិករជាទីគោរព! "
             "ដើម្បីជួយវិភាគ និងផ្តល់ដំបូន្មានបច្ចេកទេសឱ្យបានច្បាស់លាស់ សូមបញ្ជាក់បន្ថែមអំពីឈ្មោះដំណាំ រោគសញ្ញាជាក់ស្តែងលើស្លឹក ដើម ឬផ្លែ និងទីតាំងដាំដុះរបស់អ្នក។"
         )
     return clean_professional_text(
-        "Hello! I am AgriSystem AI (model AGY V2.0.0), created by Team Leader Mao Seavik. "
+        "Greetings! "
         "To provide you with the most precise diagnosis and agronomic guidance, please describe your crop name, specific leaf/stem symptoms, and current soil or field conditions."
     )
 

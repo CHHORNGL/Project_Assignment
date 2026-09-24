@@ -216,6 +216,8 @@ def _build_prompt(message: str, context: str, language: Optional[str]) -> str:
             "អ្នកគឺជា AgriSystem AI (ម៉ូឌែលឈ្មោះ AGY V2.0.0) ដែលត្រូវបានបង្កើត និងអភិវឌ្ឍឡើងដោយប្រធានក្រុម ម៉ៅ សៀវអ៊ិ (Team Leader Mao Seavik)។ "
             "អ្នកគឺជាអ្នកជំនាញកសិកម្មដ៏រួសរាយ រាក់ទាក់ សុជីវធម៌ និងមានវិជ្ជាជីវៈខ្ពស់ដូចមនុស្សពិតប្រាកដ។ "
             "សូមឆ្លើយជាភាសាខ្មែរឱ្យបានត្រឹមត្រូវ ច្បាស់លាស់ រលូន និងមានលក្ខណៈវិជ្ជាជីវៈជានិច្ច។ "
+            "សូមបញ្ជាក់អត្តសញ្ញាណថាជា AgriSystem AI និងបង្កើតឡើងដោយប្រធានក្រុម ម៉ៅ សៀវអ៊ិ តែនៅពេលណាដែលអ្នកប្រើប្រាស់សួរអំពីអត្តសញ្ញាណ ឬសួរអំពី AI ប៉ុណ្ណោះ។ "
+            "សម្រាប់សំណើរកសិកម្ម ឬការស្វាគមន៍ សូមឆ្លើយតបចំគោលដៅដោយមិនបាច់ណែនាំខ្លួនឡើយ។ "
             "សូមកុំប្រើសញ្ញាក្បាលចំណងជើងម៉ាកដោន សញ្ញាផ្កាយដិត និងកុំប្រើរូបភាពអារម្មណ៍ emoji ឡើយ។ "
             "ផ្តល់ដំបូន្មានជាក់ស្តែង រៀបចំជាចំណុច វិធីព្យាបាល និងវិធានការបង្ការប្រកបដោយសុវត្ថិភាព។\n\n"
             f"បរិបទចំណេះដឹងកសិកម្ម៖\n{bounded_context}\n\n"
@@ -229,6 +231,7 @@ def _build_prompt(message: str, context: str, language: Optional[str]) -> str:
         "You are AgriSystem AI (model name: AGY V2.0.0), created and developed under the leadership of Team Leader Mao Seavik. "
         "You are a professional, empathetic, and knowledgeable agricultural expert who communicates naturally and warmly like a human agronomist. "
         f"Answer in {language_name}. Give complete, well-structured, practical advice regarding crop health, diagnosis, IPM, safe chemical treatment, and prevention. "
+        "Only introduce yourself as AgriSystem AI created by Team Leader Mao Seavik if the user explicitly asks who you are, who created you, or about the AI. For agricultural queries, answer directly without self-introduction. "
         "Do not use markdown headers, bold formatting, asterisks, or emojis in your response. Output smooth, clean, professional plain text.\n\n"
         f"Knowledge-base context:\n{bounded_context}\n\n"
         f"Farmer question:\n{bounded_message}\n\nAnswer:\n"
@@ -530,6 +533,46 @@ def _synthesize_local_expert_reply(user_message: str, context: str = "", languag
                 matched_kb_item = item
                 break
 
+    # Check if user is asking about the AI / creator / identity
+    identity_keywords_km = [
+        "អ្នកជាអ្នកណា", "អ្នកណាបង្កើត", "នរណាបង្កើត", "ម៉ូឌែលឈ្មោះអ្វី", "ai នេះឈ្មោះអ្វី",
+        "ប្រធានក្រុម", "ម៉ៅ សៀវអ៊ិ", "អំពីខ្លួនអ្នក", "ណែនាំខ្លួន", "ជំនាន់ទីប៉ុន្មាន", "ម៉ូឌែល agy",
+        "ជានរណា", "មេក្រុម", "អំពី ai", "អ្នកណាធ្វើ", "ឈ្មោះអ្វី",
+    ]
+    identity_keywords_en = [
+        "who are you", "who created you", "who made you", "who developed you", "what is your name",
+        "what is your model", "what model are you", "model name", "who is your leader",
+        "who is your team leader", "team leader", "who is mao seavik", "about you",
+        "tell me about yourself", "introduce yourself", "what version are you", "what is agy",
+        "about ai", "who built you",
+    ]
+    if is_khmer and any(k in q_norm for k in identity_keywords_km):
+        return clean_professional_text(
+            "ជំរាបសួរលោកអ្នក! ខ្ញុំគឺជា AgriSystem AI (ម៉ូឌែលឈ្មោះ AGY V2.0.0) ដែលត្រូវបានបង្កើត និងអភិវឌ្ឍឡើងដោយប្រធានក្រុម ម៉ៅ សៀវអ៊ិ (Team Leader Mao Seavik)។ "
+            "ខ្ញុំជាជំនួយការកសិកម្មឆ្លាតវៃ ត្រៀមខ្លួនជានិច្ចក្នុងការជួយពិនិត្យជំងឺដំណាំ វិភាគរោគសញ្ញា ផ្តល់បច្ចេកទេសដាំដុះ និងចែករំលែកវិធីសាស្រ្តការពារ និងការព្យាបាលប្រកបដោយសុវត្ថិភាពខ្ពស់។ "
+            "តើថ្ងៃនេះខ្ញុំអាចជួយអ្វីដល់លោកអ្នកបានខ្លះដែរ?"
+        )
+    if not is_khmer and any(k in q_norm for k in identity_keywords_en):
+        return clean_professional_text(
+            "Hello! I am AgriSystem AI (model name: AGY V2.0.0), created and developed under the leadership of Team Leader Mao Seavik. "
+            "I am an intelligent agricultural assistant dedicated to helping farmers diagnose plant diseases, improve crop health, and adopt safe, sustainable farming practices. "
+            "How can I help you and your farm today?"
+        )
+
+    # Check for simple greetings
+    greetings_km = {"សួស្តី", "សួស្ដី", "សួរស្តី", "សួរស្ដី", "ជំរាបសួរ", "ជំរាបសួរបង", "សួស្តីបង", "សួស្តីប្អូន", "អរុណសួស្តី", "សុខសប្បាយជាទេ", "hello", "hi"}
+    greetings_en = {"hi", "hello", "hey", "greetings", "good morning", "good afternoon", "how are you", "hi there"}
+    active_greetings = greetings_km if is_khmer else greetings_en
+    if any(q_norm == g or q_norm.startswith(g + " ") for g in active_greetings):
+        if is_khmer:
+            return clean_professional_text(
+                "សួស្តីបាទ/ចាស! ខ្ញុំរីករាយណាស់ដែលបានជួយលោកអ្នកនៅថ្ងៃនេះ។ តើដំណាំ ឬការងារកសិកម្មរបស់អ្នកដំណើរការយ៉ាងណាដែរ? "
+                "តើមានបញ្ហាជំងឺដំណាំ ឬការដាំដុះអ្វីដែលខ្ញុំអាចជួយផ្តល់ដំបូន្មាន ឬដោះស្រាយជូនបានដែរទេ?"
+            )
+        return clean_professional_text(
+            "Hello! Warm greetings to you! It's a pleasure to assist you. How are your crops doing today, and how can I help you with your farming needs?"
+        )
+
     # Handle Crop Fertilizer / Nutrition Guidance
     target_crop_name = ""
     if matched_crop:
@@ -541,8 +584,7 @@ def _synthesize_local_expert_reply(user_message: str, context: str = "", languag
         if is_khmer:
             return clean_professional_text(
                 f"ការណែនាំបច្ចេកទេសជី និងអាហារូបត្ថម្ភសម្រាប់ដំណាំ {target_crop_name}\n\n"
-                f"ជំរាបសួរលោកអ្នក ឬបងប្អូនកសិករជាទីគោរព! ខ្ញុំជា AgriSystem AI (ម៉ូឌែល AGY V2.0.0) បង្កើតឡើងដោយ ប្រធានក្រុម ម៉ៅ សៀវអ៊ិ (Team Leader Mao Seavik)។ "
-                f"ខាងក្រោមនេះជារូបមន្ត និងកាលវិភាគប្រើប្រាស់ជីប្រកបដោយប្រសិទ្ធភាពខ្ពស់៖\n\n"
+                f"ជំរាបសួរលោកអ្នក ឬបងប្អូនកសិករជាទីគោរព! ខាងក្រោមនេះជារូបមន្ត និងកាលវិភាគប្រើប្រាស់ជីប្រកបដោយប្រសិទ្ធភាពខ្ពស់៖\n\n"
                 f"១. ដំណាក់កាលលូតលាស់ដើម និងស្លឹក (Vegetative Stage)\n"
                 f"- ប្រើប្រាស់ជីកំប៉ុសសរីរាង្គពុកផុយល្អលាយជាមួយផ្សិតទ្រីកូឌែរម៉ា (Trichoderma) ដើម្បីបំប៉នដី និងការពារជំងឺឫស។\n"
                 f"- បន្ថែមជី NPK រូបមន្តតុល្យភាពដូចជា 15-15-15 ឬ 16-16-16 ឬជីអ៊ុយរ៉េ (46-0-0) ក្នុងបរិមាណសមស្របតាមអាយុកាលដំណាំ។\n\n"
@@ -556,8 +598,7 @@ def _synthesize_local_expert_reply(user_message: str, context: str = "", languag
         else:
             return clean_professional_text(
                 f"Fertilizer and Nutrient Management for {target_crop_name}\n\n"
-                f"Greetings! I am AgriSystem AI (model: AGY V2.0.0), created and developed under the leadership of Team Leader Mao Seavik. "
-                f"Here is your customized nutrition program:\n\n"
+                f"Greetings! Here is your customized nutrition program:\n\n"
                 f"1. Vegetative and Growth Stage\n"
                 f"- Apply well-decomposed organic compost inoculated with Trichoderma to improve soil organic matter and suppress root pathogens.\n"
                 f"- Side-dress with balanced NPK (15-15-15 or 16-16-16) or moderate nitrogen (Urea 46-0-0) calibrated to plant age.\n\n"
@@ -574,8 +615,7 @@ def _synthesize_local_expert_reply(user_message: str, context: str = "", languag
         if is_khmer:
             return clean_professional_text(
                 f"{matched_kb_item['title_km']}\n\n"
-                f"ជំរាបសួរលោកអ្នក ឬបងប្អូនកសិករជាទីគោរព! ខ្ញុំជា AgriSystem AI (ម៉ូឌែល AGY V2.0.0) បង្កើតឡើងដោយ ប្រធានក្រុម ម៉ៅ សៀវអ៊ិ (Team Leader Mao Seavik)។ "
-                f"ខាងក្រោមនេះជាវិធានការដោះស្រាយ និងការព្យាបាលប្រកបដោយវិជ្ជាជីវៈ៖\n\n"
+                f"ជំរាបសួរលោកអ្នក ឬបងប្អូនកសិករជាទីគោរព! ខាងក្រោមនេះជាវិធានការដោះស្រាយ និងការព្យាបាលប្រកបដោយវិជ្ជាជីវៈ៖\n\n"
                 f"១. រោគសញ្ញាជាក់ស្តែង (Symptoms)\n"
                 f"- {matched_kb_item['symptoms_km']}\n\n"
                 f"២. វិធានការព្យាបាលបន្ទាន់ (Treatment)\n"
@@ -587,8 +627,7 @@ def _synthesize_local_expert_reply(user_message: str, context: str = "", languag
         else:
             return clean_professional_text(
                 f"{matched_kb_item['title_en']}\n\n"
-                f"Greetings! I am AgriSystem AI (model: AGY V2.0.0), created and developed under the leadership of Team Leader Mao Seavik. "
-                f"Here is the structured agronomic recommendation for your farm:\n\n"
+                f"Greetings! Here is the structured agronomic recommendation for your farm:\n\n"
                 f"1. Symptoms and Diagnosis\n"
                 f"- {matched_kb_item['symptoms_en']}\n\n"
                 f"2. Immediate Treatment Strategy\n"
@@ -609,8 +648,7 @@ def _synthesize_local_expert_reply(user_message: str, context: str = "", languag
             prev = matched_disease.prevention_tips_kh or matched_disease.prevention_tips or "ជ្រើសរើសពូជធន់ ដាំលើដីមានប្រព័ន្ធបង្ហូរទឹកល្អ និងកែតម្រូវដីដោយកំបោរកសិកម្ម។"
             return clean_professional_text(
                 f"ការណែនាំបច្ចេកទេស៖ {d_name} លើដំណាំ {c_name}\n\n"
-                f"ជំរាបសួរលោកអ្នក ឬបងប្អូនកសិករជាទីគោរព! ខ្ញុំជា AgriSystem AI (ម៉ូឌែល AGY V2.0.0) បង្កើតឡើងដោយ ប្រធានក្រុម ម៉ៅ សៀវអ៊ិ (Team Leader Mao Seavik)។ "
-                f"ខាងក្រោមនេះជាវិធានការដោះស្រាយ និងការព្យាបាលប្រកបដោយវិជ្ជាជីវៈ៖\n\n"
+                f"ជំរាបសួរលោកអ្នក ឬបងប្អូនកសិករជាទីគោរព! ខាងក្រោមនេះជាវិធានការដោះស្រាយ និងការព្យាបាលប្រកបដោយវិជ្ជាជីវៈ៖\n\n"
                 f"១. រោគសញ្ញា និងមូលហេតុបង្ក (Symptoms & Cause)\n"
                 f"- ការពិពណ៌នា៖ {desc}\n"
                 f"- មូលហេតុចម្បង៖ {cause}\n\n"
@@ -629,8 +667,7 @@ def _synthesize_local_expert_reply(user_message: str, context: str = "", languag
             prev = matched_disease.prevention_tips or "Maintain good field drainage, ensure balanced fertilization, and apply preventative bio-controls."
             return clean_professional_text(
                 f"Technical Guidance: {d_name} on {c_name}\n\n"
-                f"Greetings! I am AgriSystem AI (model: AGY V2.0.0), created and developed under the leadership of Team Leader Mao Seavik. "
-                f"Here is the structured agronomic recommendation for your farm:\n\n"
+                f"Greetings! Here is the structured agronomic recommendation for your farm:\n\n"
                 f"1. Symptoms and Root Cause\n"
                 f"- Overview: {desc}\n"
                 f"- Root Cause: {cause}\n\n"
@@ -643,7 +680,7 @@ def _synthesize_local_expert_reply(user_message: str, context: str = "", languag
 
     if is_khmer:
         return clean_professional_text(
-            "ជំរាបសួរលោកអ្នក ឬបងប្អូនកសិករជាទីគោរព! ខ្ញុំជា AgriSystem AI (ម៉ូឌែល AGY V2.0.0) បង្កើតឡើងដោយ ប្រធានក្រុម ម៉ៅ សៀវអ៊ិ។ "
+            "ជំរាបសួរលោកអ្នក ឬបងប្អូនកសិករជាទីគោរព! "
             "ខ្ញុំបានកត់ត្រាសំណួររបស់អ្នករួចហើយ។ ដើម្បីជួយវិភាគឱ្យកាន់តែចំគោលដៅ និងផ្តល់រូបមន្តព្យាបាលបានត្រឹមត្រូវ សូមជម្រាបបន្ថែមអំពី៖\n"
             "១. ឈ្មោះដំណាំដែលកំពុងដាំ (ឧទាហរណ៍៖ ស្រូវ ទុរេន ដំឡូងមី ម្រេច បន្លែ...)\n"
             "២. រោគសញ្ញាជាក់ស្តែងលើស្លឹក ដើម ឬឫស\n"
@@ -651,7 +688,7 @@ def _synthesize_local_expert_reply(user_message: str, context: str = "", languag
             "ខ្ញុំត្រៀមខ្លួនជានិច្ចដើម្បីជួយដោះស្រាយជូនលោកអ្នក!"
         )
     return clean_professional_text(
-        "Hello! I am AgriSystem AI (model: AGY V2.0.0), created and developed under the leadership of Team Leader Mao Seavik. "
+        "Greetings! "
         "To provide you with the most accurate diagnosis and treatment plan, could you please specify:\n"
         "1. Your crop name (e.g. Rice, Durian, Cassava, Sweet Corn, Pepper, Vegetables)\n"
         "2. Visible symptoms on the leaves, stems, or fruits\n"
