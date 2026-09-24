@@ -96,6 +96,10 @@ IDENTITY_EN = {
     "tell me about yourself", "introduce yourself", "what version are you", "what is agy",
     "about ai", "who built you",
 }
+CASUAL_THANKS_KM = {"អរគុណ", "អរគុណច្រើន", "អរគុណបង", "ជួយបានច្រើន", "ល្អណាស់"}
+CASUAL_THANKS_EN = {"thank you", "thanks", "appreciate", "helpful", "great job", "good job", "awesome"}
+CASUAL_EMPATHY_KM = {"ហត់", "នឿយ", "បារម្ភ", "តានតឹង", "លាហើយ", "ជម្រាបលា", "ចូលគេង", "និយាយលេង"}
+CASUAL_EMPATHY_EN = {"tired", "exhausted", "worried", "stress", "stressed", "bye", "goodbye", "see you", "sleep", "chat"}
 
 AGRI_KNOWLEDGE_BASE = [
     {
@@ -163,7 +167,46 @@ AGRI_KNOWLEDGE_BASE = [
         "treatment_en": "Apply agricultural lime (Dolomite or Calcite) at 500-1000 kg/ha, incorporate into soil 2-3 weeks prior to planting.",
         "prevention_km": "បន្ថែមជីកំប៉ុស និងជីលាមកសត្វពុកផុយដើម្បីបង្កើនសារធាតុសរីរាង្គក្នុងដី និងធ្វើតេស្ត pH ដីជារៀងរាល់ឆ្នាំ។",
         "prevention_en": "Incorporate mature organic compost regularly to buffer soil pH and test soil acidity annually.",
-    }
+    },
+    {
+        "keywords": ["ជី", "npk", "fertilizer", "ទិន្នផល", "yield", "អ៊ុយរ៉េ", "urea", "តុល្យភាពជី"],
+        "title_km": "តុល្យភាពសមាមាត្រជី N-P-K និងការបង្កើនទិន្នផលដំណាំផ្អែកលើទិន្នន័យ",
+        "title_en": "Data-Driven N-P-K Fertilizer Balancing & Yield Optimization",
+        "crop_km": "ជី និងទិន្នផល",
+        "crop_en": "Fertilizer & Yield",
+        "symptoms_km": "ការដាក់ជីអ៊ុយរ៉េច្រើនហួសប្រមាណធ្វើឱ្យដើមនិងស្លឹកលូតលាស់ទន់ជ្រាយ ងាយរលំដួល និងទាក់ទាញជំងឺប្លាស់និងសត្វល្អិត។",
+        "symptoms_en": "Excessive nitrogen causes thin fragile cell walls, severe crop lodging, and increased susceptibility to blast and sucking insects.",
+        "treatment_km": "បំបែកការដាក់ជីជាដំណាក់កាល៖ ដាក់ជីទ្រាប់បាត (DAP + Potassium) ពេលរៀបដី និងបំប៉នជីអ៊ុយរ៉េ + ប៉ូតាស្យូមនៅវគ្គបែកគុម្ព និងចេញផ្កា។ ប្រើប៉ូតាស្យូមដើម្បីពង្រឹងកោសិកាឱ្យធន់នឹងជំងឺ។",
+        "treatment_en": "Adopt split application: basal DAP and potassium at land preparation, then split-apply urea and potassium at tillering and booting. Increase potassium to thicken cell walls.",
+        "prevention_km": "គណនាជីតាមតម្រូវការដកហូតជាក់ស្តែងនៃដំណាំក្នុងមួយតោនទិន្នផល និងប្រើជីសរីរាង្គកំប៉ុសរួមផ្សំដើម្បីកាត់បន្ថយថ្លៃដើម ២០-៣៥%។",
+        "prevention_en": "Calculate crop nutrient removal per ton of expected yield and integrate organic compost to lower synthetic fertilizer costs by 20-35%.",
+    },
+    {
+        "keywords": ["ប្តូរមុខដំណាំ", "crop rotation", "សណ្តែក", "legume", "ដីខូច", "ដង្កូវពកឫស"],
+        "title_km": "អត្ថប្រយោជន៍វិទ្យាសាស្រ្តនៃការប្តូរមុខដំណាំជាមួយដំណាំសណ្តែក",
+        "title_en": "Agronomic Data on Crop Rotation & Legume Nitrogen Fixation",
+        "crop_km": "ការប្តូរមុខដំណាំ",
+        "crop_en": "Crop Rotation",
+        "symptoms_km": "ការដាំដំណាំដដែលៗច្រើនរដូវកាលជាប់គ្នាធ្វើឱ្យដីខ្សោះជីវជាតិ និងកើតមានដង្កូវពកឫសព្រមទាំងមេរោគផ្សិតក្នុងដីកាន់តែខ្លាំង។",
+        "symptoms_en": "Continuous monoculture depletes specific root-zone nutrients, exacerbates root-knot nematode populations, and builds up soil pathogens.",
+        "treatment_km": "ដាំដំណាំត្រកូលសណ្តែក (សណ្តែកបាយ សណ្តែកដី) បន្ទាប់ពីប្រមូលផលស្រូវ។ បាក់តេរី Rhizobium នៅលើឫសសណ្តែកជួយស្រូបយកអាសូតពីបរិយាកាសបញ្ចូលក្នុងដី ៣០-៥០ គីឡូក្រាម/ហិកតា។",
+        "treatment_en": "Rotate with legumes (mung beans, peanuts) after grain harvests. Rhizobium root nodules fix 30-50 kg atmospheric Nitrogen/ha directly into the soil.",
+        "prevention_km": "រៀបចំផែនការបង្វិលដំណាំប្រចាំឆ្នាំដើម្បីកាត់ផ្តាច់វដ្តជីវិតសត្វល្អិត និងកាត់បន្ថយការប្រើប្រាស់ជីគីមីរដូវបន្ទាប់បាន ២៥-៣០%។",
+        "prevention_en": "Establish a multi-season rotation to break insect life cycles and reduce synthetic nitrogen fertilizer requirements for the next crop by 25-30%.",
+    },
+    {
+        "keywords": ["ipm", "កម្រិតសេដ្ឋកិច្ច", "economic threshold", "គ្រប់គ្រងសត្វល្អិត", "អន្ទាក់"],
+        "title_km": "ការគ្រប់គ្រងសត្វល្អិតចម្រុះ (IPM) និងទិន្នន័យកម្រិតសេដ្ឋកិច្ច",
+        "title_en": "Integrated Pest Management (IPM) & Economic Threshold Data",
+        "crop_km": "ការគ្រប់គ្រងសត្វល្អិត",
+        "crop_en": "Pest Management",
+        "symptoms_km": "ការប្រញាប់បាញ់ថ្នាំគីមីពេលឃើញសត្វល្អិតបន្តិចបន្តួច បណ្តាលឱ្យងាប់សត្វល្អិតមានប្រយោជន៍ និងធ្វើឱ្យសត្វល្អិតចង្រៃស៊ាំថ្នាំផ្ទុះឡើងខ្លាំង។",
+        "symptoms_en": "Premature insecticide spraying kills beneficial predators (spiders, parasitoid wasps), causing pest resurgence and chemical resistance.",
+        "treatment_km": "ចុះពិនិត្យចម្ការប្រចាំសប្តាហ៍។ ប្រសិនបើសត្វល្អិតនៅក្រោមកម្រិតសេដ្ឋកិច្ច (ឧ. ស្លឹកខូចក្រោម ៥-១០%) សូមប្រើភ្នាក់ងារជីវសាស្រ្ត (Bt, Beauveria) ឬអន្ទាក់ស្អិត។ ប្រើថ្នាំគីមីលុះត្រាតែកើនលើសកម្រិតទប់ទល់។",
+        "treatment_en": "Conduct weekly scouting. If pests remain below economic thresholds (e.g. under 5-10% foliar damage), use biologicals (Bt, Beauveria bassiana) or sticky traps. Reserve chemicals for extreme outbreaks.",
+        "prevention_km": "ដាំផ្កាជុំវិញភ្លឺស្រែដើម្បីបង្កើតជម្រកសម្រាប់សត្វល្អិតមានប្រយោជន៍ដែលជួយស៊ីសត្វល្អិតចង្រៃដោយឥតគិតថ្លៃ។",
+        "prevention_en": "Plant flowering bund borders to shelter predatory beneficial insects that provide continuous free biological suppression.",
+    },
 ]
 
 
@@ -310,6 +353,47 @@ def answer(
                 )
             return clean_professional_text(
                 "Hello! Warm greetings to you! It's a pleasure to assist you. How are your crops doing today, and how can I help you with your farming needs?"
+            )
+
+        # Casual conversation: gratitude, empathy, encouragement, and polite farewells
+        is_thanks = any(t in q_norm for t in CASUAL_THANKS_KM) if is_khmer else any(t in q_norm for t in CASUAL_THANKS_EN)
+        if is_thanks and not any(k in q_norm for k in ["ជំងឺ", "disease", "រលួយ", "rot", "ថ្នាំ"]):
+            if is_khmer:
+                return clean_professional_text(
+                    "មិនអីទេបាទ/ចាស! ខ្ញុំរីករាយណាស់ដែលបានជួយលោកអ្នក។ "
+                    "ប្រសិនបើដំណាំ ឬការងារចម្ការរបស់អ្នកមានបញ្ហា ឬត្រូវការជំនួយបន្ថែមនៅពេលក្រោយ សូមកុំស្ទាក់ស្ទើរក្នុងការសួរខ្ញុំណា។ "
+                    "សូមជូនពរឱ្យដំណាំរបស់អ្នកលូតលាស់ល្អ និងទទួលបានទិន្នផលខ្ពស់!"
+                )
+            return clean_professional_text(
+                "You are very welcome! I am truly glad I could help you today. "
+                "If you ever have more questions about crop health, soil care, or farming techniques, please don't hesitate to ask. "
+                "Wishing you healthy crops and a wonderful harvest season!"
+            )
+
+        is_empathy = any(t in q_norm for t in CASUAL_EMPATHY_KM) if is_khmer else any(t in q_norm for t in CASUAL_EMPATHY_EN)
+        if is_empathy and not any(k in q_norm for k in ["ជំងឺ", "disease", "រលួយ", "rot", "ថ្នាំ"]):
+            if any(k in q_norm for k in ["លាហើយ", "ជម្រាបលា", "bye", "goodbye", "see you"]):
+                if is_khmer:
+                    return clean_professional_text(
+                        "ជម្រាបលាបាទ/ចាស! សូមជូនពរឱ្យលោកអ្នកមានសុខភាពល្អ និងទទួលបានជោគជ័យក្នុងការប្រមូលផលដំណាំ។ "
+                        "ពេលណាមានចម្ងល់កសិកម្ម អាចត្រឡប់មកជជែកជាមួយខ្ញុំបានគ្រប់ពេលណា!"
+                    )
+                return clean_professional_text(
+                    "Goodbye! Take great care of yourself and your farm. "
+                    "May your fields flourish, and I look forward to chatting with you again whenever you need advice."
+                )
+            if is_khmer:
+                return clean_professional_text(
+                    "ខ្ញុំយល់ច្បាស់ពីការលំបាក និងការនឿយហត់របស់បងប្អូនកសិករ! "
+                    "ការងារកសិកម្មទាមទារទាំងកម្លាំងកាយ កម្លាំងចិត្ត និងការអត់ធ្មត់ខ្ពស់នៅក្រោមពន្លឺថ្ងៃ និងអាកាសធាតុប្រែប្រួល។ "
+                    "សូមកុំភ្លេចសម្រាក និងថែរក្សាសុខភាពឱ្យបានល្អណា។ "
+                    "តើបច្ចុប្បន្នដំណាំរបស់អ្នកមានបញ្ហាអ្វីដែលខ្ញុំអាចជួយសម្រួលការងារបច្ចេកទេសជូនបានដែរទេ?"
+                )
+            return clean_professional_text(
+                "I truly understand how demanding and exhausting farming can be. "
+                "Working under the sun and dealing with unpredictable weather requires immense resilience and hard work. "
+                "Please make sure to take breaks, stay hydrated, and care for yourself. "
+                "How are your crops looking right now? I would be glad to help lighten your load with tailored technical advice."
             )
 
     matched_kb = _match_knowledge(question)

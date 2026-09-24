@@ -937,6 +937,65 @@ def generate_assistant_reply(
                 db.session.rollback()
         return reply
 
+    if agent_plan.intent == "casual_conversation":
+        msg_clean = user_message.lower().strip()
+        if lang == "km":
+            if any(term in user_message for term in ["អរគុណ", "អរគុណច្រើន", "អរគុណបង"]):
+                reply = (
+                    "មិនអីទេបាទ/ចាស! ខ្ញុំរីករាយណាស់ដែលបានជួយលោកអ្នក។ "
+                    "ប្រសិនបើដំណាំ ឬការងារចម្ការរបស់អ្នកមានបញ្ហា ឬត្រូវការជំនួយបន្ថែមនៅពេលក្រោយ សូមកុំស្ទាក់ស្ទើរក្នុងការសួរខ្ញុំណា។ "
+                    "សូមជូនពរឱ្យដំណាំរបស់អ្នកលូតលាស់ល្អ និងទទួលបានទិន្នផលខ្ពស់!"
+                )
+            elif any(term in user_message for term in ["ហត់", "នឿយ", "បារម្ភ", "តានតឹង"]):
+                reply = (
+                    "ខ្ញុំយល់ច្បាស់ពីការលំបាក និងការនឿយហត់របស់បងប្អូនកសិករ! "
+                    "ការងារកសិកម្មទាមទារទាំងកម្លាំងកាយ កម្លាំងចិត្ត និងការអត់ធ្មត់ខ្ពស់នៅក្រោមពន្លឺថ្ងៃ និងអាកាសធាតុប្រែប្រួល។ "
+                    "សូមកុំភ្លេចសម្រាក និងថែរក្សាសុខភាពឱ្យបានល្អណា។ "
+                    "តើបច្ចុប្បន្នដំណាំរបស់អ្នកមានបញ្ហាអ្វីដែលខ្ញុំអាចជួយសម្រួលការងារបច្ចេកទេសជូនបានដែរទេ?"
+                )
+            elif any(term in user_message for term in ["លាហើយ", "ជម្រាបលា"]):
+                reply = (
+                    "ជម្រាបលាបាទ/ចាស! សូមជូនពរឱ្យលោកអ្នកមានសុខភាពល្អ និងទទួលបានជោគជ័យក្នុងការប្រមូលផលដំណាំ។ "
+                    "ពេលណាមានចម្ងល់កសិកម្ម អាចត្រឡប់មកជជែកជាមួយខ្ញុំបានគ្រប់ពេលណា!"
+                )
+            else:
+                reply = (
+                    "សួស្តីបាទ/ចាស! ខ្ញុំរីករាយក្នុងការជជែកលេង និងផ្លាស់ប្តូរគំនិតជាមួយលោកអ្នកជានិច្ច ទាំងរឿងការងារកសិកម្ម បច្ចេកវិទ្យា ឬជីវិតប្រចាំថ្ងៃក្នុងចម្ការ។ "
+                    "តើថ្ងៃនេះមានរឿងអ្វីប្លែក ឬគួរឱ្យចាប់អារម្មណ៍ខ្លះកើតឡើងនៅចម្ការរបស់អ្នក?"
+                )
+        else:
+            if any(term in msg_clean for term in ["thank", "thanks", "appreciate", "helpful"]):
+                reply = (
+                    "You are very welcome! I am truly glad I could help you today. "
+                    "If you ever have more questions about crop health, soil care, or farming techniques, please don't hesitate to ask. "
+                    "Wishing you healthy crops and a wonderful harvest season!"
+                )
+            elif any(term in msg_clean for term in ["tired", "exhaust", "worry", "worried", "stress"]):
+                reply = (
+                    "I truly understand how demanding and exhausting farming can be. "
+                    "Working under the sun and dealing with unpredictable weather requires immense resilience and hard work. "
+                    "Please make sure to take breaks, stay hydrated, and care for yourself. "
+                    "How are your crops looking right now? I would be glad to help lighten your load with tailored technical advice."
+                )
+            elif any(term in msg_clean for term in ["bye", "goodbye", "see you"]):
+                reply = (
+                    "Goodbye! Take great care of yourself and your farm. "
+                    "May your fields flourish, and I look forward to chatting with you again whenever you need advice."
+                )
+            else:
+                reply = (
+                    "Hello! I would love to chat! Whether you want to discuss farming, modern agricultural practices, "
+                    "or just share how your day went in the fields, I am all ears. How can I assist you and your farm today?"
+                )
+        if charges_farmer_credits:
+            tokens_used = max(15, (len(user_message) + len(reply)) // 4)
+            current_user.ai_credits = max(0, (current_user.ai_credits or 0) - tokens_used)
+            try:
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+        return reply
+
     from app.models.site_setting import SiteSetting
     from app.services.ai_expert_service import legacy_fallback_enabled, is_huggingface_provider
     try:

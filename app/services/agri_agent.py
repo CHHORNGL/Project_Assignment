@@ -70,6 +70,25 @@ def plan_request(
         "អរុណសួស្តី", "ទិវាសួស្តី", "សាយណ្ហសួស្តី", "សុខសប្បាយជាទេ", "សុខសប្បាយ",
         "អ្នកសុខសប្បាយទេ",
     )
+    thanks_terms = (
+        "thank", "thanks", "appreciate", "helpful", "good job", "great job", "awesome",
+        "អរគុណ", "អរគុណច្រើន", "អរគុណបង", "ជួយបានច្រើន", "ល្អណាស់",
+    )
+    casual_terms = (
+        "bye", "goodbye", "see you", "have a nice day", "tired", "exhausted", "worried",
+        "stress", "stressed", "friend", "happy", "chat with you", "small talk", "sleep",
+        "how was your day", "how is your day",
+        "លាហើយ", "ជម្រាបលា", "សុខសប្បាយទេ", "បារម្ភ", "ហត់", "តានតឹង", "មិត្តភក្តិ",
+        "សប្បាយរីករាយ", "និយាយលេង", "ចូលគេង", "នឿយហត់",
+    )
+    insights_terms = (
+        "insight", "insights", "soil test", "soil ph", "ph level", "ph value",
+        "nutrient balance", "npk balance", "npk ratio", "crop rotation", "yield optimization",
+        "yield data", "economic threshold", "water efficiency", "moisture threshold",
+        "drip irrigation", "soil analysis",
+        "ទិន្នន័យ", "ការវិភាគ", "កម្រិត ph", "តុល្យភាពជី", "ការប្តូរមុខដំណាំ", "ការបង្កើនទិន្នផល",
+        "ទិន្នផល", "កម្រិតសេដ្ឋកិច្ច", "ការស្រោចស្រពដំណក់ទឹក", "ការវិភាគដី",
+    )
 
     clean_text = re.sub(r"[!?,.។៕\s]+", " ", text).strip()
     is_greeting = any(
@@ -84,6 +103,12 @@ def plan_request(
     elif is_greeting and len(clean_text) <= 50:
         intent = "greeting"
         tools = ()
+    elif _has_any(text, thanks_terms) or _has_any(text, casual_terms):
+        intent = "casual_conversation"
+        tools = ()
+    elif _has_any(text, insights_terms):
+        intent = "agricultural_insights"
+        tools = ("knowledge_base",)
     elif _has_any(text, weather_terms):
         intent = "weather_advice"
         tools = ("weather", "knowledge_base")
@@ -176,7 +201,7 @@ def build_agent_context(
         elif "weather" in plan.tools and latitude is not None and longitude is not None:
             sections.append("លទ្ធផលអាកាសធាតុ៖\n" + _weather_tool(latitude, longitude, language))
 
-        if plan.intent not in {"greeting", "agent_identity"}:
+        if plan.intent not in {"greeting", "agent_identity", "casual_conversation"}:
             try:
                 from app.services.openai_assistant import _build_kb_context
                 knowledge_context, crop = _build_kb_context(message)
@@ -193,6 +218,21 @@ def build_agent_context(
                 "គោលការណ៍ឆ្លើយតបការស្វាគមន៍ (Greeting Policy)៖\n"
                 "កសិករកំពុងស្វាគមន៍ ឬសួរសួស្តី (Hello / Greetings)។ "
                 "សូមឆ្លើយតបការស្វាគមន៍ដោយភាពរាក់ទាក់ កក់ក្តៅ និងគួរសមបំផុតជាភាសាខ្មែរ ហើយសួរបញ្ជាក់ថាតើមានបញ្ហាដំណាំ ការដាំដុះ ឬជំងឺរុក្ខជាតិអ្វីដែលកសិករចង់ឱ្យជួយប្រឹក្សាដែរឬទេ។ មិនត្រូវណែនាំប្រវត្តិខ្លួនឯង ឬអ្នកបង្កើតឡើយ លើកលែងតែកសិករសួរអំពីអត្តសញ្ញាណ AI ផ្ទាល់។"
+            )
+        if plan.intent == "casual_conversation":
+            sections.append(
+                "គោលការណ៍ឆ្លើយតបការសន្ទនាទូទៅ (Casual Conversation Policy)៖\n"
+                "កសិករកំពុងជជែកលេង បង្ហាញការអរគុណ ឬចែករំលែកអារម្មណ៍ (ដូចជាការនឿយហត់ ឬក្តីបារម្ភក្នុងចម្ការ)។ "
+                "សូមឆ្លើយតបដោយភាពរួសរាយ រាក់ទាក់ កក់ក្តៅ និងផ្តល់កម្លាំងចិត្តដល់កសិករ។ "
+                "ប្រសិនបើកសិករអរគុណ សូមឆ្លើយតបដោយសុជីវធម៌ និងរីករាយក្នុងការជួយបន្ត។ "
+                "ប្រសិនបើកសិករមានការព្រួយបារម្ភពីដំណាំ ឬនឿយហត់ សូមបង្ហាញការយល់ចិត្ត និងលើកទឹកចិត្ត រួមទាំងសួរបញ្ជាក់ថាតើដំណាំមានបញ្ហាអ្វីដែលយើងអាចរួមគ្នាដោះស្រាយបានដែរឬទេ។ "
+                "មិនត្រូវណែនាំខ្លួនជាថ្មីឡើយ។"
+            )
+        if plan.intent == "agricultural_insights":
+            sections.append(
+                "គោលការណ៍ទិន្នន័យ និងការវិភាគកសិកម្ម (Agricultural Insights Policy)៖\n"
+                "កសិករចង់បានការវិភាគស៊ីជម្រៅ ឬការទាញយកការយល់ដឹងពីទិន្នន័យ (ដូចជាការវិភាគដី កម្រិត pH តុល្យភាពជី NPK ការទស្សន៍ទាយអាកាសធាតុ ការបង្កើនទិន្នផល ឬការប្តូរមុខដំណាំ)។ "
+                "សូមផ្តល់ការវិភាគបែបវិទ្យាសាស្រ្តច្បាស់លាស់ ផ្អែកលើទិន្នន័យ និងការអនុវត្តជាក់ស្តែងក្នុងវិស័យកសិកម្ម ដើម្បីជួយឱ្យកសិករកាត់បន្ថយការចំណាយ បង្កើនទិន្នផល និងការពារបរិស្ថានប្រកបដោយចីរភាព។"
             )
         if plan.intent == "agent_identity":
             sections.append(
@@ -228,7 +268,7 @@ def build_agent_context(
         elif "weather" in plan.tools and latitude is not None and longitude is not None:
             sections.append("Weather tool result:\n" + _weather_tool(latitude, longitude, language))
 
-        if plan.intent not in {"greeting", "agent_identity"}:
+        if plan.intent not in {"greeting", "agent_identity", "casual_conversation"}:
             try:
                 # Import lazily to avoid the existing assistant module importing itself
                 # while Flask is registering services.
@@ -246,6 +286,20 @@ def build_agent_context(
             sections.append(
                 "Greeting Policy:\n"
                 "The farmer is greeting you (Hello / Hi). Respond warmly, politely, and helpfully. Ask how you can assist with their crops or farming today. Do not recite your self-introduction or creator information unless specifically asked about the AI's identity."
+            )
+        if plan.intent == "casual_conversation":
+            sections.append(
+                "Casual Conversation Policy:\n"
+                "The farmer is engaging in casual conversation, expressing gratitude, or sharing feelings (such as farm fatigue or concern about yields). "
+                "Respond warmly, empathetically, and conversationally. Provide genuine encouragement and support for their hard work. "
+                "If they say thank you, respond gracefully and welcome future questions. "
+                "Offer a thoughtful conversational follow-up to check how their crops or farm chores are going today."
+            )
+        if plan.intent == "agricultural_insights":
+            sections.append(
+                "Agricultural Insights Policy:\n"
+                "The farmer is seeking data-driven insights, analytical guidance, or evidence-based farming strategies (such as interpreting soil test data, optimizing N-P-K nutrient balancing, soil pH adjustment, weather-informed field operations, or crop rotation cycles). "
+                "Provide actionable, evidence-based agronomic insights that help the farmer optimize input costs, maximize yield quality, and protect soil and crop health sustainably."
             )
         if plan.intent == "agent_identity":
             sections.append(

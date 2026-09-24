@@ -60,7 +60,7 @@ Execute the training script:
 ```
 
 ### ⏱️ Expected Time:
-- **T4 GPU:** ~25 to 35 minutes for 4 epochs (2,845 records).
+- **T4 GPU:** ~25 to 35 minutes for 4 epochs (2,937 records including casual conversation & data-driven agricultural insights).
 - **A100 GPU:** ~8 to 12 minutes.
 
 ---

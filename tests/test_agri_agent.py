@@ -41,6 +41,24 @@ class AgriAgentPlanningTestCase(unittest.TestCase):
         self.assertEqual(plan.intent, "agent_identity")
         self.assertEqual(plan.tools, ())
 
+    def test_casual_conversation_intent_for_gratitude_and_empathy(self):
+        plan_km = plan_request("អរគុណច្រើនប្អូន", language="km")
+        self.assertEqual(plan_km.intent, "casual_conversation")
+        self.assertEqual(plan_km.tools, ())
+
+        plan_en = plan_request("Thank you so much for your help!", language="en")
+        self.assertEqual(plan_en.intent, "casual_conversation")
+        self.assertEqual(plan_en.tools, ())
+
+    def test_agricultural_insights_intent_for_data_queries(self):
+        plan_km = plan_request("តើទិន្នន័យនៃការវិភាគដីជួយកសិករដូចម្តេច?", language="km")
+        self.assertEqual(plan_km.intent, "agricultural_insights")
+        self.assertIn("knowledge_base", plan_km.tools)
+
+        plan_en = plan_request("How can I use soil test data to optimize fertilizer application?", language="en")
+        self.assertEqual(plan_en.intent, "agricultural_insights")
+        self.assertIn("knowledge_base", plan_en.tools)
+
 
 if __name__ == "__main__":
     unittest.main()
