@@ -270,22 +270,24 @@ def _is_valid_output(text: str, is_khmer: bool) -> bool:
 
 def _match_knowledge(question: str) -> dict | None:
     q_norm = question.lower()
+
+    # 1. Match specific disease/practice from AGRI_KNOWLEDGE_BASE first!
+    for item in AGRI_KNOWLEDGE_BASE:
+        if any(k in q_norm for k in item["keywords"]):
+            return item
+
+    # 2. Only if no specific disease was matched, check if user explicitly requested a catalog
     disease_list_terms = [
-        "ជំងឺអ្វីខ្លះ", "មានជំងឺអ្វីខ្លះ", "កើតជំងឺអ្វីខ្លះ", "មានជំងឺអ្វី", "កើតជំងឺអ្វី",
-        "ជំងឺណាខ្លះ", "រាយនាមជំងឺ", "ជំងឺទាំងអស់", "បញ្ជីជំងឺ", "មានជំងឺ", "កើតជំងឺ",
-        "អ្វីខ្លះ", "what diseases", "which diseases", "what are the diseases", "list of diseases",
-        "list diseases", "all diseases", "common diseases", "diseases of", "diseases affecting",
-        "diseases on", "disease of", "crop diseases", "show diseases",
+        "ជំងឺអ្វីខ្លះ", "មានជំងឺអ្វីខ្លះ", "កើតជំងឺអ្វីខ្លះ",
+        "ជំងឺណាខ្លះ", "រាយនាមជំងឺ", "បញ្ជីជំងឺ", "ជំងឺទាំងអស់",
+        "what diseases", "which diseases", "what are the diseases", "list of diseases",
+        "list diseases", "all diseases of", "catalog of diseases",
     ]
     is_list_query = any(t in q_norm for t in disease_list_terms)
     if is_list_query:
         for cat in CROP_DISEASES_CATALOG:
             if any(k in q_norm for k in cat["keywords"]):
                 return cat
-
-    for item in AGRI_KNOWLEDGE_BASE:
-        if any(k in q_norm for k in item["keywords"]):
-            return item
 
     return None
 

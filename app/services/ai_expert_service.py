@@ -676,11 +676,10 @@ def _synthesize_local_expert_reply(user_message: str, context: str = "", languag
         if matched_crop:
             crop_diseases = matched_crop.diseases or []
             disease_list_terms = [
-                "ជំងឺអ្វីខ្លះ", "មានជំងឺអ្វីខ្លះ", "កើតជំងឺអ្វីខ្លះ", "មានជំងឺអ្វី", "កើតជំងឺអ្វី",
-                "ជំងឺណាខ្លះ", "រាយនាមជំងឺ", "ជំងឺទាំងអស់", "បញ្ជីជំងឺ", "មានជំងឺ", "កើតជំងឺ",
-                "អ្វីខ្លះ", "what diseases", "which diseases", "what are the diseases", "list of diseases",
-                "list diseases", "all diseases", "common diseases", "diseases of", "diseases affecting",
-                "diseases on", "disease of", "crop diseases", "show diseases",
+                "ជំងឺអ្វីខ្លះ", "មានជំងឺអ្វីខ្លះ", "កើតជំងឺអ្វីខ្លះ",
+                "ជំងឺណាខ្លះ", "រាយនាមជំងឺ", "ជំងឺទាំងអស់", "បញ្ជីជំងឺ",
+                "what diseases", "which diseases", "what are the diseases", "list of diseases",
+                "list diseases", "all diseases of", "catalog of diseases",
             ]
             is_disease_listing_query = any(k in q_norm for k in disease_list_terms)
 
@@ -713,8 +712,8 @@ def _synthesize_local_expert_reply(user_message: str, context: str = "", languag
                     if matched_disease:
                         break
 
-            # If no specific disease was identified, synthesize a full disease catalog for this crop
-            if not matched_disease and crop_diseases and not is_fertilizer_query:
+            # If user explicitly asked for listing diseases of this crop
+            if not matched_disease and crop_diseases and is_disease_listing_query and not is_fertilizer_query:
                 is_listing_all_crop_diseases = True
 
         # 3. If no crop matched, search globally across all database diseases
