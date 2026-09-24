@@ -152,6 +152,16 @@ web process; existing chat URLs remain unchanged. Set
 `AI_LEGACY_FALLBACK_ENABLED=false` to keep farmer chat on the trained
 agricultural model only.
 
+### Agricultural agent
+
+Farmer chat now uses a controlled agent layer before calling the Hugging Face
+model. It selects trusted application tools for the request, including the
+agricultural knowledge base and the existing weather service when the farmer
+allows location access. The model explains those results in English or Khmer;
+it cannot execute arbitrary tools, change database records, invent live weather,
+or claim to have inspected an image it did not receive. Rule-based diagnosis
+remains the authoritative diagnosis workflow.
+
 ---
 
 ## ⚙️ Installation & Local Setup

@@ -171,8 +171,9 @@ def _build_prompt(message: str, context: str, language: Optional[str]) -> str:
     return (
         "You are AgriSystem AI, a careful agricultural assistant. "
         f"Answer in {language_name}. Use only the knowledge-base context below; "
-        "do not invent pesticide doses, diagnoses, or guarantees. If the context "
-        "is insufficient, say that more information or a local expert is needed. "
+        "follow the trusted agent instructions and do not invent pesticide doses, "
+        "diagnoses, live weather, or guarantees. If the context is insufficient, "
+        "say that more information or a local expert is needed. "
         "Give concise, practical advice and mention uncertainty when appropriate.\n\n"
         f"Knowledge-base context:\n{bounded_context}\n\n"
         f"Farmer question:\n{bounded_message}\n\nAnswer:\n"

@@ -709,6 +709,8 @@
 <form method="POST" class="w-100" id="farmer-chat-form">
     <div class="v0-composer-card">
         <input type="hidden" name="model_choice" id="farmer-chat-model" value="auto">
+        <input type="hidden" name="latitude" id="farmer-chat-latitude" value="">
+        <input type="hidden" name="longitude" id="farmer-chat-longitude" value="">
         <label for="farmer-chat-input" class="sr-only">{% if current_lang == "km" %}សួរ AI{% else %}Ask AI{% endif %}</label>
         <span id="expert-compose-help" class="sr-only">{% if current_lang == "km" %}ប្រាប់អំពីដំណាំ និងរោគសញ្ញារបស់អ្នក។{% else %}Describe your crop, symptoms, or question.{% endif %}</span>
         <div class="v0-textarea-container">
@@ -773,6 +775,29 @@
 
     function hasComposerContent() {
         return Boolean(textarea.value.trim());
+    }
+
+    function asksForWeather(text) {
+        return /weather|forecast|rain|temperature|wind|flood|drought|អាកាសធាតុ|ភ្លៀង|សីតុណ្ហភាព|ខ្យល់|ទឹកជំនន់|រាំងស្ងួត/i.test(text || "");
+    }
+
+    async function requestLocationForWeather(text) {
+        const latitudeInput = document.getElementById("farmer-chat-latitude");
+        const longitudeInput = document.getElementById("farmer-chat-longitude");
+        if (!asksForWeather(text) || !navigator.geolocation || !latitudeInput || !longitudeInput) return;
+        if (latitudeInput.value && longitudeInput.value) return;
+
+        await new Promise((resolve) => {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    latitudeInput.value = position.coords.latitude.toFixed(5);
+                    longitudeInput.value = position.coords.longitude.toFixed(5);
+                    resolve();
+                },
+                () => resolve(),
+                { enableHighAccuracy: false, timeout: 2500, maximumAge: 300000 }
+            );
+        });
     }
 
     // Start with one line and grow only as the user types.
@@ -974,8 +999,9 @@
         event.preventDefault();
         const message = textarea.value.trim();
         if (sending || !message) return;
-        const payload = new FormData(form);
         sending = true;
+        await requestLocationForWeather(message);
+        const payload = new FormData(form);
         textarea.value = "";
         autoResize();
         form.setAttribute("aria-busy", "true");

@@ -545,6 +545,9 @@ def generate_assistant_reply(
     image_bytes: Optional[bytes] = None,
     image_mime_type: str = "image/jpeg",
     model_choice: Optional[str] = None,
+    conversation: Optional[list[tuple[str, str]]] = None,
+    latitude: Optional[float] = None,
+    longitude: Optional[float] = None,
 ) -> Optional[str]:
     from app.extensions import db
     charges_farmer_credits = _uses_farmer_ai_credits(current_user)
@@ -566,24 +569,37 @@ def generate_assistant_reply(
             else:
                 return "Sorry! You have run out of AI Credits (Tokens). Please upgrade to a Premium account for unlimited AI chat."
 
-    kb_context, crop = _build_kb_context(user_message)
     lang = get_current_language()
-    lang_name = "Khmer" if lang == "km" else "English"
+    from app.services.agri_agent import build_agent_context
 
-    # Keep model hosting outside Flask. When configured, this remote provider
-    # is attempted first; existing OpenAI/Gemini/Groq handling remains the
-    # fallback so deployments can switch providers without changing clients.
+    agent_context, agent_plan = build_agent_context(
+        user_message,
+        language=lang,
+        conversation=conversation,
+        has_image=bool(image_bytes),
+        latitude=latitude,
+        longitude=longitude,
+    )
+    current_app.logger.info(
+        "Agricultural agent route intent=%s tools=%s",
+        agent_plan.intent,
+        ",".join(agent_plan.tools) or "none",
+    )
+
+    # Keep model hosting outside Flask. The agent selects trusted application
+    # tools first, then the remote model explains their results in the user's
+    # language. No arbitrary model-selected tool call is executed here.
     try:
         from app.services.ai_expert_service import generate_reply as generate_remote_reply
 
         remote_reply = generate_remote_reply(
             user_message,
-            context=kb_context,
+            context=agent_context,
             language=lang,
         )
         if remote_reply:
             if charges_farmer_credits:
-                tokens_used = (len(kb_context) + len(user_message) + len(remote_reply)) // 4
+                tokens_used = (len(agent_context) + len(user_message) + len(remote_reply)) // 4
                 current_user.ai_credits = max(0, current_user.ai_credits - tokens_used)
                 try:
                     db.session.commit()

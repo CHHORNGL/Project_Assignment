@@ -1521,6 +1521,10 @@ def chat(session_id=None):
                 )
                 db.session.add(session)
                 db.session.flush()
+            conversation_context = [
+                (item.sender, item.message)
+                for item in sorted(session.messages, key=lambda item: item.created_at or datetime.min)[-6:]
+            ]
             farmer_message = ChatMessage(
                 sender="farmer",
                 message=user_message,
@@ -1545,16 +1549,26 @@ def chat(session_id=None):
                 return short and any(t in greeting_words for t in tokens)
 
             if image_bytes:
+                latitude = request.form.get("latitude", type=float)
+                longitude = request.form.get("longitude", type=float)
                 reply = generate_assistant_reply(
                     user_message,
                     image_bytes=image_bytes,
                     image_mime_type=image_mime_type,
                     model_choice=request.form.get("model_choice", "auto"),
+                    conversation=conversation_context,
+                    latitude=latitude,
+                    longitude=longitude,
                 )
             else:
+                latitude = request.form.get("latitude", type=float)
+                longitude = request.form.get("longitude", type=float)
                 reply = generate_assistant_reply(
                     user_message,
                     model_choice=request.form.get("model_choice", "auto"),
+                    conversation=conversation_context,
+                    latitude=latitude,
+                    longitude=longitude,
                 )
 
             if not reply:
