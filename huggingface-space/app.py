@@ -10,6 +10,11 @@ import gradio as gr
 from peft import PeftModel
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
+try:
+    from crop_catalog import CROP_DISEASES_CATALOG
+except ImportError:
+    CROP_DISEASES_CATALOG = []
+
 
 MODEL_ID = "Maoseavik/agri-qwen3b-lora"
 BASE_MODEL_ID = "Qwen/Qwen2.5-3B-Instruct"
@@ -222,9 +227,27 @@ def _is_valid_output(text: str, is_khmer: bool) -> bool:
 
 def _match_knowledge(question: str) -> dict | None:
     q_norm = question.lower()
+    disease_list_terms = [
+        "ជំងឺអ្វីខ្លះ", "មានជំងឺអ្វីខ្លះ", "កើតជំងឺអ្វីខ្លះ", "មានជំងឺអ្វី", "កើតជំងឺអ្វី",
+        "ជំងឺណាខ្លះ", "រាយនាមជំងឺ", "ជំងឺទាំងអស់", "បញ្ជីជំងឺ", "មានជំងឺ", "កើតជំងឺ",
+        "អ្វីខ្លះ", "what diseases", "which diseases", "what are the diseases", "list of diseases",
+        "list diseases", "all diseases", "common diseases", "diseases of", "diseases affecting",
+        "diseases on", "disease of", "crop diseases", "show diseases",
+    ]
+    is_list_query = any(t in q_norm for t in disease_list_terms)
+    if is_list_query:
+        for cat in CROP_DISEASES_CATALOG:
+            if any(k in q_norm for k in cat["keywords"]):
+                return cat
+
     for item in AGRI_KNOWLEDGE_BASE:
         if any(k in q_norm for k in item["keywords"]):
             return item
+
+    for cat in CROP_DISEASES_CATALOG:
+        if any(k in q_norm for k in cat["keywords"]):
+            return cat
+
     return None
 
 
@@ -292,7 +315,18 @@ def answer(
     matched_kb = _match_knowledge(question)
     kb_context = context.strip() if context else ""
     if matched_kb and not kb_context:
-        if is_khmer:
+        if matched_kb.get("is_catalog"):
+            if is_khmer:
+                kb_context = (
+                    f"ប្រធានបទ៖ {matched_kb['title_km']}\n\n"
+                    f"បញ្ជីជំងឺទាំងអស់៖\n{matched_kb['symptoms_km']}"
+                )
+            else:
+                kb_context = (
+                    f"Topic: {matched_kb['title_en']}\n\n"
+                    f"Disease Catalog:\n{matched_kb['symptoms_en']}"
+                )
+        elif is_khmer:
             kb_context = (
                 f"ប្រធានបទ៖ {matched_kb['title_km']}\n"
                 f"រោគសញ្ញា៖ {matched_kb['symptoms_km']}\n"
@@ -353,7 +387,22 @@ def answer(
 
     # Fallback to structured knowledge synthesis if model generated degenerate output
     if matched_kb:
-        if is_khmer:
+        if matched_kb.get("is_catalog"):
+            if is_khmer:
+                return clean_professional_text(
+                    f"{matched_kb['title_km']}៖\n\n"
+                    f"ជំរាបសួរលោកអ្នក ឬបងប្អូនកសិករជាទីគោរព! នៅក្នុងប្រព័ន្ធបណ្តុះបណ្តាលកសិកម្ម AgriSystem ដំណាំ {matched_kb.get('crop_km', '')} មានកត់ត្រាជំងឺ និងសត្វល្អិតចម្បងៗដូចខាងក្រោម៖\n\n"
+                    f"{matched_kb['symptoms_km']}\n\n"
+                    f"ដំបូន្មានបច្ចេកទេស៖ ប្រសិនបើដំណាំ {matched_kb.get('crop_km', '')} របស់អ្នកកំពុងមានរោគសញ្ញាជាក់លាក់ណាមួយ សូមរៀបរាប់អំពីរោគសញ្ញាលើស្លឹក ដើម ឬផ្លែ ដើម្បីឱ្យខ្ញុំជួយធ្វើរោគវិនិច្ឆ័យលម្អិត និងផ្តល់រូបមន្តព្យាបាលឱ្យចំគោលដៅបំផុត។"
+                )
+            else:
+                return clean_professional_text(
+                    f"{matched_kb['title_en']}:\n\n"
+                    f"Greetings! The AgriSystem trained knowledge base includes the following key diseases and conditions affecting {matched_kb.get('crop_en', '')}:\n\n"
+                    f"{matched_kb['symptoms_en']}\n\n"
+                    f"Agronomic Advice: If your {matched_kb.get('crop_en', '')} crops are showing specific symptoms, please describe what you observe on the leaves, stems, or fruits so I can provide an exact diagnosis and tailored treatment plan."
+                )
+        elif is_khmer:
             return clean_professional_text(
                 f"{matched_kb['title_km']}\n\n"
                 f"ជំរាបសួរលោកអ្នក ឬបងប្អូនកសិករជាទីគោរព! "

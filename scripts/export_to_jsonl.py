@@ -400,6 +400,74 @@ def _crop_records(crop: Any) -> Iterable[dict[str, Any]]:
             metadata={"crop_id": crop.id, "crop": name},
         )
 
+        # Generate crop disease listing records for all diseases of this crop
+        if language == "km" and getattr(crop, "diseases", None):
+            items_km = []
+            for idx, d in enumerate(crop.diseases, 1):
+                d_km = _field(d, "name", "km")
+                d_en = _field(d, "name", "en")
+                d_desc = _field(d, "description", "km") or ""
+                d_treat = _field(d, "treatment", "km") or ""
+                desc_s = d_desc.split("។")[0].strip() + "។" if "។" in d_desc else d_desc[:120].strip()
+                treat_s = d_treat.split("។")[0].strip() + "។" if "។" in d_treat else d_treat[:120].strip()
+                d_disp = d_km if (d_km.startswith("ជំងឺ") or d_km.startswith("ការ") or d_km.startswith("មេរោគ") or d_km.startswith("កង្វះ")) else f"ជំងឺ{d_km}"
+                items_km.append(f"{idx}. {d_disp} ({d_en})\n- រោគសញ្ញាសម្គាល់៖ {desc_s}\n- វិធីព្យាបាលចម្បង៖ {treat_s}")
+
+            dis_list_body = "\n\n".join(items_km)
+            dis_answer_km = (
+                f"បញ្ជីជំងឺ និងបញ្ហាប្រឈមចម្បងៗលើដំណាំ {name} (សរុប {len(crop.diseases)} ជំងឺ)៖\n\n"
+                f"ខាងក្រោមនេះជាជំងឺ និងបញ្ហាប្រឈមចម្បងៗដែលកើតឡើងលើដំណាំ {name} នៅក្នុងប្រព័ន្ធបណ្តុះបណ្តាល AgriSystem៖\n\n"
+                f"{dis_list_body}\n\n"
+                f"ដំបូន្មានបច្ចេកទេស៖ ប្រសិនបើដំណាំ {name} របស់អ្នកកំពុងមានរោគសញ្ញាជាក់លាក់ណាមួយ សូមរៀបរាប់អំពីរោគសញ្ញាលើស្លឹក ដើម ឬផ្លែ ដើម្បីឱ្យខ្ញុំជួយធ្វើរោគវិនិច្ឆ័យលម្អិត និងផ្តល់រូបមន្តព្យាបាលឱ្យចំគោលដៅបំផុត។"
+            )
+            km_disease_questions = [
+                f"តើដំណាំ {name} មានជំងឺអ្វីខ្លះ?",
+                f"តើមានជំងឺអ្វីខ្លះដែលតែងតែកើតមានលើដំណាំ {name}?",
+                f"សូមរាយនាមជំងឺទាំងអស់លើដំណាំ {name} ដែលមានក្នុងប្រព័ន្ធបណ្តុះបណ្តាល។",
+            ]
+            for q_idx, q_text in enumerate(km_disease_questions):
+                yield _record(
+                    record_id=f"crop_diseases:{crop.id}:km:{q_idx}",
+                    language="km",
+                    question=q_text,
+                    answer=dis_answer_km,
+                    category="crop_diseases",
+                    metadata={"crop_id": crop.id, "crop": name, "disease_count": len(crop.diseases)},
+                )
+        elif language == "en" and getattr(crop, "diseases", None):
+            items_en = []
+            for idx, d in enumerate(crop.diseases, 1):
+                d_en = _field(d, "name", "en")
+                d_km = _field(d, "name", "km")
+                d_desc = _field(d, "description", "en") or ""
+                d_treat = _field(d, "treatment", "en") or ""
+                desc_s = d_desc.split(".")[0].strip() + "." if "." in d_desc else d_desc[:120].strip()
+                treat_s = d_treat.split(".")[0].strip() + "." if "." in d_treat else d_treat[:120].strip()
+                title_d = f"{d_en} ({d_km})" if d_km else d_en
+                items_en.append(f"{idx}. {title_d}\n- Observable Symptoms: {desc_s}\n- Primary Treatment: {treat_s}")
+
+            dis_list_body = "\n\n".join(items_en)
+            dis_answer_en = (
+                f"Key Diseases and Pathogens Affecting {name} ({len(crop.diseases)} Recorded Diseases):\n\n"
+                f"Greetings! The AgriSystem trained knowledge base includes the following key diseases and conditions affecting {name}:\n\n"
+                f"{dis_list_body}\n\n"
+                f"Agronomic Advice: If your {name} is showing specific symptoms, please describe what you observe on the leaves, stems, or fruits so I can provide an exact diagnosis and tailored treatment plan."
+            )
+            en_disease_questions = [
+                f"What diseases can affect {name}?",
+                f"What are all the common diseases of {name}?",
+                f"List all diseases that affect {name}.",
+            ]
+            for q_idx, q_text in enumerate(en_disease_questions):
+                yield _record(
+                    record_id=f"crop_diseases:{crop.id}:en:{q_idx}",
+                    language="en",
+                    question=q_text,
+                    answer=dis_answer_en,
+                    category="crop_diseases",
+                    metadata={"crop_id": crop.id, "crop": name, "disease_count": len(crop.diseases)},
+                )
+
 
 def _rule_records(disease: Any) -> Iterable[dict[str, Any]]:
     crop = disease.crop

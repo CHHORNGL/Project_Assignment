@@ -505,12 +505,31 @@ def _build_kb_context(message: str) -> Tuple[str, Optional[Crop]]:
     message_clean = (message or "").strip().lower()
 
     if crop:
-        diseases = (
+        all_crop_diseases = (
             Disease.query
             .filter_by(crop_id=crop.id)
             .order_by(Disease.name.asc())
             .all()
         )
+        matched_disease = None
+        for d in all_crop_diseases:
+            cand_names = [getattr(d, "name_kh", None), d.name]
+            for cand in cand_names:
+                if cand:
+                    cand_clean = normalize_display_text(cand, lang="km").strip().lower()
+                    if any("\u1780" <= ch <= "\u17ff" for ch in cand_clean):
+                        if cand_clean in message_clean:
+                            matched_disease = d
+                            break
+                    elif _normalize(cand_clean) in _normalize(message):
+                        matched_disease = d
+                        break
+            if matched_disease:
+                break
+        if matched_disease:
+            diseases = [matched_disease]
+        else:
+            diseases = all_crop_diseases
     else:
         # Check if message mentions any specific disease directly
         all_diseases = Disease.query.all()
@@ -544,18 +563,6 @@ def _build_kb_context(message: str) -> Tuple[str, Optional[Crop]]:
         empty_msg = "រកមិនឃើញព័ត៌មានជំងឺនៅក្នុងប្រព័ន្ធឡើយ។" if lang == "km" else "No diseases found in the knowledge base."
         return empty_msg, crop
 
-    disease_ids = [d.id for d in diseases]
-    rules = (
-        Rule.query
-        .options(joinedload(Rule.symptoms), joinedload(Rule.disease))
-        .filter(Rule.disease_id.in_(disease_ids))
-        .all()
-    )
-
-    rules_by_disease = {}
-    for rule in rules:
-        rules_by_disease.setdefault(rule.disease_id, []).append(rule)
-
     lang = get_current_language()
     is_km = lang == "km"
 
@@ -583,6 +590,50 @@ def _build_kb_context(message: str) -> Tuple[str, Optional[Crop]]:
         lines.append(f"{crop_lbl} {localize(crop, 'name', crop.name)}")
         if crop_desc:
             lines.append(f"{desc_lbl} {crop_desc}")
+
+    # If multiple diseases match (e.g. user asks about the crop's diseases),
+    # output a concise summary of ALL diseases so that every single disease fits without truncation.
+    if len(diseases) > 1:
+        header_text = (
+            f"បញ្ជីជំងឺ និងបញ្ហាទាំងអស់លើដំណាំ {localize(crop, 'name', crop.name) if crop else ''} (សរុប {len(diseases)} ជំងឺ)៖"
+            if is_km
+            else f"All Recorded Diseases for {localize(crop, 'name', crop.name) if crop else 'Crop'} ({len(diseases)} diseases):"
+        )
+        lines.append(header_text)
+        for i, disease in enumerate(diseases, 1):
+            d_name = localize(disease, "name", disease.name)
+            d_name_en = disease.name or ""
+            description = localize(disease, "description", disease.description or "")
+            treatment = localize(disease, "treatment", disease.treatment or "")
+            desc_short = (
+                description.split("។")[0].strip() + "។"
+                if is_km and "។" in description
+                else (description.split(".")[0].strip() + "." if "." in description else description[:110].strip())
+            )
+            treat_short = (
+                treatment.split("។")[0].strip() + "។"
+                if is_km and "។" in treatment
+                else (treatment.split(".")[0].strip() + "." if "." in treatment else treatment[:110].strip())
+            )
+            title_display = f"{d_name} ({d_name_en})" if is_km and d_name != d_name_en else d_name
+            lines.append(f"{i}. {title_display}")
+            if desc_short:
+                lines.append(f"{desc_lbl} {desc_short}")
+            if treat_short:
+                lines.append(f"{treat_lbl} {treat_short}")
+        return "\n".join(lines), crop
+
+    disease_ids = [d.id for d in diseases]
+    rules = (
+        Rule.query
+        .options(joinedload(Rule.symptoms), joinedload(Rule.disease))
+        .filter(Rule.disease_id.in_(disease_ids))
+        .all()
+    )
+
+    rules_by_disease = {}
+    for rule in rules:
+        rules_by_disease.setdefault(rule.disease_id, []).append(rule)
 
     for disease in diseases:
         lines.append(f"{dis_lbl} {localize(disease, 'name', disease.name)}")
@@ -837,13 +888,13 @@ def generate_assistant_reply(
     if agent_plan.intent == "agent_identity":
         if lang == "km":
             reply = (
-                "ជំរាបសួរលោកអ្នក! ខ្ញុំគឺជា **AgriSystem AI** (ម៉ូឌែលឈ្មោះ **AGY V2.0.0**) ដែលត្រូវបានបង្កើត និងអភិវឌ្ឍឡើងដោយ**ប្រធានក្រុម ម៉ៅ សៀវអ៊ិ (Team Leader Mao Seavik)**។ "
+                "ជំរាបសួរលោកអ្នក! ខ្ញុំគឺជា AgriSystem AI (ម៉ូឌែលឈ្មោះ AGY V2.0.0) ដែលត្រូវបានបង្កើត និងអភិវឌ្ឍឡើងដោយប្រធានក្រុម ម៉ៅ សៀវអ៊ិ (Team Leader Mao Seavik)។ "
                 "ខ្ញុំជាជំនួយការកសិកម្មឆ្លាតវៃ ត្រៀមខ្លួនជានិច្ចក្នុងការជួយពិនិត្យជំងឺដំណាំ វិភាគរោគសញ្ញា ផ្តល់បច្ចេកទេសដាំដុះ និងចែករំលែកវិធីសាស្រ្តការពារ និងការព្យាបាលប្រកបដោយសុវត្ថិភាពខ្ពស់។ "
                 "តើថ្ងៃនេះខ្ញុំអាចជួយអ្វីដល់លោកអ្នកបានខ្លះដែរ?"
             )
         else:
             reply = (
-                "Hello! I am **AgriSystem AI** (model name: **AGY V2.0.0**), created and developed under the leadership of **Team Leader Mao Seavik**. "
+                "Hello! I am AgriSystem AI (model name: AGY V2.0.0), created and developed under the leadership of Team Leader Mao Seavik. "
                 "I am an intelligent agricultural assistant dedicated to helping farmers diagnose plant diseases, improve crop health, and adopt safe, sustainable farming practices. "
                 "How can I help you and your farm today?"
             )
@@ -860,22 +911,22 @@ def generate_assistant_reply(
         msg_clean = user_message.lower().strip()
         if "hello in khmer" in msg_clean:
             reply = (
-                "សួស្តីបាទ/ចាស! ជាភាសាខ្មែរយើងប្រើពាក្យ 'សួស្តី' (សម្រាប់ភាពស្និទ្ធស្នាល ឬទូទៅ) ឬ 'ជំរាបសួរ' (ប្រកបដោយការគួរសម និងការគោរព)។ ខ្ញុំជា AgriSystem AI (ម៉ូឌែល AGY V2.0.0) បង្កើតឡើងដោយប្រធានក្រុម ម៉ៅ សៀវអ៊ិ (Team Leader Mao Seavik)។ តើខ្ញុំអាចជួយអ្វីលោកអ្នកបានខ្លះនៅថ្ងៃនេះបាទ/ចាស?"
+                "សួស្តីបាទ/ចាស! ជាភាសាខ្មែរយើងប្រើពាក្យ 'សួស្តី' (សម្រាប់ភាពស្និទ្ធស្នាល ឬទូទៅ) ឬ 'ជំរាបសួរ' (ប្រកបដោយការគួរសម និងការគោរព)។ "
+                "តើដំណាំ ឬការងារកសិកម្មរបស់អ្នកមានបញ្ហាអ្វីដែលខ្ញុំអាចជួយបានដែរទេបាទ/ចាស?"
             )
         elif "hello in english" in msg_clean:
             reply = (
-                "Hi there! In English, we greet with 'Hello' or 'Hi'! I am AgriSystem AI (model name: AGY V2.0.0), created and developed under the leadership of Team Leader Mao Seavik. How can I assist you with your crops or farm today?"
+                "Hi there! In English, we greet with 'Hello' or 'Hi'! "
+                "How can I assist you with your crops or farm today?"
             )
         elif lang == "km":
             reply = (
-                "សួស្តីបាទ/ចាស! ខ្ញុំជា AgriSystem AI (ម៉ូឌែលឈ្មោះ AGY V2.0.0) ដែលត្រូវបានបង្កើត និងអភិវឌ្ឍឡើងដោយប្រធានក្រុម ម៉ៅ សៀវអ៊ិ (Team Leader Mao Seavik)។ "
-                "ខ្ញុំរីករាយណាស់ដែលបានជួយលោកអ្នកនៅថ្ងៃនេះ។ តើដំណាំ ឬការងារកសិកម្មរបស់អ្នកដំណើរការយ៉ាងណាដែរ? "
+                "សួស្តីបាទ/ចាស! ខ្ញុំរីករាយណាស់ដែលបានជួយលោកអ្នកនៅថ្ងៃនេះ។ តើដំណាំ ឬការងារកសិកម្មរបស់អ្នកដំណើរការយ៉ាងណាដែរ? "
                 "តើមានបញ្ហាជំងឺដំណាំ ឬការដាំដុះអ្វីដែលខ្ញុំអាចជួយផ្តល់ដំបូន្មាន ឬដោះស្រាយជូនបានដែរទេ?"
             )
         else:
             reply = (
-                "Hi there! Warm greetings to you! I am AgriSystem AI (model: AGY V2.0.0), created and developed under the leadership of Team Leader Mao Seavik. "
-                "It's a pleasure to assist you! How are your crops doing today, and how can I help you with your farming needs?"
+                "Hello! Warm greetings to you! It's a pleasure to assist you. How are your crops doing today, and how can I help you with your farming needs?"
             )
         if charges_farmer_credits:
             tokens_used = max(15, (len(user_message) + len(reply)) // 4)

@@ -130,8 +130,8 @@ class UserTokensAndPremiumTests(unittest.TestCase):
         app = Flask(__name__)
         with app.app_context(), app.test_request_context():
             with patch("app.services.openai_assistant.current_user", premium_farmer):
-                reply = generate_assistant_reply("សួស្តី")
-                # Premium user receives full assistant greeting, not blocked
+                reply = generate_assistant_reply("តើអ្នកជានរណា?")
+                # Premium user receives full assistant identity reply, not blocked
                 self.assertIn("AGY V2.0.0", reply)
                 self.assertIn("ម៉ៅ សៀវអ៊ិ", reply)
                 # Verify credits remained 0 (not deducted into negative)
@@ -151,7 +151,7 @@ class UserTokensAndPremiumTests(unittest.TestCase):
         app = Flask(__name__)
         with app.app_context(), app.test_request_context():
             with patch("app.services.openai_assistant.current_user", simple_farmer):
-                reply = generate_assistant_reply("hello in khmer")
+                reply = generate_assistant_reply("តើអ្នកណាបង្កើតអ្នក?")
                 self.assertIn("ម៉ៅ សៀវអ៊ិ", reply)
                 self.assertLess(simple_farmer.ai_credits, 10000)
 

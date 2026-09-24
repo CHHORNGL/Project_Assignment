@@ -218,6 +218,7 @@ def _build_prompt(message: str, context: str, language: Optional[str]) -> str:
             "សូមឆ្លើយជាភាសាខ្មែរឱ្យបានត្រឹមត្រូវ ច្បាស់លាស់ រលូន និងមានលក្ខណៈវិជ្ជាជីវៈជានិច្ច។ "
             "សូមបញ្ជាក់អត្តសញ្ញាណថាជា AgriSystem AI និងបង្កើតឡើងដោយប្រធានក្រុម ម៉ៅ សៀវអ៊ិ តែនៅពេលណាដែលអ្នកប្រើប្រាស់សួរអំពីអត្តសញ្ញាណ ឬសួរអំពី AI ប៉ុណ្ណោះ។ "
             "សម្រាប់សំណើរកសិកម្ម ឬការស្វាគមន៍ សូមឆ្លើយតបចំគោលដៅដោយមិនបាច់ណែនាំខ្លួនឡើយ។ "
+            "ប្រសិនបើកសិករសួរអំពីជំងឺទាំងអស់លើដំណាំ ឬសួរថាតើដំណាំមានជំងឺអ្វីខ្លះ សូមរៀបរាប់ឈ្មោះជំងឺទាំងអស់ដែលមានក្នុងបរិបទចំណេះដឹងជាចំណុចៗ ព្រមទាំងរោគសញ្ញាសង្ខេប និងវិធីព្យាបាលចម្បងៗដោយពេញលេញ។ "
             "សូមកុំប្រើសញ្ញាក្បាលចំណងជើងម៉ាកដោន សញ្ញាផ្កាយដិត និងកុំប្រើរូបភាពអារម្មណ៍ emoji ឡើយ។ "
             "ផ្តល់ដំបូន្មានជាក់ស្តែង រៀបចំជាចំណុច វិធីព្យាបាល និងវិធានការបង្ការប្រកបដោយសុវត្ថិភាព។\n\n"
             f"បរិបទចំណេះដឹងកសិកម្ម៖\n{bounded_context}\n\n"
@@ -232,6 +233,7 @@ def _build_prompt(message: str, context: str, language: Optional[str]) -> str:
         "You are a professional, empathetic, and knowledgeable agricultural expert who communicates naturally and warmly like a human agronomist. "
         f"Answer in {language_name}. Give complete, well-structured, practical advice regarding crop health, diagnosis, IPM, safe chemical treatment, and prevention. "
         "Only introduce yourself as AgriSystem AI created by Team Leader Mao Seavik if the user explicitly asks who you are, who created you, or about the AI. For agricultural queries, answer directly without self-introduction. "
+        "If the farmer asks what diseases affect a crop or asks to list diseases, list all the diseases provided in the knowledge-base context with their names, brief symptoms, and primary treatments. "
         "Do not use markdown headers, bold formatting, asterisks, or emojis in your response. Output smooth, clean, professional plain text.\n\n"
         f"Knowledge-base context:\n{bounded_context}\n\n"
         f"Farmer question:\n{bounded_message}\n\nAnswer:\n"
@@ -319,6 +321,70 @@ def _is_valid_reply(reply: str, user_message: str = "", language: Optional[str] 
 
 
 CAMBODIAN_AGRI_KB = [
+    {
+        "keywords": ["ជំងឺទុរេន", "ទុរេនមានជំងឺអ្វី", "ជំងឺលើទុរេន", "ជំងឺដំណាំទុរេន", "ទុរេនមានជំងឺ", "durian disease", "durian diseases", "diseases of durian", "diseases affect durian", "diseases affecting durian", "disease in durian", "diseases in durian"],
+        "title_km": "បញ្ជីជំងឺសំខាន់ៗលើដំណាំទុរេន (Key Durian Diseases)",
+        "title_en": "Common Diseases Affecting Durian",
+        "crop_km": "ទុរេន",
+        "crop_en": "Durian",
+        "symptoms_km": (
+            "១. ជំងឺរលួយឬស និងដើមទុរេន (Phytophthora palmivora)៖ ស្លឹកលឿង ហៀរជ័រពណ៌ត្នោត ឫសរលួយខ្មៅ។\n"
+            "២. ជំងឺខ្លោចស្លឹកទុរេន (Rhizoctonia solani)៖ ស្លឹកមានស្នាមរលាកខ្លោច ជាប់គ្នាដូចសំណាញ់ពីងពាង។\n"
+            "៣. ជំងឺអាន់ថ្រាកណូស ឬរលួយផ្លែ (Colletotrichum)៖ ស្នាមអុចខ្មៅមូលលើផ្លែ និងចុងស្លឹកស្ងួត។\n"
+            "៤. ជំងឺផ្សិតផ្កាអំបោះពណ៌ផ្កាឈូក (Corticium salmonicolor)៖ សំបកមែកមានម្សៅផ្សិតពណ៌ផ្កាឈូក ធ្វើឱ្យមែកស្ងួតងាប់។\n"
+            "៥. ជំងឺសារ៉ាយក្រហមលើស្លឹក (Cephaleuros virescens)៖ ស្នាមពកក្រហមដូចកម្ញីលើផ្ទៃស្លឹក។"
+        ),
+        "symptoms_en": (
+            "1. Phytophthora Root Rot & Stem Canker (Phytophthora palmivora): Leaf yellowing, oozing trunk resin, decaying feeder roots.\n"
+            "2. Rhizoctonia Leaf Blight: Water-soaked rotting leaves webbed together by fungal mycelium.\n"
+            "3. Anthracnose Fruit & Leaf Spot (Colletotrichum): Sunken black lesions on fruits and necrotic leaf margins.\n"
+            "4. Pink Disease (Corticium salmonicolor): Pink cobweb-like crust on branches causing twig dieback.\n"
+            "5. Red Algal Spot (Cephaleuros virescens): Velvety orange-brown spots on upper leaf surfaces."
+        ),
+        "treatment_km": (
+            "- ជំងឺរលួយឬស/ដើម៖ លាប Metalaxyl ឬ Copper Oxychloride លើដំបៅដើម ស្រោច Fosetyl-Al ឬ Phyto-Fos ជុំវិញគល់។\n"
+            "- ជំងឺខ្លោចស្លឹក និងអាន់ថ្រាកណូស៖ បាញ់ថ្នាំ Azoxystrobin + Difenoconazole ឬ Propiconazole។\n"
+            "- ជំងឺផ្សិតផ្កាអំបោះ៖ កាត់មែកងាប់ដុតចោល និងលាបថ្នាំ Copper Hydroxide។"
+        ),
+        "treatment_en": (
+            "- Phytophthora: Scrape stem lesions and apply Metalaxyl paste; root drench with Fosetyl-Aluminium.\n"
+            "- Leaf Blight & Anthracnose: Foliar spray Azoxystrobin + Difenoconazole or Propiconazole.\n"
+            "- Pink Disease: Prune out dead twigs and apply Copper Hydroxide spray."
+        ),
+        "prevention_km": "ដាំលើរងខ្ពស់ បង្ហូរទឹកកុំឱ្យជាំ កែតម្រូវ pH ដីឱ្យបាន ៥.៥-៦.៥ ដោយកំបោរ Dolomite និងស្រោចផ្សិត Trichoderma រៀងរាល់ ២-៣ខែម្តង។",
+        "prevention_en": "Plant on raised mounds, prevent waterlogging, maintain soil pH 5.5-6.5 with dolomite, and apply preventative Trichoderma biocontrol.",
+    },
+    {
+        "keywords": ["ជំងឺម្រេច", "ម្រេចមានជំងឺអ្វី", "ជំងឺលើម្រេច", "ជំងឺដំណាំម្រេច", "ម្រេចមានជំងឺ", "pepper disease", "pepper diseases", "diseases of pepper", "diseases affect pepper", "diseases affecting pepper", "disease in pepper", "diseases in pepper"],
+        "title_km": "បញ្ជីជំងឺសំខាន់ៗលើដំណាំម្រេច (Key Pepper Diseases)",
+        "title_en": "Common Diseases Affecting Black Pepper",
+        "crop_km": "ម្រេច",
+        "crop_en": "Pepper",
+        "symptoms_km": (
+            "១. ជំងឺងាប់រហ័ស (Quick Wilt - Phytophthora capsici)៖ ស្លឹកស្រពោនជ្រុះលឿនក្នុង ២-៣ថ្ងៃ គល់និងឬសរលួយខ្មៅ។\n"
+            "២. ជំងឺងាប់យឺត (Slow Wilt - Fusarium & Nematodes)៖ ស្លឹកលឿងបន្តិចម្តងៗ ដើមក្រិន ឫសមានដុំពកតូចៗ។\n"
+            "៣. ជំងឺអាន់ថ្រាកណូស ឬកន្ទុយបារី (Anthracnose / Pollu Disease)៖ ស្នាមអុចខ្មៅលើស្លឹក កួរផ្លែស្វិតខ្មៅជ្រុះ។\n"
+            "៤. ជំងឺវីរុសស្លឹកជ្រីវជ្រួញ (Pepper Yellow Mottle Virus)៖ ស្លឹកតូចៗរួញខូចទ្រង់ទ្រាយ ដើមក្រិនមិនចេញផ្លែ។"
+        ),
+        "symptoms_en": (
+            "1. Quick Wilt / Foot Rot (Phytophthora capsici): Rapid foliar collapse and leaf drop within 2-3 days; black collar rot.\n"
+            "2. Slow Wilt / Decline (Fusarium & Meloidogyne): Gradual yellowing, stunted growth, root-knot galls.\n"
+            "3. Anthracnose / Pollu Disease (Colletotrichum gloeosporioides): Dark necrotic spots on leaves and spike drop.\n"
+            "4. Yellow Mottle Virus: Mottled mosaic pattern and leaf deformation."
+        ),
+        "treatment_km": (
+            "- ជំងឺងាប់រហ័ស៖ ដកដើមងាប់ដុតចោល ស្រោចគល់ដោយ Metalaxyl ឬ Bordeaux mixture 1%។\n"
+            "- ជំងឺងាប់យឺត និងដង្កូវពកឫស៖ ប្រើថ្នាំជីវសាស្រ្ត Paecilomyces lilacinus ឬ Trichoderma លាយជីកំប៉ុស។\n"
+            "- ជំងឺអាន់ថ្រាកណូស៖ បាញ់ថ្នាំ Carbendazim ឬ Mancozeb ពេលកួរផ្លែទើបចេញ។"
+        ),
+        "treatment_en": (
+            "- Quick Wilt: Remove infected vines, drench soil with Metalaxyl or 1% Bordeaux mixture.\n"
+            "- Slow Wilt: Apply Paecilomyces lilacinus biocontrol and mature organic compost.\n"
+            "- Anthracnose: Spray Carbendazim or Mancozeb at early berry spike emergence."
+        ),
+        "prevention_km": "កាត់មែកទាបៗកុំឱ្យប៉ះដី ធ្វើប្រព័ន្ធបង្ហូរទឹកជុំវិញជួរម្រេច និងចៀសវាងយកកូនពូជពីចម្ការកើតជំងឺ។",
+        "prevention_en": "Tie and prune lower runner vines away from soil contact, dig deep drainage channels between rows, and use certified healthy cuttings.",
+    },
     {
         "keywords": ["ទុរេន", "ធូរេន", "durian", "រលួយឬស", "រលួយដើម", "phytophthora", "fitora", "ជ័រ"],
         "title_km": "ជំងឺរលួយឫស និងគល់ទុរេន (Durian Root Rot & Stem Canker - Phytophthora palmivora)",
@@ -452,6 +518,62 @@ CAMBODIAN_AGRI_KB = [
 ]
 
 
+def _format_crop_all_diseases_reply_km(crop: Any, diseases: list[Any]) -> str:
+    crop_title = getattr(crop, "name_kh", None) or getattr(crop, "name", "ដំណាំ")
+    total = len(diseases)
+    items = []
+    for i, d in enumerate(diseases, 1):
+        d_name_km = (getattr(d, "name_kh", None) or getattr(d, "name", "") or "").strip()
+        d_name_en = (getattr(d, "name", "") or "").strip()
+        d_desc = (getattr(d, "description_kh", None) or getattr(d, "description", "") or "").strip()
+        d_treat = (getattr(d, "treatment_kh", None) or getattr(d, "treatment", "") or "").strip()
+
+        desc_short = d_desc.split("។")[0].strip() + "។" if "។" in d_desc else d_desc[:120].strip()
+        treat_short = d_treat.split("។")[0].strip() + "។" if "។" in d_treat else d_treat[:120].strip()
+
+        d_disp = d_name_km if (d_name_km.startswith("ជំងឺ") or d_name_km.startswith("ការ") or d_name_km.startswith("មេរោគ") or d_name_km.startswith("កង្វះ")) else f"ជំងឺ{d_name_km}"
+        items.append(
+            f"{i}. {d_disp} ({d_name_en})\n"
+            f"- រោគសញ្ញាសម្គាល់៖ {desc_short}\n"
+            f"- ការព្យាបាលចម្បង៖ {treat_short}"
+        )
+    body = "\n\n".join(items)
+    return clean_professional_text(
+        f"បញ្ជីជំងឺ និងបញ្ហាប្រឈមចម្បងៗលើដំណាំ {crop_title} (សរុប {total} ជំងឺ)៖\n\n"
+        f"ជំរាបសួរលោកអ្នក ឬបងប្អូនកសិករជាទីគោរព! នៅក្នុងប្រព័ន្ធបណ្តុះបណ្តាលកសិកម្ម AgriSystem ដំណាំ {crop_title} មានកត់ត្រាជំងឺ និងសត្វល្អិតចម្បងៗដូចខាងក្រោម៖\n\n"
+        f"{body}\n\n"
+        f"ដំបូន្មានបច្ចេកទេស៖ ប្រសិនបើដំណាំ {crop_title} របស់អ្នកកំពុងមានរោគសញ្ញាជាក់លាក់ណាមួយ សូមរៀបរាប់អំពីរោគសញ្ញាលើស្លឹក ដើម ឬផ្លែ ដើម្បីឱ្យខ្ញុំជួយធ្វើរោគវិនិច្ឆ័យលម្អិត និងផ្តល់រូបមន្តព្យាបាលឱ្យចំគោលដៅបំផុត។"
+    )
+
+
+def _format_crop_all_diseases_reply_en(crop: Any, diseases: list[Any]) -> str:
+    crop_title = getattr(crop, "name", "Crop")
+    total = len(diseases)
+    items = []
+    for i, d in enumerate(diseases, 1):
+        d_name_en = (getattr(d, "name", "") or "").strip()
+        d_name_km = (getattr(d, "name_kh", None) or "").strip()
+        d_desc = (getattr(d, "description", "") or "").strip()
+        d_treat = (getattr(d, "treatment", "") or "").strip()
+
+        desc_short = d_desc.split(".")[0].strip() + "." if "." in d_desc else d_desc[:120].strip()
+        treat_short = d_treat.split(".")[0].strip() + "." if "." in d_treat else d_treat[:120].strip()
+
+        title = f"{d_name_en} ({d_name_km})" if d_name_km else d_name_en
+        items.append(
+            f"{i}. {title}\n"
+            f"- Observable Symptoms: {desc_short}\n"
+            f"- Primary Treatment: {treat_short}"
+        )
+    body = "\n\n".join(items)
+    return clean_professional_text(
+        f"Key Diseases and Pathogens Affecting {crop_title} ({total} Diseases Recorded):\n\n"
+        f"Greetings! The AgriSystem trained knowledge base includes the following key diseases and conditions affecting {crop_title}:\n\n"
+        f"{body}\n\n"
+        f"Agronomic Advice: If your {crop_title} is showing specific symptoms, please describe what you observe on the leaves, stems, or fruits so I can provide an exact diagnosis and tailored treatment plan."
+    )
+
+
 def _synthesize_local_expert_reply(user_message: str, context: str = "", language: Optional[str] = None) -> str:
     """Offline, deterministic agronomic synthesizer prioritizing crop matching and local database records."""
     is_khmer = _is_khmer(language, user_message)
@@ -460,6 +582,7 @@ def _synthesize_local_expert_reply(user_message: str, context: str = "", languag
     matched_disease = None
     matched_kb_item = None
     is_fertilizer_query = False
+    is_listing_all_crop_diseases = False
 
     q_norm = user_message.lower()
 
@@ -483,13 +606,23 @@ def _synthesize_local_expert_reply(user_message: str, context: str = "", languag
         # 2. Match Disease within Crop (if crop matched)
         if matched_crop:
             crop_diseases = matched_crop.diseases or []
+            disease_list_terms = [
+                "ជំងឺអ្វីខ្លះ", "មានជំងឺអ្វីខ្លះ", "កើតជំងឺអ្វីខ្លះ", "មានជំងឺអ្វី", "កើតជំងឺអ្វី",
+                "ជំងឺណាខ្លះ", "រាយនាមជំងឺ", "ជំងឺទាំងអស់", "បញ្ជីជំងឺ", "មានជំងឺ", "កើតជំងឺ",
+                "អ្វីខ្លះ", "what diseases", "which diseases", "what are the diseases", "list of diseases",
+                "list diseases", "all diseases", "common diseases", "diseases of", "diseases affecting",
+                "diseases on", "disease of", "crop diseases", "show diseases",
+            ]
+            is_disease_listing_query = any(k in q_norm for k in disease_list_terms)
+
             for d in crop_diseases:
                 name_en = (d.name or "").lower()
                 name_km = (d.name_kh or "").lower()
                 if (name_en and name_en in q_norm) or (name_km and name_km in q_norm):
                     matched_disease = d
                     break
-            if not matched_disease:
+
+            if not matched_disease and not is_disease_listing_query:
                 symptom_keywords = {
                     "រលួយ": ["rot", "root", "foot", "stem"],
                     "អុច": ["spot", "leaf"],
@@ -510,8 +643,10 @@ def _synthesize_local_expert_reply(user_message: str, context: str = "", languag
                                 break
                     if matched_disease:
                         break
+
+            # If no specific disease was identified, synthesize a full disease catalog for this crop
             if not matched_disease and crop_diseases and not is_fertilizer_query:
-                matched_disease = crop_diseases[0]
+                is_listing_all_crop_diseases = True
 
         # 3. If no crop matched, search globally across all database diseases
         if not matched_disease and not matched_crop:
@@ -609,6 +744,14 @@ def _synthesize_local_expert_reply(user_message: str, context: str = "", languag
                 f"- Maintain soil pH in the optimal range of 5.8 - 6.5. Broadcast agricultural limestone (Dolomite) if soil acidity is elevated.\n\n"
                 f"Reminder: Always irrigate thoroughly after granular fertilizer application to prevent osmotic root shock."
             )
+
+    # Response for listing all diseases of a crop from database
+    if is_listing_all_crop_diseases and matched_crop:
+        crop_diseases = getattr(matched_crop, "diseases", []) or []
+        if crop_diseases:
+            if is_khmer:
+                return _format_crop_all_diseases_reply_km(matched_crop, crop_diseases)
+            return _format_crop_all_diseases_reply_en(matched_crop, crop_diseases)
 
     # Response from Knowledge Dictionary
     if matched_kb_item:

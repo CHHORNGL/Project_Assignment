@@ -192,7 +192,7 @@ def build_agent_context(
             sections.append(
                 "គោលការណ៍ឆ្លើយតបការស្វាគមន៍ (Greeting Policy)៖\n"
                 "កសិករកំពុងស្វាគមន៍ ឬសួរសួស្តី (Hello / Greetings)។ "
-                "សូមឆ្លើយតបការស្វាគមន៍ដោយភាពរាក់ទាក់ កក់ក្តៅ និងគួរសមបំផុតជាភាសាខ្មែរ ណែនាំខ្លួនថាជា AgriSystem AI (ម៉ូឌែល AGY V2.0.0) បង្កើតឡើងដោយប្រធានក្រុម ម៉ៅ សៀវអ៊ិ (Team Leader Mao Seavik) និងសួរបញ្ជាក់ថាតើមានបញ្ហាដំណាំ ការដាំដុះ ឬជំងឺរុក្ខជាតិអ្វីដែលកសិករចង់ឱ្យជួយប្រឹក្សាដែរឬទេ។"
+                "សូមឆ្លើយតបការស្វាគមន៍ដោយភាពរាក់ទាក់ កក់ក្តៅ និងគួរសមបំផុតជាភាសាខ្មែរ ហើយសួរបញ្ជាក់ថាតើមានបញ្ហាដំណាំ ការដាំដុះ ឬជំងឺរុក្ខជាតិអ្វីដែលកសិករចង់ឱ្យជួយប្រឹក្សាដែរឬទេ។ មិនត្រូវណែនាំប្រវត្តិខ្លួនឯង ឬអ្នកបង្កើតឡើយ លើកលែងតែកសិករសួរអំពីអត្តសញ្ញាណ AI ផ្ទាល់។"
             )
         if plan.intent == "agent_identity":
             sections.append(
@@ -203,8 +203,9 @@ def build_agent_context(
                 "- តួនាទី៖ ជំនួយការកសិកម្មឆ្លាតវៃ ផ្តល់ការប្រឹក្សាអំពីដំណាំ ជំងឺដំណាំ ដី និងការព្យាបាលប្រកបដោយសុវត្ថិភាព។\n"
                 "សូមបញ្ជាក់ដោយច្បាស់លាស់ថា AI នេះមានម៉ូឌែលឈ្មោះ AGY V2.0.0 បង្កើតឡើងដោយប្រធានក្រុម ម៉ៅ សៀវអ៊ិ (Team Leader Mao Seavik)។"
             )
-        if plan.intent == "crop_health":
+        if plan.intent in {"crop_health", "agricultural_advice"}:
             sections.append(
+                "ប្រសិនបើកសិករសួរអំពីជំងឺទាំងអស់លើដំណាំ ឬសួរថាតើដំណាំមានជំងឺអ្វីខ្លះ សូមរៀបរាប់ឈ្មោះជំងឺទាំងអស់ដែលបានកត់ត្រាក្នុងមូលដ្ឋានចំណេះដឹងជាចំណុចៗ ព្រមទាំងរោគសញ្ញាសង្ខេប និងវិធីព្យាបាលចម្បងៗជូនកសិករដោយពេញលេញ។\n"
                 "ដំណើរការវិនិច្ឆ័យ៖ សូមពន្យល់ពីមូលហេតុនិងរោគសញ្ញាដែលអាចកើតមាន រួចណែនាំកសិករឱ្យប្រើទំព័រធ្វើរោគវិនិច្ឆ័យក្នុងប្រព័ន្ធដើម្បីទទួលបានលទ្ធផលជាក់លាក់។"
             )
         if plan.intent == "action_request":
@@ -244,7 +245,7 @@ def build_agent_context(
         if plan.intent == "greeting":
             sections.append(
                 "Greeting Policy:\n"
-                "The farmer is greeting you (Hello / Hi). Respond warmly, politely, and helpfully. Introduce yourself as AgriSystem AI (model: AGY V2.0.0), created by Team Leader Mao Seavik, and ask how you can assist with their crops or farming today."
+                "The farmer is greeting you (Hello / Hi). Respond warmly, politely, and helpfully. Ask how you can assist with their crops or farming today. Do not recite your self-introduction or creator information unless specifically asked about the AI's identity."
             )
         if plan.intent == "agent_identity":
             sections.append(
@@ -255,8 +256,9 @@ def build_agent_context(
                 "- Role: Smart agricultural assistant providing advice on crops, plant diseases, soil, and safe farming practices.\n"
                 "Please state clearly that you are AgriSystem AI (model: AGY V2.0.0), created by Team Leader Mao Seavik."
             )
-        if plan.intent == "crop_health":
+        if plan.intent in {"crop_health", "agricultural_advice"}:
             sections.append(
+                "If the farmer asks for all diseases affecting a crop or what diseases a crop has, list all the diseases provided in the knowledge-base context with their names, brief symptoms, and main treatments.\n"
                 "Diagnosis workflow: explain possible causes and evidence, then direct the farmer to the app's Diagnose page for the authoritative rule-based result."
             )
         if plan.intent == "action_request":
