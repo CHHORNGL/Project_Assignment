@@ -251,6 +251,24 @@ def send_support_message():
         attachment_type=attachment_type
     )
     db.session.add(msg)
+
+    try:
+        from app.services.notification_service import notify_role, _snippet
+        sender_name = current_user.full_name or current_user.username
+        detail = message_text or f"Sent an {attachment_type or 'attachment'}"
+        notify_role(
+            role_name="admin",
+            kind="support_chat",
+            title=f"New message from {sender_name}",
+            subtitle=_snippet(detail, 60),
+            url="/admin/support_chats",
+            icon="fas fa-headset",
+            level="info",
+            source_id=current_user.id,
+        )
+    except Exception:
+        pass
+
     db.session.commit()
     
     return jsonify({"success": True})

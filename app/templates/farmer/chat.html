@@ -920,6 +920,13 @@
     }
 
     function updateCreditBalance(credits) {
+        if (credits === "unlimited") {
+            document.querySelectorAll("[data-ai-credits]").forEach((element) => {
+                element.textContent = "Unlimited";
+            });
+            return;
+        }
+        if (credits === null || credits === undefined || credits === "") return;
         const value = Number(credits);
         if (!Number.isFinite(value)) return;
         document.querySelectorAll("[data-ai-credits]").forEach((element) => {

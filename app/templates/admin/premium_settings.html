@@ -162,11 +162,25 @@
                     </div>
 
                     <!-- Enable Coupons at Checkout -->
-                    <div class="custom-control custom-switch mb-4">
+                    <div class="custom-control custom-switch mb-3">
                         <input type="checkbox" class="custom-control-input" id="coupon_enabled" name="coupon_enabled" {% if coupon_enabled %}checked{% endif %}>
                         <label class="custom-control-label font-weight-bold small" for="coupon_enabled" style="color: var(--admin-text);">
                             Enable Coupon Code Box on Checkout Page
                         </label>
+                    </div>
+
+                    <!-- Simple User Daily AI Token Allowance -->
+                    <div class="form-group mb-4 pt-3 border-top" style="border-color: var(--admin-border) !important;">
+                        <label class="font-weight-bold small" style="color: var(--admin-text);">
+                            <i class="fas fa-coins text-warning mr-1"></i>Simple User Daily AI Token Allowance <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group">
+                            <input type="number" step="500" min="100" name="simple_user_daily_tokens" id="input_simple_user_tokens" class="form-control font-weight-bold" style="background: var(--admin-bg); border-color: var(--admin-border); color: var(--admin-text);" value="{{ simple_user_daily_tokens }}" placeholder="13000" required>
+                            <div class="input-group-append">
+                                <span class="input-group-text font-weight-bold" style="background: var(--admin-bg); border-color: var(--admin-border); color: var(--admin-muted);">Tokens / Day</span>
+                            </div>
+                        </div>
+                        <small class="text-muted d-block mt-1">Standard / Simple accounts receive this daily quota. Premium accounts enjoy <strong>Unlimited</strong> AI access with no token limits.</small>
                     </div>
 
                     <button type="submit" class="btn-save-clean btn-block">

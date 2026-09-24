@@ -583,11 +583,37 @@ def _build_kb_context(message: str) -> Tuple[str, Optional[Crop]]:
     return "\n".join(lines), crop
 
 
+def get_simple_user_daily_tokens() -> int:
+    """Return the configured daily token limit for simple users (default: 13,000)."""
+    try:
+        from app.models.site_setting import SiteSetting
+        setting = SiteSetting.query.get("SIMPLE_USER_DAILY_TOKENS")
+        if setting and setting.value and setting.value.strip():
+            return max(100, int(setting.value.strip()))
+    except Exception:
+        pass
+    return 13000
+
+
 def _uses_farmer_ai_credits(user) -> bool:
-    """Return whether this account should pay for Farmer AI usage."""
+    """Return whether this account should pay for Farmer AI usage.
+    
+    Simple/Free users have their credits and tokens controlled.
+    Premium accounts have 100% UNLIMITED access with zero token deductions.
+    Admins and Experts also have unlimited access.
+    """
     if not user or not getattr(user, "is_authenticated", False):
         return False
-    if getattr(user, "is_premium", False):
+    # Premium account users can use Unlimited AI without any token limits
+    if getattr(user, "has_active_premium", False) or getattr(user, "is_premium", False):
+        if getattr(user, "premium_expires_at", None):
+            from datetime import datetime
+            if user.premium_expires_at < datetime.utcnow():
+                # Expired premium reverts to simple user credit control
+                return True
+        return False
+    # Admins and experts also have unlimited access
+    if getattr(user, "has_role", None) and (user.has_role("admin") or user.has_role("expert")):
         return False
     try:
         return bool(user.has_route_access("farmer"))
@@ -610,20 +636,23 @@ def generate_assistant_reply(
     
     if charges_farmer_credits:
         from datetime import datetime, timedelta
+        daily_quota = get_simple_user_daily_tokens()
         if current_user.last_credit_reset and (datetime.utcnow() - current_user.last_credit_reset) >= timedelta(days=1):
-            current_user.ai_credits = 13000
+            current_user.ai_credits = daily_quota
             current_user.last_credit_reset = datetime.utcnow()
             try:
                 db.session.commit()
-            except:
+            except Exception:
                 db.session.rollback()
 
-        if current_user.ai_credits <= 0:
+        if (current_user.ai_credits or 0) <= 0:
             lang = get_current_language()
+            if bool(re.search(r"[\u1780-\u17ff]", user_message)):
+                lang = "km"
             if lang == "km":
-                return "សុំទោស! អ្នកបានអស់ចំនួន Token (Credits) សម្រាប់ប្រើប្រាស់ AI ហើយ។ សូមដំឡើងទៅគណនី Premium ដើម្បីប្រើប្រាស់ដោយគ្មានដែនកំណត់។"
+                return "សុំទោស! អ្នកបានអស់ចំនួន Token (Credits) សម្រាប់ប្រើប្រាស់ AI ហើយ។ សូមដំឡើងទៅគណនី Premium ដើម្បីប្រើប្រាស់ដោយគ្មានដែនកំណត់ (Unlimited)។"
             else:
-                return "Sorry! You have run out of AI Credits (Tokens). Please upgrade to a Premium account for unlimited AI chat."
+                return "Sorry! You have run out of AI Credits (Tokens). Please upgrade to a Premium account for Unlimited AI chat and diagnoses."
 
     lang = get_current_language()
     if bool(re.search(r"[\u1780-\u17ff]", user_message)):
@@ -647,37 +676,55 @@ def generate_assistant_reply(
 
     if agent_plan.intent == "agent_identity":
         if lang == "km":
-            return (
+            reply = (
                 "ជំរាបសួរលោកអ្នក! ខ្ញុំគឺជា **AgriSystem AI** (ម៉ូឌែលឈ្មោះ **AGY V2.0.0**) ដែលត្រូវបានបង្កើត និងអភិវឌ្ឍឡើងដោយ**ប្រធានក្រុម ម៉ៅ សៀវអ៊ិ (Team Leader Mao Seavik)**។ "
                 "ខ្ញុំជាជំនួយការកសិកម្មឆ្លាតវៃ ត្រៀមខ្លួនជានិច្ចក្នុងការជួយពិនិត្យជំងឺដំណាំ វិភាគរោគសញ្ញា ផ្តល់បច្ចេកទេសដាំដុះ និងចែករំលែកវិធីសាស្រ្តការពារ និងការព្យាបាលប្រកបដោយសុវត្ថិភាពខ្ពស់។ "
                 "តើថ្ងៃនេះខ្ញុំអាចជួយអ្វីដល់លោកអ្នកបានខ្លះដែរ?"
             )
-        return (
-            "Hello! I am **AgriSystem AI** (model name: **AGY V2.0.0**), created and developed under the leadership of **Team Leader Mao Seavik**. "
-            "I am an intelligent agricultural assistant dedicated to helping farmers diagnose plant diseases, improve crop health, and adopt safe, sustainable farming practices. "
-            "How can I help you and your farm today?"
-        )
+        else:
+            reply = (
+                "Hello! I am **AgriSystem AI** (model name: **AGY V2.0.0**), created and developed under the leadership of **Team Leader Mao Seavik**. "
+                "I am an intelligent agricultural assistant dedicated to helping farmers diagnose plant diseases, improve crop health, and adopt safe, sustainable farming practices. "
+                "How can I help you and your farm today?"
+            )
+        if charges_farmer_credits:
+            tokens_used = max(15, (len(user_message) + len(reply)) // 4)
+            current_user.ai_credits = max(0, (current_user.ai_credits or 0) - tokens_used)
+            try:
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+        return reply
 
     if agent_plan.intent == "greeting":
         msg_clean = user_message.lower().strip()
         if "hello in khmer" in msg_clean:
-            return (
+            reply = (
                 "សួស្តីបាទ/ចាស! ជាភាសាខ្មែរយើងប្រើពាក្យ 'សួស្តី' (សម្រាប់ភាពស្និទ្ធស្នាល ឬទូទៅ) ឬ 'ជំរាបសួរ' (ប្រកបដោយការគួរសម និងការគោរព)។ ខ្ញុំជា AgriSystem AI (ម៉ូឌែល AGY V2.0.0) បង្កើតឡើងដោយប្រធានក្រុម ម៉ៅ សៀវអ៊ិ (Team Leader Mao Seavik)។ តើខ្ញុំអាចជួយអ្វីលោកអ្នកបានខ្លះនៅថ្ងៃនេះបាទ/ចាស?"
             )
-        if "hello in english" in msg_clean:
-            return (
+        elif "hello in english" in msg_clean:
+            reply = (
                 "Hi there! In English, we greet with 'Hello' or 'Hi'! I am AgriSystem AI (model name: AGY V2.0.0), created and developed under the leadership of Team Leader Mao Seavik. How can I assist you with your crops or farm today?"
             )
-        if lang == "km":
-            return (
+        elif lang == "km":
+            reply = (
                 "សួស្តីបាទ/ចាស! ខ្ញុំជា AgriSystem AI (ម៉ូឌែលឈ្មោះ AGY V2.0.0) ដែលត្រូវបានបង្កើត និងអភិវឌ្ឍឡើងដោយប្រធានក្រុម ម៉ៅ សៀវអ៊ិ (Team Leader Mao Seavik)។ "
                 "ខ្ញុំរីករាយណាស់ដែលបានជួយលោកអ្នកនៅថ្ងៃនេះ។ តើដំណាំ ឬការងារកសិកម្មរបស់អ្នកដំណើរការយ៉ាងណាដែរ? "
                 "តើមានបញ្ហាជំងឺដំណាំ ឬការដាំដុះអ្វីដែលខ្ញុំអាចជួយផ្តល់ដំបូន្មាន ឬដោះស្រាយជូនបានដែរទេ?"
             )
-        return (
-            "Hi there! Warm greetings to you! I am AgriSystem AI (model: AGY V2.0.0), created and developed under the leadership of Team Leader Mao Seavik. "
-            "It's a pleasure to assist you! How are your crops doing today, and how can I help you with your farming needs?"
-        )
+        else:
+            reply = (
+                "Hi there! Warm greetings to you! I am AgriSystem AI (model: AGY V2.0.0), created and developed under the leadership of Team Leader Mao Seavik. "
+                "It's a pleasure to assist you! How are your crops doing today, and how can I help you with your farming needs?"
+            )
+        if charges_farmer_credits:
+            tokens_used = max(15, (len(user_message) + len(reply)) // 4)
+            current_user.ai_credits = max(0, (current_user.ai_credits or 0) - tokens_used)
+            try:
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+        return reply
 
     # Keep model hosting outside Flask. The agent selects trusted application
     # tools first, then the remote model explains their results in the user's
@@ -692,8 +739,8 @@ def generate_assistant_reply(
         )
         if remote_reply:
             if charges_farmer_credits:
-                tokens_used = (len(agent_context) + len(user_message) + len(remote_reply)) // 4
-                current_user.ai_credits = max(0, current_user.ai_credits - tokens_used)
+                tokens_used = max(20, (len(agent_context) + len(user_message) + len(remote_reply)) // 4)
+                current_user.ai_credits = max(0, (current_user.ai_credits or 0) - tokens_used)
                 try:
                     db.session.commit()
                 except Exception:

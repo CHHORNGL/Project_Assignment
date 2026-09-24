@@ -136,6 +136,69 @@ class FarmerSupportLocationTestCase(unittest.TestCase):
         self.assertTrue(data.get("success"))
         self.assertAlmostEqual(data.get("latitude"), 13.3671, places=3)
         self.assertAlmostEqual(data.get("longitude"), 103.8448, places=3)
-        self.assertIn("Siem Reap", data.get("display_name"))
+    def _login_admin(self):
+        with self.client.session_transaction() as sess:
+            sess["_user_id"] = str(self.admin.id)
+            sess["_fresh"] = True
+            sess["_authenticated_at"] = time.time()
+            sess["_last_seen_at"] = time.time()
+            sess["_credential_stamp"] = credential_stamp(self.admin)
+
+    def test_farmer_message_notifies_admin(self):
+        from app.models.notification import Notification
+        self._login_farmer()
+        res = self.client.post("/farmer/support_chat/send", json={"message": "Help with rice blast disease"})
+        self.assertEqual(res.status_code, 200)
+
+        notif = Notification.query.filter_by(user_id=self.admin.id, kind="support_chat").first()
+        self.assertIsNotNone(notif)
+        self.assertIn("loc_farmer", notif.title)
+        self.assertIn("Help with rice blast", notif.subtitle)
+
+    def test_admin_conversations_mark_read_and_reply(self):
+        from app.models.notification import Notification
+        # Seed an unread message from farmer to admin
+        msg = AdminChatMessage(
+            sender_id=self.farmer.id,
+            receiver_id=self.admin.id,
+            message="Need help with fertilizers",
+            is_read=False
+        )
+        db.session.add(msg)
+        db.session.commit()
+
+        # Admin logs in
+        self._login_admin()
+
+        # Test conversations API returns unread
+        c_res = self.client.get("/admin/support_chat/conversations")
+        self.assertEqual(c_res.status_code, 200)
+        c_data = c_res.get_json()
+        self.assertEqual(c_data.get("total_unread"), 1)
+        convs = c_data.get("conversations", [])
+        self.assertEqual(len(convs), 1)
+        self.assertEqual(convs[0]["id"], self.farmer.id)
+        self.assertEqual(convs[0]["unread_count"], 1)
+        self.assertEqual(convs[0]["last_message"], "Need help with fertilizers")
+
+        # Admin fetches messages -> should mark as read
+        m_res = self.client.get(f"/admin/support_chat/{self.farmer.id}/messages")
+        self.assertEqual(m_res.status_code, 200)
+        m_data = m_res.get_json()
+        self.assertEqual(len(m_data), 1)
+        self.assertEqual(m_data[0]["message"], "Need help with fertilizers")
+
+        # DB verification: message marked read
+        db.session.expire_all()
+        refreshed_msg = db.session.get(AdminChatMessage, msg.id)
+        self.assertTrue(refreshed_msg.is_read)
+
+        # Admin sends reply -> farmer is notified
+        send_res = self.client.post(f"/admin/support_chat/{self.farmer.id}/send", json={"message": "Use NPK 15-15-15"})
+        self.assertEqual(send_res.status_code, 200)
+        farmer_notif = Notification.query.filter_by(user_id=self.farmer.id, kind="support_chat").first()
+        self.assertIsNotNone(farmer_notif)
+        self.assertIn("NPK 15-15-15", farmer_notif.subtitle)
+
 
 

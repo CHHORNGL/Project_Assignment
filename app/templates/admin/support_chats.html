@@ -247,26 +247,56 @@
 }
 .chat-action-btn:hover {
     color: var(--admin-accent);
+.tg-unread-badge {
+    background: #ef4444;
+    color: #ffffff;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 999px;
+    box-shadow: 0 1px 3px rgba(239, 68, 68, 0.4);
+}
+.tg-user-last-msg {
+    font-size: 0.78rem;
+    color: var(--admin-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 2px;
+}
+.tg-user-item.has-unread .tg-user-name {
+    font-weight: 700;
+    color: var(--admin-accent);
 }
 </style>
 
 <div class="tg-container">
     <!-- Sidebar -->
     <div class="tg-sidebar">
-        <div class="tg-sidebar-header">
-            <i class="fas fa-bars icon"></i> Farmers
+        <div class="tg-sidebar-header d-flex align-items-center justify-content-between">
+            <div>
+                <i class="fas fa-headset icon"></i> Support Chats
+            </div>
+            <span id="support-total-unread-badge" class="badge badge-danger badge-pill" style="display: none; font-size: 0.75rem;"></span>
         </div>
-        <div class="tg-user-list">
+        <div class="tg-user-list" id="tg-user-list">
             {% for u in chat_users %}
-            <div class="tg-user-item chat-user-item" data-id="{{ u.id }}" data-name="{{ u.full_name or u.username }}">
+            <div class="tg-user-item chat-user-item {% if u.unread_support_count and u.unread_support_count > 0 %}has-unread{% endif %}"
+                 data-id="{{ u.id }}"
+                 data-name="{{ u.full_name or u.username }}">
                 <div class="tg-avatar">{{ (u.full_name or u.username)[:1]|upper }}</div>
                 <div class="tg-user-info">
-                    <div class="tg-user-name">{{ u.full_name or u.username }}</div>
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="tg-user-name">{{ u.full_name or u.username }}</div>
+                        <span class="tg-unread-badge" style="display: {{ 'inline-block' if u.unread_support_count and u.unread_support_count > 0 else 'none' }};">
+                            {{ u.unread_support_count if u.unread_support_count and u.unread_support_count > 0 else '' }}
+                        </span>
+                    </div>
                     <div class="tg-user-sub">@{{ u.username }}</div>
                 </div>
             </div>
             {% else %}
-            <div class="text-center text-muted p-4 small">No active chats.</div>
+            <div class="text-center text-muted p-4 small" id="tg-empty-users">No active chats.</div>
             {% endfor %}
         </div>
     </div>
@@ -284,11 +314,11 @@
         </div>
         <div class="tg-input-area">
             <div class="d-flex align-items-center mr-3" style="gap: 16px; font-size: 1.1rem;">
-                <i class="fas fa-image chat-action-btn" style="cursor: pointer;" id="support-chat-img-btn" title="Send Image"></i>
-                <i class="fas fa-microphone chat-action-btn" style="cursor: pointer;" id="support-chat-mic-btn" title="Send Audio"></i>
-                <i class="fas fa-map-marker-alt chat-action-btn" style="cursor: pointer;" id="support-chat-loc-btn" title="Send Location"></i>
-                <input type="file" id="support-chat-file" accept="image/*" style="display:none;">
-                <input type="file" id="support-chat-audio" accept="audio/*;capture=microphone" style="display:none;">
+                <i class="fas fa-image chat-action-btn" style="cursor: pointer;" id="admin-support-chat-img-btn" title="Send Image"></i>
+                <i class="fas fa-microphone chat-action-btn" style="cursor: pointer;" id="admin-support-chat-mic-btn" title="Send Audio"></i>
+                <i class="fas fa-map-marker-alt chat-action-btn" style="cursor: pointer;" id="admin-support-chat-loc-btn" title="Send Location"></i>
+                <input type="file" id="admin-support-chat-file" accept="image/*" style="display:none;">
+                <input type="file" id="admin-support-chat-audio" accept="audio/*;capture=microphone" style="display:none;">
             </div>
             <div class="tg-input-wrapper">
                 <input type="text" id="chat-input" class="tg-input" placeholder="Type a message..." disabled>
@@ -307,18 +337,78 @@
 document.addEventListener("DOMContentLoaded", () => {
     let currentFarmerId = null;
     let lastCount = 0;
+    let knownUnreadMap = {};
+    const originalDocumentTitle = document.title;
+
     const chatBody = document.getElementById("chat-body");
     const chatInput = document.getElementById("chat-input");
     const chatSend = document.getElementById("chat-send");
     const chatTitle = document.getElementById("chat-title");
     const chatStatus = document.getElementById("chat-status");
-    const imgBtn = document.getElementById("support-chat-img-btn");
-    const micBtn = document.getElementById("support-chat-mic-btn");
-    const locBtn = document.getElementById("support-chat-loc-btn");
-    const fileInput = document.getElementById("support-chat-file");
-    const audioInput = document.getElementById("support-chat-audio");
+    const userListContainer = document.getElementById("tg-user-list");
+    const totalUnreadBadge = document.getElementById("support-total-unread-badge");
+
+    const imgBtn = document.getElementById("admin-support-chat-img-btn");
+    const micBtn = document.getElementById("admin-support-chat-mic-btn");
+    const locBtn = document.getElementById("admin-support-chat-loc-btn");
+    const fileInput = document.getElementById("admin-support-chat-file");
+    const audioInput = document.getElementById("admin-support-chat-audio");
+
+    // Audio chime notification using Web Audio API (cross-browser, no asset dependency)
+    function playNotificationChime() {
+        try {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (!AudioCtx) return;
+            const ctx = new AudioCtx();
+            if (ctx.state === 'suspended') {
+                ctx.resume();
+            }
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = "sine";
+            osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
+            osc.frequency.setValueAtTime(880, ctx.currentTime + 0.1); // A5
+            gain.gain.setValueAtTime(0.18, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.35);
+        } catch (_) {}
+    }
+
+    // Request browser notification permission on user interaction
+    if (typeof Notification !== "undefined" && Notification.permission === "default") {
+        const askPerm = () => {
+            if (Notification.permission === "default") {
+                Notification.requestPermission().catch(() => {});
+            }
+            document.removeEventListener("click", askPerm);
+        };
+        document.addEventListener("click", askPerm);
+    }
+
+    function showBrowserNotification(farmerName, messageText) {
+        if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+            try {
+                new Notification(`Support: ${farmerName}`, {
+                    body: messageText || "Sent an attachment",
+                    icon: "{{ url_for('static', filename='img/logo.svg') }}"
+                });
+            } catch (_) {}
+        }
+    }
+
+    function updateTitleNotification(totalUnread) {
+        if (totalUnread > 0) {
+            document.title = `(${totalUnread}) Live Support Chats`;
+        } else {
+            document.title = originalDocumentTitle;
+        }
+    }
 
     function formatTime(dateString) {
+        if (!dateString) return '';
         const d = new Date(dateString.replace(' ', 'T') + 'Z');
         let hours = d.getHours();
         let mins = d.getMinutes();
@@ -329,7 +419,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return hours + ':' + mins + ' ' + ampm;
     }
 
-    function fetchMessages() {
+    function fetchMessages(silent = false) {
         if (!currentFarmerId) return;
         fetch(`/admin/support_chat/${currentFarmerId}/messages`)
             .then(res => res.json())
@@ -338,8 +428,12 @@ document.addEventListener("DOMContentLoaded", () => {
                     if (lastCount === 0) chatBody.innerHTML = '';
                     
                     const newMessages = data.slice(lastCount);
+                    let hasIncoming = false;
+
                     newMessages.forEach(msg => {
                         const isMe = msg.sender_id === {{ current_user.id }};
+                        if (!isMe) hasIncoming = true;
+
                         const div = document.createElement("div");
                         div.className = "tg-bubble " + (isMe ? "tg-bubble-out" : "tg-bubble-in");
                         
@@ -347,15 +441,100 @@ document.addEventListener("DOMContentLoaded", () => {
                         const timeSpan = document.createElement("span");
                         timeSpan.className = "tg-time";
                         timeSpan.textContent = formatTime(msg.created_at);
-                        
 
                         div.appendChild(timeSpan);
                         chatBody.appendChild(div);
                     });
                     chatBody.scrollTop = chatBody.scrollHeight;
+
+                    // Play chime for incoming message during active chat
+                    if (hasIncoming && lastCount > 0 && !silent) {
+                        playNotificationChime();
+                    }
+
                     lastCount = data.length;
+
+                    // Clear unread badge for currently selected farmer
+                    const currentItem = document.querySelector(`.chat-user-item[data-id="${currentFarmerId}"]`);
+                    if (currentItem) {
+                        currentItem.classList.remove("has-unread");
+                        const badge = currentItem.querySelector(".tg-unread-badge");
+                        if (badge) badge.style.display = "none";
+                    }
                 }
             }).catch(() => {});
+    }
+
+    function fetchConversations() {
+        fetch('/admin/support_chat/conversations')
+            .then(res => res.json())
+            .then(data => {
+                const conversations = data.conversations || [];
+                const totalUnread = data.total_unread || 0;
+
+                // Update total badge & tab title
+                if (totalUnreadBadge) {
+                    if (totalUnread > 0) {
+                        totalUnreadBadge.textContent = `${totalUnread} new`;
+                        totalUnreadBadge.style.display = "inline-block";
+                    } else {
+                        totalUnreadBadge.style.display = "none";
+                    }
+                }
+                updateTitleNotification(totalUnread);
+
+                let hasNewMessageAlert = false;
+                conversations.forEach(conv => {
+                    const prevCount = knownUnreadMap[conv.id] || 0;
+                    if (conv.unread_count > prevCount && String(conv.id) !== String(currentFarmerId)) {
+                        hasNewMessageAlert = true;
+                        showBrowserNotification(conv.name, conv.last_message);
+                    }
+                    knownUnreadMap[conv.id] = conv.unread_count;
+
+                    // Update existing DOM item if present
+                    let item = document.querySelector(`.chat-user-item[data-id="${conv.id}"]`);
+                    if (item) {
+                        const badge = item.querySelector(".tg-unread-badge");
+                        if (badge) {
+                            if (conv.unread_count > 0 && String(conv.id) !== String(currentFarmerId)) {
+                                badge.textContent = conv.unread_count;
+                                badge.style.display = "inline-block";
+                                item.classList.add("has-unread");
+                            } else {
+                                badge.style.display = "none";
+                                item.classList.remove("has-unread");
+                            }
+                        }
+                    } else if (userListContainer) {
+                        // Dynamically append new conversation partner
+                        const emptyNotice = document.getElementById("tg-empty-users");
+                        if (emptyNotice) emptyNotice.remove();
+
+                        const newItem = document.createElement("div");
+                        newItem.className = "tg-user-item chat-user-item" + (conv.unread_count > 0 ? " has-unread" : "");
+                        newItem.dataset.id = conv.id;
+                        newItem.dataset.name = conv.name;
+                        newItem.innerHTML = `
+                            <div class="tg-avatar">${(conv.name || conv.username || '?').charAt(0).toUpperCase()}</div>
+                            <div class="tg-user-info">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div class="tg-user-name">${conv.name}</div>
+                                    <span class="tg-unread-badge" style="display: ${conv.unread_count > 0 ? 'inline-block' : 'none'};">${conv.unread_count || ''}</span>
+                                </div>
+                                <div class="tg-user-sub">@${conv.username}</div>
+                            </div>
+                        `;
+                        attachUserClick(newItem);
+                        userListContainer.prepend(newItem);
+                    }
+                });
+
+                if (hasNewMessageAlert) {
+                    playNotificationChime();
+                }
+            })
+            .catch(() => {});
     }
 
     function sendPayload(payload) {
@@ -365,7 +544,7 @@ document.addEventListener("DOMContentLoaded", () => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         }).then(() => {
-            fetchMessages();
+            fetchMessages(true);
             chatInput.focus();
         });
     }
@@ -395,13 +574,17 @@ document.addEventListener("DOMContentLoaded", () => {
         uploadUrl: '/admin/support_chat/upload',
         getSendUrl: () => currentFarmerId ? `/admin/support_chat/${currentFarmerId}/send` : null,
         canOpen: checkFarmerSelected,
-        onSent: fetchMessages,
+        onSent: () => fetchMessages(true),
     });
 
-    document.querySelectorAll(".chat-user-item").forEach(item => {
+    function attachUserClick(item) {
         item.addEventListener("click", () => {
             document.querySelectorAll(".chat-user-item").forEach(i => i.classList.remove("active"));
             item.classList.add("active");
+            item.classList.remove("has-unread");
+            const badge = item.querySelector(".tg-unread-badge");
+            if (badge) badge.style.display = "none";
+
             currentFarmerId = item.dataset.id;
             chatTitle.textContent = item.dataset.name;
             chatStatus.textContent = "online";
@@ -409,11 +592,21 @@ document.addEventListener("DOMContentLoaded", () => {
             chatSend.disabled = false;
             lastCount = 0;
             chatBody.innerHTML = '';
-            fetchMessages();
+            fetchMessages(true);
         });
-    });
+    }
 
-    setInterval(fetchMessages, 2500);
+    document.querySelectorAll(".chat-user-item").forEach(attachUserClick);
+
+    // Initial conversation state poll
+    fetchConversations();
+
+    // Regular polling: active chat every 2.5s, all conversations every 4s
+    setInterval(() => {
+        if (currentFarmerId) fetchMessages();
+    }, 2500);
+
+    setInterval(fetchConversations, 4000);
 });
 </script>
 {% endblock %}

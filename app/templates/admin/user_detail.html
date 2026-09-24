@@ -57,6 +57,11 @@
                 <div class="admin-user-meta">
                     <span>#{{ user.id }}</span>
                     <span>{{ user.created_at.strftime('%b %d, %Y') if user.created_at else '' }}</span>
+                    {% if user.has_active_premium or user.is_premium %}
+                        <span class="text-warning font-weight-bold"><i class="fas fa-crown mr-1"></i>Premium (Unlimited)</span>
+                    {% else %}
+                        <span><i class="fas fa-coins mr-1 text-info"></i>{{ "{:,}".format(user.ai_credits if user.ai_credits is not none else 0) }} tokens</span>
+                    {% endif %}
                 </div>
             </div>
 
@@ -124,6 +129,34 @@
                             </select>
                             <button class="btn btn-success" type="submit"><i class="fas fa-plus"></i> Add</button>
                         </div>
+                    </form>
+
+                    <form method="POST"
+                          action="{{ url_for('admin.update_user_credits', user_id=user.id) }}"
+                          class="admin-user-control-form admin-user-control-wide">
+                        <label class="admin-user-control-label">AI Token Credits (Simple User)</label>
+                        <div class="input-group input-group-sm">
+                            <input type="number"
+                                   name="ai_credits"
+                                   class="form-control"
+                                   min="0"
+                                   value="{{ user.ai_credits if user.ai_credits is not none else 0 }}"
+                                   placeholder="Tokens"
+                                   required>
+                            <div class="input-group-append">
+                                <button class="btn btn-primary font-weight-bold px-3" type="submit">
+                                    <i class="fas fa-coins mr-1"></i> Update
+                                </button>
+                            </div>
+                        </div>
+                        <small class="text-muted d-block mt-1">
+                            {% if user.has_active_premium or user.is_premium %}
+                                <span class="badge badge-warning text-dark"><i class="fas fa-infinity mr-1"></i>Premium: Unlimited</span>
+                                <span class="d-block mt-1" style="font-size: 0.75rem;">Controlled token balance applies if Premium expires.</span>
+                            {% else %}
+                                <span class="badge badge-info"><i class="fas fa-coins mr-1"></i>Simple User (Controlled AI Tokens)</span>
+                            {% endif %}
+                        </small>
                     </form>
                     {% endif %}
 

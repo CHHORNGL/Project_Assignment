@@ -140,15 +140,17 @@ def premium_settings():
             discount_percent = request.form.get("discount_percent", "0").strip()
             discount_banner = request.form.get("discount_banner", "").strip()
             coupon_enabled = "1" if request.form.get("coupon_enabled") else "0"
+            simple_user_daily_tokens = request.form.get("simple_user_daily_tokens", "13000").strip()
 
             get_or_set_setting("premium_price", new_price)
             get_or_set_setting("premium_yearly_discount_percent", yearly_discount_percent)
             get_or_set_setting("premium_discount_percent", discount_percent)
             get_or_set_setting("premium_discount_banner", discount_banner)
             get_or_set_setting("premium_coupon_enabled", coupon_enabled)
+            get_or_set_setting("SIMPLE_USER_DAILY_TOKENS", simple_user_daily_tokens)
 
             db.session.commit()
-            flash("Monthly and Yearly pricing & discount settings updated successfully.", "success")
+            flash("Pricing, token quotas, and discount settings updated successfully.", "success")
             return redirect(url_for("admin.premium_settings"))
 
         elif action == "create_coupon":
@@ -209,6 +211,7 @@ def premium_settings():
     discount_percent = get_or_set_setting("premium_discount_percent") or "0"
     discount_banner = get_or_set_setting("premium_discount_banner") or ""
     coupon_enabled = get_or_set_setting("premium_coupon_enabled") != "0"
+    simple_user_daily_tokens = get_or_set_setting("SIMPLE_USER_DAILY_TOKENS") or "13000"
 
     try:
         orig = float(current_price)
@@ -238,6 +241,7 @@ def premium_settings():
         discount_percent=discount_percent,
         discount_banner=discount_banner,
         coupon_enabled=coupon_enabled,
+        simple_user_daily_tokens=simple_user_daily_tokens,
         final_price=final_price,
         coupons=coupons,
         premium_count=premium_users_count
@@ -1906,7 +1910,7 @@ def toggle_user_premium(user_id):
     
     status_text = "Premium granted" if user.is_premium else "Premium revoked"
     flash(f"{status_text} for {user.username}.", "success")
-    return redirect(url_for("admin.users"))
+    return redirect(request.referrer or url_for("admin.users"))
 
 @admin_bp.route("/users/<int:user_id>/add-premium-time", methods=["POST"])
 @login_required
@@ -1947,6 +1951,33 @@ def add_premium_time(user_id):
     else:
         flash("Invalid amount.", "danger")
         
+    return redirect(request.referrer or url_for("admin.users"))
+
+@admin_bp.route("/users/<int:user_id>/update-credits", methods=["POST"])
+@login_required
+@permission_required("manage_users")
+def update_user_credits(user_id):
+    user = User.query.get_or_404(user_id)
+    raw_credits = request.form.get("ai_credits", "").strip()
+    try:
+        new_credits = max(0, int(raw_credits))
+    except (ValueError, TypeError):
+        flash("Invalid token credits value.", "danger")
+        return redirect(request.referrer or url_for("admin.users"))
+
+    old_credits = user.ai_credits
+    user.ai_credits = new_credits
+
+    db.session.add(
+        AuditLog(
+            user_id=current_user.id,
+            action="UPDATE_USER_CREDITS",
+            target_user=user.username,
+            detail=f"ai_credits changed from {old_credits} to {new_credits}"
+        )
+    )
+    db.session.commit()
+    flash(f"Updated AI tokens for {user.username} to {new_credits:,}.", "success")
     return redirect(request.referrer or url_for("admin.users"))
 
 # ==================================================

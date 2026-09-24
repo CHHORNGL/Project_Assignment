@@ -1,16 +1,34 @@
 /* User text is plain text. Never parse messages or attachment URLs as HTML. */
 
+function isSafeSupportImageUrl(src) {
+    if (!src || typeof src !== 'string') return false;
+    if (src.startsWith('blob:')) return true;
+    try {
+        let path = src;
+        if (src.startsWith('http://') || src.startsWith('https://')) {
+            if (typeof URL !== 'undefined') {
+                path = new URL(src).pathname;
+            } else {
+                path = src.replace(/^https?:\/\/[^\/]+/, '').split('?')[0];
+            }
+        } else {
+            path = src.split('?')[0];
+        }
+        return /^\/static\/uploads\/chats\/[0-9a-fA-F]{32}\.[a-zA-Z0-9]{1,10}$/.test(path);
+    } catch (_) {
+        return false;
+    }
+}
+
 window.openSupportImageFullscreen = function (src) {
     if (!src || typeof src !== 'string') return;
     if (typeof document === 'undefined' || !document.createElement) return;
 
-    const isChatUpload = /^\/static\/uploads\/chats\/[0-9a-f]{32}\.[a-z0-9]{1,10}$/.test(src);
-    const isBlob = src.startsWith('blob:');
-    if (!isChatUpload && !isBlob) return;
+    if (!isSafeSupportImageUrl(src)) return;
 
     let modal = typeof document.getElementById === 'function' ? document.getElementById('support-image-fullscreen-modal') : null;
     if (!modal) {
-        modal = document.createElement('div');
+        modal = document.createElement('dialog');
         modal.id = 'support-image-fullscreen-modal';
         modal.className = 'support-fullscreen-modal';
 
@@ -54,9 +72,12 @@ window.openSupportImageFullscreen = function (src) {
             if (document.fullscreenElement && typeof document.exitFullscreen === 'function') {
                 document.exitFullscreen().catch(function () {});
             }
+            if (typeof modal.close === 'function' && modal.open) {
+                try { modal.close(); } catch (_) {}
+            }
             setTimeout(function () {
                 img.src = '';
-                modal.style.display = 'none';
+                if (modal.style) modal.style.display = 'none';
             }, 180);
         }
 
@@ -94,9 +115,15 @@ window.openSupportImageFullscreen = function (src) {
         }
         if (typeof document.addEventListener === 'function') {
             document.addEventListener('keydown', function (e) {
-                if (e.key === 'Escape' && modal.style.display !== 'none') {
+                if (e.key === 'Escape' && (modal.open || (modal.style && modal.style.display !== 'none'))) {
                     closeModal();
                 }
+            });
+        }
+        if (typeof modal.addEventListener === 'function') {
+            modal.addEventListener('cancel', function (e) {
+                if (e && typeof e.preventDefault === 'function') e.preventDefault();
+                closeModal();
             });
         }
 
@@ -112,7 +139,11 @@ window.openSupportImageFullscreen = function (src) {
             fullImg.classList.remove('zoomed');
         }
     }
-    modal.style.display = 'flex';
+    if (typeof modal.showModal === 'function' && !modal.open) {
+        try { modal.showModal(); } catch (_) { if (modal.style) modal.style.display = 'flex'; }
+    } else if (modal.style) {
+        modal.style.display = 'flex';
+    }
     if (typeof requestAnimationFrame === 'function') {
         requestAnimationFrame(function () {
             if (modal.classList && typeof modal.classList.add === 'function') {
@@ -143,9 +174,8 @@ window.renderSupportMessage = function (container, message) {
         element.textContent = '📍 View on Map (' + lat.toFixed(4) + ', ' + lon.toFixed(4) + ')';
         element.className = 'support-location-link';
     } else {
-        // Also protects against unsafe attachment URLs in previously stored rows.
-        if (!/^\/static\/uploads\/chats\/[0-9a-f]{32}\.[a-z0-9]{1,10}$/.test(attachment)) return;
         if (message.attachment_type === 'image') {
+            if (!isSafeSupportImageUrl(attachment)) return;
             element = document.createElement('img');
             element.alt = 'Chat attachment';
             element.src = attachment;
@@ -162,6 +192,8 @@ window.renderSupportMessage = function (container, message) {
                 });
             }
         } else if (message.attachment_type === 'audio') {
+            const path = attachment.split('?')[0];
+            if (!/^\/static\/uploads\/chats\/[0-9a-fA-F]{32}\.[a-zA-Z0-9]{1,10}$/.test(path)) return;
             element = document.createElement('audio');
             element.controls = true;
             element.preload = 'metadata';

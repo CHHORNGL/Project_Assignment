@@ -196,7 +196,7 @@
                     {% if current_user.is_authenticated and current_user.has_route_access('farmer') %}
                         <div class="farmer-menu-credit-row">
                             <span class="farmer-menu-credit-label"><i class="fas fa-coins mr-1 text-warning"></i>{{ t("ai_credits")|default("AI Tokens") }}:</span>
-                            <span class="farmer-menu-credit-val" data-ai-credits>{{ "Unlimited" if current_user.is_premium else current_user.ai_credits }}</span>
+                            <span class="farmer-menu-credit-val" data-ai-credits>{{ "Unlimited" if (current_user.has_active_premium or current_user.is_premium) else (current_user.ai_credits if current_user.ai_credits is not none else 0) }}</span>
                         </div>
                     {% endif %}
                 </div>
@@ -276,13 +276,13 @@
                     <span class="d-none d-sm-inline">{{ t("ai_online") }}</span>
                 </span>
                 {% if current_user.is_authenticated and current_user.has_route_access('farmer') %}
-                    {% if not current_user.is_premium %}
+                    {% if not (current_user.has_active_premium or current_user.is_premium) %}
                     <span class="badge farmer-credit-badge" title="AI Tokens">
-                        <i class="fas fa-coins mr-1"></i> <span data-ai-credits>{{ current_user.ai_credits }}</span> <span class="d-none d-md-inline">Tokens</span>
+                        <i class="fas fa-coins mr-1"></i> <span data-ai-credits>{{ current_user.ai_credits if current_user.ai_credits is not none else 0 }}</span> <span class="d-none d-md-inline">Tokens</span>
                     </span>
                     {% else %}
                     <span class="badge farmer-premium-badge" title="Unlimited AI Access">
-                        <i class="fas fa-infinity mr-1"></i> <span class="d-none d-md-inline">Unlimited</span>
+                        <i class="fas fa-infinity mr-1"></i> <span>Unlimited</span>
                     </span>
                     {% endif %}
                 {% endif %}

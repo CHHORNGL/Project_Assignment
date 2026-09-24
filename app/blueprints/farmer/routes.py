@@ -90,7 +90,7 @@ PROJECT_TEAM = [
         "telegram": "@Error404_ik",
     },
     {
-        "name": "Chea Cheavchorng",
+        "name": "Chea Cheavchhorng",
         "name_kh": "ជា&nbsp;ជៀវឈ័ង្ស",
         "rank": "Frontend & UI/UX Lead",
         "rank_kh": "អ្នកដឹកនាំ Frontend & UI/UX",
@@ -106,7 +106,7 @@ PROJECT_TEAM = [
     },
     {
         "name": "Nov Panha",
-        "name_kh": "នូវ&nbsp;បញ្ញា",
+        "name_kh": "នៅ&nbsp;បញ្ញា",
         "rank": "Mobile App Developer",
         "rank_kh": "អ្នកអភិវឌ្ឍន៍ Mobile App",
         "photo": "Nov Panha.png",
@@ -1644,6 +1644,9 @@ def chat(session_id=None):
                         reply = "សុំទោស ខ្ញុំមិនអាចដំណើរការសំណួរនេះបានទេ។ សូមសាកល្បងសួរម្តងទៀត ឬពិពណ៌នាអំពីដំណាំ និងរោគសញ្ញារបស់អ្នក។"
                     else:
                         reply = "I'm having trouble processing your question right now. Please try asking again or describe your crop symptoms in more detail."
+                if current_user.has_route_access("farmer") and not getattr(current_user, "has_active_premium", False) and not getattr(current_user, "is_premium", False):
+                    tokens_used = max(15, (len(user_message) + len(reply)) // 4)
+                    current_user.ai_credits = max(0, (current_user.ai_credits or 0) - tokens_used)
 
             assistant_message = ChatMessage(
                 sender="system",
@@ -1687,9 +1690,8 @@ def chat(session_id=None):
                 db.session.rollback()
 
         if wants_json:
-            credits_remaining = None
-            if current_user.has_route_access("farmer") and not current_user.is_premium:
-                credits_remaining = max(0, current_user.ai_credits or 0)
+            is_active_premium = bool(getattr(current_user, "has_active_premium", False) or current_user.is_premium)
+            credits_remaining = "unlimited" if is_active_premium else (max(0, current_user.ai_credits or 0) if current_user.has_route_access("farmer") else None)
             return jsonify(
                 ok=True,
                 reply=reply,
@@ -1698,6 +1700,7 @@ def chat(session_id=None):
                 user_created_at=user_created_at,
                 assistant_created_at=assistant_created_at,
                 credits_remaining=credits_remaining,
+                is_premium=is_active_premium,
                 attachment_name=attachment_name,
             )
         return redirect(url_for("farmer.chat", session_id=session.id))

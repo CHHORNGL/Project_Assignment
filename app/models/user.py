@@ -260,6 +260,25 @@ class User(db.Model, UserMixin):
         return False
 
     # ===============================
+    # PREMIUM STATUS & EXPIRATION
+    # ===============================
+    @property
+    def has_active_premium(self) -> bool:
+        """Return True if user has an active premium subscription without expiration."""
+        if not self.is_premium:
+            return False
+        if self.premium_expires_at and self.premium_expires_at < datetime.utcnow():
+            return False
+        return True
+
+    def sync_premium_status(self) -> bool:
+        """Check if premium has expired and update is_premium column if needed."""
+        if self.is_premium and self.premium_expires_at and self.premium_expires_at < datetime.utcnow():
+            self.is_premium = False
+            return False
+        return bool(self.is_premium)
+
+    # ===============================
     # THEME HELPERS 🌗
     # ===============================
     def set_theme(self, theme: str):
