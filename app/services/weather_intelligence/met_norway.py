@@ -33,7 +33,7 @@ class MetNorwayClient:
         self._timeout_seconds = timeout_seconds
 
     def fetch_forecast(self, weather_request: WeatherRequest, *, previous_payload=None):
-        headers = {"User-Agent": "AgricultureExp/1.0 https://agricultureexp.space"}
+        headers = {"User-Agent": "AgricultureExp/1.0 https://agricultureexp.com"}
         if previous_payload and previous_payload.get("_last_modified"):
             headers["If-Modified-Since"] = previous_payload["_last_modified"]
         try:

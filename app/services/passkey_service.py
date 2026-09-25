@@ -28,12 +28,14 @@ from app.models.user import User
 def get_webauthn_rp_and_origins(req: Request) -> tuple[str, list[str]]:
     """Determine the Relying Party ID (rp_id) and valid origins for the current request."""
     forwarded_host = req.headers.get("X-Forwarded-Host")
-    host_raw = forwarded_host or req.headers.get("Host") or req.host or "agricultureexp.space"
+    host_raw = forwarded_host or req.headers.get("Host") or req.host or "agricultureexp.com"
     if "," in host_raw:
         host_raw = host_raw.split(",")[0].strip()
     host = host_raw.split(":")[0].strip().lower()
 
-    if "agricultureexp.space" in host:
+    if "agricultureexp.com" in host:
+        rp_id = "agricultureexp.com"
+    elif "agricultureexp.space" in host:
         rp_id = "agricultureexp.space"
     elif host in ("localhost", "127.0.0.1"):
         rp_id = "localhost"
@@ -41,6 +43,9 @@ def get_webauthn_rp_and_origins(req: Request) -> tuple[str, list[str]]:
         rp_id = host
 
     allowed_origins = [
+        f"https://{rp_id}",
+        f"https://www.agricultureexp.com",
+        f"https://agricultureexp.com",
         f"https://{rp_id}",
         f"https://www.{rp_id}",
         f"http://{rp_id}",
