@@ -666,36 +666,40 @@
             </div>
             <h1 class="v0-empty-title">
                 {% if current_lang == 'km' %}
-                    តើខ្ញុំអាចជួយអ្វីដល់ដំណាំរបស់អ្នក?
+                    តើខ្ញុំអាចជួយសម្រួលអ្វីដល់អ្នក?
                 {% else %}
-                    What can I help you diagnose?
+                    How can I assist you with AgriSystem?
                 {% endif %}
             </h1>
             <p class="v0-empty-sub">
-                {{ t("ask_expert_sub")|default("Ask about crop diseases, pest controls, seasonal planting schedules, or weather risks.") }}
+                {% if current_lang == 'km' %}
+                    សួរអំពីរបៀបប្រើប្រាស់ប្រព័ន្ធ ការធ្វើរោគវិនិច្ឆ័យ ប្រវត្តិពិនិត្យជំងឺ អាកាសធាតុ ឬការគ្រប់គ្រងគណនី។
+                {% else %}
+                    Ask about navigating the system, running diagnoses, checking history, weather advisory, or account support.
+                {% endif %}
             </p>
 
             <!-- Quick Suggestion Buttons -->
             <div class="v0-action-pills">
-                <button type="button" class="v0-action-btn" data-prompt="{{ t('suggestion_rice_blast') }}">
-                    <i class="fas fa-leaf text-success"></i>
-                    <span>{{ t("suggestion_rice_blast")|default("🌾 Rice Blast Diagnosis") }}</span>
+                <button type="button" class="v0-action-btn" data-prompt="{{ t('suggestion_diagnose_guide') }}">
+                    <i class="fas fa-camera text-success"></i>
+                    <span>🔍 {{ t("suggestion_diagnose_guide")|default("How to diagnose crops?") }}</span>
                 </button>
-                <button type="button" class="v0-action-btn" data-prompt="{{ t('suggestion_tomato_curl') }}">
-                    <i class="fas fa-virus text-warning"></i>
-                    <span>{{ t("suggestion_tomato_curl")|default("🍅 Tomato Leaf Curl") }}</span>
+                <button type="button" class="v0-action-btn" data-prompt="{{ t('suggestion_rule_guide') }}">
+                    <i class="fas fa-clipboard-list text-info"></i>
+                    <span>📋 {{ t("suggestion_rule_guide")|default("Rule-Based Diagnosis") }}</span>
                 </button>
-                <button type="button" class="v0-action-btn" data-prompt="{{ t('suggestion_pest_control') }}">
-                    <i class="fas fa-bug text-danger"></i>
-                    <span>{{ t("suggestion_pest_control")|default("🐛 Pest & Caterpillar") }}</span>
+                <button type="button" class="v0-action-btn" data-prompt="{{ t('suggestion_credits_upgrade') }}">
+                    <i class="fas fa-gem text-warning"></i>
+                    <span>💎 {{ t("suggestion_credits_upgrade")|default("Credits & Upgrade") }}</span>
                 </button>
-                <button type="button" class="v0-action-btn" data-prompt="{{ t('suggestion_dry_season') }}">
-                    <i class="fas fa-tint text-primary"></i>
-                    <span>{{ t("suggestion_dry_season")|default("🧪 Soil & Fertilizer") }}</span>
+                <button type="button" class="v0-action-btn" data-prompt="{{ t('suggestion_contact_guide') }}">
+                    <i class="fas fa-headset text-danger"></i>
+                    <span>🛠️ {{ t("suggestion_contact_guide")|default("Contact Admin / Support") }}</span>
                 </button>
-                <button type="button" class="v0-action-btn" data-prompt="How does today's weather affect crop disease risks?">
-                    <i class="fas fa-cloud-sun text-info"></i>
-                    <span>🌦️ Weather Risks</span>
+                <button type="button" class="v0-action-btn" data-prompt="How does the Weather Advisory work?">
+                    <i class="fas fa-cloud-sun text-primary"></i>
+                    <span>🌦️ {% if current_lang == 'km' %}អាកាសធាតុ និងដី{% else %}Weather Advisory{% endif %}</span>
                 </button>
             </div>
         </div>
@@ -712,13 +716,13 @@
         <input type="hidden" name="latitude" id="farmer-chat-latitude" value="">
         <input type="hidden" name="longitude" id="farmer-chat-longitude" value="">
         <label for="farmer-chat-input" class="sr-only">{% if current_lang == "km" %}សួរ AI{% else %}Ask AI{% endif %}</label>
-        <span id="expert-compose-help" class="sr-only">{% if current_lang == "km" %}ប្រាប់អំពីដំណាំ និងរោគសញ្ញារបស់អ្នក។{% else %}Describe your crop, symptoms, or question.{% endif %}</span>
+        <span id="expert-compose-help" class="sr-only">{% if current_lang == "km" %}សួរអំពីការប្រើប្រាស់ប្រព័ន្ធ។{% else %}Ask how to use the system or its features.{% endif %}</span>
         <div class="v0-textarea-container">
             <textarea
                 name="message"
                 id="farmer-chat-input"
                 class="v0-chat-textarea"
-                placeholder="{% if current_lang == 'km' %}សួរអំពីដំណាំរបស់អ្នក…{% else %}Ask anything about your crops…{% endif %}"
+                placeholder="{% if current_lang == 'km' %}សួរអំពីការប្រើប្រាស់ប្រព័ន្ធ ឬមុខងារនានា…{% else %}Ask how to use the system or its features…{% endif %}"
                 aria-describedby="expert-compose-help"
                 rows="1"
                 autocomplete="off"></textarea>
@@ -731,9 +735,9 @@
                     </button>
                     <div class="v0-menu" id="farmer-chat-prompt-menu" hidden>
                         <div class="v0-menu-title">Suggested prompts</div>
-                        <button type="button" class="v0-menu-item" data-prompt="What disease or pest could affect my crop? What signs should I check?"><i class="fas fa-leaf"></i><span>Identify crop problem</span></button>
-                        <button type="button" class="v0-menu-item" data-prompt="Give me a safe treatment plan for my crop, including timing and precautions."><i class="fas fa-shield-heart"></i><span>Make a treatment plan</span></button>
-                        <button type="button" class="v0-menu-item" data-prompt="What fertilizer and watering schedule is suitable for my crop?"><i class="fas fa-droplet"></i><span>Fertilizer and watering</span></button>
+                        <button type="button" class="v0-menu-item" data-prompt="How do I diagnose crop diseases by uploading a photo?"><i class="fas fa-camera"></i><span>How to diagnose crops</span></button>
+                        <button type="button" class="v0-menu-item" data-prompt="How does Rule-Based Diagnosis work?"><i class="fas fa-clipboard-list"></i><span>Rule-Based Diagnosis</span></button>
+                        <button type="button" class="v0-menu-item" data-prompt="How do I check my AI credits or upgrade my plan?"><i class="fas fa-gem"></i><span>Credits & Upgrade</span></button>
                     </div>
                 </div>
                 <div class="v0-tool-wrap">
@@ -742,8 +746,8 @@
                     </button>
                     <div class="v0-menu" id="farmer-chat-more-menu" hidden>
                         <div class="v0-menu-title">More tools</div>
-                        <button type="button" class="v0-menu-item" data-prompt="Compare the possible causes of this crop problem and tell me what evidence would confirm each one."><i class="fas fa-list-check"></i><span>Compare causes</span></button>
-                        <button type="button" class="v0-menu-item" data-prompt="Explain this agricultural advice in simple steps I can follow in the field."><i class="fas fa-person-chalkboard"></i><span>Explain simply</span></button>
+                        <button type="button" class="v0-menu-item" data-prompt="How can I change my password or register a biometric Passkey?"><i class="fas fa-key"></i><span>Password & Passkeys</span></button>
+                        <button type="button" class="v0-menu-item" data-prompt="How do I view and export my past Diagnosis History?"><i class="fas fa-file-pdf"></i><span>Diagnosis History</span></button>
                         <button type="button" class="v0-menu-item" data-clear-prompt="true"><i class="fas fa-eraser"></i><span>Clear prompt</span></button>
                     </div>
                 </div>

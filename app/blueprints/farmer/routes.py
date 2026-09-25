@@ -653,19 +653,27 @@ def guest_chat():
             reply = _get_identity_reply(lang)
         elif _is_greeting_or_filler(message) or "hello in khmer" in msg_lower or "hello in english" in msg_lower:
             reply = _get_greeting_reply(message, lang)
-        elif any(w in msg_lower for w in ("rice", "blast", "ស្រូវ")):
-            reply = "Rice Blast (Magnaporthe oryzae): Symptoms include spindle-shaped lesions with grey centres and brown margins. Recommendation: Drain standing water temporarily, avoid excess nitrogen, and apply Tricyclazole 75% WP (15-20g per 16L sprayer) or Azoxystrobin."
-        elif any(w in msg_lower for w in ("cassava", "mosaic", "ដំឡូង")):
-            reply = "Cassava Mosaic Disease (CMD): Symptoms include asymmetrical leaf curling and yellow chlorosis. Recommendation: Rogue and incinerate infected plants immediately; control whitefly vectors and plant certified virus-free varieties (KU50, Rayong)."
-        elif any(w in msg_lower for w in ("corn", "maize", "blight", "ពោត")):
-            reply = "Northern Corn Leaf Blight (Exserohilum turcicum): Long elliptical lesions on leaves. Recommendation: Rotate fields with non-host crops and apply Mancozeb 80% WP or Pyraclostrobin during initial spotting."
-        elif any(w in msg_lower for w in ("tomato", "blight", "ប៉េងប៉ោះ")):
-            reply = "Tomato Late Blight: Dark water-soaked lesions with white mold in humid weather. Recommendation: Ensure wide spacing for airflow, avoid overhead irrigation, and apply Metalaxyl + Mancozeb."
         else:
-            if lang == "km":
-                reply = "AgriSystem AI (ម៉ូឌែល AGY V2.0.0)៖ ដើម្បីវិភាគជំងឺដំណាំបានត្រឹមត្រូវ សូមជ្រើសរើសដំណាំក្នុងឧបករណ៍ធ្វើរោគវិនិច្ឆ័យ ឬថតរូបភាព។ សូមបង្កើតគណនីដើម្បីទទួលបានការណែនាំថ្នាំកសិកម្មលម្អិត និងការពិគ្រោះយោបល់ឥតគិតថ្លៃ!"
+            try:
+                from app.services.project_assistant import generate_project_reply
+                reply = generate_project_reply(message, user_role="farmer", page="landing")
+            except Exception:
+                reply = None
+
+        if not reply:
+            if any(w in msg_lower for w in ("rice", "blast", "ស្រូវ")):
+                reply = "Rice Blast (Magnaporthe oryzae): Symptoms include spindle-shaped lesions with grey centres and brown margins. Recommendation: Drain standing water temporarily, avoid excess nitrogen, and apply Tricyclazole 75% WP (15-20g per 16L sprayer) or Azoxystrobin."
+            elif any(w in msg_lower for w in ("cassava", "mosaic", "ដំឡូង")):
+                reply = "Cassava Mosaic Disease (CMD): Symptoms include asymmetrical leaf curling and yellow chlorosis. Recommendation: Rogue and incinerate infected plants immediately; control whitefly vectors and plant certified virus-free varieties (KU50, Rayong)."
+            elif any(w in msg_lower for w in ("corn", "maize", "blight", "ពោត")):
+                reply = "Northern Corn Leaf Blight (Exserohilum turcicum): Long elliptical lesions on leaves. Recommendation: Rotate fields with non-host crops and apply Mancozeb 80% WP or Pyraclostrobin during initial spotting."
+            elif any(w in msg_lower for w in ("tomato", "blight", "ប៉េងប៉ោះ")):
+                reply = "Tomato Late Blight: Dark water-soaked lesions with white mold in humid weather. Recommendation: Ensure wide spacing for airflow, avoid overhead irrigation, and apply Metalaxyl + Mancozeb."
             else:
-                reply = "AgriSystem AI Assistant (model AGY V2.0.0): For accurate crop diagnosis, please select your crop in the Diagnose tool or snap a photo. Create an account for complete customized spray guides and 24/7 expert advice!"
+                if lang == "km":
+                    reply = "AgriSystem AI (ម៉ូឌែល AGY V2.0.0)៖ ដើម្បីវិភាគជំងឺដំណាំបានត្រឹមត្រូវ សូមជ្រើសរើសដំណាំក្នុងឧបករណ៍ធ្វើរោគវិនិច្ឆ័យ ឬថតរូបភាព។ សូមបង្កើតគណនីដើម្បីទទួលបានការណែនាំថ្នាំកសិកម្មលម្អិត និងការពិគ្រោះយោបល់ឥតគិតថ្លៃ!"
+                else:
+                    reply = "AgriSystem AI Assistant (model AGY V2.0.0): For accurate crop diagnosis, please select your crop in the Diagnose tool or snap a photo. Create an account for complete customized spray guides and 24/7 expert advice!"
 
     return jsonify({
         "success": True,

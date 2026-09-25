@@ -620,7 +620,7 @@
                                 <div class="nx-chat-box">
                                     <div class="nx-chat-header">
                                         <div class="nx-chat-title">
-                                            <span class="nx-dot mr-1"></span> Ark Agri Assistant (Live Preview)
+                                            <span class="nx-dot mr-1"></span> AgriSystem Support Assistant (Live)
                                         </div>
                                         <span class="badge badge-pill badge-info font-weight-normal px-2 py-1">Online</span>
                                     </div>
@@ -628,27 +628,30 @@
                                     <!-- Chat Messages -->
                                     <div class="nx-chat-body" id="nxChatBody">
                                         <div class="nx-cbbl nx-cbai">
-                                            <i class="fas fa-robot text-primary mr-1"></i> <strong>ជំរាបសួរ / Hello!</strong> I am your AgriSystem AI Assistant. You can test asking about crop diseases, pest outbreaks, or spray schedules right here.
+                                            <i class="fas fa-robot text-primary mr-1"></i> <strong>ជំរាបសួរ / Hello!</strong> {% if current_lang == 'km' %}ខ្ញុំជាជំនួយការប្រព័ន្ធ AgriSystem។ អ្នកអាចសួរខ្ញុំអំពីរបៀបប្រើប្រព័ន្ធ, ការពិនិត្យជំងឺ, ការគ្រប់គ្រងគណនី ឬការទាក់ទង Admin!{% else %}I am your AgriSystem Support Assistant. Ask me how to use the dashboard, upload photos for diagnosis, manage your account, or contact administrators!{% endif %}
                                         </div>
                                     </div>
 
                                     <!-- Quick Prompt Chips -->
                                     <div class="nx-chips-wrap">
-                                        <button type="button" class="nx-chip" onclick="quickCropQuery('What are symptoms of Rice Blast?')">
-                                            <i class="fas fa-seedling text-primary mr-1"></i>Rice Blast
+                                        <button type="button" class="nx-chip" onclick="quickCropQuery('How do I diagnose crop diseases?')">
+                                            <i class="fas fa-camera text-primary mr-1"></i>{% if current_lang == 'km' %}របៀបពិនិត្យជំងឺ{% else %}How to Diagnose{% endif %}
                                         </button>
-                                        <button type="button" class="nx-chip" onclick="quickCropQuery('How to treat Cassava Mosaic Disease?')">
-                                            <i class="fas fa-spa text-info mr-1"></i>Cassava Mosaic
+                                        <button type="button" class="nx-chip" onclick="quickCropQuery('How does Rule-Based Diagnosis work?')">
+                                            <i class="fas fa-clipboard-list text-info mr-1"></i>{% if current_lang == 'km' %}ពិនិត្យតាមច្បាប់{% else %}Rule-Based Diagnosis{% endif %}
                                         </button>
-                                        <button type="button" class="nx-chip" onclick="quickCropQuery('Best weather for spraying pesticide?')">
-                                            <i class="fas fa-cloud-sun text-warning mr-1"></i>Spray Timing
+                                        <button type="button" class="nx-chip" onclick="quickCropQuery('How do I check credits or upgrade?')">
+                                            <i class="fas fa-gem text-warning mr-1"></i>{% if current_lang == 'km' %}Credits & Upgrade{% else %}Credits & Upgrade{% endif %}
+                                        </button>
+                                        <button type="button" class="nx-chip" onclick="quickCropQuery('How to contact admin or support?')">
+                                            <i class="fas fa-headset text-success mr-1"></i>{% if current_lang == 'km' %}ទាក់ទង Admin{% else %}Contact Admin{% endif %}
                                         </button>
                                     </div>
 
                                     <!-- Chat Input Bar -->
                                     <div class="nx-chat-input-row">
                                         <input type="text" class="nx-chat-input" id="nxChatInput" 
-                                               placeholder="Ask agricultural question (e.g. rice blast symptoms)...">
+                                               placeholder="{% if current_lang == 'km' %}សួរអំពីការប្រើប្រព័ន្ធ (ដូចជា របៀបពិនិត្យជំងឺ, គណនី)...{% else %}Ask about using the system (e.g. how to diagnose, check credits)...{% endif %}">
                                         <button class="nx-chat-send" type="button" id="nxChatSendBtn" title="Send Question">
                                             <i class="fas fa-paper-plane" style="font-size: 0.85rem;"></i>
                                         </button>

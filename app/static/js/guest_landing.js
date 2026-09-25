@@ -107,7 +107,7 @@
             }
         } catch (e) {
             removeTyping();
-            appendMessage('Rice Blast / Leaf Spot symptoms detected. Apply Tricyclazole 75% WP or Azoxystrobin, ensure balanced nitrogen fertilizer, and inspect field water levels.', 'ai');
+            appendMessage('I am your AgriSystem Support Assistant. Ask me how to use the dashboard, upload photos for diagnosis, manage your account, or contact administrators!', 'ai');
         } finally {
             if (chatSendBtn) chatSendBtn.disabled = false;
         }
