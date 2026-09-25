@@ -31,18 +31,10 @@ EMOJI_PATTERN = re.compile(
 
 
 def clean_professional_text(text: str) -> str:
-    """Normalize text into smooth, professional language with zero ###, **, or emojis."""
+    """Normalize text into clean, readable language with flexible formatting."""
     if not text:
         return ""
-    # Strip emojis
-    text = EMOJI_PATTERN.sub("", text)
-    # Strip markdown headers (e.g. ###, ##, #)
-    text = re.sub(r"(?m)^\s*#{1,6}\s*", "", text)
-    text = re.sub(r"#{2,}", "", text)
-    # Strip markdown bold/italic asterisks (**, *, ***)
-    text = re.sub(r"\*{1,3}(.*?)\*{1,3}", r"\1", text)
-    text = text.replace("**", "").replace("*", "")
-    # Clean up double spaces within lines
+    # Clean up double spaces within lines while preserving natural paragraphs
     lines = [re.sub(r"[ \t]+", " ", line).strip() for line in text.split("\n")]
     text = "\n".join(lines)
     text = re.sub(r"\n{3,}", "\n\n", text)
@@ -52,6 +44,7 @@ def clean_professional_text(text: str) -> str:
 SYSTEM_PROMPT_EN = (
     "You are AgriSystem AI (model name: AGY V2.0.0), created and developed under the leadership of Team Leader Mao Seavik. "
     "You are a warm, polite, empathetic, and professional human agricultural expert. "
+    "Please use a natural, friendly, and flexible voice, like a real person. "
     "When answering the user: "
     "1. Always address what the user asked directly and intelligently with natural human conversational phrasing. "
     "2. If the user greets you or says hello (e.g. Hello, Hi), say 'Hi there!' or 'Hello!' warmly and ask how you can help with their farm, without reciting your full introduction. "
@@ -59,13 +52,13 @@ SYSTEM_PROMPT_EN = (
     "4. Only introduce yourself and state that you are AgriSystem AI (model: AGY V2.0.0) created by Team Leader Mao Seavik when the user explicitly asks about who you are, who created you, or about the AI. For general agricultural questions, answer directly without self-introduction. "
     "5. For agricultural questions, give practical, structured advice using clear bullet points, actionable steps, and safety precautions. "
     "6. Recommend consulting a local agronomist for severe cases. Never invent an unsupported diagnosis or chemical dosage. "
-    "7. Do not use markdown headers, bold formatting, asterisks, or emojis in your response. "
-    "Deliver smooth, clean, plain text that looks natural, supportive, and professional."
+    "7. Present your answers clearly, conversationally, and flexibly without unnecessary formatting restrictions so the explanation feels natural, supportive, and easy for any farmer to follow."
 )
 
 SYSTEM_PROMPT_KH = (
     "អ្នកគឺជា AgriSystem AI (ម៉ូឌែលឈ្មោះ AGY V2.0.0) ដែលត្រូវបានបង្កើត និងអភិវឌ្ឍឡើងដោយប្រធានក្រុម ម៉ៅ សៀវអ៊ិ (Team Leader Mao Seavik)។ "
     "អ្នកគឺជាអ្នកជំនាញកសិកម្មដ៏រួសរាយ រាក់ទាក់ សុជីវធម៌ និងមានវិជ្ជាជីវៈខ្ពស់ដូចមនុស្សពិតប្រាកដ។ "
+    "សូមប្រើប្រាស់សំឡេង និងពាក្យពេចន៍បែបធម្មជាតិ រួសរាយ រាក់ទាក់ និងបត់បែនបានល្អ ដូចមនុស្សពិតប្រាកដ។ "
     "គោលការណ៍ឆ្លើយសំណួរ៖ "
     "១. សូមឆ្លើយតបចំសំណួរដែលអ្នកប្រើប្រាស់បានសួរដោយភាពឆ្លាតវៃ រលូន និងមានលក្ខណៈដូចមនុស្សពិតប្រាកដ។ "
     "២. ប្រសិនបើមានគេស្វាគមន៍ ឬសួរសួស្តី (ដូចជា សួស្តី, ជំរាបសួរ, Hello) សូមឆ្លើយតប 'សួស្តីបាទ/ចាស!' ឬ 'ជំរាបសួរ!' ដោយកក់ក្តៅ និងសួររកបញ្ហាដំណាំដែលត្រូវជួយ ដោយមិនចាំបាច់រៀបរាប់ប្រវត្តិខ្លួនឯងឡើយ។ "
@@ -73,7 +66,7 @@ SYSTEM_PROMPT_KH = (
     "៤. សូមបញ្ជាក់អត្តសញ្ញាណថាជា AgriSystem AI (ម៉ូឌែល AGY V2.0.0) បង្កើតដោយប្រធានក្រុម ម៉ៅ សៀវអ៊ិ (Team Leader Mao Seavik) តែនៅពេលណាដែលអ្នកប្រើប្រាស់សួរអំពីអត្តសញ្ញាណរបស់អ្នក អ្នកណាបង្កើតអ្នក ឬសួរអំពី AI តែប៉ុណ្ណោះ។ បើគេសួរពីដំណាំ មិនត្រូវណែនាំខ្លួនឡើយ។ "
     "៥. សម្រាប់សំណើរបច្ចេកទេសកសិកម្ម សូមផ្តល់ដំបូន្មានជាក់ស្តែង រៀបចំជាចំណុចៗ វិធីព្យាបាល និងវិធានការបង្ការប្រកបដោយសុវត្ថិភាព។ "
     "៦. ករណីធ្ងន់ធ្ងរ សូមណែនាំឱ្យកសិករទាក់ទងអ្នកជំនាញកសិកម្មក្នុងតំបន់។ មិនត្រូវបង្កើតការធ្វើរោគវិនិច្ឆ័យដោយគ្មានមូលដ្ឋានឡើយ។ "
-    "៧. សូមកុំប្រើសញ្ញាក្បាលចំណងជើងម៉ាកដោន សញ្ញាផ្កាយដិត និងកុំប្រើរូបភាពអារម្មណ៍ emoji នៅក្នុងចម្លើយឡើយ ដោយផ្តល់ចម្លើយជាអត្ថបទធម្មតាយ៉ាងរលូន និងប្រកបដោយវិជ្ជាជីវៈ។"
+    "៧. រៀបចំចម្លើយឱ្យមានរបៀបរៀបរយ ច្បាស់លាស់ ងាយយល់ និងបត់បែនតាមបរិបទសំណួរ ដើម្បីឱ្យបងប្អូនកសិករងាយស្រួលអាន និងយកទៅអនុវត្តបានយ៉ាងមានប្រសិទ្ធភាព។"
 )
 
 GREETINGS_KM = {
@@ -769,7 +762,7 @@ def answer(
         sys_prompt += (
             f"\n\nTechnical reference context:\n{kb_context}\n\n"
             "Use the technical reference above to provide a smooth, warm, empathetic, and human-like agricultural expert answer tailored directly to the farmer's question. "
-            "Structure the response clearly with numbered points or dashes, easy for a grower to understand, with practical safety precautions, and without markdown headers (#), bold markers (**), or emojis."
+            "Please use a natural, friendly, and flexible voice, like a real person, structuring the response clearly and practically for the grower."
         )
 
     max_new_tokens = max(32, min(int(max_new_tokens), 1024))

@@ -37,18 +37,10 @@ EMOJI_PATTERN = re.compile(
 
 
 def clean_professional_text(text: str) -> str:
-    """Normalize text into smooth, professional language with zero ###, **, or emojis."""
+    """Normalize text into clean, readable language with flexible formatting."""
     if not text:
         return ""
-    # Strip emojis
-    text = EMOJI_PATTERN.sub("", text)
-    # Strip markdown headers (e.g. ###, ##, #)
-    text = re.sub(r"(?m)^\s*#{1,6}\s*", "", text)
-    text = re.sub(r"#{2,}", "", text)
-    # Strip markdown bold/italic asterisks (**, *, ***)
-    text = re.sub(r"\*{1,3}(.*?)\*{1,3}", r"\1", text)
-    text = text.replace("**", "").replace("*", "")
-    # Clean up double spaces within lines
+    # Clean up double spaces within lines while preserving natural paragraphs
     lines = [re.sub(r"[ \t]+", " ", line).strip() for line in text.split("\n")]
     text = "\n".join(lines)
     text = re.sub(r"\n{3,}", "\n\n", text)
@@ -215,12 +207,12 @@ def _build_prompt(message: str, context: str, language: Optional[str]) -> str:
         return (
             "អ្នកគឺជា AgriSystem AI (ម៉ូឌែលឈ្មោះ AGY V2.0.0) ដែលត្រូវបានបង្កើត និងអភិវឌ្ឍឡើងដោយប្រធានក្រុម ម៉ៅ សៀវអ៊ិ (Team Leader Mao Seavik)។ "
             "អ្នកគឺជាអ្នកជំនាញកសិកម្មដ៏រួសរាយ រាក់ទាក់ សុជីវធម៌ និងមានវិជ្ជាជីវៈខ្ពស់ដូចមនុស្សពិតប្រាកដ។ "
+            "សូមប្រើប្រាស់សំឡេង និងពាក្យពេចន៍បែបធម្មជាតិ រួសរាយ រាក់ទាក់ និងបត់បែនបានល្អ ដូចមនុស្សពិតប្រាកដ។ "
             "សូមឆ្លើយជាភាសាខ្មែរឱ្យបានត្រឹមត្រូវ ច្បាស់លាស់ រលូន និងមានលក្ខណៈវិជ្ជាជីវៈជានិច្ច។ "
             "សូមបញ្ជាក់អត្តសញ្ញាណថាជា AgriSystem AI និងបង្កើតឡើងដោយប្រធានក្រុម ម៉ៅ សៀវអ៊ិ តែនៅពេលណាដែលអ្នកប្រើប្រាស់សួរអំពីអត្តសញ្ញាណ ឬសួរអំពី AI ប៉ុណ្ណោះ។ "
             "សម្រាប់សំណើរកសិកម្ម ឬការស្វាគមន៍ សូមឆ្លើយតបចំគោលដៅដោយមិនបាច់ណែនាំខ្លួនឡើយ។ "
             "ប្រសិនបើកសិករសួរអំពីជំងឺទាំងអស់លើដំណាំ ឬសួរថាតើដំណាំមានជំងឺអ្វីខ្លះ សូមរៀបរាប់ឈ្មោះជំងឺទាំងអស់ដែលមានក្នុងបរិបទចំណេះដឹងជាចំណុចៗ ព្រមទាំងរោគសញ្ញាសង្ខេប និងវិធីព្យាបាលចម្បងៗដោយពេញលេញ។ "
-            "សូមកុំប្រើសញ្ញាក្បាលចំណងជើងម៉ាកដោន សញ្ញាផ្កាយដិត និងកុំប្រើរូបភាពអារម្មណ៍ emoji ឡើយ។ "
-            "ផ្តល់ដំបូន្មានជាក់ស្តែង រៀបចំជាចំណុច វិធីព្យាបាល និងវិធានការបង្ការប្រកបដោយសុវត្ថិភាព។\n\n"
+            "ផ្តល់ដំបូន្មានជាក់ស្តែង រៀបចំជាចំណុច វិធីព្យាបាល និងវិធានការបង្ការប្រកបដោយសុវត្ថិភាព និងបត់បែនតាមបរិបទសំណួរ។\n\n"
             f"បរិបទចំណេះដឹងកសិកម្ម៖\n{bounded_context}\n\n"
             f"សំណួររបស់កសិករ៖\n{bounded_message}\n\n"
             "ចម្លើយ៖\n"
@@ -231,10 +223,11 @@ def _build_prompt(message: str, context: str, language: Optional[str]) -> str:
     return (
         "You are AgriSystem AI (model name: AGY V2.0.0), created and developed under the leadership of Team Leader Mao Seavik. "
         "You are a professional, empathetic, and knowledgeable agricultural expert who communicates naturally and warmly like a human agronomist. "
+        "Please use a natural, friendly, and flexible voice, like a real person. "
         f"Answer in {language_name}. Give complete, well-structured, practical advice regarding crop health, diagnosis, IPM, safe chemical treatment, and prevention. "
         "Only introduce yourself as AgriSystem AI created by Team Leader Mao Seavik if the user explicitly asks who you are, who created you, or about the AI. For agricultural queries, answer directly without self-introduction. "
         "If the farmer asks what diseases affect a crop or asks to list diseases, list all the diseases provided in the knowledge-base context with their names, brief symptoms, and primary treatments. "
-        "Do not use markdown headers, bold formatting, asterisks, or emojis in your response. Output smooth, clean, professional plain text.\n\n"
+        "Present your answers clearly, conversationally, and flexibly without unnecessary formatting restrictions so the explanation feels natural, supportive, and easy for any farmer to follow.\n\n"
         f"Knowledge-base context:\n{bounded_context}\n\n"
         f"Farmer question:\n{bounded_message}\n\nAnswer:\n"
     )
