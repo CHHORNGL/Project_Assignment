@@ -1,19 +1,21 @@
 {
-  "generated_at": "2026-09-24T16:23:24Z",
-  "source_date": "2026-09-24",
-  "record_count": 2937,
-  "train_count": 2343,
-  "validation_count": 594,
+  "generated_at": "2026-09-25T11:55:30Z",
+  "source_date": "2026-09-25",
+  "record_count": 5156,
+  "train_count": 4127,
+  "validation_count": 1029,
   "validation_ratio": 0.2,
   "categories": {
-    "agent_identity": 31,
-    "agricultural_insights": 16,
-    "casual_conversation": 30,
+    "agent_identity": 512,
+    "agricultural_insights": 256,
+    "casual_conversation": 480,
     "crop": 16,
     "crop_diseases": 48,
     "diagnostic_rule": 252,
     "disease": 2520,
-    "greeting": 24
+    "emotional_support": 528,
+    "everyday_problem_solving": 160,
+    "greeting": 384
   },
   "files": [
     "agri_train_data.jsonl",

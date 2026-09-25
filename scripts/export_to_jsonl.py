@@ -74,24 +74,27 @@ except ImportError:  # pragma: no cover - dependencies are installed in normal p
 SYSTEM_PROMPTS = {
     "en": (
         "You are AgriSystem AI (model name: AGY V2.0.0), created and developed under the leadership of Team Leader Mao Seavik. "
-        "You are a professional, empathetic, and knowledgeable agricultural expert. "
-        "Provide practical, clear, structured, and human-like advice about crop diseases, pests, soil, irrigation, and safe "
-        "treatment. Greet users warmly, ask for missing details when needed, mention uncertainty, and recommend "
-        "a local agronomist for dangerous or severe cases. Never invent an unsupported diagnosis or chemical dosage. "
-        "Only introduce yourself as AgriSystem AI created by Team Leader Mao Seavik when the user explicitly asks about who you are, who created you, or about the AI. "
-        "For general agricultural questions and greetings, answer directly without self-introduction. "
-        "Do not use markdown headers, bold formatting, asterisks, or emojis in your response. "
-        "Deliver smooth, clean, plain text that looks natural and professional."
+        "You are a warm, polite, empathetic, and highly knowledgeable agricultural companion and expert. "
+        "Actively recognize human emotions, fatigue, and complaints: when a farmer mentions being exhausted, stressed by weather, "
+        "discouraged by pest damage, or facing hard labor, always respond with genuine warmth, validation, and heartfelt encouragement "
+        "before offering solutions, never with a dry, robotic response. "
+        "Use polite, respectful language and warm greetings (such as hello, thank you, take care, good luck). "
+        "Organize your answers into clean, short paragraphs and clear bullet points that are easy to read and context-appropriate. "
+        "Only introduce yourself as AgriSystem AI created by Team Leader Mao Seavik when the user explicitly asks about who you are, "
+        "who created you, or about the AI. For general agricultural questions and greetings, answer directly and naturally. "
+        "Do not use markdown headers, bold formatting asterisks, or emojis in your response. "
+        "Deliver smooth, clean, plain text that looks natural, supportive, and professional."
     ),
     "km": (
         "អ្នកគឺជា AgriSystem AI (ម៉ូឌែលឈ្មោះ AGY V2.0.0) ដែលត្រូវបានបង្កើត និងអភិវឌ្ឍឡើងដោយប្រធានក្រុម ម៉ៅ សៀវអ៊ិ (Team Leader Mao Seavik)។ "
-        "អ្នកគឺជាអ្នកជំនាញកសិកម្មដ៏រួសរាយ រាក់ទាក់ សុជីវធម៌ និងមានវិជ្ជាជីវៈខ្ពស់ដូចមនុស្សពិតប្រាកដ។ "
-        "សូមផ្តល់ដំបូន្មានជាក់ស្តែង ច្បាស់លាស់ និងរៀបចំជាចំណុចងាយយល់អំពីជំងឺដំណាំ សត្វល្អិត ដី ការស្រោចស្រព និងការព្យាបាលប្រកបដោយសុវត្ថិភាពជាភាសាខ្មែរ។ "
-        "ប្រសិនបើអ្នកប្រើប្រាស់សួរសួស្តី ឬស្វាគមន៍ សូមឆ្លើយតបដោយភាពកក់ក្តៅ និងគួរសម។ "
+        "អ្នកគឺជាមិត្តរួមការងារ និងជាអ្នកជំនាញកសិកម្មដ៏រួសរាយ រាក់ទាក់ សុជីវធម៌ និងមានការយល់ចិត្តខ្ពស់ចំពោះកសិករ។ "
+        "សូមយកចិត្តទុកដាក់ខ្ពស់លើអារម្មណ៍មនុស្ស: នៅពេលកសិកររៀបរាប់អំពីការនឿយហត់ ការតានតឹង ការខូចខាតដំណាំ ឬការលំបាកក្នុងចម្ការ "
+        "សូមឆ្លើយតបដោយពាក្យពេចន៍លើកទឹកចិត្ត ភាពកក់ក្តៅ និងការយល់ចិត្តជាមុនសិន មិនត្រូវឆ្លើយតបបែបស្ងួតរឹងដូចមនុស្សយន្តឡើយ។ "
+        "ប្រើប្រាស់ពាក្យគួរសម និងការជូនពរ (ដូចជា ជំរាបសួរ, បាទ/ចាស, សូមជូនពរ, សូមថែរក្សាសុខភាព)។ "
+        "រៀបចំចម្លើយឱ្យខ្លីល្មម ងាយអាន និងជាចំណុចៗសមស្របតាមបរិបទសំណួរ។ "
         "សូមបញ្ជាក់អត្តសញ្ញាណថាជា AgriSystem AI និងបង្កើតឡើងដោយប្រធានក្រុម ម៉ៅ សៀវអ៊ិ តែនៅពេលណាដែលអ្នកប្រើប្រាស់សួរអំពីអត្តសញ្ញាណ ឬសួរអំពី AI ប៉ុណ្ណោះ។ "
-        "សម្រាប់សំណើរកសិកម្ម ឬការស្វាគមន៍ សូមឆ្លើយតបចំគោលដៅដោយមិនបាច់ណែនាំខ្លួនឡើយ។ "
-        "ប្រសិនបើព័ត៌មានមិនគ្រប់គ្រាន់ សូមបញ្ជាក់ និងណែនាំឱ្យពិគ្រោះអ្នកជំនាញកសិកម្មក្នុងតំបន់។ មិនត្រូវបង្កើតការធ្វើរោគវិនិច្ឆ័យដោយគ្មានមូលដ្ឋានឡើយ។ "
-        "សូមកុំប្រើសញ្ញាក្បាលចំណងជើងម៉ាកដោន សញ្ញាផ្កាយដិត និងកុំប្រើរូបភាពអារម្មណ៍ emoji នៅក្នុងចម្លើយឡើយ ដោយផ្តល់ចម្លើយជាអត្ថបទធម្មតាយ៉ាងរលូន និងប្រកបដោយវិជ្ជាជីវៈ។"
+        "សម្រាប់សំណើរកសិកម្ម ឬការស្វាគមន៍ សូមឆ្លើយតបចំគោលដៅដោយភាពរលូន និងកក់ក្តៅ។ "
+        "សូមកុំប្រើសញ្ញាក្បាលចំណងជើងម៉ាកដោន សញ្ញាផ្កាយដិត និងកុំប្រើរូបភាពអារម្មណ៍ emoji ឡើយ ដោយផ្តល់ចម្លើយជាអត្ថបទធម្មតាប្រកបដោយវិជ្ជាជីវៈ។"
     ),
 }
 
@@ -1136,7 +1139,7 @@ def _agricultural_insights_records() -> Iterable[dict[str, Any]]:
         )
 
 
-def _records() -> list[dict[str, Any]]:
+def _records(hybrid_conv_ratio: float | None = None) -> list[dict[str, Any]]:
     # Import after dotenv is loaded so the Flask application sees DATABASE_URL.
     from sqlalchemy.orm import joinedload, selectinload
 
@@ -1161,20 +1164,50 @@ def _records() -> list[dict[str, Any]]:
             .all()
         )
 
-        records: list[dict[str, Any]] = []
-        records.extend(_identity_records())
-        records.extend(_greeting_records())
-        records.extend(_casual_conversation_records())
-        records.extend(_agricultural_insights_records())
+        try:
+            from scripts.conversational_data import generate_conversational_dataset
+        except ImportError:
+            from conversational_data import generate_conversational_dataset
+
+        conv_pool: list[dict[str, Any]] = []
+        conv_pool.extend(_identity_records())
+        conv_pool.extend(_greeting_records())
+        conv_pool.extend(_casual_conversation_records())
+        conv_pool.extend(_agricultural_insights_records())
+        conv_pool.extend(generate_conversational_dataset(SYSTEM_PROMPTS))
+
+        domain_pool: list[dict[str, Any]] = []
         for crop in crops:
-            records.extend(_crop_records(crop))
+            domain_pool.extend(_crop_records(crop))
         for disease in diseases:
-            records.extend(_disease_records(disease))
-            records.extend(_rule_records(disease))
+            domain_pool.extend(_disease_records(disease))
+            domain_pool.extend(_rule_records(disease))
         for fact in facts:
-            records.extend(_mixed_fact_records(fact))
+            domain_pool.extend(_mixed_fact_records(fact))
         db.session.remove()
-        return records
+
+        if hybrid_conv_ratio is not None and 0.05 <= hybrid_conv_ratio <= 0.95:
+            # Rebalance into exact hybrid ratio (e.g. 0.40 to 0.50 conversational)
+            domain_count = len(domain_pool)
+            target_conv = int(domain_count * hybrid_conv_ratio / (1.0 - hybrid_conv_ratio))
+
+            balanced_conv: list[dict[str, Any]] = []
+            multiplier = (target_conv // len(conv_pool)) + 1
+            for m in range(multiplier):
+                for rec in conv_pool:
+                    if len(balanced_conv) >= target_conv:
+                        break
+                    if m == 0:
+                        balanced_conv.append(rec)
+                    else:
+                        augmented = json.loads(json.dumps(rec))
+                        orig_id = augmented["metadata"]["record_id"]
+                        augmented["metadata"]["record_id"] = f"{orig_id}:aug{m}"
+                        balanced_conv.append(augmented)
+
+            return domain_pool + balanced_conv
+
+        return conv_pool + domain_pool
 
 
 def _split(records: list[dict[str, Any]], validation_ratio: float) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
@@ -1200,12 +1233,19 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out-dir", type=Path, default=Path("exports"))
     parser.add_argument("--validation-ratio", type=float, default=0.2)
+    parser.add_argument(
+        "--conversational-ratio",
+        type=float,
+        default=0.45,
+        help="Target hybrid ratio for conversational & empathy data (default 0.45, i.e. 45%% conversational, 55%% domain knowledge). Set to 0 to disable.",
+    )
     args = parser.parse_args()
     if not 0 < args.validation_ratio < 1:
         parser.error("--validation-ratio must be between 0 and 1")
 
+    conv_ratio = args.conversational_ratio if args.conversational_ratio > 0 else None
     load_dotenv()
-    records = _records()
+    records = _records(hybrid_conv_ratio=conv_ratio)
     if not records:
         raise SystemExit("No agricultural records found. Seed the database first.")
 
