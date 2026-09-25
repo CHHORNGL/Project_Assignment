@@ -152,10 +152,10 @@ def login():
             user.two_factor_code = code
             user.two_factor_expiry = datetime.datetime.utcnow() + datetime.timedelta(minutes=10)
             db.session.commit()
-            _send_verification_email(user.email, code)
+            sent = _send_verification_email(user.email, code)
             session["verify_user_id"] = user.id
             session["verify_purpose"] = "register"
-            return jsonify({'success': True, 'requires_2fa': True, 'purpose': 'register', 'email': user.email})
+            return jsonify({'success': True, 'requires_2fa': True, 'purpose': 'register', 'email': user.email, 'email_sent': sent, 'code': None if sent else code})
 
         if getattr(user, 'two_factor_enabled', False):
             from app.blueprints.auth.routes import _send_verification_email
@@ -165,10 +165,10 @@ def login():
             user.two_factor_code = code
             user.two_factor_expiry = datetime.datetime.utcnow() + datetime.timedelta(minutes=10)
             db.session.commit()
-            _send_verification_email(user.email, code)
+            sent = _send_verification_email(user.email, code)
             session["verify_user_id"] = user.id
             session["verify_purpose"] = "login"
-            return jsonify({'success': True, 'requires_2fa': True, 'purpose': 'login', 'email': user.email})
+            return jsonify({'success': True, 'requires_2fa': True, 'purpose': 'login', 'email': user.email, 'email_sent': sent, 'code': None if sent else code})
             
         db.session.commit()  # Persist any password hash upgrade.
         login_user(user, remember=False)
@@ -337,8 +337,8 @@ def resend_code():
     user.two_factor_expiry = datetime.datetime.utcnow() + datetime.timedelta(minutes=10)
     db.session.commit()
     
-    _send_verification_email(user.email, code)
-    return jsonify({'success': True})
+    sent = _send_verification_email(user.email, code)
+    return jsonify({'success': True, 'email_sent': sent, 'code': None if sent else code})
 
 @api_bp.route('/me', methods=['GET'])
 def me():

@@ -76,10 +76,13 @@ def login():
             user.two_factor_expiry = datetime.datetime.utcnow() + datetime.timedelta(minutes=10)
             db.session.commit()
 
-            _send_verification_email(user.email, code)
+            sent = _send_verification_email(user.email, code)
             session["verify_user_id"] = user.id
             session["verify_purpose"] = "login" if user.is_verified else "register"
-            flash("Verification code sent to your email.", "info")
+            if sent:
+                flash("Verification code sent to your email.", "info")
+            else:
+                flash(f"Verification code: {code} (Email delivery failed. Use this dev code to continue)", "warning")
             return redirect(url_for("auth.verify_code"))
 
         _sync_client_theme_to_user(user)
