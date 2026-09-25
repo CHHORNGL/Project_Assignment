@@ -268,20 +268,138 @@ def _is_valid_output(text: str, is_khmer: bool) -> bool:
     return True
 
 
+def _normalize_text(text: str) -> str:
+    if not text:
+        return ""
+    t = text.lower()
+    t = re.sub(r"[\u200b\u200c\u200d\ufeff]", "", t)
+    # Normalize Khmer orthography: ឬស <-> ឫស
+    t = t.replace("\u17af\u179f", "\u17ac\u179f")
+    # Normalize Khmer greeting Coeng: សួស្ដី <-> សួស្តី
+    t = t.replace("\u179f\u17bd\u179f\u17d2\u178f\u17b8", "\u179f\u17bd\u179f\u17d2\u178a\u17b8")
+    return t
+
+
+def _index_catalog_diseases(catalog: list[dict]) -> list[dict]:
+    indexed = []
+    for cat in catalog:
+        crop_en = cat.get("crop_en", "")
+        crop_km = cat.get("crop_km", "")
+        crop_keywords = [_normalize_text(k) for k in cat.get("keywords", [])]
+
+        s_km = cat.get("symptoms_km", "").strip()
+        s_en = cat.get("symptoms_en", "").strip()
+        blocks_km = re.split(r"\n(?=\d+\.\s+)", s_km) if s_km else []
+        blocks_en = re.split(r"\n(?=\d+\.\s+)", s_en) if s_en else []
+
+        for i in range(min(len(blocks_km), len(blocks_en))):
+            b_km = blocks_km[i].strip()
+            b_en = blocks_en[i].strip()
+
+            title_km = re.sub(r"^\d+\.\s*", "", b_km.split("\n")[0]).strip()
+            title_en = re.sub(r"^\d+\.\s*", "", b_en.split("\n")[0]).strip()
+
+            symptoms_km = ""
+            treatment_km = ""
+            for line in b_km.split("\n")[1:]:
+                if "រោគសញ្ញាសម្គាល់" in line:
+                    symptoms_km = re.sub(r"^-\s*រោគសញ្ញាសម្គាល់\s*[៖:]\s*", "", line).strip()
+                elif "ការព្យាបាល" in line:
+                    treatment_km = re.sub(r"^-\s*ការព្យាបាល\s*[៖:]\s*-?\s*", "", line).strip()
+
+            symptoms_en = ""
+            treatment_en = ""
+            for line in b_en.split("\n")[1:]:
+                if "Symptoms" in line:
+                    symptoms_en = re.sub(r"^-\s*Symptoms\s*[៖:]\s*", "", line).strip()
+                elif "Management" in line or "Treatment" in line:
+                    treatment_en = re.sub(r"^-\s*(Management|Treatment)\s*[៖:]\s*-?\s*", "", line).strip()
+
+            clean_km = _normalize_text(re.sub(r"\([^)]*\)", "", title_km).strip())
+            clean_en = _normalize_text(re.sub(r"\([^)]*\)", "", title_en).strip())
+            en_words = [
+                w for w in re.findall(r"[a-z0-9]+", clean_en)
+                if w not in {"rice", "potato", "tomato", "cucumber", "chili", "pepper", "banana", "corn", "cassava", "durian", "disease", "damage"}
+            ]
+            en_phrases = [" ".join(en_words[j:j + k]) for k in range(len(en_words), 1, -1) for j in range(len(en_words) - k + 1)]
+
+            indexed.append({
+                "crop_en": crop_en,
+                "crop_km": crop_km,
+                "crop_keywords": crop_keywords,
+                "title_km": title_km,
+                "title_en": title_en,
+                "clean_name_km": clean_km,
+                "clean_name_en": clean_en,
+                "en_words": en_words,
+                "en_phrases": en_phrases,
+                "symptoms_km": symptoms_km or b_km,
+                "symptoms_en": symptoms_en or b_en,
+                "treatment_km": treatment_km or "អនុវត្តវិធានការការពារនិងព្យាបាលសមស្របតាមដំណាក់កាល។",
+                "treatment_en": treatment_en or "Apply appropriate registered control measures at early disease stage.",
+                "prevention_km": f"ជ្រើសរើសពូជធន់ សម្អាតចម្ការ និងរៀបចំប្រព័ន្ធបង្ហូរទឹកលើដំណាំ{crop_km}ឱ្យបានល្អ។",
+                "prevention_en": f"Use resistant varieties, maintain field sanitation, and ensure good drainage for {crop_en}.",
+                "is_catalog": False,
+            })
+    return indexed
+
+
+INDEXED_CATALOG_DISEASES = _index_catalog_diseases(CROP_DISEASES_CATALOG)
+
+KB_COMBINATIONS = [
+    {
+        "item_idx": 0,  # Durian root rot & stem canker
+        "require_crop": ["ទុរេន", "ធូរេន", "durian"],
+        "require_symptom": ["រលួយ", "ជ័រ", "ស្អុយ", "rot", "canker", "phytophthora", "ooz"],
+    },
+    {
+        "item_idx": 1,  # Rice blast
+        "require_crop": ["ស្រូវ", "rice", "paddy"],
+        "require_symptom": ["ប្លាស់", "blast", "magnaporthe", "កួរ"],
+    },
+    {
+        "item_idx": 2,  # Cassava CMD
+        "require_crop": ["ដំឡូងមី", "cassava"],
+        "require_symptom": ["ម៉ូសេក", "mosaic", "រួញ", "curl", "មមាចស", "whitefl", "cmd"],
+    },
+    {
+        "item_idx": 3,  # Fall armyworm
+        "require_crop": ["ពោត", "corn", "maize"],
+        "require_symptom": ["ដង្កូវ", "armyworm", "spodoptera", "worm", "frass"],
+    },
+    {
+        "item_idx": 4,  # Pepper quick wilt
+        "require_crop": ["ម្រេច", "pepper"],
+        "require_symptom": ["ងាប់រហ័ស", "ងាប់យឺត", "quick wilt", "slow wilt", "wilt", "phytophthora"],
+    },
+    {
+        "item_idx": 5,  # Soil management & liming
+        "direct_terms": ["ដីជូរ", "កំបោរ", "acidic soil", "agricultural lime", "dolomite lime", "soil acidity", "soil ph", "ph ដី", "liming"],
+    },
+    {
+        "item_idx": 6,  # NPK balance
+        "direct_terms": ["តុល្យភាពជី", "សមាមាត្រជី", "npk", "ជីអ៊ុយរ៉េ", "fertilizer balance", "balanced fertilization", "split application"],
+    },
+    {
+        "item_idx": 7,  # Crop rotation
+        "direct_terms": ["ប្តូរមុខដំណាំ", "បង្វិលមុខដំណាំ", "crop rotation", "legume", "rotate crops", "nitrogen fixation"],
+    },
+    {
+        "item_idx": 8,  # IPM
+        "direct_terms": ["ipm", "គ្រប់គ្រងសត្វល្អិត", "កម្រិតសេដ្ឋកិច្ច", "integrated pest management", "economic threshold"],
+    },
+]
+
+
 def _match_knowledge(question: str) -> dict | None:
-    q_norm = question.lower()
+    q_norm = _normalize_text(question)
 
-    # 1. Match specific disease/practice from AGRI_KNOWLEDGE_BASE first!
-    for item in AGRI_KNOWLEDGE_BASE:
-        if any(k in q_norm for k in item["keywords"]):
-            return item
-
-    # 2. Only if no specific disease was matched, check if user explicitly requested a catalog
+    # 1. Check if user explicitly requested a full disease catalog of a crop
     disease_list_terms = [
         "ជំងឺអ្វីខ្លះ", "មានជំងឺអ្វីខ្លះ", "កើតជំងឺអ្វីខ្លះ",
         "ជំងឺណាខ្លះ", "រាយនាមជំងឺ", "បញ្ជីជំងឺ", "ជំងឺទាំងអស់",
         "what diseases", "which diseases", "what are the diseases", "list of diseases",
-        "list diseases", "all diseases of", "catalog of diseases",
+        "list diseases", "all diseases of", "all diseases", "catalog of diseases", "diseases affecting",
     ]
     is_list_query = any(t in q_norm for t in disease_list_terms)
     if is_list_query:
@@ -289,7 +407,98 @@ def _match_knowledge(question: str) -> dict | None:
             if any(k in q_norm for k in cat["keywords"]):
                 return cat
 
+    # 2. Match high-priority specific knowledge base (smart combinations or direct terms)
+    for combo in KB_COMBINATIONS:
+        idx = combo["item_idx"]
+        item = AGRI_KNOWLEDGE_BASE[idx]
+        direct = combo.get("direct_terms")
+        if direct and any(dt in q_norm for dt in direct):
+            return item
+        req_c = combo.get("require_crop")
+        req_s = combo.get("require_symptom")
+        if req_c and req_s:
+            has_crop = any(c in q_norm for c in req_c)
+            has_sym = any(s in q_norm for s in req_s)
+            if has_crop and has_sym:
+                return item
+
+    for item in AGRI_KNOWLEDGE_BASE:
+        for k in item["keywords"]:
+            if _normalize_text(k) in q_norm:
+                return item
+
+    # 3. Match specific individual disease from CROP_DISEASES_CATALOG
+    for d in INDEXED_CATALOG_DISEASES:
+        crop_matched = any(ck in q_norm for ck in d["crop_keywords"])
+        name_en_core = d["clean_name_en"]
+        name_km_core = d["clean_name_km"]
+
+        if crop_matched:
+            short_km = name_km_core.replace("ជំងឺ", "").strip()
+            if len(short_km) >= 4 and short_km in q_norm:
+                return d
+            if any(p in q_norm for p in d["en_phrases"]):
+                return d
+            if d["en_words"] and all(w in q_norm for w in d["en_words"]):
+                return d
+            if len(name_en_core) >= 4 and name_en_core in q_norm:
+                return d
+        else:
+            if len(name_en_core) >= 8 and name_en_core in q_norm:
+                return d
+            if len(name_km_core) >= 6 and name_km_core in q_norm:
+                return d
+
+    # 4. Fallback: if user mentions a crop and generally inquires about diseases
+    for cat in CROP_DISEASES_CATALOG:
+        crop_in_q = any(k in q_norm for k in cat["keywords"])
+        if crop_in_q and any(w in q_norm for w in ["ជំងឺ", "disease", "pathogen"]):
+            return cat
+
     return None
+
+
+def _format_smooth_human_reply(matched_kb: dict, is_khmer: bool) -> str:
+    """Format matched agricultural knowledge into a warm, structured, human-like expert reply."""
+    if matched_kb.get("is_catalog"):
+        if is_khmer:
+            return clean_professional_text(
+                f"{matched_kb['title_km']}៖\n\n"
+                f"ជំរាបសួរលោកអ្នក ឬបងប្អូនកសិករជាទីគោរព! នៅក្នុងប្រព័ន្ធបណ្តុះបណ្តាលកសិកម្ម AgriSystem ដំណាំ {matched_kb.get('crop_km', '')} មានកត់ត្រាជំងឺ និងសត្វល្អិតចម្បងៗដូចខាងក្រោម៖\n\n"
+                f"{matched_kb['symptoms_km']}\n\n"
+                f"ដំបូន្មានបច្ចេកទេស៖ ប្រសិនបើដំណាំ {matched_kb.get('crop_km', '')} របស់អ្នកកំពុងមានរោគសញ្ញាជាក់លាក់ណាមួយ សូមរៀបរាប់អំពីរោគសញ្ញាលើស្លឹក ដើម ឬផ្លែ ដើម្បីឱ្យខ្ញុំជួយធ្វើរោគវិនិច្ឆ័យលម្អិត និងផ្តល់រូបមន្តព្យាបាលឱ្យចំគោលដៅបំផុត។"
+            )
+        return clean_professional_text(
+            f"{matched_kb['title_en']}:\n\n"
+            f"Greetings! In the AgriSystem agricultural expert database, the following key diseases and conditions are recorded for {matched_kb.get('crop_en', '')}:\n\n"
+            f"{matched_kb['symptoms_en']}\n\n"
+            f"Agronomic Advice: If your {matched_kb.get('crop_en', '')} crops are showing specific symptoms, please describe what you observe on the leaves, stems, or fruits so I can provide an exact diagnosis and tailored treatment plan."
+        )
+
+    if is_khmer:
+        return clean_professional_text(
+            f"ជំរាបសួរលោកអ្នក ឬបងប្អូនកសិករជាទីគោរព!\n\n"
+            f"ទាក់ទងនឹង{matched_kb['title_km']} ខ្ញុំសូមចែករំលែកនូវការណែនាំបច្ចេកទេស និងវិធីសាស្រ្តដោះស្រាយប្រកបដោយប្រសិទ្ធភាពដូចខាងក្រោម៖\n\n"
+            f"១. រោគសញ្ញាសម្គាល់ជាក់ស្តែង (Symptoms)\n"
+            f"- {matched_kb['symptoms_km']}\n\n"
+            f"២. វិធានការព្យាបាល និងការអនុវត្តបន្ទាន់ (Treatment & Management)\n"
+            f"- {matched_kb['treatment_km']}\n\n"
+            f"៣. វិធានការបង្ការ និងការថែទាំរយៈពេលវែង (Prevention & Field Care)\n"
+            f"- {matched_kb['prevention_km']}\n\n"
+            f"ការណែនាំសុវត្ថិភាព៖ សូមពាក់ម៉ាស់ ស្រោមដៃ និងវ៉ែនតាការពារពេលប្រើប្រាស់ថ្នាំកសិកម្ម គោរពតាមកម្រិតណែនាំលើស្លាកផលិតផល និងពិគ្រោះជាមួយមន្ត្រីកសិកម្មក្នុងតំបន់បន្ថែមប្រសិនបើមានការរាលដាលធ្ងន់ធ្ងរ។"
+        )
+
+    return clean_professional_text(
+        f"Greetings!\n\n"
+        f"Regarding {matched_kb['title_en']}, here is the expert agronomic guidance and step-by-step recommendation for your farm:\n\n"
+        f"1. Identifiable Symptoms and Observations\n"
+        f"- {matched_kb['symptoms_en']}\n\n"
+        f"2. Immediate Treatment and Action Plan\n"
+        f"- {matched_kb['treatment_en']}\n\n"
+        f"3. Long-Term Prevention and Soil Maintenance\n"
+        f"- {matched_kb['prevention_en']}\n\n"
+        f"Safety Reminder: Always wear personal protective equipment (PPE) such as masks and gloves when handling agricultural products, strictly observe pre-harvest intervals (PHI), and consult your local agricultural extension service for severe outbreaks."
+    )
 
 
 @spaces.GPU(duration=180)
@@ -304,7 +513,7 @@ def answer(
     if not question:
         return "Please enter an agricultural question. / សូមបញ្ចូលសំណួរកសិកម្មរបស់អ្នក។"
 
-    q_norm = re.sub(r"[!?,.។៕\s]+", " ", question.lower()).strip()
+    q_norm = _normalize_text(re.sub(r"[!?,.។៕\s]+", " ", question).strip())
     is_khmer = bool(re.search(r"[\u1780-\u17ff]", question))
 
     # Fast responses for language greeting questions
@@ -411,16 +620,16 @@ def answer(
         elif is_khmer:
             kb_context = (
                 f"ប្រធានបទ៖ {matched_kb['title_km']}\n"
-                f"រោគសញ្ញា៖ {matched_kb['symptoms_km']}\n"
-                f"វិធីព្យាបាល៖ {matched_kb['treatment_km']}\n"
-                f"វិធានការបង្ការ៖ {matched_kb['prevention_km']}"
+                f"រោគសញ្ញាសម្គាល់៖ {matched_kb['symptoms_km']}\n"
+                f"វិធានការព្យាបាល និងការអនុវត្ត៖ {matched_kb['treatment_km']}\n"
+                f"វិធានការបង្ការ និងការថែទាំ៖ {matched_kb['prevention_km']}"
             )
         else:
             kb_context = (
                 f"Topic: {matched_kb['title_en']}\n"
-                f"Symptoms: {matched_kb['symptoms_en']}\n"
-                f"Treatment: {matched_kb['treatment_en']}\n"
-                f"Prevention: {matched_kb['prevention_en']}"
+                f"Observable Symptoms: {matched_kb['symptoms_en']}\n"
+                f"Treatment & Action Plan: {matched_kb['treatment_en']}\n"
+                f"Prevention & Field Care: {matched_kb['prevention_en']}"
             )
 
     sys_prompt = SYSTEM_PROMPT_KH if is_khmer else SYSTEM_PROMPT_EN
@@ -428,12 +637,14 @@ def answer(
         if is_khmer:
             sys_prompt += (
                 f"\n\nព័ត៌មានបច្ចេកទេសយោង៖\n{kb_context}\n\n"
-                "សូមប្រើព័ត៌មានយោងខាងលើជាជំនួយក្នុងការឆ្លើយតបសំណួរជាក់ស្តែងរបស់កសិករដោយផ្ទាល់ រលូន ធម្មជាតិ ដូចអ្នកជំនាញកសិកម្មពិតប្រាកដ ដោយមិនចាំបាច់រៀបចំតាមទម្រង់រូបមន្តរឹងឡើយ។"
+                "សូមប្រើព័ត៌មានបច្ចេកទេសយោងខាងលើដើម្បីឆ្លើយតបសំណួររបស់កសិករដោយផ្ទាល់ រលូន គួរសម និងកក់ក្តៅដូចអ្នកជំនាញកសិកម្មពិតប្រាកដ។ "
+                "សូមរៀបចំចម្លើយឱ្យមានរបៀបរៀបរយជាចំណុចៗ ងាយយល់ និងមានការណែនាំសុវត្ថិភាពច្បាស់លាស់ ដោយមិនប្រើប្រាស់សញ្ញា # ឬ ** ឬ emoji ឡើយ។"
             )
         else:
             sys_prompt += (
                 f"\n\nTechnical reference context:\n{kb_context}\n\n"
-                "Use the factual reference above as background to provide a helpful, natural, and conversational response tailored to the farmer's specific question, avoiding rigid template formulas."
+                "Use the technical reference above to provide a smooth, warm, empathetic, and human-like agricultural expert answer tailored directly to the farmer's question. "
+                "Structure the response clearly with numbered points or dashes, easy for a grower to understand, with practical safety precautions, and without markdown headers (#), bold markers (**), or emojis."
             )
 
     max_new_tokens = max(32, min(int(max_new_tokens), 1024))
@@ -476,44 +687,24 @@ def answer(
 
     # Natural conversational fallback if model generation was truly empty or invalid
     if matched_kb:
-        if matched_kb.get("is_catalog"):
-            if is_khmer:
-                return clean_professional_text(
-                    f"{matched_kb['title_km']}៖\n\n"
-                    f"ជំរាបសួរលោកអ្នក ឬបងប្អូនកសិករជាទីគោរព! នៅក្នុងប្រព័ន្ធបណ្តុះបណ្តាលកសិកម្ម AgriSystem ដំណាំ {matched_kb.get('crop_km', '')} មានកត់ត្រាជំងឺ និងសត្វល្អិតចម្បងៗដូចខាងក្រោម៖\n\n"
-                    f"{matched_kb['symptoms_km']}\n\n"
-                    f"ដំបូន្មានបច្ចេកទេស៖ ប្រសិនបើដំណាំ {matched_kb.get('crop_km', '')} របស់អ្នកកំពុងមានរោគសញ្ញាជាក់លាក់ណាមួយ សូមរៀបរាប់អំពីរោគសញ្ញាលើស្លឹក ដើម ឬផ្លែ ដើម្បីឱ្យខ្ញុំជួយធ្វើរោគវិនិច្ឆ័យលម្អិត និងផ្តល់រូបមន្តព្យាបាលឱ្យចំគោលដៅបំផុត។"
-                )
-            else:
-                return clean_professional_text(
-                    f"{matched_kb['title_en']}:\n\n"
-                    f"Greetings! The AgriSystem trained knowledge base includes the following key diseases and conditions affecting {matched_kb.get('crop_en', '')}:\n\n"
-                    f"{matched_kb['symptoms_en']}\n\n"
-                    f"Agronomic Advice: If your {matched_kb.get('crop_en', '')} crops are showing specific symptoms, please describe what you observe on the leaves, stems, or fruits so I can provide an exact diagnosis and tailored treatment plan."
-                )
-        elif is_khmer:
-            return clean_professional_text(
-                f"ទាក់ទងនឹង{matched_kb['title_km']}៖ រោគសញ្ញាសំខាន់ៗគឺ {matched_kb['symptoms_km']} "
-                f"វិធានការព្យាបាលដែលបានណែនាំគឺ {matched_kb['treatment_km']} "
-                f"និងការបង្ការថែទាំ៖ {matched_kb['prevention_km']} "
-                f"សូមពាក់សម្ភារៈការពារខ្លួន និងពិគ្រោះជាមួយអ្នកជំនាញកសិកម្មក្នុងតំបន់បន្ថែម។"
-            )
-        else:
-            return clean_professional_text(
-                f"Regarding {matched_kb['title_en']}, the key symptoms to look for are: {matched_kb['symptoms_en']} "
-                f"For treatment: {matched_kb['treatment_en']} "
-                f"For long-term management and prevention: {matched_kb['prevention_en']} "
-                f"Always wear appropriate personal protective equipment when applying treatments."
-            )
+        return _format_smooth_human_reply(matched_kb, is_khmer)
 
     if is_khmer:
         return clean_professional_text(
-            "ជំរាបសួរលោកអ្នក ឬបងប្អូនកសិករជាទីគោរព! "
-            "ដើម្បីជួយវិភាគ និងផ្តល់ដំបូន្មានបច្ចេកទេសឱ្យបានច្បាស់លាស់ សូមបញ្ជាក់បន្ថែមអំពីឈ្មោះដំណាំ រោគសញ្ញាជាក់ស្តែងលើស្លឹក ដើម ឬផ្លែ និងទីតាំងដាំដុះរបស់អ្នក។"
+            "ជំរាបសួរលោកអ្នក ឬបងប្អូនកសិករជាទីគោរព!\n\n"
+            "ខ្ញុំបានទទួលសំណួររបស់អ្នកហើយ។ ដើម្បីឱ្យខ្ញុំអាចវិភាគបញ្ហា និងផ្តល់រូបមន្តព្យាបាលឱ្យចំគោលដៅបំផុត សូមមេត្តាជួយប្រាប់បន្ថែមអំពី៖\n\n"
+            "១. ឈ្មោះដំណាំដែលកំពុងដាំដុះ (ឧ. ស្រូវ ទុរេន ដំឡូងមី ពោត ប៉េងប៉ោះ ត្រសក់...)\n"
+            "២. រោគសញ្ញាជាក់ស្តែងដែលឃើញនៅលើស្លឹក ដើម ផ្លែ ឬឫស\n"
+            "៣. អាយុកាលដំណាំ និងស្ថានភាពដី ឬការស្រោចស្រព។\n\n"
+            "ខ្ញុំត្រៀមខ្លួនជានិច្ចក្នុងការជួយលោកអ្នក!"
         )
     return clean_professional_text(
-        "Greetings! "
-        "To provide you with the most precise diagnosis and agronomic guidance, please describe your crop name, specific leaf/stem symptoms, and current soil or field conditions."
+        "Greetings!\n\n"
+        "I have received your inquiry. To help me pinpoint the exact diagnosis and provide you with the most effective agronomic treatment plan, could you please provide a few more details:\n\n"
+        "1. Your crop name (e.g. Rice, Durian, Cassava, Corn, Tomato, Cucumber, Pepper)\n"
+        "2. Visible symptoms on the leaves, stems, fruits, or roots\n"
+        "3. Approximate crop age and recent field or moisture conditions.\n\n"
+        "I am here and ready to help you optimize your crop health!"
     )
 
 

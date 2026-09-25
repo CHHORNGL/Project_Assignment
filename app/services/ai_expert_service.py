@@ -613,6 +613,18 @@ def _format_crop_all_diseases_reply_en(crop: Any, diseases: list[Any]) -> str:
     )
 
 
+def _normalize_query(text: str) -> str:
+    if not text:
+        return ""
+    t = text.lower()
+    t = re.sub(r"[\u200b\u200c\u200d\ufeff]", "", t)
+    # Normalize Khmer orthography: ឬស <-> ឫស
+    t = t.replace("\u17af\u179f", "\u17ac\u179f")
+    # Normalize Khmer greeting Coeng: សួស្ដី <-> សួស្តី
+    t = t.replace("\u179f\u17bd\u179f\u17d2\u178f\u17b8", "\u179f\u17bd\u179f\u17d2\u178a\u17b8")
+    return t
+
+
 def _synthesize_local_expert_reply(user_message: str, context: str = "", language: Optional[str] = None) -> str:
     """Offline, deterministic agronomic synthesizer prioritizing crop matching and local database records."""
     is_khmer = _is_khmer(language, user_message)
@@ -623,7 +635,7 @@ def _synthesize_local_expert_reply(user_message: str, context: str = "", languag
     is_fertilizer_query = False
     is_listing_all_crop_diseases = False
 
-    q_norm = user_message.lower()
+    q_norm = _normalize_query(user_message)
 
     thanks_terms = ["អរគុណ", "អរគុណច្រើន", "អរគុណបង", "thank", "thanks", "appreciate", "helpful", "good job", "great job"]
     if any(k in q_norm for k in thanks_terms) and not any(k in q_norm for k in ["ជំងឺ", "disease", "រលួយ", "rot", "ថ្នាំ"]):
@@ -731,10 +743,43 @@ def _synthesize_local_expert_reply(user_message: str, context: str = "", languag
 
     # 4. If still not matched, search Cambodian agronomic dictionary (Durian, Pepper, Lime, etc.)
     if not matched_disease and not matched_crop:
-        for item in CAMBODIAN_AGRI_KB:
-            if any(k in q_norm for k in item["keywords"]):
-                matched_kb_item = item
-                break
+        cambodian_kb_combos = [
+            {"item_idx": 0, "require_crop": ["ទុរេន", "ធូរេន", "durian"], "require_symptom": ["រលួយ", "ជ័រ", "ស្អុយ", "rot", "canker", "phytophthora", "ooz"]},
+            {"item_idx": 1, "require_crop": ["ស្រូវ", "rice", "paddy"], "require_symptom": ["ប្លាស់", "blast", "magnaporthe", "កួរ"]},
+            {"item_idx": 2, "require_crop": ["ដំឡូងមី", "cassava"], "require_symptom": ["ម៉ូសេក", "mosaic", "រួញ", "curl", "មមាចស", "whitefl", "cmd"]},
+            {"item_idx": 3, "require_crop": ["ពោត", "corn", "maize"], "require_symptom": ["ដង្កូវ", "armyworm", "spodoptera", "worm", "frass"]},
+            {"item_idx": 4, "require_crop": ["ម្រេច", "pepper"], "require_symptom": ["ងាប់រហ័ស", "ងាប់យឺត", "quick wilt", "slow wilt", "wilt", "phytophthora"]},
+            {"item_idx": 5, "require_crop": ["ប៉េងប៉ោះ", "tomato"], "require_symptom": ["ខ្លោចស្លឹក", "រលួយផ្លែ", "late blight"]},
+            {"item_idx": 6, "require_crop": ["ត្រសក់", "cucumber"], "require_symptom": ["ផ្សិតម្សៅ", "រោម", "mildew"]},
+            {"item_idx": 7, "require_crop": ["ម្ទេស", "chili"], "require_symptom": ["កន្ទុយបារី", "រលួយផ្លែ", "anthracnose"]},
+            {"item_idx": 8, "require_crop": ["ក្រូច", "citrus"], "require_symptom": ["កង់កា", "ដំបៅ", "canker"]},
+            {"item_idx": 9, "direct_terms": ["ដីជូរ", "កំបោរ", "acidic soil", "agricultural lime", "dolomite lime", "soil acidity", "soil ph", "ph ដី", "liming"]},
+            {"item_idx": 10, "direct_terms": ["តុល្យភាពជី", "សមាមាត្រជី", "npk", "ជីអ៊ុយរ៉េ", "fertilizer balance", "balanced fertilization", "split application"]},
+            {"item_idx": 11, "direct_terms": ["ប្តូរមុខដំណាំ", "បង្វិលមុខដំណាំ", "crop rotation", "legume", "rotate crops", "nitrogen fixation"]},
+            {"item_idx": 12, "direct_terms": ["ipm", "គ្រប់គ្រងសត្វល្អិត", "កម្រិតសេដ្ឋកិច្ច", "integrated pest management", "economic threshold"]},
+        ]
+        for combo in cambodian_kb_combos:
+            idx = combo["item_idx"]
+            if idx < len(CAMBODIAN_AGRI_KB):
+                item = CAMBODIAN_AGRI_KB[idx]
+                direct = combo.get("direct_terms")
+                if direct and any(dt in q_norm for dt in direct):
+                    matched_kb_item = item
+                    break
+                req_c = combo.get("require_crop")
+                req_s = combo.get("require_symptom")
+                if req_c and req_s:
+                    has_crop = any(c in q_norm for c in req_c)
+                    has_sym = any(s in q_norm for s in req_s)
+                    if has_crop and has_sym:
+                        matched_kb_item = item
+                        break
+
+        if not matched_kb_item:
+            for item in CAMBODIAN_AGRI_KB:
+                if any(_normalize_query(k) in q_norm for k in item["keywords"]):
+                    matched_kb_item = item
+                    break
 
     # Check if user is asking about the AI / creator / identity
     identity_keywords_km = [
