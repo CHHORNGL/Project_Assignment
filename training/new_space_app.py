@@ -243,18 +243,57 @@ def _clean_text(text: str) -> str:
     return clean_professional_text(text)
 
 
+COMMON_KHMER_WORDS = {
+    "ជា", "គឺ", "នៅ", "មាន", "និង", "ដែល", "បាន", "ដោយ", "ដើម្បី", "លើ", "ក្នុង", "ពី",
+    "នេះ", "នោះ", "ដំណាំ", "ជំងឺ", "ស្លឹក", "ដើម", "ផ្លែ", "ឫស", "ឬស", "ព្យាបាល", "ថ្នាំ",
+    "កសិកម្ម", "កសិករ", "ទឹក", "ដី", "បាញ់", "ការពារ", "បង្ការ", "ជំរាបសួរ", "សួស្តី",
+    "សូម", "ប្រើ", "រោគសញ្ញា", "វិធានការ", "សុវត្ថិភាព", "ស្រោច", "ដាក់", "ជី", "កាត់",
+    "មែក", "ផ្សិត", "បាក់តេរី", "សត្វល្អិត", "ចង្រៃ", "ទិន្នផល", "លូតលាស់", "ពូជ",
+    "រដូវ", "ចម្ការ", "ស្រែ", "កម្រិត", "សរីរាង្គ", "គីមី", "បច្ចេកទេស", "ដំបូន្មាន",
+    "ជួយ", "ដោះស្រាយ", "លោកអ្នក", "បងប្អូន", "ខ្ញុំ", "អ្នក", "ល្អ", "ខូច", "ស្ងួត",
+    "រលួយ", "លឿង", "ខ្មៅ", "ក្រហម", "ត្នោត", "កំបោរ", "អ៊ុយរ៉េ",
+}
+
+
+def _is_valid_khmer_text(text: str) -> bool:
+    if not text or len(text.strip()) < 10:
+        return False
+    # Reject template placeholders
+    if "%%" in text or bool(re.search(r"\[(Crop|List|Action|Insert|Your)[^\]]*\]", text, re.IGNORECASE)):
+        return False
+    # Reject invalid/obsolete Khmer codepoints that LLMs hallucinate (\u17b4, \u17b5, \u17d8-\u17da, \u17dd)
+    if bool(re.search(r"[\u17b4\u17b5\u17d8-\u17da\u17dd]", text)):
+        return False
+    # Reject stacked dependent vowels on a single consonant
+    if bool(re.search(r"[\u17b6-\u17c5][\u17b6-\u17c5]", text)):
+        return False
+    # Reject Latin letters directly adjacent to Khmer characters (token corruption e.g. កសិkcម្ម)
+    if bool(re.search(r"[\u1780-\u17a2\u17a3-\u17d2][a-zA-Z]|[a-zA-Z][\u1780-\u17a2\u17a3-\u17d2]", text)):
+        return False
+    # Reject foreign scripts (Thai, Japanese, Cyrillic, Chinese)
+    if bool(re.search(r"[\u0e00-\u0e7f\u3040-\u30ff\u0400-\u04ff\u4e00-\u9fff]", text)):
+        return False
+    # Must contain Khmer script
+    if not bool(re.search(r"[\u1780-\u17ff]", text)):
+        return False
+    # Check vocabulary density for longer texts
+    found = [w for w in COMMON_KHMER_WORDS if w in text]
+    if len(text) > 40 and len(found) < 3:
+        return False
+    return True
+
+
 def _is_valid_output(text: str, is_khmer: bool) -> bool:
     cleaned = text.strip()
     if len(cleaned) < 25:
         return False
+    if is_khmer:
+        return _is_valid_khmer_text(cleaned)
     # Reject broken unicode replacement chars, raw template leftovers, and hybrid artifacts
-    if "\ufffd" in cleaned or "example_video_id" in cleaned or "ជំ-ngឺ" in cleaned or "ngឺ" in cleaned:
+    if "\ufffd" in cleaned or "example_video_id" in cleaned or "%%" in cleaned:
         return False
-    # Reject Japanese kana or Cyrillic characters
-    if bool(re.search(r"[\u3040-\u30ff\u0400-\u04ff]", cleaned)):
-        return False
-    # Reject Chinese character leakage
-    if bool(re.search(r"[\u4e00-\u9fff]", cleaned)):
+    # Reject foreign script leakage
+    if bool(re.search(r"[\u0e00-\u0e7f\u3040-\u30ff\u0400-\u04ff\u4e00-\u9fff]", cleaned)):
         return False
     # Check if a single character dominates >35% of the text
     counts = Counter(cleaned)
@@ -262,9 +301,6 @@ def _is_valid_output(text: str, is_khmer: bool) -> bool:
         most_common_char, count = counts.most_common(1)[0]
         if count / len(cleaned) > 0.35 and most_common_char not in {" ", "\n", "-"}:
             return False
-    # If query is Khmer, verify response has Khmer characters
-    if is_khmer and not bool(re.search(r"[\u1780-\u17ff]", cleaned)):
-        return False
     return True
 
 
@@ -391,6 +427,16 @@ KB_COMBINATIONS = [
 ]
 
 
+KHMER_SYMPTOM_TERMS = [
+    "អុចខ្មៅ", "អាន់ថ្រាកណូស", "អុចត្នោត", "អុច", "ផ្សិតម្សៅ", "រុយទុំ", "ដំបៅ",
+    "កង់កា", "ស្លឹកលឿង", "ហ្គ្រីននីង", "ផ្សិតខ្មៅ", "ហៀរជ័រ", "ផ្សិតរោម", "កញ្ចែ",
+    "ដង្កូវក្បាលខ្មៅ", "ច្រែះស្លឹក", "ច្រែះ", "ស្វិតបាក់តេរី", "ស្វិត", "មេអំបៅពេជ្រ",
+    "យិនស៊ី", "រលួយស្អុយ", "អំបោសធ្មប់", "មមាចតែ", "មមាចត្នោត", "មមាច", "ចោះផ្លែ",
+    "ចោះដើម", "ចោះត្រួយ", "រលួយឫស", "រលួយឬស", "រលួយដើម", "រលួយ", "ប្លាស់", "ម៉ូសេក",
+    "ដង្កូវហ្វូង", "ដង្កូវ", "ងាប់រហ័ស", "ងាប់យឺត", "រលាកគែមស្លឹក", "ពកឫស",
+]
+
+
 def _match_knowledge(question: str) -> dict | None:
     q_norm = _normalize_text(question)
 
@@ -398,14 +444,23 @@ def _match_knowledge(question: str) -> dict | None:
     disease_list_terms = [
         "ជំងឺអ្វីខ្លះ", "មានជំងឺអ្វីខ្លះ", "កើតជំងឺអ្វីខ្លះ",
         "ជំងឺណាខ្លះ", "រាយនាមជំងឺ", "បញ្ជីជំងឺ", "ជំងឺទាំងអស់",
+        "បញ្ជីសត្វល្អិត", "សត្វល្អិតអ្វីខ្លះ", "សត្វល្អិតណាខ្លះ", "សត្វល្អិតចម្បង",
         "what diseases", "which diseases", "what are the diseases", "list of diseases",
         "list diseases", "all diseases of", "all diseases", "catalog of diseases", "diseases affecting",
+        "what pests", "which pests", "list of pests", "list pests", "all pests", "pests affecting",
     ]
     is_list_query = any(t in q_norm for t in disease_list_terms)
     if is_list_query:
+        matched_cats = []
         for cat in CROP_DISEASES_CATALOG:
-            if any(k in q_norm for k in cat["keywords"]):
-                return cat
+            matching_keys = [k for k in cat["keywords"] if _normalize_text(k) in q_norm]
+            if matching_keys:
+                if cat.get("crop_en") == "Mango" and any(k in q_norm for k in ["ស្វាយចន្ទី", "ចន្ទី", "cashew"]):
+                    continue
+                matched_cats.append((max(len(k) for k in matching_keys), cat))
+        if matched_cats:
+            matched_cats.sort(key=lambda x: x[0], reverse=True)
+            return matched_cats[0][1]
 
     # 2. Match high-priority specific knowledge base (smart combinations or direct terms)
     for combo in KB_COMBINATIONS:
@@ -429,14 +484,26 @@ def _match_knowledge(question: str) -> dict | None:
 
     # 3. Match specific individual disease from CROP_DISEASES_CATALOG
     for d in INDEXED_CATALOG_DISEASES:
+        if d.get("crop_en") == "Mango" and any(k in q_norm for k in ["ស្វាយចន្ទី", "ចន្ទី", "cashew"]):
+            continue
         crop_matched = any(ck in q_norm for ck in d["crop_keywords"])
         name_en_core = d["clean_name_en"]
         name_km_core = d["clean_name_km"]
 
         if crop_matched:
             short_km = name_km_core.replace("ជំងឺ", "").strip()
+            crop_stripped_km = short_km.replace(d["crop_km"], "").strip()
             if len(short_km) >= 4 and short_km in q_norm:
                 return d
+            if len(crop_stripped_km) >= 3 and crop_stripped_km in q_norm:
+                return d
+            # Match distinctive sub-keywords (e.g. អុចខ្មៅ, ផ្សិតម្សៅ, រុយទុំ, ដំបៅ, កង់កា, etc.)
+            subwords = [w for w in re.split(r"[\s_()\-ឬនិងលើ]+", crop_stripped_km) if len(w) >= 3]
+            if any(sw in q_norm for sw in subwords):
+                return d
+            for term in KHMER_SYMPTOM_TERMS:
+                if term in q_norm and (term in name_km_core or term in crop_stripped_km):
+                    return d
             if any(p in q_norm for p in d["en_phrases"]):
                 return d
             if d["en_words"] and all(w in q_norm for w in d["en_words"]):
@@ -449,11 +516,17 @@ def _match_knowledge(question: str) -> dict | None:
             if len(name_km_core) >= 6 and name_km_core in q_norm:
                 return d
 
-    # 4. Fallback: if user mentions a crop and generally inquires about diseases
+    # 4. Fallback: if user mentions a crop and generally inquires about diseases/pests
+    matched_cats = []
     for cat in CROP_DISEASES_CATALOG:
-        crop_in_q = any(k in q_norm for k in cat["keywords"])
-        if crop_in_q and any(w in q_norm for w in ["ជំងឺ", "disease", "pathogen"]):
-            return cat
+        matching_keys = [k for k in cat["keywords"] if _normalize_text(k) in q_norm]
+        if matching_keys and any(w in q_norm for w in ["ជំងឺ", "សត្វល្អិត", "ចង្រៃ", "disease", "pest", "pathogen", "insect"]):
+            if cat.get("crop_en") == "Mango" and any(k in q_norm for k in ["ស្វាយចន្ទី", "ចន្ទី", "cashew"]):
+                continue
+            matched_cats.append((max(len(k) for k in matching_keys), cat))
+    if matched_cats:
+        matched_cats.sort(key=lambda x: x[0], reverse=True)
+        return matched_cats[0][1]
 
     return None
 
@@ -603,26 +676,83 @@ def answer(
                 "How are your crops looking right now? I would be glad to help lighten your load with tailored technical advice."
             )
 
+    # Check fertilizer / soil / lime queries
+    fertilizer_terms_km = ["ជី", "ជីអ៊ុយរ៉េ", "ដីជូរ", "កំបោរ", "កំប៉ុស", "លាមកសត្វ", "ជីគីមី", "ដាក់ជី", "ជីបំប៉ន", "ជីស្លឹក"]
+    fertilizer_terms_en = ["fertilizer", "npk", "urea", "compost", "soil acidity", "agricultural lime", "dolomite", "fertilization"]
+    is_fert_query = any(k in q_norm for k in fertilizer_terms_km) if is_khmer else any(k in q_norm for k in fertilizer_terms_en)
+
+    # Check IPM / general pest queries
+    ipm_terms_km = ["សត្វល្អិត", "ដង្កូវ", "ចៃ", "មមាច", "ក្រា", "ipm", "កម្រិតសេដ្ឋកិច្ច"]
+    ipm_terms_en = ["integrated pest management", "economic threshold", "pest management", "insect pest"]
+    is_ipm_query = any(k in q_norm for k in ipm_terms_km) if is_khmer else any(k in q_norm for k in ipm_terms_en)
+
     matched_kb = _match_knowledge(question)
+
+    # Detect if any catalog crop is mentioned
+    matched_catalog_crop = None
+    for cat in CROP_DISEASES_CATALOG:
+        if any(k in q_norm for k in cat["keywords"]):
+            matched_catalog_crop = cat
+            break
+
+    # If asking about fertilizers/nutrients
+    if is_fert_query and not (matched_kb and not matched_kb.get("is_catalog") and "npk" in matched_kb.get("keywords", [])):
+        crop_name = (matched_catalog_crop.get("crop_km") if is_khmer else matched_catalog_crop.get("crop_en")) if matched_catalog_crop else ""
+        if is_khmer:
+            target_str = f"សម្រាប់ដំណាំ {crop_name}" if crop_name else ""
+            return clean_professional_text(
+                f"ការណែនាំបច្ចេកទេសជី និងអាហារូបត្ថម្ភ{target_str} (Fertilizer & Soil Nutrition Management)\n\n"
+                "ជំរាបសួរលោកអ្នក ឬបងប្អូនកសិករជាទីគោរព! ខាងក្រោមនេះជារូបមន្ត និងកាលវិភាគប្រើប្រាស់ជីប្រកបដោយប្រសិទ្ធភាពខ្ពស់៖\n\n"
+                "១. ដំណាក់កាលលូតលាស់ដើម និងស្លឹក (Vegetative Stage)\n"
+                "- ប្រើប្រាស់ជីកំប៉ុសសរីរាង្គពុកផុយល្អលាយជាមួយផ្សិតទ្រីកូឌែរម៉ា (Trichoderma) ដើម្បីបំប៉នដី និងការពារជំងឺឫស។\n"
+                "- បន្ថែមជី NPK រូបមន្តតុល្យភាពដូចជា 15-15-15 ឬ 16-16-16 ឬជីអ៊ុយរ៉េ (46-0-0) ក្នុងបរិមាណសមស្របតាមអាយុកាលដំណាំ។\n\n"
+                "២. ដំណាក់កាលត្រៀមផ្កា និងផ្លែ (Flowering & Fruiting)\n"
+                "- បន្ថយជាតិអាសូត (N) និងបង្កើនជីផូស្វ័រ និងប៉ូតាស្យូម ដូចជារូបមន្ត 12-12-17, 8-24-24 ឬ 0-0-60 ដើម្បីជួយឱ្យផ្កាកាន់ល្អ និងផ្លែធំផ្អែម មានទម្ងន់។\n"
+                "- បាញ់បន្ថែមជីកាល់ស្យូម-បូរ៉ុង (Calcium-Boron) ដើម្បីកាត់បន្ថយការជ្រុះផ្កា និងការប្រេះផ្លែ។\n\n"
+                "៣. ការគ្រប់គ្រងគុណភាពដី (Soil Management)\n"
+                "- វាស់កម្រិត pH ដីឱ្យនៅចន្លោះ ៥.៥ ដល់ ៦.៥។ ប្រសិនបើដីជូរ (pH ទាប) ត្រូវរោយកំបោរកសិកម្ម (Dolomite) នៅដើមរដូវ។\n\n"
+                "ចំណាំ៖ ត្រូវស្រោចទឹកឱ្យបានគ្រប់គ្រាន់ក្រោយពេលដាក់ជីគីមីជានិច្ច ដើម្បីកុំឱ្យរលាកឫសដំណាំ។"
+            )
+        else:
+            target_str = f"for {crop_name}" if crop_name else ""
+            return clean_professional_text(
+                f"Fertilizer and Nutrient Management {target_str}\n\n"
+                "Greetings! Here is the recommended nutrition and fertilizer schedule:\n\n"
+                "1. Vegetative and Growth Stage\n"
+                "- Apply well-decomposed organic compost inoculated with Trichoderma to improve soil biology.\n"
+                "- Side-dress with balanced NPK (15-15-15 or 16-16-16) or moderate nitrogen (Urea 46-0-0) calibrated to plant age.\n\n"
+                "2. Flowering and Fruit Development\n"
+                "- Shift to high phosphorus and potassium formulations (such as 12-12-17, 8-24-24, or 0-0-60) to stimulate flower retention and fruit filling.\n"
+                "- Foliar spray micronutrients, specifically Calcium-Boron, to prevent blossom drop and fruit cracking.\n\n"
+                "3. Soil pH and Root Zone Care\n"
+                "- Maintain soil pH in the range of 5.5 - 6.5. Broadcast agricultural limestone (Dolomite) if soil acidity is elevated.\n\n"
+                "Reminder: Always irrigate thoroughly after granular fertilizer application to prevent osmotic root shock."
+            )
+
+    # For Khmer questions, directly return smooth, human-like expert responses to guarantee zero broken words
+    if is_khmer:
+        if matched_kb:
+            return _format_smooth_human_reply(matched_kb, is_khmer=True)
+        if matched_catalog_crop:
+            return _format_smooth_human_reply(matched_catalog_crop, is_khmer=True)
+        if is_ipm_query:
+            return _format_smooth_human_reply(AGRI_KNOWLEDGE_BASE[8], is_khmer=True)
+        return clean_professional_text(
+            "ជំរាបសួរលោកអ្នក ឬបងប្អូនកសិករជាទីគោរព!\n\n"
+            "ខ្ញុំបានទទួលសំណួររបស់អ្នកហើយ។ ដើម្បីឱ្យខ្ញុំអាចវិភាគបញ្ហា និងផ្តល់រូបមន្តព្យាបាលឱ្យចំគោលដៅបំផុត សូមមេត្តាជួយប្រាប់បន្ថែមអំពី៖\n\n"
+            "១. ឈ្មោះដំណាំដែលកំពុងដាំដុះ (ឧ. ស្រូវ ទុរេន ដំឡូងមី ពោត ប៉េងប៉ោះ ត្រសក់ ស្វាយ ក្រូច ម្រេច...)\n"
+            "២. រោគសញ្ញាជាក់ស្តែងដែលឃើញនៅលើស្លឹក ដើម ផ្លែ ឬឫស\n"
+            "៣. អាយុកាលដំណាំ និងស្ថានភាពដី ឬការស្រោចស្រព។\n\n"
+            "ខ្ញុំត្រៀមខ្លួនជានិច្ចក្នុងការជួយលោកអ្នក!"
+        )
+
+    # English flow: Qwen2.5-3B generates fluent English
     kb_context = context.strip() if context else ""
     if matched_kb and not kb_context:
         if matched_kb.get("is_catalog"):
-            if is_khmer:
-                kb_context = (
-                    f"ប្រធានបទ៖ {matched_kb['title_km']}\n\n"
-                    f"បញ្ជីជំងឺទាំងអស់៖\n{matched_kb['symptoms_km']}"
-                )
-            else:
-                kb_context = (
-                    f"Topic: {matched_kb['title_en']}\n\n"
-                    f"Disease Catalog:\n{matched_kb['symptoms_en']}"
-                )
-        elif is_khmer:
             kb_context = (
-                f"ប្រធានបទ៖ {matched_kb['title_km']}\n"
-                f"រោគសញ្ញាសម្គាល់៖ {matched_kb['symptoms_km']}\n"
-                f"វិធានការព្យាបាល និងការអនុវត្ត៖ {matched_kb['treatment_km']}\n"
-                f"វិធានការបង្ការ និងការថែទាំ៖ {matched_kb['prevention_km']}"
+                f"Topic: {matched_kb['title_en']}\n\n"
+                f"Disease Catalog:\n{matched_kb['symptoms_en']}"
             )
         else:
             kb_context = (
@@ -632,20 +762,13 @@ def answer(
                 f"Prevention & Field Care: {matched_kb['prevention_en']}"
             )
 
-    sys_prompt = SYSTEM_PROMPT_KH if is_khmer else SYSTEM_PROMPT_EN
+    sys_prompt = SYSTEM_PROMPT_EN
     if kb_context:
-        if is_khmer:
-            sys_prompt += (
-                f"\n\nព័ត៌មានបច្ចេកទេសយោង៖\n{kb_context}\n\n"
-                "សូមប្រើព័ត៌មានបច្ចេកទេសយោងខាងលើដើម្បីឆ្លើយតបសំណួររបស់កសិករដោយផ្ទាល់ រលូន គួរសម និងកក់ក្តៅដូចអ្នកជំនាញកសិកម្មពិតប្រាកដ។ "
-                "សូមរៀបចំចម្លើយឱ្យមានរបៀបរៀបរយជាចំណុចៗ ងាយយល់ និងមានការណែនាំសុវត្ថិភាពច្បាស់លាស់ ដោយមិនប្រើប្រាស់សញ្ញា # ឬ ** ឬ emoji ឡើយ។"
-            )
-        else:
-            sys_prompt += (
-                f"\n\nTechnical reference context:\n{kb_context}\n\n"
-                "Use the technical reference above to provide a smooth, warm, empathetic, and human-like agricultural expert answer tailored directly to the farmer's question. "
-                "Structure the response clearly with numbered points or dashes, easy for a grower to understand, with practical safety precautions, and without markdown headers (#), bold markers (**), or emojis."
-            )
+        sys_prompt += (
+            f"\n\nTechnical reference context:\n{kb_context}\n\n"
+            "Use the technical reference above to provide a smooth, warm, empathetic, and human-like agricultural expert answer tailored directly to the farmer's question. "
+            "Structure the response clearly with numbered points or dashes, easy for a grower to understand, with practical safety precautions, and without markdown headers (#), bold markers (**), or emojis."
+        )
 
     max_new_tokens = max(32, min(int(max_new_tokens), 1024))
     temperature = max(0.05, min(float(temperature), 0.8))
@@ -682,22 +805,12 @@ def answer(
 
     cleaned_reply = _clean_text(raw_output)
 
-    if _is_valid_output(cleaned_reply, is_khmer):
+    if _is_valid_output(cleaned_reply, is_khmer=False):
         return clean_professional_text(cleaned_reply)
 
-    # Natural conversational fallback if model generation was truly empty or invalid
     if matched_kb:
-        return _format_smooth_human_reply(matched_kb, is_khmer)
+        return _format_smooth_human_reply(matched_kb, is_khmer=False)
 
-    if is_khmer:
-        return clean_professional_text(
-            "ជំរាបសួរលោកអ្នក ឬបងប្អូនកសិករជាទីគោរព!\n\n"
-            "ខ្ញុំបានទទួលសំណួររបស់អ្នកហើយ។ ដើម្បីឱ្យខ្ញុំអាចវិភាគបញ្ហា និងផ្តល់រូបមន្តព្យាបាលឱ្យចំគោលដៅបំផុត សូមមេត្តាជួយប្រាប់បន្ថែមអំពី៖\n\n"
-            "១. ឈ្មោះដំណាំដែលកំពុងដាំដុះ (ឧ. ស្រូវ ទុរេន ដំឡូងមី ពោត ប៉េងប៉ោះ ត្រសក់...)\n"
-            "២. រោគសញ្ញាជាក់ស្តែងដែលឃើញនៅលើស្លឹក ដើម ផ្លែ ឬឫស\n"
-            "៣. អាយុកាលដំណាំ និងស្ថានភាពដី ឬការស្រោចស្រព។\n\n"
-            "ខ្ញុំត្រៀមខ្លួនជានិច្ចក្នុងការជួយលោកអ្នក!"
-        )
     return clean_professional_text(
         "Greetings!\n\n"
         "I have received your inquiry. To help me pinpoint the exact diagnosis and provide you with the most effective agronomic treatment plan, could you please provide a few more details:\n\n"

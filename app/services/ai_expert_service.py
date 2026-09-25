@@ -281,11 +281,55 @@ def _clean_model_output(reply: str, user_message: str = "", language: Optional[s
     return cleaned
 
 
+COMMON_KHMER_WORDS = {
+    "ជា", "គឺ", "នៅ", "មាន", "និង", "ដែល", "បាន", "ដោយ", "ដើម្បី", "លើ", "ក្នុង", "ពី",
+    "នេះ", "នោះ", "ដំណាំ", "ជំងឺ", "ស្លឹក", "ដើម", "ផ្លែ", "ឫស", "ឬស", "ព្យាបាល", "ថ្នាំ",
+    "កសិកម្ម", "កសិករ", "ទឹក", "ដី", "បាញ់", "ការពារ", "បង្ការ", "ជំរាបសួរ", "សួស្តី",
+    "សូម", "ប្រើ", "រោគសញ្ញា", "វិធានការ", "សុវត្ថិភាព", "ស្រោច", "ដាក់", "ជី", "កាត់",
+    "មែក", "ផ្សិត", "បាក់តេរី", "សត្វល្អិត", "ចង្រៃ", "ទិន្នផល", "លូតលាស់", "ពូជ",
+    "រដូវ", "ចម្ការ", "ស្រែ", "កម្រិត", "សរីរាង្គ", "គីមី", "បច្ចេកទេស", "ដំបូន្មាន",
+    "ជួយ", "ដោះស្រាយ", "លោកអ្នក", "បងប្អូន", "ខ្ញុំ", "អ្នក", "ល្អ", "ខូច", "ស្ងួត",
+    "រលួយ", "លឿង", "ខ្មៅ", "ក្រហម", "ត្នោត", "កំបោរ", "អ៊ុយរ៉េ",
+}
+
+
+def _is_valid_khmer_text(text: str) -> bool:
+    if not text or len(text.strip()) < 10:
+        return False
+    # Reject template placeholders
+    if "%%" in text or bool(re.search(r"\[(Crop|List|Action|Insert|Your)[^\]]*\]", text, re.IGNORECASE)):
+        return False
+    # Reject invalid/obsolete Khmer codepoints that LLMs hallucinate (\u17b4, \u17b5, \u17d8-\u17da, \u17dd)
+    if bool(re.search(r"[\u17b4\u17b5\u17d8-\u17da\u17dd]", text)):
+        return False
+    # Reject stacked dependent vowels on a single consonant
+    if bool(re.search(r"[\u17b6-\u17c5][\u17b6-\u17c5]", text)):
+        return False
+    # Reject Latin letters directly adjacent to Khmer characters (token corruption e.g. កសិkcម្ម)
+    if bool(re.search(r"[\u1780-\u17a2\u17a3-\u17d2][a-zA-Z]|[a-zA-Z][\u1780-\u17a2\u17a3-\u17d2]", text)):
+        return False
+    # Reject foreign scripts (Thai, Japanese, Cyrillic, Chinese)
+    if bool(re.search(r"[\u0e00-\u0e7f\u3040-\u30ff\u0400-\u04ff\u4e00-\u9fff]", text)):
+        return False
+    # Must contain Khmer script
+    if not bool(re.search(r"[\u1780-\u17ff]", text)):
+        return False
+    # Check vocabulary density for longer texts
+    found = [w for w in COMMON_KHMER_WORDS if w in text]
+    if len(text) > 40 and len(found) < 3:
+        return False
+    return True
+
+
 def _is_valid_reply(reply: str, user_message: str = "", language: Optional[str] = None) -> bool:
     """Validate that the model response is coherent, sufficiently long, and not a repetition loop."""
     if not reply or len(reply.strip()) < 10:
         return False
     cleaned = reply.strip()
+
+    is_km = _is_khmer(language, user_message)
+    if is_km:
+        return _is_valid_khmer_text(cleaned)
 
     # Reject broken unicode replacement chars, raw template leftovers, and hybrid artifacts
     if "\ufffd" in cleaned or "example_video_id" in cleaned or "ជំ-ngឺ" in cleaned or "ngឺ" in cleaned:
@@ -311,11 +355,6 @@ def _is_valid_reply(reply: str, user_message: str = "", language: Optional[str] 
         most_common_char, count = counts.most_common(1)[0]
         if count / len(cleaned) > 0.35 and most_common_char not in {" ", "\n", "-", "*"}:
             return False
-
-    is_km = _is_khmer(language, user_message)
-    # If the user asked in Khmer, the response must contain Khmer script
-    if is_km and not bool(re.search(r"[\u1780-\u17ff]", cleaned)):
-        return False
 
     return True
 

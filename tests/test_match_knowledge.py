@@ -123,6 +123,73 @@ class MatchKnowledgeTestCase(unittest.TestCase):
         self.assertNotIn("###", reply_en)
         self.assertNotIn("**", reply_en)
 
+    def test_expanded_crops_and_fertilizer(self):
+        # Mango catalog query
+        m_mango = space_app._match_knowledge("តើដំណាំស្វាយមានជំងឺអ្វីខ្លះ?")
+        self.assertIsNotNone(m_mango)
+        self.assertTrue(m_mango.get("is_catalog"))
+        self.assertEqual(m_mango.get("crop_km"), "ស្វាយ")
+
+        # Mango anthracnose
+        m_anth = space_app._match_knowledge("ស្វាយកើតអុចខ្មៅ")
+        self.assertIsNotNone(m_anth)
+        self.assertIn("Mango Anthracnose", m_anth["title_en"])
+
+        # Urea query
+        m_urea = space_app._match_knowledge("តើត្រូវដាក់ជីអ៊ុយរ៉េយ៉ាងដូចម្តេច?")
+        self.assertIsNotNone(m_urea)
+        self.assertIn("Fertilizer", m_urea["title_en"])
+
+        # Citrus
+        m_citrus = space_app._match_knowledge("តើដំណាំក្រូចមានជំងឺអ្វីខ្លះ?")
+        self.assertIsNotNone(m_citrus)
+        self.assertEqual(m_citrus.get("crop_km"), "ក្រូច")
+
+        # Cashew
+        m_cashew = space_app._match_knowledge("បញ្ជីជំងឺស្វាយចន្ទី")
+        self.assertIsNotNone(m_cashew)
+        self.assertEqual(m_cashew.get("crop_km"), "ស្វាយចន្ទី")
+
+        # Longan
+        m_longan = space_app._match_knowledge("តើដំណាំមៀនមានជំងឺអ្វីខ្លះ?")
+        self.assertIsNotNone(m_longan)
+        self.assertEqual(m_longan.get("crop_km"), "មៀន")
+
+        # Watermelon
+        m_wm = space_app._match_knowledge("ជំងឺឪឡឹក")
+        self.assertIsNotNone(m_wm)
+        self.assertEqual(m_wm.get("crop_km"), "ឪឡឹក")
+
+        # Coconut
+        m_coco = space_app._match_knowledge("បញ្ជីសត្វល្អិតលើដំណាំដូង")
+        self.assertIsNotNone(m_coco)
+        self.assertEqual(m_coco.get("crop_km"), "ដូង")
+
+        # Coffee
+        m_coffee = space_app._match_knowledge("តើដំណាំកាហ្វេមានជំងឺអ្វីខ្លះ?")
+        self.assertIsNotNone(m_coffee)
+        self.assertEqual(m_coffee.get("crop_km"), "កាហ្វេ")
+
+        # Eggplant
+        m_egg = space_app._match_knowledge("ជំងឺដំណាំត្រប់")
+        self.assertIsNotNone(m_egg)
+        self.assertEqual(m_egg.get("crop_km"), "ត្រប់")
+
+        # Cabbage
+        m_cab = space_app._match_knowledge("ជំងឺលើស្ពៃក្តោប")
+        self.assertIsNotNone(m_cab)
+        self.assertEqual(m_cab.get("crop_km"), "ស្ពៃ")
+
+    def test_khmer_text_validator_rejects_corrupted_tokens(self):
+        # Corrupted gibberish reported by user with Latin artifacts, broken vowels, obsolete characters
+        bad_text = "សូជីយូ! សើរតែថាជាកសិkcម្មរាកលើពេក? ខ្ញុ៊ណែះណាដឹង សាបស្រោច សឿងស្រពដោំឡើប! ប្លែកចំហៀងដែនម៉ baybayin ខ្លះ ស឴ឫសចំពោៗម៉"
+        self.assertFalse(space_app._is_valid_khmer_text(bad_text))
+
+        # Valid expert reply should pass
+        good_text = "ជំរាបសួរលោកអ្នក ឬបងប្អូនកសិករជាទីគោរព! ចំពោះដំណាំស្វាយដែលមានជំងឺអុចខ្មៅ ឬអង់ត្រាក់ណូស សូមអនុវត្តដូចខាងក្រោម៖ ១. កាត់មែកនិងប្រមូលផ្លែដែលរងការបំផ្លាញដុតចោល។ ២. បាញ់ថ្នាំការពារដូចជា Copper hydroxide ឬ Mancozeb។"
+        self.assertTrue(space_app._is_valid_khmer_text(good_text))
+
+
 
 if __name__ == "__main__":
     unittest.main()
