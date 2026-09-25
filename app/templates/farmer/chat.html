@@ -992,7 +992,7 @@
 
             const messageText = document.createElement("div");
             messageText.className = "v0-bubble-text";
-            messageText.textContent = text;
+            messageText.textContent = sanitizeDisplayText(text);
             bubble.appendChild(messageText);
         }
         row.appendChild(bubble);
@@ -1000,6 +1000,21 @@
         row.scrollIntoView({ block: "nearest", behavior: "auto" });
         return row;
     }
+
+    function sanitizeDisplayText(raw) {
+        if (!raw) return "";
+        let s = String(raw);
+        s = s.replace(/\*{1,3}(.*?)\*{1,3}/g, "$1");
+        s = s.replace(/_{1,3}(.*?)_{1,3}/g, "$1");
+        s = s.replace(/^#{1,6}\s*/gm, "");
+        s = s.replace(/`([^`]+)`/g, "$1");
+        s = s.replace(/\*\*/g, "").replace(/\*/g, "").replace(/`/g, "");
+        return s.trim();
+    }
+
+    document.querySelectorAll(".v0-bubble-text").forEach(el => {
+        el.textContent = sanitizeDisplayText(el.textContent);
+    });
 
     document.querySelectorAll("[data-chat-time]").forEach((time) => {
         time.textContent = formatChatTime(time.dataset.chatTime);

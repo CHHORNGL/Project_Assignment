@@ -314,10 +314,15 @@
         if (persist) saveActiveTab(tab);
     }
 
-    function escapeText(text) {
-        const div = document.createElement("div");
-        div.textContent = text;
-        return div.textContent;
+    function sanitizeDisplayText(raw) {
+        if (!raw) return "";
+        let s = String(raw);
+        s = s.replace(/\*{1,3}(.*?)\*{1,3}/g, "$1");
+        s = s.replace(/_{1,3}(.*?)_{1,3}/g, "$1");
+        s = s.replace(/^#{1,6}\s*/gm, "");
+        s = s.replace(/`([^`]+)`/g, "$1");
+        s = s.replace(/\*\*/g, "").replace(/\*/g, "").replace(/`/g, "");
+        return s.trim();
     }
 
     function appendMessage(kind, text, persist) {
@@ -335,7 +340,7 @@
 
         const bubble = document.createElement("div");
         bubble.className = "ai-helper-bubble";
-        bubble.textContent = escapeText(text);
+        bubble.textContent = sanitizeDisplayText(text);
 
         item.appendChild(bubble);
         thread.appendChild(item);

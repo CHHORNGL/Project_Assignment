@@ -53,11 +53,22 @@
     const chatInput = document.getElementById('nxChatInput');
     const chatSendBtn = document.getElementById('nxChatSendBtn');
 
+    function sanitizeDisplayText(raw) {
+        if (!raw) return "";
+        let s = String(raw);
+        s = s.replace(/\*{1,3}(.*?)\*{1,3}/g, "$1");
+        s = s.replace(/_{1,3}(.*?)_{1,3}/g, "$1");
+        s = s.replace(/^#{1,6}\s*/gm, "");
+        s = s.replace(/`([^`]+)`/g, "$1");
+        s = s.replace(/\*\*/g, "").replace(/\*/g, "").replace(/`/g, "");
+        return s.trim();
+    }
+
     function appendMessage(text, role) {
         if (!chatBody) return;
         const msg = document.createElement('div');
         msg.className = `nx-cbbl ${role === 'user' ? 'nx-cbus' : 'nx-cbai'}`;
-        msg.textContent = text;
+        msg.textContent = sanitizeDisplayText(text);
         chatBody.appendChild(msg);
         chatBody.scrollTop = chatBody.scrollHeight;
     }
