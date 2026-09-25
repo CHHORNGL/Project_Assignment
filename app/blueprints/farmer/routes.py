@@ -589,13 +589,13 @@ def _get_identity_reply(lang: str = "en") -> str:
     if lang == "km":
         return (
             "ជំរាបសួរលោកអ្នក! ខ្ញុំគឺជា **AgriSystem AI** (ម៉ូឌែលឈ្មោះ **AGY V2.0.0**) ដែលត្រូវបានបង្កើត និងអភិវឌ្ឍឡើងដោយ**ប្រធានក្រុម ម៉ៅ សៀវអ៊ិ (Team Leader Mao Seavik)**។ "
-            "ខ្ញុំជាជំនួយការកសិកម្មឆ្លាតវៃ ត្រៀមខ្លួនជានិច្ចក្នុងការជួយពិនិត្យជំងឺដំណាំ វិភាគរោគសញ្ញា ផ្តល់បច្ចេកទេសដាំដុះ និងចែករំលែកវិធីសាស្រ្តការពារ និងការព្យាបាលប្រកបដោយសុវត្ថិភាពខ្ពស់។ "
+            "ខ្ញុំជាជំនួយការប្រព័ន្ធ និងកសិកម្មឆ្លាតវៃ ត្រៀមខ្លួនជានិច្ចក្នុងការជួយណែនាំការប្រើប្រាស់ប្រព័ន្ធ ពិនិត្យជំងឺដំណាំ វិភាគរោគសញ្ញា និងចែករំលែកវិធីសាស្រ្តការពារ និងការព្យាបាលដំណាំប្រកបដោយសុវត្ថិភាព។ "
             "តើថ្ងៃនេះខ្ញុំអាចជួយអ្វីដល់លោកអ្នកបានខ្លះដែរ?"
         )
     return (
         "Hello! I am **AgriSystem AI** (model name: **AGY V2.0.0**), created and developed under the leadership of **Team Leader Mao Seavik**. "
-        "I am an intelligent agricultural assistant dedicated to helping farmers diagnose plant diseases, improve crop health, and adopt safe, sustainable farming practices. "
-        "How can I help you and your farm today?"
+        "I am your intelligent AgriSystem assistant dedicated to supporting you with platform features, system navigation, and safe agricultural guidance. "
+        "How can I help you today?"
     )
 
 
@@ -603,21 +603,20 @@ def _get_greeting_reply(message: str, lang: str = "en") -> str:
     msg_clean = message.lower().strip()
     if "hello in khmer" in msg_clean:
         return (
-            "សួស្តីបាទ/ចាស! ជាភាសាខ្មែរយើងប្រើពាក្យ 'សួស្តី' (សម្រាប់ភាពស្និទ្ធស្នាល ឬទូទៅ) ឬ 'ជំរាបសួរ' (ប្រកបដោយការគួរសម និងការគោរព)។ ខ្ញុំជា AgriSystem AI (ម៉ូឌែល AGY V2.0.0) បង្កើតឡើងដោយប្រធានក្រុម ម៉ៅ សៀវអ៊ិ (Team Leader Mao Seavik)។ តើខ្ញុំអាចជួយអ្វីលោកអ្នកបានខ្លះនៅថ្ងៃនេះបាទ/ចាស?"
+            "សួស្តីបាទ/ចាស! ជាភាសាខ្មែរយើងប្រើពាក្យ 'សួស្តី' (សម្រាប់ភាពស្និទ្ធស្នាល ឬទូទៅ) ឬ 'ជំរាបសួរ' (ប្រកបដោយការគួរសម និងការគោរព)។ ខ្ញុំជា AgriSystem AI (ម៉ូឌែល AGY V2.0.0) បង្កើតឡើងដោយប្រធានក្រុម ម៉ៅ សៀវអ៊ិ (Team Leader Mao Seavik)។ តើខ្ញុំអាចជួយសម្រួលការប្រើប្រាស់ប្រព័ន្ធ ឬជួយដោះស្រាយបញ្ហាអ្វីជូនលោកអ្នកបានខ្លះដែរ?"
         )
     if "hello in english" in msg_clean:
         return (
-            "Hi there! In English, we greet with 'Hello' or 'Hi'! I am AgriSystem AI (model name: AGY V2.0.0), created and developed under the leadership of Team Leader Mao Seavik. How can I assist you with your crops or farm today?"
+            "Hi there! In English, we greet with 'Hello' or 'Hi'! I am AgriSystem AI (model name: AGY V2.0.0), created and developed under the leadership of Team Leader Mao Seavik. How can I assist you with the AgriSystem platform or your questions today?"
         )
     if lang == "km":
         return (
             "សួស្តីបាទ/ចាស! ខ្ញុំជា AgriSystem AI (ម៉ូឌែលឈ្មោះ AGY V2.0.0) ដែលត្រូវបានបង្កើត និងអភិវឌ្ឍឡើងដោយប្រធានក្រុម ម៉ៅ សៀវអ៊ិ (Team Leader Mao Seavik)។ "
-            "ខ្ញុំរីករាយណាស់ដែលបានជួយលោកអ្នកនៅថ្ងៃនេះ។ តើដំណាំ ឬការងារកសិកម្មរបស់អ្នកដំណើរការយ៉ាងណាដែរ? "
-            "តើមានបញ្ហាជំងឺដំណាំ ឬការដាំដុះអ្វីដែលខ្ញុំអាចជួយផ្តល់ដំបូន្មាន ឬដោះស្រាយជូនបានដែរទេ?"
+            "ខ្ញុំរីករាយណាស់ដែលបានជួយលោកអ្នកនៅថ្ងៃនេះ។ តើខ្ញុំអាចជួយសម្រួលការប្រើប្រាស់ប្រព័ន្ធ ឬជួយដោះស្រាយបញ្ហាអ្វីជូនលោកអ្នកបានខ្លះដែរ?"
         )
     return (
         "Hi there! Warm greetings to you! I am AgriSystem AI (model: AGY V2.0.0), created and developed under the leadership of Team Leader Mao Seavik. "
-        "It's a pleasure to assist you! How are your crops doing today, and how can I help you with your farming needs?"
+        "It's a pleasure to assist you! How can I help you with the system or your questions today?"
     )
 
 

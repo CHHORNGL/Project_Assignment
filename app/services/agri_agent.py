@@ -90,6 +90,19 @@ def plan_request(
         "ទិន្នផល", "កម្រិតសេដ្ឋកិច្ច", "ការស្រោចស្រពដំណក់ទឹក", "ការវិភាគដី",
     )
 
+    system_help_terms = (
+        "system", "website", "platform", "app", "application", "dashboard",
+        "how to use", "how do i", "navigation", "feature", "menu", "page",
+        "password", "passkey", "account", "profile", "settings", "dark mode",
+        "light mode", "language", "khmer", "english", "upgrade", "credit", "credits",
+        "token", "tokens", "subscription", "price", "pricing", "plan",
+        "how to diagnose", "upload photo", "rule based", "history", "report",
+        "contact admin", "support", "ticket",
+        "ប្រព័ន្ធ", "គេហទំព័រ", "កម្មវិធី", "របៀបប្រើ", "មុខងារ", "ម៉ឺនុយ",
+        "លេខសម្ងាត់", "គណនី", "ការកំណត់", "ភាសា", "ប្តូរភាសា", "ម៉ូតងងឹត", "តម្លើង",
+        "របៀបពិនិត្យ", "បញ្ចូលរូប", "ប្រវត្តិ", "ទាក់ទង", "ជំនួយ", "របាយការណ៍",
+    )
+
     clean_text = re.sub(r"[!?,.។៕\s]+", " ", text).strip()
     is_greeting = any(
         clean_text == term
@@ -105,6 +118,9 @@ def plan_request(
         tools = ()
     elif _has_any(text, thanks_terms) or _has_any(text, casual_terms):
         intent = "casual_conversation"
+        tools = ()
+    elif _has_any(text, system_help_terms):
+        intent = "system_help"
         tools = ()
     elif _has_any(text, insights_terms):
         intent = "agricultural_insights"
