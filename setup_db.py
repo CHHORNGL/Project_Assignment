@@ -22,6 +22,9 @@ def initialize_database(database, stamp_revision):
             with database.engine.begin() as conn:
                 conn.execute(text("ALTER TABLE diseases ADD COLUMN IF NOT EXISTS cause_explanation_kh TEXT;"))
                 conn.execute(text("ALTER TABLE diseases ADD COLUMN IF NOT EXISTS prevention_tips_kh TEXT;"))
+                conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS ai_credits INTEGER DEFAULT 13000;"))
+                conn.execute(text("ALTER TABLE roles ADD COLUMN IF NOT EXISTS route_type VARCHAR(50) DEFAULT 'farmer';"))
+                conn.execute(text("ALTER TABLE expert_diagnoses ADD COLUMN IF NOT EXISTS image_paths JSON;"))
         except Exception:
             pass
 

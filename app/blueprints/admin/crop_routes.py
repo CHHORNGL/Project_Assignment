@@ -3,6 +3,8 @@ from flask_login import login_required
 from app.utils.decorators import permission_required
 from app.extensions import db
 from app.models.crop import Crop
+from app.models.diagnosis import Diagnosis
+from app.models.expert_question import ExpertQuestion
 
 admin_crop_bp = Blueprint(
     "admin_crop",
@@ -71,15 +73,32 @@ def edit(id):
     return render_template("admin/edit_crop.html", crop=crop)
 
 
-@admin_crop_bp.route("/<int:id>/delete")
+@admin_crop_bp.route("/<int:id>/delete", methods=["GET", "POST"])
 @login_required
 @permission_required("manage_crops")
 def delete(id):
     crop = Crop.query.get_or_404(id)
-    db.session.delete(crop)
-    db.session.commit()
+    try:
+        # Detach references in diagnoses and expert questions to preserve farmer history
+        disease_ids = [d.id for d in crop.diseases]
+        if disease_ids:
+            Diagnosis.query.filter(Diagnosis.disease_id.in_(disease_ids)).update(
+                {Diagnosis.disease_id: None}, synchronize_session=False
+            )
+        Diagnosis.query.filter_by(crop_id=crop.id).update(
+            {Diagnosis.crop_id: None}, synchronize_session=False
+        )
+        ExpertQuestion.query.filter_by(crop_id=crop.id).update(
+            {ExpertQuestion.crop_id: None}, synchronize_session=False
+        )
 
-    flash("Crop deleted.", "warning")
+        db.session.delete(crop)
+        db.session.commit()
+        flash("Crop deleted.", "warning")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Failed to delete crop: {str(e)}", "danger")
+
     return redirect(url_for("admin_crop.index"))
 
 
@@ -107,9 +126,26 @@ def bulk():
         flash("No crops found to delete", "warning")
         return redirect(url_for("admin_crop.index"))
 
-    for crop in crops:
-        db.session.delete(crop)
-    db.session.commit()
+    try:
+        target_crop_ids = [c.id for c in crops]
+        all_disease_ids = [d.id for c in crops for d in c.diseases]
+        if all_disease_ids:
+            Diagnosis.query.filter(Diagnosis.disease_id.in_(all_disease_ids)).update(
+                {Diagnosis.disease_id: None}, synchronize_session=False
+            )
+        Diagnosis.query.filter(Diagnosis.crop_id.in_(target_crop_ids)).update(
+            {Diagnosis.crop_id: None}, synchronize_session=False
+        )
+        ExpertQuestion.query.filter(ExpertQuestion.crop_id.in_(target_crop_ids)).update(
+            {ExpertQuestion.crop_id: None}, synchronize_session=False
+        )
 
-    flash(f"Deleted {len(crops)} crop(s)", "warning")
+        for crop in crops:
+            db.session.delete(crop)
+        db.session.commit()
+        flash(f"Deleted {len(crops)} crop(s)", "warning")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Failed to delete crops: {str(e)}", "danger")
+
     return redirect(url_for("admin_crop.index"))

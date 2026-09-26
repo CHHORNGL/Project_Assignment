@@ -24,7 +24,7 @@ class Diagnosis(db.Model):
     # ===============================
     crop_id = db.Column(
         db.Integer,
-        db.ForeignKey("crops.id"),
+        db.ForeignKey("crops.id", ondelete="SET NULL"),
         nullable=True
     )
 
@@ -43,7 +43,7 @@ class Diagnosis(db.Model):
     # ===============================
     disease_id = db.Column(
         db.Integer,
-        db.ForeignKey("diseases.id"),
+        db.ForeignKey("diseases.id", ondelete="SET NULL"),
         nullable=True   # AUTO diagnosis may be None
     )
 
