@@ -61,7 +61,7 @@ class WeatherBackupTests(unittest.TestCase):
         result = self.client.fetch_forecast(self.request)
         args = self.session.get.call_args.kwargs
         self.assertEqual(args["params"], {"lat": "11.556", "lon": "104.928"})
-        self.assertIn("https://agricultureexp.space", args["headers"]["User-Agent"])
+        self.assertIn("https://agricultureexp.com", args["headers"]["User-Agent"])
         self.assertGreater(result["_cache_until"], datetime.now(timezone.utc).timestamp() + 1700)
 
     def test_304_revalidates_and_recomputes_current_forecast_hour(self):

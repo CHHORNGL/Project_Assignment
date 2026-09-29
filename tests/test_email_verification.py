@@ -5,6 +5,8 @@ from app.blueprints.auth.routes import _send_verification_email
 class TestEmailVerification(unittest.TestCase):
     @patch("smtplib.SMTP")
     @patch.dict("os.environ", {
+        "BREVO_API_KEY": "",
+        "MAIL_API_KEY": "",
         "MAIL_SERVER": "smtp-relay.brevo.com",
         "MAIL_PORT": "587",
         "MAIL_USERNAME": "test_user@example.com",
@@ -25,6 +27,8 @@ class TestEmailVerification(unittest.TestCase):
 
     @patch("smtplib.SMTP_SSL")
     @patch.dict("os.environ", {
+        "BREVO_API_KEY": "",
+        "MAIL_API_KEY": "",
         "MAIL_SERVER": "smtp.gmail.com",
         "MAIL_PORT": "465",
         "MAIL_USERNAME": "test_user@gmail.com",
@@ -43,6 +47,8 @@ class TestEmailVerification(unittest.TestCase):
 
     @patch("smtplib.SMTP")
     @patch.dict("os.environ", {
+        "BREVO_API_KEY": "",
+        "MAIL_API_KEY": "",
         "MAIL_SERVER": "smtp-relay.brevo.com",
         "MAIL_PORT": "587",
         "MAIL_USERNAME": "test_user@example.com",
