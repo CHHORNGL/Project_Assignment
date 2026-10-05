@@ -13,7 +13,7 @@ alembic==1.13.1
 # Authentication, Session & Security
 Flask-Login==0.6.3
 Flask-WTF==1.2.1
-WTForms==3.1.2
+WTForms==3.2.2
 email-validator==2.1.0.post1
 Authlib==1.8.0
 webauthn==2.8.0
