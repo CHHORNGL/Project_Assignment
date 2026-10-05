@@ -18,10 +18,6 @@ def initialize_database(database, stamp_revision):
     else:
         print('Existing database detected; pending migrations will run next')
         try:
-            database.create_all()
-        except Exception as e:
-            print(f"Notice: create_all on existing database completed: {e}")
-        try:
             from sqlalchemy import text
             with database.engine.begin() as conn:
                 conn.execute(text("ALTER TABLE diseases ADD COLUMN IF NOT EXISTS cause_explanation_kh TEXT;"))
