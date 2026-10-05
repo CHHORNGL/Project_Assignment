@@ -364,8 +364,9 @@
         <div class="col-lg-5 mb-4">
             <div class="admin-panel h-100">
                 <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom" style="border-color: var(--admin-border) !important;">
-                    <h6 class="mb-0 font-weight-bold" style="color: var(--admin-text);">
-                        <i class="fas fa-qrcode text-danger mr-2"></i>Bakong KHQR Gateway Settings
+                    <h6 class="mb-0 font-weight-bold d-flex align-items-center" style="color: var(--admin-text);">
+                        <img src="{{ url_for('static', filename='img/banks/bakong.png') }}" style="width: 20px; height: 20px; border-radius: 4px; object-fit: cover; margin-right: 0.5rem;" alt="Bakong">
+                        Bakong KHQR Gateway Settings
                     </h6>
                     <span class="badge badge-pill badge-danger font-weight-bold px-2 py-1">Cambodia NBC</span>
                 </div>
@@ -451,6 +452,37 @@
                         <button type="submit" class="btn btn-danger px-4" style="border-radius: 10px; font-weight: 600;">
                             <i class="fas fa-save mr-1"></i> Save Bakong Config
                         </button>
+                    </div>
+
+                    <!-- Supported Cambodian Banking Apps preview -->
+                    <div class="mt-3 pt-3 border-top" style="border-color: var(--admin-border) !important;">
+                        <div class="small font-weight-bold text-muted mb-2 text-uppercase" style="letter-spacing: 0.05em; font-size: 0.7rem;">Supported Banking Apps</div>
+                        <div class="d-flex flex-wrap align-items-center" style="gap: 0.35rem;">
+                            <span class="badge badge-light px-2 py-1 d-inline-flex align-items-center" style="border: 1px solid var(--admin-border); background: var(--admin-card-bg); color: var(--admin-text); font-weight: 500;">
+                                <img src="{{ url_for('static', filename='img/banks/aba.png') }}" style="width: 15px; height: 15px; border-radius: 3px; margin-right: 4px;" alt="ABA">ABA
+                            </span>
+                            <span class="badge badge-light px-2 py-1 d-inline-flex align-items-center" style="border: 1px solid var(--admin-border); background: var(--admin-card-bg); color: var(--admin-text); font-weight: 500;">
+                                <img src="{{ url_for('static', filename='img/banks/acleda.png') }}" style="width: 15px; height: 15px; border-radius: 3px; margin-right: 4px;" alt="ACLEDA">ACLEDA
+                            </span>
+                            <span class="badge badge-light px-2 py-1 d-inline-flex align-items-center" style="border: 1px solid var(--admin-border); background: var(--admin-card-bg); color: var(--admin-text); font-weight: 500;">
+                                <img src="{{ url_for('static', filename='img/banks/wing.png') }}" style="width: 15px; height: 15px; border-radius: 3px; margin-right: 4px;" alt="Wing">Wing
+                            </span>
+                            <span class="badge badge-light px-2 py-1 d-inline-flex align-items-center" style="border: 1px solid var(--admin-border); background: var(--admin-card-bg); color: var(--admin-text); font-weight: 500;">
+                                <img src="{{ url_for('static', filename='img/banks/canadia.png') }}" style="width: 15px; height: 15px; border-radius: 3px; margin-right: 4px;" alt="Canadia">Canadia
+                            </span>
+                            <span class="badge badge-light px-2 py-1 d-inline-flex align-items-center" style="border: 1px solid var(--admin-border); background: var(--admin-card-bg); color: var(--admin-text); font-weight: 500;">
+                                <img src="{{ url_for('static', filename='img/banks/sathapana.png') }}" style="width: 15px; height: 15px; border-radius: 3px; margin-right: 4px;" alt="Sathapana">Sathapana
+                            </span>
+                            <span class="badge badge-light px-2 py-1 d-inline-flex align-items-center" style="border: 1px solid var(--admin-border); background: var(--admin-card-bg); color: var(--admin-text); font-weight: 500;">
+                                <img src="{{ url_for('static', filename='img/banks/chipmong.png') }}" style="width: 15px; height: 15px; border-radius: 3px; margin-right: 4px;" alt="Chip Mong">Chip Mong
+                            </span>
+                            <span class="badge badge-light px-2 py-1 d-inline-flex align-items-center" style="border: 1px solid var(--admin-border); background: var(--admin-card-bg); color: var(--admin-text); font-weight: 500;">
+                                <img src="{{ url_for('static', filename='img/banks/truemoney.png') }}" style="width: 15px; height: 15px; border-radius: 3px; margin-right: 4px;" alt="TrueMoney">TrueMoney
+                            </span>
+                            <span class="badge badge-light px-2 py-1 d-inline-flex align-items-center" style="border: 1px solid var(--admin-border); background: var(--admin-card-bg); color: var(--admin-text); font-weight: 500;">
+                                <img src="{{ url_for('static', filename='img/banks/bakong.png') }}" style="width: 15px; height: 15px; border-radius: 3px; margin-right: 4px;" alt="Bakong">Bakong
+                            </span>
+                        </div>
                     </div>
                 </form>
             </div>

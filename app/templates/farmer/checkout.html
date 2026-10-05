@@ -595,6 +595,15 @@
         letter-spacing: 0.02em;
     }
 
+    .payment-tab-btn .tab-bank-icon {
+        width: 19px;
+        height: 19px;
+        border-radius: 4px;
+        object-fit: cover;
+        display: inline-block;
+        flex-shrink: 0;
+    }
+
     /* Bakong KHQR Professional Card Styling */
     .khqr-card-container {
         display: flex;
@@ -1065,10 +1074,10 @@
 
     /* Supported Banks Strip */
     .khqr-banks-container {
-        margin-top: 1.25rem;
+        margin-top: 1.35rem;
         text-align: center;
         width: 100%;
-        max-width: 380px;
+        max-width: 440px;
         margin-left: auto;
         margin-right: auto;
     }
@@ -1079,33 +1088,74 @@
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.06em;
-        margin-bottom: 0.55rem;
+        margin-bottom: 0.65rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.6rem;
+    }
+
+    .khqr-banks-title::before,
+    .khqr-banks-title::after {
+        content: "";
+        height: 1px;
+        flex: 1;
+        background: #e4e4e7;
+    }
+
+    .dark-mode .khqr-banks-title::before,
+    .dark-mode .khqr-banks-title::after {
+        background: #3f3f46;
     }
 
     .khqr-banks-grid {
         display: flex;
         flex-wrap: wrap;
         justify-content: center;
-        gap: 0.4rem;
+        gap: 0.45rem;
     }
 
     .khqr-bank-chip {
-        padding: 0.28rem 0.6rem;
-        border-radius: 8px;
-        background: var(--checkout-container-bg, #f4f4f5);
+        padding: 0.32rem 0.65rem;
+        border-radius: 9999px;
+        background: var(--card-bg, #ffffff);
         border: 1px solid var(--border-light, #e4e4e7);
         font-size: 0.72rem;
         font-weight: 600;
         color: var(--text-main, #09090b);
         display: inline-flex;
         align-items: center;
-        gap: 0.3rem;
+        gap: 0.45rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        transition: all 0.2s ease;
+        user-select: none;
+    }
+
+    .khqr-bank-chip:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+        border-color: #cbd5e1;
     }
 
     .dark-mode .khqr-bank-chip {
         background: #27272a;
         border-color: #3f3f46;
-        color: #e4e4e7;
+        color: #f4f4f5;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+    }
+
+    .dark-mode .khqr-bank-chip:hover {
+        border-color: #52525b;
+    }
+
+    .khqr-bank-logo {
+        width: 18px;
+        height: 18px;
+        border-radius: 4px;
+        object-fit: cover;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+        display: inline-block;
+        flex-shrink: 0;
     }
 
     .paypal-gateway-container {
@@ -1353,7 +1403,7 @@
             <!-- Payment Method Tabs -->
             <div class="payment-tabs-wrapper">
                 <button type="button" class="payment-tab-btn is-active" id="tab_btn_bakong" onclick="switchPaymentMethod('bakong')">
-                    <i class="fas fa-qrcode text-danger"></i>
+                    <img src="{{ url_for('static', filename='img/banks/bakong.png') }}" class="tab-bank-icon" alt="Bakong KHQR">
                     <span>Bakong KHQR</span>
                     <span class="badge-pill-khqr">Fastest</span>
                 </button>
@@ -1461,12 +1511,38 @@
                 <div class="khqr-banks-container">
                     <div class="khqr-banks-title">Supported Cambodian Banking Apps</div>
                     <div class="khqr-banks-grid">
-                        <span class="khqr-bank-chip"><i class="fas fa-university text-danger mr-1"></i>Bakong</span>
-                        <span class="khqr-bank-chip"><i class="fas fa-bolt text-primary mr-1"></i>ABA Mobile</span>
-                        <span class="khqr-bank-chip"><i class="fas fa-check-circle text-info mr-1"></i>ACLEDA</span>
-                        <span class="khqr-bank-chip"><i class="fas fa-feather text-success mr-1"></i>Wing Bank</span>
-                        <span class="khqr-bank-chip"><i class="fas fa-building text-warning mr-1"></i>Canadia</span>
-                        <span class="khqr-bank-chip"><i class="fas fa-wallet text-secondary mr-1"></i>TrueMoney</span>
+                        <span class="khqr-bank-chip" title="ABA Bank Mobile">
+                            <img src="{{ url_for('static', filename='img/banks/aba.png') }}" class="khqr-bank-logo" alt="ABA Mobile">
+                            <span>ABA Mobile</span>
+                        </span>
+                        <span class="khqr-bank-chip" title="ACLEDA mobile">
+                            <img src="{{ url_for('static', filename='img/banks/acleda.png') }}" class="khqr-bank-logo" alt="ACLEDA mobile">
+                            <span>ACLEDA</span>
+                        </span>
+                        <span class="khqr-bank-chip" title="Wing Bank">
+                            <img src="{{ url_for('static', filename='img/banks/wing.png') }}" class="khqr-bank-logo" alt="Wing Bank">
+                            <span>Wing Bank</span>
+                        </span>
+                        <span class="khqr-bank-chip" title="Canadia Bank">
+                            <img src="{{ url_for('static', filename='img/banks/canadia.png') }}" class="khqr-bank-logo" alt="Canadia Bank">
+                            <span>Canadia</span>
+                        </span>
+                        <span class="khqr-bank-chip" title="Sathapana Mobile">
+                            <img src="{{ url_for('static', filename='img/banks/sathapana.png') }}" class="khqr-bank-logo" alt="Sathapana">
+                            <span>Sathapana</span>
+                        </span>
+                        <span class="khqr-bank-chip" title="Chip Mong Bank">
+                            <img src="{{ url_for('static', filename='img/banks/chipmong.png') }}" class="khqr-bank-logo" alt="Chip Mong">
+                            <span>Chip Mong</span>
+                        </span>
+                        <span class="khqr-bank-chip" title="TrueMoney Cambodia">
+                            <img src="{{ url_for('static', filename='img/banks/truemoney.png') }}" class="khqr-bank-logo" alt="TrueMoney">
+                            <span>TrueMoney</span>
+                        </span>
+                        <span class="khqr-bank-chip" title="Bakong App">
+                            <img src="{{ url_for('static', filename='img/banks/bakong.png') }}" class="khqr-bank-logo" alt="Bakong">
+                            <span>Bakong</span>
+                        </span>
                     </div>
                 </div>
             </div>
