@@ -47,6 +47,65 @@ def get_khqr_client() -> KHQR:
     return KHQR(bakong_token=config["token"])
 
 
+def generate_clean_khqr_image(qr_string: str, currency: str = "USD") -> str | None:
+    """
+    Generate an ultra-crisp, professional QR code image with the central Bakong currency badge,
+    sized and padded perfectly for in-app checkout display without redundant outer card framing.
+    """
+    try:
+        import base64
+        import io
+        from importlib import resources
+        from PIL import Image, ImageDraw
+        import qrcode
+
+        qr = qrcode.QRCode(
+            version=None,
+            error_correction=qrcode.constants.ERROR_CORRECT_M,
+            box_size=12,
+            border=2,
+        )
+        qr.add_data(qr_string)
+        qr.make(fit=True)
+        img = qr.make_image(fill_color="black", back_color="white").convert("RGBA")
+
+        asset_name = "USD.png" if (currency or "USD").upper() == "USD" else "KHR.png"
+        try:
+            icon_bytes = resources.files("bakong_khqr.sdk.assets").joinpath(asset_name).read_bytes()
+            icon = Image.open(io.BytesIO(icon_bytes)).convert("RGBA")
+        except Exception:
+            icon_bytes = resources.files("bakong_khqr.sdk.assets").joinpath("khqr.png").read_bytes()
+            icon = Image.open(io.BytesIO(icon_bytes)).convert("RGBA")
+
+        qr_w, qr_h = img.size
+        icon_w = max(24, int(qr_w * 0.22))
+        icon_h = icon_w
+        icon = icon.resize((icon_w, icon_h), Image.Resampling.LANCZOS)
+
+        pad = max(4, int(icon_w * 0.14))
+        badge_size = icon_w + pad * 2
+        badge = Image.new("RGBA", (badge_size, badge_size), (0, 0, 0, 0))
+        draw = ImageDraw.Draw(badge)
+        draw.rounded_rectangle(
+            [0, 0, badge_size, badge_size],
+            radius=int(badge_size * 0.28),
+            fill=(255, 255, 255, 255),
+            outline=(225, 36, 42, 230),
+            width=2,
+        )
+        badge.paste(icon, (pad, pad), icon)
+
+        offset = ((qr_w - badge_size) // 2, (qr_h - badge_size) // 2)
+        img.paste(badge, offset, badge)
+
+        buf = io.BytesIO()
+        img.save(buf, format="PNG", optimize=True)
+        return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode("utf-8")
+    except Exception as e:
+        logger.warning(f"Failed to generate clean KHQR image: {e}")
+        return None
+
+
 def create_khqr_payment(
     user: User,
     amount: float,
@@ -81,12 +140,14 @@ def create_khqr_payment(
             "message": f"Unable to generate Bakong QR code: {e!s}",
         }
 
-    # Generate styled QR image as data URI
-    try:
-        qr_image_data_uri = client.qr_image(str(res), format="base64_uri")
-    except Exception as e:  # noqa: BLE001
-        logger.warning(f"Failed to generate styled QR image, falling back: {e}")
-        qr_image_data_uri = None
+    # Generate clean, high-resolution QR image for UI display
+    qr_image_data_uri = generate_clean_khqr_image(str(res), currency=final_currency)
+    if not qr_image_data_uri:
+        try:
+            qr_image_data_uri = client.qr_image(str(res), format="base64_uri")
+        except Exception as e:  # noqa: BLE001
+            logger.warning(f"Failed to generate fallback QR image: {e}")
+            qr_image_data_uri = None
 
     # Generate Bakong mobile banking deep link
     try:

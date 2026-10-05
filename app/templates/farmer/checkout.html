@@ -595,7 +595,7 @@
         letter-spacing: 0.02em;
     }
 
-    /* Bakong KHQR Card Styling */
+    /* Bakong KHQR Professional Card Styling */
     .khqr-card-container {
         display: flex;
         flex-direction: column;
@@ -605,44 +605,85 @@
         margin: 0 auto;
         background: #ffffff;
         border: 2px solid #e1242a;
-        border-radius: 20px;
+        border-radius: 24px;
         overflow: hidden;
-        box-shadow: 0 12px 36px rgba(225, 36, 42, 0.14);
+        box-shadow: 0 16px 40px -10px rgba(225, 36, 42, 0.18), 0 4px 16px rgba(0, 0, 0, 0.04);
         position: relative;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .dark-mode .khqr-card-container {
+        background: #18181b;
+        border-color: #ef4444;
+        box-shadow: 0 16px 40px -10px rgba(239, 68, 68, 0.22), 0 4px 20px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Authentic NBC KHQR corner fold ribbon */
+    .khqr-corner-fold {
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 0;
+        height: 0;
+        border-style: solid;
+        border-width: 0 52px 52px 0;
+        border-color: transparent #991b1b transparent transparent;
+        filter: drop-shadow(-2px 2px 4px rgba(0, 0, 0, 0.22));
+        z-index: 10;
+        pointer-events: none;
     }
 
     .khqr-card-header {
         width: 100%;
-        background: #e1242a;
+        background: linear-gradient(135deg, #e1242a 0%, #dc2626 50%, #991b1b 100%);
         color: #ffffff;
-        padding: 0.75rem 1.1rem;
+        padding: 0.85rem 1.25rem;
         display: flex;
         align-items: center;
         justify-content: space-between;
+        position: relative;
     }
 
     .khqr-brand-title {
-        font-family: "Space Grotesk", sans-serif;
-        font-weight: 800;
-        font-size: 1.2rem;
-        letter-spacing: 0.05em;
-        margin: 0;
         display: flex;
         align-items: center;
-        gap: 0.45rem;
+        gap: 0.55rem;
+    }
+
+    .khqr-logo-box {
+        font-family: "Space Grotesk", sans-serif;
+        font-weight: 900;
+        font-size: 1.2rem;
+        letter-spacing: 0.08em;
+        background: #ffffff;
+        color: #e1242a;
+        padding: 0.15rem 0.65rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+        line-height: 1.2;
+    }
+
+    .khqr-brand-sub {
+        font-size: 0.8rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.92);
     }
 
     .khqr-emvco-tag {
-        font-size: 0.72rem;
+        font-size: 0.7rem;
         background: rgba(255, 255, 255, 0.2);
-        padding: 0.2rem 0.5rem;
-        border-radius: 6px;
-        font-weight: 600;
+        border: 1px solid rgba(255, 255, 255, 0.35);
+        padding: 0.2rem 0.55rem;
+        border-radius: 20px;
+        font-weight: 700;
         letter-spacing: 0.04em;
+        margin-right: 1.25rem;
     }
 
     .khqr-card-body {
-        padding: 1.25rem 1rem 1.1rem;
+        padding: 1.2rem 1.2rem 1.1rem;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -651,51 +692,172 @@
         background: #ffffff;
     }
 
+    .dark-mode .khqr-card-body {
+        background: #18181b;
+    }
+
     .khqr-merchant-info {
         text-align: center;
-        margin-bottom: 0.85rem;
+        margin-bottom: 0.95rem;
         width: 100%;
+    }
+
+    .khqr-merchant-name-wrap {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.35rem;
+        margin-bottom: 0.25rem;
     }
 
     .khqr-merchant-name {
         font-weight: 800;
-        font-size: 1.05rem;
+        font-size: 1.15rem;
         color: #09090b;
-        margin: 0 0 0.15rem 0;
         font-family: "Space Grotesk", "Kantumruy Pro", sans-serif;
+        letter-spacing: -0.01em;
+    }
+
+    .dark-mode .khqr-merchant-name {
+        color: #f4f4f5;
+    }
+
+    .khqr-verified-badge {
+        color: #3b82f6;
+        font-size: 0.9rem;
+    }
+
+    .khqr-account-chip-wrap {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        background: #f4f4f5;
+        border: 1px solid #e4e4e7;
+        padding: 0.2rem 0.6rem;
+        border-radius: 8px;
+    }
+
+    .dark-mode .khqr-account-chip-wrap {
+        background: #27272a;
+        border-color: #3f3f46;
     }
 
     .khqr-account-id {
-        font-size: 0.82rem;
-        color: #71717a;
-        font-family: "SF Mono", Menlo, monospace;
-        letter-spacing: 0.02em;
-        background: #f4f4f5;
-        padding: 0.15rem 0.55rem;
-        border-radius: 6px;
-        display: inline-block;
+        font-size: 0.8rem;
+        color: #52525b;
+        font-family: "SF Mono", Menlo, Consolas, monospace;
+        font-weight: 600;
     }
 
+    .dark-mode .khqr-account-id {
+        color: #a1a1aa;
+    }
+
+    .khqr-copy-btn {
+        background: none;
+        border: none;
+        padding: 0;
+        cursor: pointer;
+        color: #71717a;
+        font-size: 0.78rem;
+        display: flex;
+        align-items: center;
+        transition: color 0.15s ease;
+    }
+
+    .khqr-copy-btn:hover {
+        color: #e1242a;
+    }
+
+    /* Target Framing on QR Code Box */
     .khqr-qr-frame {
         position: relative;
-        background: #ffffff;
-        padding: 0.75rem;
-        border-radius: 16px;
-        border: 1px solid #f0f0f0;
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+        background: #ffffff !important;
+        padding: 0.85rem;
+        border-radius: 18px;
+        border: 1.5px solid #eaeaea;
+        box-shadow: 0 10px 30px -6px rgba(0, 0, 0, 0.08), inset 0 0 0 1px rgba(255, 255, 255, 0.9);
         display: flex;
         align-items: center;
         justify-content: center;
         width: 100%;
-        max-width: 270px;
-        min-height: 270px;
+        max-width: 260px;
+        aspect-ratio: 1 / 1;
+        overflow: hidden;
+    }
+
+    .dark-mode .khqr-qr-frame {
+        background: #ffffff !important;
+        border-color: #3f3f46;
+        box-shadow: 0 10px 30px -6px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Viewfinder corner brackets */
+    .khqr-bracket {
+        position: absolute;
+        width: 16px;
+        height: 16px;
+        border-color: #e1242a;
+        border-style: solid;
+        pointer-events: none;
+        z-index: 2;
+    }
+
+    .khqr-bracket-tl {
+        top: 6px;
+        left: 6px;
+        border-width: 3px 0 0 3px;
+        border-top-left-radius: 6px;
+    }
+
+    .khqr-bracket-tr {
+        top: 6px;
+        right: 6px;
+        border-width: 3px 3px 0 0;
+        border-top-right-radius: 6px;
+    }
+
+    .khqr-bracket-bl {
+        bottom: 6px;
+        left: 6px;
+        border-width: 0 0 3px 3px;
+        border-bottom-left-radius: 6px;
+    }
+
+    .khqr-bracket-br {
+        bottom: 6px;
+        right: 6px;
+        border-width: 0 3px 3px 0;
+        border-bottom-right-radius: 6px;
+    }
+
+    /* Subtle scanning laser line */
+    .khqr-scanline {
+        position: absolute;
+        left: 0.85rem;
+        right: 0.85rem;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, rgba(225, 36, 42, 0.7), transparent);
+        box-shadow: 0 0 8px rgba(225, 36, 42, 0.85);
+        border-radius: 2px;
+        pointer-events: none;
+        z-index: 3;
+        animation: khqrScanBeam 2.8s ease-in-out infinite alternate;
+    }
+
+    @keyframes khqrScanBeam {
+        0% { top: 0.85rem; opacity: 0; }
+        15% { opacity: 1; }
+        85% { opacity: 1; }
+        100% { top: calc(100% - 0.85rem); opacity: 0; }
     }
 
     .khqr-qr-image {
         width: 100%;
-        height: auto;
+        height: 100%;
+        object-fit: contain;
         display: block;
-        border-radius: 10px;
+        border-radius: 6px;
         transition: opacity 0.2s ease;
     }
 
@@ -703,8 +865,8 @@
         display: none;
         position: absolute;
         inset: 0;
-        background: rgba(255, 255, 255, 0.9);
-        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.92);
+        border-radius: 18px;
         flex-direction: column;
         align-items: center;
         justify-content: center;
@@ -712,33 +874,73 @@
         z-index: 5;
     }
 
+    .khqr-divider {
+        width: 100%;
+        position: relative;
+        margin: 1.15rem 0 0.85rem;
+        border-bottom: 2px dashed #e4e4e7;
+    }
+
+    .dark-mode .khqr-divider {
+        border-bottom-color: #3f3f46;
+    }
+
     .khqr-amount-box {
-        margin-top: 0.95rem;
         text-align: center;
         width: 100%;
     }
 
+    .khqr-amount-label {
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #71717a;
+        margin-bottom: 0.15rem;
+    }
+
+    .dark-mode .khqr-amount-label {
+        color: #a1a1aa;
+    }
+
     .khqr-amount-val {
-        font-size: 1.65rem;
+        font-size: 1.85rem;
         font-weight: 900;
         color: #e1242a;
         letter-spacing: -0.02em;
         margin: 0;
         font-family: "Space Grotesk", sans-serif;
+        line-height: 1.1;
+    }
+
+    .dark-mode .khqr-amount-val {
+        color: #ef4444;
+    }
+
+    .khqr-currency-tag {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #71717a;
+        margin-left: 0.2rem;
     }
 
     .khqr-amount-khr {
-        font-size: 0.84rem;
-        color: #71717a;
+        font-size: 0.86rem;
+        color: #52525b;
         font-weight: 600;
-        margin-top: 0.2rem;
+        margin-top: 0.25rem;
     }
 
-    .khqr-bill-number {
+    .dark-mode .khqr-amount-khr {
+        color: #d4d4d8;
+    }
+
+    .khqr-bill-number-wrap {
         font-size: 0.72rem;
         color: #a1a1aa;
-        margin-top: 0.35rem;
-        font-family: monospace;
+        margin-top: 0.4rem;
+        font-family: "SF Mono", Menlo, monospace;
+        letter-spacing: 0.02em;
     }
 
     /* Polling Status Radar */
@@ -747,9 +949,9 @@
         align-items: center;
         gap: 0.55rem;
         margin-top: 1rem;
-        padding: 0.45rem 1rem;
+        padding: 0.45rem 1.1rem;
         border-radius: 999px;
-        font-size: 0.82rem;
+        font-size: 0.8rem;
         font-weight: 600;
         background: rgba(225, 36, 42, 0.08);
         color: #e1242a;
@@ -781,37 +983,64 @@
     }
 
     .bakong-action-buttons {
-        display: flex;
-        gap: 0.6rem;
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 0.55rem;
         width: 100%;
         max-width: 380px;
-        margin: 1rem auto 0;
+        margin: 1.1rem auto 0;
+    }
+
+    @media (max-width: 480px) {
+        .bakong-action-buttons {
+            grid-template-columns: 1fr;
+        }
     }
 
     .bakong-btn {
-        flex: 1;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 0.45rem;
-        padding: 0.65rem 0.85rem;
+        gap: 0.4rem;
+        padding: 0.68rem 0.65rem;
         border-radius: 12px;
-        font-size: 0.84rem;
-        font-weight: 600;
+        font-size: 0.8rem;
+        font-weight: 700;
         cursor: pointer;
         text-decoration: none;
         border: 1px solid transparent;
         transition: all 0.2s ease;
+        text-align: center;
+        white-space: nowrap;
     }
 
     .bakong-btn-primary {
-        background: #e1242a;
+        background: linear-gradient(135deg, #e1242a 0%, #c71c22 100%);
         color: #ffffff !important;
-        box-shadow: 0 4px 14px rgba(225, 36, 42, 0.25);
+        box-shadow: 0 4px 14px rgba(225, 36, 42, 0.28);
     }
 
     .bakong-btn-primary:hover {
-        background: #c71c22;
+        background: #b91c1c;
+        transform: translateY(-1px);
+        text-decoration: none;
+    }
+
+    .bakong-btn-outline {
+        background: #ffffff;
+        color: #18181b !important;
+        border: 1.5px solid #e4e4e7;
+    }
+
+    .dark-mode .bakong-btn-outline {
+        background: #27272a;
+        color: #f4f4f5 !important;
+        border-color: #3f3f46;
+    }
+
+    .bakong-btn-outline:hover {
+        border-color: #e1242a;
+        color: #e1242a !important;
         transform: translateY(-1px);
         text-decoration: none;
     }
@@ -819,7 +1048,7 @@
     .bakong-btn-secondary {
         background: var(--card-bg, #ffffff);
         color: var(--text-main, #09090b) !important;
-        border-color: var(--border-light, #e4e4e7);
+        border: 1.5px solid var(--border-light, #e4e4e7);
     }
 
     .dark-mode .bakong-btn-secondary {
@@ -830,23 +1059,27 @@
 
     .bakong-btn-secondary:hover {
         background: var(--checkout-container-bg, #f4f4f5);
+        transform: translateY(-1px);
         text-decoration: none;
     }
 
     /* Supported Banks Strip */
     .khqr-banks-container {
-        margin-top: 1.15rem;
+        margin-top: 1.25rem;
         text-align: center;
         width: 100%;
+        max-width: 380px;
+        margin-left: auto;
+        margin-right: auto;
     }
 
     .khqr-banks-title {
-        font-size: 0.74rem;
+        font-size: 0.72rem;
         color: #71717a;
-        font-weight: 600;
+        font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
-        margin-bottom: 0.5rem;
+        letter-spacing: 0.06em;
+        margin-bottom: 0.55rem;
     }
 
     .khqr-banks-grid {
@@ -857,13 +1090,16 @@
     }
 
     .khqr-bank-chip {
-        padding: 0.22rem 0.55rem;
-        border-radius: 6px;
+        padding: 0.28rem 0.6rem;
+        border-radius: 8px;
         background: var(--checkout-container-bg, #f4f4f5);
         border: 1px solid var(--border-light, #e4e4e7);
-        font-size: 0.73rem;
+        font-size: 0.72rem;
         font-weight: 600;
         color: var(--text-main, #09090b);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
     }
 
     .dark-mode .khqr-bank-chip {
@@ -1137,36 +1373,63 @@
 
                 <!-- KHQR CARD -->
                 <div class="khqr-card-container">
+                    <!-- Authentic NBC Red Folded Corner -->
+                    <div class="khqr-corner-fold" title="Official NBC KHQR Standard"></div>
+
+                    <!-- Header -->
                     <div class="khqr-card-header">
                         <div class="khqr-brand-title">
-                            <i class="fas fa-qrcode"></i>
-                            <span>KHQR</span>
+                            <span class="khqr-logo-box">KHQR</span>
+                            <span class="khqr-brand-sub">Bakong</span>
                         </div>
                         <span class="khqr-emvco-tag"><i class="fas fa-shield-alt mr-1"></i>NBC EMVCo</span>
                     </div>
 
                     <div class="khqr-card-body">
+                        <!-- Merchant Header -->
                         <div class="khqr-merchant-info">
-                            <div class="khqr-merchant-name" id="khqr_merchant_name">{{ bakong_config.merchant_name if bakong_config else 'Seavik Mao' }}</div>
-                            <div class="khqr-account-id" id="khqr_account_id">{{ bakong_config.account_id if bakong_config else 'seavik_mao@bkrt' }}</div>
+                            <div class="khqr-merchant-name-wrap">
+                                <span class="khqr-merchant-name" id="khqr_merchant_name">{{ bakong_config.merchant_name if bakong_config else 'Seavik Mao' }}</span>
+                                <i class="fas fa-check-circle khqr-verified-badge" title="Verified Merchant"></i>
+                            </div>
+                            <div class="khqr-account-chip-wrap">
+                                <span class="khqr-account-id" id="khqr_account_id">{{ bakong_config.account_id if bakong_config else 'seavik_mao@bkrt' }}</span>
+                                <button type="button" class="khqr-copy-btn" onclick="copyBakongAccount()" title="Copy Account ID">
+                                    <i class="far fa-copy" id="icon_copy_account"></i>
+                                </button>
+                            </div>
                         </div>
 
-                        <!-- QR Code Frame -->
+                        <!-- Professional QR Frame with Target Viewfinder Brackets -->
                         <div class="khqr-qr-frame">
+                            <div class="khqr-bracket khqr-bracket-tl"></div>
+                            <div class="khqr-bracket khqr-bracket-tr"></div>
+                            <div class="khqr-bracket khqr-bracket-bl"></div>
+                            <div class="khqr-bracket khqr-bracket-br"></div>
+                            
+                            <!-- Laser scan pulse line -->
+                            <div class="khqr-scanline"></div>
+
                             <img id="bakong_qr_image" class="khqr-qr-image" 
                                  src="{{ initial_bakong.qr_image if initial_bakong and initial_bakong.qr_image else '' }}" 
                                  alt="Bakong KHQR Payment Code">
                             <div id="bakong_qr_spinner" class="khqr-qr-spinner">
                                 <i class="fas fa-circle-notch fa-spin fa-2x text-danger"></i>
-                                <span style="font-size: 0.8rem; font-weight: 600; color: #71717a;">Updating QR...</span>
+                                <span style="font-size: 0.8rem; font-weight: 600; color: #71717a;">Generating QR...</span>
                             </div>
                         </div>
 
+                        <!-- Perforated Receipt Divider -->
+                        <div class="khqr-divider"></div>
+
                         <!-- Amount Display -->
                         <div class="khqr-amount-box">
-                            <div class="khqr-amount-val" id="khqr_amount_display">${{ premium_price }} <span style="font-size: 0.95rem; font-weight: 700; color: #71717a;">USD</span></div>
+                            <div class="khqr-amount-label">TOTAL AMOUNT DUE</div>
+                            <div class="khqr-amount-val" id="khqr_amount_display">${{ premium_price }} <span class="khqr-currency-tag">USD</span></div>
                             <div class="khqr-amount-khr" id="khqr_amount_khr">≈ {{ "{:,.0f}".format(premium_price|float * 4100) }} KHR</div>
-                            <div class="khqr-bill-number" id="khqr_bill_number">Bill Ref: {{ initial_bakong.bill_number if initial_bakong else 'BILL-REF' }}</div>
+                            <div class="khqr-bill-number-wrap">
+                                <span id="khqr_bill_number">Ref: {{ initial_bakong.bill_number if initial_bakong else 'BILL-REF' }}</span>
+                            </div>
                         </div>
 
                         <!-- Polling Status Radar -->
@@ -1177,13 +1440,17 @@
                     </div>
                 </div>
 
-                <!-- Action Buttons: Deep Link & Check -->
+                <!-- Action Buttons: Deep Link, Save QR, and Check Status -->
                 <div class="bakong-action-buttons">
                     <a id="btn_bakong_deeplink" href="{{ initial_bakong.deeplink if initial_bakong and initial_bakong.deeplink else '#' }}" 
                        target="_blank" class="bakong-btn bakong-btn-primary">
                         <i class="fas fa-mobile-alt"></i>
-                        <span>Open in Banking App</span>
+                        <span>Open App</span>
                     </a>
+                    <button type="button" id="btn_download_qr" class="bakong-btn bakong-btn-outline" onclick="downloadBakongQR()">
+                        <i class="fas fa-download"></i>
+                        <span>Save QR</span>
+                    </button>
                     <button type="button" id="btn_check_bakong_now" class="bakong-btn bakong-btn-secondary" onclick="manualCheckBakongStatus()">
                         <i class="fas fa-sync-alt" id="icon_manual_check"></i>
                         <span>Check Status</span>
@@ -1356,6 +1623,38 @@ async function checkBakongStatus(isManual = false) {
 
 function manualCheckBakongStatus() {
     checkBakongStatus(true);
+}
+
+function copyBakongAccount() {
+    const accEl = document.getElementById("khqr_account_id");
+    const icon = document.getElementById("icon_copy_account");
+    if (!accEl) return;
+    const text = accEl.textContent.trim();
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text);
+    } else {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+    }
+    if (icon) {
+        icon.className = "fas fa-check text-success";
+        setTimeout(() => { icon.className = "far fa-copy"; }, 2000);
+    }
+}
+
+function downloadBakongQR() {
+    const qrImg = document.getElementById("bakong_qr_image");
+    if (!qrImg || !qrImg.src) return;
+    const link = document.createElement("a");
+    link.href = qrImg.src;
+    link.download = "Bakong-KHQR-Payment.png";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }
 
 function handlePaymentSuccess(redirectUrl) {
