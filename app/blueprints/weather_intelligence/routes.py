@@ -16,7 +16,6 @@ from app.services.weather_intelligence.service import (
 from app.utils.decorators import farmer_required
 from app.utils.i18n import get_current_language
 
-
 weather_intelligence_bp = Blueprint(
     "weather_intelligence",
     __name__,

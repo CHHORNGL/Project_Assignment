@@ -1,20 +1,34 @@
-import base64
+import datetime
 import random
 import string
-import datetime
 
-from flask import Blueprint, render_template, redirect, url_for, flash, request, session, make_response, jsonify
-from flask_login import login_user, current_user
+from flask import (
+    Blueprint,
+    flash,
+    jsonify,
+    make_response,
+    redirect,
+    render_template,
+    request,
+    session,
+    url_for,
+)
+from flask_login import current_user, login_user
 
+from app.blueprints.auth.routes import (
+    _redirect_with_theme,
+    _safe_next_url,
+    _send_verification_email,
+    _sync_client_theme_to_user,
+)
 from app.extensions import db
-from app.models.user import User
 from app.forms.auth_forms import LoginForm
-from app.services.theme_manager import resolve_active_runtime
+from app.models.user import User
 from app.services.passkey_service import (
     get_authentication_options_json,
     verify_authentication,
 )
-from app.blueprints.auth.routes import _send_verification_email, _safe_next_url, _sync_client_theme_to_user, _redirect_with_theme
+from app.services.theme_manager import resolve_active_runtime
 from app.utils.audit import audit_log
 
 staff_bp = Blueprint("staff", __name__, url_prefix="/staff")

@@ -1,0 +1,18 @@
+{
+  "include": ["app", "tests"],
+  "exclude": [".venv", "node_modules", "build", "dist"],
+  "venvPath": ".",
+  "venv": ".venv",
+  "pythonVersion": "3.14",
+  "reportCallIssue": "none",
+  "reportAttributeAccessIssue": "none",
+  "reportArgumentType": "none",
+  "reportOptionalMemberAccess": "none",
+  "reportGeneralTypeIssues": "none",
+  "reportPossiblyUnboundVariable": "none",
+  "reportIncompatibleMethodOverride": "none",
+  "reportOperatorIssue": "none",
+  "reportOptionalSubscript": "none",
+  "reportReturnType": "none",
+  "reportFunctionMemberAccess": "none"
+}

@@ -1,44 +1,48 @@
-from app.utils.input_validation import text_field, email_field, password_field, code_field, safe_next_url, InputValidationError
-from app.utils.audit import audit_log
-# app/blueprints/auth/routes.py
+import datetime
+import os
+import random
 
+# app/blueprints/auth/routes.py
 import re
 import secrets
-from typing import Optional
+import smtplib
+import string
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.utils import formatdate, make_msgid
 
 from flask import (
     Blueprint,
-    render_template,
-    redirect,
-    url_for,
     flash,
-    request,
-    session,
     jsonify,
     make_response,
+    redirect,
+    render_template,
+    request,
+    session,
+    url_for,
 )
-import random
-import string
-import datetime
-import smtplib
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-from email.utils import make_msgid, formatdate
-import os
-from flask_login import (
-    login_user,
-    logout_user,
-    current_user,
-    login_required
-)
-from sqlalchemy import or_
+from flask_login import current_user, login_required, login_user, logout_user
 
 from app.extensions import db, oauth
-from app.models.user import User
+from app.forms.auth_forms import (
+    ForgotPasswordForm,
+    LoginForm,
+    RegisterForm,
+    ResetPasswordForm,
+)
 from app.models.role import Role
-from app.forms.auth_forms import LoginForm, RegisterForm, ForgotPasswordForm, ResetPasswordForm
+from app.models.user import User
 from app.services.theme_manager import resolve_active_runtime
-
+from app.utils.audit import audit_log
+from app.utils.input_validation import (
+    InputValidationError,
+    code_field,
+    email_field,
+    password_field,
+    safe_next_url,
+    text_field,
+)
 
 auth_bp = Blueprint(
     "auth",
@@ -119,8 +123,8 @@ def _send_verification_email(email: str, code: str) -> bool:
     # Method 1: Brevo HTTPS API (Port 443 - never blocked by cloud firewalls like Railway)
     if brevo_api_key:
         try:
-            import urllib.request
             import json
+            import urllib.request
             api_url = "https://api.brevo.com/v3/smtp/email"
             req_headers = {
                 "accept": "application/json",
@@ -194,7 +198,7 @@ def _send_verification_email(email: str, code: str) -> bool:
     return email_sent
 
 
-def _safe_next_url(value: Optional[str]) -> Optional[str]:
+def _safe_next_url(value: str | None) -> str | None:
     return safe_next_url(value)
 
 
@@ -949,11 +953,12 @@ def google_callback():
 # WEBAUTHN PASSKEYS ROUTES 🔑
 # ==========================================
 from app.services.passkey_service import (
+    get_authentication_options_json,
     get_registration_options_json,
     verify_and_save_registration,
-    get_authentication_options_json,
     verify_authentication,
 )
+
 
 @auth_bp.route("/passkey/register/options", methods=["GET"])
 @login_required

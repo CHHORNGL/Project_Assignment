@@ -1,35 +1,26 @@
 # app/blueprints/expert/routes.py
 
-from flask import (
-    abort,
-    send_file,
-    render_template,
-    redirect,
-    url_for,
-    flash,
-    request
-)
-from flask_login import current_user, login_required
-from sqlalchemy import func   # ✅ needed for charts
+import re
 from datetime import datetime, timedelta
 from io import BytesIO
-import re
 
-from app.utils.decorators import role_required
+from flask import abort, flash, redirect, render_template, request, send_file, url_for
+from flask_login import current_user, login_required
+from sqlalchemy import func  # ✅ needed for charts
+
 from app.extensions import db
-
-from app.models.diagnosis import Diagnosis
 from app.models.chat_message import ChatMessage
 from app.models.chat_session import ChatSession
 from app.models.crop import Crop
+from app.models.diagnosis import Diagnosis
 from app.models.disease import Disease
 from app.models.rule import Rule
 from app.models.symptom import Symptom
 from app.models.user import User
-from app.services.notification_service import notify_user, _snippet
+from app.services.notification_service import _snippet, notify_user
+from app.utils.decorators import role_required
 
 from . import expert_bp
-
 
 DISEASE_IMAGE_MIME_BY_EXT = {
     ".jpg": "image/jpeg",

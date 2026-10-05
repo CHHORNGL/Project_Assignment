@@ -1,6 +1,6 @@
 # app/blueprints/main/routes.py
 
-from flask import Blueprint, redirect, url_for, request, session
+from flask import Blueprint, redirect, request, session, url_for
 from flask_login import current_user
 
 main_bp = Blueprint("main", __name__)

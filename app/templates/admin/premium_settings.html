@@ -356,6 +356,173 @@
         </div>
     </div>
 
+    <!-- ===============================
+         BAKONG KHQR PAYMENT GATEWAY
+    =============================== -->
+    <div class="row mt-2">
+        <!-- Configuration Card -->
+        <div class="col-lg-5 mb-4">
+            <div class="admin-panel h-100">
+                <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom" style="border-color: var(--admin-border) !important;">
+                    <h6 class="mb-0 font-weight-bold" style="color: var(--admin-text);">
+                        <i class="fas fa-qrcode text-danger mr-2"></i>Bakong KHQR Gateway Settings
+                    </h6>
+                    <span class="badge badge-pill badge-danger font-weight-bold px-2 py-1">Cambodia NBC</span>
+                </div>
+
+                <div id="bakong_test_alert" class="alert mb-3" style="display: none; font-size: 0.85rem;"></div>
+
+                <form method="POST">
+                    <input type="hidden" name="action" value="save_bakong">
+
+                    <!-- Bakong Account ID -->
+                    <div class="form-group mb-3">
+                        <label class="font-weight-bold small" style="color: var(--admin-text);">
+                            Bakong Account ID <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text" style="background: var(--admin-bg); border-color: var(--admin-border); color: var(--admin-muted);"><i class="fas fa-at"></i></span>
+                            </div>
+                            <input type="text" name="bakong_account_id" class="form-control font-weight-bold" 
+                                   style="background: var(--admin-bg); border-color: var(--admin-border); color: var(--admin-text);" 
+                                   value="{{ bakong_config.account_id if bakong_config else 'seavik_mao@bkrt' }}" placeholder="username@bank_code" required>
+                        </div>
+                        <small class="text-muted">The merchant account ID registered with Bakong (e.g. <code>seavik_mao@bkrt</code>).</small>
+                    </div>
+
+                    <!-- Merchant Name -->
+                    <div class="form-group mb-3">
+                        <label class="font-weight-bold small" style="color: var(--admin-text);">
+                            Merchant Display Name <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" name="bakong_merchant_name" class="form-control" 
+                               style="background: var(--admin-bg); border-color: var(--admin-border); color: var(--admin-text);" 
+                               value="{{ bakong_config.merchant_name if bakong_config else 'Seavik Mao' }}" placeholder="e.g. Seavik Mao" required>
+                    </div>
+
+                    <!-- Merchant City & Currency -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="font-weight-bold small" style="color: var(--admin-text);">Merchant City</label>
+                            <input type="text" name="bakong_merchant_city" class="form-control" 
+                                   style="background: var(--admin-bg); border-color: var(--admin-border); color: var(--admin-text);" 
+                                   value="{{ bakong_config.merchant_city if bakong_config else 'Phnom Penh' }}" placeholder="Phnom Penh">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="font-weight-bold small" style="color: var(--admin-text);">Settlement Currency</label>
+                            <select name="bakong_currency" class="custom-select" style="background: var(--admin-bg); border-color: var(--admin-border); color: var(--admin-text);">
+                                <option value="USD" {{ 'selected' if bakong_config and bakong_config.currency == 'USD' else '' }}>USD ($)</option>
+                                <option value="KHR" {{ 'selected' if bakong_config and bakong_config.currency == 'KHR' else '' }}>KHR (៛)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Store Label -->
+                    <div class="form-group mb-3">
+                        <label class="font-weight-bold small" style="color: var(--admin-text);">Store Label / Terminal</label>
+                        <input type="text" name="bakong_store_label" class="form-control" 
+                               style="background: var(--admin-bg); border-color: var(--admin-border); color: var(--admin-text);" 
+                               value="{{ bakong_config.store_label if bakong_config else 'Agri System Pro' }}" placeholder="Agri System Pro">
+                    </div>
+
+                    <!-- Bakong Developer Token -->
+                    <div class="form-group mb-3">
+                        <label class="font-weight-bold small" style="color: var(--admin-text);">
+                            Bakong Developer / Relay Token (JWT or RBK)
+                        </label>
+                        <div class="input-group">
+                            <input type="password" id="input_bakong_token" name="bakong_token" class="form-control font-monospace" 
+                                   style="background: var(--admin-bg); border-color: var(--admin-border); color: var(--admin-text); font-size: 0.8rem;" 
+                                   value="{{ bakong_config.token if bakong_config else '' }}" placeholder="Paste JWT or rbk_ token">
+                            <div class="input-group-append">
+                                <button type="button" class="btn btn-outline-secondary" onclick="toggleTokenVisibility()" style="border-color: var(--admin-border);">
+                                    <i class="fas fa-eye" id="icon_eye_token"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <small class="text-muted">Issued by National Bank of Cambodia (NBC) or KHQR.dev client portal.</small>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top" style="border-color: var(--admin-border) !important;">
+                        <button type="button" class="btn btn-outline-info btn-sm" id="btn_test_bakong" onclick="testBakongConnection()">
+                            <i class="fas fa-plug mr-1" id="icon_test_plug"></i> Test Connection
+                        </button>
+                        <button type="submit" class="btn btn-danger px-4" style="border-radius: 10px; font-weight: 600;">
+                            <i class="fas fa-save mr-1"></i> Save Bakong Config
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Recent Transactions Card -->
+        <div class="col-lg-7 mb-4">
+            <div class="admin-panel h-100">
+                <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom" style="border-color: var(--admin-border) !important;">
+                    <h6 class="mb-0 font-weight-bold" style="color: var(--admin-text);">
+                        <i class="fas fa-receipt text-success mr-2"></i>Recent KHQR Payment Transactions
+                    </h6>
+                    <span class="text-muted small">Real-time ledger</span>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table admin-table mb-0" style="color: var(--admin-text); font-size: 0.85rem;">
+                        <thead>
+                            <tr style="background: color-mix(in srgb, var(--admin-card) 90%, var(--admin-bg) 10%); border-bottom: 1px solid var(--admin-border);">
+                                <th>Bill Ref</th>
+                                <th>User</th>
+                                <th>Amount</th>
+                                <th>Interval</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if recent_transactions %}
+                                {% for tx in recent_transactions %}
+                                <tr style="border-bottom: 1px solid var(--admin-border);">
+                                    <td>
+                                        <code style="font-size: 0.76rem; color: var(--admin-text);">{{ tx.bill_number }}</code>
+                                    </td>
+                                    <td>
+                                        <span class="font-weight-bold">@{{ tx.user.username if tx.user else 'Unknown' }}</span>
+                                    </td>
+                                    <td class="font-weight-bold text-success">
+                                        ${{ "%.2f"|format(tx.amount or 0.0) }} {{ tx.currency }}
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-light" style="background: var(--admin-bg); color: var(--admin-text); border: 1px solid var(--admin-border);">
+                                            {{ tx.billing_interval|capitalize }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if tx.status == 'PAID' %}
+                                        <span class="badge badge-success px-2 py-1"><i class="fas fa-check-circle mr-1"></i>PAID</span>
+                                        {% else %}
+                                        <span class="badge badge-warning text-dark px-2 py-1"><i class="fas fa-clock mr-1"></i>PENDING</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-muted small">
+                                        {{ tx.created_at.strftime('%Y-%m-%d %H:%M') if tx.created_at else '' }}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="6" class="text-center py-4 text-muted">
+                                        <i class="fas fa-receipt fa-2x mb-2 d-block opacity-50"></i>
+                                        No transactions recorded yet. Transactions made via Bakong KHQR will appear here.
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 {% endblock %}
 
@@ -417,6 +584,59 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 });
+
+function toggleTokenVisibility() {
+    const input = document.getElementById("input_bakong_token");
+    const icon = document.getElementById("icon_eye_token");
+    if (!input || !icon) return;
+    if (input.type === "password") {
+        input.type = "text";
+        icon.className = "fas fa-eye-slash";
+    } else {
+        input.type = "password";
+        icon.className = "fas fa-eye";
+    }
+}
+
+async function testBakongConnection() {
+    const btn = document.getElementById("btn_test_bakong");
+    const icon = document.getElementById("icon_test_plug");
+    const alertBox = document.getElementById("bakong_test_alert");
+
+    if (btn) btn.disabled = true;
+    if (icon) icon.className = "fas fa-spinner fa-spin mr-1";
+    if (alertBox) alertBox.style.display = "none";
+
+    try {
+        const resp = await fetch("{{ url_for('admin.test_bakong_connection') }}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+        const data = await resp.json();
+
+        if (alertBox) {
+            alertBox.style.display = "block";
+            if (resp.ok && data.success) {
+                alertBox.className = "alert alert-success";
+                alertBox.innerHTML = '<i class="fas fa-check-circle mr-1"></i> ' + data.message;
+            } else {
+                alertBox.className = "alert alert-danger";
+                alertBox.innerHTML = '<i class="fas fa-exclamation-triangle mr-1"></i> ' + (data.message || "Failed to connect to Bakong NBC.");
+            }
+        }
+    } catch (err) {
+        if (alertBox) {
+            alertBox.style.display = "block";
+            alertBox.className = "alert alert-danger";
+            alertBox.innerHTML = '<i class="fas fa-exclamation-triangle mr-1"></i> Network error testing Bakong connection.';
+        }
+    } finally {
+        if (btn) btn.disabled = false;
+        if (icon) icon.className = "fas fa-plug mr-1";
+    }
+}
 </script>
 {% endblock %}
 

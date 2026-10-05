@@ -2,6 +2,7 @@ alembic==1.13.1
 annotated-types==0.8.0
 anyio==4.14.2
 Authlib==1.8.0
+bakong-khqr==0.6.5
 blinker==1.9.0
 boolean.py==5.0
 CacheControl==0.14.4
@@ -56,6 +57,7 @@ msgspec==0.21.1
 ordered-set==4.1.0
 packageurl-python==0.17.6
 packaging==26.3
+pillow==12.3.0
 pip-requirements-parser==32.0.1
 pip_api==0.0.35
 pip_audit==2.10.1
@@ -71,6 +73,7 @@ Pygments==2.21.0
 pyOpenSSL==26.4.0
 PyYAML==6.0.3
 pyparsing==3.3.2
+qrcode==8.2
 python-dotenv==1.2.3
 redis==7.4.1
 requests==2.34.2

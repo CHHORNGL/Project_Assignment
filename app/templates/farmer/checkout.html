@@ -530,12 +530,346 @@
         border-top-color: #27272a;
     }
 
-    /* Right Card: Payment Gateway */
+    /* Right Card: Payment Gateway & Method Tabs */
     .payment-instruction-text {
         font-size: 0.88rem;
         color: #71717a;
         line-height: 1.5;
         margin-bottom: 1.25rem;
+    }
+
+    .payment-tabs-wrapper {
+        display: flex;
+        gap: 0.5rem;
+        background: var(--checkout-container-bg, #f4f4f5);
+        padding: 0.35rem;
+        border-radius: 14px;
+        margin-bottom: 1.25rem;
+        border: 1px solid var(--border-light, #e4e4e7);
+    }
+
+    .dark-mode .payment-tabs-wrapper {
+        border-color: #27272a;
+    }
+
+    .payment-tab-btn {
+        flex: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.65rem 0.85rem;
+        border-radius: 10px;
+        border: none;
+        background: transparent;
+        color: #71717a;
+        font-weight: 600;
+        font-size: 0.88rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .payment-tab-btn:hover {
+        color: var(--text-main, #09090b);
+    }
+
+    .payment-tab-btn.is-active {
+        background: var(--card-bg, #ffffff);
+        color: #09090b;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .dark-mode .payment-tab-btn.is-active {
+        background: #27272a;
+        color: #f4f4f5;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    }
+
+    .payment-tab-btn .badge-pill-khqr {
+        background: #e1242a;
+        color: #ffffff;
+        font-size: 0.7rem;
+        padding: 0.15rem 0.45rem;
+        border-radius: 6px;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+    }
+
+    /* Bakong KHQR Card Styling */
+    .khqr-card-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        max-width: 380px;
+        margin: 0 auto;
+        background: #ffffff;
+        border: 2px solid #e1242a;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 12px 36px rgba(225, 36, 42, 0.14);
+        position: relative;
+    }
+
+    .khqr-card-header {
+        width: 100%;
+        background: #e1242a;
+        color: #ffffff;
+        padding: 0.75rem 1.1rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .khqr-brand-title {
+        font-family: "Space Grotesk", sans-serif;
+        font-weight: 800;
+        font-size: 1.2rem;
+        letter-spacing: 0.05em;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+    }
+
+    .khqr-emvco-tag {
+        font-size: 0.72rem;
+        background: rgba(255, 255, 255, 0.2);
+        padding: 0.2rem 0.5rem;
+        border-radius: 6px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+    }
+
+    .khqr-card-body {
+        padding: 1.25rem 1rem 1.1rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        box-sizing: border-box;
+        background: #ffffff;
+    }
+
+    .khqr-merchant-info {
+        text-align: center;
+        margin-bottom: 0.85rem;
+        width: 100%;
+    }
+
+    .khqr-merchant-name {
+        font-weight: 800;
+        font-size: 1.05rem;
+        color: #09090b;
+        margin: 0 0 0.15rem 0;
+        font-family: "Space Grotesk", "Kantumruy Pro", sans-serif;
+    }
+
+    .khqr-account-id {
+        font-size: 0.82rem;
+        color: #71717a;
+        font-family: "SF Mono", Menlo, monospace;
+        letter-spacing: 0.02em;
+        background: #f4f4f5;
+        padding: 0.15rem 0.55rem;
+        border-radius: 6px;
+        display: inline-block;
+    }
+
+    .khqr-qr-frame {
+        position: relative;
+        background: #ffffff;
+        padding: 0.75rem;
+        border-radius: 16px;
+        border: 1px solid #f0f0f0;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        max-width: 270px;
+        min-height: 270px;
+    }
+
+    .khqr-qr-image {
+        width: 100%;
+        height: auto;
+        display: block;
+        border-radius: 10px;
+        transition: opacity 0.2s ease;
+    }
+
+    .khqr-qr-spinner {
+        display: none;
+        position: absolute;
+        inset: 0;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 16px;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        z-index: 5;
+    }
+
+    .khqr-amount-box {
+        margin-top: 0.95rem;
+        text-align: center;
+        width: 100%;
+    }
+
+    .khqr-amount-val {
+        font-size: 1.65rem;
+        font-weight: 900;
+        color: #e1242a;
+        letter-spacing: -0.02em;
+        margin: 0;
+        font-family: "Space Grotesk", sans-serif;
+    }
+
+    .khqr-amount-khr {
+        font-size: 0.84rem;
+        color: #71717a;
+        font-weight: 600;
+        margin-top: 0.2rem;
+    }
+
+    .khqr-bill-number {
+        font-size: 0.72rem;
+        color: #a1a1aa;
+        margin-top: 0.35rem;
+        font-family: monospace;
+    }
+
+    /* Polling Status Radar */
+    .bakong-status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        margin-top: 1rem;
+        padding: 0.45rem 1rem;
+        border-radius: 999px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        background: rgba(225, 36, 42, 0.08);
+        color: #e1242a;
+        border: 1px solid rgba(225, 36, 42, 0.25);
+        transition: all 0.3s ease;
+    }
+
+    .bakong-status-badge.is-success {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+        border-color: rgba(16, 185, 129, 0.3);
+    }
+
+    .radar-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #e1242a;
+        display: inline-block;
+        box-shadow: 0 0 0 rgba(225, 36, 42, 0.6);
+        animation: radarPulse 1.8s infinite;
+        flex-shrink: 0;
+    }
+
+    @keyframes radarPulse {
+        0% { box-shadow: 0 0 0 0 rgba(225, 36, 42, 0.6); }
+        70% { box-shadow: 0 0 0 8px rgba(225, 36, 42, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(225, 36, 42, 0); }
+    }
+
+    .bakong-action-buttons {
+        display: flex;
+        gap: 0.6rem;
+        width: 100%;
+        max-width: 380px;
+        margin: 1rem auto 0;
+    }
+
+    .bakong-btn {
+        flex: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.45rem;
+        padding: 0.65rem 0.85rem;
+        border-radius: 12px;
+        font-size: 0.84rem;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        border: 1px solid transparent;
+        transition: all 0.2s ease;
+    }
+
+    .bakong-btn-primary {
+        background: #e1242a;
+        color: #ffffff !important;
+        box-shadow: 0 4px 14px rgba(225, 36, 42, 0.25);
+    }
+
+    .bakong-btn-primary:hover {
+        background: #c71c22;
+        transform: translateY(-1px);
+        text-decoration: none;
+    }
+
+    .bakong-btn-secondary {
+        background: var(--card-bg, #ffffff);
+        color: var(--text-main, #09090b) !important;
+        border-color: var(--border-light, #e4e4e7);
+    }
+
+    .dark-mode .bakong-btn-secondary {
+        background: #27272a;
+        border-color: #3f3f46;
+        color: #f4f4f5 !important;
+    }
+
+    .bakong-btn-secondary:hover {
+        background: var(--checkout-container-bg, #f4f4f5);
+        text-decoration: none;
+    }
+
+    /* Supported Banks Strip */
+    .khqr-banks-container {
+        margin-top: 1.15rem;
+        text-align: center;
+        width: 100%;
+    }
+
+    .khqr-banks-title {
+        font-size: 0.74rem;
+        color: #71717a;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.5rem;
+    }
+
+    .khqr-banks-grid {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.4rem;
+    }
+
+    .khqr-bank-chip {
+        padding: 0.22rem 0.55rem;
+        border-radius: 6px;
+        background: var(--checkout-container-bg, #f4f4f5);
+        border: 1px solid var(--border-light, #e4e4e7);
+        font-size: 0.73rem;
+        font-weight: 600;
+        color: var(--text-main, #09090b);
+    }
+
+    .dark-mode .khqr-bank-chip {
+        background: #27272a;
+        border-color: #3f3f46;
+        color: #e4e4e7;
     }
 
     .paypal-gateway-container {
@@ -560,13 +894,26 @@
     .payment-success-overlay {
         display: none;
         text-align: center;
-        padding: 2rem 1rem;
+        padding: 2.25rem 1.25rem;
         background: var(--card-bg, #ffffff);
         border-radius: 16px;
     }
 
     .dark-mode .payment-success-overlay {
         background: #18181b;
+    }
+
+    .payment-success-icon-wrap {
+        width: 64px;
+        height: 64px;
+        margin: 0 auto 1rem;
+        border-radius: 50%;
+        background: rgba(16, 185, 129, 0.15);
+        color: #10b981;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
     }
 
     /* Trust & Guarantee List in Checkout */
@@ -765,43 +1112,128 @@
             </div>
         </div>
 
-        <!-- RIGHT COLUMN: PAYMENT GATEWAY -->
+        <!-- RIGHT COLUMN: PAYMENT GATEWAY (Bakong KHQR + PayPal) -->
         <div class="checkout-card">
-            <div class="checkout-card-header">
-                <h3 class="checkout-card-title">
+            <!-- Payment Method Tabs -->
+            <div class="payment-tabs-wrapper">
+                <button type="button" class="payment-tab-btn is-active" id="tab_btn_bakong" onclick="switchPaymentMethod('bakong')">
+                    <i class="fas fa-qrcode text-danger"></i>
+                    <span>Bakong KHQR</span>
+                    <span class="badge-pill-khqr">Fastest</span>
+                </button>
+                <button type="button" class="payment-tab-btn" id="tab_btn_paypal" onclick="switchPaymentMethod('paypal')">
                     <i class="fab fa-paypal text-primary"></i>
-                    <span>{{ t("payment_method")|default("Payment Method") }}</span>
-                </h3>
-                <div style="display: flex; gap: 0.5rem; font-size: 1.3rem; color: #71717a;">
-                    <i class="fab fa-cc-paypal" title="PayPal"></i>
-                    <i class="fab fa-cc-visa" title="Visa"></i>
-                    <i class="fab fa-cc-mastercard" title="Mastercard"></i>
+                    <span>PayPal / Cards</span>
+                </button>
+            </div>
+
+            <!-- ==============================================
+                 PANE 1: BAKONG KHQR PAYMENT (DEFAULT)
+                 ============================================== -->
+            <div id="payment_pane_bakong">
+                <p class="payment-instruction-text text-center mb-3">
+                    Scan with <strong>any Cambodian Mobile Banking App</strong> (ABA, ACLEDA, Wing, Canadia, Bakong, etc.). Your Pro membership activates instantly!
+                </p>
+
+                <!-- KHQR CARD -->
+                <div class="khqr-card-container">
+                    <div class="khqr-card-header">
+                        <div class="khqr-brand-title">
+                            <i class="fas fa-qrcode"></i>
+                            <span>KHQR</span>
+                        </div>
+                        <span class="khqr-emvco-tag"><i class="fas fa-shield-alt mr-1"></i>NBC EMVCo</span>
+                    </div>
+
+                    <div class="khqr-card-body">
+                        <div class="khqr-merchant-info">
+                            <div class="khqr-merchant-name" id="khqr_merchant_name">{{ bakong_config.merchant_name if bakong_config else 'Seavik Mao' }}</div>
+                            <div class="khqr-account-id" id="khqr_account_id">{{ bakong_config.account_id if bakong_config else 'seavik_mao@bkrt' }}</div>
+                        </div>
+
+                        <!-- QR Code Frame -->
+                        <div class="khqr-qr-frame">
+                            <img id="bakong_qr_image" class="khqr-qr-image" 
+                                 src="{{ initial_bakong.qr_image if initial_bakong and initial_bakong.qr_image else '' }}" 
+                                 alt="Bakong KHQR Payment Code">
+                            <div id="bakong_qr_spinner" class="khqr-qr-spinner">
+                                <i class="fas fa-circle-notch fa-spin fa-2x text-danger"></i>
+                                <span style="font-size: 0.8rem; font-weight: 600; color: #71717a;">Updating QR...</span>
+                            </div>
+                        </div>
+
+                        <!-- Amount Display -->
+                        <div class="khqr-amount-box">
+                            <div class="khqr-amount-val" id="khqr_amount_display">${{ premium_price }} <span style="font-size: 0.95rem; font-weight: 700; color: #71717a;">USD</span></div>
+                            <div class="khqr-amount-khr" id="khqr_amount_khr">≈ {{ "{:,.0f}".format(premium_price|float * 4100) }} KHR</div>
+                            <div class="khqr-bill-number" id="khqr_bill_number">Bill Ref: {{ initial_bakong.bill_number if initial_bakong else 'BILL-REF' }}</div>
+                        </div>
+
+                        <!-- Polling Status Radar -->
+                        <div class="bakong-status-badge" id="bakong_status_badge">
+                            <span class="radar-dot" id="bakong_radar_dot"></span>
+                            <span id="bakong_status_label">Waiting for payment... (auto-checking)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons: Deep Link & Check -->
+                <div class="bakong-action-buttons">
+                    <a id="btn_bakong_deeplink" href="{{ initial_bakong.deeplink if initial_bakong and initial_bakong.deeplink else '#' }}" 
+                       target="_blank" class="bakong-btn bakong-btn-primary">
+                        <i class="fas fa-mobile-alt"></i>
+                        <span>Open in Banking App</span>
+                    </a>
+                    <button type="button" id="btn_check_bakong_now" class="bakong-btn bakong-btn-secondary" onclick="manualCheckBakongStatus()">
+                        <i class="fas fa-sync-alt" id="icon_manual_check"></i>
+                        <span>Check Status</span>
+                    </button>
+                </div>
+
+                <!-- Supported Cambodian Banks Strip -->
+                <div class="khqr-banks-container">
+                    <div class="khqr-banks-title">Supported Cambodian Banking Apps</div>
+                    <div class="khqr-banks-grid">
+                        <span class="khqr-bank-chip"><i class="fas fa-university text-danger mr-1"></i>Bakong</span>
+                        <span class="khqr-bank-chip"><i class="fas fa-bolt text-primary mr-1"></i>ABA Mobile</span>
+                        <span class="khqr-bank-chip"><i class="fas fa-check-circle text-info mr-1"></i>ACLEDA</span>
+                        <span class="khqr-bank-chip"><i class="fas fa-feather text-success mr-1"></i>Wing Bank</span>
+                        <span class="khqr-bank-chip"><i class="fas fa-building text-warning mr-1"></i>Canadia</span>
+                        <span class="khqr-bank-chip"><i class="fas fa-wallet text-secondary mr-1"></i>TrueMoney</span>
+                    </div>
                 </div>
             </div>
 
-            <p class="payment-instruction-text">
-                Pay securely using your PayPal balance, debit, or credit card. Your Pro membership unlocks instantly upon approval.
-            </p>
+            <!-- ==============================================
+                 PANE 2: PAYPAL GATEWAY (ALTERNATIVE)
+                 ============================================== -->
+            <div id="payment_pane_paypal" style="display: none;">
+                <p class="payment-instruction-text">
+                    Pay securely using your PayPal balance, debit, or international credit card.
+                </p>
 
-            <!-- Processing Overlay -->
+                <!-- PayPal Button Mount -->
+                <div class="paypal-gateway-container" id="paypal-wrapper">
+                    <div id="paypal-loading-spinner" class="payment-loading-box">
+                        <i class="fas fa-circle-notch fa-spin fa-2x text-primary mb-2"></i>
+                        <div style="font-size: 0.9rem; font-weight: 600;">Connecting to PayPal gateway...</div>
+                    </div>
+                    <div id="paypal-button-container"></div>
+                </div>
+            </div>
+
+            <!-- Success Overlay Animation (Applies to both) -->
             <div id="payment-processing" class="payment-success-overlay">
-                <i class="fas fa-circle-notch fa-spin fa-2x text-primary mb-3"></i>
-                <h4 style="font-weight: 700; color: var(--text-main, #09090b); margin-bottom: 0.5rem;">Processing Payment...</h4>
-                <p style="color: #71717a; font-size: 0.9rem;">
-                    Activating your Pro membership and preparing your smart farming tools...
+                <div class="payment-success-icon-wrap" id="payment_icon_wrap">
+                    <i class="fas fa-check-circle" id="payment_success_icon"></i>
+                </div>
+                <h4 style="font-weight: 800; color: var(--text-main, #09090b); margin-bottom: 0.5rem;" id="payment_success_title">Payment Confirmed!</h4>
+                <p style="color: #71717a; font-size: 0.92rem; margin-bottom: 0;" id="payment_success_subtitle">
+                    Upgrading your account to VIP Pro... Redirecting to dashboard now.
                 </p>
             </div>
 
-            <!-- PayPal Button Mount -->
-            <div class="paypal-gateway-container" id="paypal-wrapper">
-                <div id="paypal-loading-spinner" class="payment-loading-box">
-                    <i class="fas fa-circle-notch fa-spin fa-2x text-primary mb-2"></i>
-                    <div style="font-size: 0.9rem; font-weight: 600;">Connecting to secure gateway...</div>
-                </div>
-                <div id="paypal-button-container"></div>
-            </div>
-
-            <!-- Hidden Submission Form -->
+            <!-- Hidden Submission Form for PayPal -->
             <form id="paypal-success-form" method="POST" action="{{ url_for('farmer.premium_checkout', billing=billing_interval) }}" style="display: none;">
                 <input type="hidden" name="paypal_order_id" id="paypal_order_id">
                 <input type="hidden" name="applied_coupon_code" id="applied_coupon_code" value="">
@@ -819,19 +1251,13 @@
                 <div class="checkout-trust-item">
                     <i class="fas fa-lock"></i>
                     <div>
-                        <strong>Bank-Grade Encryption:</strong> Your transaction is processed through encrypted SSL gateways.
+                        <strong>National NBC KHQR Security:</strong> Real-time encrypted settlement verified directly by the National Bank of Cambodia.
                     </div>
                 </div>
                 <div class="checkout-trust-item">
                     <i class="fas fa-bolt"></i>
                     <div>
-                        <strong>Instant Activation:</strong> All premium features unlock immediately after approval.
-                    </div>
-                </div>
-                <div class="checkout-trust-item">
-                    <i class="fas fa-calendar-check"></i>
-                    <div>
-                        <strong>Cancel Anytime:</strong> Easily manage or cancel your subscription anytime with one click.
+                        <strong>Instant Activation:</strong> All premium features unlock immediately upon scanning.
                     </div>
                 </div>
             </div>
@@ -848,6 +1274,162 @@
 let currentFinalPrice = "{{ premium_price }}";
 let basePrice = "{{ premium_price }}";
 let appliedCoupon = "";
+let currentBakongMd5 = "{{ initial_bakong.md5 if initial_bakong and initial_bakong.md5 else '' }}";
+let bakongPollInterval = null;
+let activePaymentMethod = "bakong";
+
+function switchPaymentMethod(method) {
+    activePaymentMethod = method;
+    const tabBakong = document.getElementById("tab_btn_bakong");
+    const tabPaypal = document.getElementById("tab_btn_paypal");
+    const paneBakong = document.getElementById("payment_pane_bakong");
+    const panePaypal = document.getElementById("payment_pane_paypal");
+
+    if (method === "bakong") {
+        tabBakong.classList.add("is-active");
+        tabPaypal.classList.remove("is-active");
+        paneBakong.style.display = "block";
+        panePaypal.style.display = "none";
+        startBakongPolling();
+    } else {
+        tabPaypal.classList.add("is-active");
+        tabBakong.classList.remove("is-active");
+        panePaypal.style.display = "block";
+        paneBakong.style.display = "none";
+        stopBakongPolling();
+    }
+}
+
+function startBakongPolling() {
+    stopBakongPolling();
+    if (!currentBakongMd5) return;
+    
+    bakongPollInterval = setInterval(async function() {
+        await checkBakongStatus(false);
+    }, 3000);
+}
+
+function stopBakongPolling() {
+    if (bakongPollInterval) {
+        clearInterval(bakongPollInterval);
+        bakongPollInterval = null;
+    }
+}
+
+async function checkBakongStatus(isManual = false) {
+    if (!currentBakongMd5) return;
+
+    const iconCheck = document.getElementById("icon_manual_check");
+    if (isManual && iconCheck) {
+        iconCheck.classList.add("fa-spin");
+    }
+
+    try {
+        const url = "{{ url_for('farmer.check_bakong_status', md5='MD5_PLACEHOLDER') }}".replace("MD5_PLACEHOLDER", currentBakongMd5);
+        const resp = await fetch(url, { method: "POST" });
+        const data = await resp.json();
+
+        if (data && data.status === "PAID") {
+            stopBakongPolling();
+            handlePaymentSuccess(data.redirect_url || "{{ url_for('farmer.dashboard') }}");
+            return;
+        }
+
+        if (isManual) {
+            const badge = document.getElementById("bakong_status_badge");
+            const label = document.getElementById("bakong_status_label");
+            if (label) {
+                label.textContent = "Payment not received yet. Please scan and complete in your banking app.";
+                setTimeout(() => {
+                    label.textContent = "Waiting for payment... (auto-checking)";
+                }, 3500);
+            }
+        }
+    } catch (e) {
+        console.warn("Bakong polling note:", e);
+    } finally {
+        if (isManual && iconCheck) {
+            iconCheck.classList.remove("fa-spin");
+        }
+    }
+}
+
+function manualCheckBakongStatus() {
+    checkBakongStatus(true);
+}
+
+function handlePaymentSuccess(redirectUrl) {
+    const paneBakong = document.getElementById("payment_pane_bakong");
+    const panePaypal = document.getElementById("payment_pane_paypal");
+    const processing = document.getElementById("payment-processing");
+    const badge = document.getElementById("bakong_status_badge");
+    const radar = document.getElementById("bakong_radar_dot");
+    const label = document.getElementById("bakong_status_label");
+
+    if (paneBakong) paneBakong.style.display = "none";
+    if (panePaypal) panePaypal.style.display = "none";
+    if (processing) processing.style.display = "block";
+
+    setTimeout(function() {
+        window.location.href = redirectUrl;
+    }, 1800);
+}
+
+async function refreshBakongQR() {
+    const spinner = document.getElementById("bakong_qr_spinner");
+    if (spinner) spinner.style.display = "flex";
+
+    try {
+        const resp = await fetch("{{ url_for('farmer.generate_bakong_qr') }}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                billing_interval: "{{ billing_interval }}",
+                coupon_code: appliedCoupon
+            })
+        });
+
+        const data = await resp.json();
+        if (data && data.success) {
+            currentBakongMd5 = data.md5;
+
+            const qrImg = document.getElementById("bakong_qr_image");
+            if (qrImg && data.qr_image) {
+                qrImg.src = data.qr_image;
+            }
+
+            const amtDisplay = document.getElementById("khqr_amount_display");
+            if (amtDisplay) {
+                amtDisplay.innerHTML = "$" + Number(data.amount).toFixed(2) + ' <span style="font-size: 0.95rem; font-weight: 700; color: #71717a;">USD</span>';
+            }
+
+            const amtKhr = document.getElementById("khqr_amount_khr");
+            if (amtKhr) {
+                amtKhr.textContent = "≈ " + (Math.round(data.amount * 4100)).toLocaleString() + " KHR";
+            }
+
+            const billRef = document.getElementById("khqr_bill_number");
+            if (billRef && data.bill_number) {
+                billRef.textContent = "Bill Ref: " + data.bill_number;
+            }
+
+            const deepLinkBtn = document.getElementById("btn_bakong_deeplink");
+            if (deepLinkBtn && data.deeplink) {
+                deepLinkBtn.href = data.deeplink;
+            }
+
+            if (activePaymentMethod === "bakong") {
+                startBakongPolling();
+            }
+        }
+    } catch (err) {
+        console.error("Error refreshing Bakong QR:", err);
+    } finally {
+        if (spinner) spinner.style.display = "none";
+    }
+}
 
 function removeCoupon() {
     appliedCoupon = "";
@@ -869,6 +1451,9 @@ function removeCoupon() {
     if (couponFeedback) {
         couponFeedback.style.display = "none";
     }
+
+    // Refresh Bakong QR for the updated base price
+    refreshBakongQR();
 }
 
 document.addEventListener("DOMContentLoaded", function() {
@@ -883,6 +1468,9 @@ document.addEventListener("DOMContentLoaded", function() {
     const loadingSpinner = document.getElementById("paypal-loading-spinner");
     const processingOverlay = document.getElementById("payment-processing");
     const paypalWrapper = document.getElementById("paypal-wrapper");
+
+    // Start auto polling for Bakong KHQR
+    startBakongPolling();
 
     // Enter key triggers coupon apply
     if (couponInput) {
@@ -912,7 +1500,10 @@ document.addEventListener("DOMContentLoaded", function() {
                     headers: {
                         "Content-Type": "application/json"
                     },
-                    body: JSON.stringify({ code: code })
+                    body: JSON.stringify({
+                        code: code,
+                        billing_interval: "{{ billing_interval }}"
+                    })
                 });
 
                 const data = await response.json();
@@ -930,6 +1521,9 @@ document.addEventListener("DOMContentLoaded", function() {
                     showFeedback("✓ " + data.message, "text-success font-weight-bold");
                     couponInput.disabled = true;
                     btnApply.style.display = "none";
+
+                    // Re-generate Bakong QR with discounted amount
+                    refreshBakongQR();
                 } else {
                     showFeedback(data.message || "Invalid coupon code.", "text-danger");
                 }

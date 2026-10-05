@@ -1,56 +1,61 @@
 # app/blueprints/admin/routes.py
 
-import os
 import csv
 import json
-import secrets
-import zipfile
+import os
+import random
 import re
-from datetime import datetime
-from io import StringIO, BytesIO
+import secrets
+import string
+import time
+import zipfile
+from datetime import datetime, timedelta, timezone
+from functools import wraps
+from io import BytesIO, StringIO
 
 from flask import (
     Blueprint,
-    render_template,
-    redirect,
-    url_for,
-    flash,
-    request,
     Response,
-    jsonify,
     abort,
     current_app,
+    flash,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    url_for,
 )
-from flask_login import login_required, current_user
-from sqlalchemy import or_, func
+from flask_login import current_user, login_required
+from sqlalchemy import func, or_
 from sqlalchemy.exc import IntegrityError
 
 from app.extensions import db
-from app.utils.decorators import permission_required, admin_required
-from app.utils.i18n import t
-
-from app.models.user import User
-from app.models.role import Role
-from app.models.permission import Permission
 from app.models.associations import user_roles
 from app.models.audit_log import AuditLog
-from app.models.support_request import SupportRequest
-from app.models.site_setting import SiteSetting
-from app.models.diagnosis import Diagnosis
 from app.models.chat_message import ChatMessage
 from app.models.crop import Crop
+from app.models.diagnosis import Diagnosis
 from app.models.disease import Disease
+from app.models.payment_transaction import PaymentTransaction
+from app.models.permission import Permission
+from app.models.premium_coupon import PremiumCoupon
+from app.models.promo import PromoCode
+from app.models.role import Role
+from app.models.site_setting import SiteSetting
+from app.models.support_request import SupportRequest
 from app.models.symptom import Symptom
 from app.models.translation_backup import TranslationBackup
-from app.models.support_request import SupportRequest
-from app.models.theme import ThemeProfile, ThemeSchedule
+from app.models.user import User
+from app.services.ai_expert_service import is_valid_inference_endpoint, request_endpoint
+from app.services.bakong_service import get_bakong_config, get_khqr_client
+from app.services.notification_service import _snippet, notify_user
 from app.services.translator import translate_to_khmer
-from app.services.notification_service import notify_user, _snippet
-from app.services.seasonal_theme import (
-    SeasonalThemeError,
-    build_seasonal_suggestions,
-    fetch_seasonal_events,
-)
+from app.utils.decorators import admin_required, permission_required
+from app.utils.i18n import t
+
+
+def _now_dt() -> datetime:
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 admin_bp = Blueprint(
     "admin",
@@ -116,11 +121,6 @@ def _zip_response(files, filename):
 @login_required
 @admin_required
 def premium_settings():
-    from app.models.site_setting import SiteSetting
-    from app.models.user import User
-    from app.models.premium_coupon import PremiumCoupon
-    from datetime import datetime
-
     def get_or_set_setting(key, value=None):
         setting = SiteSetting.query.get(key)
         if value is not None:
@@ -163,7 +163,7 @@ def premium_settings():
             expires_at = None
             if expiry_str:
                 try:
-                    expires_at = datetime.strptime(expiry_str, "%Y-%m-%d")
+                    expires_at = datetime.strptime(expiry_str, "%Y-%m-%d").replace(tzinfo=timezone.utc).replace(tzinfo=None)
                 except ValueError:
                     expires_at = None
 
@@ -205,6 +205,31 @@ def premium_settings():
                 flash(f"Coupon '{code_name}' deleted.", "success")
             return redirect(url_for("admin.premium_settings"))
 
+        elif action == "save_bakong":
+            bakong_token = request.form.get("bakong_token", "").strip()
+            bakong_account_id = request.form.get("bakong_account_id", "").strip()
+            bakong_merchant_name = request.form.get("bakong_merchant_name", "").strip()
+            bakong_merchant_city = request.form.get("bakong_merchant_city", "").strip()
+            bakong_currency = request.form.get("bakong_currency", "USD").strip().upper()
+            bakong_store_label = request.form.get("bakong_store_label", "").strip()
+
+            if bakong_token:
+                get_or_set_setting("bakong_token", bakong_token)
+            if bakong_account_id:
+                get_or_set_setting("bakong_account_id", bakong_account_id)
+            if bakong_merchant_name:
+                get_or_set_setting("bakong_merchant_name", bakong_merchant_name)
+            if bakong_merchant_city:
+                get_or_set_setting("bakong_merchant_city", bakong_merchant_city)
+            if bakong_currency:
+                get_or_set_setting("bakong_currency", bakong_currency)
+            if bakong_store_label:
+                get_or_set_setting("bakong_store_label", bakong_store_label)
+
+            db.session.commit()
+            flash("Bakong KHQR gateway configuration updated successfully.", "success")
+            return redirect(url_for("admin.premium_settings"))
+
     # Fetch current settings
     current_price = get_or_set_setting("premium_price") or "20.00"
     yearly_discount_percent = get_or_set_setting("premium_yearly_discount_percent") or "20"
@@ -232,6 +257,9 @@ def premium_settings():
     coupons = PremiumCoupon.query.order_by(PremiumCoupon.created_at.desc()).all()
     premium_users_count = User.query.filter_by(is_premium=True).count()
 
+    bakong_config = get_bakong_config()
+    recent_transactions = PaymentTransaction.query.order_by(PaymentTransaction.created_at.desc()).limit(20).all()
+
     return render_template(
         "admin/premium_settings.html",
         current_price=current_price,
@@ -244,8 +272,38 @@ def premium_settings():
         simple_user_daily_tokens=simple_user_daily_tokens,
         final_price=final_price,
         coupons=coupons,
-        premium_count=premium_users_count
+        premium_count=premium_users_count,
+        bakong_config=bakong_config,
+        recent_transactions=recent_transactions,
+        now=_now_dt(),
     )
+
+@admin_bp.route("/api/bakong/test-connection", methods=["POST"])
+@login_required
+@admin_required
+def test_bakong_connection():
+    try:
+        cfg = get_bakong_config()
+        client = get_khqr_client()
+        test_res = client.create_qr(
+            amount=1.00,
+            account_id=cfg["account_id"],
+            merchant_name=cfg["merchant_name"],
+            merchant_city=cfg["merchant_city"],
+            currency="USD",
+            bill_number="CONNTEST"
+        )
+        check = client.check_payment(test_res.md5)
+        return jsonify({
+            "success": True,
+            "message": f"Connected to Bakong NBC! Account: {cfg['account_id']} | Live status check response: {check}",
+            "md5": test_res.md5
+        })
+    except Exception as e:  # noqa: BLE001
+        return jsonify({
+            "success": False,
+            "message": f"Bakong test failed: {e!s}"
+        }), 400
 
 @admin_bp.route("/dashboard")
 @admin_required
@@ -457,7 +515,7 @@ _TRANSLATION_RATE_LIMIT = {
 
 
 def _rate_limited(ip: str) -> bool:
-    now = datetime.utcnow().timestamp()
+    now = _now_dt().timestamp()
     bucket = _TRANSLATION_RATE_LIMIT["buckets"].get(ip)
     if not bucket or now - bucket["start"] > _TRANSLATION_RATE_LIMIT["window_seconds"]:
         _TRANSLATION_RATE_LIMIT["buckets"][ip] = {"start": now, "count": 1}
@@ -478,10 +536,6 @@ def _save_translation_backup(scope: str, payload: dict):
     )
     for item in old:
         db.session.delete(item)
-
-from functools import wraps
-from flask import abort
-from flask_login import current_user
 
 def translation_access_required(f):
     @wraps(f)
@@ -664,7 +718,7 @@ def translations():
                 return redirect(url_for("admin.translations"))
             try:
                 content = upload.read().decode("utf-8")
-            except Exception:
+            except Exception:  # noqa: BLE001
                 flash("Unable to read CSV file.", "danger")
                 return redirect(url_for("admin.translations"))
             reader = csv.DictReader(StringIO(content))
@@ -783,7 +837,7 @@ def translations():
             try:
                 data = upload.read()
                 zf = zipfile.ZipFile(BytesIO(data))
-            except Exception:
+            except Exception:  # noqa: BLE001
                 flash("Unable to read ZIP file.", "danger")
                 return redirect(url_for("admin.translations"))
 
@@ -1213,18 +1267,14 @@ def settings():
 @login_required
 @permission_required("manage_roles")
 def test_ai_connection():
-    import time
     data = request.get_json(silent=True) or request.form
     provider = (data.get("provider") or "own-ai").strip().lower()
     api_key = (data.get("api_key") or "").strip()
-    model = (data.get("model") or "").strip()
 
     if provider not in {"own-ai", "trained-ai", "huggingface", "hf", "hugging_face"}:
         return jsonify({"success": False, "error": "Commercial LLM providers are disabled. Use your self-trained AI endpoint."}), 410
 
     if provider in {"own-ai", "trained-ai", "huggingface", "hf", "hugging_face"}:
-        from app.services.ai_expert_service import is_valid_inference_endpoint, request_endpoint
-
         saved_url = SiteSetting.query.get("HF_INFERENCE_URL")
         endpoint = (data.get("endpoint") or data.get("url") or "").strip()
         endpoint = endpoint or (saved_url.value.strip() if saved_url and saved_url.value else "")
@@ -1282,7 +1332,7 @@ def test_ai_connection():
                 "message": f"Own AI endpoint connected ({elapsed}ms latency). Reply: {reply[:120]}",
                 "latency_ms": elapsed,
             })
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001
             elapsed = round((time.time() - start_time) * 1000)
             return jsonify({"success": False, "error": str(exc), "latency_ms": elapsed}), 200
 
@@ -1337,7 +1387,7 @@ def translations_undo():
         return redirect(url_for("admin.translations"))
     try:
         payload = json.loads(backup.payload)
-    except Exception:
+    except Exception:  # noqa: BLE001
         flash("Backup is corrupted.", "danger")
         return redirect(url_for("admin.translations"))
 
@@ -1502,7 +1552,7 @@ def users_bulk():
         filename_suffix = "all" if scope == "all" else "selected"
         if action == "export_json":
             payload = {
-                "exported_at": datetime.utcnow().isoformat(),
+                "exported_at": _now_dt().isoformat(),
                 "users": rows
             }
             return _json_response(payload, f"users_{filename_suffix}.json")
@@ -1601,7 +1651,7 @@ def users_export():
 
     if export_format == "json":
         payload = {
-            "exported_at": datetime.utcnow().isoformat(),
+            "exported_at": _now_dt().isoformat(),
             "users": rows
         }
         return _json_response(payload, "users_filtered.json")
@@ -1733,12 +1783,10 @@ def add_premium_time(user_id):
     unit = request.form.get("unit", "days")
     
     if amount > 0:
-        from datetime import datetime, timedelta
-        
         user.is_premium = True
         
         # If lifetime, adding time turns it into a fixed expiration starting from now
-        base_date = user.premium_expires_at if user.premium_expires_at and user.premium_expires_at > datetime.utcnow() else datetime.utcnow()
+        base_date = user.premium_expires_at if user.premium_expires_at and user.premium_expires_at > _now_dt() else _now_dt()
         
         if unit == "days":
             user.premium_expires_at = base_date + timedelta(days=amount)
@@ -2015,7 +2063,7 @@ def delete_role(role_id):
         )
         db.session.commit()
         flash(t("role_deleted_msg"), "success")
-    except Exception:
+    except Exception:  # noqa: BLE001
         db.session.rollback()
         flash(t("role_delete_failed_msg"), "danger")
 
@@ -2209,13 +2257,13 @@ def resolve_support_request(req_id):
         flash("Support request is already resolved.", "info")
     else:
         req.status = "resolved"
-        req.resolved_at = datetime.utcnow()
+        req.resolved_at = _now_dt()
         req.resolved_by_id = current_user.id
 
         try:
             db.session.commit()
             flash(f"Support request #{req.id} marked as resolved successfully!", "success")
-        except Exception:
+        except Exception:  # noqa: BLE001
             db.session.rollback()
             flash("Unable to update support request status. Please try again.", "danger")
             return redirect(url_for("admin.support_requests"))
@@ -2233,7 +2281,7 @@ def resolve_support_request(req_id):
                 source_id=req.id,
             )
             db.session.commit()
-        except Exception:
+        except Exception:  # noqa: BLE001
             db.session.rollback()
 
     next_status = (request.form.get("status") or "open").strip().lower()
@@ -2278,10 +2326,6 @@ def delete_support_request(req_id):
 @login_required
 @permission_required("manage_users")
 def promo_codes():
-    from app.models.promo import PromoCode
-    import random
-    import string
-    
     if request.method == "POST":
         tokens = request.form.get("tokens", type=int, default=1000)
         # Generate random 8-character code
@@ -2301,7 +2345,6 @@ def promo_codes():
 @login_required
 @permission_required("manage_users")
 def delete_promo_code(code_id):
-    from app.models.promo import PromoCode
     promo = PromoCode.query.get_or_404(code_id)
     db.session.delete(promo)
     db.session.commit()

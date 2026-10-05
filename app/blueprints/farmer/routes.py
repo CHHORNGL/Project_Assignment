@@ -1,39 +1,70 @@
 # app/blueprints/farmer/routes.py
 
+import hashlib
+import os
+import re
+import urllib.parse
+from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, timedelta, timezone
+from uuid import uuid4
+
+import requests
 from flask import (
     Blueprint,
-    render_template,
-    redirect,
-    url_for,
+    Response,
+    abort,
+    current_app,
     flash,
-    request,
     jsonify,
-    current_app
+    redirect,
+    render_template,
+    request,
+    session,
+    url_for,
 )
-import re
-import os
-from datetime import datetime, timedelta
-from uuid import uuid4
 from flask_login import current_user, login_required
+from flask_wtf.csrf import generate_csrf
 from sqlalchemy.orm import joinedload
 from werkzeug.utils import secure_filename
 
-from app.utils.decorators import farmer_required
 from app.extensions import db
-
-from app.models.crop import Crop
-from app.models.disease import Disease
-from app.models.diagnosis import Diagnosis
-from app.models.rule import Rule
-from app.models.symptom import Symptom
 from app.models.chat_message import ChatMessage
 from app.models.chat_session import ChatSession
+from app.models.crop import Crop
+from app.models.diagnosis import Diagnosis
+from app.models.disease import Disease
+from app.models.marquee import Marquee
 from app.models.notification import Notification
-from app.services.rule_engine import diagnose as rule_diagnose
-from app.services.openai_assistant import generate_assistant_reply, suggest_symptoms_from_image
-from app.services.notification_service import notify_role, notify_user, _snippet, serialize_notification
+from app.models.premium_coupon import PremiumCoupon
+from app.models.promo import PromoCode
+from app.models.rule import Rule
+from app.models.site_setting import SiteSetting
+from app.models.symptom import Symptom
+from app.models.user import User
 from app.services.audit_service import log_action
-from app.utils.i18n import t, get_current_language, normalize_display_text
+from app.services.bakong_service import (
+    create_khqr_payment,
+    get_bakong_config,
+    verify_khqr_payment,
+)
+from app.services.notification_service import (
+    _snippet,
+    notify_role,
+    notify_user,
+    serialize_notification,
+)
+from app.services.openai_assistant import (
+    generate_agriculture_news,
+    generate_assistant_reply,
+)
+from app.services.project_assistant import generate_project_reply
+from app.services.rule_engine import diagnose as rule_diagnose
+from app.utils.decorators import farmer_required
+from app.utils.i18n import get_current_language, normalize_display_text, t
+
+
+def _now_dt() -> datetime:
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 DIAGNOSIS_CATEGORIES = [
@@ -447,7 +478,6 @@ def dashboard():
     """
     if current_user.is_authenticated:
         if not (current_user.has_role("farmer") or any(getattr(r, 'route_type', None) == "farmer" for r in current_user.roles)):
-            from flask import abort
             abort(403)
         farmer_id = current_user.id
     else:
@@ -479,7 +509,6 @@ def dashboard():
         diagnoses = []
         ai_questions = []
 
-    from app.models.site_setting import SiteSetting
     price_setting = SiteSetting.query.get("premium_price")
     ydisc_setting = SiteSetting.query.get("premium_yearly_discount_percent")
     disc_setting = SiteSetting.query.get("premium_discount_percent")
@@ -499,7 +528,6 @@ def dashboard():
         yearly_monthly = "16.00"
         yearly_total = "192.00"
 
-    from app.models.marquee import Marquee
     active_marquees = Marquee.query.filter_by(is_active=True).order_by(Marquee.sort_order).all()
 
     return render_template(
@@ -561,10 +589,7 @@ def _is_greeting_or_filler(text: str) -> bool:
         "can you help", "anyone there", "are you there", "hello there",
         "hi there", "hey there", "how are you", "hello in english", "hello in khmer"
     }
-    if stripped in exact_phrases:
-        return True
-
-    return False
+    return stripped in exact_phrases
 
 
 def _is_identity_query(text: str) -> bool:
@@ -625,7 +650,6 @@ def guest_chat():
     """
     Allow guest users to test the interactive AI crop consultation preview (up to 5 inquiries).
     """
-    from flask import session, jsonify
     data = request.get_json(silent=True) or {}
     message = (data.get("message") or "").strip()
     if not message:
@@ -639,11 +663,10 @@ def guest_chat():
         })
     session["guest_chat_count"] = count + 1
 
-    from app.services.openai_assistant import generate_assistant_reply
     reply = None
     try:
         reply = generate_assistant_reply(message)
-    except Exception:
+    except Exception:  # noqa: BLE001
         reply = None
 
     if not reply:
@@ -655,9 +678,8 @@ def guest_chat():
             reply = _get_greeting_reply(message, lang)
         else:
             try:
-                from app.services.project_assistant import generate_project_reply
                 reply = generate_project_reply(message, user_role="farmer", page="landing")
-            except Exception:
+            except Exception:  # noqa: BLE001
                 reply = None
 
         if not reply:
@@ -782,15 +804,12 @@ def _process_diagnose_post():
 
     if result:
         rule = result["rule"]
-        matched_symptoms = result["matched_symptoms"]
-
         disease_name = rule.disease.name if rule.disease else "Unknown"
         confidence = result.get("confidence")
         disease_id = rule.disease.id if rule.disease else None
     else:
         disease_name = "Unknown"
         confidence = None
-        matched_symptoms = []
         disease_id = None
 
     # ---------------------------------
@@ -799,22 +818,17 @@ def _process_diagnose_post():
     image_paths = []
     if "diagnosis_image" in request.files:
         files = request.files.getlist("diagnosis_image")
-        import os, uuid
-        from werkzeug.utils import secure_filename
-        from flask import current_app
-        
         for file in files:
             if file and file.filename != "":
                 ext = os.path.splitext(file.filename)[1].lower()
                 if ext in [".jpg", ".jpeg", ".png", ".webp", ".gif"]:
-                    filename = f"diag_{uuid.uuid4().hex}{ext}"
+                    filename = f"diag_{uuid4().hex}{ext}"
                     upload_dir = os.path.join(current_app.root_path, "static", "uploads")
                     os.makedirs(upload_dir, exist_ok=True)
                     file.save(os.path.join(upload_dir, filename))
                     image_paths.append(f"uploads/{filename}")
 
     if not current_user.is_authenticated:
-        from flask import session
         count = session.get("guest_diagnosis_count", 0)
         if count >= 3:
             flash("You have reached the limit of 3 free diagnoses. Please register an account to continue.", "warning")
@@ -870,7 +884,7 @@ def _process_diagnose_post():
                 source_id=diagnosis.id,
             )
         db.session.commit()
-    except Exception:
+    except Exception:  # noqa: BLE001
         db.session.rollback()
 
     flash(t("diagnosis_completed"), "success")
@@ -889,11 +903,9 @@ def diagnose():
     Farmer submits crop + symptoms
     System uses Rule Engine to auto-diagnose
     """
-    if not current_user.is_authenticated:
-        from flask import session
-        if session.get("guest_diagnosis_count", 0) >= 3:
-            flash("You have reached the limit of 3 free diagnoses. Please register an account to continue.", "warning")
-            return redirect(url_for("auth.login"))
+    if not current_user.is_authenticated and session.get("guest_diagnosis_count", 0) >= 3:
+        flash("You have reached the limit of 3 free diagnoses. Please register an account to continue.", "warning")
+        return redirect(url_for("auth.login"))
 
     # Redirect removed to use the cleaner, native native Diagnose UI instead of React wizard
     if request.method == "GET":
@@ -922,8 +934,6 @@ def diagnose():
         )
     else:
         diagnoses = []
-
-    from flask_wtf.csrf import generate_csrf
 
     return render_template(
         "farmer/diagnose.html",
@@ -1010,19 +1020,11 @@ def diagnose_rule_based():
     """
     Farmer submits crop + symptoms (fully rule-based inference form)
     """
-    if not current_user.is_authenticated:
-        from flask import session
-        if session.get("guest_diagnosis_count", 0) >= 3:
-            flash("You have reached the limit of 3 free diagnoses. Please register an account to continue.", "warning")
-            return redirect(url_for("auth.login"))
-
-    scan_mode = request.args.get("scan", "").strip() == "1"
-    instant_scan_mode = request.args.get("instant", "").strip() == "1"
-    initial_crop_id = request.args.get("crop_id", "").strip() or ""
+    if not current_user.is_authenticated and session.get("guest_diagnosis_count", 0) >= 3:
+        flash("You have reached the limit of 3 free diagnoses. Please register an account to continue.", "warning")
+        return redirect(url_for("auth.login"))
 
     if request.method == "POST":
-        scan_mode = request.form.get("scan_mode", "0") == "1"
-        instant_scan_mode = request.form.get("instant_scan_mode", "0") == "1"
         crop_id = (request.form.get("crop_id") or "").strip()
         diagnosis_category = (request.form.get("diagnosis_category") or "other").strip().lower() or "other"
         symptom_ids = _safe_int_list(request.form.getlist("symptoms"))
@@ -1102,22 +1104,17 @@ def diagnose_rule_based():
         image_paths = []
         if "diagnosis_image" in request.files:
             files = request.files.getlist("diagnosis_image")
-            import os, uuid
-            from werkzeug.utils import secure_filename
-            from flask import current_app
-            
             for file in files:
                 if file and file.filename != "":
                     ext = os.path.splitext(file.filename)[1].lower()
                     if ext in [".jpg", ".jpeg", ".png", ".webp", ".gif"]:
-                        filename = f"diag_{uuid.uuid4().hex}{ext}"
+                        filename = f"diag_{uuid4().hex}{ext}"
                         upload_dir = os.path.join(current_app.root_path, "static", "uploads")
                         os.makedirs(upload_dir, exist_ok=True)
                         file.save(os.path.join(upload_dir, filename))
                         image_paths.append(f"uploads/{filename}")
 
         if not current_user.is_authenticated:
-            from flask import session
             count = session.get("guest_diagnosis_count", 0)
             if count >= 3:
                 flash("You have reached the limit of 3 free diagnoses. Please register an account to continue.", "warning")
@@ -1181,7 +1178,7 @@ def diagnose_rule_based():
                     source_id=diagnosis.id,
                 )
             db.session.commit()
-        except Exception:
+        except Exception:  # noqa: BLE001
             db.session.rollback()
 
         flash(t("diagnosis_completed"), "success")
@@ -1193,17 +1190,6 @@ def diagnose_rule_based():
         )
 
     crops = Crop.query.order_by(Crop.name.asc()).all()
-
-    # Sidebar: recent diagnoses
-    diagnoses = []
-    if current_user.is_authenticated:
-        diagnoses = (
-            Diagnosis.query
-            .filter_by(farmer_id=current_user.id)
-            .order_by(Diagnosis.created_at.desc())
-            .limit(10)
-            .all()
-        )
 
     rules = (
         Rule.query
@@ -1266,7 +1252,6 @@ def diagnose_rule_based():
         items.sort(key=lambda x: x["name"].lower())
         symptoms_by_crop_list[str(cid)] = items
 
-    from flask_wtf.csrf import generate_csrf
     bootstrap_data = {
         "postUrl": url_for("farmer.diagnose_rule_based"),
         "liveEvaluationApi": url_for("farmer.api_diagnose_live_evaluation"),
@@ -1402,10 +1387,9 @@ def diagnosis_result(diagnosis_id):
         return redirect(url_for("farmer.dashboard"))
 
     # Security: owner only if it belongs to a user
-    if diagnosis.farmer_id is not None:
-        if not current_user.is_authenticated or diagnosis.farmer_id != current_user.id:
-            flash("Access denied.", "danger")
-            return redirect(url_for("farmer.dashboard"))
+    if diagnosis.farmer_id is not None and (not current_user.is_authenticated or diagnosis.farmer_id != current_user.id):
+        flash("Access denied.", "danger")
+        return redirect(url_for("farmer.dashboard"))
 
     # Sidebar: recent diagnoses
     if current_user.is_authenticated:
@@ -1558,6 +1542,9 @@ def chat(session_id=None):
         image_bytes = None
         image_mime_type = "image/jpeg"
         attachment_name = ""
+        reply = ""
+        user_created_at = None
+        assistant_created_at = None
         if attachment and attachment.filename:
             attachment_name = secure_filename(attachment.filename)[:120]
             image_mime_type = (attachment.mimetype or "").lower().strip()
@@ -1592,7 +1579,7 @@ def chat(session_id=None):
                 db.session.flush()
             conversation_context = [
                 (item.sender, item.message)
-                for item in sorted(session.messages, key=lambda item: item.created_at or datetime.min)[-6:]
+                for item in sorted(session.messages, key=lambda item: item.created_at or datetime.min.replace(tzinfo=timezone.utc))[-6:]
             ]
             farmer_message = ChatMessage(
                 sender="farmer",
@@ -1693,7 +1680,7 @@ def chat(session_id=None):
                     source_id=farmer_message.id,
                 )
                 db.session.commit()
-            except Exception:
+            except Exception:  # noqa: BLE001
                 db.session.rollback()
 
         if wants_json:
@@ -1794,7 +1781,6 @@ def news():
     marquee_list = []
     active_marquees = []
     try:
-        from app.models.marquee import Marquee
         active_marquees = Marquee.query.filter_by(is_active=True).order_by(Marquee.sort_order).all()
         marquee_list = [
             {
@@ -1805,10 +1791,9 @@ def news():
             }
             for m in active_marquees
         ]
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         current_app.logger.warning(f"Marquee loading skipped or table missing: {e}")
 
-    from app.services.openai_assistant import generate_agriculture_news
     lang = get_current_language()
     initial_news = generate_agriculture_news(region="cambodia", lang=lang)
 
@@ -1825,12 +1810,10 @@ def api_generate_news():
     region = request.args.get("region", "cambodia").strip().lower()
     lang = request.args.get("lang", "en").strip().lower()
     force = request.args.get("force", "false").strip().lower() in ("true", "1")
-    from app.services.openai_assistant import generate_agriculture_news
     news_data = generate_agriculture_news(region=region, lang=lang, force_refresh=force)
 
     marquee_list = []
     try:
-        from app.models.marquee import Marquee
         active_marquees = Marquee.query.filter_by(is_active=True).order_by(Marquee.sort_order).all()
         marquee_list = [
             {
@@ -1841,7 +1824,7 @@ def api_generate_news():
             }
             for m in active_marquees
         ]
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         current_app.logger.warning(f"Marquee loading skipped for API: {e}")
 
     return jsonify({
@@ -1859,20 +1842,13 @@ def api_tts():
     if not text:
         return ("No text provided", 400)
 
-    import hashlib
-    import requests
-    import urllib.parse
-    import re
-    from flask import Response
-    from concurrent.futures import ThreadPoolExecutor
-
     # Normalize language code (e.g. 'km-kh' -> 'km', 'en-us' -> 'en')
     if lang.startswith("km"):
         lang = "km"
     elif lang.startswith("en"):
         lang = "en"
 
-    cache_key = hashlib.md5(f"{lang}:{text}".encode("utf-8")).hexdigest()
+    cache_key = hashlib.md5(f"{lang}:{text}".encode()).hexdigest()
     if cache_key in _TTS_CACHE:
         return Response(
             _TTS_CACHE[cache_key],
@@ -1930,8 +1906,8 @@ def api_tts():
             resp = requests.get(url, headers=headers, timeout=3.5)
             if resp.status_code == 200 and resp.content:
                 return resp.content
-        except Exception:
-            pass
+        except Exception as e:  # noqa: BLE001
+            current_app.logger.debug(f"TTS chunk fetch error: {e}")
         return None
 
     with ThreadPoolExecutor(max_workers=min(4, len(chunks))) as executor:
@@ -1967,7 +1943,6 @@ def premium_upgrade():
     if current_user.is_authenticated and getattr(current_user, "is_premium", False):
         flash("You are already a Premium member!", "info")
         return redirect(url_for("farmer.dashboard"))
-    from app.models.site_setting import SiteSetting
     price_setting = SiteSetting.query.get("premium_price")
     discount_setting = SiteSetting.query.get("premium_discount_percent")
     yearly_discount_setting = SiteSetting.query.get("premium_yearly_discount_percent")
@@ -1998,9 +1973,6 @@ def premium_checkout():
     if current_user.is_authenticated and getattr(current_user, "is_premium", False):
         flash("You are already a Premium member!", "info")
         return redirect(url_for("farmer.dashboard"))
-        
-    from app.models.site_setting import SiteSetting
-    from app.models.premium_coupon import PremiumCoupon
 
     price_setting = SiteSetting.query.get("premium_price")
     discount_setting = SiteSetting.query.get("premium_discount_percent")
@@ -2038,8 +2010,7 @@ def premium_checkout():
         days_to_add = 365 if post_interval == "yearly" else 30
 
         current_user.is_premium = True
-        from datetime import datetime, timedelta
-        current_user.premium_expires_at = datetime.utcnow() + timedelta(days=days_to_add)
+        current_user.premium_expires_at = _now_dt() + timedelta(days=days_to_add)
         
         # Best effort user notification & audit log
         try:
@@ -2052,23 +2023,36 @@ def premium_checkout():
                 icon="fas fa-crown",
                 level="success",
             )
-        except Exception:
-            pass
+        except Exception as e:  # noqa: BLE001
+            current_app.logger.debug(f"Notification error: {e}")
 
         try:
             log_action("farmer_premium_upgrade", detail=f"User @{current_user.username} upgraded to Premium ({post_interval}, expires {current_user.premium_expires_at.strftime('%Y-%m-%d')})")
-        except Exception:
-            pass
+        except Exception as e:  # noqa: BLE001
+            current_app.logger.debug(f"Audit log error: {e}")
 
         db.session.commit()
         flash("Payment successful! Welcome to Agri System Premium.", "success")
         return redirect(url_for("farmer.dashboard"))
-        
-    import os
+
     paypal_client_id = os.getenv("PAYPAL_CLIENT_ID", "YOUR_PAYPAL_CLIENT_ID")
+    bakong_config = get_bakong_config()
+
+    initial_bakong = None
+    try:
+        initial_bakong = create_khqr_payment(
+            user=current_user,
+            amount=float(display_checkout_price),
+            billing_interval=billing_interval,
+        )
+    except Exception as e:  # noqa: BLE001
+        current_app.logger.warning(f"Initial Bakong QR generation note: {e}")
+
     return render_template(
         "farmer/checkout.html",
         paypal_client_id=paypal_client_id,
+        bakong_config=bakong_config,
+        initial_bakong=initial_bakong,
         premium_price=display_checkout_price,
         original_price=display_orig_price,
         discount_percent=discount_percent,
@@ -2079,14 +2063,59 @@ def premium_checkout():
         is_yearly=is_yearly
     )
 
+@farmer_bp.route("/api/bakong/generate-qr", methods=["POST"])
+@farmer_required
+def generate_bakong_qr():
+    data = request.get_json(silent=True) or {}
+    billing_interval = data.get("billing_interval", "monthly").strip().lower()
+    coupon_code = data.get("coupon_code", "").strip().upper()
+
+    price_setting = SiteSetting.query.get("premium_price")
+    discount_setting = SiteSetting.query.get("premium_discount_percent")
+    yearly_discount_setting = SiteSetting.query.get("premium_yearly_discount_percent")
+
+    original_price = float(price_setting.value) if price_setting and price_setting.value else 20.0
+    discount_percent = float(discount_setting.value) if discount_setting and discount_setting.value else 0.0
+    yearly_discount_percent = float(yearly_discount_setting.value) if yearly_discount_setting and yearly_discount_setting.value else 20.0
+
+    savings = round(original_price * (discount_percent / 100.0), 2) if discount_percent > 0 else 0.0
+    base_price = max(0.0, original_price - savings)
+
+    if billing_interval == "yearly":
+        price = round(base_price * (1.0 - yearly_discount_percent / 100.0) * 12, 2)
+    else:
+        price = base_price
+
+    applied_coupon = None
+    if coupon_code:
+        coupon = PremiumCoupon.query.filter_by(code=coupon_code).first()
+        if coupon and coupon.is_valid()[0]:
+            _, price = coupon.calculate_discount(price)
+            applied_coupon = coupon.code
+
+    result = create_khqr_payment(
+        user=current_user,
+        amount=price,
+        billing_interval=billing_interval,
+        coupon_code=applied_coupon,
+    )
+    return jsonify(result)
+
+@farmer_bp.route("/api/bakong/check-status/<md5>", methods=["GET", "POST"])
+@farmer_required
+def check_bakong_status(md5):
+    res = verify_khqr_payment(md5)
+    if res.get("status") == "PAID":
+        flash("Bakong KHQR payment confirmed! Welcome to Agri System Premium.", "success")
+        res["redirect_url"] = url_for("farmer.dashboard")
+    return jsonify(res)
+
 @farmer_bp.route("/api/validate-coupon", methods=["POST"])
 @farmer_required
 def validate_coupon():
-    from app.models.site_setting import SiteSetting
-    from app.models.premium_coupon import PremiumCoupon
-
-    data = request.get_json() or {}
+    data = request.get_json(silent=True) or {}
     code = data.get("code", "").strip().upper()
+    billing_interval = data.get("billing_interval", "monthly").strip().lower()
 
     if not code:
         return jsonify({"success": False, "message": "Please enter a coupon code."}), 400
@@ -2101,12 +2130,19 @@ def validate_coupon():
 
     price_setting = SiteSetting.query.get("premium_price")
     discount_setting = SiteSetting.query.get("premium_discount_percent")
+    yearly_discount_setting = SiteSetting.query.get("premium_yearly_discount_percent")
 
     original_price = float(price_setting.value) if price_setting and price_setting.value else 20.0
     discount_percent = float(discount_setting.value) if discount_setting and discount_setting.value else 0.0
+    yearly_discount_percent = float(yearly_discount_setting.value) if yearly_discount_setting and yearly_discount_setting.value else 20.0
 
     savings = round(original_price * (discount_percent / 100.0), 2) if discount_percent > 0 else 0.0
-    current_price = max(0.0, original_price - savings)
+    base_price = max(0.0, original_price - savings)
+
+    if billing_interval == "yearly":
+        current_price = round(base_price * (1.0 - yearly_discount_percent / 100.0) * 12, 2)
+    else:
+        current_price = base_price
 
     discount_amount, final_price = coupon.calculate_discount(current_price)
 
@@ -2128,10 +2164,7 @@ def redeem_code():
     if not code_input:
         flash("Please enter a code.", "danger")
         return redirect(url_for("user.settings"))
-        
-    from app.models.promo import PromoCode
-    from datetime import datetime
-    
+
     promo = PromoCode.query.filter(PromoCode.code.ilike(code_input)).first()
     
     if not promo:
@@ -2145,9 +2178,8 @@ def redeem_code():
     # Apply reward
     promo.is_used = True
     promo.used_by_id = current_user.id
-    promo.used_at = datetime.utcnow()
-    
-    from app.models.user import User
+    promo.used_at = _now_dt()
+
     user = User.query.get(current_user.id)
     user.ai_credits = (user.ai_credits or 0) + promo.tokens_reward
     db.session.add(promo)
@@ -2242,8 +2274,7 @@ def notifications_seen():
         if id_list:
             query = query.filter(Notification.id.in_(id_list))
 
-    from datetime import datetime
-    updated = query.update({"read_at": datetime.utcnow()}, synchronize_session=False)
+    updated = query.update({"read_at": _now_dt()}, synchronize_session=False)
     db.session.commit()
 
     unread_count = (
@@ -2267,9 +2298,8 @@ def notifications_seen():
 @farmer_required
 def mark_notification_read(notification_id: int):
     notification = Notification.query.filter_by(id=notification_id, user_id=current_user.id).first_or_404()
-    from datetime import datetime
     if not notification.read_at:
-        notification.read_at = datetime.utcnow()
+        notification.read_at = _now_dt()
         db.session.commit()
 
     unread_count = (

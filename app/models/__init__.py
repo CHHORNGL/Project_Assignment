@@ -21,3 +21,4 @@ from .admin_chat import AdminChatMessage
 from .promo import PromoCode
 from .marquee import Marquee
 from .premium_coupon import PremiumCoupon
+from .payment_transaction import PaymentTransaction

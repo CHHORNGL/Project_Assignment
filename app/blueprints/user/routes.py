@@ -1,37 +1,39 @@
 # app/blueprints/user/routes.py
 
 import os
-from io import BytesIO
+import tempfile
 from datetime import datetime
-from urllib.parse import quote_plus
+from io import BytesIO
 
 from flask import (
     Blueprint,
+    abort,
+    flash,
+    jsonify,
+    make_response,
+    redirect,
     render_template,
     request,
-    jsonify,
-    redirect,
-    url_for,
-    flash,
-    abort,
     send_file,
     session,
-    make_response,
+    url_for,
 )
-from flask_login import login_required, current_user
+from flask_login import current_user, login_required
 
 from app.extensions import db
-from app.models.user import User
 from app.models.notification import Notification
 from app.models.passkey import UserPasskey
-from app.services.notification_service import serialize_notification
+from app.models.user import User
 from app.services.khmer_calendar import build_khmer_calendar_month
+from app.services.login_activity import (
+    list_login_activity,
+    revoke_all_other_sessions,
+    revoke_login_activity,
+)
+from app.services.notification_service import serialize_notification
 from app.services.theme_manager import resolve_active_runtime
-from app.services.translator import translate_to_khmer, translate_audio_to_khmer
-from app.services.login_activity import list_login_activity, revoke_login_activity, revoke_all_other_sessions
-from app.utils.i18n import set_current_language, get_current_language
-import tempfile
-
+from app.services.translator import translate_audio_to_khmer, translate_to_khmer
+from app.utils.i18n import get_current_language, set_current_language
 
 AVATAR_MIME_BY_EXT = {
     ".jpg": "image/jpeg",

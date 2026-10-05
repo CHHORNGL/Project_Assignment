@@ -1,14 +1,13 @@
-from app.utils.input_validation import text_field
 # app/blueprints/assistant/routes.py
-
 from flask import jsonify, request
 from flask_login import current_user, login_required
 
 from app.extensions import db
 from app.models.support_request import SupportRequest
+from app.services.notification_service import _snippet, notify_role
 from app.services.project_assistant import generate_project_reply
-from app.services.notification_service import notify_role, _snippet
 from app.utils.i18n import t
+from app.utils.input_validation import text_field
 
 from . import assistant_bp
 
