@@ -115,6 +115,11 @@ def register_input_validation(app):
     @app.before_request
     def validate_json_envelope():
         if request.is_json:
+            if request.content_length == 0:
+                return
+            raw_data = request.get_data(cache=True)
+            if not raw_data or not raw_data.strip():
+                return
             # Flask enforces MAX_CONTENT_LENGTH when reading even without Content-Length.
             try:
                 data = request.get_json()

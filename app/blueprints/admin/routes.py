@@ -278,7 +278,7 @@ def premium_settings():
         now=_now_dt(),
     )
 
-@admin_bp.route("/api/bakong/test-connection", methods=["POST"])
+@admin_bp.route("/api/bakong/test-connection", methods=["GET", "POST"])
 @login_required
 @admin_required
 def test_bakong_connection():
