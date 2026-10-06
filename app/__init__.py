@@ -566,6 +566,16 @@ def create_app():
             body_class = ""
         return {"body_class": body_class}
 
+    @app.context_processor
+    def inject_csrf_token():
+        def _csrf_token():
+            try:
+                from flask_wtf.csrf import generate_csrf
+                return generate_csrf()
+            except Exception:
+                return ""
+        return {"csrf_token": _csrf_token}
+
     @app.route("/notifications", strict_slashes=False)
     @app.route("/notifications/", strict_slashes=False)
     @login_required
