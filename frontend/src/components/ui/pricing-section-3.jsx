@@ -29,7 +29,7 @@ const plans = [
     popular: true,
     includes: [
       "Everything in Starter, plus:",
-      "Unlimited GPT-4o Vision diagnoses",
+      "Unlimited Custom-Trained AI Crop Diagnoses",
       "Ultra-Advanced Weather Intelligence & alerts",
       "Direct 24/7 Chat with certified Agronomists",
       "Permanent cloud history & PDF reports",
