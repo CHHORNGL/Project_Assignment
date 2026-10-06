@@ -305,6 +305,39 @@ def test_bakong_connection():
             "message": f"Bakong test failed: {e!s}"
         }), 400
 
+
+@admin_bp.route("/premium-settings/approve-transaction/<int:tx_id>", methods=["POST"])
+@login_required
+@admin_required
+def approve_bakong_transaction(tx_id):
+    from app.services.bakong_service import approve_khqr_transaction_manually
+    res = approve_khqr_transaction_manually(tx_id, current_user)
+    if res.get("success"):
+        flash(res.get("message", "Transaction approved!"), "success")
+    else:
+        flash(res.get("message", "Failed to approve transaction."), "danger")
+    return redirect(url_for("admin.premium_settings"))
+
+
+@admin_bp.route("/premium-settings/check-transaction/<int:tx_id>", methods=["POST"])
+@login_required
+@admin_required
+def check_bakong_transaction(tx_id):
+    from app.services.bakong_service import verify_khqr_payment
+    tx = PaymentTransaction.query.get_or_404(tx_id)
+    if not tx.md5:
+        flash(f"Transaction #{tx_id} has no MD5 hash.", "warning")
+        return redirect(url_for("admin.premium_settings"))
+    res = verify_khqr_payment(tx.md5)
+    if res.get("status") == "PAID":
+        flash(f"Transaction #{tx_id} verified as PAID! VIP activated.", "success")
+    elif res.get("status") == "RATE_LIMITED":
+        flash(f"Bakong API is rate-limited: {res.get('message')}", "warning")
+    else:
+        flash(f"Bakong API status for #{tx_id}: {res.get('status', 'UNPAID')}", "info")
+    return redirect(url_for("admin.premium_settings"))
+
+
 @admin_bp.route("/dashboard")
 @admin_required
 def dashboard():

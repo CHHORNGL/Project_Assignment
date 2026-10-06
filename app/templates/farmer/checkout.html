@@ -1643,13 +1643,26 @@ function switchPaymentMethod(method) {
     }
 }
 
+let bakongPollElapsed = 0;
+const MAX_BAKONG_POLL_TIME = 180000; // 3 minutes max auto-polling
+
 function startBakongPolling() {
     stopBakongPolling();
     if (!currentBakongMd5) return;
+    bakongPollElapsed = 0;
     
     bakongPollInterval = setInterval(async function() {
+        bakongPollElapsed += 10000;
+        if (bakongPollElapsed >= MAX_BAKONG_POLL_TIME) {
+            stopBakongPolling();
+            const label = document.getElementById("bakong_status_label");
+            if (label) {
+                label.textContent = "Auto-checking paused to preserve limits. Click 'Check Status' anytime.";
+            }
+            return;
+        }
         await checkBakongStatus(false);
-    }, 3000);
+    }, 10000);
 }
 
 function stopBakongPolling() {
@@ -1678,14 +1691,21 @@ async function checkBakongStatus(isManual = false) {
             return;
         }
 
-        if (isManual) {
-            const badge = document.getElementById("bakong_status_badge");
-            const label = document.getElementById("bakong_status_label");
+        const label = document.getElementById("bakong_status_label");
+
+        if (data && data.status === "RATE_LIMITED") {
             if (label) {
-                label.textContent = "Payment not received yet. Please scan and complete in your banking app.";
+                label.innerHTML = '<span class="text-warning"><i class="fas fa-exclamation-triangle mr-1"></i>Bank developer API reached daily limit (100 reqs). If you sent money, admin will confirm your VIP Pro shortly.</span>';
+            }
+            return;
+        }
+
+        if (isManual) {
+            if (label) {
+                label.textContent = "Payment not detected yet. Please confirm transfer in your mobile banking app.";
                 setTimeout(() => {
                     label.textContent = "Waiting for payment... (auto-checking)";
-                }, 3500);
+                }, 4000);
             }
         }
     } catch (e) {

@@ -508,6 +508,7 @@
                                 <th>Interval</th>
                                 <th>Status</th>
                                 <th>Date</th>
+                                <th style="text-align: right;">Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -538,11 +539,33 @@
                                     <td class="text-muted small">
                                         {{ tx.created_at.strftime('%Y-%m-%d %H:%M') if tx.created_at else '' }}
                                     </td>
+                                    <td style="text-align: right;">
+                                        {% if tx.status == 'PAID' %}
+                                        <span class="text-success small font-weight-bold"><i class="fas fa-check-double mr-1"></i>Active</span>
+                                        {% else %}
+                                        <div class="d-inline-flex align-items-center" style="gap: 0.3rem;">
+                                            <form method="POST" action="{{ url_for('admin.approve_bakong_transaction', tx_id=tx.id) }}" style="display:inline;" onsubmit="return confirm('Approve transaction #{{ tx.id }} (Bill: {{ tx.bill_number }}) and activate VIP Pro for @{{ tx.user.username if tx.user else \'Unknown\' }}?');">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                <button type="submit" class="btn btn-xs btn-success px-2 py-1" style="font-size: 0.72rem; border-radius: 6px; font-weight: 600;" title="Manually approve payment and activate VIP Pro">
+                                                    <i class="fas fa-check mr-1"></i>Approve
+                                                </button>
+                                            </form>
+                                            {% if tx.md5 %}
+                                            <form method="POST" action="{{ url_for('admin.check_bakong_transaction', tx_id=tx.id) }}" style="display:inline;">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                <button type="submit" class="btn btn-xs btn-outline-info px-2 py-1" style="font-size: 0.72rem; border-radius: 6px;" title="Check payment status with NBC API">
+                                                    <i class="fas fa-sync-alt"></i>
+                                                </button>
+                                            </form>
+                                            {% endif %}
+                                        </div>
+                                        {% endif %}
+                                    </td>
                                 </tr>
                                 {% endfor %}
                             {% else %}
                                 <tr>
-                                    <td colspan="6" class="text-center py-4 text-muted">
+                                    <td colspan="7" class="text-center py-4 text-muted">
                                         <i class="fas fa-receipt fa-2x mb-2 d-block opacity-50"></i>
                                         No transactions recorded yet. Transactions made via Bakong KHQR will appear here.
                                     </td>

@@ -20,7 +20,7 @@ def get_bakong_config() -> dict[str, str]:
     Retrieve Bakong KHQR settings from SiteSetting database or fall back to environment variables.
     """
     def _val(key: str, env_key: str, default: str = "") -> str:
-        s = SiteSetting.query.get(key)
+        s = db.session.get(SiteSetting, key)
         if s and s.value and s.value.strip():
             return s.value.strip()
         return os.getenv(env_key, default).strip()
@@ -199,6 +199,66 @@ def create_khqr_payment(
     }
 
 
+# Cache to prevent burning NBC daily limits (100 req/day): {md5: (timestamp, status_str, data, err_msg)}
+_MD5_STATUS_CACHE: dict[str, tuple[float, str, dict, str]] = {}
+CACHE_TTL_SECONDS = 8.0
+
+
+def query_bakong_md5_api(token: str, md5: str) -> tuple[str, dict, str]:
+    """
+    Directly query Bakong /check_transaction_by_md5 to parse responseCode, errorCode, and message accurately.
+    Returns: (status_str, data_dict, error_message)
+    """
+    import http.client
+    import json
+
+    now = time.time()
+    if md5 in _MD5_STATUS_CACHE:
+        cached_time, cached_status, cached_data, cached_msg = _MD5_STATUS_CACHE[md5]
+        if now - cached_time < CACHE_TTL_SECONDS:
+            return cached_status, cached_data, cached_msg
+
+    is_relay = bool(token and token.startswith("rbk"))
+    host = "api.khqr.dev" if is_relay else "api-bakong.nbc.gov.kh"
+    path = "/v1/check_transaction_by_md5"
+
+    conn = http.client.HTTPSConnection(host, timeout=10)
+    try:
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+            "User-Agent": "bakong-khqr/0.6.5 (+https://agricultureexp.com)",
+        }
+        conn.request("POST", path, body=json.dumps({"md5": md5}), headers=headers)
+        resp = conn.getresponse()
+        resp_data = resp.read().decode("utf-8")
+        try:
+            res_json = json.loads(resp_data)
+        except json.JSONDecodeError:
+            res_json = {"responseCode": 1, "responseMessage": f"Invalid JSON: {resp_data}"}
+    except Exception as e:
+        res_json = {"responseCode": 1, "responseMessage": f"Network error: {e}"}
+    finally:
+        conn.close()
+
+    resp_code = res_json.get("responseCode")
+    err_code = res_json.get("errorCode")
+    err_msg = str(res_json.get("responseMessage", ""))
+    data = res_json.get("data") if isinstance(res_json.get("data"), dict) else {}
+
+    if resp_code == 0:
+        status_str = "PAID"
+    elif err_code == 17 or "daily request limit" in err_msg.lower():
+        status_str = "RATE_LIMITED"
+    elif err_code == 3 or "not found" in err_msg.lower():
+        status_str = "UNPAID"
+    else:
+        status_str = "UNPAID"
+
+    _MD5_STATUS_CACHE[md5] = (now, status_str, data, err_msg)
+    return status_str, data, err_msg
+
+
 def verify_khqr_payment(md5: str) -> dict[str, Any]:
     """
     Check the transaction status with Bakong NBC and upgrade the user if paid.
@@ -219,17 +279,13 @@ def verify_khqr_payment(md5: str) -> dict[str, Any]:
             "transaction": tx.to_dict(),
         }
 
-    client = get_khqr_client()
+    config = get_bakong_config()
     try:
-        api_status = client.check_payment(md5)
-        # check_payment returns 'PAID', 'UNPAID', or tuple ('PAID', code)
-        if isinstance(api_status, tuple):
-            status_str = str(api_status[0]).upper()
-        else:
-            status_str = str(api_status).upper()
+        status_str, data, err_msg = query_bakong_md5_api(config["token"], md5)
     except Exception as e:  # noqa: BLE001
-        logger.warning(f"Bakong check_payment check error for md5 {md5}: {e}")
+        logger.warning(f"Bakong query error for md5 {md5}: {e}")
         status_str = "UNPAID"
+        err_msg = str(e)
 
     if status_str == "PAID":
         now_dt = datetime.now(timezone.utc).replace(tzinfo=None)
@@ -291,9 +347,85 @@ def verify_khqr_payment(md5: str) -> dict[str, Any]:
             "transaction": tx.to_dict(),
         }
 
+    if status_str == "RATE_LIMITED":
+        return {
+            "success": False,
+            "status": "RATE_LIMITED",
+            "message": "Bakong NBC Developer daily limit reached (100 requests). If you already scanned and sent funds, please notify the administrator to approve your transaction.",
+            "transaction": tx.to_dict(),
+        }
+
     return {
         "success": True,
         "status": status_str if status_str in ("UNPAID", "PENDING", "EXPIRED") else "UNPAID",
-        "message": "Payment is waiting for confirmation.",
+        "message": err_msg or "Payment is waiting for confirmation.",
+        "transaction": tx.to_dict(),
+    }
+
+
+def approve_khqr_transaction_manually(tx_id: int, admin_user=None) -> dict[str, Any]:
+    """
+    Manually approve a pending KHQR transaction and grant VIP access to the user.
+    """
+    tx = db.session.get(PaymentTransaction, tx_id)
+    if not tx:
+        return {"success": False, "message": "Transaction not found."}
+
+    if tx.status == "PAID":
+        return {"success": True, "message": "Transaction is already marked as PAID.", "transaction": tx.to_dict()}
+
+    now_dt = datetime.now(timezone.utc).replace(tzinfo=None)
+    tx.status = "PAID"
+    tx.paid_at = now_dt
+
+    # Update coupon usage if applicable
+    if tx.coupon_code:
+        coupon = PremiumCoupon.query.filter_by(code=tx.coupon_code).first()
+        if coupon and coupon.is_valid()[0]:
+            coupon.times_used += 1
+
+    days_to_add = 365 if tx.billing_interval == "yearly" else 30
+    user = tx.user
+    if user:
+        user.is_premium = True
+        if user.premium_expires_at and user.premium_expires_at > now_dt:
+            user.premium_expires_at = user.premium_expires_at + timedelta(days=days_to_add)
+        else:
+            user.premium_expires_at = now_dt + timedelta(days=days_to_add)
+
+        try:
+            from app.services.notification_service import notify_user
+            notify_user(
+                user_id=user.id,
+                kind="premium_upgrade",
+                title="Bakong KHQR Payment Approved! 👑",
+                subtitle=(
+                    f"Your {tx.billing_interval.capitalize()} VIP Pro membership has been confirmed and activated until "
+                    f"{user.premium_expires_at.strftime('%Y-%m-%d')}."
+                ),
+                url="/farmer/dashboard",
+                icon="fas fa-crown",
+                level="success",
+            )
+        except Exception as notify_err:  # noqa: BLE001
+            logger.debug(f"Notification bypassed: {notify_err}")
+
+        try:
+            from app.services.audit_service import log_action
+            admin_name = getattr(admin_user, "username", "admin") if admin_user else "system"
+            log_action(
+                "bakong_payment_manual_approval",
+                detail=(
+                    f"Admin @{admin_name} manually approved ${tx.amount:.2f} {tx.currency} via Bakong KHQR for @{user.username} "
+                    f"(Bill: {tx.bill_number}, ID: {tx.id}, Interval: {tx.billing_interval})"
+                ),
+            )
+        except Exception as audit_err:  # noqa: BLE001
+            logger.debug(f"Audit log bypassed: {audit_err}")
+
+    db.session.commit()
+    return {
+        "success": True,
+        "message": f"Transaction #{tx.id} for @{user.username if user else 'Unknown'} approved successfully!",
         "transaction": tx.to_dict(),
     }

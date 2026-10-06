@@ -91,11 +91,7 @@ class TestBakongPayment(unittest.TestCase):
         )
         md5 = created["md5"]
 
-        # Mock check_payment response to return 'PAID'
-        mock_client = MagicMock()
-        mock_client.check_payment.return_value = "PAID"
-
-        with patch("app.services.bakong_service.get_khqr_client", return_value=mock_client):
+        with patch("app.services.bakong_service.query_bakong_md5_api", return_value=("PAID", {}, "")):
             res = verify_khqr_payment(md5)
 
         self.assertTrue(res["success"])
@@ -111,6 +107,41 @@ class TestBakongPayment(unittest.TestCase):
         self.assertTrue(self.farmer.is_premium)
         self.assertIsNotNone(self.farmer.premium_expires_at)
 
+    def test_verify_khqr_payment_rate_limited(self):
+        created = create_khqr_payment(
+            user=self.farmer,
+            amount=20.0,
+            billing_interval="monthly",
+        )
+        md5 = created["md5"]
+
+        with patch("app.services.bakong_service.query_bakong_md5_api", return_value=("RATE_LIMITED", {}, "Daily request limit of 100 exceeded.")):
+            res = verify_khqr_payment(md5)
+
+        self.assertFalse(res["success"])
+        self.assertEqual(res["status"], "RATE_LIMITED")
+        self.assertIn("100 requests", res["message"])
+
+    def test_approve_khqr_transaction_manually(self):
+        created = create_khqr_payment(
+            user=self.farmer,
+            amount=20.0,
+            billing_interval="monthly",
+        )
+        tx_id = created["transaction_id"]
+
+        from app.services.bakong_service import approve_khqr_transaction_manually
+        res = approve_khqr_transaction_manually(tx_id)
+        self.assertTrue(res["success"])
+
+        tx = db.session.get(PaymentTransaction, tx_id)
+        self.assertEqual(tx.status, "PAID")
+        self.assertIsNotNone(tx.paid_at)
+
+        self.farmer = db.session.get(User, self.farmer.id)
+        self.assertTrue(self.farmer.is_premium)
+
 
 if __name__ == "__main__":
     unittest.main()
+
