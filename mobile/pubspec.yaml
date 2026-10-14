@@ -38,7 +38,7 @@ dependencies:
   shared_preferences: ^2.5.5
   provider: ^6.1.5+1
   intl: ^0.20.3
-  image_picker: ^1.2.3
+  image_picker: ^1.2.4
   google_fonts: ^8.2.1
   flutter_animate: ^4.5.2
   http_parser: ^4.1.2
