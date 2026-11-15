@@ -1,227 +1,191 @@
-# Integrated Agricultural Expert System 🌾
-An advanced, multi-role expert system designed to assist farmers, experts, and administrators in diagnosing crop diseases, providing real-time weather-informed recommendations, and managing agricultural knowledge. 
+# Integrated Agricultural Expert System
 
-This project was developed in collaboration with university peers and advisors to create an accessible tool tailored to low-technical-literacy farmers (supporting both English and Khmer language configurations, Khmer lunar calendar alignment, and adaptive UI wizards).
+[![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![Flask](https://img.shields.io/badge/Flask-3.1-000000?logo=flask&logoColor=white)](https://flask.palletsprojects.com/)
+[![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)](https://react.dev/)
+[![Flutter](https://img.shields.io/badge/Flutter-Mobile-02569B?logo=flutter&logoColor=white)](https://flutter.dev/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](https://docs.docker.com/compose/)
+
+An accessible, multi-role agricultural advisory platform designed to help farmers, agronomists, and administrators diagnose crop diseases, monitor weather-driven field risks, and manage domain knowledge across **web** and **mobile** interfaces with full **English and Khmer** localization.
+
+---
+
+## Table of Contents
+
+- [Architecture Overview](#-architecture-overview)
+- [Core Capabilities](#-core-capabilities)
+- [Technology Stack](#️-technology-stack)
+- [Repository Structure](#-repository-structure)
+- [Getting Started](#-getting-started)
+- [Testing & Security Audits](#-testing--security-audits)
+- [AI Training & Dataset Export](#-ai-training--dataset-export)
+- [Documentation](#-documentation)
 
 ---
 
 ## 🏗️ Architecture Overview
 
-The application is architected as a decoupled system featuring a robust **Python Flask** backend serving APIs and administrative interfaces, integrated with a modern **React + Vite** frontend powering the client-side Diagnosis Wizard.
+The platform is organized as a modular monorepo combining a **Flask** backend (REST APIs + Jinja2 SSR portals), a **React + Vite** Diagnosis Wizard bundle, a cross-platform **Flutter** mobile client, and isolated **AI/ML** training and inference pipelines.
 
 ```mermaid
 flowchart TD
-    subgraph Client [Client-Side Presentation]
-        A[Farmer Dashboard / HTML5] <-->|Interactive UI| W[Diagnosis Wizard / React + Vite]
-        E[Expert / Admin Panels]
+    subgraph Clients["Client Applications"]
+        WEB["Web Portal (Jinja2 + React Diagnosis Wizard)"]
+        MOB["Flutter Mobile App (iOS / Android)"]
     end
 
-    subgraph Backend [Flask Application Boundary]
-        API[Blueprints / Routes]
-        RE[Rule Engine Service]
-        AI[Self-trained Agricultural AI]
-        WM[Weather Intelligence Service]
-        TM[Seasonal Theme Manager]
+    subgraph Backend["Flask Application (backend/)"]
+        BP["Blueprints (Auth, Farmer, Expert, Admin, API)"]
+        RE["Rule-Based Diagnosis Engine"]
+        AG["Controlled Agricultural AI Agent"]
+        WI["Weather Intelligence Service"]
+        TM["Khmer Calendar & Theme Manager"]
+        BK["Bakong KHQR Billing Service"]
     end
 
-    subgraph Database [Storage & Persistence]
-        DB[(PostgreSQL Database)]
+    subgraph Data["Persistence & Cache"]
+        PG[("PostgreSQL 15")]
+        RD[("Redis 7 (Sessions, Rate Limits, Cache)")]
     end
 
-    subgraph External [External Services]
-        OM[Open-Meteo API]
-        CL[Calendarific / Nager.at API]
-        OA[Your protected inference endpoint]
-        GD[Google OAuth]
+    subgraph External["External Integrations"]
+        HF["Self-Trained AI Endpoint"]
+        OM["Open-Meteo Forecast API"]
+        NBC["Bakong NBC KHQR API"]
+        CAL["Calendarific / Nager.at"]
+        OAUTH["Google OAuth 2.0"]
     end
 
-    %% Routing Flow
-    A & W & E <--> API
-    API <--> RE & AI & WM & TM
-    RE & AI & WM & TM <--> DB
-    
-    %% External Integration
-    WM <--> OM
-    TM <--> CL
-    AI <--> OA
-    API <--> GD
+    WEB & MOB <--> BP
+    BP <--> RE & AG & WI & TM & BK
+    RE & AG & WI & TM & BK <--> PG & RD
+    AG <--> HF
+    WI <--> OM
+    BK <--> NBC
+    TM <--> CAL
+    BP <--> OAUTH
 ```
 
 ---
 
-## ✨ Key Features
+## ✨ Core Capabilities
 
-### 🩺 1. Rule-Based Crop Disease Diagnosis
-* **Adaptive Clarification Wizard:** A React-based step-by-step wizard designed for low-literacy farmers that asks a maximum of 5–7 adaptive yes/no questions based on active symptom rules.
-* **Scoring & Evaluation Algorithm:** Computes diagnostic scores dynamically utilizing:
+### 1. Rule-Based Crop Disease Diagnosis
+- **Adaptive Clarification Wizard:** A React-powered step-by-step wizard tailored for low-technical-literacy farmers, narrowing candidate diseases with 5–7 adaptive yes/no questions.
+- **Weighted Diagnostic Scoring:** Ranks candidate diseases across *Fungal*, *Bacterial*, *Viral*, *Pest*, *Nutrient*, and *Environmental* categories using:
+
   $$\text{Score} = (0.60 \times \text{Symptom Coverage}) + (0.20 \times \text{Precision}) + (0.20 \times \text{Expert Confidence}) - (0.45 \times \text{Contradiction Penalty})$$
-* **Disease Classifications:** Automatically matches and logs diagnoses under *Fungal*, *Bacterial*, *Viral*, *Pest*, *Nutrient*, and *Environmental* categories.
-* **Actionable Solutions:** Generates structured diagnostic results (Diagnosis, Evidence, Reason) accompanied by instant mitigation and long-term prevention guidelines.
-* **Farmer Feedback Loop:** Collects helpfulness ratings and optional comments to build user-driven validation datasets.
 
-### ☀️ 2. Ultra-Advanced Weather Intelligence
-* **Localized Analytics:** Retrieves coordinate-based forecast data from Open-Meteo (no API key required).
-* **Smart Agricultural Warnings:** Automatically calculates thresholds for risk conditions:
-  * **Storm Risk:** High wind speeds ($>45 \text{ km/h}$) or thunderstorms.
-  * **Heavy Rain & Waterlogging:** Precipitation volume projections ($>35\text{ mm}$).
-  * **Heat Stress:** Extreme heatwave temperature thresholds ($>38^\circ\text{C}$).
-  * **Pesticide Spray Window:** Analyzes wind speed to notify if spray drift is likely (safe under $25 \text{ km/h}$).
-* **Resilient Architecture:** Implements server-side caching (10-min TTL), stale fallback storage, and local storage on the client side to remain operational during network interruptions.
+- **Structured Outcomes & Feedback:** Delivers actionable immediate mitigation, long-term prevention steps, and captures farmer helpfulness feedback for expert review.
+- **Seeded Crops:** Pre-populated knowledge base covers **Rice**, **Potato**, **Tomato**, **Cucumber**, **Chili Pepper**, **Banana**, **Corn**, and **Cassava**.
 
-### 🎨 3. Seasonal Theme Manager (Khmer Calendar Integration)
-* **Automated Seasonal Transitioning:** Synchronizes dashboard styling with Cambodian agricultural cycles (Dry Season, Rainy Season) and national festivals.
-* **Lunar Date Engine:** Uses the `khmerdate` library to convert Gregorian calendar coordinates into Khmer lunar coordinates (zodiac year, lunar month, moon phase).
-* **Event Providers:** Connects to Calendarific or Nager.at APIs (with local fallbacks) to track holiday triggers.
-* **Upload Pipeline:** Integrates with Cloudinary CDN for storing and serving seasonal interface animations.
+### 2. Bilingual AI Agricultural Assistant (`AGY V2.0.0`)
+- **Controlled Agent Layer:** Routes farmer queries through trusted application tools (seeded agricultural knowledge base and live weather context) before invoking the remote fine-tuned model (`AI_PROVIDER=own-ai`).
+- **Process Isolation:** Flask communicates strictly via `HF_INFERENCE_URL` and `HF_TOKEN` without loading model weights inside web workers.
+- **Resilient Bilingual Support:** Full English and Khmer language handling with automatic Khmer text normalization.
 
-### 🔒 4. Security & Role-Based Access Control (RBAC)
-* **Granular Roles:** Supports three application access tiers:
-  * `farmer` (Accesses dashboard, weather updates, diagnosis wizard, notifications).
-  * `expert` (Manages rules, answers farmers' questions, reviews system suggestions).
-  * `admin` (Performs overall system configuration, user auditing, database management).
-* **Multi-Factor Auth & Passkeys:** Supports Google OAuth login flows alongside modern passwordless WebAuthn (Passkey) credentials.
-* **Audit Trails:** Automatic system auditing logs database updates, role changes, and critical actions.
+### 3. Weather Intelligence
+- **Localized Forecasts:** Fetches coordinate-based agricultural weather via **Open-Meteo** (no API key required).
+- **Automated Field Alerts:** Evaluates storm risk (wind $> 45\text{ km/h}$), heavy rain/waterlogging ($> 35\text{ mm}$), heat stress ($> 38^\circ\text{C}$), and pesticide spray-drift safety windows ($< 25\text{ km/h}$).
+- **Multi-Tier Caching:** Uses Redis or in-memory TTL caching (10-minute fresh window) with stale-forecast fallback during upstream outages.
+
+### 4. Khmer Calendar & Seasonal Theme Manager
+- **Lunar Alignment:** Converts Gregorian dates to Khmer lunar calendar data (zodiac year, lunar month, moon phase) via `khmerdate`.
+- **Automated Seasonal Styling:** Synchronizes UI themes with Cambodian agricultural seasons and national holidays via Calendarific / Nager.at (with offline defaults).
+
+### 5. Security, RBAC & Bakong KHQR Billing
+- **Three-Tier RBAC:** Dedicated portals and permissions for `farmer`, `expert`, and `admin` roles.
+- **Modern Authentication:** Server-backed Redis sessions, Google OAuth 2.0, WebAuthn **Passkeys**, two-factor verification, device login-activity tracking, and strict rate limiting.
+- **Local Payments:** Native **Bakong KHQR** checkout generation and transaction verification for Pro subscriptions.
 
 ---
 
 ## 🛠️ Technology Stack
 
-| Layer | Technologies & Frameworks |
+| Domain | Technologies |
 | :--- | :--- |
-| **Backend Core** | [Python 3.11](https://www.python.org/) • [Flask 2.3](https://flask.palletsprojects.com/) • [Gunicorn](https://gunicorn.org/) |
-| **Database & ORM** | [PostgreSQL 15](https://www.postgresql.org/) • [SQLAlchemy 2.0](https://www.sqlalchemy.org/) • [Flask-SQLAlchemy](https://flask-sqlalchemy.palletsprojects.com/) |
-| **Migrations** | [Alembic](https://alembic.sqlalchemy.org/) • [Flask-Migrate](https://flask-migrate.readthedocs.io/) |
-| **Frontend UI** | [React 18](https://react.dev/) • [Vite 5](https://vitejs.dev/) • [Tailwind CSS 3](https://tailwindcss.com/) • [PostCSS](https://postcss.org/) |
-| **Integration APIs** | [Your self-trained AI endpoint](ai/deployment/README.md) • [Open-Meteo](https://open-meteo.com/) • [Calendarific](https://calendarific.com/) • [Authlib](https://authlib.org/) |
-| **Localization** | Custom i18n subsystem (English/Khmer translation matrix with Khmer text normalizer) |
-| **DevOps** | [Docker](https://www.docker.com/) • [Docker Compose](https://docs.docker.com/compose/) |
+| **Backend** | Python 3.11+ • Flask 3.1 • Gunicorn • SQLAlchemy 2.0 • Alembic / Flask-Migrate |
+| **Database & Cache** | PostgreSQL 15 • Redis 7 (Flask-Session & Flask-Limiter) |
+| **Web Frontend** | React 18 • Vite 7 • Tailwind CSS 3 • PostCSS • Jinja2 |
+| **Mobile Client** | Flutter (Dart SDK ^3.12) • Provider • HTTP Cookie Session Management |
+| **AI / ML** | Fine-tuned LoRA weights • Hugging Face Space / Standalone FastAPI Inference |
+| **Auth & Payments** | Authlib (Google OAuth) • WebAuthn (Passkeys) • Bakong KHQR SDK |
+| **Infrastructure** | Docker • Multi-stage Dockerfile • Docker Compose • GitHub Actions CI |
 
 ---
 
 ## 📁 Repository Structure
 
-See [docs/architecture.md](docs/architecture.md) for the complete monorepo reference.
+See [docs/architecture.md](docs/architecture.md) for the full directory reference and module breakdown.
 
-```hl
+```text
 Project_Assignment/
-├── backend/                          # Python Flask Backend Service
-│   ├── app/                          # Core Flask Application Package
-│   │   ├── blueprints/               # Role-Based Routing modules (admin, auth, expert, farmer, api, etc.)
-│   │   ├── models/                   # SQLAlchemy Database Entities (Crop, Disease, Symptom, Rule, etc.)
-│   │   ├── services/                 # Business Logic Services (rule_engine, weather_intelligence, etc.)
-│   │   ├── static/                   # Compiled assets (CSS, JS, SVGs, diagnosis-wizard)
-│   │   ├── templates/                # Jinja2 HTML5 Layouts & Components
-│   │   └── utils/                    # Internationalization, security headers, rate limiting, sessions
-│   ├── migrations/                   # Alembic database schema migrations
-│   ├── seeds/                        # System default seeding utilities (Admin, Expert, Farmer, Rules)
-│   ├── tests/                        # Backend Python unit & integration tests
-│   ├── entrypoint.sh                 # Database migration & seed start helper
-│   ├── requirements.txt              # Pinned Python dependencies declaration
-│   ├── requirements.lock             # Locked transitive Python dependencies
-│   ├── run.py                        # Flask application entrypoint
-│   └── setup_db.py                   # Database bootstrap helper
-├── frontend/                         # React Frontend for the Diagnosis Wizard
-│   ├── src/                          # React components and Stepper pages
-│   ├── tests/                        # Frontend Node.js regression tests (.cjs / .mjs)
-│   ├── package.json                  # Node packaging configurations
-│   ├── tailwind.config.js            # Design token properties
-│   └── vite.config.js                # Vite build outputs configured to backend/app/static/diagnosis-wizard
-├── mobile/                           # Flutter Cross-Platform Mobile App (iOS / Android)
-│   ├── lib/                          # Dart models, providers, screens, services, and translations
-│   └── test/                         # Mobile Dart unit tests
-├── ai/                               # Self-Trained AI Pipelines & Datasets
-│   ├── datasets/                     # Exported JSONL/CSV datasets and train.json
-│   ├── deployment/                   # Standalone inference API server
-│   ├── huggingface-space/            # Hugging Face Space Gradio app & knowledge matcher
-│   └── training/                     # Colab LoRA fine-tuning scripts & notebooks
-├── docs/                             # Core specifications, architecture blueprints, and API specs (docs/api/)
-├── scripts/                          # Operational, maintenance, and dataset export CLI scripts
-├── archived/                         # Archived scratch files and historical one-off dev_tools
-├── Dockerfile                        # Multi-stage production container build script
-└── docker-compose.yml                # Docker orchestrations (App service + PostgreSQL + Redis)
+├── backend/              # Flask application, Alembic migrations, seeds, and Python tests
+│   ├── app/              # Blueprints, models, domain services, templates, and static assets
+│   ├── migrations/       # Alembic schema revisions
+│   ├── seeds/            # Role, permission, user, and rule-based knowledge seeders
+│   └── tests/            # Python unittest suite (160 unit & integration tests)
+├── frontend/             # React + Vite Diagnosis Wizard & Node.js regression tests
+├── mobile/               # Flutter cross-platform application (Android, iOS, macOS, Windows)
+├── ai/                   # Datasets, LoRA training scripts, HF Space app, and inference server
+├── docs/                 # Architecture guide, security specs, and OpenAPI/Postman specs
+├── scripts/              # Operational CLI utilities, dataset exporters, and CVE auditor
+├── archived/             # Archived historical scratch files and one-off dev utilities
+├── Dockerfile            # Multi-stage production container build (Node 22 + Python 3.11)
+└── docker-compose.yml    # Full-stack orchestration (Flask + PostgreSQL 15 + Redis 7)
 ```
-
-### AI dataset export and remote model
-
-The agricultural knowledge tables can be exported for supervised fine-tuning
-with:
-
-```bash
-python scripts/export_to_jsonl.py --out-dir ai/datasets/exports
-```
-
-This creates `ai/datasets/exports/agri_train_data.jsonl`,
-`ai/datasets/exports/agri_validation_data.jsonl`, and a dataset manifest. The exporter
-excludes users, chat messages, diagnoses, and secrets. The trained model is
-served separately by your protected inference endpoint. Set
-`AI_PROVIDER=own-ai`, `HF_INFERENCE_URL`, and `HF_TOKEN` in the backend
-environment. Flask calls only that endpoint while keeping model weights out
-of the web process; commercial providers and fallback chains are disabled.
-
-### Agricultural agent
-
-Farmer chat now uses a controlled agent layer before calling the Hugging Face
-model. It selects trusted application tools for the request, including the
-agricultural knowledge base and the existing weather service when the farmer
-allows location access. The model explains those results in English or Khmer;
-it cannot execute arbitrary tools, change database records, invent live weather,
-or claim to have inspected an image it did not receive. Rule-based diagnosis
-remains the authoritative diagnosis workflow.
 
 ---
 
-## ⚙️ Installation & Local Setup
+## 🚀 Getting Started
 
-You can run this project locally on your host machine or via Docker.
+### Option A: Docker Compose (Recommended)
 
-### Option A: Local Run (Development)
+Docker Compose builds the React frontend, starts PostgreSQL 15 and Redis 7, applies database migrations, seeds initial data, and launches Gunicorn.
 
-#### 1. Setup Python Virtual Environment
-Ensure you have Python 3.11 installed.
+1. Create your environment file:
+   ```bash
+   cp .env.example .env
+   ```
+   Configure `SECRET_KEY`, `POSTGRES_*`, `HF_INFERENCE_URL`, `HF_TOKEN`, and any optional OAuth/Bakong keys in `.env`.
+
+2. Build and start the stack:
+   ```bash
+   docker compose up --build
+   ```
+
+3. Access the application at **`http://localhost:5000`**.
+
+---
+
+### Option B: Local Development
+
+#### 1. Backend Setup (Python 3.11+)
 ```bash
-# Clone the repository and enter directory
-cd Project_Assignment
+python3 -m venv .venv
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
+pip install -r backend/requirements.lock
 
-# Create virtual environment
-python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-
-# Install dependencies
-pip install -r backend/requirements.txt
-```
-
-#### 2. Configure Local Environment Variables
-Create a `.env` file in the root directory by copying the example:
-```bash
 cp .env.example .env
 ```
-Update the connection string and API key values in `.env`:
-* Configure `DATABASE_URL` to point to your local PostgreSQL instance (e.g., `postgresql+psycopg2://postgres:123@localhost:5432/AssExpertsystem`).
-* Configure `HF_INFERENCE_URL` and the matching `HF_TOKEN` for your trained AI endpoint.
-* Provide your `CALENDARIFIC_API_KEY` or set `THEME_EVENTS_PROVIDER=auto`.
 
-#### 3. Build React Frontend
-Ensure you have Node.js installed.
+#### 2. Frontend Build (Node.js 22+)
 ```bash
 cd frontend
-npm install
+npm ci
 npm run build
 cd ..
 ```
-*Note: Vite will compile assets directly into the backend static resources directory (`backend/app/static/diagnosis-wizard`).*
+*Vite automatically outputs the compiled Diagnosis Wizard bundle to `backend/app/static/diagnosis-wizard/`.*
 
-#### 4. Prepare Database & Seeds
+#### 3. Database Initialization & Seeding
 ```bash
-# Set environment context
 export FLASK_APP=backend/run.py
 
-# Setup database schemas and create tables
 python backend/setup_db.py
-
-# Stamp migrations to head
 flask --app backend/run.py db stamp head
 
-# Populate database with agricultural profiles & roles
 python backend/seeds/seed_roles.py
 python backend/seeds/seed_permissions.py
 python backend/seeds/seed_admin.py
@@ -230,44 +194,71 @@ python backend/seeds/seed_farmer.py
 python backend/seeds/seed_rule_based_knowledge.py
 ```
 
-#### 5. Launch Development Server
+#### 4. Start the Flask Server
 ```bash
 python backend/run.py
 ```
-Open `http://localhost:5000` in your web browser.
+Open **`http://localhost:5000`** in your browser.
+
+#### 5. Mobile App (Optional, Flutter)
+```bash
+cd mobile
+flutter pub get
+flutter run
+```
 
 ---
 
-### Option B: Run with Docker (Recommended)
+## 🧪 Testing & Security Audits
 
-Docker Compose automates the React builds, sets up PostgreSQL, executes database migrations, seeds initial data, and starts the production Gunicorn web server.
+Continuous integration runs automated security audits, lockfile parity validation, builds, and regression tests via [`.github/workflows/dependency-audit.yml`](.github/workflows/dependency-audit.yml).
 
-1. Ensure Docker Desktop is installed and running.
-2. Setup your `.env` configuration file in the project root folder.
-3. Boot the environment:
-   ```bash
-   docker-compose up --build
-   ```
-4. Once database checks pass and seeding succeeds, open `http://localhost:5000` in your browser.
+```bash
+# 1. Backend unit & integration tests (160 tests)
+.venv/bin/python -m unittest discover -s backend/tests -v
 
----
+# 2. Frontend regression tests (20 tests)
+node --test frontend/tests/*.cjs frontend/tests/*.mjs
 
-## 🌾 Seeding Data Configurations
+# 3. Mobile unit tests
+cd mobile && flutter test
 
-Our pre-configured knowledge database (`seed_rule_based_knowledge.py`) populates the system with rules and symptoms for the following crops:
-- 🌾 **Rice** (Blast, Bacterial Leaf Blight, Brown Planthopper, Stem Borer, Nitrogen Deficiency)
-- 🥔 **Potato** (Early Blight, Late Blight, Common Scab, Potato Aphids)
-- 🍅 **Tomato** (Late Blight, Bacterial Canker, Tomato Mosaic Virus, Blossom End Rot)
-- 🥒 **Cucumber** (Downy Mildew, Powdery Mildew, Cucumber Mosaic Virus, Iron Deficiency)
-- 🌶️ **Chili Pepper** (Anthracnose, Bacterial Wilt, Chili Leaf Curl Virus, Nitrogen Deficiency)
-- 🍌 **Banana** (Panama Disease, Sigatoka, Banana Bunchy Top Virus, Potassium Deficiency)
-- 🌽 **Corn** (Northern Corn Leaf Blight, Common Smut, Maize Dwarf Mosaic Virus, Nitrogen Deficiency)
-- 🍠 **Cassava** (Cassava Mosaic Disease, Cassava Brown Streak Disease, Cassava Bacterial Blight)
+# 4. Dependency parity, tree integrity, and CVE audit (Python + npm)
+.venv/bin/python scripts/audit_dependencies.py --check-lockfile --strict
+
+# 5. Python lint check
+.venv/bin/ruff check backend/ scripts/
+```
 
 ---
 
-## 🤝 Collaboration & Review
-For reviews, bugs, and development:
-* Code validation scripts can be tested using `python scripts/dev_tools/smoke_test.py`.
-* Reviewers can invoke specialized instructions in [.github/agents/code-reviewer.agent.md](.github/agents/code-reviewer.agent.md).
-* Themes can be completely reset and reseeded to defaults using `python scripts/dev_tools/reset_themes.py`.
+## 🤖 AI Training & Dataset Export
+
+Agricultural knowledge tables can be exported cleanly for supervised fine-tuning (excluding PII, user records, chat logs, and secrets):
+
+```bash
+python scripts/export_to_jsonl.py --out-dir ai/datasets/exports
+```
+
+This generates:
+- `ai/datasets/exports/agri_train_data.jsonl`
+- `ai/datasets/exports/agri_validation_data.jsonl`
+- Dataset manifest metadata
+
+Refer to [`ai/deployment/README.md`](ai/deployment/README.md) for deploying the standalone inference server.
+
+---
+
+## 📚 Documentation
+
+| Document | Description |
+| :--- | :--- |
+| [Monorepo Architecture](docs/architecture.md) | Complete directory layout and developer workflows |
+| [OpenAPI Auth Specification](docs/api/openapi_auth_spec.json) | REST API authentication contract & schemas |
+| [Postman Collection](docs/api/postman_auth_collection.json) | Ready-to-import API test collection |
+| [Rule Engine Design](docs/rule_based_diagnosis_engine_design.md) | Diagnosis scoring and adaptive questioning model |
+| [Weather Intelligence](docs/weather_intelligence_module.md) | Forecast caching, thresholds, and fallback architecture |
+| [Session Security](docs/session_security.md) | Server-side Redis sessions, timeouts, and CSRF controls |
+| [Dependency Management](docs/dependency_management.md) | Lockfile pinning and CVE auditing policies |
+| [Railway Migration Guide](docs/railway_migration.md) | Cloud deployment steps for Railway |
+| [Code Review Agent](.github/agents/code-reviewer.agent.md) | Repository code review guidelines |
