@@ -2,9 +2,12 @@ from __future__ import annotations
 
 from typing import Any
 
-from flask import render_template, request, url_for
+from flask import get_flashed_messages, render_template, request, url_for
 from flask_login import current_user
+from flask_wtf.csrf import generate_csrf
 
+from app.models.notification import Notification
+from app.services.notification_service import serialize_notification
 from app.utils.i18n import get_current_language, normalize_display_text, t
 from app.services.theme_manager import resolve_active_runtime
 
@@ -114,6 +117,16 @@ def _theme_runtime(scope: str):
 
 
 def _current_user_payload() -> dict[str, Any]:
+    if not current_user or not current_user.is_authenticated:
+        return {
+            "id": None,
+            "username": "",
+            "full_name": "Guest",
+            "email": "",
+            "roles": [],
+            "avatar_url": url_for("static", filename="img/avatar.png"),
+        }
+
     full_name = getattr(current_user, "full_name", None) or getattr(current_user, "username", None) or "User"
     roles = []
     try:
@@ -121,16 +134,97 @@ def _current_user_payload() -> dict[str, Any]:
     except Exception:
         roles = []
 
+    try:
+        avatar = url_for("user.avatar", user_id=current_user.id)
+    except Exception:
+        avatar = url_for("static", filename="img/avatar.png")
+
     return {
         "id": getattr(current_user, "id", None),
         "username": _text(getattr(current_user, "username", "") or ""),
         "full_name": _text(full_name),
         "email": _text(getattr(current_user, "email", "") or ""),
         "roles": roles,
+        "avatar_url": avatar,
     }
 
 
+def _notifications_payload() -> dict[str, Any]:
+    if not current_user or not current_user.is_authenticated:
+        return {"items": [], "unreadCount": 0, "link": None}
+    try:
+        if getattr(request, "blueprint", None) == "farmer" or (
+            current_user.has_role("farmer")
+            and not current_user.has_role("admin")
+            and not current_user.has_role("expert")
+        ):
+            link = url_for("farmer.notifications")
+        else:
+            link = url_for("user.notifications")
+        items = [
+            serialize_notification(item)
+            for item in Notification.query.filter(Notification.user_id == current_user.id)
+            .order_by(Notification.created_at.desc())
+            .limit(6)
+            .all()
+        ]
+        unread = Notification.query.filter(
+            Notification.user_id == current_user.id,
+            Notification.read_at.is_(None),
+        ).count()
+        return {"items": items, "unreadCount": unread, "link": link}
+    except Exception:
+        return {"items": [], "unreadCount": 0, "link": None}
+
+
+def _flashes_payload() -> list[dict[str, str]]:
+    flashes = []
+    for category, message in get_flashed_messages(with_categories=True):
+        flashes.append(
+            {
+                "category": str(category or "info"),
+                "message": _text(message or ""),
+            }
+        )
+    return flashes
+
+
+def _safe_url(endpoint: str, fallback: str = "#", **values) -> str:
+    try:
+        return url_for(endpoint, **values)
+    except Exception:
+        return fallback
+
+
+def _common_urls() -> dict[str, str]:
+    next_path = _request_full_path()
+    en_url = _safe_url("user.update_language", "/users/language?lang=en", lang="en", next=request.path)
+    km_url = _safe_url("user.update_language", "/users/language?lang=km", lang="km", next=request.path)
+    return {
+        "home": _safe_url("main.index", "/"),
+        "updateLanguageEn": en_url,
+        "updateLanguageKm": km_url,
+        "themeUpdate": _safe_url("user.update_theme", "/users/theme"),
+        "logout": _safe_url("auth.logout", "/auth/logout"),
+        "profile": _safe_url("user.profile", "/users/profile"),
+        "settings": _safe_url("user.settings", "/users/settings"),
+        "loginActivity": _safe_url("user.login_activity", "/users/login-activity"),
+        "notifications": _safe_url("user.notifications", "/users/notifications"),
+        "logoLight": _safe_url("static", "/static/img/newlogo.svg", filename="img/newlogo.svg"),
+        "logoDark": _safe_url("static", "/static/img/newlogo-dark.svg", filename="img/newlogo-dark.svg"),
+        "nextPath": next_path,
+    }
+
+
+def _safe_csrf() -> str:
+    try:
+        return generate_csrf()
+    except Exception:
+        return ""
+
+
 def _base_bootstrap(page_id: str, scope: str, ui: dict[str, Any], data: dict[str, Any]) -> dict[str, Any]:
+    lang = "km" if _lang() == "km" else "en"
     return {
         "page": {
             "id": page_id,
@@ -138,25 +232,38 @@ def _base_bootstrap(page_id: str, scope: str, ui: dict[str, Any], data: dict[str
         },
         "path": request.path,
         "serverOrigin": request.url_root,
-        "locale": "km-KH" if _lang() == "km" else "en-US",
+        "locale": "km-KH" if lang == "km" else "en-US",
+        "lang": lang,
+        "csrfToken": _safe_csrf(),
+        "flashes": _flashes_payload(),
         "settings": {
-            "theme": getattr(current_user, "theme", "system") or "system",
+            "theme": getattr(current_user, "theme", "system") if (current_user and current_user.is_authenticated) else "system",
         },
+        "urls": _common_urls(),
         "user": _current_user_payload(),
+        "notifications": _notifications_payload(),
         "themeRuntime": _theme_runtime(scope),
         "ui": ui,
         "data": data,
     }
 
 
-def render_react_page(*, bootstrap_payload: dict[str, Any], title: str, body_class: str = "", react_extra_css: list[str] | None = None):
+def render_react_page(
+    *,
+    bootstrap_payload: dict[str, Any],
+    title: str,
+    body_class: str = "",
+    react_extra_css: list[str] | None = None,
+    react_ssr_html: str | None = None,
+):
     return render_template(
         "layouts/react_shell.html",
         bootstrap_payload=bootstrap_payload,
         react_page_title=title,
         react_body_class=body_class,
         react_extra_css=react_extra_css or [],
-        react_loading_message=_copy("React page is loading...", "កំពុងផ្ទុកទំព័រ React..."),
+        react_ssr_html=react_ssr_html,
+        react_loading_message=_copy("Workspace is loading...", "កំពុងផ្ទុកទំព័រ..."),
     )
 
 
@@ -175,23 +282,7 @@ def build_admin_dashboard_bootstrap(*, total_users, total_diagnoses, pending_dia
             "users": {"label": t("manage_users"), "href": url_for("admin.users")},
         },
         "navigation": {
-            "sections": [
-                {
-                    "title": _copy("Overview", "ទិដ្ឋភាពទូទៅ"),
-                    "items": [
-                        {"label": t("admin_dashboard_title"), "href": url_for("admin.dashboard"), "description": t("admin_control_sub")},
-                        {"label": t("world_map"), "href": url_for("admin.world"), "description": _copy("Geographic monitoring", "តាមដានផែនទី")},
-                    ],
-                },
-                {
-                    "title": _copy("Governance", "ការគ្រប់គ្រង"),
-                    "items": [
-                        {"label": t("manage_users"), "href": url_for("admin.users"), "description": _copy("Accounts and access", "គណនី និងសិទ្ធិ")},
-                        {"label": t("roles"), "href": url_for("admin.roles"), "description": _copy("Permission sets", "សំណុំសិទ្ធិ")},
-                        {"label": t("audit_logs"), "href": url_for("admin.audit_logs"), "description": _copy("Recent platform actions", "សកម្មភាពថ្មីៗ")},
-                    ],
-                },
-            ],
+            "sections": _admin_navigation_sections(),
         },
         "metrics": {
             "users": t("total_users"),
@@ -1794,7 +1885,17 @@ def build_expert_support_hub_bootstrap(
     return _base_bootstrap("expert-support-hub", "expert", ui, data)
 
 
-def build_farmer_dashboard_bootstrap(*, diagnoses, ai_questions, crops):
+def build_farmer_dashboard_bootstrap(
+    *,
+    diagnoses,
+    ai_questions,
+    crops,
+    marquees=None,
+    premium_price="20.00",
+    yearly_monthly="16.00",
+    yearly_total="192.00",
+    yearly_discount_percent="20",
+):
     diagnosis_rows = []
     total_confidence = 0.0
 
@@ -1830,9 +1931,27 @@ def build_farmer_dashboard_bootstrap(*, diagnoses, ai_questions, crops):
         {
             "id": crop.id,
             "name": _localize_attr(crop, "name", getattr(crop, "name", "")),
+            "diagnoseUrl": f"{url_for('farmer.diagnose_rule_based')}?crop_id={crop.id}",
         }
         for crop in (crops or [])
     ]
+
+    marquee_rows = [
+        {
+            "id": m.id,
+            "text": _localize_attr(m, "text", getattr(m, "text", "")),
+            "textEn": _text(getattr(m, "text", "")),
+            "textKm": _text(getattr(m, "text_kh", "") or getattr(m, "text", "")),
+        }
+        for m in (marquees or [])
+    ]
+
+    is_premium = bool(
+        current_user
+        and current_user.is_authenticated
+        and (getattr(current_user, "has_active_premium", False) or getattr(current_user, "is_premium", False))
+    )
+    ai_credits = int(getattr(current_user, "ai_credits", 0) or 0) if (current_user and current_user.is_authenticated) else 0
 
     ui = {
         "productName": "AGRI SYSTEM",
@@ -1845,23 +1964,7 @@ def build_farmer_dashboard_bootstrap(*, diagnoses, ai_questions, crops):
             "chat": {"label": t("ask_expert"), "href": url_for("farmer.chat")},
         },
         "navigation": {
-            "sections": [
-                {
-                    "title": _copy("Workspace", "ផ្ទាំងការងារ"),
-                    "items": [
-                        {"label": t("farmer_dashboard_title"), "href": url_for("farmer.dashboard"), "description": t("farmer_dashboard_sub")},
-                        {"label": t("guided_diagnosis_title"), "href": url_for("farmer.diagnose_rule_based"), "description": t("guided_diagnosis_sub")},
-                        {"label": t("instant_scan_title"), "href": f"{url_for('farmer.scan_crop')}?instant=1", "description": t("instant_scan_sub")},
-                    ],
-                },
-                {
-                    "title": _copy("History", "ប្រវត្តិ"),
-                    "items": [
-                        {"label": t("recent_diagnoses_title"), "href": url_for("farmer.diagnosis_history"), "description": _copy("Past diagnosis records", "ប្រវត្តិវិនិច្ឆ័យ")},
-                        {"label": t("ask_expert_title"), "href": url_for("farmer.chat"), "description": t("ask_expert_sub")},
-                    ],
-                },
-            ],
+            "sections": _farmer_navigation_sections(),
         },
         "metrics": {
             "diagnoses": t("total_diagnoses"),
@@ -1892,7 +1995,7 @@ def build_farmer_dashboard_bootstrap(*, diagnoses, ai_questions, crops):
         },
         "entryCards": [
             {"title": t("guided_diagnosis_title"), "description": t("guided_diagnosis_sub"), "href": url_for("farmer.diagnose_rule_based"), "primary": True},
-            {"title": t("instant_scan_title"), "description": t("instant_scan_sub"), "href": f"{url_for('farmer.scan_crop')}?instant=1", "primary": False},
+            {"title": t("instant_scan_title"), "description": t("instant_scan_sub"), "href": url_for("farmer.diagnose_rule_based", instant=1), "primary": False},
             {"title": t("ask_expert_title"), "description": t("ask_expert_sub"), "href": url_for("farmer.chat"), "primary": False},
         ],
         "table": {
@@ -1928,16 +2031,27 @@ def build_farmer_dashboard_bootstrap(*, diagnoses, ai_questions, crops):
 
     data = {
         "totalDiagnoses": len(diagnosis_rows),
-        "averageConfidence": round((total_confidence / len(diagnosis_rows)), 1) if diagnosis_rows else 0,
+        "averageConfidence": round((total_confidence / len(diagnosis_rows)) * 100.0 if diagnosis_rows and (total_confidence / len(diagnosis_rows)) <= 1.0 else (total_confidence / len(diagnosis_rows)), 1) if diagnosis_rows else 0,
         "diagnoses": diagnosis_rows,
         "aiQuestions": question_rows,
         "crops": crop_rows,
+        "marquees": marquee_rows,
+        "isPremium": is_premium,
+        "aiCredits": ai_credits,
+        "premiumPrice": str(premium_price),
+        "yearlyMonthly": str(yearly_monthly),
+        "yearlyTotal": str(yearly_total),
+        "yearlyDiscountPercent": str(yearly_discount_percent),
+        "upgradeUrl": _safe_url("farmer.premium_upgrade", "/farmer/premium/upgrade"),
+        "diseasesUrl": _safe_url("farmer_disease.index", "/farmer/diseases/"),
+        "newsUrl": _safe_url("farmer.news", "/farmer/news"),
+        "diagnoseClassicUrl": _safe_url("farmer.diagnose", "/farmer/diagnose"),
+        "historyUrl": _safe_url("farmer.diagnosis_history", "/farmer/diagnoses/history"),
         "weather": {
             "endpoint": url_for("weather_intelligence.weather_summary"),
             "lang": _lang(),
             "fallbackLat": 11.5564,
             "fallbackLon": 104.9282,
-            "scriptUrl": url_for("static", filename="js/weather_intelligence.js"),
         },
     }
 
@@ -1947,18 +2061,30 @@ def build_farmer_dashboard_bootstrap(*, diagnoses, ai_questions, crops):
 def _farmer_navigation_sections():
     return [
         {
-            "title": _copy("Workspace"),
+            "title": _copy("Workspace", "ផ្ទាំងការងារ"),
             "items": [
-                {"label": t("farmer_dashboard_title"), "href": url_for("farmer.dashboard"), "description": t("farmer_dashboard_sub")},
-                {"label": t("guided_diagnosis_title"), "href": url_for("farmer.diagnose_rule_based"), "description": t("guided_diagnosis_sub")},
-                {"label": t("instant_scan_title"), "href": f"{url_for('farmer.scan_crop')}?instant=1", "description": t("instant_scan_sub")},
+                {"label": t("farmer_dashboard_title"), "href": _safe_url("farmer.dashboard", "/farmer/dashboard")},
+                {"label": t("guided_diagnosis_title"), "href": _safe_url("farmer.diagnose_rule_based", "/farmer/diagnose/rule-based")},
+                {"label": t("instant_scan_title"), "href": _safe_url("farmer.diagnose_rule_based", "/farmer/diagnose/rule-based?instant=1", instant=1)},
+                {"label": _copy("Symptom Checker", "ពិនិត្យរោគសញ្ញា"), "href": _safe_url("farmer.diagnose", "/farmer/diagnose")},
+                {"label": t("ask_expert_title"), "href": _safe_url("farmer.chat", "/farmer/chat")},
             ],
         },
         {
-            "title": _copy("History"),
+            "title": _copy("Explore", "រុករក"),
             "items": [
-                {"label": t("recent_diagnoses_title"), "href": url_for("farmer.diagnosis_history"), "description": _copy("Past diagnosis records")},
-                {"label": t("ask_expert_title"), "href": url_for("farmer.chat"), "description": t("ask_expert_sub")},
+                {"label": _copy("Crop & Disease Atlas", "សព្វវចនាធិប្បាយជំងឺដំណាំ"), "href": _safe_url("farmer_disease.index", "/farmer/diseases/")},
+                {"label": _copy("Agri News", "ព័ត៌មានកសិកម្ម"), "href": _safe_url("farmer.news", "/farmer/news")},
+                {"label": _copy("About Platform", "អំពីប្រព័ន្ធ"), "href": _safe_url("farmer.detail", "/farmer/detail")},
+            ],
+        },
+        {
+            "title": _copy("History & Account", "ប្រវត្តិ និងគណនី"),
+            "items": [
+                {"label": t("recent_diagnoses_title"), "href": _safe_url("farmer.diagnosis_history", "/farmer/diagnoses/history")},
+                {"label": _copy("Rule Inference Logs", "ប្រវត្តិវិភាគតាមច្បាប់"), "href": _safe_url("farmer.rule_inference_history", "/farmer/history/rule-inference")},
+                {"label": _copy("Notifications", "ការជូនដំណឹង"), "href": _safe_url("farmer.notifications", "/farmer/notifications")},
+                {"label": _copy("Settings", "ការកំណត់"), "href": _safe_url("user.settings", "/users/settings")},
             ],
         },
     ]
@@ -2045,17 +2171,29 @@ def build_farmer_chat_bootstrap(*, sessions, active_session, messages):
     data = {
         "newChatUrl": url_for("farmer.new_chat"),
         "diagnoseUrl": url_for("farmer.diagnose_rule_based"),
+        "ttsUrl": _safe_url("farmer.api_tts", "/farmer/api/tts"),
         "exampleMessage": t("ai_help_example"),
+        "isPremium": bool(
+            current_user
+            and current_user.is_authenticated
+            and (getattr(current_user, "has_active_premium", False) or getattr(current_user, "is_premium", False))
+        ),
+        "aiCredits": int(getattr(current_user, "ai_credits", 0) or 0) if (current_user and current_user.is_authenticated) else 0,
         "activeSession": {
             "id": getattr(active_session, "id", None),
             "title": _text(getattr(active_session, "title", None) or t("new_chat")),
             "postUrl": url_for("farmer.chat", session_id=active_session.id) if active_session else url_for("farmer.chat"),
+            "isPinned": bool(getattr(active_session, "is_pinned", False)) if active_session else False,
         },
         "sessions": [
             {
                 "id": session.id,
                 "title": _text(getattr(session, "title", None) or t("new_chat")),
                 "href": url_for("farmer.chat", session_id=session.id),
+                "pinUrl": url_for("farmer.pin_chat_session", session_id=session.id),
+                "renameUrl": url_for("farmer.rename_chat_session", session_id=session.id),
+                "deleteUrl": url_for("farmer.delete_chat_session", session_id=session.id),
+                "isPinned": bool(getattr(session, "is_pinned", False)),
                 "updatedAt": _iso(getattr(session, "updated_at", None)),
                 "active": bool(active_session and session.id == active_session.id),
             }
@@ -2397,3 +2535,1262 @@ def build_farmer_result_bootstrap(*, diagnosis, possible_diseases, symptom_break
     }
 
     return _base_bootstrap("farmer-result", "farmer", ui, data)
+
+
+def build_auth_bootstrap(
+    *,
+    mode: str,
+    role: str = "farmer",
+    form=None,
+    email: str = "",
+    purpose: str = "",
+    next_url: str | None = None,
+    auth_theme_runtime=None,
+) -> dict[str, Any]:
+    page_id = {
+        "login": "auth-login",
+        "staff-login": "staff-login",
+        "register": "auth-register",
+        "forgot-password": "auth-forgot-password",
+        "reset-password": "auth-reset-password",
+        "verify-code": "auth-verify-code",
+    }.get(mode, "auth-login")
+
+    errors: dict[str, list[str]] = {}
+    values: dict[str, str] = {"email": _text(email)}
+    if form is not None:
+        for field_name in ("email", "full_name", "verification_code", "code"):
+            field = getattr(form, field_name, None)
+            if field is not None and getattr(field, "data", None):
+                values[field_name] = _text(field.data)
+        for field_name, errs in (getattr(form, "errors", None) or {}).items():
+            errors[str(field_name)] = [_text(e) for e in errs]
+
+    submit_url = _request_full_path()
+    data: dict[str, Any] = {
+        "mode": mode,
+        "role": role,
+        "purpose": _text(purpose),
+        "email": _text(email),
+        "nextUrl": _text(next_url or ""),
+        "csrfToken": generate_csrf(),
+        "submitUrl": submit_url,
+        "googleLoginUrl": url_for("auth.google_login"),
+        "passkeyOptionsUrl": url_for("staff.passkey_login_options") if mode == "staff-login" else url_for("auth.passkey_login_options"),
+        "passkeyVerifyUrl": url_for("staff.passkey_login_verify") if mode == "staff-login" else url_for("auth.passkey_login_verify"),
+        "sendOtpUrl": url_for("auth.send_register_otp"),
+        "resetPasswordApiUrl": url_for("auth.reset_password_api"),
+        "resendCodeUrl": url_for("auth.resend_code"),
+        "forgotPasswordUrl": url_for("auth.forgot_password"),
+        "loginUrl": url_for("auth.login"),
+        "staffLoginUrl": url_for("staff.login"),
+        "registerUrl": url_for("auth.register"),
+        "logoutUrl": url_for("auth.logout"),
+        "homeUrl": url_for("main.index"),
+        "values": values,
+        "errors": errors,
+    }
+    payload = _base_bootstrap(page_id, role if role in ("admin", "expert", "farmer") else "farmer", {}, data)
+    if auth_theme_runtime is not None:
+        payload["themeRuntime"] = auth_theme_runtime
+    return payload
+
+
+def build_error_bootstrap(
+    *,
+    error_code: int,
+    error_title: str,
+    error_message: str,
+    request_path: str,
+    request_method: str,
+    referrer: str | None,
+    request_id: str,
+    timestamp,
+    user_label: str,
+    home_url: str,
+    valid_methods: list[str] | None = None,
+) -> dict[str, Any]:
+    data = {
+        "errorCode": int(error_code),
+        "errorTitle": _text(error_title),
+        "errorMessage": _text(error_message),
+        "requestPath": _text(request_path),
+        "requestMethod": _text(request_method),
+        "referrer": _text(referrer) if referrer else None,
+        "requestId": _text(request_id),
+        "timestamp": timestamp.strftime("%Y-%m-%d %H:%M:%S") if hasattr(timestamp, "strftime") else _text(timestamp),
+        "userLabel": _text(user_label),
+        "homeUrl": _text(home_url),
+        "validMethods": valid_methods or [],
+    }
+    return _base_bootstrap("error-page", "farmer", {}, data)
+
+
+def _admin_navigation_sections() -> list[dict[str, Any]]:
+    return [
+        {
+            "title": _copy("Overview", "ទិដ្ឋភាពទូទៅ"),
+            "items": [
+                {"label": t("admin_dashboard_title"), "href": _safe_url("admin.dashboard", "/admin/dashboard")},
+                {"label": t("world_map"), "href": _safe_url("admin.world", "/admin/world")},
+                {"label": _copy("Support Hub", "មជ្ឈមណ្ឌលគាំទ្រ"), "href": _safe_url("admin.support_requests", "/admin/support-requests")},
+                {"label": _copy("Live Support", "ជំនួយផ្ទាល់"), "href": _safe_url("admin.support_chats", "/admin/support_chats")},
+            ],
+        },
+        {
+            "title": _copy("Governance", "ការគ្រប់គ្រង"),
+            "items": [
+                {"label": t("manage_users"), "href": _safe_url("admin.users", "/admin/users")},
+                {"label": t("roles"), "href": _safe_url("admin.roles", "/admin/roles")},
+                {"label": t("audit_logs"), "href": _safe_url("admin.audit_logs", "/admin/audit-logs")},
+                {"label": _copy("Expert Stats", "ស្ថិតិអ្នកជំនាញ"), "href": _safe_url("admin.expert_statistics", "/admin/expert-statistics")},
+            ],
+        },
+        {
+            "title": _copy("Platform & Billing", "ប្រព័ន្ធ និងការទូទាត់"),
+            "items": [
+                {"label": _copy("Crops", "ដំណាំ"), "href": _safe_url("admin_crop.index", "/admin/crops/")},
+                {"label": _copy("Diseases", "ជំងឺ"), "href": _safe_url("admin.diseases", "/admin/diseases")},
+                {"label": _copy("Premium & Plans", "គម្រោង Premium"), "href": _safe_url("admin.premium_settings", "/admin/premium-settings")},
+                {"label": _copy("Promo Codes", "កូដបញ្ចុះតម្លៃ"), "href": _safe_url("admin.promo_codes", "/admin/promo-codes")},
+                {"label": _copy("Translations", "ការបកប្រែ"), "href": _safe_url("admin.translations", "/admin/translations")},
+                {"label": _copy("Marquees", "សាររត់"), "href": _safe_url("admin.marquees", "/admin/marquees")},
+                {"label": _copy("System Settings", "ការកំណត់ប្រព័ន្ធ"), "href": _safe_url("admin.settings", "/admin/settings")},
+            ],
+        },
+    ]
+
+
+def _user_navigation_sections() -> list[dict[str, Any]]:
+    sections: list[dict[str, Any]] = []
+    has_admin = bool(current_user and current_user.is_authenticated and current_user.has_role("admin"))
+    has_expert = bool(current_user and current_user.is_authenticated and current_user.has_role("expert"))
+    has_farmer = bool(current_user and current_user.is_authenticated and current_user.has_role("farmer"))
+
+    if has_admin:
+        sections.extend(_admin_navigation_sections()[:2])
+    elif has_expert:
+        sections.extend(_expert_navigation_sections())
+    elif has_farmer:
+        sections.extend(_farmer_navigation_sections())
+
+    sections.append(
+        {
+            "title": _copy("Account", "គណនី"),
+            "items": [
+                {"label": t("profile") or _copy("Profile", "ប្រវត្តិរូប"), "href": _safe_url("user.profile", "/users/profile")},
+                {"label": t("settings") or _copy("Settings", "ការកំណត់"), "href": _safe_url("user.settings", "/users/settings")},
+                {"label": _copy("Login Activity", "សកម្មភាពចូលគណនី"), "href": _safe_url("user.login_activity", "/users/login-activity")},
+                {"label": _copy("Notifications", "ការជូនដំណឹង"), "href": _safe_url("user.notifications", "/users/notifications")},
+            ],
+        }
+    )
+    return sections
+
+
+def _user_scope() -> str:
+    if current_user and current_user.is_authenticated:
+        if current_user.has_role("admin"):
+            return "admin"
+        if current_user.has_role("expert"):
+            return "expert"
+    return "farmer"
+
+
+def build_user_home_bootstrap() -> dict[str, Any]:
+    scope = _user_scope()
+    ui = {
+        "pageTitle": _copy("Account Hub", "មជ្ឈមណ្ឌលគណនី"),
+        "pageSubtitle": _copy("Quick access to your workspace, security controls, and preferences.", "ចូលទៅកាន់កន្លែងធ្វើការ សុវត្ថិភាព និងការកំណត់របស់អ្នកយ៉ាងរហ័ស។"),
+        "navigation": {"sections": _user_navigation_sections()},
+    }
+    data = {
+        "dashboardUrl": (
+            _safe_url("admin.dashboard", "/admin/dashboard")
+            if scope == "admin"
+            else _safe_url("expert.dashboard", "/expert/dashboard")
+            if scope == "expert"
+            else _safe_url("farmer.dashboard", "/farmer/dashboard")
+        ),
+        "profileUrl": _safe_url("user.profile", "/users/profile"),
+        "settingsUrl": _safe_url("user.settings", "/users/settings"),
+        "loginActivityUrl": _safe_url("user.login_activity", "/users/login-activity"),
+        "notificationsUrl": _safe_url("user.notifications", "/users/notifications"),
+    }
+    return _base_bootstrap("user-home", scope, ui, data)
+
+
+def build_user_profile_bootstrap(*, rep_label: str | None = None, member_card_url: str | None = None) -> dict[str, Any]:
+    scope = _user_scope()
+    ui = {
+        "pageTitle": _copy("Profile & Security", "ប្រវត្តិរូប និងសុវត្ថិភាព"),
+        "pageSubtitle": _copy("Manage your identity, password, passkeys, and two-factor protection.", "គ្រប់គ្រងព័ត៌មានគណនី ពាក្យសម្ងាត់ Passkeys និងការផ្ទៀងផ្ទាត់ពីរជាន់។"),
+        "navigation": {"sections": _user_navigation_sections()},
+    }
+    data = {
+        "submitUrl": _safe_url("user.profile", "/users/profile"),
+        "toggle2faUrl": _safe_url("user.update_2fa", "/users/2fa"),
+        "passkeysListUrl": _safe_url("user.list_passkeys", "/users/passkeys"),
+        "passkeyDeletePrefix": "/users/passkeys/",
+        "passkeyRegisterOptionsUrl": _safe_url("auth.passkey_register_options", "/auth/passkey/register/options"),
+        "passkeyRegisterVerifyUrl": _safe_url("auth.passkey_register_verify", "/auth/passkey/register/verify"),
+        "settingsUrl": _safe_url("user.settings", "/users/settings"),
+        "loginActivityUrl": _safe_url("user.login_activity", "/users/login-activity"),
+        "repLabel": _text(rep_label) if rep_label else None,
+        "memberCardUrl": member_card_url,
+        "twoFactorEnabled": bool(getattr(current_user, "two_factor_enabled", False)),
+        "isPremium": bool(getattr(current_user, "is_premium", False)),
+        "authProvider": _text(getattr(current_user, "auth_provider", "local") or "local"),
+    }
+    return _base_bootstrap("user-profile", scope, ui, data)
+
+
+def build_user_settings_bootstrap(*, activities: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+    scope = _user_scope()
+    ui = {
+        "pageTitle": _copy("Workspace Preferences", "ការកំណត់គណនី"),
+        "pageSubtitle": _copy("Personalize appearance, language, and account security settings.", "កំណត់រចនាប័ទ្ម ភាសា និងការការពារគណនីរបស់អ្នក។"),
+        "navigation": {"sections": _user_navigation_sections()},
+    }
+    data = {
+        "submitUrl": _safe_url("user.settings", "/users/settings"),
+        "loginActivityUrl": _safe_url("user.login_activity", "/users/login-activity"),
+        "profileUrl": _safe_url("user.profile", "/users/profile"),
+        "theme": getattr(current_user, "theme", "system") if current_user and current_user.is_authenticated else "system",
+        "twoFactorEnabled": bool(getattr(current_user, "two_factor_enabled", False)),
+        "recentActivities": activities or [],
+    }
+    return _base_bootstrap("user-settings", scope, ui, data)
+
+
+def build_user_login_activity_bootstrap(*, activities: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+    scope = _user_scope()
+    ui = {
+        "pageTitle": _copy("Device & Session Security", "សកម្មភាពឧបករណ៍ និងសម័យចូល"),
+        "pageSubtitle": _copy("Monitor active logins across devices and revoke unrecognized sessions.", "តាមដានការចូលប្រើប្រាស់លើឧបករណ៍នានា និងបញ្ឈប់សម័យដែលមិនស្គាល់។"),
+        "navigation": {"sections": _user_navigation_sections()},
+    }
+    data = {
+        "activities": activities or [],
+        "dataUrl": _safe_url("user.login_activity_data", "/users/login-activity/data"),
+        "revokeUrl": _safe_url("user.login_activity_revoke", "/users/login-activity/revoke"),
+        "revokeOthersUrl": _safe_url("user.login_activity_revoke_others", "/users/login-activity/revoke-others"),
+        "settingsUrl": _safe_url("user.settings", "/users/settings"),
+        "loginUrl": _safe_url("auth.login", "/auth/login"),
+    }
+    return _base_bootstrap("user-login-activity", scope, ui, data)
+
+
+def build_user_member_card_bootstrap(*, member, rep_label: str, role_names: str, theme_runtime=None) -> dict[str, Any]:
+    avatar_url = _safe_url("user.avatar", "/static/img/avatar.png", user_id=member.id)
+    member_card_url = _safe_url("user.member_card", f"/users/member-card/{member.id}", user_id=member.id, _external=True)
+    data = {
+        "member": {
+            "id": member.id,
+            "username": _text(member.username),
+            "full_name": _text(member.full_name or member.username),
+            "email": _text(member.email or ""),
+            "avatar_url": avatar_url,
+            "created_at": _iso(getattr(member, "created_at", None)),
+            "is_active": bool(getattr(member, "is_active", True)),
+        },
+        "repLabel": _text(rep_label),
+        "roleNames": _text(role_names),
+        "memberCardUrl": member_card_url,
+        "homeUrl": _safe_url("main.index", "/"),
+    }
+    payload = _base_bootstrap("user-member-card", "admin", {}, data)
+    if theme_runtime is not None:
+        payload["themeRuntime"] = theme_runtime
+    return payload
+
+
+def build_user_notifications_bootstrap(
+    *,
+    items: list[dict[str, Any]],
+    next_page: int | None,
+    per_page: int,
+    data_url: str,
+    seen_url: str,
+) -> dict[str, Any]:
+    scope = _user_scope()
+    ui = {
+        "pageTitle": _copy("Notifications", "ការជូនដំណឹង"),
+        "pageSubtitle": _copy("Alerts about diagnoses, expert replies, and system updates.", "ការជូនដំណឹងអំពីការវិនិច្ឆ័យ ការឆ្លើយតបរបស់អ្នកជំនាញ និងបច្ចុប្បន្នភាពប្រព័ន្ធ។"),
+        "navigation": {"sections": _user_navigation_sections()},
+    }
+    data = {
+        "items": items,
+        "nextPage": next_page,
+        "perPage": int(per_page),
+        "dataUrl": data_url,
+        "seenUrl": seen_url,
+    }
+    return _base_bootstrap("user-notifications", scope, ui, data)
+
+
+def build_guest_landing_ssr_html(*, supervisor=None, team=None) -> str:
+    supervisor_name = _text(getattr(supervisor, "name", "") if isinstance(supervisor, dict) else (supervisor or {}).get("name", "Sek Socheat") if isinstance(supervisor, dict) else "Sek Socheat")
+    team_names = []
+    for member in (team or []):
+        if isinstance(member, dict) and member.get("name"):
+            team_names.append(_text(member["name"]))
+    team_line = ", ".join(team_names) if team_names else "Mao Seavik"
+    return (
+        '<div class="nx-landing-wrap" aria-hidden="true" style="display:none">'
+        '<div class="nx-aurora-1"></div>'
+        '<span class="nx-badge">AI Agronomy</span>'
+        '<span class="nx-gradient-text">AGRI SYSTEM</span>'
+        '<div class="nx-dwrap"><div class="nx-dtbar"></div>'
+        '<div id="nxLiveActivity"></div>'
+        '<div id="nxInteractiveChat"><div id="nxChatBody"></div>'
+        '<input id="nxChatInput" /><button id="nxChatSendBtn"></button></div></div>'
+        '<section id="nxWorkflow"></section>'
+        '<section id="nxSampleReport"><button data-crop="rice">Rice</button><button data-crop="cassava">Cassava</button></section>'
+        '<section id="nx3DShowcase"><div id="nx3dCanvas"><div id="nx3dViewport"><div id="nx3dScene">'
+        '<div id="nx3dLaser"></div><div id="nx3dCardLeft"></div><div id="nx3dCardRight"></div>'
+        '</div></div></div></section>'
+        '<section id="nxPricing"><button id="nxPriceToggle"></button><span id="nxProPlanPrice"></span></section>'
+        f'<section id="nxProjectDetail">{supervisor_name} · {team_line}</section>'
+        '<section id="nxFaqAccordion"></section>'
+        '<a href="/auth/login">Sign In</a><a href="/auth/register">Register</a>'
+        '</div>'
+    )
+
+
+def build_farmer_guest_landing_bootstrap(
+    *,
+    crops,
+    marquees,
+    premium_price: str,
+    yearly_monthly: str,
+    yearly_total: str,
+    yearly_discount_percent: str,
+    supervisor,
+    team,
+) -> dict[str, Any]:
+    data = {
+        "guestChatUrl": _safe_url("farmer.guest_chat", "/farmer/guest-chat"),
+        "loginUrl": _safe_url("auth.login", "/auth/login"),
+        "registerUrl": _safe_url("auth.register", "/auth/register"),
+        "staffLoginUrl": _safe_url("staff.login", "/staff/login"),
+        "diagnoseUrl": _safe_url("farmer.diagnose_rule_based", "/farmer/diagnose/rule-based"),
+        "detailUrl": _safe_url("farmer.detail", "/farmer/detail"),
+        "premiumPrice": str(premium_price),
+        "yearlyMonthly": str(yearly_monthly),
+        "yearlyTotal": str(yearly_total),
+        "yearlyDiscountPercent": str(yearly_discount_percent),
+        "crops": [
+            {"id": c.id, "name": _localize_attr(c, "name", getattr(c, "name", ""))}
+            for c in (crops or [])
+        ],
+        "marquees": [
+            {"id": m.id, "text": _localize_attr(m, "text", getattr(m, "text", ""))}
+            for m in (marquees or [])
+        ],
+        "supervisor": supervisor,
+        "team": team,
+    }
+    return _base_bootstrap("farmer-guest-landing", "farmer", {}, data)
+
+
+def build_farmer_diagnose_wizard_bootstrap(bootstrap_data: dict[str, Any]) -> dict[str, Any]:
+    ui = _farmer_shell_ui(
+        eyebrow=t("guided_diagnosis_title"),
+        title=bootstrap_data.get("ui", {}).get("pageTitle") or t("guided_diagnosis_title"),
+        subtitle=bootstrap_data.get("ui", {}).get("pageSubtitle") or t("guided_diagnosis_sub"),
+    )
+    return _base_bootstrap("farmer-diagnose-wizard", "farmer", ui, bootstrap_data)
+
+
+def build_farmer_diagnose_classic_bootstrap(*, crops, crop_symptoms, diagnoses, selected_crop_id) -> dict[str, Any]:
+    ui = _farmer_shell_ui(
+        eyebrow=_copy("Symptom Checker", "ពិនិត្យរោគសញ្ញា"),
+        title=_copy("Classic Symptom Checker", "ឧបករណ៍ពិនិត្យរោគសញ្ញា"),
+        subtitle=_copy("Select your crop, toggle visible field symptoms, and run instant rule-based inference.", "ជ្រើសរើសដំណាំ និងរោគសញ្ញាដើម្បីវិភាគភ្លាមៗ។"),
+    )
+    data = {
+        "postUrl": _safe_url("farmer.diagnose", "/farmer/diagnose"),
+        "liveEvalUrl": _safe_url("farmer.api_diagnose_live_evaluation", "/farmer/api/diagnose/live-evaluation"),
+        "guidedUrl": _safe_url("farmer.diagnose_rule_based", "/farmer/diagnose/rule-based"),
+        "selectedCropId": selected_crop_id,
+        "crops": [
+            {"id": c.id, "name": _localize_attr(c, "name", getattr(c, "name", ""))}
+            for c in (crops or [])
+        ],
+        "cropSymptoms": crop_symptoms or {},
+        "recentDiagnoses": [
+            {
+                "id": d.id,
+                "cropName": _localize_attr(d.crop, "name", d.crop_name),
+                "diseaseName": _localize_attr(d.disease, "name", d.disease_name),
+                "status": _text(d.status),
+                "confidence": float(d.confidence or 0),
+                "createdAt": _iso(d.created_at),
+                "resultUrl": _safe_url("farmer.diagnosis_result", f"/farmer/result/{d.id}", diagnosis_id=d.id),
+            }
+            for d in (diagnoses or [])
+        ],
+    }
+    return _base_bootstrap("farmer-diagnose-classic", "farmer", ui, data)
+
+
+def build_farmer_history_bootstrap(*, diagnoses, mode: str = "all") -> dict[str, Any]:
+    is_rule = mode == "rule-inference"
+    ui = _farmer_shell_ui(
+        eyebrow=_copy("Diagnosis Records", "កំណត់ត្រាវិនិច្ឆ័យ"),
+        title=_copy("Rule-Based Inference Logs", "ប្រវត្តិវិភាគតាមច្បាប់") if is_rule else t("recent_diagnoses_title"),
+        subtitle=(
+            _copy("Automated inference cases scored by the agronomy engine.", "ករណីវិភាគស្វ័យប្រវត្តិដោយប្រព័ន្ធច្បាប់។")
+            if is_rule
+            else _copy("Complete record of guided and instant crop diagnoses.", "ប្រវត្តិវិនិច្ឆ័យដំណាំទាំងអស់របស់អ្នក។")
+        ),
+    )
+    data = {
+        "mode": mode,
+        "diagnoseUrl": _safe_url("farmer.diagnose_rule_based", "/farmer/diagnose/rule-based"),
+        "diagnoses": [
+            {
+                "id": d.id,
+                "cropName": _localize_attr(d.crop, "name", d.crop_name),
+                "diseaseName": _localize_attr(d.disease, "name", d.disease_name),
+                "status": _text(d.status),
+                "statusLabel": _status_label(d.status),
+                "confidence": round(float(d.confidence or 0) * 100.0, 1) if float(d.confidence or 0) <= 1.0 else round(float(d.confidence or 0), 1),
+                "symptoms": _text(getattr(d, "symptoms", "") or ""),
+                "createdAt": _iso(d.created_at),
+                "resultUrl": _safe_url("farmer.diagnosis_result", f"/farmer/result/{d.id}", diagnosis_id=d.id),
+            }
+            for d in (diagnoses or [])
+        ],
+    }
+    return _base_bootstrap("farmer-history", "farmer", ui, data)
+
+
+def build_farmer_news_bootstrap(*, marquees, initial_news) -> dict[str, Any]:
+    ui = _farmer_shell_ui(
+        eyebrow=_copy("Intelligence Feed", "ព័ត៌មានឆ្លាតវៃ"),
+        title=_copy("AI Agricultural News & Alerts", "ព័ត៌មានកសិកម្ម និងការជូនដំណឹង AI"),
+        subtitle=_copy("Curated crop, weather, and regional agronomy briefings.", "ព័ត៌មានដំណាំ អាកាសធាតុ និងកសិកម្មក្នុងតំបន់។"),
+    )
+    data = {
+        "generateUrl": _safe_url("farmer.api_generate_news", "/farmer/api/generate_news"),
+        "ttsUrl": _safe_url("farmer.api_tts", "/farmer/api/tts"),
+        "marquees": marquees or [],
+        "initialNews": initial_news or {},
+    }
+    return _base_bootstrap("farmer-news", "farmer", ui, data)
+
+
+def build_farmer_detail_bootstrap(*, supervisor, team) -> dict[str, Any]:
+    ui = _farmer_shell_ui(
+        eyebrow=_copy("About Platform", "អំពីប្រព័ន្ធ"),
+        title=_copy("AGRI SYSTEM Architecture & Team", "ស្ថាបត្យកម្មប្រព័ន្ធ និងក្រុមអភិវឌ្ឍន៍"),
+        subtitle=_copy("AI-assisted agronomy engineering project overview.", "ទិដ្ឋភាពទូទៅនៃគម្រោងកសិកម្មឆ្លាតវៃ AI។"),
+    )
+    data = {
+        "supervisor": supervisor,
+        "team": team,
+        "dashboardUrl": _safe_url("farmer.dashboard", "/farmer/dashboard"),
+        "diagnoseUrl": _safe_url("farmer.diagnose_rule_based", "/farmer/diagnose/rule-based"),
+    }
+    return _base_bootstrap("farmer-detail", "farmer", ui, data)
+
+
+def build_farmer_upgrade_bootstrap(
+    *,
+    premium_price: str,
+    original_price: str,
+    discount_percent: float,
+    yearly_discount_percent: float,
+    discount_banner: str,
+    savings: float,
+) -> dict[str, Any]:
+    ui = _farmer_shell_ui(
+        eyebrow=_copy("Membership", "សមាជិកភាព"),
+        title=_copy("Upgrade to AGRI SYSTEM Pro", "ដំឡើងទៅ AGRI SYSTEM Pro"),
+        subtitle=_copy("Unlock unlimited AI consultations, image scanning, and priority expert reviews.", "ដោះសោការពិគ្រោះ AI គ្មានដែនកំណត់ និងការស្កេនរូបភាព។"),
+    )
+    data = {
+        "checkoutUrl": _safe_url("farmer.premium_checkout", "/farmer/premium/checkout"),
+        "dashboardUrl": _safe_url("farmer.dashboard", "/farmer/dashboard"),
+        "premiumPrice": str(premium_price),
+        "originalPrice": str(original_price),
+        "discountPercent": float(discount_percent or 0),
+        "yearlyDiscountPercent": float(yearly_discount_percent or 0),
+        "discountBanner": _text(discount_banner or ""),
+        "savings": float(savings or 0),
+    }
+    return _base_bootstrap("farmer-upgrade", "farmer", ui, data)
+
+
+def build_farmer_checkout_bootstrap(
+    *,
+    paypal_client_id: str,
+    bakong_config: dict[str, Any],
+    initial_bakong: dict[str, Any] | None,
+    premium_price: str,
+    original_price: str,
+    discount_percent: float,
+    yearly_discount_percent: float,
+    savings: float,
+    coupon_enabled: bool,
+    billing_interval: str,
+    is_yearly: bool,
+) -> dict[str, Any]:
+    ui = _farmer_shell_ui(
+        eyebrow=_copy("Checkout", "ការទូទាត់"),
+        title=_copy("Activate Pro Membership", "បើកដំណើរការសមាជិកភាព Pro"),
+        subtitle=_copy("Instant activation via Bakong KHQR or card/PayPal.", "បង់ប្រាក់រហ័សតាមរយៈ Bakong KHQR ឬ PayPal។"),
+    )
+    data = {
+        "submitUrl": _safe_url("farmer.premium_checkout", "/farmer/premium/checkout"),
+        "generateQrUrl": _safe_url("farmer.generate_bakong_qr", "/farmer/api/bakong/generate-qr"),
+        "checkStatusPrefix": "/farmer/api/bakong/check-status/",
+        "validateCouponUrl": _safe_url("farmer.validate_coupon", "/farmer/api/validate-coupon"),
+        "upgradeUrl": _safe_url("farmer.premium_upgrade", "/farmer/premium/upgrade"),
+        "paypalClientId": paypal_client_id,
+        "bakongConfigured": bool(bakong_config and bakong_config.get("account_id")),
+        "bakongMerchantName": _text((bakong_config or {}).get("merchant_name") or "AGRI SYSTEM"),
+        "initialBakong": initial_bakong,
+        "premiumPrice": str(premium_price),
+        "originalPrice": str(original_price),
+        "discountPercent": float(discount_percent or 0),
+        "yearlyDiscountPercent": float(yearly_discount_percent or 0),
+        "savings": float(savings or 0),
+        "couponEnabled": bool(coupon_enabled),
+        "billingInterval": billing_interval,
+        "isYearly": bool(is_yearly),
+    }
+    return _base_bootstrap("farmer-checkout", "farmer", ui, data)
+
+
+def build_farmer_diseases_bootstrap(*, crops, diseases=None) -> dict[str, Any]:
+    ui = _farmer_shell_ui(
+        eyebrow=_copy("Atlas", "សព្វវចនាធិប្បាយ"),
+        title=_copy("Crop & Disease Reference", "បញ្ជីដំណាំ និងជំងឺ"),
+        subtitle=_copy("Explore tracked crops, documented diseases, symptoms, and treatments.", "ស្វែងរកដំណាំ រោគសញ្ញា និងវិធីព្យាបាល។"),
+    )
+    crop_rows = [
+        {
+            "id": c.id,
+            "name": _localize_attr(c, "name", getattr(c, "name", "")),
+            "description": _text(getattr(c, "description", "") or ""),
+            "diagnoseUrl": f"{_safe_url('farmer.diagnose_rule_based', '/farmer/diagnose/rule-based')}?crop_id={c.id}",
+        }
+        for c in (crops or [])
+    ]
+    disease_rows = [
+        {
+            "id": dis.id,
+            "cropId": getattr(dis, "crop_id", None),
+            "cropName": _localize_attr(getattr(dis, "crop", None), "name", ""),
+            "name": _localize_attr(dis, "name", getattr(dis, "name", "")),
+            "description": _text(getattr(dis, "description", "") or ""),
+            "treatment": _text(getattr(dis, "treatment_kh", "") or getattr(dis, "treatment", "") or "") if _lang() == "km" else _text(getattr(dis, "treatment", "") or ""),
+            "severity": _text(getattr(dis, "severity", "") or ""),
+        }
+        for dis in (diseases or [])
+    ]
+    data = {"crops": crop_rows, "diseases": disease_rows}
+    return _base_bootstrap("farmer-diseases", "farmer", ui, data)
+
+
+def _admin_shell_ui(*, eyebrow: str, title: str, subtitle: str, actions: dict[str, dict[str, str]] | None = None) -> dict[str, Any]:
+    return {
+        "productName": "AGRI SYSTEM",
+        "roleLabel": t("admin_control_center"),
+        "eyebrow": _text(eyebrow),
+        "pageTitle": _text(title),
+        "pageSubtitle": _text(subtitle),
+        "actions": actions or {},
+        "navigation": {"sections": _admin_navigation_sections()},
+    }
+
+
+def build_admin_world_bootstrap(*, scan_points, cesium_token="") -> dict[str, Any]:
+    ui = _admin_shell_ui(
+        eyebrow=_copy("Operations", "ប្រតិបត្តិការ"),
+        title=t("world_map"),
+        subtitle=_copy("Live regional telemetry and Cambodia deployment overview.", "ទិន្នន័យភូមិសាស្ត្រ និងការតាមដានតំបន់។"),
+        actions={"dashboard": {"label": t("dashboard"), "href": _safe_url("admin.dashboard", "/admin/dashboard")}},
+    )
+    data = {
+        "scanPoints": [
+            {
+                "id": point.get("id") or point.get("label"),
+                "label": _text(point.get("label") or point.get("name") or ""),
+                "region": _text(point.get("region") or ""),
+                "lat": point.get("lat"),
+                "lng": point.get("lng"),
+                "status": _text(point.get("status") or "active"),
+            }
+            for point in (scan_points or [])
+            if isinstance(point, dict)
+        ],
+        "cesiumToken": _text(cesium_token or ""),
+        "defaultCenter": {"lat": 11.5564, "lng": 104.9282, "label": "Phnom Penh, Cambodia"},
+    }
+    return _base_bootstrap("admin-world", "admin", ui, data)
+
+
+def build_admin_expert_stats_bootstrap(*, total_diagnoses, pending_count, approved_count) -> dict[str, Any]:
+    ui = _admin_shell_ui(
+        eyebrow=_copy("Analytics", "វិភាគ"),
+        title=_copy("Expert Review Statistics", "ស្ថិតិការពិនិត្យរបស់អ្នកជំនាញ"),
+        subtitle=_copy("Monitor diagnosis validation throughput and pending workload.", "តាមដានល្បឿនផ្ទៀងផ្ទាត់ និងករណីរង់ចាំ។"),
+        actions={"dashboard": {"label": t("dashboard"), "href": _safe_url("admin.dashboard", "/admin/dashboard")}},
+    )
+    total = int(total_diagnoses or 0)
+    pending = int(pending_count or 0)
+    approved = int(approved_count or 0)
+    completion = round((approved / total) * 100.0, 1) if total else 0.0
+    data = {
+        "totalDiagnoses": total,
+        "pendingCount": pending,
+        "approvedCount": approved,
+        "completionPercent": completion,
+    }
+    return _base_bootstrap("admin-expert-stats", "admin", ui, data)
+
+
+def build_admin_users_bootstrap(*, users, roles, q="") -> dict[str, Any]:
+    ui = _admin_shell_ui(
+        eyebrow=t("manage_users"),
+        title=t("manage_users"),
+        subtitle=_copy("Manage platform accounts, roles, quota credits, and access controls.", "គ្រប់គ្រងគណនី តួនាទី និងសិទ្ធិប្រើប្រាស់។"),
+        actions={"dashboard": {"label": t("dashboard"), "href": _safe_url("admin.dashboard", "/admin/dashboard")}},
+    )
+    user_rows = []
+    for u in (users or []):
+        role_names = [r.name for r in (getattr(u, "roles", None) or [])]
+        user_rows.append({
+            "id": u.id,
+            "username": _text(u.username),
+            "fullName": _text(getattr(u, "full_name", None) or ""),
+            "email": _text(getattr(u, "email", None) or ""),
+            "roles": role_names,
+            "primaryRole": role_names[0] if role_names else "farmer",
+            "isActive": bool(getattr(u, "is_active", True)),
+            "isPremium": bool(getattr(u, "is_premium", False)),
+            "aiCredits": int(getattr(u, "ai_credits", 0) or 0),
+            "createdAt": _iso(getattr(u, "created_at", None)),
+            "detailUrl": _safe_url("admin.user_detail", f"/admin/users/{u.id}", user_id=u.id, q=q or None),
+            "toggleStatusAction": _safe_url("admin.toggle_user_status", f"/admin/users/{u.id}/toggle-status", user_id=u.id),
+            "togglePremiumAction": _safe_url("admin.toggle_user_premium", f"/admin/users/{u.id}/toggle-premium", user_id=u.id),
+            "changeRoleAction": _safe_url("admin.change_user_role", f"/admin/users/{u.id}/change-role", user_id=u.id),
+            "updateCreditsAction": _safe_url("admin.update_user_credits", f"/admin/users/{u.id}/update-credits", user_id=u.id),
+        })
+    data = {
+        "q": _text(q or ""),
+        "users": user_rows,
+        "roles": [{"id": r.id, "name": _text(r.name), "routeType": _text(getattr(r, "route_type", None) or "farmer")} for r in (roles or [])],
+        "links": {
+            "usersUrl": _safe_url("admin.users", "/admin/users"),
+            "createUserAction": _safe_url("admin.create_user", "/admin/users/create"),
+            "bulkActionUrl": _safe_url("admin.users_bulk", "/admin/users/bulk"),
+            "exportCsvUrl": _safe_url("admin.export_users", "/admin/users/export?format=csv", format="csv", q=q or None),
+            "exportJsonUrl": _safe_url("admin.export_users", "/admin/users/export?format=json", format="json", q=q or None),
+        },
+    }
+    return _base_bootstrap("admin-users", "admin", ui, data)
+
+
+def build_admin_user_detail_bootstrap(*, user, roles, q="") -> dict[str, Any]:
+    ui = _admin_shell_ui(
+        eyebrow=t("manage_users"),
+        title=_text(getattr(user, "full_name", None) or user.username),
+        subtitle=_copy("Account profile, role assignment, subscription controls, and token credits.", "ព័ត៌មានគណនី និងការគ្រប់គ្រងសិទ្ធិ។"),
+        actions={"users": {"label": t("back"), "href": _safe_url("admin.users", "/admin/users", q=q or None)}},
+    )
+    role_names = [r.name for r in (getattr(user, "roles", None) or [])]
+    data = {
+        "q": _text(q or ""),
+        "user": {
+            "id": user.id,
+            "username": _text(user.username),
+            "fullName": _text(getattr(user, "full_name", None) or ""),
+            "email": _text(getattr(user, "email", None) or ""),
+            "roles": role_names,
+            "primaryRole": role_names[0] if role_names else "farmer",
+            "isActive": bool(getattr(user, "is_active", True)),
+            "isPremium": bool(getattr(user, "is_premium", False)),
+            "premiumExpiresAt": _iso(getattr(user, "premium_expires_at", None)),
+            "aiCredits": int(getattr(user, "ai_credits", 0) or 0),
+            "createdAt": _iso(getattr(user, "created_at", None)),
+        },
+        "roles": [{"id": r.id, "name": _text(r.name)} for r in (roles or [])],
+        "actions": {
+            "backUrl": _safe_url("admin.users", "/admin/users", q=q or None),
+            "toggleStatusAction": _safe_url("admin.toggle_user_status", f"/admin/users/{user.id}/toggle-status", user_id=user.id),
+            "togglePremiumAction": _safe_url("admin.toggle_user_premium", f"/admin/users/{user.id}/toggle-premium", user_id=user.id),
+            "addPremiumTimeAction": _safe_url("admin.add_premium_time", f"/admin/users/{user.id}/add-premium-time", user_id=user.id),
+            "updateCreditsAction": _safe_url("admin.update_user_credits", f"/admin/users/{user.id}/update-credits", user_id=user.id),
+            "changeRoleAction": _safe_url("admin.change_user_role", f"/admin/users/{user.id}/change-role", user_id=user.id),
+            "updateEmailAction": _safe_url("admin.update_user_email", f"/admin/users/{user.id}/update-email", user_id=user.id),
+        },
+    }
+    return _base_bootstrap("admin-user-detail", "admin", ui, data)
+
+
+def build_admin_roles_bootstrap(*, roles, core_role_names, role_user_counts) -> dict[str, Any]:
+    ui = _admin_shell_ui(
+        eyebrow=t("roles"),
+        title=t("roles"),
+        subtitle=_copy("Define access roles and fine-grained permission bundles.", "កំណត់តួនាទី និងសិទ្ធិចូលប្រើប្រាស់។"),
+    )
+    core_set = {str(name).lower() for name in (core_role_names or ())}
+    data = {
+        "createRoleAction": _safe_url("admin.create_role", "/admin/roles/create"),
+        "roles": [
+            {
+                "id": r.id,
+                "name": _text(r.name),
+                "routeType": _text(getattr(r, "route_type", None) or "farmer"),
+                "isCore": str(r.name or "").lower() in core_set,
+                "userCount": int((role_user_counts or {}).get(r.id, 0)),
+                "permissionsCount": len(getattr(r, "permissions", None) or []),
+                "permissionsUrl": _safe_url("admin.manage_role_permissions", f"/admin/roles/{r.id}/permissions", role_id=r.id),
+                "deleteAction": _safe_url("admin.delete_role", f"/admin/roles/{r.id}/delete", role_id=r.id),
+            }
+            for r in (roles or [])
+        ],
+    }
+    return _base_bootstrap("admin-roles", "admin", ui, data)
+
+
+def build_admin_role_permissions_bootstrap(*, role, permissions, grouped_permissions) -> dict[str, Any]:
+    ui = _admin_shell_ui(
+        eyebrow=t("roles"),
+        title=f"{_copy('Role Permissions', 'សិទ្ធិតួនាទី')}: {role.name}",
+        subtitle=_copy("Configure capabilities enabled for this role.", "ជ្រើសរើសសិទ្ធិសម្រាប់តួនាទីនេះ។"),
+        actions={"roles": {"label": t("back"), "href": _safe_url("admin.roles", "/admin/roles")}},
+    )
+    assigned_ids = [p.id for p in (getattr(role, "permissions", None) or [])]
+    groups = [
+        {
+            "group": _text(group_name),
+            "permissions": [
+                {"id": p.id, "code": _text(p.code), "description": _text(getattr(p, "description", None) or p.code)}
+                for p in perms
+            ],
+        }
+        for group_name, perms in (grouped_permissions or {}).items()
+    ]
+    data = {
+        "formAction": _safe_url("admin.manage_role_permissions", f"/admin/roles/{role.id}/permissions", role_id=role.id),
+        "backUrl": _safe_url("admin.roles", "/admin/roles"),
+        "role": {"id": role.id, "name": _text(role.name)},
+        "assignedPermissionIds": assigned_ids,
+        "groups": groups,
+    }
+    return _base_bootstrap("admin-role-permissions", "admin", ui, data)
+
+
+def build_admin_audit_logs_bootstrap(*, logs) -> dict[str, Any]:
+    ui = _admin_shell_ui(
+        eyebrow=t("audit_logs"),
+        title=t("audit_logs"),
+        subtitle=_copy("Immutable chronological trail of administrative and moderation actions.", "កំណត់ហេតុសកម្មភាពប្រព័ន្ធ។"),
+    )
+    data = {
+        "logs": [
+            {
+                "id": log.id,
+                "action": _text(log.action),
+                "targetUser": _text(getattr(log, "target_user", None) or ""),
+                "detail": _text(getattr(log, "detail", None) or ""),
+                "actorName": _text(getattr(getattr(log, "user", None), "username", None) or "System"),
+                "createdAt": _iso(getattr(log, "created_at", None)),
+            }
+            for log in (logs or [])
+        ]
+    }
+    return _base_bootstrap("admin-audit-logs", "admin", ui, data)
+
+
+def build_admin_crops_bootstrap(*, crops) -> dict[str, Any]:
+    ui = _admin_shell_ui(
+        eyebrow=_copy("Catalog", "បញ្ជីដំណាំ"),
+        title=_copy("Crop Management", "គ្រប់គ្រងដំណាំ"),
+        subtitle=_copy("Maintain supported crop records in English and Khmer.", "គ្រប់គ្រងព័ត៌មានដំណាំ។"),
+        actions={"create": {"label": _copy("Add Crop", "បន្ថែមដំណាំ"), "href": _safe_url("admin_crop.create", "/admin/crops/create")}},
+    )
+    data = {
+        "createUrl": _safe_url("admin_crop.create", "/admin/crops/create"),
+        "crops": [
+            {
+                "id": crop.id,
+                "name": _text(crop.name),
+                "nameKh": _text(getattr(crop, "name_kh", None) or ""),
+                "emoji": _text(getattr(crop, "emoji", None) or ""),
+                "description": _text(getattr(crop, "description", None) or ""),
+                "descriptionKh": _text(getattr(crop, "description_kh", None) or ""),
+                "editUrl": _safe_url("admin_crop.edit", f"/admin/crops/{crop.id}/edit", id=crop.id),
+                "deleteAction": _safe_url("admin_crop.delete", f"/admin/crops/{crop.id}/delete", id=crop.id),
+            }
+            for crop in (crops or [])
+        ],
+    }
+    return _base_bootstrap("admin-crops", "admin", ui, data)
+
+
+def build_admin_crop_form_bootstrap(*, crop=None, is_edit=False) -> dict[str, Any]:
+    title = _copy("Edit Crop", "កែប្រែដំណាំ") if is_edit else _copy("Add Crop", "បន្ថែមដំណាំ")
+    ui = _admin_shell_ui(
+        eyebrow=_copy("Catalog", "បញ្ជីដំណាំ"),
+        title=title,
+        subtitle=_copy("Provide bilingual crop metadata.", "បញ្ចូលព័ត៌មានដំណាំជាភាសាអង់គ្លេស និងខ្មែរ។"),
+        actions={"list": {"label": t("back"), "href": _safe_url("admin_crop.index", "/admin/crops/")}},
+    )
+    data = {
+        "isEdit": bool(is_edit),
+        "formAction": request.path,
+        "backUrl": _safe_url("admin_crop.index", "/admin/crops/"),
+        "formValues": {
+            "name": _text(getattr(crop, "name", None) or ""),
+            "nameKh": _text(getattr(crop, "name_kh", None) or ""),
+            "emoji": _text(getattr(crop, "emoji", None) or ""),
+            "description": _text(getattr(crop, "description", None) or ""),
+            "descriptionKh": _text(getattr(crop, "description_kh", None) or ""),
+        },
+    }
+    return _base_bootstrap("admin-crop-form", "admin", ui, data)
+
+
+def build_admin_diseases_bootstrap(*, diseases) -> dict[str, Any]:
+    ui = _admin_shell_ui(
+        eyebrow=_copy("Catalog", "បញ្ជីជំងឺ"),
+        title=_copy("Disease Management", "គ្រប់គ្រងជំងឺដំណាំ"),
+        subtitle=_copy("Review and manage all crop disease definitions.", "គ្រប់គ្រងព័ត៌មានជំងឺ និងការព្យាបាល។"),
+        actions={"create": {"label": _copy("Add Disease", "បន្ថែមជំងឺ"), "href": _safe_url("admin.create_disease", "/admin/diseases/create")}},
+    )
+    data = {
+        "createUrl": _safe_url("admin.create_disease", "/admin/diseases/create"),
+        "diseases": [
+            {
+                "id": dis.id,
+                "name": _localize_attr(dis, "name", getattr(dis, "name", "")),
+                "cropName": _localize_attr(getattr(dis, "crop", None), "name", "-"),
+                "severityLabel": _severity_label(getattr(dis, "severity_level", None)),
+                "description": _text(getattr(dis, "description", None) or ""),
+                "treatment": _text(getattr(dis, "treatment", None) or ""),
+                "editUrl": _safe_url("admin.edit_disease", f"/admin/diseases/{dis.id}/edit", disease_id=dis.id),
+                "deleteAction": _safe_url("admin.delete_disease", f"/admin/diseases/{dis.id}/delete", disease_id=dis.id),
+            }
+            for dis in (diseases or [])
+        ],
+    }
+    return _base_bootstrap("admin-diseases", "admin", ui, data)
+
+
+def build_admin_disease_form_bootstrap(*, crops, back_url, disease=None, edit_mode=False) -> dict[str, Any]:
+    title = _copy("Edit Disease", "កែប្រែជំងឺ") if edit_mode else _copy("Add Disease", "បន្ថែមជំងឺ")
+    ui = _admin_shell_ui(
+        eyebrow=_copy("Catalog", "បញ្ជីជំងឺ"),
+        title=title,
+        subtitle=_copy("Define disease symptoms and treatment steps in English and Khmer.", "បំពេញរោគសញ្ញា និងការព្យាបាល។"),
+        actions={"list": {"label": t("back"), "href": _text(back_url)}},
+    )
+    data = {
+        "editMode": bool(edit_mode),
+        "formAction": request.path,
+        "backUrl": _text(back_url),
+        "crops": [{"id": c.id, "name": _localize_attr(c, "name", getattr(c, "name", ""))} for c in (crops or [])],
+        "severityLevels": [
+            {"id": "Low", "label": t("severity_low")},
+            {"id": "Medium", "label": t("severity_medium")},
+            {"id": "High", "label": t("severity_high")},
+            {"id": "Critical", "label": t("severity_critical")},
+        ],
+        "formValues": {
+            "cropId": str(getattr(disease, "crop_id", "") or ""),
+            "name": _text(getattr(disease, "name", None) or ""),
+            "nameKh": _text(getattr(disease, "name_kh", None) or ""),
+            "severityLevel": _text(getattr(disease, "severity_level", None) or "Low"),
+            "description": _text(getattr(disease, "description", None) or ""),
+            "descriptionKh": _text(getattr(disease, "description_kh", None) or ""),
+            "treatment": _text(getattr(disease, "treatment", None) or ""),
+            "treatmentKh": _text(getattr(disease, "treatment_kh", None) or ""),
+        },
+    }
+    return _base_bootstrap("admin-disease-form", "admin", ui, data)
+
+
+def build_admin_marquees_bootstrap(*, marquees) -> dict[str, Any]:
+    ui = _admin_shell_ui(
+        eyebrow=_copy("Announcements", "សេចក្តីជូនដំណឹង"),
+        title=_copy("Announcement Marquees", "សាររត់លើផ្ទាំងកសិករ"),
+        subtitle=_copy("Control scrolling announcements displayed across farmer workspaces.", "គ្រប់គ្រងសារជូនដំណឹងលើប្រព័ន្ធ។"),
+        actions={"add": {"label": _copy("Add Marquee", "បន្ថែមសារ"), "href": _safe_url("admin.add_marquee", "/admin/marquees/add")}},
+    )
+    data = {
+        "addUrl": _safe_url("admin.add_marquee", "/admin/marquees/add"),
+        "marquees": [
+            {
+                "id": m.id,
+                "text": _text(m.text),
+                "textKh": _text(getattr(m, "text_kh", None) or ""),
+                "sortOrder": int(getattr(m, "sort_order", 0) or 0),
+                "isActive": bool(getattr(m, "is_active", True)),
+                "editUrl": _safe_url("admin.edit_marquee", f"/admin/marquees/edit/{m.id}", marquee_id=m.id),
+                "deleteAction": _safe_url("admin.delete_marquee", f"/admin/marquees/delete/{m.id}", marquee_id=m.id),
+            }
+            for m in (marquees or [])
+        ],
+    }
+    return _base_bootstrap("admin-marquees", "admin", ui, data)
+
+
+def build_admin_marquee_form_bootstrap(*, marquee=None) -> dict[str, Any]:
+    is_edit = marquee is not None
+    title = _copy("Edit Marquee", "កែប្រែសារ") if is_edit else _copy("Add Marquee", "បន្ថែមសារ")
+    ui = _admin_shell_ui(
+        eyebrow=_copy("Announcements", "សេចក្តីជូនដំណឹង"),
+        title=title,
+        subtitle=_copy("Publish a localized marquee banner.", "បង្ហោះសារជូនដំណឹងជាភាសាអង់គ្លេស និងខ្មែរ។"),
+        actions={"list": {"label": t("back"), "href": _safe_url("admin.marquees", "/admin/marquees")}},
+    )
+    data = {
+        "isEdit": is_edit,
+        "formAction": request.path,
+        "backUrl": _safe_url("admin.marquees", "/admin/marquees"),
+        "formValues": {
+            "text": _text(getattr(marquee, "text", None) or ""),
+            "textKh": _text(getattr(marquee, "text_kh", None) or ""),
+            "sortOrder": int(getattr(marquee, "sort_order", 0) or 0),
+            "isActive": bool(getattr(marquee, "is_active", True)) if is_edit else True,
+        },
+    }
+    return _base_bootstrap("admin-marquee-form", "admin", ui, data)
+
+
+def build_admin_promo_codes_bootstrap(*, codes) -> dict[str, Any]:
+    ui = _admin_shell_ui(
+        eyebrow=_copy("Growth", "កូដរង្វាន់"),
+        title=_copy("Reward Promo Codes", "កូដបញ្ចុះតម្លៃ និងក្រេឌីត"),
+        subtitle=_copy("Generate AI credit reward codes and manage redemptions.", "បង្កើតកូដក្រេឌីត AI និងតាមដានការប្រើប្រាស់។"),
+    )
+    data = {
+        "createAction": _safe_url("admin.promo_codes", "/admin/promo-codes"),
+        "codes": [
+            {
+                "id": c.id,
+                "code": _text(c.code),
+                "tokensReward": int(getattr(c, "tokens_reward", 0) or 0),
+                "isRedeemed": bool(getattr(c, "is_redeemed", False)),
+                "redeemedAt": _iso(getattr(c, "redeemed_at", None)),
+                "createdAt": _iso(getattr(c, "created_at", None)),
+                "deleteAction": _safe_url("admin.delete_promo_code", f"/admin/promo-codes/{c.id}/delete", code_id=c.id),
+            }
+            for c in (codes or [])
+        ],
+    }
+    return _base_bootstrap("admin-promo-codes", "admin", ui, data)
+
+
+def build_admin_support_requests_bootstrap(*, support_requests, filter_status, q, open_count, resolved_count, total_count, users) -> dict[str, Any]:
+    ui = _admin_shell_ui(
+        eyebrow=_copy("Support", "ជំនួយ"),
+        title=_copy("Support Requests", "សំណើសុំជំនួយ"),
+        subtitle=_copy("Triage and resolve platform inquiry tickets.", "តាមដាន និងដោះស្រាយសំណើសុំជំនួយ។"),
+    )
+    data = {
+        "filterStatus": _text(filter_status or "open"),
+        "q": _text(q or ""),
+        "counts": {"open": int(open_count or 0), "resolved": int(resolved_count or 0), "total": int(total_count or 0)},
+        "links": {
+            "baseUrl": _safe_url("admin.support_requests", "/admin/support-requests"),
+            "createAction": _safe_url("admin.create_support_request", "/admin/support-requests/create"),
+        },
+        "users": [{"id": u.id, "label": f"{u.username} ({u.email or ''})"} for u in (users or [])],
+        "requests": [
+            {
+                "id": req.id,
+                "requesterName": _text(getattr(getattr(req, "requester", None), "username", None) or f"User #{req.requester_id}"),
+                "requesterRole": _text(getattr(req, "requester_role", None) or ""),
+                "message": _text(req.message),
+                "page": _text(getattr(req, "page", None) or ""),
+                "status": _text(req.status),
+                "createdAt": _iso(getattr(req, "created_at", None)),
+                "resolvedAt": _iso(getattr(req, "resolved_at", None)),
+                "resolveAction": _safe_url("admin.resolve_support_request", f"/admin/support-requests/{req.id}/resolve", req_id=req.id),
+                "reopenAction": _safe_url("admin.reopen_support_request", f"/admin/support-requests/{req.id}/reopen", req_id=req.id),
+                "deleteAction": _safe_url("admin.delete_support_request", f"/admin/support-requests/{req.id}/delete", req_id=req.id),
+            }
+            for req in (support_requests or [])
+        ],
+    }
+    return _base_bootstrap("admin-support-requests", "admin", ui, data)
+
+
+def build_admin_support_chats_bootstrap(*, chat_users) -> dict[str, Any]:
+    ui = _admin_shell_ui(
+        eyebrow=_copy("Support", "ជំនួយ"),
+        title=_copy("Live Support Inbox", "ប្រអប់សារជំនួយផ្ទាល់"),
+        subtitle=_copy("Chat in real time with farmers and staff members.", "ឆ្លើយតបសារជំនួយភ្លាមៗជាមួយកសិករ។"),
+    )
+    data = {
+        "currentUserId": int(current_user.id) if (current_user and current_user.is_authenticated) else 0,
+        "endpoints": {
+            "conversations": _safe_url("admin.admin_get_conversations", "/admin/support_chat/conversations"),
+            "messagesPrefix": "/admin/support_chat/",
+            "upload": _safe_url("admin.upload_support_attachment", "/admin/support_chat/upload"),
+            "location": _safe_url("admin.admin_get_location", "/admin/support_chat/location"),
+            "locationSearch": _safe_url("admin.admin_search_location", "/admin/support_chat/location/search"),
+        },
+        "users": [
+            {
+                "id": u.id,
+                "name": _text(getattr(u, "full_name", None) or u.username),
+                "username": _text(u.username),
+                "unreadCount": int(getattr(u, "unread_support_count", 0) or 0),
+                "lastTime": _iso(getattr(u, "latest_support_time", None)),
+            }
+            for u in (chat_users or [])
+            if not (current_user and current_user.is_authenticated and u.id == current_user.id)
+        ],
+    }
+    return _base_bootstrap("admin-support-chats", "admin", ui, data)
+
+
+def build_admin_premium_settings_bootstrap(
+    *,
+    current_price,
+    yearly_discount_percent,
+    yearly_final_monthly_rate,
+    yearly_total_amount,
+    discount_percent,
+    discount_banner,
+    coupon_enabled,
+    simple_user_daily_tokens,
+    final_price,
+    coupons,
+    premium_count,
+    bakong_config,
+    recent_transactions,
+) -> dict[str, Any]:
+    ui = _admin_shell_ui(
+        eyebrow=_copy("Billing", "ការទូទាត់"),
+        title=_copy("Premium & Bakong KHQR Settings", "ការកំណត់គម្រោង Pro និង Bakong KHQR"),
+        subtitle=_copy("Manage subscription pricing, token quotas, discount coupons, and NBC KHQR.", "កំណត់តម្លៃ កូតា AI និងប្រព័ន្ធ Bakong KHQR។"),
+    )
+    data = {
+        "formAction": _safe_url("admin.premium_settings", "/admin/premium-settings"),
+        "testBakongUrl": _safe_url("admin.test_bakong_connection", "/admin/api/bakong/test-connection"),
+        "pricing": {
+            "currentPrice": _text(current_price),
+            "yearlyDiscountPercent": _text(yearly_discount_percent),
+            "yearlyFinalMonthlyRate": _text(yearly_final_monthly_rate),
+            "yearlyTotalAmount": _text(yearly_total_amount),
+            "discountPercent": _text(discount_percent),
+            "discountBanner": _text(discount_banner),
+            "couponEnabled": bool(coupon_enabled),
+            "simpleUserDailyTokens": _text(simple_user_daily_tokens),
+            "finalPrice": _text(final_price),
+            "premiumCount": int(premium_count or 0),
+        },
+        "bakong": {
+            "accountId": _text((bakong_config or {}).get("account_id") or ""),
+            "merchantName": _text((bakong_config or {}).get("merchant_name") or ""),
+            "merchantCity": _text((bakong_config or {}).get("merchant_city") or ""),
+            "currency": _text((bakong_config or {}).get("currency") or "USD"),
+            "storeLabel": _text((bakong_config or {}).get("store_label") or ""),
+            "tokenConfigured": bool((bakong_config or {}).get("token")),
+        },
+        "coupons": [
+            {
+                "id": c.id,
+                "code": _text(c.code),
+                "discountType": _text(getattr(c, "discount_type", "percent")),
+                "discountValue": float(getattr(c, "discount_value", 0) or 0),
+                "maxUses": int(getattr(c, "max_uses", 0) or 0),
+                "currentUses": int(getattr(c, "current_uses", 0) or 0),
+                "isActive": bool(getattr(c, "is_active", True)),
+                "expiresAt": _iso(getattr(c, "expires_at", None)),
+            }
+            for c in (coupons or [])
+        ],
+        "transactions": [
+            {
+                "id": tx.id,
+                "userId": getattr(tx, "user_id", None),
+                "amount": float(getattr(tx, "amount", 0) or 0),
+                "currency": _text(getattr(tx, "currency", "USD")),
+                "status": _text(getattr(tx, "status", "PENDING")),
+                "md5": _text(getattr(tx, "md5", "") or ""),
+                "createdAt": _iso(getattr(tx, "created_at", None)),
+                "checkAction": _safe_url("admin.check_bakong_transaction", f"/admin/premium-settings/check-transaction/{tx.id}", tx_id=tx.id),
+                "approveAction": _safe_url("admin.approve_bakong_transaction", f"/admin/premium-settings/approve-transaction/{tx.id}", tx_id=tx.id),
+            }
+            for tx in (recent_transactions or [])
+        ],
+    }
+    return _base_bootstrap("admin-premium-settings", "admin", ui, data)
+
+
+def build_admin_translations_bootstrap(*, crops, diseases, symptoms, current_section, q, missing_only) -> dict[str, Any]:
+    ui = _admin_shell_ui(
+        eyebrow=_copy("Localization", "ភាសា"),
+        title=_copy("Khmer Translations Studio", "ការគ្រប់គ្រងការបកប្រែភាសាខ្មែរ"),
+        subtitle=_copy("Edit Khmer labels and descriptions for crops, diseases, and symptoms.", "កែប្រែពាក្យបកប្រែសម្រាប់ដំណាំ ជំងឺ និងរោគសញ្ញា។"),
+        actions={"backups": {"label": _copy("Backups", "ការបម្រុងទុក"), "href": _safe_url("admin.translations_backups", "/admin/translations/backups")}},
+    )
+    data = {
+        "currentSection": _text(current_section or "crops"),
+        "q": _text(q or ""),
+        "missingOnly": bool(missing_only),
+        "formAction": _safe_url("admin.translations", "/admin/translations"),
+        "backupsUrl": _safe_url("admin.translations_backups", "/admin/translations/backups"),
+        "crops": [
+            {
+                "id": c.id,
+                "name": _text(c.name),
+                "nameKh": _text(getattr(c, "name_kh", None) or ""),
+                "description": _text(getattr(c, "description", None) or ""),
+                "descriptionKh": _text(getattr(c, "description_kh", None) or ""),
+            }
+            for c in (crops or [])
+        ],
+        "diseases": [
+            {
+                "id": dis.id,
+                "name": _text(dis.name),
+                "nameKh": _text(getattr(dis, "name_kh", None) or ""),
+                "description": _text(getattr(dis, "description", None) or ""),
+                "descriptionKh": _text(getattr(dis, "description_kh", None) or ""),
+                "treatment": _text(getattr(dis, "treatment", None) or ""),
+                "treatmentKh": _text(getattr(dis, "treatment_kh", None) or ""),
+            }
+            for dis in (diseases or [])
+        ],
+        "symptoms": [
+            {
+                "id": sym.id,
+                "name": _text(sym.name),
+                "nameKh": _text(getattr(sym, "name_kh", None) or ""),
+                "description": _text(getattr(sym, "description", None) or ""),
+                "descriptionKh": _text(getattr(sym, "description_kh", None) or ""),
+            }
+            for sym in (symptoms or [])
+        ],
+    }
+    return _base_bootstrap("admin-translations", "admin", ui, data)
+
+
+def build_admin_translations_backups_bootstrap(*, backups) -> dict[str, Any]:
+    ui = _admin_shell_ui(
+        eyebrow=_copy("Localization", "ភាសា"),
+        title=_copy("Translation Backups", "ប្រវត្តិការបម្រុងទុកបកប្រែ"),
+        subtitle=_copy("Restore previous Khmer translation snapshots.", "ស្តារការបកប្រែពីកំណែមុន។"),
+        actions={"translations": {"label": t("back"), "href": _safe_url("admin.translations", "/admin/translations")}},
+    )
+    data = {
+        "undoAction": _safe_url("admin.translations_undo", "/admin/translations/undo"),
+        "backups": [
+            {
+                "id": b.id,
+                "section": _text(getattr(b, "section", "") or ""),
+                "createdAt": _iso(getattr(b, "created_at", None)),
+                "summary": _text(getattr(b, "summary", "") or f"Backup #{b.id}"),
+            }
+            for b in (backups or [])
+        ],
+    }
+    return _base_bootstrap("admin-translations-backups", "admin", ui, data)
+
+
+def build_admin_settings_ssr_html() -> str:
+    return (
+        '<div id="admin-board" class="admin-board" aria-hidden="true" style="display:none">'
+        '<nav>'
+        '<a href="/admin/support_chats"><span class="nav-label">Live Support</span></a>'
+        '<div id="collapseController">'
+        '<a href="/admin/premium-settings">Premium Settings</a>'
+        '<a href="/admin/marquees">Marquees</a>'
+        '<a href="/admin/support-requests">Support Requests</a>'
+        '<a href="/admin/promo-codes">Promo Codes</a>'
+        '</div>'
+        '</nav>'
+        '<ul id="settings-nav">'
+        '<li id="tab-general">General</li>'
+        '<li id="tab-trained">Trained Models</li>'
+        '<li id="tab-guide">Deployment Guide</li>'
+        '</ul>'
+        '<select id="cambodia_province_select"></select>'
+        '<input id="server_location_name" name="server_location_name" />'
+        '<input id="server_location_lat" name="server_location_lat" />'
+        '<input id="server_location_lon" name="server_location_lon" />'
+        '<a id="link-gmaps-preview" href="https://maps.google.com">Preview</a>'
+        '<button id="generate-model-key" type="button">Generate Key</button>'
+        '<button id="test-trained-ai" type="button">Test Trained AI</button>'
+        '</div>'
+    )
+
+
+def build_admin_settings_bootstrap(
+    *,
+    active_tab,
+    system_name,
+    server_location_name,
+    server_location_lat,
+    server_location_lon,
+    cambodia_provinces,
+    active_provider,
+    hf_model_id,
+    hf_inference_url,
+    hf_key_configured,
+    legacy_fallback_enabled,
+    hf_models,
+    active_model_id,
+    editing_model,
+) -> dict[str, Any]:
+    ui = _admin_shell_ui(
+        eyebrow=_copy("Configuration", "ការកំណត់"),
+        title=_copy("System & AI Settings", "ការកំណត់ប្រព័ន្ធ និង AI"),
+        subtitle=_copy("Configure system identity, server weather coordinates, and deployed trained models.", "កំណត់ឈ្មោះប្រព័ន្ធ ទីតាំងម៉ាស៊ីនមេ និងម៉ូដែល AI ផ្ទាល់ខ្លួន។"),
+    )
+    provinces = []
+    if isinstance(cambodia_provinces, dict):
+        for key, item in cambodia_provinces.items():
+            if isinstance(item, dict):
+                provinces.append({
+                    "id": _text(key),
+                    "name": _text(item.get("display_name") or item.get("name") or key),
+                    "lat": _text(item.get("lat") or ""),
+                    "lon": _text(item.get("lon") or ""),
+                })
+    elif isinstance(cambodia_provinces, list):
+        for item in cambodia_provinces:
+            if isinstance(item, dict):
+                provinces.append({
+                    "id": _text(item.get("id") or item.get("name") or ""),
+                    "name": _text(item.get("display_name") or item.get("name") or ""),
+                    "lat": _text(item.get("lat") or ""),
+                    "lon": _text(item.get("lon") or ""),
+                })
+    data = {
+        "activeTab": _text(active_tab or "general"),
+        "formAction": _safe_url("admin.settings", "/admin/settings"),
+        "testConnectionUrl": _safe_url("admin.test_ai_connection", "/admin/api/test_ai_connection"),
+        "generateKeyUrl": _safe_url("admin.generate_inference_key", "/admin/api/generate_inference_key"),
+        "general": {
+            "systemName": _text(system_name or "AgriSystem"),
+            "serverLocationName": _text(server_location_name or "Phnom Penh, Cambodia"),
+            "serverLocationLat": _text(server_location_lat or "11.5564"),
+            "serverLocationLon": _text(server_location_lon or "104.9282"),
+        },
+        "provinces": provinces,
+        "trainedAi": {
+            "activeProvider": _text(active_provider or "own-ai"),
+            "hfModelId": _text(hf_model_id or ""),
+            "hfInferenceUrl": _text(hf_inference_url or ""),
+            "hfKeyConfigured": bool(hf_key_configured),
+            "legacyFallbackEnabled": bool(legacy_fallback_enabled),
+            "hfModels": hf_models or [],
+            "activeModelId": _text(active_model_id or ""),
+            "editingModel": editing_model,
+        },
+    }
+    return _base_bootstrap("admin-settings", "admin", ui, data)
+

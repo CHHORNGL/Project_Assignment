@@ -4,7 +4,7 @@ import re
 from datetime import datetime, timedelta
 from io import BytesIO
 
-from flask import abort, flash, redirect, render_template, request, send_file, url_for
+from flask import abort, flash, redirect, request, send_file, url_for
 from flask_login import current_user, login_required
 from sqlalchemy import func  # ✅ needed for charts
 
@@ -19,6 +19,18 @@ from app.models.symptom import Symptom
 from app.models.user import User
 from app.services.notification_service import _snippet, notify_user
 from app.utils.decorators import role_required
+from app.utils.react_bootstrap import (
+    build_expert_dashboard_bootstrap,
+    build_expert_disease_form_bootstrap,
+    build_expert_diseases_bootstrap,
+    build_expert_farmer_chats_bootstrap,
+    build_expert_optional_form_bootstrap,
+    build_expert_pending_diagnoses_bootstrap,
+    build_expert_reply_chat_bootstrap,
+    build_expert_review_diagnosis_bootstrap,
+    build_expert_support_hub_bootstrap,
+    render_react_page,
+)
 
 from . import expert_bp
 
@@ -246,15 +258,17 @@ def dashboard():
     chart_labels = [row[0] for row in chart_rows]
     chart_values = [row[1] for row in chart_rows]
 
-    return render_template(
-        "expert/dashboard.html",
-        diagnoses=pending_diagnoses,
-        auto_cases=auto_cases,
-        approved_count=approved_count,
-        rejected_count=rejected_count,
-        chat_count=chat_count,
-        chart_labels=chart_labels,
-        chart_values=chart_values
+    return render_react_page(
+        bootstrap_payload=build_expert_dashboard_bootstrap(
+            diagnoses=pending_diagnoses,
+            auto_cases=auto_cases,
+            approved_count=approved_count,
+            rejected_count=rejected_count,
+            chat_count=chat_count,
+            chart_labels=chart_labels,
+            chart_values=chart_values,
+        ),
+        title="Expert Dashboard",
     )
 
 
@@ -371,24 +385,26 @@ def support_hub():
     )
 
     crops = Crop.query.order_by(Crop.name.asc()).all()
-    return render_template(
-        "expert/support_hub.html",
-        auto_cases=auto_cases,
-        crops=crops,
-        filter_crop_id=crop_id,
-        filter_status=status,
-        filter_date_from=date_from,
-        filter_date_to=date_to,
-        total_rule_sessions=total_rule_sessions,
-        rule_unique_farmers=rule_unique_farmers,
-        total_rule_messages=total_rule_messages,
-        last_24h_rule_messages=last_24h_rule_messages,
-        rule_chat_messages=rule_chat_messages,
-        rule_farmers=rule_farmers_list,
-        chat_date_from=chat_date_from,
-        chat_date_to=chat_date_to,
-        chat_keyword=chat_keyword,
-        chat_farmer_id=chat_farmer_id
+    return render_react_page(
+        bootstrap_payload=build_expert_support_hub_bootstrap(
+            auto_cases=auto_cases,
+            crops=crops,
+            filter_crop_id=crop_id,
+            filter_status=status,
+            filter_date_from=date_from,
+            filter_date_to=date_to,
+            total_rule_sessions=total_rule_sessions,
+            rule_unique_farmers=rule_unique_farmers,
+            total_rule_messages=total_rule_messages,
+            last_24h_rule_messages=last_24h_rule_messages,
+            rule_chat_messages=rule_chat_messages,
+            rule_farmers=rule_farmers_list,
+            chat_date_from=chat_date_from,
+            chat_date_to=chat_date_to,
+            chat_keyword=chat_keyword,
+            chat_farmer_id=chat_farmer_id,
+        ),
+        title="Expert Support Hub",
     )
 
 
@@ -406,9 +422,9 @@ def pending_diagnoses():
         .all()
     )
 
-    return render_template(
-        "expert/pending_diagnoses.html",
-        diagnoses=pending_diagnoses
+    return render_react_page(
+        bootstrap_payload=build_expert_pending_diagnoses_bootstrap(diagnoses=pending_diagnoses),
+        title="Pending Diagnoses",
     )
 
 
@@ -473,9 +489,9 @@ def review_diagnosis(diagnosis_id):
 
         return redirect(url_for("expert.dashboard"))
 
-    return render_template(
-        "expert/review_diagnosis.html",
-        diagnosis=diagnosis
+    return render_react_page(
+        bootstrap_payload=build_expert_review_diagnosis_bootstrap(diagnosis=diagnosis),
+        title="Review Diagnosis",
     )
 
 
@@ -492,9 +508,9 @@ def farmer_chats():
         .all()
     )
 
-    return render_template(
-        "expert/farmer_chats.html",
-        sessions=sessions
+    return render_react_page(
+        bootstrap_payload=build_expert_farmer_chats_bootstrap(sessions=sessions),
+        title="Farmer Chats",
     )
 
 
@@ -561,10 +577,12 @@ def reply_chat_session(session_id):
         .all()
     )
 
-    return render_template(
-        "expert/reply_chat.html",
-        messages=messages,
-        session=session
+    return render_react_page(
+        bootstrap_payload=build_expert_reply_chat_bootstrap(
+            messages=messages,
+            session=session,
+        ),
+        title="Reply Farmer",
     )
 
 
@@ -585,11 +603,13 @@ def diseases():
         for disease in diseases
         if (disease.cause_explanation or disease.treatment or disease.prevention_tips or disease.reference_links)
     )
-    return render_template(
-        "expert/diseases.html",
-        diseases=diseases,
-        knowledge_ready_count=knowledge_ready_count,
-        reference_scope_labels={item["id"]: item["label"] for item in REFERENCE_SCOPE_OPTIONS},
+    return render_react_page(
+        bootstrap_payload=build_expert_diseases_bootstrap(
+            diseases=diseases,
+            knowledge_ready_count=knowledge_ready_count,
+            reference_scope_labels={item["id"]: item["label"] for item in REFERENCE_SCOPE_OPTIONS},
+        ),
+        title="Diagnosis Knowledge Manager",
     )
 
 
@@ -664,11 +684,13 @@ def create_disease():
         flash("Diagnosis knowledge entry added successfully.", "success")
         return redirect(url_for("expert.diseases"))
 
-    return render_template(
-        "expert/create_disease.html",
-        crops=crops,
-        back_url=url_for("expert.diseases"),
-        **taxonomy_options,
+    return render_react_page(
+        bootstrap_payload=build_expert_disease_form_bootstrap(
+            crops=crops,
+            back_url=url_for("expert.diseases"),
+            **taxonomy_options,
+        ),
+        title="Add Diagnosis Knowledge",
     )
 
 
@@ -739,13 +761,15 @@ def edit_disease(disease_id):
         flash("Diagnosis knowledge entry updated.", "success")
         return redirect(url_for("expert.diseases"))
 
-    return render_template(
-        "expert/create_disease.html",
-        crops=crops,
-        disease=disease,
-        edit_mode=True,
-        back_url=url_for("expert.diseases"),
-        **taxonomy_options,
+    return render_react_page(
+        bootstrap_payload=build_expert_disease_form_bootstrap(
+            crops=crops,
+            disease=disease,
+            edit_mode=True,
+            back_url=url_for("expert.diseases"),
+            **taxonomy_options,
+        ),
+        title="Edit Diagnosis Knowledge",
     )
 
 
@@ -922,4 +946,7 @@ def form():
         flash("Knowledge saved to rule base.", "success")
         return redirect(url_for("expert.knowledge_dashboard"))
 
-    return render_template("expert/form.html", **taxonomy_options)
+    return render_react_page(
+        bootstrap_payload=build_expert_optional_form_bootstrap(**taxonomy_options),
+        title="Expert Knowledge Input",
+    )

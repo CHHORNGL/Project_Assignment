@@ -55,6 +55,3 @@ mobile/.flutter-plugins-dependencies
 *.diff
 backend/app/static/uploads/diag_*
 cookies*.txt
-archived/root_debug/
-archived/dev_tools/cookies.txt
-archived/dev_tools/flask_run.log

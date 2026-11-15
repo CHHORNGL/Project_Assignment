@@ -21,9 +21,28 @@ from flask import (
     flash,
     jsonify,
     redirect,
-    render_template,
     request,
     url_for,
+)
+from app.utils.react_bootstrap import (
+    build_admin_audit_logs_bootstrap,
+    build_admin_dashboard_bootstrap,
+    build_admin_disease_form_bootstrap,
+    build_admin_diseases_bootstrap,
+    build_admin_expert_stats_bootstrap,
+    build_admin_premium_settings_bootstrap,
+    build_admin_promo_codes_bootstrap,
+    build_admin_role_permissions_bootstrap,
+    build_admin_roles_bootstrap,
+    build_admin_settings_bootstrap,
+    build_admin_settings_ssr_html,
+    build_admin_support_requests_bootstrap,
+    build_admin_translations_backups_bootstrap,
+    build_admin_translations_bootstrap,
+    build_admin_user_detail_bootstrap,
+    build_admin_users_bootstrap,
+    build_admin_world_bootstrap,
+    render_react_page,
 )
 from flask_login import current_user, login_required
 from sqlalchemy import func, or_
@@ -260,22 +279,23 @@ def premium_settings():
     bakong_config = get_bakong_config()
     recent_transactions = PaymentTransaction.query.order_by(PaymentTransaction.created_at.desc()).limit(20).all()
 
-    return render_template(
-        "admin/premium_settings.html",
-        current_price=current_price,
-        yearly_discount_percent=yearly_discount_percent,
-        yearly_final_monthly_rate=yearly_final_monthly_rate,
-        yearly_total_amount=yearly_total_amount,
-        discount_percent=discount_percent,
-        discount_banner=discount_banner,
-        coupon_enabled=coupon_enabled,
-        simple_user_daily_tokens=simple_user_daily_tokens,
-        final_price=final_price,
-        coupons=coupons,
-        premium_count=premium_users_count,
-        bakong_config=bakong_config,
-        recent_transactions=recent_transactions,
-        now=_now_dt(),
+    return render_react_page(
+        bootstrap_payload=build_admin_premium_settings_bootstrap(
+            current_price=current_price,
+            yearly_discount_percent=yearly_discount_percent,
+            yearly_final_monthly_rate=yearly_final_monthly_rate,
+            yearly_total_amount=yearly_total_amount,
+            discount_percent=discount_percent,
+            discount_banner=discount_banner,
+            coupon_enabled=coupon_enabled,
+            simple_user_daily_tokens=simple_user_daily_tokens,
+            final_price=final_price,
+            coupons=coupons,
+            premium_count=premium_users_count,
+            bakong_config=bakong_config,
+            recent_transactions=recent_transactions,
+        ),
+        title="Premium & Pricing Settings",
     )
 
 @admin_bp.route("/api/bakong/test-connection", methods=["GET", "POST"])
@@ -346,14 +366,17 @@ def dashboard():
     pending_diagnoses = Diagnosis.query.filter_by(status="PENDING").count()
     total_chats = db.session.query(func.count(ChatMessage.session_id.distinct())).scalar() or 0
     recent_logs = AuditLog.query.order_by(AuditLog.created_at.desc()).limit(10).all()
-    return render_template(
-        "admin/dashboard.html",
-        total_users=total_users,
-        total_diagnoses=total_diagnoses,
-        pending_diagnoses=pending_diagnoses,
-        total_chats=total_chats,
-        recent_logs=recent_logs,
-        scan_points=[],
+    return render_react_page(
+        bootstrap_payload=build_admin_dashboard_bootstrap(
+            total_users=total_users,
+            total_diagnoses=total_diagnoses,
+            pending_diagnoses=pending_diagnoses,
+            total_chats=total_chats,
+            recent_logs=recent_logs,
+            scan_points=[],
+            cesium_token=os.getenv("CESIUM_TOKEN", ""),
+        ),
+        title="Admin Control Center",
     )
 
 
@@ -365,10 +388,12 @@ def dashboard():
 def world():
     scan_points = []
     cesium_token = os.getenv("CESIUM_TOKEN", "")
-    return render_template(
-        "admin/world.html",
-        scan_points=scan_points,
-        cesium_token=cesium_token
+    return render_react_page(
+        bootstrap_payload=build_admin_world_bootstrap(
+            scan_points=scan_points,
+            cesium_token=cesium_token,
+        ),
+        title="World Map",
     )
 
 
@@ -385,11 +410,13 @@ def expert_statistics():
         Diagnosis.status != "PENDING"
     ).count()
 
-    return render_template(
-        "admin/expert_stats.html",
-        total_diagnoses=total,
-        pending_count=pending,
-        approved_count=approved
+    return render_react_page(
+        bootstrap_payload=build_admin_expert_stats_bootstrap(
+            total_diagnoses=total,
+            pending_count=pending,
+            approved_count=approved,
+        ),
+        title="Expert Statistics",
     )
 
 
@@ -401,9 +428,9 @@ def expert_statistics():
 @permission_required("manage_crops")
 def diseases():
     diseases = Disease.query.order_by(Disease.id.desc()).all()
-    return render_template(
-        "admin/diseases.html",
-        diseases=diseases
+    return render_react_page(
+        bootstrap_payload=build_admin_diseases_bootstrap(diseases=diseases),
+        title="Disease Management",
     )
 
 
@@ -443,10 +470,14 @@ def create_disease():
         flash("Disease added successfully", "success")
         return redirect(url_for("admin.diseases"))
 
-    return render_template(
-        "admin/create_disease.html",
-        crops=crops,
-        back_url=url_for("admin.diseases")
+    return render_react_page(
+        bootstrap_payload=build_admin_disease_form_bootstrap(
+            crops=crops,
+            back_url=url_for("admin.diseases"),
+            disease=None,
+            edit_mode=False,
+        ),
+        title="Add Disease",
     )
 
 
@@ -484,12 +515,14 @@ def edit_disease(disease_id):
         flash("Disease updated", "success")
         return redirect(url_for("admin.diseases"))
 
-    return render_template(
-        "admin/create_disease.html",
-        crops=crops,
-        disease=disease,
-        edit_mode=True,
-        back_url=url_for("admin.diseases")
+    return render_react_page(
+        bootstrap_payload=build_admin_disease_form_bootstrap(
+            crops=crops,
+            disease=disease,
+            edit_mode=True,
+            back_url=url_for("admin.diseases"),
+        ),
+        title="Edit Disease",
     )
 
 
@@ -1027,14 +1060,16 @@ def translations():
     diseases = _apply_filters(Disease.query, Disease.name, Disease.name_kh).order_by(Disease.name.asc()).all()
     symptoms = _apply_filters(Symptom.query, Symptom.name, Symptom.name_kh).order_by(Symptom.name.asc()).all()
 
-    return render_template(
-        "admin/translations.html",
-        crops=crops,
-        diseases=diseases,
-        symptoms=symptoms,
-        current_section=section,
-        q=q,
-        missing_only=missing_only
+    return render_react_page(
+        bootstrap_payload=build_admin_translations_bootstrap(
+            crops=crops,
+            diseases=diseases,
+            symptoms=symptoms,
+            current_section=section,
+            q=q,
+            missing_only=missing_only,
+        ),
+        title="Khmer Translations",
     )
 
 
@@ -1275,24 +1310,27 @@ def settings():
     from app.blueprints.farmer.support_chat import CAMBODIA_PROVINCES
     active_tab = request.args.get("tab", "general")
 
-    return render_template(
-        "admin/settings.html",
-        active_tab=active_tab,
-        system_name=system_name,
-        server_location_name=server_location_name,
-        server_location_lat=server_location_lat,
-        server_location_lon=server_location_lon,
-        cambodia_provinces=CAMBODIA_PROVINCES,
-        active_provider=active_provider,
-        hf_model_id=hf_model_id,
-        hf_inference_url=hf_inference_url,
-        hf_key_configured=bool(hf_key_setting and hf_key_setting.value.strip()) or bool(current_app.config.get("HF_TOKEN")) or bool(
-            active_token_setting and active_token_setting.value.strip()
+    return render_react_page(
+        bootstrap_payload=build_admin_settings_bootstrap(
+            active_tab=active_tab,
+            system_name=system_name,
+            server_location_name=server_location_name,
+            server_location_lat=server_location_lat,
+            server_location_lon=server_location_lon,
+            cambodia_provinces=CAMBODIA_PROVINCES,
+            active_provider=active_provider,
+            hf_model_id=hf_model_id,
+            hf_inference_url=hf_inference_url,
+            hf_key_configured=bool(hf_key_setting and hf_key_setting.value.strip()) or bool(current_app.config.get("HF_TOKEN")) or bool(
+                active_token_setting and active_token_setting.value.strip()
+            ),
+            legacy_fallback_enabled=fallback_value in {"1", "true", "yes", "on"},
+            hf_models=hf_models,
+            active_model_id=active_model_id,
+            editing_model=editing_model,
         ),
-        legacy_fallback_enabled=fallback_value in {"1", "true", "yes", "on"},
-        hf_models=hf_models,
-        active_model_id=active_model_id,
-        editing_model=editing_model,
+        title="System & AI Settings",
+        react_ssr_html=build_admin_settings_ssr_html(),
     )
 
 
@@ -1397,9 +1435,9 @@ def translations_backups():
         .limit(30)
         .all()
     )
-    return render_template(
-        "admin/translations_backups.html",
-        backups=backups
+    return render_react_page(
+        bootstrap_payload=build_admin_translations_backups_bootstrap(backups=backups),
+        title="Translation Backups",
     )
 
 
@@ -1503,11 +1541,13 @@ def users():
                 User.full_name.ilike(like)
             )
         )
-    return render_template(
-        "admin/users.html",
-        users=query.order_by(User.created_at.desc()).all(),
-        roles=Role.query.all(),
-        q=q
+    return render_react_page(
+        bootstrap_payload=build_admin_users_bootstrap(
+            users=query.order_by(User.created_at.desc()).all(),
+            roles=Role.query.all(),
+            q=q,
+        ),
+        title="User Management",
     )
 
 
@@ -1517,11 +1557,13 @@ def users():
 def user_detail(user_id):
     q = (request.args.get("q") or "").strip()
     user = User.query.get_or_404(user_id)
-    return render_template(
-        "admin/user_detail.html",
-        user=user,
-        roles=Role.query.all(),
-        q=q
+    return render_react_page(
+        bootstrap_payload=build_admin_user_detail_bootstrap(
+            user=user,
+            roles=Role.query.all(),
+            q=q,
+        ),
+        title=user.full_name or user.username,
     )
 
 
@@ -1998,11 +2040,13 @@ def roles():
         .all()
     )
 
-    return render_template(
-        "admin/roles.html",
-        roles=roles_list,
-        core_role_names=CORE_ROLE_NAMES,
-        role_user_counts=role_user_counts,
+    return render_react_page(
+        bootstrap_payload=build_admin_roles_bootstrap(
+            roles=roles_list,
+            core_role_names=CORE_ROLE_NAMES,
+            role_user_counts=role_user_counts,
+        ),
+        title="Role Management",
     )
 
 
@@ -2161,11 +2205,13 @@ def manage_role_permissions(role_id):
             grouped_permissions[group] = []
         grouped_permissions[group].append(perm)
 
-    return render_template(
-        "admin/manage_permissions.html",
-        role=role,
-        permissions=permissions,
-        grouped_permissions=grouped_permissions
+    return render_react_page(
+        bootstrap_payload=build_admin_role_permissions_bootstrap(
+            role=role,
+            permissions=permissions,
+            grouped_permissions=grouped_permissions,
+        ),
+        title=f"Permissions: {role.name}",
     )
 
 
@@ -2183,9 +2229,9 @@ def audit_logs():
         .all()
     )
 
-    return render_template(
-        "admin/audit_logs.html",
-        logs=logs
+    return render_react_page(
+        bootstrap_payload=build_admin_audit_logs_bootstrap(logs=logs),
+        title="Audit Logs",
     )
 
 
@@ -2230,15 +2276,17 @@ def support_requests():
 
     users = User.query.order_by(User.username.asc()).limit(100).all()
 
-    return render_template(
-        "admin/support_requests.html",
-        support_requests=support_requests,
-        filter_status=filter_status,
-        q=q,
-        open_count=open_count,
-        resolved_count=resolved_count,
-        total_count=total_count,
-        users=users,
+    return render_react_page(
+        bootstrap_payload=build_admin_support_requests_bootstrap(
+            support_requests=support_requests,
+            filter_status=filter_status,
+            q=q,
+            open_count=open_count,
+            resolved_count=resolved_count,
+            total_count=total_count,
+            users=users,
+        ),
+        title="Support Requests",
     )
 
 
@@ -2372,7 +2420,10 @@ def promo_codes():
         return redirect(url_for("admin.promo_codes"))
         
     codes = PromoCode.query.order_by(PromoCode.created_at.desc()).all()
-    return render_template("admin/promo_codes.html", codes=codes)
+    return render_react_page(
+        bootstrap_payload=build_admin_promo_codes_bootstrap(codes=codes),
+        title="Promo Codes",
+    )
 
 @admin_bp.route("/promo-codes/<int:code_id>/delete", methods=["POST"])
 @login_required

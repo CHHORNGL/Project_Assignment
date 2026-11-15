@@ -1,4 +1,9 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask import Blueprint, request, redirect, url_for, flash
+from app.utils.react_bootstrap import (
+    build_admin_crop_form_bootstrap,
+    build_admin_crops_bootstrap,
+    render_react_page,
+)
 from flask_login import login_required
 from app.utils.decorators import permission_required
 from app.extensions import db
@@ -18,7 +23,10 @@ admin_crop_bp = Blueprint(
 @permission_required("manage_crops")
 def index():
     crops = Crop.query.all()
-    return render_template("admin/crops.html", crops=crops)
+    return render_react_page(
+        bootstrap_payload=build_admin_crops_bootstrap(crops=crops),
+        title="Manage Crops",
+    )
 
 
 @admin_crop_bp.route("/create", methods=["GET", "POST"])
@@ -49,7 +57,10 @@ def create():
         flash("Crop added successfully.", "success")
         return redirect(url_for("admin_crop.index"))
 
-    return render_template("admin/create_crop.html")
+    return render_react_page(
+        bootstrap_payload=build_admin_crop_form_bootstrap(crop=None, is_edit=False),
+        title="Create Crop",
+    )
 
 
 @admin_crop_bp.route("/<int:id>/edit", methods=["GET", "POST"])
@@ -70,7 +81,10 @@ def edit(id):
         db.session.commit()
         flash("Crop updated successfully.", "success")
         return redirect(url_for("admin_crop.index"))
-    return render_template("admin/edit_crop.html", crop=crop)
+    return render_react_page(
+        bootstrap_payload=build_admin_crop_form_bootstrap(crop=crop, is_edit=True),
+        title="Edit Crop",
+    )
 
 
 @admin_crop_bp.route("/<int:id>/delete", methods=["GET", "POST"])

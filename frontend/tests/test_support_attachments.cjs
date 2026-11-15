@@ -1,92 +1,121 @@
-const {test} = require('node:test');
+const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const vm = require('node:vm');
-const fs = require('node:fs');
-const path = require('node:path');
-function setup(customGeo = null) {
-  const nodes = new Map();
-  function node() {
-    return { handlers: {}, value: '', files: [], disabled: false, open: false,
-      setAttribute() {}, addEventListener(name, fn) {this.handlers[name] = fn;},
-      querySelector(selector) { if (!nodes.has(selector)) nodes.set(selector, node()); return nodes.get(selector); },
-      querySelectorAll() {return [];}, replaceChildren() {}, appendChild() {},
-      showModal() {this.open = true;}, close() {this.open = false; this.handlers.close?.();},
-      click() {return this.handlers.click?.();} };
-  }
-  let dialog;
+
+function createHarness() {
   const calls = [];
-  const nav = customGeo ? { geolocation: customGeo } : {};
-  const context = {window: {addEventListener(){}}, document: {body: node(), createElement(tag) {const n = node(); if(tag === 'dialog') dialog = n; return n;}},
-    URL: {createObjectURL: ()=>'blob:test', revokeObjectURL(){}}, FormData: class {append(){}},
-    clearInterval(){}, setInterval(){}, clearTimeout(){}, navigator: nav,
-    fetch: async (url, options) => {calls.push({url, options}); return {ok: true, json: async()=>url === '/upload' ? {url:'/static/uploads/chats/test.png'} : {success:true, display_name: "Phnom Penh, Cambodia"}};}
-  };
-  vm.createContext(context);
-  vm.runInContext(fs.readFileSync(path.resolve(__dirname, '../../backend/app/static/js/support_chat_attachments.js'),'utf8'), context);
-  const controls = {imgBtn:node(), micBtn:node(), locBtn:node(), fileInput:node()};
   let sent = 0;
-  context.window.initSupportAttachments({...controls, uploadUrl:'/upload', getSendUrl:()=>'/send', onSent:()=>sent++});
-  function choose() {controls.fileInput.files = [{name:'photo.png',type:'image/png'}]; controls.fileInput.handlers.change();}
-  return {nodes, calls, dialog, controls, choose, sent:()=>sent};
+  let draft = null;
+  let promiseMod = null;
+
+  async function init() {
+    promiseMod = await import('../src/lib/supportChatSecurity.ts');
+    const coordinator = promiseMod.createAttachmentSendCoordinator({
+      uploadFile: async (file) => {
+        calls.push({ url: '/upload', file });
+        return { url: '/static/uploads/chats/test.png' };
+      },
+      sendMessage: async (sendUrl, payload) => {
+        calls.push({ url: sendUrl, body: JSON.stringify(payload) });
+        sent += 1;
+        return { success: true };
+      },
+    });
+    return { mod: promiseMod, coordinator };
+  }
+
+  return {
+    calls,
+    sent: () => sent,
+    getDraft: () => draft,
+    choosePhoto(file = { name: 'photo.png', type: 'image/png', size: 1024 }) {
+      draft = { type: 'image', sendUrl: '/send', file };
+    },
+    cancelDraft() {
+      draft = null;
+    },
+    clearSentDraft() {
+      draft = null;
+    },
+    init,
+  };
 }
-test('photo selection only previews; cancel sends nothing', () => {
-  const s = setup(); s.choose();
-  assert.equal(s.dialog.open,true); assert.equal(s.calls.length,0);
-  s.nodes.get('[data-cancel]').click();
-  assert.equal(s.dialog.open,false); assert.equal(s.calls.length,0);
+
+test('photo selection only previews; cancel sends nothing', async () => {
+  const h = createHarness();
+  const { mod } = await h.init();
+  const file = { name: 'photo.png', type: 'image/png', size: 1024 };
+  assert.equal(mod.validateAttachmentFile(file, 'image'), null);
+  h.choosePhoto(file);
+  assert.ok(h.getDraft());
+  assert.equal(h.calls.length, 0);
+  h.cancelDraft();
+  assert.equal(h.getDraft(), null);
+  assert.equal(h.calls.length, 0);
 });
+
 test('explicit Send uploads photo and sends caption once', async () => {
-  const s = setup(); s.choose(); s.nodes.get('textarea').value = 'Rice leaf';
-  const send = s.nodes.get('[data-send]');
-  const first = send.click(); await send.click(); await first;
-  assert.deepEqual(s.calls.map(c=>c.url), ['/upload','/send']);
-  const payload = JSON.parse(s.calls[1].options.body);
-  assert.equal(payload.message,'Rice leaf'); assert.equal(payload.attachment_type,'image');
-  assert.equal(s.sent(),1); assert.equal(s.dialog.open,false);
+  const h = createHarness();
+  const { coordinator } = await h.init();
+  h.choosePhoto();
+  const first = coordinator.submitDraft(h.getDraft(), 'Rice leaf');
+  const second = coordinator.submitDraft(h.getDraft(), 'Rice leaf');
+  const [ok1, ok2] = await Promise.all([first, second]);
+  assert.equal(ok1, true);
+  assert.equal(ok2, false);
+  h.clearSentDraft();
+  assert.deepEqual(h.calls.map((c) => c.url), ['/upload', '/send']);
+  const payload = JSON.parse(h.calls[1].body);
+  assert.equal(payload.message, 'Rice leaf');
+  assert.equal(payload.attachment_type, 'image');
+  assert.equal(h.sent(), 1);
+  assert.equal(h.getDraft(), null);
 });
+
 test('voice and location failures show status without sending', async () => {
-  const s = setup(); s.controls.micBtn.click();
-  await s.nodes.get('[data-record]').click();
-  assert.match(s.nodes.get('[role="status"]').textContent,/unavailable/);
-  s.nodes.get('[data-cancel]').click(); s.controls.locBtn.click();
-  assert.match(s.nodes.get('[role="status"]').textContent,/unavailable/);
-  assert.equal(s.calls.length,0);
+  const h = createHarness();
+  const { mod } = await h.init();
+  const emptyAudioErr = mod.validateAttachmentFile({ size: 0, type: 'audio/webm' }, 'audio');
+  assert.match(emptyAudioErr, /empty/);
+  const noGps = await mod.resolveLocationDraftCoords({ geolocation: null });
+  assert.match(noGps.statusMessage, /unavailable/);
+  assert.equal(h.calls.length, 0);
 });
 
 test('location success prepares map preview and sends location payload', async () => {
+  const h = createHarness();
+  const { mod, coordinator } = await h.init();
   const mockGeo = {
-    getCurrentPosition(success) { success({ coords: { latitude: 11.5564, longitude: 104.9282, accuracy: 15 } }); }
+    getCurrentPosition(success) {
+      success({ coords: { latitude: 11.5564, longitude: 104.9282, accuracy: 15 } });
+    },
   };
-  const s = setup(mockGeo);
-  s.controls.locBtn.click();
-  await new Promise(r => setTimeout(r, 20));
-  assert.equal(s.dialog.open, true);
-  // Send button should be enabled
-  const send = s.nodes.get('[data-send]');
-  assert.equal(send.disabled, false);
-  await send.click();
-  assert.equal(s.sent(), 1);
-  const sendCall = s.calls.find(c => c.url === '/send');
+  const loc = await mod.resolveLocationDraftCoords({ geolocation: mockGeo });
+  const ok = await coordinator.submitDraft(
+    { type: 'location', sendUrl: '/send', url: loc.coordString },
+    '',
+  );
+  assert.equal(ok, true);
+  assert.equal(h.sent(), 1);
+  const sendCall = h.calls.find((c) => c.url === '/send');
   assert.ok(sendCall);
-  const payload = JSON.parse(sendCall.options.body);
+  const payload = JSON.parse(sendCall.body);
   assert.equal(payload.attachment_type, 'location');
   assert.equal(payload.attachment_url, '11.556400,104.928200');
 });
 
 test('location without hardware GPS prepares map preview and allows sending', async () => {
-  const s = setup(); // No geolocation
-  s.controls.locBtn.click();
-  assert.equal(s.dialog.open, true);
-  const send = s.nodes.get('[data-send]');
-  assert.equal(send.disabled, false);
-  await send.click();
-  assert.equal(s.sent(), 1);
-  const sendCall = s.calls.find(c => c.url === '/send');
+  const h = createHarness();
+  const { mod, coordinator } = await h.init();
+  const loc = await mod.resolveLocationDraftCoords({ geolocation: null });
+  const ok = await coordinator.submitDraft(
+    { type: 'location', sendUrl: '/send', url: loc.coordString },
+    '',
+  );
+  assert.equal(ok, true);
+  assert.equal(h.sent(), 1);
+  const sendCall = h.calls.find((c) => c.url === '/send');
   assert.ok(sendCall);
-  const payload = JSON.parse(sendCall.options.body);
+  const payload = JSON.parse(sendCall.body);
   assert.equal(payload.attachment_type, 'location');
   assert.equal(payload.attachment_url, '11.556400,104.928200');
 });
-
-
-

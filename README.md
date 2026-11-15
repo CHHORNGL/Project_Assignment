@@ -131,7 +131,6 @@ Project_Assignment/
 ├── ai/                   # Datasets, LoRA training scripts, HF Space app, and inference server
 ├── docs/                 # Architecture guide, security specs, and OpenAPI/Postman specs
 ├── scripts/              # Operational CLI utilities, dataset exporters, and CVE auditor
-├── archived/             # Archived historical scratch files and one-off dev utilities
 ├── Dockerfile            # Multi-stage production container build (Node 22 + Python 3.11)
 └── docker-compose.yml    # Full-stack orchestration (Flask + PostgreSQL 15 + Redis 7)
 ```

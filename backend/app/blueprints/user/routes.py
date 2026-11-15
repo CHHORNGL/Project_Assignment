@@ -12,7 +12,6 @@ from flask import (
     jsonify,
     make_response,
     redirect,
-    render_template,
     request,
     send_file,
     session,
@@ -34,6 +33,15 @@ from app.services.notification_service import serialize_notification
 from app.services.theme_manager import resolve_active_runtime
 from app.services.translator import translate_audio_to_khmer, translate_to_khmer
 from app.utils.i18n import get_current_language, set_current_language
+from app.utils.react_bootstrap import (
+    build_user_home_bootstrap,
+    build_user_login_activity_bootstrap,
+    build_user_member_card_bootstrap,
+    build_user_notifications_bootstrap,
+    build_user_profile_bootstrap,
+    build_user_settings_bootstrap,
+    render_react_page,
+)
 
 AVATAR_MIME_BY_EXT = {
     ".jpg": "image/jpeg",
@@ -92,9 +100,9 @@ def index():
     """
     User dashboard / home
     """
-    return render_template(
-        "users/index.html",
-        theme=current_user.theme
+    return render_react_page(
+        bootstrap_payload=build_user_home_bootstrap(),
+        title="Account Hub",
     )
 
 
@@ -275,16 +283,13 @@ def profile():
     member_card_url = None
     if rep_label:
         member_card_url = url_for("user.member_card", user_id=current_user.id, _external=True)
-    if current_user.has_role("admin") or current_user.has_role("expert"):
-        layout_shell = "layouts/base.html"
-    else:
-        layout_shell = "layouts/farmer_shell.html"
 
-    return render_template(
-        "farmer/profile.html",
-        rep_label=rep_label,
-        member_card_url=member_card_url,
-        layout_shell=layout_shell
+    return render_react_page(
+        bootstrap_payload=build_user_profile_bootstrap(
+            rep_label=rep_label,
+            member_card_url=member_card_url,
+        ),
+        title="Profile & Security",
     )
 
 
@@ -329,12 +334,14 @@ def member_card(user_id: int):
     except Exception:
         theme_runtime = None
 
-    return render_template(
-        "users/member_card.html",
-        member=member,
-        rep_label=rep_label,
-        role_names=role_names,
-        theme_runtime=theme_runtime,
+    return render_react_page(
+        bootstrap_payload=build_user_member_card_bootstrap(
+            member=member,
+            rep_label=rep_label,
+            role_names=role_names,
+            theme_runtime=theme_runtime,
+        ),
+        title=f"Member Card | {member.full_name or member.username}",
     )
 
 
@@ -368,20 +375,15 @@ def settings():
         resp.set_cookie("theme", theme, max_age=31536000, path="/", samesite="Lax")
         return resp
 
-    if current_user.has_role("admin") or current_user.has_role("expert"):
-        layout_shell = "layouts/base.html"
-    else:
-        layout_shell = "layouts/farmer_shell.html"
-
-    return render_template(
-        "farmer/settings.html",
-        current_lang=get_current_language(),
-        layout_shell=layout_shell,
-        activities=list_login_activity(
-            current_user.id,
-            current_activity_id=session.get("_login_activity_id"),
-            limit=5,
+    return render_react_page(
+        bootstrap_payload=build_user_settings_bootstrap(
+            activities=list_login_activity(
+                current_user.id,
+                current_activity_id=session.get("_login_activity_id"),
+                limit=5,
+            )
         ),
+        title="Settings",
     )
 
 
@@ -391,12 +393,12 @@ def settings():
 @user_bp.route("/login-activity")
 @login_required
 def login_activity():
-    layout_shell = "layouts/base.html" if current_user.has_role("admin") or current_user.has_role("expert") else "layouts/farmer_shell.html"
-    return render_template(
-        "farmer/login_activity.html",
-        activities=list_login_activity(current_user.id, current_activity_id=session.get("_login_activity_id")),
-        layout_shell=layout_shell,
-        current_lang=get_current_language(),
+    return render_react_page(
+        bootstrap_payload=build_user_login_activity_bootstrap(
+            activities=list_login_activity(current_user.id, current_activity_id=session.get("_login_activity_id")),
+        ),
+        title="Login Activity",
+        react_ssr_html='<div class="login-activity-container"><div class="login-activity-card"></div></div>',
     )
 
 
@@ -453,12 +455,15 @@ def notifications():
     query = _notification_query(current_user.id)
     rows, next_page, per_page = _paginate_notifications(query, page, per_page)
 
-    template = "farmer/notifications.html" if current_user.has_role("farmer") else "users/notifications.html"
-    return render_template(
-        template,
-        notifications_items=[serialize_notification(item) for item in rows],
-        notifications_next_page=next_page,
-        notifications_per_page=per_page,
+    return render_react_page(
+        bootstrap_payload=build_user_notifications_bootstrap(
+            items=[serialize_notification(item) for item in rows],
+            next_page=next_page,
+            per_page=per_page,
+            data_url=url_for("user.notifications_data"),
+            seen_url=url_for("user.notifications_seen"),
+        ),
+        title="Notifications",
     )
 
 

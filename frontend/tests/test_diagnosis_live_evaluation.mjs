@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { scheduleLiveEvaluation } from '../src/diagnosis/liveEvaluation.js';
+import { scheduleLiveEvaluation } from '../src/diagnosis/liveEvaluation.ts';
 
 const tick = () => new Promise(resolve => setTimeout(resolve, 10));
 

@@ -104,11 +104,6 @@ Project_Assignment/
 │   ├── test_smtp_email.py            # SMTP verification utility
 │   └── wait_for_database.py          # PostgreSQL readiness probe
 │
-├── archived/                         # Archived Historical Scratch & Debug Scripts
-│   ├── dev_tools/                    # One-off UI/database migration patch scripts
-│   ├── root_debug/                   # Former root-level diagnostic & HTML scratch files
-│   └── scratch/                      # Presentation & Khmer PDF generator scripts
-│
 ├── .dockerignore                     # Docker build context exclusions
 ├── .env.example                      # Environment variable template
 ├── .gitignore                        # Git ignore rules

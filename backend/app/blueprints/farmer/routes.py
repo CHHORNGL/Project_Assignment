@@ -17,7 +17,6 @@ from flask import (
     flash,
     jsonify,
     redirect,
-    render_template,
     request,
     session,
     url_for,
@@ -42,6 +41,22 @@ from app.models.site_setting import SiteSetting
 from app.models.symptom import Symptom
 from app.models.user import User
 from app.services.audit_service import log_action
+from app.utils.react_bootstrap import (
+    build_farmer_chat_bootstrap,
+    build_farmer_checkout_bootstrap,
+    build_farmer_dashboard_bootstrap,
+    build_farmer_detail_bootstrap,
+    build_farmer_diagnose_classic_bootstrap,
+    build_farmer_diagnose_wizard_bootstrap,
+    build_farmer_guest_landing_bootstrap,
+    build_farmer_history_bootstrap,
+    build_farmer_news_bootstrap,
+    build_farmer_result_bootstrap,
+    build_farmer_upgrade_bootstrap,
+    build_guest_landing_ssr_html,
+    build_user_notifications_bootstrap,
+    render_react_page,
+)
 from app.services.bakong_service import (
     create_khqr_payment,
     get_bakong_config,
@@ -530,18 +545,37 @@ def dashboard():
 
     active_marquees = Marquee.query.filter_by(is_active=True).order_by(Marquee.sort_order).all()
 
-    return render_template(
-        "farmer/dashboard.html",
-        diagnoses=diagnoses,
-        ai_questions=ai_questions,
-        crops=crops,
-        marquees=active_marquees,
-        premium_price=final_monthly,
-        yearly_monthly=yearly_monthly,
-        yearly_total=yearly_total,
-        yearly_discount_percent=yearly_discount,
-        supervisor=PROJECT_SUPERVISOR,
-        team=PROJECT_TEAM,
+    if not current_user.is_authenticated:
+        return render_react_page(
+            bootstrap_payload=build_farmer_guest_landing_bootstrap(
+                crops=crops,
+                marquees=active_marquees,
+                premium_price=final_monthly,
+                yearly_monthly=yearly_monthly,
+                yearly_total=yearly_total,
+                yearly_discount_percent=yearly_discount,
+                supervisor=PROJECT_SUPERVISOR,
+                team=PROJECT_TEAM,
+            ),
+            title="AGRI SYSTEM — AI Crop Diagnosis",
+            react_ssr_html=build_guest_landing_ssr_html(
+                supervisor=PROJECT_SUPERVISOR,
+                team=PROJECT_TEAM,
+            ),
+        )
+
+    return render_react_page(
+        bootstrap_payload=build_farmer_dashboard_bootstrap(
+            diagnoses=diagnoses,
+            ai_questions=ai_questions,
+            crops=crops,
+            marquees=active_marquees,
+            premium_price=final_monthly,
+            yearly_monthly=yearly_monthly,
+            yearly_total=yearly_total,
+            yearly_discount_percent=yearly_discount,
+        ),
+        title="Farmer Dashboard",
     )
 
 def _is_greeting_or_filler(text: str) -> bool:
@@ -749,9 +783,9 @@ def rule_inference_history():
         .order_by(Diagnosis.created_at.desc())
         .all()
     )
-    return render_template(
-        "farmer/rule_inference_history.html",
-        diagnoses=diagnoses
+    return render_react_page(
+        bootstrap_payload=build_farmer_history_bootstrap(diagnoses=diagnoses, mode="rule-inference"),
+        title="Rule-Based Inference History",
     )
 
 
@@ -767,9 +801,9 @@ def diagnosis_history():
         .order_by(Diagnosis.created_at.desc())
         .all()
     )
-    return render_template(
-        "farmer/diagnosis_history.html",
-        diagnoses=diagnoses
+    return render_react_page(
+        bootstrap_payload=build_farmer_history_bootstrap(diagnoses=diagnoses, mode="all"),
+        title="Diagnosis History",
     )
 
 
@@ -935,13 +969,14 @@ def diagnose():
     else:
         diagnoses = []
 
-    return render_template(
-        "farmer/diagnose.html",
-        diagnosis_csrf_token=generate_csrf(),
-        crops=crops,
-        crop_symptoms=crop_symptoms,
-        diagnoses=diagnoses,
-        selected_crop_id=selected_crop_id
+    return render_react_page(
+        bootstrap_payload=build_farmer_diagnose_classic_bootstrap(
+            crops=crops,
+            crop_symptoms=crop_symptoms,
+            diagnoses=diagnoses,
+            selected_crop_id=selected_crop_id,
+        ),
+        title="Symptom Checker",
     )
 
 
@@ -1367,9 +1402,9 @@ def diagnose_rule_based():
         }
     }
 
-    return render_template(
-        "farmer/diagnose_rule_based.html",
-        bootstrap_data=bootstrap_data
+    return render_react_page(
+        bootstrap_payload=build_farmer_diagnose_wizard_bootstrap(bootstrap_data),
+        title="Guided Crop Diagnosis",
     )
 
 # ===============================
@@ -1419,13 +1454,13 @@ def diagnosis_result(diagnosis_id):
         s_list = Symptom.query.all()
         symptom_translations = {s.name.lower().strip(): s.name_kh for s in s_list if s.name and s.name_kh}
 
-    return render_template(
-        "farmer/result.html",
-        diagnosis=diagnosis,
-        diagnoses=diagnoses,
-        possible_diseases=possible_diseases,
-        symptom_breakdown=symptom_breakdown,
-        symptom_translations=symptom_translations,
+    return render_react_page(
+        bootstrap_payload=build_farmer_result_bootstrap(
+            diagnosis=diagnosis,
+            possible_diseases=possible_diseases,
+            symptom_breakdown=symptom_breakdown,
+        ),
+        title="Diagnosis Result",
     )
 
 
@@ -1711,11 +1746,14 @@ def chat(session_id=None):
             .all()
         )
 
-    return render_template(
-        "farmer/chat.html",
-        messages=messages,
-        sessions=sessions,
-        active_session=session
+    return render_react_page(
+        bootstrap_payload=build_farmer_chat_bootstrap(
+            sessions=sessions,
+            active_session=session,
+            messages=messages,
+        ),
+        title="Ask Agri AI",
+        react_ssr_html='<div class="farmer-history-empty"></div>' if not sessions else None,
     )
 
 
@@ -1766,10 +1804,12 @@ def delete_chat_session(session_id):
 
 @farmer_bp.route("/detail")
 def detail():
-    return render_template(
-        "farmer/detail.html",
-        supervisor=PROJECT_SUPERVISOR,
-        team=PROJECT_TEAM,
+    return render_react_page(
+        bootstrap_payload=build_farmer_detail_bootstrap(
+            supervisor=PROJECT_SUPERVISOR,
+            team=PROJECT_TEAM,
+        ),
+        title="About AGRI SYSTEM",
     )
 
 # ---------------------------------------------------------------------------
@@ -1797,11 +1837,12 @@ def news():
     lang = get_current_language()
     initial_news = generate_agriculture_news(region="cambodia", lang=lang)
 
-    return render_template(
-        "farmer/news.html",
-        marquees=active_marquees,
-        marquees_data=marquee_list,
-        initial_news=initial_news
+    return render_react_page(
+        bootstrap_payload=build_farmer_news_bootstrap(
+            marquees=marquee_list,
+            initial_news=initial_news,
+        ),
+        title="AI Agricultural News",
     )
 
 @farmer_bp.route("/api/generate_news")
@@ -1957,14 +1998,16 @@ def premium_upgrade():
     final_price = f"{max(0.0, original_price - savings):.2f}"
     orig_price_str = f"{original_price:.2f}"
 
-    return render_template(
-        "farmer/upgrade.html",
-        premium_price=final_price,
-        original_price=orig_price_str,
-        discount_percent=discount_percent,
-        yearly_discount_percent=yearly_discount_percent,
-        discount_banner=discount_banner,
-        savings=savings
+    return render_react_page(
+        bootstrap_payload=build_farmer_upgrade_bootstrap(
+            premium_price=final_price,
+            original_price=orig_price_str,
+            discount_percent=discount_percent,
+            yearly_discount_percent=yearly_discount_percent,
+            discount_banner=discount_banner,
+            savings=savings,
+        ),
+        title="Upgrade Pro",
     )
 
 @farmer_bp.route("/premium/checkout", methods=["GET", "POST"])
@@ -2048,19 +2091,21 @@ def premium_checkout():
     except Exception as e:  # noqa: BLE001
         current_app.logger.warning(f"Initial Bakong QR generation note: {e}")
 
-    return render_template(
-        "farmer/checkout.html",
-        paypal_client_id=paypal_client_id,
-        bakong_config=bakong_config,
-        initial_bakong=initial_bakong,
-        premium_price=display_checkout_price,
-        original_price=display_orig_price,
-        discount_percent=discount_percent,
-        yearly_discount_percent=yearly_discount_percent,
-        savings=savings,
-        coupon_enabled=coupon_enabled,
-        billing_interval=billing_interval,
-        is_yearly=is_yearly
+    return render_react_page(
+        bootstrap_payload=build_farmer_checkout_bootstrap(
+            paypal_client_id=paypal_client_id,
+            bakong_config=bakong_config,
+            initial_bakong=initial_bakong,
+            premium_price=display_checkout_price,
+            original_price=display_orig_price,
+            discount_percent=discount_percent,
+            yearly_discount_percent=yearly_discount_percent,
+            savings=savings,
+            coupon_enabled=coupon_enabled,
+            billing_interval=billing_interval,
+            is_yearly=is_yearly,
+        ),
+        title="Checkout",
     )
 
 @farmer_bp.route("/api/bakong/generate-qr", methods=["POST"])
@@ -2213,11 +2258,15 @@ def notifications():
     rows = query.offset((page - 1) * per_page).limit(per_page).all()
     next_page = page + 1 if (page * per_page) < total else None
 
-    return render_template(
-        "farmer/notifications.html",
-        notifications_items=[serialize_notification(item) for item in rows],
-        notifications_next_page=next_page,
-        notifications_per_page=per_page,
+    return render_react_page(
+        bootstrap_payload=build_user_notifications_bootstrap(
+            items=[serialize_notification(item) for item in rows],
+            next_page=next_page,
+            per_page=per_page,
+            data_url=url_for("farmer.notifications_data"),
+            seen_url=url_for("farmer.notifications_seen"),
+        ),
+        title="Notifications",
     )
 
 

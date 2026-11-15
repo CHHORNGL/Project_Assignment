@@ -21,7 +21,6 @@ backend/uploads/
 *.diff
 mobile/
 ai/
-archived/
 docs/
 docker-compose.yml
 Dockerfile

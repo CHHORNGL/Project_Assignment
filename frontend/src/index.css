@@ -5,7 +5,20 @@
 @layer base {
   #diagnosis-wizard-root {
     min-height: 100%;
+    font-family: "Inter", "Kantumruy Pro", "Noto Sans Khmer", system-ui, -apple-system, sans-serif;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     @apply text-slate-700 dark:text-slate-300;
+  }
+
+  html[lang^="km"] #diagnosis-wizard-root,
+  html[lang^="km"] #diagnosis-wizard-root button,
+  html[lang^="km"] #diagnosis-wizard-root input,
+  html[lang^="km"] #diagnosis-wizard-root textarea,
+  html[lang^="km"] #diagnosis-wizard-root select {
+    font-family: "Kantumruy Pro", "Noto Sans Khmer", "Inter", system-ui, sans-serif;
+    letter-spacing: 0 !important;
   }
 
   #diagnosis-wizard-root button:disabled,

@@ -4,7 +4,7 @@ from datetime import datetime
 from decimal import Decimal
 from io import StringIO
 
-from flask import render_template, request, redirect, url_for, flash, Response, abort
+from flask import request, redirect, url_for, flash, Response, abort
 from flask_login import current_user
 from sqlalchemy import func, or_
 from sqlalchemy.exc import IntegrityError
@@ -12,6 +12,17 @@ from sqlalchemy.orm import selectinload
 
 from app.extensions import db
 from app.utils.decorators import role_required
+from app.utils.react_bootstrap import (
+    build_expert_create_rule_bootstrap,
+    build_expert_create_symptom_bootstrap,
+    build_expert_knowledge_dashboard_bootstrap,
+    build_expert_mixed_agri_dashboard_bootstrap,
+    build_expert_mixed_agri_fact_form_bootstrap,
+    build_expert_mixed_agri_facts_bootstrap,
+    build_expert_mixed_agri_source_form_bootstrap,
+    build_expert_mixed_agri_sources_bootstrap,
+    render_react_page,
+)
 
 from app.models.audit_log import AuditLog
 from app.models.symptom import Symptom
@@ -182,14 +193,16 @@ def knowledge_dashboard():
 
     rules = Rule.query.order_by(Rule.id.desc()).all()
 
-    return render_template(
-        "expert/knowledge/dashboard.html",
-        symptom_count=symptom_count,
-        rule_count=rule_count,
-        disease_count=disease_count,
-        mixed_source_count=mixed_source_count,
-        mixed_fact_count=mixed_fact_count,
-        rules=rules
+    return render_react_page(
+        bootstrap_payload=build_expert_knowledge_dashboard_bootstrap(
+            symptom_count=symptom_count,
+            rule_count=rule_count,
+            disease_count=disease_count,
+            mixed_source_count=mixed_source_count,
+            mixed_fact_count=mixed_fact_count,
+            rules=rules,
+        ),
+        title="Expert Knowledge Base",
     )
 
 
@@ -231,7 +244,10 @@ def create_symptom():
         flash("Symptom added", "success")
         return redirect(url_for("expert.knowledge_dashboard"))
 
-    return render_template("expert/knowledge/create_symptom.html")
+    return render_react_page(
+        bootstrap_payload=build_expert_create_symptom_bootstrap(),
+        title="Add Symptom",
+    )
 
 
 # ===============================
@@ -274,10 +290,12 @@ def create_rule():
         flash("Rule created", "success")
         return redirect(url_for("expert.knowledge_dashboard"))
 
-    return render_template(
-        "expert/knowledge/create_rule.html",
-        symptoms=symptoms,
-        diseases=diseases
+    return render_react_page(
+        bootstrap_payload=build_expert_create_rule_bootstrap(
+            symptoms=symptoms,
+            diseases=diseases,
+        ),
+        title="Create Rule",
     )
 
 
@@ -299,12 +317,14 @@ def mixed_agri_dashboard():
     )
     facts, pagination = _paginate(query, page, per_page)
 
-    return render_template(
-        "expert/knowledge/mixed_agri_dashboard.html",
-        source_count=source_count,
-        fact_count=fact_count,
-        facts=facts,
-        pagination=pagination
+    return render_react_page(
+        bootstrap_payload=build_expert_mixed_agri_dashboard_bootstrap(
+            source_count=source_count,
+            fact_count=fact_count,
+            facts=facts,
+            pagination=pagination,
+        ),
+        title="Mixed Agriculture Knowledge",
     )
 
 
@@ -337,12 +357,13 @@ def mixed_agri_sources():
 
     sources, pagination = _paginate(query, page, per_page)
 
-    return render_template(
-        "expert/knowledge/mixed_agri_sources.html",
-        sources=sources,
-        q=q,
-        pagination=pagination,
-        current_path=_current_path()
+    return render_react_page(
+        bootstrap_payload=build_expert_mixed_agri_sources_bootstrap(
+            sources=sources,
+            q=q,
+            pagination=pagination,
+        ),
+        title="Mixed Agriculture Sources",
     )
 
 
@@ -571,10 +592,12 @@ def mixed_agri_source_create():
         flash("Source added", "success")
         return redirect(url_for("expert.mixed_agri_sources"))
 
-    return render_template(
-        "expert/knowledge/mixed_agri_source_form.html",
-        source=None,
-        is_edit=False
+    return render_react_page(
+        bootstrap_payload=build_expert_mixed_agri_source_form_bootstrap(
+            source=None,
+            is_edit=False,
+        ),
+        title="Add Source",
     )
 
 
@@ -641,10 +664,12 @@ def mixed_agri_source_edit(source_id):
         flash("Source updated", "success")
         return redirect(url_for("expert.mixed_agri_sources"))
 
-    return render_template(
-        "expert/knowledge/mixed_agri_source_form.html",
-        source=source,
-        is_edit=True
+    return render_react_page(
+        bootstrap_payload=build_expert_mixed_agri_source_form_bootstrap(
+            source=source,
+            is_edit=True,
+        ),
+        title="Edit Source",
     )
 
 
@@ -698,14 +723,15 @@ def mixed_agri_facts():
     facts, pagination = _paginate(query, page, per_page)
     sources = MixedAgriSource.query.order_by(MixedAgriSource.source_title.asc()).all()
 
-    return render_template(
-        "expert/knowledge/mixed_agri_facts.html",
-        facts=facts,
-        sources=sources,
-        q=q,
-        source_id=source_id,
-        pagination=pagination,
-        current_path=_current_path()
+    return render_react_page(
+        bootstrap_payload=build_expert_mixed_agri_facts_bootstrap(
+            facts=facts,
+            sources=sources,
+            q=q,
+            source_id=source_id,
+            pagination=pagination,
+        ),
+        title="Mixed Agriculture Facts",
     )
 
 
@@ -971,12 +997,14 @@ def mixed_agri_fact_create():
         flash("Fact added", "success")
         return redirect(url_for("expert.mixed_agri_facts"))
 
-    return render_template(
-        "expert/knowledge/mixed_agri_fact_form.html",
-        fact=None,
-        sources=sources,
-        is_edit=False,
-        selected_source_id=selected_source_id
+    return render_react_page(
+        bootstrap_payload=build_expert_mixed_agri_fact_form_bootstrap(
+            fact=None,
+            sources=sources,
+            is_edit=False,
+            selected_source_id=selected_source_id,
+        ),
+        title="Add Fact",
     )
 
 
@@ -1038,12 +1066,14 @@ def mixed_agri_fact_edit(fact_id):
         flash("Fact updated", "success")
         return redirect(url_for("expert.mixed_agri_facts"))
 
-    return render_template(
-        "expert/knowledge/mixed_agri_fact_form.html",
-        fact=fact,
-        sources=sources,
-        is_edit=True,
-        selected_source_id=fact.source_id
+    return render_react_page(
+        bootstrap_payload=build_expert_mixed_agri_fact_form_bootstrap(
+            fact=fact,
+            sources=sources,
+            is_edit=True,
+            selected_source_id=fact.source_id,
+        ),
+        title="Edit Fact",
     )
 
 

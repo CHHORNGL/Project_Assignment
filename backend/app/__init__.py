@@ -6,7 +6,7 @@ from uuid import uuid4
 import logging
 from logging.handlers import RotatingFileHandler
 
-from flask import Flask, jsonify, url_for, request, render_template, redirect, g, send_from_directory, has_request_context, session
+from flask import Flask, jsonify, url_for, request, redirect, g, send_from_directory, has_request_context, session
 from flask_login import current_user, login_required
 
 from .extensions import db, login_manager, migrate, oauth
@@ -214,63 +214,72 @@ def create_app():
 
     @app.errorhandler(404)
     def not_found(error):
+        from datetime import datetime
+        from app.utils.react_bootstrap import build_error_bootstrap, render_react_page
+
         request_id = getattr(g, "request_id", uuid4().hex[:12])
+        payload = build_error_bootstrap(
+            error_code=404,
+            error_title="Page not found",
+            error_message="The page you are looking for does not exist.",
+            request_path=request.path,
+            request_method=request.method,
+            referrer=request.referrer,
+            request_id=request_id,
+            timestamp=datetime.utcnow(),
+            user_label=current_user.username if current_user.is_authenticated else "Guest",
+            home_url=_resolve_home_url(),
+        )
         return (
-            render_template(
-                "errors/404.html",
-                error_code=404,
-                error_title="Page not found",
-                error_message="The page you are looking for does not exist.",
-                request_path=request.path,
-                request_method=request.method,
-                referrer=request.referrer,
-                request_id=request_id,
-                timestamp=datetime.utcnow(),
-                user_label=current_user.username if current_user.is_authenticated else "Guest",
-                home_url=_resolve_home_url(),
-            ),
+            render_react_page(bootstrap_payload=payload, title="404 - Page not found"),
             404,
         )
 
     @app.errorhandler(405)
     def method_not_allowed(error):
+        from datetime import datetime
+        from app.utils.react_bootstrap import build_error_bootstrap, render_react_page
+
         request_id = getattr(g, "request_id", uuid4().hex[:12])
         valid_methods = sorted(getattr(error, "valid_methods", []) or [])
+        payload = build_error_bootstrap(
+            error_code=405,
+            error_title="Method not allowed",
+            error_message="This action is not allowed for the requested URL.",
+            request_path=request.path,
+            request_method=request.method,
+            referrer=request.referrer,
+            request_id=request_id,
+            timestamp=datetime.utcnow(),
+            user_label=current_user.username if current_user.is_authenticated else "Guest",
+            home_url=_resolve_home_url(),
+            valid_methods=valid_methods,
+        )
         return (
-            render_template(
-                "errors/405.html",
-                error_code=405,
-                error_title="Method not allowed",
-                error_message="This action is not allowed for the requested URL.",
-                request_path=request.path,
-                request_method=request.method,
-                referrer=request.referrer,
-                request_id=request_id,
-                timestamp=datetime.utcnow(),
-                user_label=current_user.username if current_user.is_authenticated else "Guest",
-                home_url=_resolve_home_url(),
-                valid_methods=valid_methods,
-            ),
+            render_react_page(bootstrap_payload=payload, title="405 - Method not allowed"),
             405,
         )
 
     @app.errorhandler(500)
     def server_error(error):
+        from datetime import datetime
+        from app.utils.react_bootstrap import build_error_bootstrap, render_react_page
+
         request_id = getattr(g, "request_id", uuid4().hex[:12])
+        payload = build_error_bootstrap(
+            error_code=500,
+            error_title="Server error",
+            error_message="We hit a snag while processing your request. Please try again.",
+            request_path=request.path,
+            request_method=request.method,
+            referrer=request.referrer,
+            request_id=request_id,
+            timestamp=datetime.utcnow(),
+            user_label=current_user.username if current_user.is_authenticated else "Guest",
+            home_url=_resolve_home_url(),
+        )
         return (
-            render_template(
-                "errors/500.html",
-                error_code=500,
-                error_title="Server error",
-                error_message="We hit a snag while processing your request. Please try again.",
-                request_path=request.path,
-                request_method=request.method,
-                referrer=request.referrer,
-                request_id=request_id,
-                timestamp=datetime.utcnow(),
-                user_label=current_user.username if current_user.is_authenticated else "Guest",
-                home_url=_resolve_home_url(),
-            ),
+            render_react_page(bootstrap_payload=payload, title="500 - Server error"),
             500,
         )
 
@@ -395,6 +404,10 @@ def create_app():
         try:
             static_root = os.path.join(app.root_path, "static")
             candidates = [
+                os.path.join(static_root, "app", "app.js"),
+                os.path.join(static_root, "app", "app.css"),
+                os.path.join(static_root, "diagnosis-wizard", "diagnosis-wizard.js"),
+                os.path.join(static_root, "diagnosis-wizard", "diagnosis-wizard.css"),
                 os.path.join(static_root, "css", "style.css"),
                 os.path.join(static_root, "css", "auth.css"),
                 os.path.join(static_root, "css", "farmer.css"),
@@ -458,13 +471,27 @@ def create_app():
             translated = [g.symptom_kh_map.get(name.lower().strip(), name) for name in names]
             return ", ".join(translated)
 
+        sv = _static_version()
+
+        def react_bundle(entry="src/main.tsx"):
+            if "diagnosis" in str(entry):
+                return {
+                    "css": [url_for("static", filename="diagnosis-wizard/diagnosis-wizard.css", v=sv)],
+                    "js": [url_for("static", filename="diagnosis-wizard/diagnosis-wizard.js", v=sv)],
+                }
+            return {
+                "css": [url_for("static", filename="app/app.css", v=sv)],
+                "js": [url_for("static", filename="app/app.js", v=sv)],
+            }
+
         return {
             "t": t,
             "current_lang": get_current_language(),
             "get_current_language": get_current_language,
             "localize": localize,
             "translate_symptoms": translate_symptoms,
-            "static_version": _static_version(),
+            "static_version": sv,
+            "react_bundle": react_bundle,
         }
 
     # Auto-fix Khmer mojibake text in rendered template expressions.

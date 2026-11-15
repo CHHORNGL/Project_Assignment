@@ -17,7 +17,6 @@ from flask import (
     jsonify,
     make_response,
     redirect,
-    render_template,
     request,
     session,
     url_for,
@@ -43,6 +42,30 @@ from app.utils.input_validation import (
     safe_next_url,
     text_field,
 )
+from app.utils.react_bootstrap import build_auth_bootstrap, render_react_page
+
+
+def _render_auth_page(
+    *,
+    mode: str,
+    title: str,
+    role: str = "farmer",
+    form=None,
+    email: str = "",
+    purpose: str = "",
+    next_url: str | None = None,
+    auth_theme_runtime=None,
+):
+    payload = build_auth_bootstrap(
+        mode=mode,
+        role=role,
+        form=form,
+        email=email,
+        purpose=purpose,
+        next_url=next_url,
+        auth_theme_runtime=auth_theme_runtime,
+    )
+    return render_react_page(bootstrap_payload=payload, title=title)
 
 auth_bp = Blueprint(
     "auth",
@@ -278,10 +301,11 @@ def login():
                 severity="WARNING",
             )
             flash("Invalid email or password.", "danger")
-            return render_template(
-                "auth/login.html",
+            return _render_auth_page(
+                mode="login",
+                title="Sign In",
+                role="farmer",
                 form=form,
-                active_role="farmer",
                 next_url=next_url,
                 auth_theme_runtime=auth_theme_runtime,
             )
@@ -297,10 +321,11 @@ def login():
                 severity="WARNING",
             )
             flash("Your account has been banned. Please contact administrator.", "danger")
-            return render_template(
-                "auth/login.html",
+            return _render_auth_page(
+                mode="login",
+                title="Sign In",
+                role="farmer",
                 form=form,
-                active_role="farmer",
                 next_url=next_url,
                 auth_theme_runtime=auth_theme_runtime,
             )
@@ -308,10 +333,11 @@ def login():
         # ✅ Role gate by form
         if not (user.has_role("farmer") or any(r.route_type == "farmer" for r in user.roles)):
             flash("This login is for Farmers only.", "danger")
-            return render_template(
-                "auth/login.html",
+            return _render_auth_page(
+                mode="login",
+                title="Sign In",
+                role="farmer",
                 form=form,
-                active_role="farmer",
                 next_url=next_url,
                 auth_theme_runtime=auth_theme_runtime,
             )
@@ -363,10 +389,11 @@ def login():
         flash("Welcome back!", "success")
         return _redirect_with_theme(next_url or url_for("main.index"), user)
 
-    return render_template(
-        "auth/login.html",
+    return _render_auth_page(
+        mode="login",
+        title="Sign In",
+        role="farmer",
         form=form,
-        active_role="farmer",
         next_url=next_url,
         auth_theme_runtime=auth_theme_runtime,
     )
@@ -487,8 +514,9 @@ def register():
         email_value = form.email.data.strip().lower()
         if User.query.filter_by(email=email_value).first():
             flash("Email already exists.", "danger")
-            return render_template(
-                "auth/register.html",
+            return _render_auth_page(
+                mode="register",
+                title="Create Account",
                 form=form,
                 auth_theme_runtime=auth_theme_runtime,
             )
@@ -501,15 +529,15 @@ def register():
 
         if not session_code or not session_email or email_value != session_email:
             flash("Please request a new verification code for this email.", "danger")
-            return render_template("auth/register.html", form=form, auth_theme_runtime=auth_theme_runtime)
+            return _render_auth_page(mode="register", title="Create Account", form=form, auth_theme_runtime=auth_theme_runtime)
 
         if input_code != session_code:
             flash("Invalid verification code.", "danger")
-            return render_template("auth/register.html", form=form, auth_theme_runtime=auth_theme_runtime)
+            return _render_auth_page(mode="register", title="Create Account", form=form, auth_theme_runtime=auth_theme_runtime)
 
         if session_expiry and datetime.datetime.utcnow().timestamp() > session_expiry:
             flash("Verification code has expired. Please request a new one.", "danger")
-            return render_template("auth/register.html", form=form, auth_theme_runtime=auth_theme_runtime)
+            return _render_auth_page(mode="register", title="Create Account", form=form, auth_theme_runtime=auth_theme_runtime)
 
         # ✅ Generate a unique username from email prefix
         email_prefix = email_value.split("@")[0]
@@ -544,8 +572,9 @@ def register():
         flash("Registration successful! Welcome to Agri System.", "success")
         return _redirect_with_theme(url_for("main.index"), user)
 
-    return render_template(
-        "auth/register.html",
+    return _render_auth_page(
+        mode="register",
+        title="Create Account",
         form=form,
         auth_theme_runtime=auth_theme_runtime,
     )
@@ -687,8 +716,9 @@ def forgot_password():
             # But realistically, maybe we should redirect to login.
             return redirect(url_for("auth.login"))
 
-    return render_template(
-        "auth/forgot_password.html",
+    return _render_auth_page(
+        mode="forgot-password",
+        title="Forgot Password",
         form=form,
         auth_theme_runtime=auth_theme_runtime,
     )
@@ -717,7 +747,7 @@ def reset_password():
         # Validate OTP
         if not user.two_factor_code or user.two_factor_code != input_code:
             flash("Invalid OTP code.", "danger")
-            return render_template("auth/reset_password.html", form=form, email=user.email, auth_theme_runtime=auth_theme_runtime)
+            return _render_auth_page(mode="reset-password", title="Reset Password", form=form, email=user.email, auth_theme_runtime=auth_theme_runtime)
 
         # Check expiry
         if user.two_factor_expiry and user.two_factor_expiry < datetime.datetime.utcnow():
@@ -734,8 +764,9 @@ def reset_password():
         flash("Your password has been successfully reset. You can now log in.", "success")
         return redirect(url_for("auth.login"))
 
-    return render_template(
-        "auth/reset_password.html",
+    return _render_auth_page(
+        mode="reset-password",
+        title="Reset Password",
         form=form,
         email=user.email,
         auth_theme_runtime=auth_theme_runtime,
@@ -786,12 +817,12 @@ def verify_code():
         input_code = (request.form.get("code") or "").strip()
         if not user.two_factor_code or user.two_factor_code != input_code:
             flash("Invalid verification code.", "danger")
-            return render_template("auth/verify_code.html", email=user.email, purpose=purpose)
+            return _render_auth_page(mode="verify-code", title="Verify Code", email=user.email, purpose=purpose or "")
 
         # Check expiry
         if user.two_factor_expiry and user.two_factor_expiry < datetime.datetime.utcnow():
             flash("Verification code has expired. Please request a new one.", "danger")
-            return render_template("auth/verify_code.html", email=user.email, purpose=purpose)
+            return _render_auth_page(mode="verify-code", title="Verify Code", email=user.email, purpose=purpose or "")
 
         # Success: verify and clear
         user.two_factor_code = None
@@ -811,7 +842,7 @@ def verify_code():
         flash("Authentication successful!", "success")
         return _redirect_with_theme(url_for("main.index"), user)
 
-    return render_template("auth/verify_code.html", email=user.email, purpose=purpose)
+    return _render_auth_page(mode="verify-code", title="Verify Code", email=user.email, purpose=purpose or "")
 
 
 @auth_bp.route("/resend-code", methods=["POST"])

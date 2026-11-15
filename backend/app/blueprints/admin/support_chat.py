@@ -1,6 +1,10 @@
 from app.utils.input_validation import support_message_fields
 import os
-from flask import request, jsonify, render_template, current_app
+from flask import request, jsonify, current_app
+from app.utils.react_bootstrap import (
+    build_admin_support_chats_bootstrap,
+    render_react_page,
+)
 from flask_login import current_user, login_required
 from app.extensions import db
 from app.models import User, AdminChatMessage
@@ -61,7 +65,10 @@ def support_chats():
         reverse=True
     )
     
-    return render_template("admin/support_chats.html", chat_users=final_users)
+    return render_react_page(
+        bootstrap_payload=build_admin_support_chats_bootstrap(chat_users=final_users),
+        title="Live Support",
+    )
 
 
 @admin_bp.route("/support_chat/conversations", methods=["GET"])

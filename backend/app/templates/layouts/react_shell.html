@@ -1,75 +1,33 @@
 <!DOCTYPE html>
-<html lang="{{ current_lang }}">
+<html lang="{{ current_lang }}" class="{{ theme_html_class }}">
 <head>
 <meta charset="UTF-8">
-<title>{% block title %}{{ react_page_title or "Dashboard" }}{% endblock %} | AGRI SYSTEM</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}{{ react_page_title or "Workspace" }}{% endblock %} | AGRI SYSTEM</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/logo.svg', v=static_version) }}">
 <link rel="shortcut icon" type="image/svg+xml" href="{{ url_for('static', filename='img/logo.svg', v=static_version) }}">
 <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/logo.svg', v=static_version) }}">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;500;600;700&family=Noto+Sans+Khmer:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link href="{{ url_for('static', filename='sb-admin/vendor/fontawesome-free/css/all.min.css') }}" rel="stylesheet">
-<link href="{{ url_for('static', filename='css/modern.css', v=static_version) }}" rel="stylesheet">
-<link href="{{ url_for('static', filename='css/modern-components.css', v=static_version) }}" rel="stylesheet">
-<link href="{{ url_for('static', filename='css/style.css', v=static_version) }}" rel="stylesheet">
-<link href="{{ url_for('static', filename='css/notifications.css') }}" rel="stylesheet">
-<link href="{{ url_for('static', filename='css/system_status.css', v=static_version) }}" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.0.0/css/flag-icons.min.css" rel="stylesheet">
+
 {% if react_extra_css %}
     {% for href in react_extra_css %}
 <link href="{{ href }}" rel="stylesheet">
     {% endfor %}
 {% endif %}
-{% set _react_assets = react_bundle('src/main.jsx') %}
+{% set _react_assets = react_bundle('src/main.tsx') if react_bundle is defined else {'css': [], 'js': []} %}
 {% for href in _react_assets.css %}
 <link href="{{ href }}" rel="stylesheet">
 {% endfor %}
 
-<style>
-:root {
-    --font-en: "Inter", "Kantumruy Pro", "Noto Sans Khmer", "Khmer OS", system-ui, sans-serif;
-    --font-kh: "Kantumruy Pro", "Noto Sans Khmer", "Khmer OS", "Inter", system-ui, sans-serif;
-}
-html, body, #react-template-root { min-height: 100%; }
-body, button, input, select, textarea {
-    font-family: var(--font-en), var(--font-kh);
-}
-html[lang^="km"] body,
-html[lang^="km"] button,
-html[lang^="km"] input,
-html[lang^="km"] select,
-html[lang^="km"] textarea {
-    font-family: var(--font-kh), var(--font-en);
-}
-html[lang^="km"] * {
-    letter-spacing: 0 !important;
-}
-</style>
-
+{% include "partials/theme_head.html" %}
 {% block head %}{% endblock %}
-
-<script>
-(function () {
-    const userTheme = "{{ current_user.theme if current_user.is_authenticated else '' }}";
-    const storedTheme = localStorage.getItem("theme");
-    const activeTheme = (storedTheme === "dark" || storedTheme === "light")
-        ? storedTheme
-        : (userTheme === "dark" ? "dark" : "light");
-
-    if (activeTheme === "dark") {
-        document.documentElement.classList.add("dark-mode");
-    } else {
-        document.documentElement.classList.remove("dark-mode");
-    }
-})();
-</script>
 </head>
-<body class="app-shell react-template-shell {{ react_body_class or body_class|default('') }}">
-{% include "partials/flash_notices.html" %}
+<body class="app-shell react-template-shell {{ react_body_class or body_class|default('') }} {{ theme_body_class }}">
 
 <script id="app-bootstrap" type="application/json">{{ bootstrap_payload | tojson }}</script>
 <script>
@@ -78,14 +36,16 @@ window.__APP_BOOTSTRAP__ = {{ bootstrap_payload | tojson }};
 
 <div id="react-template-root">
 {% block content %}
-<div class="surface-panel mx-4 mt-4 p-6 text-sm text-skin-muted">
-    {{ react_loading_message or "React page is loading..." }}
+{% if react_ssr_html %}
+{{ react_ssr_html | safe }}
+{% endif %}
+<div class="flex min-h-screen items-center justify-center p-6 text-sm text-slate-500 dark:text-slate-400">
+    {{ react_loading_message or "Loading workspace..." }}
 </div>
 {% endblock %}
 </div>
 
-<script src="{{ url_for('static', filename='js/toast.js') }}"></script>
-<script src="{{ url_for('static', filename='js/system_status.js', v=static_version) }}"></script>
+{% include "partials/theme_script.html" %}
 {% for src in _react_assets.js %}
 <script type="module" src="{{ src }}"></script>
 {% endfor %}

@@ -1,0 +1,69 @@
+export interface SymptomItem {
+  id: string;
+  name: string;
+  name_kh?: string;
+}
+
+export interface SymptomCardProps {
+  symptom: SymptomItem;
+  selected: boolean;
+  onToggle: () => void;
+  isKhmer: boolean;
+  selectedText: string;
+  unselectedText: string;
+}
+
+export default function SymptomCard({
+  symptom,
+  selected,
+  onToggle,
+  isKhmer,
+  selectedText,
+  unselectedText,
+}: SymptomCardProps) {
+  const name = isKhmer && symptom.name_kh ? symptom.name_kh : symptom.name;
+  return (
+    <button
+      type="button"
+      aria-pressed={selected}
+      onClick={onToggle}
+      className={[
+        "diag-symptom-card",
+        selected ? "diag-symptom-card-selected" : "",
+      ].join(" ")}
+    >
+      <div className="flex items-start gap-3">
+        <div
+          className={[
+            "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border text-sm transition-all duration-200",
+            selected
+              ? "border-indigo-600 bg-indigo-600 text-white"
+              : "border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-slate-400",
+          ].join(" ")}
+        >
+          <i className={`fas ${selected ? "fa-check" : "fa-plus"}`} aria-hidden="true" />
+        </div>
+        <div>
+          <p
+            className={
+              selected
+                ? "text-sm font-bold text-slate-900 dark:text-white"
+                : "text-sm font-semibold text-slate-700 dark:text-slate-300"
+            }
+          >
+            {name}
+          </p>
+          <p
+            className={
+              selected
+                ? "mt-1 text-xs leading-5 text-indigo-700 dark:text-indigo-300/90"
+                : "mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400"
+            }
+          >
+            {selected ? selectedText : unselectedText}
+          </p>
+        </div>
+      </div>
+    </button>
+  );
+}

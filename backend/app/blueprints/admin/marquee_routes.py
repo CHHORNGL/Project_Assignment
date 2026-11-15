@@ -1,4 +1,9 @@
-from flask import render_template, request, redirect, url_for, flash
+from flask import request, redirect, url_for, flash
+from app.utils.react_bootstrap import (
+    build_admin_marquee_form_bootstrap,
+    build_admin_marquees_bootstrap,
+    render_react_page,
+)
 from app.extensions import db
 from app.models import Marquee
 from .routes import admin_bp
@@ -8,7 +13,10 @@ from app.utils.decorators import admin_required
 @admin_required
 def marquees():
     marquees_list = Marquee.query.order_by(Marquee.sort_order).all()
-    return render_template("admin/marquees.html", marquees=marquees_list)
+    return render_react_page(
+        bootstrap_payload=build_admin_marquees_bootstrap(marquees=marquees_list),
+        title="Marquee Announcements",
+    )
 
 @admin_bp.route("/marquees/add", methods=["GET", "POST"])
 @admin_required
@@ -34,7 +42,10 @@ def add_marquee():
         flash("Marquee added successfully.", "success")
         return redirect(url_for("admin.marquees"))
             
-    return render_template("admin/marquee_form.html", marquee=None)
+    return render_react_page(
+        bootstrap_payload=build_admin_marquee_form_bootstrap(marquee=None),
+        title="New Marquee",
+    )
 
 @admin_bp.route("/marquees/edit/<int:marquee_id>", methods=["GET", "POST"])
 @admin_required
@@ -54,7 +65,10 @@ def edit_marquee(marquee_id):
         flash("Marquee updated successfully.", "success")
         return redirect(url_for("admin.marquees"))
         
-    return render_template("admin/marquee_form.html", marquee=marquee)
+    return render_react_page(
+        bootstrap_payload=build_admin_marquee_form_bootstrap(marquee=marquee),
+        title="Edit Marquee",
+    )
 
 @admin_bp.route("/marquees/delete/<int:marquee_id>", methods=["POST"])
 @admin_required

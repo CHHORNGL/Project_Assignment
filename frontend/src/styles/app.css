@@ -1,0 +1,218 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body,
+  #react-template-root {
+    min-height: 100%;
+  }
+
+  html {
+    font-family: "Inter", "Kantumruy Pro", "Noto Sans Khmer", system-ui, -apple-system, sans-serif;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    font-optical-sizing: auto;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-slate-50 font-sans text-slate-900 antialiased transition-colors duration-200 dark:bg-obsidian-950 dark:text-slate-100;
+  }
+
+  h1,
+  h2,
+  h3,
+  .font-display {
+    font-family: "Plus Jakarta Sans", "Inter", "Kantumruy Pro", "Noto Sans Khmer", system-ui, -apple-system, sans-serif;
+    letter-spacing: -0.015em;
+  }
+
+  code,
+  pre,
+  kbd,
+  samp,
+  .font-mono {
+    font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-feature-settings: "liga" 0, "calt" 1;
+  }
+
+  html[lang^="km"] body,
+  html[lang^="km"] button,
+  html[lang^="km"] input,
+  html[lang^="km"] select,
+  html[lang^="km"] textarea,
+  html[lang^="km"] h1,
+  html[lang^="km"] h2,
+  html[lang^="km"] h3,
+  html[lang^="km"] .font-display {
+    font-family: "Kantumruy Pro", "Noto Sans Khmer", "Inter", system-ui, sans-serif;
+    letter-spacing: 0 !important;
+  }
+
+  html[lang^="km"] body,
+  html[lang^="km"] p {
+    line-height: 1.65;
+  }
+}
+
+@layer components {
+  .ai-surface {
+    @apply rounded-3xl border border-slate-200/80 bg-white/90 shadow-glass backdrop-blur-xl transition-colors duration-200 dark:border-slate-800/80 dark:bg-obsidian-900/90;
+  }
+
+  .ai-card-hover {
+    @apply transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-0.5 hover:border-indigo-300/70 hover:shadow-panel dark:hover:border-indigo-500/40;
+  }
+
+  .ai-stagger {
+    animation: ai-enter-up 0.44s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: calc(var(--stagger, 0) * 55ms);
+  }
+
+  .ai-enter {
+    animation: ai-enter-up 0.36s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .ai-tab-panel {
+    animation: ai-enter-fade 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .ai-table-row {
+    @apply transition-colors duration-150 hover:bg-indigo-50/45 dark:hover:bg-indigo-500/5;
+  }
+
+  .ai-badge-dot {
+    @apply inline-block h-1.5 w-1.5 rounded-full;
+  }
+
+  .ai-input {
+    @apply w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none transition-all duration-150 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 dark:border-slate-700/80 dark:bg-obsidian-950/90 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/15;
+  }
+
+  .ai-btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-indigo-500/20 transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-0.5 hover:brightness-105 active:translate-y-0 active:scale-[0.98] focus:outline-none focus:ring-4 focus:ring-indigo-500/25 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0;
+  }
+
+  .ai-btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-0.5 hover:border-slate-300 hover:bg-slate-50 active:translate-y-0 active:scale-[0.98] focus:outline-none focus:ring-4 focus:ring-slate-500/10 dark:border-slate-700/80 dark:bg-obsidian-850 dark:text-slate-200 dark:hover:border-slate-600 dark:hover:bg-obsidian-800 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0;
+  }
+
+  .ai-grid-pattern {
+    background-image:
+      linear-gradient(to right, rgba(99, 102, 241, 0.06) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(99, 102, 241, 0.06) 1px, transparent 1px);
+    background-size: 36px 36px;
+  }
+
+  .dark-mode .ai-grid-pattern {
+    background-image:
+      linear-gradient(to right, rgba(129, 140, 248, 0.07) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(129, 140, 248, 0.07) 1px, transparent 1px);
+  }
+
+  /* Phoenix Tailwind v1.3.0 Vertical Workspace Theme (Admin & Expert Panels) */
+  .phoenix-panel {
+    font-family: "Inter", "Kantumruy Pro", "Noto Sans Khmer", system-ui, -apple-system, sans-serif;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    background-color: #f5f7fa;
+    color: #31374a;
+  }
+
+  .dark-mode .phoenix-panel {
+    background-color: #0f111a;
+    color: #eff2f6;
+  }
+
+  html[lang^="km"] .phoenix-panel,
+  html[lang^="km"] .phoenix-panel button,
+  html[lang^="km"] .phoenix-panel input,
+  html[lang^="km"] .phoenix-panel select,
+  html[lang^="km"] .phoenix-panel textarea,
+  html[lang^="km"] .phoenix-panel h1,
+  html[lang^="km"] .phoenix-panel h2,
+  html[lang^="km"] .phoenix-panel h3 {
+    font-family: "Kantumruy Pro", "Noto Sans Khmer", "Inter", system-ui, sans-serif;
+    letter-spacing: 0 !important;
+  }
+
+  .phoenix-panel .ai-surface {
+    @apply rounded-xl border border-[#cbd0dd]/85 bg-white shadow-none backdrop-blur-none transition-colors duration-150 dark:border-[#2b3245] dark:bg-[#141824];
+  }
+
+  .phoenix-panel .ai-card-hover {
+    @apply transition-[border-color,transform,box-shadow] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-0.5 hover:border-[#3874ff]/45 hover:shadow-sm dark:hover:border-[#3874ff]/50;
+  }
+
+  .phoenix-panel .ai-table-row {
+    @apply transition-colors duration-150 hover:bg-[#eff2f6]/65 dark:hover:bg-[#1b2234]/75;
+  }
+
+  .phoenix-panel .ai-input {
+    @apply rounded-lg border border-[#cbd0dd] bg-white px-3 py-2 text-sm text-[#31374a] shadow-none placeholder:text-[#8a94ad] focus:border-[#3874ff] focus:ring-2 focus:ring-[#3874ff]/15 dark:border-[#373e53] dark:bg-[#0f111a] dark:text-[#eff2f6] dark:placeholder:text-[#6e7891] dark:focus:border-[#3874ff] dark:focus:ring-[#3874ff]/20;
+  }
+
+  .phoenix-panel .ai-btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-[#3874ff] bg-none px-4 py-2 text-sm font-semibold text-white shadow-none transition-all duration-150 hover:translate-y-0 hover:bg-[#004dff] hover:brightness-100 active:scale-[0.985] focus:outline-none focus:ring-2 focus:ring-[#3874ff]/30 disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .phoenix-panel .ai-btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-[#cbd0dd] bg-white px-4 py-2 text-sm font-semibold text-[#31374a] shadow-none transition-all duration-150 hover:translate-y-0 hover:border-[#b3bac9] hover:bg-[#eff2f6] active:scale-[0.985] focus:outline-none focus:ring-2 focus:ring-[#3874ff]/15 dark:border-[#373e53] dark:bg-[#181d2b] dark:text-[#eff2f6] dark:hover:border-[#4b546f] dark:hover:bg-[#22283a];
+  }
+
+  .phoenix-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(138, 148, 173, 0.35) transparent;
+  }
+
+  .phoenix-scroll::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .phoenix-scroll::-webkit-scrollbar-thumb {
+    border-radius: 9999px;
+    background-color: rgba(138, 148, 173, 0.35);
+  }
+}
+
+@keyframes ai-enter-up {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes ai-enter-fade {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 6px, 0) scale(0.995);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ai-stagger,
+  .ai-enter,
+  .ai-tab-panel,
+  .animate-fade-in-up,
+  .animate-fade-in,
+  .animate-scale-in,
+  .animate-slide-in-right,
+  .animate-slide-down,
+  .animate-progress-fill,
+  .animate-float-slow,
+  .animate-pulse-ring {
+    animation: none !important;
+    transition: none !important;
+  }
+}

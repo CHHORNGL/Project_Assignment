@@ -8,7 +8,6 @@ from flask import (
     jsonify,
     make_response,
     redirect,
-    render_template,
     request,
     session,
     url_for,
@@ -30,8 +29,20 @@ from app.services.passkey_service import (
 )
 from app.services.theme_manager import resolve_active_runtime
 from app.utils.audit import audit_log
+from app.utils.react_bootstrap import build_auth_bootstrap, render_react_page
 
 staff_bp = Blueprint("staff", __name__, url_prefix="/staff")
+
+
+def _render_staff_login(form, next_url, auth_theme_runtime):
+    payload = build_auth_bootstrap(
+        mode="staff-login",
+        role="expert",
+        form=form,
+        next_url=next_url,
+        auth_theme_runtime=auth_theme_runtime,
+    )
+    return render_react_page(bootstrap_payload=payload, title="Staff Sign In")
 
 def _resolve_staff_theme_runtime():
     scope_candidates = ["admin", "expert"]
@@ -66,7 +77,7 @@ def login():
                 severity="WARNING",
             )
             flash("Invalid email or password.", "danger")
-            return render_template("staff/login.html", form=form, active_role="expert", next_url=next_url, auth_theme_runtime=auth_theme_runtime)
+            return _render_staff_login(form, next_url, auth_theme_runtime)
 
         if not user.is_active:
             audit_log(
@@ -78,11 +89,11 @@ def login():
                 severity="WARNING",
             )
             flash("Your account has been banned. Please contact administrator.", "danger")
-            return render_template("staff/login.html", form=form, active_role="expert", next_url=next_url, auth_theme_runtime=auth_theme_runtime)
+            return _render_staff_login(form, next_url, auth_theme_runtime)
 
         if not (user.has_role("expert") or user.has_role("admin") or any(r.route_type in ["expert", "admin"] for r in user.roles)):
             flash("This login is for Expert & Admin only.", "danger")
-            return render_template("staff/login.html", form=form, active_role="expert", next_url=next_url, auth_theme_runtime=auth_theme_runtime)
+            return _render_staff_login(form, next_url, auth_theme_runtime)
 
         if not user.is_verified or user.two_factor_enabled:
             code = "".join(random.choices(string.digits, k=6))
@@ -111,7 +122,7 @@ def login():
         flash("Welcome back!", "success")
         return _redirect_with_theme(next_url or url_for("main.index"), user)
 
-    return render_template("staff/login.html", form=form, active_role="expert", next_url=next_url, auth_theme_runtime=auth_theme_runtime)
+    return _render_staff_login(form, next_url, auth_theme_runtime)
 
 @staff_bp.route("/passkey/login/options", methods=["GET"])
 def passkey_login_options():

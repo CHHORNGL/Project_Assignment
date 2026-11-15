@@ -27,6 +27,7 @@ COPY backend/ ./
 COPY scripts/ ./scripts/
 
 # Copy the built React assets from the node stage
+COPY --from=frontend-builder /workspace/backend/app/static/app /app/app/static/app
 COPY --from=frontend-builder /workspace/backend/app/static/diagnosis-wizard /app/app/static/diagnosis-wizard
 
 # Expose the Flask default port
