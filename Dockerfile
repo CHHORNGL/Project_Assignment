@@ -7,7 +7,7 @@ COPY frontend/ ./
 RUN npm run build
 
 # Stage 2: Set up the Python Flask backend
-FROM python:3.11-slim
+FROM python:3.15-slim
 
 # Install system dependencies (including postgresql-client for pg_isready)
 RUN apt-get update && apt-get install -y --no-install-recommends \
