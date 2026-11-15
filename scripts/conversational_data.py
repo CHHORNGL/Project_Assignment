@@ -7,7 +7,7 @@ This module provides high-quality bilingual (Khmer and English) training pairs f
 """
 
 from __future__ import annotations
-from typing import Any, Iterable
+from typing import Any
 
 
 EMPATHY_KM = [

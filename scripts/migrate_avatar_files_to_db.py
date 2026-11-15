@@ -17,9 +17,9 @@ if str(BACKEND_DIR) not in sys.path:
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from app import create_app
-from app.extensions import db
-from app.models.user import User
+from app import create_app  # noqa: E402
+from app.extensions import db  # noqa: E402
+from app.models.user import User  # noqa: E402
 
 
 MIME_BY_EXT = {

@@ -8,9 +8,9 @@ _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(_ROOT, "backend"))
 sys.path.insert(0, _ROOT)
 
-from datetime import datetime, timedelta
-from app import create_app, db
-from app.models.user import User
+from datetime import datetime  # noqa: E402
+from app import create_app  # noqa: E402
+from app.models.user import User  # noqa: E402
 
 def send_mail(to_email, subject, html_body):
     smtp_server = os.environ.get("MAIL_SERVER")

@@ -6,7 +6,6 @@ for consistency, broken requirements, missing lockfile records, and security adv
 """
 
 import argparse
-import os
 import re
 import subprocess
 import sys

@@ -6,10 +6,10 @@ _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(_ROOT, "backend"))
 sys.path.insert(0, _ROOT)
 
-from dotenv import load_dotenv
+from dotenv import load_dotenv  # noqa: E402
 load_dotenv()
 
-from app.blueprints.auth.routes import _send_verification_email
+from app.blueprints.auth.routes import _send_verification_email  # noqa: E402
 
 def main():
     recipient = sys.argv[1] if len(sys.argv) > 1 else (os.environ.get("ADMIN_EMAIL") or "iks214262@gmail.com")

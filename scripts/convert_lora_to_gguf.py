@@ -48,9 +48,9 @@ def main() -> None:
     if quantizer is None:
         raise SystemExit("Could not find llama-quantize under llama.cpp/build/bin or llama.cpp/")
 
-    import torch
-    from peft import AutoPeftModelForCausalLM
-    from transformers import AutoTokenizer
+    import torch  # type: ignore[import-not-found]
+    from peft import AutoPeftModelForCausalLM  # type: ignore[import-not-found]
+    from transformers import AutoTokenizer  # type: ignore[import-not-found]
 
     use_cuda = torch.cuda.is_available()
     dtype = torch.float16 if use_cuda else torch.float32

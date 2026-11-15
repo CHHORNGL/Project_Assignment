@@ -10,15 +10,15 @@ _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(_ROOT, "backend"))
 sys.path.insert(0, _ROOT)
 
-from app import create_app
-from app.extensions import db
-from app.models.audit_log import AuditLog
-from app.models.chat_message import ChatMessage
-from app.models.chat_session import ChatSession
-from app.models.notification import Notification
-from app.models.role import Role
-from app.models.support_request import SupportRequest
-from app.models.user import User
+from app import create_app  # noqa: E402
+from app.extensions import db  # noqa: E402
+from app.models.audit_log import AuditLog  # noqa: E402
+from app.models.chat_message import ChatMessage  # noqa: E402
+from app.models.chat_session import ChatSession  # noqa: E402
+from app.models.notification import Notification  # noqa: E402
+from app.models.role import Role  # noqa: E402
+from app.models.support_request import SupportRequest  # noqa: E402
+from app.models.user import User  # noqa: E402
 
 
 def _snippet(text: str | None, max_len: int = 60) -> str:
