@@ -11,6 +11,9 @@ from pathlib import Path
 
 # Allow running as `python scripts/migrate_avatar_files_to_db.py`
 ROOT = Path(__file__).resolve().parents[1]
+BACKEND_DIR = ROOT / "backend"
+if str(BACKEND_DIR) not in sys.path:
+    sys.path.insert(0, str(BACKEND_DIR))
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 

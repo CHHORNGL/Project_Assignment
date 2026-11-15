@@ -14,6 +14,7 @@ from pathlib import Path
 
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
+BACKEND_DIR = ROOT_DIR / "backend"
 
 
 def parse_requirement_name(line: str) -> str:
@@ -94,7 +95,7 @@ def run_pip_audit():
         print("  ⚠️  pip-audit is not installed. Install via `pip install pip-audit` to scan for CVEs.")
         return False, "pip-audit not installed"
 
-    lock_file = ROOT_DIR / "requirements.lock"
+    lock_file = BACKEND_DIR / "requirements.lock"
     cmd = [sys.executable, "-m", "pip_audit"]
     if lock_file.exists():
         cmd.extend(["-r", str(lock_file)])
@@ -187,8 +188,8 @@ def main():
     parser.add_argument("--python-only", action="store_true", help="Run only Python checks; frontend has its own CI job.")
     args = parser.parse_args()
 
-    req_file = ROOT_DIR / "requirements.txt"
-    lock_file = ROOT_DIR / "requirements.lock"
+    req_file = BACKEND_DIR / "requirements.txt"
+    lock_file = BACKEND_DIR / "requirements.lock"
 
     results = []
 

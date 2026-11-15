@@ -19,17 +19,14 @@ venv/
 # Flask / SQLAlchemy
 # ===============================
 instance/
+backend/instance/
 *.db
 
 # ===============================
-# IDE
+# IDE & OS
 # ===============================
 .vscode/
 .idea/
-
-# ===============================
-# OS
-# ===============================
 .DS_Store
 Thumbs.db
 
@@ -43,7 +40,7 @@ yarn-debug.log*
 yarn-error.log*
 
 # ===============================
-# Mobile & Root Builds
+# Mobile & Builds
 # ===============================
 build/
 mobile/build/
@@ -52,27 +49,12 @@ mobile/.flutter-plugins
 mobile/.flutter-plugins-dependencies
 
 # ===============================
-# Logs & Temporary Files
+# Logs, Runtime Uploads & Scratch
 # ===============================
 *.log
 *.diff
-app/static/uploads/diag_*
-cookies.txt
+backend/app/static/uploads/diag_*
 cookies*.txt
-scripts/dev_tools/cookies.txt
-scripts/dev_tools/flask_run.log
-
-# ===============================
-# Development Scratch Scripts
-# ===============================
-diag.html
-diag_new.html
-diag.py
-diag2.py
-diag3.py
-rewrite_register.py
-rewrite_forgot_password.py
-test_jinja.py
-
-# Local server-side session records
-instance/sessions/
+archived/root_debug/
+archived/dev_tools/cookies.txt
+archived/dev_tools/flask_run.log

@@ -6,7 +6,9 @@ from datetime import datetime
 
 from flask import url_for
 
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(_ROOT, "backend"))
+sys.path.insert(0, _ROOT)
 
 from app import create_app
 from app.extensions import db

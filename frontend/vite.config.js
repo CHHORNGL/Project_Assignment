@@ -5,7 +5,7 @@ export default defineConfig({
   plugins: [react()],
   base: "./",
   build: {
-    outDir: "../app/static/diagnosis-wizard",
+    outDir: "../backend/app/static/diagnosis-wizard",
     emptyOutDir: true,
     cssCodeSplit: false,
     rollupOptions: {

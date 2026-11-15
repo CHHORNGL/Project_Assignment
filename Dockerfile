@@ -1,6 +1,6 @@
 # Stage 1: Build the React frontend using Vite
 FROM node:22-alpine AS frontend-builder
-WORKDIR /frontend
+WORKDIR /workspace/frontend
 COPY frontend/package*.json ./
 RUN npm ci
 COPY frontend/ ./
@@ -19,14 +19,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 
 # Install Python dependencies
-COPY requirements.txt requirements.lock ./
+COPY backend/requirements.txt backend/requirements.lock ./
 RUN pip install --no-cache-dir -r requirements.lock
 
-# Copy all application code
-COPY . .
+# Copy backend application code and operational scripts
+COPY backend/ ./
+COPY scripts/ ./scripts/
 
 # Copy the built React assets from the node stage
-COPY --from=frontend-builder /app/static/diagnosis-wizard /app/app/static/diagnosis-wizard
+COPY --from=frontend-builder /workspace/backend/app/static/diagnosis-wizard /app/app/static/diagnosis-wizard
 
 # Expose the Flask default port
 EXPOSE 5000

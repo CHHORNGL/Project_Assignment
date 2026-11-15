@@ -53,6 +53,9 @@ def clean_professional_text(text: str) -> str:
 # scripts directory on sys.path rather than the repository root. Add the root
 # explicitly so the Flask application package can be imported reliably.
 REPO_ROOT = Path(__file__).resolve().parents[1]
+BACKEND_DIR = REPO_ROOT / "backend"
+if str(BACKEND_DIR) not in sys.path:
+    sys.path.insert(0, str(BACKEND_DIR))
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
@@ -1224,7 +1227,7 @@ def _write_jsonl(path: Path, records: Iterable[dict[str, Any]]) -> int:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--out-dir", type=Path, default=Path("exports"))
+    parser.add_argument("--out-dir", type=Path, default=Path("ai/datasets/exports"))
     parser.add_argument("--validation-ratio", type=float, default=0.2)
     parser.add_argument(
         "--conversational-ratio",
@@ -1270,8 +1273,9 @@ def main() -> int:
     (args.out_dir / "agri_dataset_manifest.json").write_text(
         json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )
-    # Also write root train.json in instruction-output format for tools that expect it.
-    train_json_path = REPO_ROOT / "train.json"
+    # Also write ai/datasets/train.json in instruction-output format for tools that expect it.
+    train_json_path = REPO_ROOT / "ai" / "datasets" / "train.json"
+    train_json_path.parent.mkdir(parents=True, exist_ok=True)
     train_instructions = [
         {"instruction": r["messages"][1]["content"], "output": r["messages"][2]["content"]}
         for r in records

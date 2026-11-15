@@ -42,6 +42,8 @@ services:
       - SESSION_TYPE=redis
       - SESSION_REDIS_URL=redis://redis:6379/1
       - RATELIMIT_STORAGE_URI=redis://redis:6379/0
+      - SESSION_COOKIE_SECURE=${SESSION_COOKIE_SECURE:-false}
+      - SESSION_COOKIE_SAMESITE=${SESSION_COOKIE_SAMESITE:-Lax}
       - TRUSTED_PROXY_COUNT=${TRUSTED_PROXY_COUNT:-1}
       - POSTGRES_HOST=db
       - DATABASE_URL=postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
@@ -54,8 +56,10 @@ services:
     env_file:
       - .env
     volumes:
-      - ./app:/app/app
-      - ./uploads:/app/app/static/uploads
+      - ./backend/app:/app/app
+      - ./backend/migrations:/app/migrations
+      - ./backend/setup_db.py:/app/setup_db.py
+      - ./backend/uploads:/app/app/static/uploads
     depends_on:
       db:
         condition: service_healthy
@@ -65,7 +69,8 @@ services:
   cloudflared:
     image: cloudflare/cloudflared:latest
     container_name: project_assignment_tunnel
-    restart: always
+    profiles: ["tunnel"]
+    restart: unless-stopped
     command: tunnel --protocol http2 run
     environment:
       - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}

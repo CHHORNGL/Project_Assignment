@@ -92,7 +92,7 @@ flowchart TD
 | **Database & ORM** | [PostgreSQL 15](https://www.postgresql.org/) • [SQLAlchemy 2.0](https://www.sqlalchemy.org/) • [Flask-SQLAlchemy](https://flask-sqlalchemy.palletsprojects.com/) |
 | **Migrations** | [Alembic](https://alembic.sqlalchemy.org/) • [Flask-Migrate](https://flask-migrate.readthedocs.io/) |
 | **Frontend UI** | [React 18](https://react.dev/) • [Vite 5](https://vitejs.dev/) • [Tailwind CSS 3](https://tailwindcss.com/) • [PostCSS](https://postcss.org/) |
-| **Integration APIs** | [Your self-trained AI endpoint](deployment/README.md) • [Open-Meteo](https://open-meteo.com/) • [Calendarific](https://calendarific.com/) • [Authlib](https://authlib.org/) |
+| **Integration APIs** | [Your self-trained AI endpoint](ai/deployment/README.md) • [Open-Meteo](https://open-meteo.com/) • [Calendarific](https://calendarific.com/) • [Authlib](https://authlib.org/) |
 | **Localization** | Custom i18n subsystem (English/Khmer translation matrix with Khmer text normalizer) |
 | **DevOps** | [Docker](https://www.docker.com/) • [Docker Compose](https://docs.docker.com/compose/) |
 
@@ -100,37 +100,45 @@ flowchart TD
 
 ## 📁 Repository Structure
 
+See [docs/architecture.md](docs/architecture.md) for the complete monorepo reference.
+
 ```hl
 Project_Assignment/
-├── app/                              # Flask Application Package
-│   ├── blueprints/                   # Role-Based Routing modules
-│   │   ├── admin/                    # Admin controls and crop configurations
-│   │   ├── auth/                     # Session and WebAuthn authentications
-│   │   ├── expert/                   # Diagnostic rule configurations
-│   │   ├── farmer/                   # Farmer dashboard and history
-│   │   ├── weather_intelligence/     # API endpoints for live weather summary
-│   │   └── user/                     # Profile, avatar, and notification routes
-│   ├── models/                       # SQLAlchemy Database Entities (Crop, Disease, Symptom, Rule, etc.)
-│   ├── services/                     # Business Logic Services
-│   │   ├── rule_engine.py            # Custom diagnostic rule matching algorithms
-│   │   ├── weather_intelligence/     # Open-Meteo clients, warning limits, caching
-│   │   ├── theme_manager.py          # Theme state transitions
-│   │   ├── seasonal_theme.py         # Cambodia holiday lookups (Calendarific/Nager)
-│   │   └── openai_assistant.py       # Compatibility wrapper for trained AI flow
-│   ├── static/                       # Compiled assets (CSS, JS, SVGs)
-│   ├── templates/                    # Jinja2 HTML5 Layouts & Components
-│   └── utils/                        # Internationalization, decorators, and layout helpers
+├── backend/                          # Python Flask Backend Service
+│   ├── app/                          # Core Flask Application Package
+│   │   ├── blueprints/               # Role-Based Routing modules (admin, auth, expert, farmer, api, etc.)
+│   │   ├── models/                   # SQLAlchemy Database Entities (Crop, Disease, Symptom, Rule, etc.)
+│   │   ├── services/                 # Business Logic Services (rule_engine, weather_intelligence, etc.)
+│   │   ├── static/                   # Compiled assets (CSS, JS, SVGs, diagnosis-wizard)
+│   │   ├── templates/                # Jinja2 HTML5 Layouts & Components
+│   │   └── utils/                    # Internationalization, security headers, rate limiting, sessions
+│   ├── migrations/                   # Alembic database schema migrations
+│   ├── seeds/                        # System default seeding utilities (Admin, Expert, Farmer, Rules)
+│   ├── tests/                        # Backend Python unit & integration tests
+│   ├── entrypoint.sh                 # Database migration & seed start helper
+│   ├── requirements.txt              # Pinned Python dependencies declaration
+│   ├── requirements.lock             # Locked transitive Python dependencies
+│   ├── run.py                        # Flask application entrypoint
+│   └── setup_db.py                   # Database bootstrap helper
 ├── frontend/                         # React Frontend for the Diagnosis Wizard
 │   ├── src/                          # React components and Stepper pages
+│   ├── tests/                        # Frontend Node.js regression tests (.cjs / .mjs)
 │   ├── package.json                  # Node packaging configurations
 │   ├── tailwind.config.js            # Design token properties
-│   └── vite.config.js                # Vite build outputs configured to backend static paths
-├── docs/                             # Core specifications and architecture blueprints
+│   └── vite.config.js                # Vite build outputs configured to backend/app/static/diagnosis-wizard
+├── mobile/                           # Flutter Cross-Platform Mobile App (iOS / Android)
+│   ├── lib/                          # Dart models, providers, screens, services, and translations
+│   └── test/                         # Mobile Dart unit tests
+├── ai/                               # Self-Trained AI Pipelines & Datasets
+│   ├── datasets/                     # Exported JSONL/CSV datasets and train.json
+│   ├── deployment/                   # Standalone inference API server
+│   ├── huggingface-space/            # Hugging Face Space Gradio app & knowledge matcher
+│   └── training/                     # Colab LoRA fine-tuning scripts & notebooks
+├── docs/                             # Core specifications, architecture blueprints, and API specs (docs/api/)
+├── scripts/                          # Operational, maintenance, and dataset export CLI scripts
+├── archived/                         # Archived scratch files and historical one-off dev_tools
 ├── Dockerfile                        # Multi-stage production container build script
-├── docker-compose.yml                # Docker orchestrations (App service + PostgreSQL server)
-├── requirements.txt                  # Python dependencies declaration
-├── entrypoint.sh                     # Database migration & seed start helper
-└── seed_*.py                         # System default seeding utilities (Admin, Expert, Farmer, Rules)
+└── docker-compose.yml                # Docker orchestrations (App service + PostgreSQL + Redis)
 ```
 
 ### AI dataset export and remote model
@@ -139,11 +147,11 @@ The agricultural knowledge tables can be exported for supervised fine-tuning
 with:
 
 ```bash
-python scripts/export_to_jsonl.py --out-dir exports
+python scripts/export_to_jsonl.py --out-dir ai/datasets/exports
 ```
 
-This creates `exports/agri_train_data.jsonl`,
-`exports/agri_validation_data.jsonl`, and a dataset manifest. The exporter
+This creates `ai/datasets/exports/agri_train_data.jsonl`,
+`ai/datasets/exports/agri_validation_data.jsonl`, and a dataset manifest. The exporter
 excludes users, chat messages, diagnoses, and secrets. The trained model is
 served separately by your protected inference endpoint. Set
 `AI_PROVIDER=own-ai`, `HF_INFERENCE_URL`, and `HF_TOKEN` in the backend
@@ -179,7 +187,7 @@ python -m venv .venv
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 
 # Install dependencies
-pip install -r requirements.txt
+pip install -r backend/requirements.txt
 ```
 
 #### 2. Configure Local Environment Variables
@@ -200,31 +208,31 @@ npm install
 npm run build
 cd ..
 ```
-*Note: Vite will compile assets directly into the backend static resources directory (`app/static/diagnosis-wizard`).*
+*Note: Vite will compile assets directly into the backend static resources directory (`backend/app/static/diagnosis-wizard`).*
 
 #### 4. Prepare Database & Seeds
 ```bash
 # Set environment context
-export FLASK_APP=run.py
+export FLASK_APP=backend/run.py
 
 # Setup database schemas and create tables
-python setup_db.py
+python backend/setup_db.py
 
 # Stamp migrations to head
-flask db stamp head
+flask --app backend/run.py db stamp head
 
 # Populate database with agricultural profiles & roles
-python seed_roles.py
-python seed_permissions.py
-python seed_admin.py
-python seed_expert.py
-python seed_farmer.py
-python seed_rule_based_knowledge.py
+python backend/seeds/seed_roles.py
+python backend/seeds/seed_permissions.py
+python backend/seeds/seed_admin.py
+python backend/seeds/seed_expert.py
+python backend/seeds/seed_farmer.py
+python backend/seeds/seed_rule_based_knowledge.py
 ```
 
 #### 5. Launch Development Server
 ```bash
-python run.py
+python backend/run.py
 ```
 Open `http://localhost:5000` in your web browser.
 

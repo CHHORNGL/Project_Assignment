@@ -1,0 +1,68 @@
+import sys as _sys, pathlib as _pathlib
+for _p in (str(_pathlib.Path(__file__).resolve().parents[1]), str(_pathlib.Path(__file__).resolve().parents[2])):
+    if _p not in _sys.path:
+        _sys.path.insert(0, _p)
+import unittest
+
+from app.services.agri_agent import agent_metadata, plan_request
+
+
+class AgriAgentPlanningTestCase(unittest.TestCase):
+    def test_khmer_weather_request_uses_weather_and_requests_location(self):
+        plan = plan_request("សូមប្រាប់អំពីអាកាសធាតុ និងភ្លៀងសម្រាប់ស្រែរបស់ខ្ញុំ", language="km")
+
+        self.assertEqual(plan.intent, "weather_advice")
+        self.assertEqual(plan.tools, ("weather", "knowledge_base"))
+        self.assertTrue(plan.needs_location)
+
+    def test_weather_request_with_coordinates_can_use_weather_tool(self):
+        plan = plan_request(
+            "Will rain affect my rice field?",
+            latitude=11.55,
+            longitude=104.92,
+        )
+
+        self.assertFalse(plan.needs_location)
+        self.assertIn("weather", plan.tools)
+
+    def test_diagnosis_image_never_becomes_an_unrestricted_tool_call(self):
+        plan = plan_request("Please check this leaf", has_image=True)
+
+        self.assertEqual(plan.intent, "crop_health")
+        self.assertIn("diagnosis_guidance", plan.tools)
+        self.assertTrue(plan.has_image)
+
+    def test_action_request_is_confirmation_gated(self):
+        plan = plan_request("រំលឹកខ្ញុំឱ្យស្រោចទឹកថ្ងៃស្អែក", language="km")
+
+        self.assertEqual(plan.intent, "action_request")
+        self.assertIn("confirmation_gate", plan.tools)
+        self.assertEqual(agent_metadata(plan)["intent"], "action_request")
+
+    def test_identity_request_does_not_load_irrelevant_disease_context(self):
+        plan = plan_request("តើអ្នកណាបង្កើតអ្នក?", language="km")
+
+        self.assertEqual(plan.intent, "agent_identity")
+        self.assertEqual(plan.tools, ())
+
+    def test_casual_conversation_intent_for_gratitude_and_empathy(self):
+        plan_km = plan_request("អរគុណច្រើនប្អូន", language="km")
+        self.assertEqual(plan_km.intent, "casual_conversation")
+        self.assertEqual(plan_km.tools, ())
+
+        plan_en = plan_request("Thank you so much for your help!", language="en")
+        self.assertEqual(plan_en.intent, "casual_conversation")
+        self.assertEqual(plan_en.tools, ())
+
+    def test_agricultural_insights_intent_for_data_queries(self):
+        plan_km = plan_request("តើទិន្នន័យនៃការវិភាគដីជួយកសិករដូចម្តេច?", language="km")
+        self.assertEqual(plan_km.intent, "agricultural_insights")
+        self.assertIn("knowledge_base", plan_km.tools)
+
+        plan_en = plan_request("How can I use soil test data to optimize fertilizer application?", language="en")
+        self.assertEqual(plan_en.intent, "agricultural_insights")
+        self.assertIn("knowledge_base", plan_en.tools)
+
+
+if __name__ == "__main__":
+    unittest.main()

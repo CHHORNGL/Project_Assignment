@@ -4,7 +4,9 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(_ROOT, "backend"))
+sys.path.insert(0, _ROOT)
 
 from datetime import datetime, timedelta
 from app import create_app, db

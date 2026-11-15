@@ -1,6 +1,7 @@
 {
-  "include": ["app", "tests"],
-  "exclude": [".venv", "node_modules", "build", "dist"],
+  "include": ["backend/app", "backend/tests", "scripts"],
+  "extraPaths": ["backend"],
+  "exclude": [".venv", "node_modules", "build", "dist", "archived"],
   "venvPath": ".",
   "venv": ".venv",
   "pythonVersion": "3.14",

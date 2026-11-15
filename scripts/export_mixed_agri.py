@@ -61,7 +61,7 @@ def main() -> None:
     fact_cols = [desc[0] for desc in cur.description]
     facts = [dict(zip(fact_cols, row)) for row in cur.fetchall()]
 
-    out_dir = Path('exports') / 'mixed_agri'
+    out_dir = Path('ai/datasets/exports') / 'mixed_agri'
     out_dir.mkdir(parents=True, exist_ok=True)
 
     sources_csv = out_dir / 'mixed_agri_sources.csv'

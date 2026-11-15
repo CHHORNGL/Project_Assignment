@@ -27,7 +27,7 @@ def main() -> None:
             "ADAPTER_ID", "Maoseavik/agrisystem-qwen2.5-3b-adapter"
         ),
     )
-    parser.add_argument("--output-dir", type=Path, default=Path(os.getenv("OUTPUT_DIR", "exports/gguf")))
+    parser.add_argument("--output-dir", type=Path, default=Path(os.getenv("OUTPUT_DIR", "ai/datasets/exports/gguf")))
     parser.add_argument("--llama-cpp-dir", type=Path, default=Path(os.getenv("LLAMA_CPP_DIR", "llama.cpp")))
     parser.add_argument("--quantization", default=os.getenv("GGUF_QUANTIZATION", "Q4_K_M"))
     parser.add_argument("--gguf-repo-id", default=os.getenv("GGUF_REPO_ID", ""))
