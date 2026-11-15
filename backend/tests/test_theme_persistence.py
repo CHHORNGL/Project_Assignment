@@ -1,5 +1,11 @@
-import sys as _sys, pathlib as _pathlib
-for _p in (str(_pathlib.Path(__file__).resolve().parents[1]), str(_pathlib.Path(__file__).resolve().parents[2])):
+# ruff: noqa: E402, I001
+import pathlib as _pathlib
+import sys as _sys
+
+for _p in (
+    str(_pathlib.Path(__file__).resolve().parents[1]),
+    str(_pathlib.Path(__file__).resolve().parents[2]),
+):
     if _p not in _sys.path:
         _sys.path.insert(0, _p)
 import os

@@ -1,23 +1,29 @@
-import sys as _sys, pathlib as _pathlib
-for _p in (str(_pathlib.Path(__file__).resolve().parents[1]), str(_pathlib.Path(__file__).resolve().parents[2])):
-    if _p not in _sys.path:
-        _sys.path.insert(0, _p)
 import os
+import pathlib as _pathlib
+import sys as _sys
 import tempfile
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
+
+for _p in (
+    str(_pathlib.Path(__file__).resolve().parents[1]),
+    str(_pathlib.Path(__file__).resolve().parents[2]),
+):
+    if _p not in _sys.path:
+        _sys.path.insert(0, _p)
 
 _test_db_fd, _test_db_path = tempfile.mkstemp(suffix=".db")
 os.environ["DATABASE_URL"] = f"sqlite:///{_test_db_path}"
 os.environ.setdefault("SECRET_KEY", "test-secret-key-for-ci")
 
-from app import create_app
-from app.config import Config
-from app.extensions import db
-from app.models.payment_transaction import PaymentTransaction
-from app.models.role import Role
-from app.models.user import User
-from app.services.bakong_service import (
+from app import create_app  # noqa: E402
+from app.config import Config  # noqa: E402
+from app.extensions import db  # noqa: E402
+from app.models.payment_transaction import PaymentTransaction  # noqa: E402
+from app.models.role import Role  # noqa: E402
+from app.models.user import User  # noqa: E402
+from app.services.bakong_service import (  # noqa: E402
+    approve_khqr_transaction_manually,
     create_khqr_payment,
     get_bakong_config,
     verify_khqr_payment,
@@ -51,19 +57,29 @@ class TestBakongPayment(unittest.TestCase):
         self.ctx.push()
         db.create_all()
 
+        self._deeplink_patcher = patch(
+            "bakong_khqr.KHQR.generate_deeplink",
+            return_value="https://bakong.page.link/test",
+        )
+        self._deeplink_patcher.start()
+
         farmer_role = Role.query.filter_by(name="farmer").first()
         if not farmer_role:
             farmer_role = Role(name="farmer", route_type="farmer")
             db.session.add(farmer_role)
             db.session.flush()
 
-        self.farmer = User(username="test_bakong_farmer", email="test_bakong@example.com")
+        self.farmer = User(
+            username="test_bakong_farmer",
+            email="test_bakong@example.com",
+        )
         self.farmer.set_password("TestPassword123!")
         self.farmer.roles.append(farmer_role)
         db.session.add(self.farmer)
         db.session.commit()
 
     def tearDown(self):
+        self._deeplink_patcher.stop()
         db.session.remove()
         db.drop_all()
         self.ctx.pop()
@@ -90,6 +106,7 @@ class TestBakongPayment(unittest.TestCase):
         # Verify record in database
         tx = PaymentTransaction.query.filter_by(md5=result["md5"]).first()
         self.assertIsNotNone(tx)
+        assert tx is not None
         self.assertEqual(tx.status, "PENDING")
         self.assertEqual(tx.user_id, self.farmer.id)
 
@@ -102,7 +119,10 @@ class TestBakongPayment(unittest.TestCase):
         )
         md5 = created["md5"]
 
-        with patch("app.services.bakong_service.query_bakong_md5_api", return_value=("PAID", {}, "")):
+        with patch(
+            "app.services.bakong_service.query_bakong_md5_api",
+            return_value=("PAID", {}, ""),
+        ):
             res = verify_khqr_payment(md5)
 
         self.assertTrue(res["success"])
@@ -110,11 +130,16 @@ class TestBakongPayment(unittest.TestCase):
 
         # Verify transaction status changed to PAID
         tx = PaymentTransaction.query.filter_by(md5=md5).first()
+        self.assertIsNotNone(tx)
+        assert tx is not None
         self.assertEqual(tx.status, "PAID")
         self.assertIsNotNone(tx.paid_at)
 
         # Verify user VIP status updated
-        self.farmer = db.session.get(User, self.farmer.id)
+        farmer = db.session.get(User, self.farmer.id)
+        self.assertIsNotNone(farmer)
+        assert farmer is not None
+        self.farmer = farmer
         self.assertTrue(self.farmer.is_premium)
         self.assertIsNotNone(self.farmer.premium_expires_at)
 
@@ -126,7 +151,10 @@ class TestBakongPayment(unittest.TestCase):
         )
         md5 = created["md5"]
 
-        with patch("app.services.bakong_service.query_bakong_md5_api", return_value=("RATE_LIMITED", {}, "Daily request limit of 100 exceeded.")):
+        with patch(
+            "app.services.bakong_service.query_bakong_md5_api",
+            return_value=("RATE_LIMITED", {}, "Daily request limit of 100 exceeded."),
+        ):
             res = verify_khqr_payment(md5)
 
         self.assertFalse(res["success"])
@@ -141,15 +169,19 @@ class TestBakongPayment(unittest.TestCase):
         )
         tx_id = created["transaction_id"]
 
-        from app.services.bakong_service import approve_khqr_transaction_manually
         res = approve_khqr_transaction_manually(tx_id)
         self.assertTrue(res["success"])
 
         tx = db.session.get(PaymentTransaction, tx_id)
+        self.assertIsNotNone(tx)
+        assert tx is not None
         self.assertEqual(tx.status, "PAID")
         self.assertIsNotNone(tx.paid_at)
 
-        self.farmer = db.session.get(User, self.farmer.id)
+        farmer = db.session.get(User, self.farmer.id)
+        self.assertIsNotNone(farmer)
+        assert farmer is not None
+        self.farmer = farmer
         self.assertTrue(self.farmer.is_premium)
 
 
