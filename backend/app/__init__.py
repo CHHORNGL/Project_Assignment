@@ -26,6 +26,13 @@ from flask_cors import CORS
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
+    if not app.config.get("SECRET_KEY") and os.getenv("SECRET_KEY"):
+        app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
+    if not app.config.get("SQLALCHEMY_DATABASE_URI") and os.getenv("DATABASE_URL"):
+        db_uri = os.getenv("DATABASE_URL", "")
+        if db_uri.startswith("postgres://"):
+            db_uri = "postgresql://" + db_uri[len("postgres://"):]
+        app.config["SQLALCHEMY_DATABASE_URI"] = db_uri
     trusted_proxies = app.config["TRUSTED_PROXY_COUNT"]
     app.wsgi_app = ProxyFix(
         app.wsgi_app, x_for=trusted_proxies, x_proto=trusted_proxies,
@@ -305,13 +312,17 @@ def create_app():
             app.logger.info(f"Completed {response.status_code} in {duration:.1f}ms")
         try:
             if current_user and current_user.is_authenticated:
-                cookie_theme = request.cookies.get("theme")
-                if cookie_theme in ("light", "dark", "system"):
-                    if getattr(current_user, "theme", None) != cookie_theme:
-                        current_user.theme = cookie_theme
-                        db.session.commit()
-                elif getattr(current_user, "theme", None):
-                    response.set_cookie("theme", current_user.theme, max_age=31536000, path="/", samesite="Lax")
+                has_new_theme_cookie = any(
+                    c.startswith("theme=") for c in response.headers.getlist("Set-Cookie")
+                )
+                if not has_new_theme_cookie:
+                    cookie_theme = request.cookies.get("theme")
+                    if cookie_theme in ("light", "dark", "system"):
+                        if getattr(current_user, "theme", None) != cookie_theme:
+                            current_user.theme = cookie_theme
+                            db.session.commit()
+                    elif getattr(current_user, "theme", None):
+                        response.set_cookie("theme", current_user.theme, max_age=31536000, path="/", samesite="Lax")
         except Exception:
             pass
         return response

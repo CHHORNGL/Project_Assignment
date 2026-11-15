@@ -9,8 +9,10 @@ from unittest.mock import MagicMock, patch
 
 _test_db_fd, _test_db_path = tempfile.mkstemp(suffix=".db")
 os.environ["DATABASE_URL"] = f"sqlite:///{_test_db_path}"
+os.environ.setdefault("SECRET_KEY", "test-secret-key-for-ci")
 
 from app import create_app
+from app.config import Config
 from app.extensions import db
 from app.models.payment_transaction import PaymentTransaction
 from app.models.role import Role
@@ -25,7 +27,12 @@ from app.services.bakong_service import (
 class TestBakongPayment(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.app = create_app()
+        with patch.multiple(
+            Config,
+            SQLALCHEMY_DATABASE_URI=f"sqlite:///{_test_db_path}",
+            SECRET_KEY=os.environ.get("SECRET_KEY", "test-secret-key-for-ci"),
+        ):
+            cls.app = create_app()
         cls.app.config.update({
             "TESTING": True,
             "WTF_CSRF_ENABLED": False,

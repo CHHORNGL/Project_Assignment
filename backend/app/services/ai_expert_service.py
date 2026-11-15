@@ -776,19 +776,19 @@ def _synthesize_local_expert_reply(user_message: str, context: str = "", languag
     # 4. If still not matched, search Cambodian agronomic dictionary (Durian, Pepper, Lime, etc.)
     if not matched_disease and not matched_crop:
         cambodian_kb_combos = [
-            {"item_idx": 0, "require_crop": ["ទុរេន", "ធូរេន", "durian"], "require_symptom": ["រលួយ", "ជ័រ", "ស្អុយ", "rot", "canker", "phytophthora", "ooz"]},
-            {"item_idx": 1, "require_crop": ["ស្រូវ", "rice", "paddy"], "require_symptom": ["ប្លាស់", "blast", "magnaporthe", "កួរ"]},
-            {"item_idx": 2, "require_crop": ["ដំឡូងមី", "cassava"], "require_symptom": ["ម៉ូសេក", "mosaic", "រួញ", "curl", "មមាចស", "whitefl", "cmd"]},
-            {"item_idx": 3, "require_crop": ["ពោត", "corn", "maize"], "require_symptom": ["ដង្កូវ", "armyworm", "spodoptera", "worm", "frass"]},
-            {"item_idx": 4, "require_crop": ["ម្រេច", "pepper"], "require_symptom": ["ងាប់រហ័ស", "ងាប់យឺត", "quick wilt", "slow wilt", "wilt", "phytophthora"]},
-            {"item_idx": 5, "require_crop": ["ប៉េងប៉ោះ", "tomato"], "require_symptom": ["ខ្លោចស្លឹក", "រលួយផ្លែ", "late blight"]},
-            {"item_idx": 6, "require_crop": ["ត្រសក់", "cucumber"], "require_symptom": ["ផ្សិតម្សៅ", "រោម", "mildew"]},
-            {"item_idx": 7, "require_crop": ["ម្ទេស", "chili"], "require_symptom": ["កន្ទុយបារី", "រលួយផ្លែ", "anthracnose"]},
-            {"item_idx": 8, "require_crop": ["ក្រូច", "citrus"], "require_symptom": ["កង់កា", "ដំបៅ", "canker"]},
-            {"item_idx": 9, "direct_terms": ["ដីជូរ", "កំបោរ", "acidic soil", "agricultural lime", "dolomite lime", "soil acidity", "soil ph", "ph ដី", "liming"]},
-            {"item_idx": 10, "direct_terms": ["តុល្យភាពជី", "សមាមាត្រជី", "npk", "ជីអ៊ុយរ៉េ", "fertilizer balance", "balanced fertilization", "split application"]},
-            {"item_idx": 11, "direct_terms": ["ប្តូរមុខដំណាំ", "បង្វិលមុខដំណាំ", "crop rotation", "legume", "rotate crops", "nitrogen fixation"]},
-            {"item_idx": 12, "direct_terms": ["ipm", "គ្រប់គ្រងសត្វល្អិត", "កម្រិតសេដ្ឋកិច្ច", "integrated pest management", "economic threshold"]},
+            {"item_idx": 2, "require_crop": ["ទុរេន", "ធូរេន", "durian"], "require_symptom": ["រលួយ", "ជ័រ", "ស្អុយ", "rot", "canker", "phytophthora", "ooz"]},
+            {"item_idx": 3, "require_crop": ["ស្រូវ", "rice", "paddy"], "require_symptom": ["ប្លាស់", "blast", "magnaporthe", "កួរ"]},
+            {"item_idx": 4, "require_crop": ["ដំឡូងមី", "cassava"], "require_symptom": ["ម៉ូសេក", "mosaic", "រួញ", "curl", "មមាចស", "whitefl", "cmd"]},
+            {"item_idx": 5, "require_crop": ["ពោត", "corn", "maize"], "require_symptom": ["ដង្កូវ", "armyworm", "spodoptera", "worm", "frass"]},
+            {"item_idx": 6, "require_crop": ["ម្រេច", "pepper"], "require_symptom": ["ងាប់រហ័ស", "ងាប់យឺត", "quick wilt", "slow wilt", "wilt", "phytophthora"]},
+            {"item_idx": 7, "require_crop": ["ប៉េងប៉ោះ", "tomato"], "require_symptom": ["ខ្លោចស្លឹក", "រលួយផ្លែ", "late blight"]},
+            {"item_idx": 8, "require_crop": ["ត្រសក់", "cucumber"], "require_symptom": ["ផ្សិតម្សៅ", "រោម", "mildew"]},
+            {"item_idx": 9, "require_crop": ["ម្ទេស", "chili"], "require_symptom": ["កន្ទុយបារី", "រលួយផ្លែ", "anthracnose"]},
+            {"item_idx": 10, "require_crop": ["ក្រូច", "citrus"], "require_symptom": ["កង់កា", "ដំបៅ", "canker"]},
+            {"item_idx": 11, "direct_terms": ["ដីជូរ", "កំបោរ", "acidic soil", "agricultural lime", "dolomite lime", "soil acidity", "soil ph", "ph ដី", "liming"]},
+            {"item_idx": 12, "direct_terms": ["តុល្យភាពជី", "សមាមាត្រជី", "npk", "ជីអ៊ុយរ៉េ", "fertilizer balance", "balanced fertilization", "split application"]},
+            {"item_idx": 13, "direct_terms": ["ប្តូរមុខដំណាំ", "បង្វិលមុខដំណាំ", "crop rotation", "legume", "rotate crops", "nitrogen fixation"]},
+            {"item_idx": 14, "direct_terms": ["ipm", "គ្រប់គ្រងសត្វល្អិត", "កម្រិតសេដ្ឋកិច្ច", "integrated pest management", "economic threshold"]},
         ]
         for combo in cambodian_kb_combos:
             idx = combo["item_idx"]

@@ -5,21 +5,33 @@ for _p in (str(_pathlib.Path(__file__).resolve().parents[1]), str(_pathlib.Path(
 import os
 import tempfile
 import unittest
+from unittest.mock import patch
 
 _test_db_fd, _test_db_path = tempfile.mkstemp(suffix=".db")
 os.environ["DATABASE_URL"] = f"sqlite:///{_test_db_path}"
+os.environ.setdefault("SECRET_KEY", "test-secret-key-for-ci")
 
 from app import create_app
+from app.config import Config
 from app.extensions import db
 
 
 class GuestLandingTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.app = create_app()
+        with patch.multiple(
+            Config,
+            SQLALCHEMY_DATABASE_URI=f"sqlite:///{_test_db_path}",
+            SECRET_KEY=os.environ.get("SECRET_KEY", "test-secret-key-for-ci"),
+            HF_INFERENCE_URL="",
+            HUGGINGFACE_INFERENCE_URL="",
+        ):
+            cls.app = create_app()
         cls.app.config.update({
             "TESTING": True,
             "WTF_CSRF_ENABLED": False,
+            "HF_INFERENCE_URL": "",
+            "HUGGINGFACE_INFERENCE_URL": "",
         })
 
     @classmethod
@@ -97,6 +109,7 @@ class GuestLandingTestCase(unittest.TestCase):
         # FAQ Accordion
         self.assertIn("nxFaqAccordion", html)
 
+    @patch.dict(os.environ, {"HF_INFERENCE_URL": "", "HUGGINGFACE_INFERENCE_URL": ""})
     def test_guest_chat_endpoint_responds_and_enforces_limit(self):
         # 1. Successful inquiry
         res = self.client.post("/farmer/guest-chat", json={"message": "What is Rice Blast?"})

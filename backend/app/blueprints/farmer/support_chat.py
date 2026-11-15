@@ -120,18 +120,25 @@ def resolve_real_location(lat=None, lon=None, ip_address=None):
             import urllib.request
             import json
             req_url = f"https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat={resolved_lat}&lon={resolved_lon}"
-            req = urllib.request.Request(req_url, headers={"User-Agent": "AgriSystem/2.0 (Farmer Support Chat)"})
+            req = urllib.request.Request(
+                req_url,
+                headers={
+                    "User-Agent": "AgriSystem/2.0 (Farmer Support Chat)",
+                    "Accept-Language": "en,km",
+                },
+            )
             with urllib.request.urlopen(req, timeout=1.5) as resp:
                 geo_data = json.loads(resp.read().decode("utf-8"))
                 addr = geo_data.get("address", {})
                 parts = []
-                for key in ("village", "suburb", "town", "city", "county", "state"):
+                for key in ("village", "suburb", "town", "city", "county", "state", "province"):
                     val = addr.get(key)
                     if val and val not in parts:
                         parts.append(val)
                 country = addr.get("country", "Cambodia")
                 if parts:
-                    place_name = f"{', '.join(parts[:2])}, {country}"
+                    selected = [parts[0], parts[-1]] if len(parts) > 1 else parts
+                    place_name = f"{', '.join(selected)}, {country}"
                 elif geo_data.get("display_name"):
                     place_name = geo_data.get("display_name").split(",")[0] + f", {country}"
         except Exception:

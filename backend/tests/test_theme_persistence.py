@@ -2,18 +2,45 @@ import sys as _sys, pathlib as _pathlib
 for _p in (str(_pathlib.Path(__file__).resolve().parents[1]), str(_pathlib.Path(__file__).resolve().parents[2])):
     if _p not in _sys.path:
         _sys.path.insert(0, _p)
+import os
+import tempfile
 import unittest
+from unittest.mock import patch
+
+_test_db_fd, _test_db_path = tempfile.mkstemp(suffix=".db")
+os.environ.setdefault("DATABASE_URL", f"sqlite:///{_test_db_path}")
+os.environ.setdefault("SECRET_KEY", "test-secret-key-for-ci")
+
 from app import create_app
+from app.config import Config
 from app.extensions import db
 from app.models.user import User
 from app.models.role import Role
 
 
 class ThemePersistenceTestCase(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        with patch.multiple(
+            Config,
+            SQLALCHEMY_DATABASE_URI=f"sqlite:///{_test_db_path}",
+            SECRET_KEY=os.environ.get("SECRET_KEY", "test-secret-key-for-ci"),
+            RATE_LIMIT_AUTH="1000 per minute;10000 per hour",
+            RATE_LIMIT_GLOBAL="10000 per minute;100000 per hour",
+        ):
+            cls.app = create_app()
+        cls.app.config["TESTING"] = True
+        cls.app.config["WTF_CSRF_ENABLED"] = False
+
+    @classmethod
+    def tearDownClass(cls):
+        try:
+            os.close(_test_db_fd)
+            os.unlink(_test_db_path)
+        except OSError:
+            pass
+
     def setUp(self):
-        self.app = create_app()
-        self.app.config["TESTING"] = True
-        self.app.config["WTF_CSRF_ENABLED"] = False
         self.client = self.app.test_client()
         self.app_context = self.app.app_context()
         self.app_context.push()
@@ -83,6 +110,8 @@ class ThemePersistenceTestCase(unittest.TestCase):
             db.session.commit()
 
     def tearDown(self):
+        db.session.remove()
+        db.drop_all()
         self.app_context.pop()
 
     def test_guest_user_post_theme_sets_cookie_and_session(self):

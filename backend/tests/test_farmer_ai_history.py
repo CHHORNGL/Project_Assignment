@@ -7,12 +7,15 @@ import tempfile
 import time
 import unittest
 from datetime import datetime, timedelta, timezone
+from unittest.mock import patch
 
 # Ensure in-memory/temp sqlite is used for database initialization
 _test_db_fd, _test_db_path = tempfile.mkstemp(suffix=".db")
 os.environ["DATABASE_URL"] = f"sqlite:///{_test_db_path}"
+os.environ.setdefault("SECRET_KEY", "test-secret-key-for-ci")
 
 from app import create_app
+from app.config import Config
 from app.extensions import db
 from app.models.user import User
 from app.models.role import Role
@@ -25,7 +28,12 @@ from app.blueprints.farmer.routes import _format_history_title, _is_greeting_or_
 class FarmerAiHistoryTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.app = create_app()
+        with patch.multiple(
+            Config,
+            SQLALCHEMY_DATABASE_URI=f"sqlite:///{_test_db_path}",
+            SECRET_KEY=os.environ.get("SECRET_KEY", "test-secret-key-for-ci"),
+        ):
+            cls.app = create_app()
         cls.app.config.update({
             "TESTING": True,
             "WTF_CSRF_ENABLED": False,
