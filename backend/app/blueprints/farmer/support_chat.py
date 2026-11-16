@@ -7,29 +7,89 @@ from app.extensions import db
 from app.models import User, AdminChatMessage
 from app.utils.decorators import role_required
 from app.utils.support_attachments import save_support_attachment, SupportAttachmentError
+from app.utils.support_chat_realtime import (
+    clear_typing,
+    is_typing,
+    serialize_chat_message,
+    set_typing,
+)
 from .routes import farmer_bp
+
+
+def _resolve_support_admin() -> User | None:
+    return User.query.filter(User.roles.any(name="admin")).first()
+
 
 @farmer_bp.route("/support_chat/messages", methods=["GET"])
 @login_required
 @role_required("farmer")
 def get_support_messages():
     cutoff = datetime.utcnow() - timedelta(hours=24)
-    messages = AdminChatMessage.query.filter(
+    after_id = request.args.get("after_id", type=int)
+    envelope = (request.args.get("envelope") or "").strip().lower() in {"1", "true", "yes"}
+
+    base_query = AdminChatMessage.query.filter(
         db.or_(
             AdminChatMessage.sender_id == current_user.id,
-            AdminChatMessage.receiver_id == current_user.id
+            AdminChatMessage.receiver_id == current_user.id,
         ),
-        AdminChatMessage.created_at >= cutoff
-    ).order_by(AdminChatMessage.created_at.asc()).all()
+        AdminChatMessage.created_at >= cutoff,
+    )
 
-    return jsonify([{
-        "id": msg.id,
-        "sender_id": msg.sender_id,
-        "message": msg.message,
-        "attachment_url": msg.attachment_url,
-        "attachment_type": msg.attachment_type,
-        "created_at": msg.created_at.strftime("%Y-%m-%d %H:%M:%S")
-    } for msg in messages])
+    unread_incoming_ids = [
+        row[0]
+        for row in base_query.with_entities(AdminChatMessage.id)
+        .filter(
+            AdminChatMessage.receiver_id == current_user.id,
+            AdminChatMessage.sender_id != current_user.id,
+            AdminChatMessage.is_read.is_(False),
+        )
+        .all()
+    ]
+    if unread_incoming_ids:
+        AdminChatMessage.query.filter(AdminChatMessage.id.in_(unread_incoming_ids)).update(
+            {AdminChatMessage.is_read: True}, synchronize_session=False
+        )
+        db.session.commit()
+
+    query = base_query
+    if after_id is not None and after_id > 0:
+        query = query.filter(AdminChatMessage.id > after_id)
+
+    messages = query.order_by(AdminChatMessage.id.asc()).all()
+    serialized = [serialize_chat_message(msg) for msg in messages]
+
+    if envelope:
+        admin_user = _resolve_support_admin()
+        partner_typing = is_typing(admin_user.id, current_user.id) if admin_user else False
+        read_ids = [
+            row[0]
+            for row in base_query.with_entities(AdminChatMessage.id)
+            .filter(
+                AdminChatMessage.sender_id == current_user.id,
+                AdminChatMessage.is_read.is_(True),
+            )
+            .all()
+        ]
+        return jsonify(
+            {
+                "messages": serialized,
+                "read_ids": read_ids,
+                "partner_typing": partner_typing,
+            }
+        )
+
+    return jsonify(serialized)
+
+
+@farmer_bp.route("/support_chat/typing", methods=["POST"])
+@login_required
+@role_required("farmer")
+def farmer_typing_indicator():
+    admin_user = _resolve_support_admin()
+    if admin_user:
+        set_typing(current_user.id, admin_user.id, ttl_seconds=5)
+    return jsonify({"ok": True})
 
 CAMBODIA_PROVINCES = [
     ("Phnom Penh", 11.5564, 104.9282),
@@ -245,7 +305,7 @@ def send_support_message():
         except Exception:
             message_text = "📍 Shared location"
 
-    admin = User.query.filter(User.roles.any(name='admin')).first()
+    admin = _resolve_support_admin()
     if not admin:
         return jsonify({"error": "No admin available"}), 404
     
@@ -257,6 +317,7 @@ def send_support_message():
         attachment_type=attachment_type
     )
     db.session.add(msg)
+    clear_typing(current_user.id, admin.id)
 
     try:
         from app.services.notification_service import notify_role, _snippet
@@ -277,7 +338,7 @@ def send_support_message():
 
     db.session.commit()
     
-    return jsonify({"success": True})
+    return jsonify({"success": True, "message": serialize_chat_message(msg)})
 
 @farmer_bp.route("/support_chat/upload", methods=["POST"])
 @login_required

@@ -97,7 +97,7 @@ export default function FarmerResultPage({ bootstrap }: { bootstrap: AppBootstra
             <MessageSquare className="h-3.5 w-3.5" /> Ask Expert
           </a>
           <a href={d.actions.newDiagnosisUrl} className="ai-btn-primary h-9 px-3 text-xs">
-            <RotateCcw className="h-3.5 w-3.5" /> New Scan
+            <RotateCcw className="h-3.5 w-3.5" /> New Diagnosis
           </a>
         </div>
       }

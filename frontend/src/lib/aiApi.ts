@@ -1,6 +1,7 @@
 export interface AskAgriExpertOptions {
   signal?: AbortSignal;
   endpoint?: string;
+  csrfToken?: string;
 }
 
 /**
@@ -11,18 +12,21 @@ export interface AskAgriExpertOptions {
  */
 export async function askAgriExpert(
   message: string,
-  { signal, endpoint = "/api/chat/ask" }: AskAgriExpertOptions = {},
+  { signal, endpoint = "/api/chat/ask", csrfToken }: AskAgriExpertOptions = {},
 ): Promise<string> {
   const text = String(message || "").trim();
   if (!text) throw new Error("Message is required");
 
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    Accept: "application/json",
+  };
+  if (csrfToken) headers["X-CSRFToken"] = csrfToken;
+
   const response = await fetch(endpoint, {
     method: "POST",
     credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
+    headers,
     body: JSON.stringify({ message: text }),
     signal,
   });

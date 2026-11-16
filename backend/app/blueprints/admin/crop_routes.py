@@ -1,4 +1,6 @@
 from flask import Blueprint, request, redirect, url_for, flash
+from sqlalchemy import func
+from sqlalchemy.exc import IntegrityError
 from app.utils.react_bootstrap import (
     build_admin_crop_form_bootstrap,
     build_admin_crops_bootstrap,
@@ -22,9 +24,18 @@ admin_crop_bp = Blueprint(
 @login_required
 @permission_required("manage_crops")
 def index():
-    crops = Crop.query.all()
+    crops = Crop.query.order_by(func.lower(Crop.name).asc()).all()
+    diagnosis_counts = dict(
+        db.session.query(Diagnosis.crop_id, func.count(Diagnosis.id))
+        .filter(Diagnosis.crop_id.isnot(None))
+        .group_by(Diagnosis.crop_id)
+        .all()
+    )
     return render_react_page(
-        bootstrap_payload=build_admin_crops_bootstrap(crops=crops),
+        bootstrap_payload=build_admin_crops_bootstrap(
+            crops=crops,
+            diagnosis_counts=diagnosis_counts,
+        ),
         title="Manage Crops",
     )
 
@@ -34,14 +45,19 @@ def index():
 @permission_required("manage_crops")
 def create():
     if request.method == "POST":
-        name = request.form.get("name")
-        name_kh = request.form.get("name_kh")
+        name = (request.form.get("name") or "").strip()
+        name_kh = (request.form.get("name_kh") or "").strip() or None
         emoji = (request.form.get("emoji") or "").strip()[:8] or None
-        description = request.form.get("description")
-        description_kh = request.form.get("description_kh")
+        description = (request.form.get("description") or "").strip() or None
+        description_kh = (request.form.get("description_kh") or "").strip() or None
 
         if not name:
             flash("Crop name is required.", "danger")
+            return redirect(request.url)
+
+        existing = Crop.query.filter(func.lower(Crop.name) == name.lower()).first()
+        if existing:
+            flash(f'Crop "{name}" already exists.', "warning")
             return redirect(request.url)
 
         crop = Crop(
@@ -52,7 +68,12 @@ def create():
             description_kh=description_kh
         )
         db.session.add(crop)
-        db.session.commit()
+        try:
+            db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+            flash(f'Crop "{name}" already exists.', "warning")
+            return redirect(request.url)
 
         flash("Crop added successfully.", "success")
         return redirect(url_for("admin_crop.index"))
@@ -73,12 +94,23 @@ def edit(id):
         if not name:
             flash("Crop name is required.", "danger")
             return redirect(request.url)
+        existing = (
+            Crop.query.filter(func.lower(Crop.name) == name.lower(), Crop.id != crop.id).first()
+        )
+        if existing:
+            flash(f'Crop "{name}" already exists.', "warning")
+            return redirect(request.url)
         crop.name = name
         crop.name_kh = request.form.get("name_kh", "").strip() or None
         crop.emoji = (request.form.get("emoji") or "").strip()[:8] or None
         crop.description = request.form.get("description", "").strip() or None
         crop.description_kh = request.form.get("description_kh", "").strip() or None
-        db.session.commit()
+        try:
+            db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+            flash(f'Crop "{name}" already exists.', "warning")
+            return redirect(request.url)
         flash("Crop updated successfully.", "success")
         return redirect(url_for("admin_crop.index"))
     return render_react_page(

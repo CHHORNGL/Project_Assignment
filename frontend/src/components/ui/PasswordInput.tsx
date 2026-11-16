@@ -37,7 +37,7 @@ export function PasswordInput({
           {...props}
           type={visible ? "text" : "password"}
           value={value}
-          className={cn("ai-input pl-10 pr-10", className)}
+          className={cn("ai-input pl-10 pr-11", className)}
         />
         <button
           type="button"

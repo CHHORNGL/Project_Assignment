@@ -1,11 +1,16 @@
 import React, { useMemo, useState } from "react";
-import { ArrowRight, MessageSquare, Search } from "lucide-react";
+import { ArrowRight, Clock, MessageSquare, Search } from "lucide-react";
 import type { AppBootstrap } from "@/types/app";
 import { WorkspaceShell } from "@/components/layout/WorkspaceShell";
 import { buildNavSections } from "@/lib/navigation";
-import { ExpertHeaderActions } from "@/components/expert/ExpertShared";
+import {
+  ExpertHeaderActions,
+  ExpertSearchField,
+  formatShortDateTime,
+} from "@/components/expert/ExpertShared";
 import {
   AdminEmptyState,
+  AdminKpiCard,
   AdminSectionCard,
   AdminStatusBadge,
 } from "@/components/admin/AdminPrimitives";
@@ -26,6 +31,7 @@ export default function ExpertFarmerChatsPage({
 }: {
   bootstrap: AppBootstrap<FarmerChatsData>;
 }) {
+  const isKhmer = bootstrap.lang === "km";
   const d = bootstrap.data;
   const ui = bootstrap.ui as Record<string, any>;
   const labels = ui.labels || {};
@@ -50,31 +56,88 @@ export default function ExpertFarmerChatsPage({
       pageSubtitle={bootstrap.ui.pageSubtitle}
       headerActions={<ExpertHeaderActions bootstrap={bootstrap} />}
     >
-      <div className="space-y-5">
-        <AdminSectionCard delayIndex={0}>
+      <div className="space-y-6">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <AdminKpiCard
+            delayIndex={0}
+            label={labels.session || (isKhmer ? "វគ្គសន្ទនាសរុប" : "Active Chat Sessions")}
+            value={d.sessionCount}
+            hint={isKhmer ? "កសិករកំពុងរង់ចាំការឆ្លើយតប" : "Farmer inquiry threads available"}
+            icon={<MessageSquare className="h-5 w-5" />}
+            tone="indigo"
+          />
+          <AdminKpiCard
+            delayIndex={1}
+            label={isKhmer ? "កំពុងបង្ហាញ" : "Visible Threads"}
+            value={filtered.length}
+            hint={
+              query.trim()
+                ? isKhmer
+                  ? "លទ្ធផលតាមពាក្យស្វែងរក"
+                  : "Filtered by search query"
+                : isKhmer
+                  ? "បង្ហាញការសន្ទនាទាំងអស់"
+                  : "All sessions shown"
+            }
+            icon={<Search className="h-5 w-5" />}
+            tone="emerald"
+          />
+        </div>
+
+        <AdminSectionCard delayIndex={1}>
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="relative w-full sm:w-80">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8a94ad]" />
-              <input
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder={labels.search || "Search farmer chats..."}
-                className="ai-input py-2 pl-9 text-xs"
-              />
+            <ExpertSearchField
+              value={query}
+              onChange={setQuery}
+              placeholder={labels.search || "Search farmer, topic, or session ID..."}
+              className="sm:w-80"
+            />
+            <div className="flex items-center gap-2">
+              {query.trim() && (
+                <button
+                  type="button"
+                  onClick={() => setQuery("")}
+                  className="ai-btn-secondary h-8 px-2.5 text-xs"
+                >
+                  {isKhmer ? "សម្អាត" : "Clear"}
+                </button>
+              )}
+              <AdminStatusBadge tone="indigo">
+                {filtered.length} / {d.sessionCount}
+              </AdminStatusBadge>
             </div>
-            <AdminStatusBadge tone="indigo">
-              {d.sessionCount} {labels.session || "Sessions"}
-            </AdminStatusBadge>
           </div>
         </AdminSectionCard>
 
         {filtered.length === 0 ? (
-          <AdminSectionCard delayIndex={1}>
+          <AdminSectionCard delayIndex={2}>
             <AdminEmptyState
               icon={<MessageSquare className="h-5 w-5" />}
-              title={labels.emptyTitle || "No farmer chats"}
-              description={labels.emptyText}
+              title={
+                query.trim()
+                  ? isKhmer
+                    ? "រកមិនឃើញការសន្ទនាទេ"
+                    : "No matching farmer chats"
+                  : labels.emptyTitle || "No farmer chats"
+              }
+              description={
+                query.trim()
+                  ? isKhmer
+                    ? "សូមសម្អាតពាក្យស្វែងរក ដើម្បីមើលវគ្គសន្ទនាទាំងអស់។"
+                    : "Try clearing your search filter to view all threads."
+                  : labels.emptyText
+              }
+              action={
+                query.trim() ? (
+                  <button
+                    type="button"
+                    onClick={() => setQuery("")}
+                    className="ai-btn-secondary h-8 px-3 text-xs"
+                  >
+                    {isKhmer ? "សម្អាត" : "Clear search"}
+                  </button>
+                ) : undefined
+              }
             />
           </AdminSectionCard>
         ) : (
@@ -87,20 +150,30 @@ export default function ExpertFarmerChatsPage({
                 <div>
                   <div className="flex items-center justify-between gap-2">
                     <AdminStatusBadge tone="indigo">#{s.id}</AdminStatusBadge>
-                    <span className="font-mono text-[11px] text-[#8a94ad]">
-                      {s.updatedAt ? s.updatedAt.slice(0, 16).replace("T", " ") : ""}
-                    </span>
+                    {s.updatedAt && (
+                      <span className="inline-flex items-center gap-1 font-mono text-[11px] text-[#8a94ad]">
+                        <Clock className="h-3 w-3" />
+                        {formatShortDateTime(s.updatedAt)}
+                      </span>
+                    )}
                   </div>
-                  <h3 className="mt-3 font-display text-sm font-bold text-[#141824] dark:text-[#eff2f6]">
-                    {s.farmerName}
-                  </h3>
-                  <p className="mt-1 line-clamp-2 text-xs text-[#6e7891] dark:text-[#8a94ad]">
-                    {s.title}
-                  </p>
+                  <div className="mt-3.5 flex items-center gap-3">
+                    <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#e5edff] font-display text-sm font-bold text-[#004dff] ring-1 ring-[#3874ff]/20 dark:bg-[#3874ff]/15 dark:text-[#85a9ff]">
+                      {(s.farmerName || "?").slice(0, 1).toUpperCase()}
+                    </span>
+                    <div className="min-w-0">
+                      <h3 className="truncate font-display text-sm font-bold text-[#141824] dark:text-[#eff2f6]">
+                        {s.farmerName}
+                      </h3>
+                      <p className="truncate text-xs text-[#6e7891] dark:text-[#8a94ad]">
+                        {s.title}
+                      </p>
+                    </div>
+                  </div>
                 </div>
                 <div className="mt-4 border-t border-[#e3e6ed] pt-3.5 dark:border-[#2b3245]">
-                  <a href={s.replyUrl} className="ai-btn-primary h-9 w-full justify-center text-xs">
-                    {labels.respond || "Respond Now"}
+                  <a href={s.replyUrl} className="ai-btn-primary h-9 w-full justify-center gap-1.5 text-xs">
+                    <span>{labels.respond || "Respond Now"}</span>
                     <ArrowRight className="h-3.5 w-3.5" />
                   </a>
                 </div>

@@ -15,6 +15,8 @@ interface UserHomeData {
 export default function UserHomePage({ bootstrap }: { bootstrap: AppBootstrap<UserHomeData> }) {
   const isKhmer = bootstrap.lang === "km";
   const d = bootstrap.data;
+  const roles = bootstrap.user.roles?.length ? bootstrap.user.roles : ["Member"];
+
   const cards = [
     {
       title: isKhmer ? "ផ្ទាំងគ្រប់គ្រងការងារ" : "Main Workspace",
@@ -60,55 +62,70 @@ export default function UserHomePage({ bootstrap }: { bootstrap: AppBootstrap<Us
       pageTitle={bootstrap.ui.pageTitle}
       pageSubtitle={bootstrap.ui.pageSubtitle}
     >
-      <div className="ai-surface mb-6 flex flex-col justify-between gap-4 p-6 sm:flex-row sm:items-center">
-        <div className="flex items-center gap-4">
-          <img
-            src={bootstrap.user.avatar_url || "/static/img/avatar.png"}
-            alt={bootstrap.user.full_name}
-            className="h-14 w-14 rounded-2xl object-cover ring-2 ring-indigo-500/25"
-          />
-          <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
-              <KeyRound className="mr-1 inline h-3.5 w-3.5" />
-              {bootstrap.user.roles.join(" · ") || "Member"}
-            </p>
-            <h2 className="font-display text-xl font-bold">{bootstrap.user.full_name || bootstrap.user.username}</h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400">{bootstrap.user.email || bootstrap.user.username}</p>
-          </div>
-        </div>
-        <a href={d.dashboardUrl} className="ai-btn-primary">
-          {isKhmer ? "ទៅកាន់ផ្ទាំងគ្រប់គ្រង" : "Go to Dashboard"}
-          <ArrowRight className="h-4 w-4" />
-        </a>
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {cards.map((card) => {
-          const Icon = card.icon;
-          return (
-            <a
-              key={card.href}
-              href={card.href}
-              className="ai-surface group flex flex-col justify-between p-5 transition-all hover:-translate-y-0.5 hover:border-indigo-500/40"
-            >
-              <div>
-                <div
-                  className={`mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br ${card.accent} text-white shadow-sm`}
-                >
-                  <Icon className="h-5 w-5" />
-                </div>
-                <h3 className="font-display text-base font-bold group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
-                  {card.title}
-                </h3>
-                <p className="mt-1 text-xs leading-relaxed text-slate-500 dark:text-slate-400">{card.desc}</p>
+      <div className="space-y-6">
+        <div className="ai-surface flex flex-col justify-between gap-4 p-6 sm:flex-row sm:items-center">
+          <div className="flex items-center gap-4">
+            <img
+              src={bootstrap.user.avatar_url || "/static/img/avatar.png"}
+              alt={bootstrap.user.full_name}
+              className="h-14 w-14 rounded-2xl object-cover ring-2 ring-indigo-500/25"
+            />
+            <div>
+              <div className="flex flex-wrap items-center gap-1.5">
+                {roles.map((role) => (
+                  <span
+                    key={role}
+                    className="inline-flex items-center gap-1 rounded-full border border-indigo-500/25 bg-indigo-500/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-300"
+                  >
+                    <KeyRound className="h-3 w-3" />
+                    {role}
+                  </span>
+                ))}
               </div>
-              <span className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 dark:text-indigo-400">
-                {isKhmer ? "បើក" : "Open"}
-                <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
-              </span>
-            </a>
-          );
-        })}
+              <h2 className="mt-1.5 font-display text-xl font-bold text-slate-900 dark:text-slate-50">
+                {bootstrap.user.full_name || bootstrap.user.username}
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                {bootstrap.user.email || bootstrap.user.username}
+              </p>
+            </div>
+          </div>
+          <a href={d.dashboardUrl} className="ai-btn-primary h-10 shrink-0 gap-1.5 px-5 text-xs">
+            <span>{isKhmer ? "ទៅកាន់ផ្ទាំងគ្រប់គ្រង" : "Go to Dashboard"}</span>
+            <ArrowRight className="h-4 w-4" />
+          </a>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {cards.map((card) => {
+            const Icon = card.icon;
+            return (
+              <a
+                key={card.href}
+                href={card.href}
+                className="ai-surface ai-card-hover group flex flex-col justify-between p-5"
+              >
+                <div>
+                  <div
+                    className={`mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br ${card.accent} text-white shadow-sm`}
+                  >
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <h3 className="font-display text-base font-bold text-slate-900 group-hover:text-indigo-600 dark:text-slate-100 dark:group-hover:text-indigo-400">
+                    {card.title}
+                  </h3>
+                  <p className="mt-1.5 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                    {card.desc}
+                  </p>
+                </div>
+                <span className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 dark:text-indigo-400">
+                  <span>{isKhmer ? "បើក" : "Open"}</span>
+                  <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+                </span>
+              </a>
+            );
+          })}
+        </div>
       </div>
     </WorkspaceShell>
   );

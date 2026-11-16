@@ -63,9 +63,14 @@ class OpenMeteoClient:
             "current": ",".join(
                 [
                     "temperature_2m",
+                    "apparent_temperature",
                     "relative_humidity_2m",
                     "rain",
                     "wind_speed_10m",
+                    "wind_direction_10m",
+                    "wind_gusts_10m",
+                    "surface_pressure",
+                    "cloud_cover",
                     "weather_code",
                 ]
             ),

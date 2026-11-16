@@ -27,6 +27,15 @@ def _number(value):
     return number
 
 
+def _optional_number(value):
+    if value is None:
+        return None
+    try:
+        return _number(value)
+    except (TypeError, ValueError):
+        return None
+
+
 class MetNorwayClient:
     def __init__(self, *, timeout_seconds=6.0, session=None):
         self._session = session or requests.Session()
@@ -96,8 +105,16 @@ class MetNorwayClient:
             if current is None:
                 if start > cutoff + timedelta(hours=1):
                     raise ValueError("Forecast has no current data")
-                current = {"temperature_2m": temp, "wind_speed_10m": wind,
-                           "relative_humidity_2m": humidity, "rain": rain_per_hour, "weather_code": code}
+                current = {
+                    "temperature_2m": temp,
+                    "wind_speed_10m": wind,
+                    "relative_humidity_2m": humidity,
+                    "rain": rain_per_hour,
+                    "weather_code": code,
+                    "wind_direction_10m": _optional_number(instant.get("wind_from_direction")),
+                    "surface_pressure": _optional_number(instant.get("air_pressure_at_sea_level")),
+                    "cloud_cover": _optional_number(instant.get("cloud_area_fraction")),
+                }
             # Long-range data uses six-hour periods. Distribute rain by overlap
             # across local dates; temperatures are model samples/period extrema.
             for hour in range(period_hours):

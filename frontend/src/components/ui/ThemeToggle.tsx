@@ -4,12 +4,15 @@ import { cn } from "@/lib/utils";
 
 export function ThemeToggle({
   showSystem = false,
+  variant = "default",
   className = "",
 }: {
   showSystem?: boolean;
+  variant?: "default" | "phoenix";
   className?: string;
 }) {
   const { theme, isDark, setTheme, toggleDark } = useTheme();
+  const isPhoenix = variant === "phoenix";
 
   if (showSystem) {
     return (
@@ -59,19 +62,21 @@ export function ThemeToggle({
       aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
       title={isDark ? "Switch to light mode" : "Switch to dark mode"}
       className={cn(
-        "inline-flex h-9 items-center gap-2 rounded-full border border-slate-200/80 bg-white/85 px-3 text-xs font-semibold text-slate-700 shadow-sm backdrop-blur-md transition-all hover:border-indigo-300 hover:text-indigo-600 dark:border-slate-700/80 dark:bg-obsidian-900/85 dark:text-slate-200 dark:hover:border-indigo-500/60 dark:hover:text-indigo-300",
+        isPhoenix
+          ? "inline-flex h-9 items-center gap-2 rounded-lg border border-[#cbd0dd] bg-[#f5f7fa] px-2.5 text-xs font-semibold text-[#31374a] transition-colors hover:border-[#b3bac9] hover:bg-[#eff2f6] dark:border-[#373e53] dark:bg-[#181d2b] dark:text-[#eff2f6] dark:hover:border-[#4b546f] dark:hover:bg-[#22283a]"
+          : "inline-flex h-9 items-center gap-2 rounded-full border border-slate-200/80 bg-white/85 px-3 text-xs font-semibold text-slate-700 shadow-sm backdrop-blur-md transition-all hover:border-indigo-300 hover:text-indigo-600 dark:border-slate-700/80 dark:bg-obsidian-900/85 dark:text-slate-200 dark:hover:border-indigo-500/60 dark:hover:text-indigo-300",
         className,
       )}
     >
       {isDark ? (
         <>
-          <Sun className="h-3.5 w-3.5 text-amber-400" />
-          <span className="hidden sm:inline">Light</span>
+          <Sun className={cn("h-3.5 w-3.5", isPhoenix ? "text-[#e5780b]" : "text-amber-400")} />
+          <span className="hidden xl:inline">Light</span>
         </>
       ) : (
         <>
-          <Moon className="h-3.5 w-3.5 text-indigo-600" />
-          <span className="hidden sm:inline">Dark</span>
+          <Moon className={cn("h-3.5 w-3.5", isPhoenix ? "text-[#3874ff]" : "text-indigo-600")} />
+          <span className="hidden xl:inline">Dark</span>
         </>
       )}
     </button>

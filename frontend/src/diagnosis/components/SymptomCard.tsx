@@ -1,3 +1,5 @@
+import { Check, Plus } from "lucide-react";
+
 export interface SymptomItem {
   id: string;
   name: string;
@@ -35,20 +37,24 @@ export default function SymptomCard({
       <div className="flex items-start gap-3">
         <div
           className={[
-            "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border text-sm transition-all duration-200",
+            "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border text-xs transition-all duration-150",
             selected
-              ? "border-indigo-600 bg-indigo-600 text-white"
-              : "border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 text-slate-400",
+              ? "border-indigo-600 bg-indigo-600 text-white shadow-xs"
+              : "border-slate-200 bg-slate-50 text-slate-400 dark:border-slate-800 dark:bg-obsidian-950/70",
           ].join(" ")}
         >
-          <i className={`fas ${selected ? "fa-check" : "fa-plus"}`} aria-hidden="true" />
+          {selected ? (
+            <Check className="h-4 w-4" aria-hidden="true" />
+          ) : (
+            <Plus className="h-4 w-4" aria-hidden="true" />
+          )}
         </div>
-        <div>
+        <div className="min-w-0 flex-1">
           <p
             className={
               selected
                 ? "text-sm font-bold text-slate-900 dark:text-white"
-                : "text-sm font-semibold text-slate-700 dark:text-slate-300"
+                : "text-sm font-semibold text-slate-700 dark:text-slate-200"
             }
           >
             {name}
@@ -56,8 +62,8 @@ export default function SymptomCard({
           <p
             className={
               selected
-                ? "mt-1 text-xs leading-5 text-indigo-700 dark:text-indigo-300/90"
-                : "mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400"
+                ? "mt-1 text-xs leading-relaxed text-indigo-700 dark:text-indigo-300"
+                : "mt-1 text-xs leading-relaxed text-slate-500 dark:text-slate-400"
             }
           >
             {selected ? selectedText : unselectedText}

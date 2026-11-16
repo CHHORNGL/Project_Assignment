@@ -151,14 +151,14 @@ export default function FarmerDiagnoseClassicPage({ bootstrap }: { bootstrap: Ap
               <label className="text-xs font-bold uppercase tracking-wider text-slate-500">
                 2. {isKhmer ? "ជ្រើសរើសរោគសញ្ញា" : "Select Observed Symptoms"} ({selected.length})
               </label>
-              <div className="relative w-56">
+              <div className="relative w-full sm:w-56">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
                 <input
                   type="text"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder={isKhmer ? "ស្វែងរករោគសញ្ញា..." : "Filter symptoms..."}
-                  className="ai-input py-1.5 pl-8 text-xs"
+                  className="ai-input py-1.5 pl-9 text-xs"
                 />
               </div>
             </div>

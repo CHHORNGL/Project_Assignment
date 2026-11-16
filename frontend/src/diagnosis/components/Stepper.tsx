@@ -1,4 +1,4 @@
-import { Fragment } from "react";
+import { Check } from "lucide-react";
 
 export interface StepItem {
   id: string;
@@ -12,6 +12,7 @@ export interface StepperProps {
   title: string;
   stepProgressText: string;
   hint: string;
+  onStepSelect?: (stepNumber: number) => void;
 }
 
 function stepState(stepNumber: number, currentStep: number): "complete" | "current" | "upcoming" {
@@ -20,104 +21,97 @@ function stepState(stepNumber: number, currentStep: number): "complete" | "curre
   return "upcoming";
 }
 
-export default function Stepper({ steps, currentStep, title, stepProgressText, hint }: StepperProps) {
+export default function Stepper({
+  steps,
+  currentStep,
+  title,
+  stepProgressText,
+  hint,
+  onStepSelect,
+}: StepperProps) {
+  const progressPct = steps.length > 0 ? Math.round((currentStep / steps.length) * 100) : 0;
+
   return (
     <div className="diag-panel overflow-hidden">
-      <div className="border-b border-slate-100 dark:border-slate-900 bg-white dark:bg-slate-950/90 px-5 py-4 md:px-6">
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase text-emerald-700 dark:text-emerald-400">
-              {title}
-            </p>
-            <p className="mt-1 font-display text-lg font-bold text-slate-900 dark:text-white">
-              {stepProgressText}
-            </p>
-          </div>
-          <div className="inline-flex items-center rounded-full border border-emerald-200 dark:border-emerald-900/40 bg-emerald-50 dark:bg-emerald-950/20 px-3 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
-            {hint}
-          </div>
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 bg-slate-50/75 px-5 py-3 dark:border-slate-800/80 dark:bg-obsidian-950/60 sm:px-6">
+        <div className="flex items-center gap-2.5">
+          <span className="inline-flex items-center rounded-full bg-indigo-500/10 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-300">
+            {title}
+          </span>
+          <span className="font-display text-sm font-bold text-slate-900 dark:text-white">
+            {stepProgressText}
+          </span>
         </div>
+        <span className="text-xs font-medium text-slate-500 dark:text-slate-400">{hint}</span>
       </div>
 
-      <div className="px-5 pb-6 pt-5 md:px-6">
-        <div className="hidden md:grid md:grid-cols-[1fr_auto_1fr_auto_1fr_auto_1fr] md:items-start md:gap-4">
+      {/* Continuous progress bar */}
+      <div className="h-1 w-full bg-slate-100 dark:bg-obsidian-950">
+        <div
+          className="h-full bg-gradient-to-r from-indigo-600 to-blue-500 transition-[width] duration-300 ease-out"
+          style={{ width: `${progressPct}%` }}
+        />
+      </div>
+
+      <div className="p-4 sm:px-6 sm:py-4">
+        <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
           {steps.map((step, index) => {
             const number = index + 1;
             const state = stepState(number, currentStep);
             const complete = state === "complete";
             const current = state === "current";
+            const clickable = complete && typeof onStepSelect === "function";
 
             return (
-              <Fragment key={step.id}>
-                <div className="flex flex-col items-start gap-3">
-                  <div
-                    className={[
-                      "flex h-10 w-10 items-center justify-center rounded-full border text-sm font-bold transition-all duration-200",
-                      complete
-                        ? "border-emerald-600 bg-emerald-600 text-white"
-                        : current
-                          ? "border-emerald-600 bg-white dark:bg-slate-950 text-emerald-700 dark:text-emerald-400 shadow-sm"
-                          : "border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-400 dark:text-slate-500",
-                    ].join(" ")}
-                  >
-                    {complete ? <i className="fas fa-check text-xs" aria-hidden="true" /> : number}
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-slate-900 dark:text-white">{step.label}</p>
-                    <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">{step.description}</p>
-                  </div>
-                </div>
-                {index < steps.length - 1 ? (
-                  <div className="mt-5 h-1 w-16 rounded-full bg-slate-200 dark:bg-slate-800/40">
-                    <div
-                      className={[
-                        "h-1 rounded-full",
-                        number < currentStep ? "w-full bg-emerald-500" : "w-0 bg-transparent",
-                      ].join(" ")}
-                    />
-                  </div>
-                ) : null}
-              </Fragment>
-            );
-          })}
-        </div>
-
-        <div className="grid gap-3 md:hidden">
-          {steps.map((step, index) => {
-            const number = index + 1;
-            const state = stepState(number, currentStep);
-            const complete = state === "complete";
-            const current = state === "current";
-
-            return (
-              <div
+              <button
                 key={step.id}
+                type="button"
+                disabled={!clickable}
+                onClick={() => {
+                  if (clickable) onStepSelect(number);
+                }}
+                aria-current={current ? "step" : undefined}
                 className={[
-                  "flex items-start gap-3 rounded-2xl border px-4 py-3 transition-all duration-200",
+                  "flex items-center gap-3 rounded-xl border px-3.5 py-2.5 text-left transition-all duration-150 disabled:cursor-default disabled:opacity-100",
                   current
-                    ? "border-emerald-400 dark:border-emerald-700/60 bg-emerald-50 dark:bg-emerald-950/20"
+                    ? "border-indigo-500 bg-indigo-50/80 ring-1 ring-indigo-500/20 dark:border-indigo-400 dark:bg-indigo-500/15"
                     : complete
-                      ? "border-emerald-200 dark:border-emerald-900/40 bg-white dark:bg-slate-950"
-                      : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950",
+                      ? "border-emerald-200 bg-emerald-50/50 hover:border-emerald-300 dark:border-emerald-900/40 dark:bg-emerald-950/20"
+                      : "border-slate-200/80 bg-white/70 opacity-75 dark:border-slate-800/80 dark:bg-obsidian-950/40",
                 ].join(" ")}
               >
-                <div
+                <span
                   className={[
-                    "flex h-9 w-9 shrink-0 items-center justify-center rounded-full border text-sm font-bold",
+                    "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-bold transition-colors",
                     complete
-                      ? "border-emerald-600 bg-emerald-600 text-white"
+                      ? "bg-emerald-600 text-white"
                       : current
-                        ? "border-emerald-600 bg-white dark:bg-slate-950 text-emerald-700 dark:text-emerald-400"
-                        : "border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-400 dark:text-slate-500",
+                        ? "bg-indigo-600 text-white shadow-xs"
+                        : "bg-slate-100 text-slate-500 dark:bg-obsidian-800 dark:text-slate-400",
                   ].join(" ")}
                 >
-                  {complete ? <i className="fas fa-check text-xs" aria-hidden="true" /> : number}
-                </div>
+                  {complete ? <Check className="h-4 w-4" aria-hidden="true" /> : number}
+                </span>
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-slate-900 dark:text-white">{step.label}</p>
-                  <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">{step.description}</p>
+                  <p
+                    className={[
+                      "truncate text-xs font-bold",
+                      current
+                        ? "text-indigo-700 dark:text-indigo-200"
+                        : complete
+                          ? "text-emerald-800 dark:text-emerald-300"
+                          : "text-slate-600 dark:text-slate-300",
+                    ].join(" ")}
+                  >
+                    {step.label}
+                  </p>
+                  {step.description && (
+                    <p className="mt-0.5 truncate text-[11px] text-slate-500 dark:text-slate-400">
+                      {step.description}
+                    </p>
+                  )}
                 </div>
-              </div>
+              </button>
             );
           })}
         </div>

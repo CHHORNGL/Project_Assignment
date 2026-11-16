@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import {
-  ArrowRight,
   CheckCircle2,
+  ChevronRight,
   Cpu,
   Globe2,
   Laptop,
@@ -17,7 +17,12 @@ import {
 import type { AppBootstrap, LoginActivityEntry, ThemeMode } from "@/types/app";
 import { WorkspaceShell } from "@/components/layout/WorkspaceShell";
 import { AccountHeaderTabs, formatAccountTimestamp } from "@/components/user/AccountHeaderTabs";
-import { AccountSectionCard, AccountSwitch } from "@/components/user/AccountPrimitives";
+import {
+  ACCOUNT_TONE_CLASSES,
+  AccountSectionCard,
+  AccountSwitch,
+  MobileSectionLabel,
+} from "@/components/user/AccountPrimitives";
 import { useTheme } from "@/context/ThemeContext";
 import { buildNavSections } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
@@ -36,23 +41,23 @@ function ThemeMiniPreview({ mode }: { mode: ThemeMode }) {
     return (
       <div
         aria-hidden="true"
-        className="flex h-20 w-full overflow-hidden rounded-lg border border-[#cbd0dd] bg-[#f5f7fa]"
+        className="flex h-16 w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-50"
       >
-        <div className="w-8 border-r border-[#e3e6ed] bg-white p-1.5">
-          <div className="mb-1.5 h-1.5 w-4 rounded-full bg-[#3874ff]" />
+        <div className="w-6 border-r border-slate-200 bg-white p-1.5">
+          <div className="mb-1.5 h-1.5 w-3 rounded-full bg-indigo-500" />
           <div className="space-y-1">
-            <div className="h-1 w-full rounded bg-[#cbd0dd]" />
-            <div className="h-1 w-3/4 rounded bg-[#e3e6ed]" />
+            <div className="h-1 w-full rounded bg-slate-300" />
+            <div className="h-1 w-3/4 rounded bg-slate-200" />
           </div>
         </div>
         <div className="flex-1 p-2">
-          <div className="mb-2 flex items-center justify-between">
-            <div className="h-1.5 w-10 rounded-full bg-[#31374a]/25" />
-            <div className="h-2 w-2 rounded-full bg-[#3874ff]" />
+          <div className="mb-1.5 flex items-center justify-between">
+            <div className="h-1.5 w-8 rounded-full bg-slate-300" />
+            <div className="h-2 w-2 rounded-full bg-indigo-500" />
           </div>
           <div className="grid grid-cols-2 gap-1.5">
-            <div className="h-7 rounded border border-[#e3e6ed] bg-white" />
-            <div className="h-7 rounded border border-[#e3e6ed] bg-white" />
+            <div className="h-6 rounded border border-slate-200 bg-white" />
+            <div className="h-6 rounded border border-slate-200 bg-white" />
           </div>
         </div>
       </div>
@@ -63,23 +68,23 @@ function ThemeMiniPreview({ mode }: { mode: ThemeMode }) {
     return (
       <div
         aria-hidden="true"
-        className="flex h-20 w-full overflow-hidden rounded-lg border border-[#2b3245] bg-[#0f111a]"
+        className="flex h-16 w-full overflow-hidden rounded-xl border border-slate-800 bg-obsidian-950"
       >
-        <div className="w-8 border-r border-[#2b3245] bg-[#141824] p-1.5">
-          <div className="mb-1.5 h-1.5 w-4 rounded-full bg-[#3874ff]" />
+        <div className="w-6 border-r border-slate-800 bg-obsidian-900 p-1.5">
+          <div className="mb-1.5 h-1.5 w-3 rounded-full bg-indigo-500" />
           <div className="space-y-1">
-            <div className="h-1 w-full rounded bg-[#373e53]" />
-            <div className="h-1 w-3/4 rounded bg-[#2b3245]" />
+            <div className="h-1 w-full rounded bg-slate-700" />
+            <div className="h-1 w-3/4 rounded bg-slate-800" />
           </div>
         </div>
         <div className="flex-1 p-2">
-          <div className="mb-2 flex items-center justify-between">
-            <div className="h-1.5 w-10 rounded-full bg-[#9fa6bc]/30" />
-            <div className="h-2 w-2 rounded-full bg-[#3874ff]" />
+          <div className="mb-1.5 flex items-center justify-between">
+            <div className="h-1.5 w-8 rounded-full bg-slate-700" />
+            <div className="h-2 w-2 rounded-full bg-indigo-500" />
           </div>
           <div className="grid grid-cols-2 gap-1.5">
-            <div className="h-7 rounded border border-[#2b3245] bg-[#141824]" />
-            <div className="h-7 rounded border border-[#2b3245] bg-[#141824]" />
+            <div className="h-6 rounded border border-slate-800 bg-obsidian-900" />
+            <div className="h-6 rounded border border-slate-800 bg-obsidian-900" />
           </div>
         </div>
       </div>
@@ -89,17 +94,17 @@ function ThemeMiniPreview({ mode }: { mode: ThemeMode }) {
   return (
     <div
       aria-hidden="true"
-      className="grid h-20 w-full grid-cols-2 overflow-hidden rounded-lg border border-[#cbd0dd] dark:border-[#373e53]"
+      className="grid h-16 w-full grid-cols-2 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700"
     >
-      <div className="border-r border-[#cbd0dd] bg-[#f5f7fa] p-2 dark:border-[#373e53]">
-        <div className="mb-1.5 h-1.5 w-6 rounded-full bg-[#3874ff]" />
-        <div className="h-8 rounded border border-[#e3e6ed] bg-white" />
+      <div className="border-r border-slate-200 bg-slate-50 p-2 dark:border-slate-700">
+        <div className="mb-1.5 h-1.5 w-5 rounded-full bg-indigo-500" />
+        <div className="h-6 rounded border border-slate-200 bg-white" />
       </div>
-      <div className="bg-[#0f111a] p-2">
+      <div className="bg-obsidian-950 p-2">
         <div className="mb-1.5 flex justify-end">
-          <div className="h-2 w-2 rounded-full bg-[#3874ff]" />
+          <div className="h-2 w-2 rounded-full bg-indigo-500" />
         </div>
-        <div className="h-8 rounded border border-[#2b3245] bg-[#141824]" />
+        <div className="h-6 rounded border border-slate-800 bg-obsidian-900" />
       </div>
     </div>
   );
@@ -115,25 +120,21 @@ export default function SettingsPage({ bootstrap }: { bootstrap: AppBootstrap<Se
   const themeOptions: Array<{
     value: ThemeMode;
     label: string;
-    desc: string;
     icon: React.ComponentType<{ className?: string }>;
   }> = [
     {
       value: "light",
-      label: isKhmer ? "ពន្លឺ (Light)" : "Light Mode",
-      desc: isKhmer ? "ផ្ទៃភ្លឺច្បាស់សម្រាប់ពេលថ្ងៃ" : "Clean daylight slate workspace",
+      label: isKhmer ? "ពន្លឺ (Light)" : "Light",
       icon: Sun,
     },
     {
       value: "dark",
-      label: isKhmer ? "ងងឹត (Dark)" : "Dark Mode",
-      desc: isKhmer ? "ផ្ទៃងងឹតស្រទន់កាត់បន្ថយពន្លឺភ្នែក" : "Low-glare nocturnal palette",
+      label: isKhmer ? "ងងឹត (Dark)" : "Dark",
       icon: Moon,
     },
     {
       value: "system",
-      label: isKhmer ? "តាមប្រព័ន្ធ (System)" : "System Auto",
-      desc: isKhmer ? "ប្តូរដោយស្វ័យប្រវត្តិតាមឧបករណ៍" : "Matches your OS appearance",
+      label: isKhmer ? "ស្វ័យប្រវត្តិ" : "System",
       icon: Laptop,
     },
   ];
@@ -155,7 +156,8 @@ export default function SettingsPage({ bootstrap }: { bootstrap: AppBootstrap<Se
     },
   ];
 
-  const activeThemeLabel = themeOptions.find((t) => t.value === selectedTheme)?.label || selectedTheme;
+  const activeThemeLabel =
+    themeOptions.find((t) => t.value === selectedTheme)?.label || selectedTheme;
 
   return (
     <WorkspaceShell
@@ -166,7 +168,7 @@ export default function SettingsPage({ bootstrap }: { bootstrap: AppBootstrap<Se
       headerActions={
         <a href={d.profileUrl} className="ai-btn-secondary h-9 px-3 text-xs">
           <UserCircle className="h-3.5 w-3.5" />
-          <span>{isKhmer ? "កែសម្រួលប្រវត្តិរូប" : "Edit Profile"}</span>
+          <span className="hidden sm:inline">{isKhmer ? "ប្រវត្តិរូប" : "Profile"}</span>
         </a>
       }
     >
@@ -179,310 +181,262 @@ export default function SettingsPage({ bootstrap }: { bootstrap: AppBootstrap<Se
         twoFactorEnabled={twoFactor}
       />
 
-      <div className="grid gap-6 xl:grid-cols-12">
-        {/* Main Preferences Form */}
-        <form method="post" action={d.submitUrl} className="space-y-6 xl:col-span-8">
+      <div className="mx-auto w-full max-w-2xl space-y-6 pb-4">
+        <form method="post" action={d.submitUrl} className="space-y-5">
           <input type="hidden" name="csrf_token" value={bootstrap.csrfToken} />
 
-          {/* Appearance Theme Card */}
-          <AccountSectionCard
-            delayIndex={1}
-            tone="blue"
-            icon={<Palette className="h-4 w-4" />}
-            title={isKhmer ? "រចនាប័ទ្មបង្ហាញ (Theme)" : "Interface Appearance"}
-            subtitle={
-              isKhmer
-                ? "រក្សាទុកជាប់លាប់រវាងឧបករណ៍ និងកម្មវិធីរុករកទាំងអស់។"
-                : "Changes preview instantly and sync across your signed-in sessions."
-            }
-            action={
-              <span className="inline-flex items-center rounded-md border border-[#cbd0dd] bg-[#f5f7fa] px-2.5 py-1 text-[11px] font-semibold text-[#31374a] dark:border-[#373e53] dark:bg-[#181d2b] dark:text-[#eff2f6]">
-                {activeThemeLabel}
-              </span>
-            }
-          >
-            <div className="grid gap-3.5 sm:grid-cols-3">
-              {themeOptions.map((opt) => {
-                const Icon = opt.icon;
-                const active = selectedTheme === opt.value;
-                return (
-                  <label
-                    key={opt.value}
-                    className={cn(
-                      "group flex cursor-pointer flex-col gap-3 rounded-xl border p-3.5 transition-all duration-150",
-                      active
-                        ? "border-[#3874ff] bg-[#e5edff]/35 ring-2 ring-[#3874ff]/20 dark:bg-[#3874ff]/10"
-                        : "border-[#cbd0dd] bg-white hover:border-[#85a9ff] dark:border-[#2b3245] dark:bg-[#0f111a]/50 dark:hover:border-[#373e53]",
-                    )}
-                  >
-                    <input
-                      type="radio"
-                      name="theme"
-                      value={opt.value}
-                      checked={active}
-                      onChange={() => {
-                        setSelectedTheme(opt.value);
-                        void setTheme(opt.value);
-                      }}
-                      className="sr-only"
-                    />
-
-                    <ThemeMiniPreview mode={opt.value} />
-
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-1.5">
+          {/* Appearance Picker */}
+          <div>
+            <MobileSectionLabel>
+              {isKhmer ? "រចនាប័ទ្មបង្ហាញ" : "Appearance"}
+            </MobileSectionLabel>
+            <AccountSectionCard
+              delayIndex={1}
+              tone="blue"
+              icon={<Palette className="h-4 w-4" />}
+              title={isKhmer ? "រចនាប័ទ្មពណ៌ (Theme)" : "Interface Theme"}
+              subtitle={
+                isKhmer
+                  ? "ប្តូរភ្លាមៗ និងរក្សាទុកឆ្លងឧបករណ៍"
+                  : "Live preview across your signed-in devices"
+              }
+              action={
+                <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-bold text-slate-700 dark:bg-obsidian-800 dark:text-slate-200">
+                  {activeThemeLabel}
+                </span>
+              }
+            >
+              <div className="grid grid-cols-3 gap-2.5">
+                {themeOptions.map((opt) => {
+                  const Icon = opt.icon;
+                  const active = selectedTheme === opt.value;
+                  return (
+                    <label
+                      key={opt.value}
+                      className={cn(
+                        "flex cursor-pointer flex-col gap-2.5 rounded-2xl border p-2.5 transition-all",
+                        active
+                          ? "border-indigo-500 bg-indigo-500/5 ring-2 ring-indigo-500/20"
+                          : "border-slate-200/80 bg-slate-50/40 hover:border-indigo-300 dark:border-slate-800 dark:bg-obsidian-950/50",
+                      )}
+                    >
+                      <input
+                        type="radio"
+                        name="theme"
+                        value={opt.value}
+                        checked={active}
+                        onChange={() => {
+                          setSelectedTheme(opt.value);
+                          void setTheme(opt.value);
+                        }}
+                        className="sr-only"
+                      />
+                      <ThemeMiniPreview mode={opt.value} />
+                      <div className="flex items-center justify-between gap-1 px-0.5">
+                        <span className="inline-flex items-center gap-1.5 truncate text-xs font-bold text-slate-900 dark:text-white">
                           <Icon
                             className={cn(
                               "h-3.5 w-3.5 shrink-0",
-                              active ? "text-[#3874ff]" : "text-[#6e7891] dark:text-[#8a94ad]",
+                              active ? "text-indigo-500" : "text-slate-400",
                             )}
                           />
-                          <p className="truncate text-xs font-bold text-[#141824] dark:text-[#eff2f6]">
-                            {opt.label}
-                          </p>
-                        </div>
-                        <p className="mt-1 text-[11px] leading-snug text-[#6e7891] dark:text-[#8a94ad]">
-                          {opt.desc}
-                        </p>
+                          <span className="truncate">{opt.label}</span>
+                        </span>
+                        {active && <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-indigo-500" />}
                       </div>
-                      <CheckCircle2
-                        className={cn(
-                          "h-4 w-4 shrink-0 transition-opacity",
-                          active ? "text-[#3874ff] opacity-100" : "opacity-0",
-                        )}
-                      />
-                    </div>
-                  </label>
-                );
-              })}
-            </div>
-          </AccountSectionCard>
+                    </label>
+                  );
+                })}
+              </div>
+            </AccountSectionCard>
+          </div>
 
-          {/* Language Preference Card */}
-          <AccountSectionCard
-            delayIndex={2}
-            tone="blue"
-            icon={<Globe2 className="h-4 w-4" />}
-            title={isKhmer ? "ភាសាប្រព័ន្ធ (Language)" : "Display Language & Locale"}
-            subtitle={
-              isKhmer
-                ? "ជ្រើសរើសភាសាសម្រាប់ម៉ឺនុយ របាយការណ៍ និងការជូនដំណឹង។"
-                : "Select the default language used for navigation, AI output, and alerts."
-            }
-          >
-            <div className="grid gap-3 sm:grid-cols-2">
+          {/* Language Picker */}
+          <div>
+            <MobileSectionLabel>
+              {isKhmer ? "ភាសាប្រព័ន្ធ" : "Display Language"}
+            </MobileSectionLabel>
+            <div className="divide-y divide-slate-200/75 overflow-hidden rounded-3xl border border-slate-200/85 bg-white shadow-sm dark:divide-slate-800 dark:border-slate-800 dark:bg-obsidian-900">
               {languageOptions.map((item) => {
                 const isSelected = bootstrap.lang === item.code;
                 return (
                   <a
                     key={item.code}
                     href={item.href}
-                    className={cn(
-                      "flex items-center justify-between gap-3 rounded-xl border px-4 py-3.5 transition-all duration-150",
-                      isSelected
-                        ? "border-[#3874ff] bg-[#e5edff]/35 ring-2 ring-[#3874ff]/15 dark:bg-[#3874ff]/10"
-                        : "border-[#cbd0dd] bg-[#f5f7fa]/60 hover:border-[#85a9ff] hover:bg-white dark:border-[#2b3245] dark:bg-[#0f111a]/50 dark:hover:border-[#373e53] dark:hover:bg-[#181d2b]",
-                    )}
+                    className="flex items-center justify-between gap-3 px-4 py-3.5 transition hover:bg-slate-50/75 dark:hover:bg-obsidian-850 sm:px-5"
                   >
                     <div className="flex min-w-0 items-center gap-3">
                       <span
-                        className={`fi ${item.flagClass} h-5 w-6 shrink-0 rounded-sm border border-[#cbd0dd]/60`}
-                        aria-hidden="true"
-                      />
+                        className={cn(
+                          "flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border",
+                          isSelected ? ACCOUNT_TONE_CLASSES.blue : ACCOUNT_TONE_CLASSES.slate,
+                        )}
+                      >
+                        <Globe2 className="h-4 w-4" />
+                      </span>
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-bold text-[#141824] dark:text-[#eff2f6]">
-                          {item.name}
-                        </p>
-                        <p className="truncate text-[11px] text-[#6e7891] dark:text-[#8a94ad]">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`fi ${item.flagClass} h-4 w-5 shrink-0 rounded-sm border border-slate-200/60`}
+                            aria-hidden="true"
+                          />
+                          <p className="truncate text-sm font-bold text-slate-900 dark:text-white">
+                            {item.name}
+                          </p>
+                        </div>
+                        <p className="mt-0.5 truncate text-xs text-slate-500 dark:text-slate-400">
                           {item.subtitle}
                         </p>
                       </div>
                     </div>
                     {isSelected ? (
-                      <CheckCircle2 className="h-4 w-4 shrink-0 text-[#3874ff]" />
+                      <CheckCircle2 className="h-5 w-5 shrink-0 text-indigo-600 dark:text-indigo-400" />
                     ) : (
-                      <span className="h-4 w-4 shrink-0 rounded-full border border-[#cbd0dd] dark:border-[#373e53]" />
+                      <span className="h-5 w-5 shrink-0 rounded-full border-2 border-slate-300 dark:border-slate-700" />
                     )}
                   </a>
                 );
               })}
             </div>
-          </AccountSectionCard>
+          </div>
 
-          {/* Two-Factor Policy & Save Footer Card */}
-          <AccountSectionCard
-            delayIndex={3}
-            tone="emerald"
-            icon={<ShieldCheck className="h-4 w-4" />}
-            title={isKhmer ? "សុវត្ថិភាពពេលចូលគណនី" : "Sign-In Protection"}
-            subtitle={
-              isKhmer
-                ? "គ្រប់គ្រងការផ្ទៀងផ្ទាត់ ២ ជាន់សម្រាប់ការចូលប្រើប្រាស់គណនី។"
-                : "Configure secondary verification requirements when logging into your workspace."
-            }
-          >
-            <label className="flex cursor-pointer items-center justify-between gap-4 rounded-xl border border-[#e3e6ed] bg-[#f5f7fa]/75 p-4 transition hover:border-[#cbd0dd] dark:border-[#2b3245] dark:bg-[#0f111a]/65 dark:hover:border-[#373e53]">
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="text-sm font-bold text-[#141824] dark:text-[#eff2f6]">
-                    {isKhmer ? "ការផ្ទៀងផ្ទាត់ពីរជាន់ (2FA Email OTP)" : "Two-Factor Email Verification (2FA)"}
-                  </p>
+          {/* Two-Factor Toggle */}
+          <div>
+            <MobileSectionLabel>
+              {isKhmer ? "សុវត្ថិភាពពេលចូលគណនី" : "Sign-In Protection"}
+            </MobileSectionLabel>
+            <div className="overflow-hidden rounded-3xl border border-slate-200/85 bg-white shadow-sm dark:border-slate-800 dark:bg-obsidian-900">
+              <label className="flex cursor-pointer items-center justify-between gap-3 px-4 py-4 sm:px-5">
+                <div className="flex min-w-0 items-center gap-3">
                   <span
                     className={cn(
-                      "rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
-                      twoFactor
-                        ? "bg-[#d9fbd0] text-[#1c6c09] dark:bg-[#25b003]/20 dark:text-[#90ee7a]"
-                        : "bg-[#e3e6ed] text-[#525b75] dark:bg-[#1e2436] dark:text-[#9fa6bc]",
+                      "flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border",
+                      twoFactor ? ACCOUNT_TONE_CLASSES.emerald : ACCOUNT_TONE_CLASSES.slate,
                     )}
                   >
-                    {twoFactor ? (isKhmer ? "បានបើក" : "Enabled") : isKhmer ? "បានបិទ" : "Disabled"}
+                    <ShieldCheck className="h-4 w-4" />
                   </span>
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-slate-900 dark:text-white">
+                      {isKhmer ? "ការផ្ទៀងផ្ទាត់ ២ ជាន់ (2FA Email OTP)" : "Two-Factor Email OTP"}
+                    </p>
+                    <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                      {isKhmer
+                        ? "ទាមទារកូដ OTP តាមអ៊ីមែលនៅពេលចូលពីឧបករណ៍ថ្មី"
+                        : "Require a one-time email verification code on new sign-ins"}
+                    </p>
+                  </div>
                 </div>
-                <p className="mt-1 text-xs text-[#6e7891] dark:text-[#8a94ad]">
-                  {isKhmer
-                    ? "ទាមទារកូដ OTP តាមអ៊ីមែលនៅពេលចូលពីឧបករណ៍ថ្មី"
-                    : "Require a one-time email verification code during account sign-in."}
-                </p>
-              </div>
-              <AccountSwitch
-                name="two_factor_enabled"
-                value="y"
-                checked={twoFactor}
-                label={isKhmer ? "បើក ឬបិទ 2FA OTP" : "Toggle Two-Factor Email Verification"}
-                onChange={setTwoFactor}
-              />
-            </label>
-
-            <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-[#e3e6ed] pt-4 dark:border-[#2b3245]">
-              <p className="text-xs text-[#6e7891] dark:text-[#8a94ad]">
-                {isKhmer
-                  ? "ចុចរក្សាទុកដើម្បីបញ្ជាក់ការផ្លាស់ប្តូរការកំណត់គណនី។"
-                  : "Save preferences to persist theme and 2FA settings to your account."}
-              </p>
-              <div className="flex items-center gap-2.5">
-                <a href={d.profileUrl} className="ai-btn-secondary h-9 px-3.5 text-xs">
-                  {isKhmer ? "ប្រវត្តិរូប" : "Edit Profile"}
-                </a>
-                <button type="submit" className="ai-btn-primary h-9 px-4 text-xs">
-                  <Save className="h-3.5 w-3.5" />
-                  <span>{isKhmer ? "រក្សាទុកការកំណត់" : "Save Settings"}</span>
-                </button>
-              </div>
+                <AccountSwitch
+                  name="two_factor_enabled"
+                  value="y"
+                  checked={twoFactor}
+                  label={isKhmer ? "បើក ឬបិទ 2FA OTP" : "Toggle Two-Factor Email Verification"}
+                  onChange={setTwoFactor}
+                />
+              </label>
             </div>
-          </AccountSectionCard>
+          </div>
+
+          <button
+            type="submit"
+            className="ai-btn-primary h-11 w-full rounded-2xl text-sm font-bold shadow-sm"
+          >
+            <Save className="h-4 w-4" />
+            <span>{isKhmer ? "រក្សាទុកការកំណត់" : "Save Preferences"}</span>
+          </button>
         </form>
 
-        {/* Right Column: Workspace Summary & Recent Login Devices */}
-        <div className="space-y-6 xl:col-span-4">
-          <AccountSectionCard
-            delayIndex={2}
-            tone="slate"
-            icon={<Cpu className="h-4 w-4" />}
-            title={isKhmer ? "សង្ខេបការកំណត់បច្ចុប្បន្ន" : "Workspace Summary"}
-            subtitle={isKhmer ? "ការកំណត់សកម្មសម្រាប់គណនីនេះ" : "Active runtime configuration"}
-          >
-            <dl className="divide-y divide-[#e3e6ed] text-xs dark:divide-[#2b3245]">
-              <div className="flex items-center justify-between py-2.5 first:pt-0">
-                <dt className="text-[#6e7891] dark:text-[#8a94ad]">
+        {/* Runtime Summary & Recent Login Devices */}
+        <div>
+          <MobileSectionLabel>
+            {isKhmer ? "ទិដ្ឋភាពទូទៅ និងឧបករណ៍" : "Configuration & Devices"}
+          </MobileSectionLabel>
+          <div className="overflow-hidden rounded-3xl border border-slate-200/85 bg-white shadow-sm dark:border-slate-800 dark:bg-obsidian-900">
+            <dl className="divide-y divide-slate-200/75 px-4 text-xs dark:divide-slate-800 sm:px-5">
+              <div className="flex items-center justify-between py-3">
+                <dt className="text-slate-500 dark:text-slate-400">
                   {isKhmer ? "រចនាប័ទ្ម" : "Active Theme"}
                 </dt>
-                <dd className="font-semibold text-[#141824] dark:text-[#eff2f6]">
-                  {activeThemeLabel}
-                </dd>
+                <dd className="font-bold text-slate-900 dark:text-white">{activeThemeLabel}</dd>
               </div>
-              <div className="flex items-center justify-between py-2.5">
-                <dt className="text-[#6e7891] dark:text-[#8a94ad]">
+              <div className="flex items-center justify-between py-3">
+                <dt className="text-slate-500 dark:text-slate-400">
                   {isKhmer ? "ភាសា" : "Interface Language"}
                 </dt>
-                <dd className="font-semibold text-[#141824] dark:text-[#eff2f6]">
+                <dd className="font-bold text-slate-900 dark:text-white">
                   {isKhmer ? "ភាសាខ្មែរ" : "English (US)"}
                 </dd>
               </div>
-              <div className="flex items-center justify-between py-2.5">
-                <dt className="text-[#6e7891] dark:text-[#8a94ad]">
-                  {isKhmer ? "ការផ្ទៀងផ្ទាត់ ២ ជាន់" : "Two-Factor Auth"}
+              <div className="flex items-center justify-between py-3">
+                <dt className="inline-flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
+                  <Cpu className="h-3.5 w-3.5 text-indigo-500" />
+                  <span>{isKhmer ? "ប្រព័ន្ធ AI" : "AI Engine"}</span>
                 </dt>
-                <dd
-                  className={cn(
-                    "font-semibold",
-                    twoFactor ? "text-[#1c6c09] dark:text-[#7ee864]" : "text-[#6e7891] dark:text-[#9fa6bc]",
-                  )}
-                >
-                  {twoFactor ? (isKhmer ? "បានបើក" : "Enabled") : isKhmer ? "បានបិទ" : "Disabled"}
-                </dd>
-              </div>
-              <div className="flex items-center justify-between py-2.5 last:pb-0">
-                <dt className="text-[#6e7891] dark:text-[#8a94ad]">
-                  {isKhmer ? "ម៉ូដែល AI" : "AI Engine"}
-                </dt>
-                <dd className="font-semibold text-[#3874ff]">Agri-System AI</dd>
+                <dd className="font-bold text-indigo-600 dark:text-indigo-300">Agri-System AI</dd>
               </div>
             </dl>
-          </AccountSectionCard>
 
-          <AccountSectionCard
-            delayIndex={3}
-            tone="blue"
-            icon={<MonitorSmartphone className="h-4 w-4" />}
-            title={isKhmer ? "សម័យចូលគណនីថ្មីៗ" : "Recent Login Devices"}
-            subtitle={isKhmer ? "ឧបករណ៍ចំនួន ៥ ចុងក្រោយ" : "Latest 5 device sign-ins"}
-          >
-            {d.recentActivities.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-[#cbd0dd] bg-[#f5f7fa]/60 px-4 py-6 text-center text-xs text-[#6e7891] dark:border-[#373e53] dark:bg-[#0f111a]/50 dark:text-[#8a94ad]">
-                {isKhmer ? "មិនទាន់មានទិន្នន័យសម័យចូលទេ។" : "No login sessions recorded yet."}
+            <div className="border-t border-slate-200/75 p-4 dark:border-slate-800 sm:p-5">
+              <div className="mb-3 flex items-center justify-between">
+                <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                  {isKhmer ? "ឧបករណ៍ចូលថ្មីៗ" : "Recent Logins"}
+                </p>
+                <a
+                  href={d.loginActivityUrl}
+                  className="inline-flex items-center gap-0.5 text-xs font-bold text-indigo-600 hover:underline dark:text-indigo-300"
+                >
+                  <span>{isKhmer ? "មើលទាំងអស់" : "Manage all"}</span>
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </a>
               </div>
-            ) : (
-              <ul className="space-y-2.5">
-                {d.recentActivities.map((act) => {
-                  const isMobile = (act.device_type || "").toLowerCase().includes("mobile");
-                  const DeviceIcon = isMobile ? Smartphone : act.device_type ? Laptop : MonitorSmartphone;
-                  return (
-                    <li
-                      key={act.activity_id}
-                      className="rounded-xl border border-[#e3e6ed] bg-[#f5f7fa]/65 p-3 text-xs transition hover:border-[#cbd0dd] dark:border-[#2b3245] dark:bg-[#0f111a]/60 dark:hover:border-[#373e53]"
-                    >
-                      <div className="flex items-start justify-between gap-2">
+
+              {d.recentActivities.length === 0 ? (
+                <p className="rounded-2xl border border-dashed border-slate-200 py-5 text-center text-xs text-slate-400 dark:border-slate-800">
+                  {isKhmer ? "មិនទាន់មានទិន្នន័យសម័យចូលទេ។" : "No login sessions recorded yet."}
+                </p>
+              ) : (
+                <ul className="space-y-2">
+                  {d.recentActivities.map((act) => {
+                    const isMobile = (act.device_type || "").toLowerCase().includes("mobile");
+                    const DeviceIcon = isMobile
+                      ? Smartphone
+                      : act.device_type
+                        ? Laptop
+                        : MonitorSmartphone;
+                    return (
+                      <li
+                        key={act.activity_id}
+                        className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200/75 bg-slate-50/70 px-3.5 py-2.5 text-xs dark:border-slate-800 dark:bg-obsidian-950/60"
+                      >
                         <div className="flex min-w-0 items-center gap-2.5">
-                          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[#cbd0dd]/80 bg-white text-[#3874ff] dark:border-[#373e53] dark:bg-[#141824]">
+                          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white text-indigo-600 shadow-sm dark:bg-obsidian-900 dark:text-indigo-300">
                             <DeviceIcon className="h-4 w-4" />
                           </span>
                           <div className="min-w-0">
-                            <p className="truncate font-semibold text-[#141824] dark:text-[#eff2f6]">
+                            <p className="truncate font-bold text-slate-900 dark:text-white">
                               {act.browser || "Browser"} · {act.os || "OS"}
                             </p>
-                            <p className="mt-0.5 truncate font-mono text-[11px] text-[#6e7891] dark:text-[#8a94ad]">
-                              {act.ip_address || "—"} · {act.login_route || "/auth/login"}
+                            <p className="truncate text-[11px] text-slate-500 dark:text-slate-400">
+                              <span className="font-mono">{act.ip_address || "—"}</span>
+                              {(act.last_seen_at || act.created_at) &&
+                                ` · ${formatAccountTimestamp(act.last_seen_at || act.created_at)}`}
                             </p>
                           </div>
                         </div>
-
                         {act.is_current && (
-                          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[#d9fbd0] px-2 py-0.5 text-[10px] font-bold text-[#1c6c09] dark:bg-[#25b003]/20 dark:text-[#90ee7a]">
-                            <span className="h-1.5 w-1.5 rounded-full bg-[#25b003]" />
+                          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:text-emerald-300">
+                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                             {isKhmer ? "បច្ចុប្បន្ន" : "Current"}
                           </span>
                         )}
-                      </div>
-                      {(act.last_seen_at || act.created_at) && (
-                        <p className="mt-2 pl-10 text-[11px] text-[#8a94ad]">
-                          {formatAccountTimestamp(act.last_seen_at || act.created_at)}
-                        </p>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-
-            <a
-              href={d.loginActivityUrl}
-              className="mt-4 flex items-center justify-center gap-1.5 rounded-xl border border-[#cbd0dd] bg-[#f5f7fa] py-2.5 text-xs font-semibold text-[#31374a] transition hover:bg-[#eff2f6] dark:border-[#373e53] dark:bg-[#181d2b] dark:text-[#eff2f6] dark:hover:bg-[#22283a]"
-            >
-              <span>{isKhmer ? "គ្រប់គ្រងឧបករណ៍ទាំងអស់" : "Manage All Devices"}</span>
-              <ArrowRight className="h-3.5 w-3.5" />
-            </a>
-          </AccountSectionCard>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </WorkspaceShell>

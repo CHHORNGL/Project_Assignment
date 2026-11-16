@@ -19,18 +19,18 @@ export default function StepCard({
 }: StepCardProps) {
   return (
     <section className="diag-step-card">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+      <div className="flex flex-col gap-3 border-b border-slate-100 pb-4 dark:border-slate-800/80 lg:flex-row lg:items-start lg:justify-between">
         <div className="max-w-2xl">
           {eyebrow ? (
-            <p className="text-xs font-semibold uppercase text-emerald-700 dark:text-emerald-400">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
               {eyebrow}
             </p>
           ) : null}
-          <h2 className="mt-2 font-display text-2xl font-bold text-slate-900 dark:text-white md:text-[2rem]">
+          <h2 className="mt-1 font-display text-xl font-bold text-slate-900 dark:text-white sm:text-2xl">
             {title}
           </h2>
           {description ? (
-            <p className="mt-2 text-sm leading-7 text-slate-600 dark:text-slate-400 md:text-base">
+            <p className="mt-1.5 text-xs leading-relaxed text-slate-500 dark:text-slate-400 sm:text-sm">
               {description}
             </p>
           ) : null}
@@ -38,9 +38,11 @@ export default function StepCard({
         {aside ? <div className="shrink-0">{aside}</div> : null}
       </div>
 
-      <div className="mt-6">{children}</div>
+      <div className="mt-5">{children}</div>
 
-      {footer ? <div className="mt-6 border-t border-slate-100 dark:border-slate-900 pt-5">{footer}</div> : null}
+      {footer ? (
+        <div className="mt-6 border-t border-slate-100 pt-4 dark:border-slate-800/80">{footer}</div>
+      ) : null}
     </section>
   );
 }

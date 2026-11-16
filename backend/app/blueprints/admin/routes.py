@@ -45,7 +45,7 @@ from app.utils.react_bootstrap import (
     render_react_page,
 )
 from flask_login import current_user, login_required
-from sqlalchemy import func, or_
+from sqlalchemy import case, func, or_
 from sqlalchemy.exc import IntegrityError
 
 from app.extensions import db
@@ -175,8 +175,18 @@ def premium_settings():
         elif action == "create_coupon":
             code = request.form.get("code", "").strip().upper()
             discount_type = request.form.get("discount_type", "percent")
-            discount_value = float(request.form.get("discount_value", 10.0))
-            max_uses = int(request.form.get("max_uses", 100))
+            if discount_type not in {"percent", "fixed"}:
+                discount_type = "percent"
+            try:
+                discount_value = max(0.0, float(request.form.get("discount_value", 10.0) or 0.0))
+            except (TypeError, ValueError):
+                flash("Invalid discount value.", "danger")
+                return redirect(url_for("admin.premium_settings"))
+            try:
+                max_uses = max(1, int(request.form.get("max_uses", 100) or 100))
+            except (TypeError, ValueError):
+                flash("Invalid max uses value.", "danger")
+                return redirect(url_for("admin.premium_settings"))
             expiry_str = request.form.get("expires_at", "").strip()
             
             expires_at = None
@@ -277,7 +287,17 @@ def premium_settings():
     premium_users_count = User.query.filter_by(is_premium=True).count()
 
     bakong_config = get_bakong_config()
-    recent_transactions = PaymentTransaction.query.order_by(PaymentTransaction.created_at.desc()).limit(20).all()
+    recent_transactions = PaymentTransaction.query.order_by(PaymentTransaction.created_at.desc()).limit(30).all()
+    tx_stats = {
+        "paidCount": PaymentTransaction.query.filter_by(status="PAID").count(),
+        "pendingCount": PaymentTransaction.query.filter_by(status="PENDING").count(),
+        "totalRevenueUsd": float(
+            db.session.query(func.coalesce(func.sum(PaymentTransaction.amount), 0.0))
+            .filter(PaymentTransaction.status == "PAID", PaymentTransaction.currency == "USD")
+            .scalar()
+            or 0.0
+        ),
+    }
 
     return render_react_page(
         bootstrap_payload=build_admin_premium_settings_bootstrap(
@@ -294,6 +314,7 @@ def premium_settings():
             premium_count=premium_users_count,
             bakong_config=bakong_config,
             recent_transactions=recent_transactions,
+            tx_stats=tx_stats,
         ),
         title="Premium & Pricing Settings",
     )
@@ -358,6 +379,25 @@ def check_bakong_transaction(tx_id):
     return redirect(url_for("admin.premium_settings"))
 
 
+def _get_server_location_defaults() -> tuple[str, str, str]:
+    """Return configured server monitoring location name, latitude, and longitude strings."""
+    loc_name_setting = SiteSetting.query.get("SERVER_LOCATION_NAME")
+    loc_lat_setting = SiteSetting.query.get("SERVER_LOCATION_LAT")
+    loc_lon_setting = SiteSetting.query.get("SERVER_LOCATION_LON")
+    return (
+        loc_name_setting.value.strip() if loc_name_setting and loc_name_setting.value else "Phnom Penh, Cambodia",
+        loc_lat_setting.value.strip() if loc_lat_setting and loc_lat_setting.value else "11.5564",
+        loc_lon_setting.value.strip() if loc_lon_setting and loc_lon_setting.value else "104.9282",
+    )
+
+
+def _safe_float(raw: str, default: float) -> float:
+    try:
+        return float(raw)
+    except (TypeError, ValueError):
+        return default
+
+
 @admin_bp.route("/dashboard")
 @admin_required
 def dashboard():
@@ -366,6 +406,7 @@ def dashboard():
     pending_diagnoses = Diagnosis.query.filter_by(status="PENDING").count()
     total_chats = db.session.query(func.count(ChatMessage.session_id.distinct())).scalar() or 0
     recent_logs = AuditLog.query.order_by(AuditLog.created_at.desc()).limit(10).all()
+    location_name, location_lat_str, location_lon_str = _get_server_location_defaults()
     return render_react_page(
         bootstrap_payload=build_admin_dashboard_bootstrap(
             total_users=total_users,
@@ -375,61 +416,365 @@ def dashboard():
             recent_logs=recent_logs,
             scan_points=[],
             cesium_token=os.getenv("CESIUM_TOKEN", ""),
+            location_name=location_name,
+            location_lat=_safe_float(location_lat_str, 11.5564),
+            location_lon=_safe_float(location_lon_str, 104.9282),
         ),
         title="Admin Control Center",
     )
 
 
 # ==================================================
-# 3D WORLD VIEW
+# GLOBAL WEATHER & ATMOSPHERIC MAP
 # ==================================================
+GLOBAL_WEATHER_HUBS = [
+    ("Bangkok, Thailand", "Southeast Asia", 13.7563, 100.5018),
+    ("Ho Chi Minh City, Vietnam", "Southeast Asia", 10.8231, 106.6297),
+    ("Singapore", "Equatorial Tropics", 1.3521, 103.8198),
+    ("Tokyo, Japan", "East Asia", 35.6762, 139.6503),
+    ("Dubai, UAE", "Arid Subtropical", 25.2048, 55.2708),
+    ("London, UK", "North Atlantic", 51.5072, -0.1276),
+    ("New York, USA", "North America", 40.7128, -74.0060),
+    ("Reykjavik, Iceland", "Subpolar North", 64.1466, -21.9426),
+]
+
+CAMBODIA_WEATHER_HUBS = [
+    "Phnom Penh",
+    "Siem Reap",
+    "Battambang",
+    "Kampong Cham",
+    "Kampot",
+    "Preah Sihanouk",
+    "Mondulkiri",
+    "Stung Treng",
+    "Takeo",
+]
+
+
 @admin_bp.route("/world")
 @admin_required
 def world():
-    scan_points = []
-    cesium_token = os.getenv("CESIUM_TOKEN", "")
+    from app.blueprints.farmer.support_chat import CAMBODIA_PROVINCES
+
+    location_name, location_lat_str, location_lon_str = _get_server_location_defaults()
+    featured = set(CAMBODIA_WEATHER_HUBS)
+    scan_points = [
+        {
+            "id": f"kh-{name.lower().replace(' ', '-')}",
+            "label": name,
+            "region": "Cambodia",
+            "group": "cambodia",
+            "lat": p_lat,
+            "lng": p_lon,
+            "status": "live",
+        }
+        for name, p_lat, p_lon in CAMBODIA_PROVINCES
+        if name in featured
+    ] + [
+        {
+            "id": f"global-{name.lower().split(',')[0].replace(' ', '-')}",
+            "label": name,
+            "region": region,
+            "group": "global",
+            "lat": g_lat,
+            "lng": g_lon,
+            "status": "live",
+        }
+        for name, region, g_lat, g_lon in GLOBAL_WEATHER_HUBS
+    ]
+
     return render_react_page(
         bootstrap_payload=build_admin_world_bootstrap(
             scan_points=scan_points,
-            cesium_token=cesium_token,
+            cesium_token=os.getenv("CESIUM_TOKEN", ""),
+            default_center={
+                "lat": _safe_float(location_lat_str, 11.5564),
+                "lng": _safe_float(location_lon_str, 104.9282),
+                "label": location_name,
+            },
+            weather_api_url=url_for("admin.world_weather"),
         ),
-        title="World Map",
+        title="Global Weather Map",
     )
+
+
+@admin_bp.route("/world/weather", methods=["GET"])
+@admin_required
+def world_weather():
+    from app.blueprints.weather_intelligence.routes import build_weather_summary_response
+
+    return build_weather_summary_response()
 
 
 # ==================================================
 # 📊 EXPERT STATISTICS
 # ==================================================
+def _confidence_to_pct(value) -> float | None:
+    if value is None:
+        return None
+    num = float(value)
+    return round(num * 100.0 if num <= 1.0 else num, 1)
+
+
+def _confidence_pct_expr():
+    return case(
+        (Diagnosis.confidence <= 1.0, Diagnosis.confidence * 100.0),
+        else_=Diagnosis.confidence,
+    )
+
+
 @admin_bp.route("/expert-statistics")
 @login_required
 @permission_required("view_reports")
 def expert_statistics():
     total = Diagnosis.query.count()
-    pending = Diagnosis.query.filter_by(status="PENDING").count()
-    approved = Diagnosis.query.filter(
-        Diagnosis.status != "PENDING"
-    ).count()
+
+    raw_status_counts = (
+        db.session.query(Diagnosis.status, func.count(Diagnosis.id))
+        .group_by(Diagnosis.status)
+        .all()
+    )
+    status_counts: dict[str, int] = {}
+    for raw_status, cnt in raw_status_counts:
+        key = str(raw_status or "UNKNOWN").strip().upper()
+        status_counts[key] = status_counts.get(key, 0) + int(cnt or 0)
+
+    pending = status_counts.get("PENDING", 0)
+    resolved_total = max(0, total - pending)
+
+    avg_conf_val = (
+        db.session.query(func.avg(_confidence_pct_expr()))
+        .filter(Diagnosis.confidence.isnot(None))
+        .scalar()
+    )
+    avg_confidence = round(float(avg_conf_val), 1) if avg_conf_val is not None else None
+
+    raw_feedback = (
+        db.session.query(Diagnosis.feedback_rating, func.count(Diagnosis.id))
+        .filter(Diagnosis.feedback_rating.isnot(None))
+        .group_by(Diagnosis.feedback_rating)
+        .all()
+    )
+    feedback_counts: dict[str, int] = {}
+    for rating, cnt in raw_feedback:
+        key = str(rating or "").strip().lower()
+        if key:
+            feedback_counts[key] = feedback_counts.get(key, 0) + int(cnt or 0)
+
+    crop_rows = (
+        db.session.query(
+            Diagnosis.crop_name,
+            func.count(Diagnosis.id).label("cnt"),
+            func.avg(_confidence_pct_expr()).label("avg_conf"),
+        )
+        .group_by(Diagnosis.crop_name)
+        .order_by(func.count(Diagnosis.id).desc(), Diagnosis.crop_name.asc())
+        .limit(8)
+        .all()
+    )
+    crop_breakdown = [
+        {
+            "cropName": str(crop_name or "Unknown"),
+            "count": int(cnt or 0),
+            "avgConfidence": round(float(avg_conf), 1) if avg_conf is not None else None,
+        }
+        for crop_name, cnt, avg_conf in crop_rows
+    ]
+
+    disease_rows = (
+        db.session.query(
+            Diagnosis.disease_name,
+            func.max(Diagnosis.crop_name).label("crop_name"),
+            func.count(Diagnosis.id).label("cnt"),
+        )
+        .group_by(Diagnosis.disease_name)
+        .order_by(func.count(Diagnosis.id).desc(), Diagnosis.disease_name.asc())
+        .limit(8)
+        .all()
+    )
+    disease_breakdown = [
+        {
+            "diseaseName": str(disease_name or "Unknown"),
+            "cropName": str(crop_name or ""),
+            "count": int(cnt or 0),
+        }
+        for disease_name, crop_name, cnt in disease_rows
+    ]
+
+    reviewer_rows = (
+        db.session.query(
+            User.id,
+            User.username,
+            User.full_name,
+            func.count(Diagnosis.id).label("total_reviewed"),
+            func.sum(case((Diagnosis.status == "APPROVED", 1), else_=0)).label("approved_cnt"),
+            func.sum(case((Diagnosis.status == "REJECTED", 1), else_=0)).label("rejected_cnt"),
+        )
+        .join(Diagnosis, Diagnosis.expert_id == User.id)
+        .group_by(User.id, User.username, User.full_name)
+        .order_by(func.count(Diagnosis.id).desc(), User.username.asc())
+        .limit(10)
+        .all()
+    )
+    reviewer_stats = [
+        {
+            "expertId": int(uid),
+            "username": str(username or ""),
+            "displayName": str(full_name or username or f"Expert #{uid}"),
+            "totalReviewed": int(total_rev or 0),
+            "approvedCount": int(app_cnt or 0),
+            "rejectedCount": int(rej_cnt or 0),
+        }
+        for uid, username, full_name, total_rev, app_cnt, rej_cnt in reviewer_rows
+    ]
+
+    recent_diagnoses = (
+        Diagnosis.query
+        .order_by(Diagnosis.created_at.desc(), Diagnosis.id.desc())
+        .limit(25)
+        .all()
+    )
+    recent_cases = [
+        {
+            "id": item.id,
+            "cropName": str(item.crop_name or ""),
+            "diseaseName": str(item.disease_name or "Unknown"),
+            "status": str(item.status or "PENDING").upper(),
+            "confidencePct": _confidence_to_pct(item.confidence),
+            "farmerName": str(getattr(getattr(item, "farmer", None), "username", None) or "Farmer"),
+            "expertName": str(
+                getattr(getattr(item, "expert", None), "full_name", None)
+                or getattr(getattr(item, "expert", None), "username", None)
+                or ""
+            ),
+            "feedbackRating": str(item.feedback_rating or ""),
+            "createdAt": item.created_at.isoformat() if item.created_at else None,
+        }
+        for item in recent_diagnoses
+    ]
 
     return render_react_page(
         bootstrap_payload=build_admin_expert_stats_bootstrap(
             total_diagnoses=total,
             pending_count=pending,
-            approved_count=approved,
+            approved_count=resolved_total,
+            status_counts=status_counts,
+            avg_confidence=avg_confidence,
+            feedback_counts=feedback_counts,
+            crop_breakdown=crop_breakdown,
+            disease_breakdown=disease_breakdown,
+            reviewer_stats=reviewer_stats,
+            recent_cases=recent_cases,
         ),
         title="Expert Statistics",
+    )
+
+
+@admin_bp.route("/expert-statistics/export")
+@login_required
+@permission_required("view_reports")
+def expert_statistics_export():
+    export_format = (request.args.get("format") or "csv").strip().lower()
+    if export_format not in {"csv", "json"}:
+        abort(400)
+
+    def _csv_safe(value):
+        text = "" if value is None else str(value)
+        if text and text[0] in ("=", "+", "-", "@", "\t", "\r"):
+            return f"'{text}"
+        return text
+
+    diagnoses = (
+        Diagnosis.query
+        .order_by(Diagnosis.created_at.desc(), Diagnosis.id.desc())
+        .limit(5000)
+        .all()
+    )
+    rows = [
+        {
+            "id": item.id,
+            "crop": item.crop_name or "",
+            "disease": item.disease_name or "",
+            "status": (item.status or "").upper(),
+            "confidence_pct": _confidence_to_pct(item.confidence),
+            "farmer": getattr(getattr(item, "farmer", None), "username", None) or "",
+            "expert": getattr(getattr(item, "expert", None), "username", None) or "",
+            "feedback_rating": item.feedback_rating or "",
+            "created_at": item.created_at.isoformat() if item.created_at else "",
+        }
+        for item in diagnoses
+    ]
+
+    db.session.add(
+        AuditLog(
+            user_id=current_user.id,
+            action="EXPERT_STATS_EXPORT",
+            detail=f"format={export_format} count={len(rows)}",
+        )
+    )
+    db.session.commit()
+
+    if export_format == "json":
+        return _json_response(
+            {"exported_at": _now_dt().isoformat(), "diagnoses": rows},
+            "expert_review_statistics.json",
+        )
+    safe_csv_rows = [
+        {k: _csv_safe(v) if isinstance(v, str) else v for k, v in row.items()}
+        for row in rows
+    ]
+    return _csv_response(
+        safe_csv_rows,
+        ["id", "crop", "disease", "status", "confidence_pct", "farmer", "expert", "feedback_rating", "created_at"],
+        "expert_review_statistics.csv",
     )
 
 
 # ==================================================
 # DISEASE MANAGEMENT
 # ==================================================
+def _normalize_severity_level(raw: str | None) -> str:
+    val = (raw or "").strip().lower()
+    mapping = {
+        "low": "Low",
+        "medium": "Medium",
+        "moderate": "Medium",
+        "high": "High",
+        "critical": "Critical",
+        "severe": "Critical",
+    }
+    return mapping.get(val, "Low")
+
+
+def _apply_disease_form(disease: Disease, form_data) -> tuple[bool, str | None]:
+    crop_id = form_data.get("crop_id")
+    name = (form_data.get("name") or "").strip()
+    if not crop_id or not name:
+        return False, "Crop and disease name are required"
+
+    disease.crop_id = crop_id
+    disease.name = name
+    disease.name_kh = (form_data.get("name_kh") or "").strip() or None
+    disease.description = (form_data.get("description") or "").strip() or None
+    disease.description_kh = (form_data.get("description_kh") or "").strip() or None
+    disease.cause_explanation = (form_data.get("cause_explanation") or "").strip() or None
+    disease.cause_explanation_kh = (form_data.get("cause_explanation_kh") or "").strip() or None
+    disease.treatment = (form_data.get("treatment") or "").strip() or None
+    disease.treatment_kh = (form_data.get("treatment_kh") or "").strip() or None
+    disease.prevention_tips = (form_data.get("prevention_tips") or "").strip() or None
+    disease.prevention_tips_kh = (form_data.get("prevention_tips_kh") or "").strip() or None
+    disease.severity_level = _normalize_severity_level(form_data.get("severity_level"))
+    return True, None
+
+
 @admin_bp.route("/diseases")
 @login_required
 @permission_required("manage_crops")
 def diseases():
     diseases = Disease.query.order_by(Disease.id.desc()).all()
+    crops = Crop.query.order_by(func.lower(Crop.name).asc()).all()
     return render_react_page(
-        bootstrap_payload=build_admin_diseases_bootstrap(diseases=diseases),
+        bootstrap_payload=build_admin_diseases_bootstrap(diseases=diseases, crops=crops),
         title="Disease Management",
     )
 
@@ -441,29 +786,12 @@ def create_disease():
     crops = Crop.query.order_by(Crop.name.asc()).all()
 
     if request.method == "POST":
-        crop_id = request.form.get("crop_id")
-        name = request.form.get("name")
-        name_kh = request.form.get("name_kh")
-        description = request.form.get("description")
-        description_kh = request.form.get("description_kh")
-        treatment = request.form.get("treatment")
-        treatment_kh = request.form.get("treatment_kh")
-        severity = request.form.get("severity_level")
-
-        if not crop_id or not name:
-            flash("Crop and disease name are required", "danger")
+        disease = Disease()
+        ok, err = _apply_disease_form(disease, request.form)
+        if not ok:
+            flash(err or "Invalid input", "danger")
             return redirect(request.url)
 
-        disease = Disease(
-            crop_id=crop_id,
-            name=name,
-            name_kh=name_kh,
-            description=description,
-            description_kh=description_kh,
-            treatment=treatment,
-            treatment_kh=treatment_kh,
-            severity_level=severity
-        )
         db.session.add(disease)
         db.session.commit()
 
@@ -489,27 +817,10 @@ def edit_disease(disease_id):
     crops = Crop.query.order_by(Crop.name.asc()).all()
 
     if request.method == "POST":
-        crop_id = request.form.get("crop_id")
-        name = request.form.get("name")
-        name_kh = request.form.get("name_kh")
-        description = request.form.get("description")
-        description_kh = request.form.get("description_kh")
-        treatment = request.form.get("treatment")
-        treatment_kh = request.form.get("treatment_kh")
-        severity = request.form.get("severity_level")
-
-        if not crop_id or not name:
-            flash("Crop and disease name are required", "danger")
+        ok, err = _apply_disease_form(disease, request.form)
+        if not ok:
+            flash(err or "Invalid input", "danger")
             return redirect(request.url)
-
-        disease.crop_id = crop_id
-        disease.name = name
-        disease.name_kh = name_kh
-        disease.description = description
-        disease.description_kh = description_kh
-        disease.treatment = treatment
-        disease.treatment_kh = treatment_kh
-        disease.severity_level = severity
         db.session.commit()
 
         flash("Disease updated", "success")
@@ -531,6 +842,9 @@ def edit_disease(disease_id):
 @permission_required("manage_crops")
 def delete_disease(disease_id):
     disease = Disease.query.get_or_404(disease_id)
+    Diagnosis.query.filter_by(disease_id=disease.id).update(
+        {Diagnosis.disease_id: None}, synchronize_session=False
+    )
     db.session.delete(disease)
     db.session.commit()
 
@@ -562,6 +876,10 @@ def diseases_bulk():
         flash("No diseases found to delete", "warning")
         return redirect(url_for("admin.diseases"))
 
+    target_ids = [d.id for d in diseases]
+    Diagnosis.query.filter(Diagnosis.disease_id.in_(target_ids)).update(
+        {Diagnosis.disease_id: None}, synchronize_session=False
+    )
     for disease in diseases:
         db.session.delete(disease)
     db.session.commit()
@@ -618,17 +936,34 @@ def translations():
     missing_only = (request.values.get("missing") or "").strip().lower() == "1"
     q = (request.values.get("q") or "").strip()
 
-    def _apply_filters(query, name_col, name_kh_col):
+    def _apply_filters(query, name_col, name_kh_col, desc_col=None, desc_kh_col=None, treat_col=None, treat_kh_col=None):
         if q:
             like = f"%{q}%"
-            query = query.filter(
-                or_(
-                    name_col.ilike(like),
-                    name_kh_col.ilike(like)
-                )
-            )
+            clauses = [name_col.ilike(like), name_kh_col.ilike(like)]
+            if desc_col is not None:
+                clauses.append(desc_col.ilike(like))
+            if desc_kh_col is not None:
+                clauses.append(desc_kh_col.ilike(like))
+            query = query.filter(or_(*clauses))
         if missing_only:
-            query = query.filter(or_(name_kh_col.is_(None), name_kh_col == ""))
+            missing_clauses = [name_kh_col.is_(None), name_kh_col == ""]
+            if desc_col is not None and desc_kh_col is not None:
+                missing_clauses.append(
+                    db.and_(
+                        desc_col.isnot(None),
+                        desc_col != "",
+                        or_(desc_kh_col.is_(None), desc_kh_col == ""),
+                    )
+                )
+            if treat_col is not None and treat_kh_col is not None:
+                missing_clauses.append(
+                    db.and_(
+                        treat_col.isnot(None),
+                        treat_col != "",
+                        or_(treat_kh_col.is_(None), treat_kh_col == ""),
+                    )
+                )
+            query = query.filter(or_(*missing_clauses))
         return query
 
     if request.method == "POST":
@@ -1005,50 +1340,95 @@ def translations():
             return redirect(url_for("admin.translations"))
 
         if section == "crops":
-            crops = _apply_filters(Crop.query, Crop.name, Crop.name_kh).order_by(Crop.name.asc()).all()
+            crops = _apply_filters(Crop.query, Crop.name, Crop.name_kh, Crop.description, Crop.description_kh).order_by(Crop.name.asc()).all()
+            snapshot_items = []
             for crop in crops:
-                name_kh = (request.form.get(f"crop_name_kh_{crop.id}") or "").strip() or None
-                desc_kh = (request.form.get(f"crop_desc_kh_{crop.id}") or "").strip() or None
-                if crop.name_kh != name_kh:
-                    crop.name_kh = name_kh
-                    updated += 1
-                if crop.description_kh != desc_kh:
-                    crop.description_kh = desc_kh
-                    updated += 1
+                name_key = f"crop_name_kh_{crop.id}"
+                desc_key = f"crop_desc_kh_{crop.id}"
+                if name_key not in request.form and desc_key not in request.form:
+                    continue
+                snapshot_items.append({"id": crop.id, "name_kh": crop.name_kh, "description_kh": crop.description_kh})
+                if name_key in request.form:
+                    name_kh = (request.form.get(name_key) or "").strip() or None
+                    if crop.name_kh != name_kh:
+                        crop.name_kh = name_kh
+                        updated += 1
+                if desc_key in request.form:
+                    desc_kh = (request.form.get(desc_key) or "").strip() or None
+                    if crop.description_kh != desc_kh:
+                        crop.description_kh = desc_kh
+                        updated += 1
+            if updated > 0 and snapshot_items:
+                _save_translation_backup("crops", {"scope": "crops", "items": snapshot_items})
             db.session.commit()
             flash(f"Updated {updated} crop field(s).", "success")
             return redirect(url_for("admin.translations", section="crops", q=q, missing=("1" if missing_only else "0")) + "#crops")
 
         if section == "diseases":
-            diseases = _apply_filters(Disease.query, Disease.name, Disease.name_kh).order_by(Disease.name.asc()).all()
+            diseases = _apply_filters(
+                Disease.query,
+                Disease.name,
+                Disease.name_kh,
+                Disease.description,
+                Disease.description_kh,
+                Disease.treatment,
+                Disease.treatment_kh,
+            ).order_by(Disease.name.asc()).all()
+            snapshot_items = []
             for disease in diseases:
-                name_kh = (request.form.get(f"disease_name_kh_{disease.id}") or "").strip() or None
-                desc_kh = (request.form.get(f"disease_desc_kh_{disease.id}") or "").strip() or None
-                treat_kh = (request.form.get(f"disease_treatment_kh_{disease.id}") or "").strip() or None
-                if disease.name_kh != name_kh:
-                    disease.name_kh = name_kh
-                    updated += 1
-                if disease.description_kh != desc_kh:
-                    disease.description_kh = desc_kh
-                    updated += 1
-                if disease.treatment_kh != treat_kh:
-                    disease.treatment_kh = treat_kh
-                    updated += 1
+                name_key = f"disease_name_kh_{disease.id}"
+                desc_key = f"disease_desc_kh_{disease.id}"
+                treat_key = f"disease_treatment_kh_{disease.id}"
+                if name_key not in request.form and desc_key not in request.form and treat_key not in request.form:
+                    continue
+                snapshot_items.append({
+                    "id": disease.id,
+                    "name_kh": disease.name_kh,
+                    "description_kh": disease.description_kh,
+                    "treatment_kh": disease.treatment_kh,
+                })
+                if name_key in request.form:
+                    name_kh = (request.form.get(name_key) or "").strip() or None
+                    if disease.name_kh != name_kh:
+                        disease.name_kh = name_kh
+                        updated += 1
+                if desc_key in request.form:
+                    desc_kh = (request.form.get(desc_key) or "").strip() or None
+                    if disease.description_kh != desc_kh:
+                        disease.description_kh = desc_kh
+                        updated += 1
+                if treat_key in request.form:
+                    treat_kh = (request.form.get(treat_key) or "").strip() or None
+                    if disease.treatment_kh != treat_kh:
+                        disease.treatment_kh = treat_kh
+                        updated += 1
+            if updated > 0 and snapshot_items:
+                _save_translation_backup("diseases", {"scope": "diseases", "items": snapshot_items})
             db.session.commit()
             flash(f"Updated {updated} disease field(s).", "success")
             return redirect(url_for("admin.translations", section="diseases", q=q, missing=("1" if missing_only else "0")) + "#diseases")
 
         if section == "symptoms":
-            symptoms = _apply_filters(Symptom.query, Symptom.name, Symptom.name_kh).order_by(Symptom.name.asc()).all()
+            symptoms = _apply_filters(Symptom.query, Symptom.name, Symptom.name_kh, Symptom.description, Symptom.description_kh).order_by(Symptom.name.asc()).all()
+            snapshot_items = []
             for symptom in symptoms:
-                name_kh = (request.form.get(f"symptom_name_kh_{symptom.id}") or "").strip() or None
-                desc_kh = (request.form.get(f"symptom_desc_kh_{symptom.id}") or "").strip() or None
-                if symptom.name_kh != name_kh:
-                    symptom.name_kh = name_kh
-                    updated += 1
-                if symptom.description_kh != desc_kh:
-                    symptom.description_kh = desc_kh
-                    updated += 1
+                name_key = f"symptom_name_kh_{symptom.id}"
+                desc_key = f"symptom_desc_kh_{symptom.id}"
+                if name_key not in request.form and desc_key not in request.form:
+                    continue
+                snapshot_items.append({"id": symptom.id, "name_kh": symptom.name_kh, "description_kh": symptom.description_kh})
+                if name_key in request.form:
+                    name_kh = (request.form.get(name_key) or "").strip() or None
+                    if symptom.name_kh != name_kh:
+                        symptom.name_kh = name_kh
+                        updated += 1
+                if desc_key in request.form:
+                    desc_kh = (request.form.get(desc_key) or "").strip() or None
+                    if symptom.description_kh != desc_kh:
+                        symptom.description_kh = desc_kh
+                        updated += 1
+            if updated > 0 and snapshot_items:
+                _save_translation_backup("symptoms", {"scope": "symptoms", "items": snapshot_items})
             db.session.commit()
             flash(f"Updated {updated} symptom field(s).", "success")
             return redirect(url_for("admin.translations", section="symptoms", q=q, missing=("1" if missing_only else "0")) + "#symptoms")
@@ -1056,9 +1436,32 @@ def translations():
         flash("Select a valid section to update.", "warning")
         return redirect(url_for("admin.translations"))
 
-    crops = _apply_filters(Crop.query, Crop.name, Crop.name_kh).order_by(Crop.name.asc()).all()
-    diseases = _apply_filters(Disease.query, Disease.name, Disease.name_kh).order_by(Disease.name.asc()).all()
-    symptoms = _apply_filters(Symptom.query, Symptom.name, Symptom.name_kh).order_by(Symptom.name.asc()).all()
+    crops = _apply_filters(Crop.query, Crop.name, Crop.name_kh, Crop.description, Crop.description_kh).order_by(Crop.name.asc()).all()
+    diseases = _apply_filters(
+        Disease.query,
+        Disease.name,
+        Disease.name_kh,
+        Disease.description,
+        Disease.description_kh,
+        Disease.treatment,
+        Disease.treatment_kh,
+    ).order_by(Disease.name.asc()).all()
+    symptoms = _apply_filters(Symptom.query, Symptom.name, Symptom.name_kh, Symptom.description, Symptom.description_kh).order_by(Symptom.name.asc()).all()
+
+    coverage_stats = {
+        "crops": {
+            "total": Crop.query.count(),
+            "translated": Crop.query.filter(Crop.name_kh.isnot(None), Crop.name_kh != "").count(),
+        },
+        "diseases": {
+            "total": Disease.query.count(),
+            "translated": Disease.query.filter(Disease.name_kh.isnot(None), Disease.name_kh != "").count(),
+        },
+        "symptoms": {
+            "total": Symptom.query.count(),
+            "translated": Symptom.query.filter(Symptom.name_kh.isnot(None), Symptom.name_kh != "").count(),
+        },
+    }
 
     return render_react_page(
         bootstrap_payload=build_admin_translations_bootstrap(
@@ -1068,6 +1471,7 @@ def translations():
             current_section=section,
             q=q,
             missing_only=missing_only,
+            coverage_stats=coverage_stats,
         ),
         title="Khmer Translations",
     )
@@ -1106,6 +1510,47 @@ def settings():
             setting = SiteSetting(key=k, value=v)
             db.session.add(setting)
 
+    def _load_profiles():
+        models_setting = SiteSetting.query.get("HF_MODELS")
+        try:
+            profiles = json.loads(models_setting.value) if models_setting and models_setting.value else []
+        except (TypeError, ValueError):
+            profiles = []
+        if not isinstance(profiles, list):
+            profiles = []
+        return models_setting, [p for p in profiles if isinstance(p, dict)]
+
+    def _save_profiles(models_setting, profiles):
+        payload = json.dumps(profiles, ensure_ascii=False)
+        if models_setting:
+            models_setting.value = payload
+        else:
+            db.session.add(SiteSetting(key="HF_MODELS", value=payload))
+
+    def _activate_profile_state(profiles, target_id):
+        chosen = None
+        for profile in profiles:
+            is_target = profile.get("id") == target_id
+            profile["active"] = is_target
+            if is_target:
+                chosen = profile
+        update_setting("HF_ACTIVE_MODEL", target_id if chosen else "")
+        update_setting("AI_PROVIDER", "own-ai")
+        current_app.config["AI_PROVIDER"] = "own-ai"
+        if chosen:
+            chosen_model_id = str(chosen.get("model_id") or "").strip()
+            chosen_endpoint = str(chosen.get("endpoint") or "").strip()
+            if chosen_model_id:
+                update_setting("HF_MODEL_ID", chosen_model_id)
+            if chosen_endpoint:
+                update_setting("HF_INFERENCE_URL", chosen_endpoint)
+                current_app.config["HF_INFERENCE_URL"] = chosen_endpoint
+            token_key = str(chosen.get("token_key") or "").strip()
+            token_setting = SiteSetting.query.get(token_key) if token_key else None
+            if token_setting and token_setting.value and token_setting.value.strip():
+                current_app.config["HF_TOKEN"] = token_setting.value.strip()
+        return chosen
+
     if request.method == "POST":
         form_type = (request.form.get("form_type") or "").strip()
 
@@ -1116,15 +1561,41 @@ def settings():
             server_loc_lat = request.form.get("server_location_lat", "").strip()
             server_loc_lon = request.form.get("server_location_lon", "").strip()
 
+            if server_loc_lat:
+                try:
+                    lat_val = float(server_loc_lat)
+                    if not (-90.0 <= lat_val <= 90.0):
+                        raise ValueError("Latitude out of range")
+                except (TypeError, ValueError):
+                    flash("Enter a valid latitude between -90 and 90.", "danger")
+                    return redirect(url_for("admin.settings", tab="general"))
+
+            if server_loc_lon:
+                try:
+                    lon_val = float(server_loc_lon)
+                    if not (-180.0 <= lon_val <= 180.0):
+                        raise ValueError("Longitude out of range")
+                except (TypeError, ValueError):
+                    flash("Enter a valid longitude between -180 and 180.", "danger")
+                    return redirect(url_for("admin.settings", tab="general"))
+
             if system_name:
-                update_setting("SYSTEM_NAME", system_name)
+                update_setting("SYSTEM_NAME", system_name[:120])
+                current_app.config["SYSTEM_NAME"] = system_name[:120]
             if server_loc_name:
-                update_setting("SERVER_LOCATION_NAME", server_loc_name)
+                update_setting("SERVER_LOCATION_NAME", server_loc_name[:160])
             if server_loc_lat:
                 update_setting("SERVER_LOCATION_LAT", server_loc_lat)
             if server_loc_lon:
                 update_setting("SERVER_LOCATION_LON", server_loc_lon)
 
+            db.session.add(
+                AuditLog(
+                    user_id=current_user.id,
+                    action="UPDATE_SYSTEM_SETTINGS",
+                    detail=f"system={system_name or '-'} location={server_loc_name or '-'} lat={server_loc_lat or '-'} lon={server_loc_lon or '-'}",
+                )
+            )
             db.session.commit()
             flash("General system & server location settings saved successfully.", "success")
             return redirect(url_for("admin.settings", tab="general"))
@@ -1132,24 +1603,9 @@ def settings():
         model_action = (request.form.get("model_action") or "").strip().lower()
 
         if model_action:
-            # Store model metadata as JSON so adding trained models does not
-            # require a database migration. API keys are stored separately.
-            models_setting = SiteSetting.query.get("HF_MODELS")
-            try:
-                profiles = json.loads(models_setting.value) if models_setting and models_setting.value else []
-            except (TypeError, ValueError):
-                profiles = []
-            if not isinstance(profiles, list):
-                profiles = []
-
-            def save_profiles():
-                payload = json.dumps(profiles, ensure_ascii=False)
-                if models_setting:
-                    models_setting.value = payload
-                else:
-                    db.session.add(SiteSetting(key="HF_MODELS", value=payload))
-
+            models_setting, profiles = _load_profiles()
             profile_id = re.sub(r"[^a-z0-9-]+", "-", (request.form.get("profile_id") or "").lower()).strip("-")
+
             if model_action == "delete":
                 deleted = next((p for p in profiles if p.get("id") == profile_id), None)
                 profiles = [p for p in profiles if p.get("id") != profile_id]
@@ -1159,17 +1615,41 @@ def settings():
                         db.session.delete(token_setting)
                 active_setting = SiteSetting.query.get("HF_ACTIVE_MODEL")
                 if active_setting and active_setting.value == profile_id:
-                    active_setting.value = profiles[0].get("id", "") if profiles else ""
-                save_profiles()
+                    next_id = profiles[0].get("id", "") if profiles else ""
+                    _activate_profile_state(profiles, next_id)
+                _save_profiles(models_setting, profiles)
+                db.session.add(
+                    AuditLog(
+                        user_id=current_user.id,
+                        action="DELETE_AI_MODEL",
+                        detail=f"profile={profile_id or '-'}",
+                    )
+                )
                 db.session.commit()
                 flash("Trained AI model removed.", "success")
+                return redirect(url_for("admin.settings", tab="trained"))
+
+            if model_action == "switch":
+                target = _activate_profile_state(profiles, profile_id)
+                if not target:
+                    flash("Selected trained model profile was not found.", "warning")
+                    return redirect(url_for("admin.settings", tab="trained"))
+                _save_profiles(models_setting, profiles)
+                db.session.add(
+                    AuditLog(
+                        user_id=current_user.id,
+                        action="SWITCH_AI_MODEL",
+                        detail=f"profile={profile_id} model={target.get('model_id', '')}",
+                    )
+                )
+                db.session.commit()
+                flash(f"Activated trained model profile: {target.get('label') or target.get('model_id')}.", "success")
                 return redirect(url_for("admin.settings", tab="trained"))
 
             model_id = (request.form.get("model_id") or "").strip()
             endpoint = (request.form.get("endpoint") or "").strip()
             label = (request.form.get("label") or model_id or "Trained model").strip()[:120]
             api_key = (request.form.get("model_api_key") or "").strip()
-            from app.services.ai_expert_service import is_valid_inference_endpoint
 
             if not model_id or not endpoint or not is_valid_inference_endpoint(endpoint):
                 flash("Enter a model ID and a valid deployed inference endpoint URL.", "danger")
@@ -1188,28 +1668,24 @@ def settings():
                 profiles.append(existing)
             existing.update({"label": label, "model_id": model_id, "endpoint": endpoint, "token_key": token_key})
             if api_key:
-                token_setting = SiteSetting.query.get(token_key)
-                if token_setting:
-                    token_setting.value = api_key
-                else:
-                    db.session.add(SiteSetting(key=token_key, value=api_key))
-            if model_action == "activate" or request.form.get("activate_model"):
-                for profile in profiles:
-                    profile["active"] = profile.get("id") == profile_id
-                active_setting = SiteSetting.query.get("HF_ACTIVE_MODEL")
-                if active_setting:
-                    active_setting.value = profile_id
-                else:
-                    db.session.add(SiteSetting(key="HF_ACTIVE_MODEL", value=profile_id))
-                # Keep the provider switch explicit and backwards compatible.
-                provider_setting = SiteSetting.query.get("AI_PROVIDER")
-                if provider_setting:
-                    provider_setting.value = "own-ai"
-                else:
-                    db.session.add(SiteSetting(key="AI_PROVIDER", value="own-ai"))
-            save_profiles()
+                update_setting(token_key, api_key)
+
+            should_activate = model_action == "activate" or bool(request.form.get("activate_model"))
+            if should_activate or existing.get("active"):
+                _activate_profile_state(profiles, profile_id)
+            _save_profiles(models_setting, profiles)
+            db.session.add(
+                AuditLog(
+                    user_id=current_user.id,
+                    action="SAVE_AI_MODEL",
+                    detail=f"profile={profile_id} model={model_id} activate={should_activate}",
+                )
+            )
             db.session.commit()
-            flash("Trained AI model saved and activated." if model_action == "activate" or request.form.get("activate_model") else "Trained AI model saved.", "success")
+            flash(
+                "Trained AI model saved and activated." if should_activate else "Trained AI model saved.",
+                "success",
+            )
             return redirect(url_for("admin.settings", tab="trained"))
 
         # The current configuration screen manages the owner's separately
@@ -1224,23 +1700,46 @@ def settings():
             hf_model_id = request.form.get("hf_model_id", "").strip()
             hf_inference_url = request.form.get("hf_inference_url", "").strip()
             hf_api_key = request.form.get("hf_api_key", "").strip()
-            # No commercial fallback is permitted in self-trained mode.
             fallback_enabled = "false"
+
+            if hf_inference_url and not is_valid_inference_endpoint(hf_inference_url):
+                flash("Enter a valid deployed inference endpoint URL (https://.../generate or .hf.space).", "danger")
+                return redirect(url_for("admin.settings", tab="trained"))
 
             update_setting("AI_PROVIDER", "own-ai")
             update_setting("HF_MODEL_ID", hf_model_id)
             update_setting("HF_INFERENCE_URL", hf_inference_url)
             update_setting("AI_LEGACY_FALLBACK_ENABLED", fallback_enabled)
-            # An empty password means “keep the existing secret”.
             if hf_api_key:
                 update_setting("HF_API_KEY", hf_api_key)
 
+            # Keep the currently active registered profile in sync so reloading
+            # /admin/settings reflects the newly saved endpoint immediately.
+            models_setting, profiles = _load_profiles()
+            active_setting = SiteSetting.query.get("HF_ACTIVE_MODEL")
+            active_id = active_setting.value.strip() if active_setting and active_setting.value else ""
+            if active_id:
+                active_prof = next((p for p in profiles if p.get("id") == active_id), None)
+                if active_prof:
+                    if hf_model_id:
+                        active_prof["model_id"] = hf_model_id
+                    if hf_inference_url:
+                        active_prof["endpoint"] = hf_inference_url
+                    if hf_api_key and active_prof.get("token_key"):
+                        update_setting(active_prof["token_key"], hf_api_key)
+                    _save_profiles(models_setting, profiles)
+
+            db.session.add(
+                AuditLog(
+                    user_id=current_user.id,
+                    action="UPDATE_AI_SETTINGS",
+                    detail=f"model={hf_model_id or '-'} endpoint_set={bool(hf_inference_url)} key_updated={bool(hf_api_key)}",
+                )
+            )
             db.session.commit()
-            # Apply values immediately; the saved settings are also read after
-            # restarts and by other workers.
             current_app.config["AI_PROVIDER"] = "own-ai"
             current_app.config["HF_INFERENCE_URL"] = hf_inference_url
-            current_app.config["AI_LEGACY_FALLBACK_ENABLED"] = fallback_enabled == "true"
+            current_app.config["AI_LEGACY_FALLBACK_ENABLED"] = False
             if hf_api_key:
                 current_app.config["HF_TOKEN"] = hf_api_key
             flash("Own AI engine settings saved successfully.", "success")
@@ -1272,40 +1771,40 @@ def settings():
         else str(current_app.config.get("AI_LEGACY_FALLBACK_ENABLED", False)).lower()
     )
 
-    hf_models_setting = SiteSetting.query.get("HF_MODELS")
-    try:
-        hf_models = json.loads(hf_models_setting.value) if hf_models_setting and hf_models_setting.value else []
-    except (TypeError, ValueError):
-        hf_models = []
-    if not isinstance(hf_models, list):
-        hf_models = []
+    _, raw_hf_models = _load_profiles()
     active_model_setting = SiteSetting.query.get("HF_ACTIVE_MODEL")
     active_model_id = active_model_setting.value.strip() if active_model_setting and active_model_setting.value else ""
+    hf_models = []
+    for p in raw_hf_models:
+        token_key = str(p.get("token_key") or "").strip()
+        token_obj = SiteSetting.query.get(token_key) if token_key else None
+        hf_models.append({
+            "id": p.get("id", ""),
+            "label": p.get("label", ""),
+            "model_id": p.get("model_id", ""),
+            "endpoint": p.get("endpoint", ""),
+            "active": bool(p.get("id") == active_model_id or p.get("active")),
+            "has_token": bool(token_obj and token_obj.value and token_obj.value.strip()),
+        })
+
     active_model = next((p for p in hf_models if p.get("id") == active_model_id), None)
     if active_model:
         hf_model_id = (active_model.get("model_id") or hf_model_id).strip()
         hf_inference_url = (active_model.get("endpoint") or hf_inference_url).strip()
     edit_model_id = (request.args.get("edit_model_id") or "").strip()
     editing_model = next((p for p in hf_models if p.get("id") == edit_model_id), None)
+    active_raw = next((p for p in raw_hf_models if p.get("id") == active_model_id), None)
     active_token_setting = (
-        SiteSetting.query.get(active_model.get("token_key"))
-        if active_model and active_model.get("token_key") else None
+        SiteSetting.query.get(active_raw.get("token_key"))
+        if active_raw and active_raw.get("token_key") else None
     )
 
     active_provider = "own-ai"
-    
+
     # General / Server Location Settings
     system_name_setting = SiteSetting.query.get("SYSTEM_NAME")
     system_name = system_name_setting.value.strip() if system_name_setting and system_name_setting.value else "AgriSystem"
-
-    server_loc_name_setting = SiteSetting.query.get("SERVER_LOCATION_NAME")
-    server_location_name = server_loc_name_setting.value.strip() if server_loc_name_setting and server_loc_name_setting.value else "Phnom Penh, Cambodia"
-
-    server_loc_lat_setting = SiteSetting.query.get("SERVER_LOCATION_LAT")
-    server_location_lat = server_loc_lat_setting.value.strip() if server_loc_lat_setting and server_loc_lat_setting.value else "11.5564"
-
-    server_loc_lon_setting = SiteSetting.query.get("SERVER_LOCATION_LON")
-    server_location_lon = server_loc_lon_setting.value.strip() if server_loc_lon_setting and server_loc_lon_setting.value else "104.9282"
+    server_location_name, server_location_lat, server_location_lon = _get_server_location_defaults()
 
     from app.blueprints.farmer.support_chat import CAMBODIA_PROVINCES
     active_tab = request.args.get("tab", "general")
@@ -2045,6 +2544,7 @@ def roles():
             roles=roles_list,
             core_role_names=CORE_ROLE_NAMES,
             role_user_counts=role_user_counts,
+            total_permissions=Permission.query.count(),
         ),
         title="Role Management",
     )
@@ -2155,7 +2655,7 @@ def delete_role(role_id):
 @permission_required("manage_roles")
 def manage_role_permissions(role_id):
     role = Role.query.get_or_404(role_id)
-    permissions = Permission.query.all()
+    permissions = Permission.query.order_by(func.lower(Permission.code).asc()).all()
 
     if request.method == "POST":
         role.permissions.clear()
@@ -2205,11 +2705,14 @@ def manage_role_permissions(role_id):
             grouped_permissions[group] = []
         grouped_permissions[group].append(perm)
 
+    all_roles = Role.query.order_by(func.lower(Role.name).asc()).all()
     return render_react_page(
         bootstrap_payload=build_admin_role_permissions_bootstrap(
             role=role,
             permissions=permissions,
             grouped_permissions=grouped_permissions,
+            core_role_names=CORE_ROLE_NAMES,
+            all_roles=all_roles,
         ),
         title=f"Permissions: {role.name}",
     )
@@ -2218,20 +2721,141 @@ def manage_role_permissions(role_id):
 # ==================================================
 # 🔍 AUDIT LOGS
 # ==================================================
+def _audit_failure_clause():
+    return or_(
+        AuditLog.action.ilike("%FAILURE%"),
+        AuditLog.action.ilike("%ERROR%"),
+        AuditLog.action == "BAN_USER",
+        AuditLog.action == "AUTH_SESSION_EXPIRED",
+    )
+
+
+def _audit_logs_filtered_query(*, q: str = "", action_filter: str = ""):
+    query = AuditLog.query.outerjoin(User, AuditLog.user_id == User.id)
+    if action_filter:
+        query = query.filter(AuditLog.action == action_filter)
+    if q:
+        like = f"%{q}%"
+        query = query.filter(
+            or_(
+                AuditLog.action.ilike(like),
+                AuditLog.target_user.ilike(like),
+                AuditLog.detail.ilike(like),
+                User.username.ilike(like),
+                User.email.ilike(like),
+            )
+        )
+    return query
+
+
 @admin_bp.route("/audit-logs")
 @login_required
 @permission_required("view_dashboard")
 def audit_logs():
+    q = (request.args.get("q") or "").strip()
+    action_filter = (request.args.get("action") or "").strip()
+
     logs = (
-        AuditLog.query
-        .order_by(AuditLog.created_at.desc())
-        .limit(200)
+        _audit_logs_filtered_query(q=q, action_filter=action_filter)
+        .order_by(AuditLog.created_at.desc(), AuditLog.id.desc())
+        .limit(250)
         .all()
     )
 
+    total_count = AuditLog.query.count()
+    since_24h = _now_dt() - timedelta(hours=24)
+    last_24h_count = AuditLog.query.filter(AuditLog.created_at >= since_24h).count()
+    failure_count = AuditLog.query.filter(_audit_failure_clause()).count()
+    unique_actors = (
+        db.session.query(func.count(func.distinct(AuditLog.user_id)))
+        .filter(AuditLog.user_id.isnot(None))
+        .scalar()
+        or 0
+    )
+    available_actions = [
+        row[0]
+        for row in (
+            AuditLog.query.with_entities(AuditLog.action)
+            .distinct()
+            .order_by(AuditLog.action.asc())
+            .all()
+        )
+        if row[0]
+    ]
+
     return render_react_page(
-        bootstrap_payload=build_admin_audit_logs_bootstrap(logs=logs),
+        bootstrap_payload=build_admin_audit_logs_bootstrap(
+            logs=logs,
+            q=q,
+            action_filter=action_filter,
+            total_count=total_count,
+            last_24h_count=last_24h_count,
+            failure_count=failure_count,
+            unique_actors=unique_actors,
+            available_actions=available_actions,
+        ),
         title="Audit Logs",
+    )
+
+
+@admin_bp.route("/audit-logs/export")
+@login_required
+@permission_required("view_dashboard")
+def audit_logs_export():
+    export_format = (request.args.get("format") or "csv").strip().lower()
+    if export_format not in {"csv", "json"}:
+        abort(400)
+
+    q = (request.args.get("q") or "").strip()
+    action_filter = (request.args.get("action") or "").strip()
+
+    logs = (
+        _audit_logs_filtered_query(q=q, action_filter=action_filter)
+        .order_by(AuditLog.created_at.desc(), AuditLog.id.desc())
+        .limit(5000)
+        .all()
+    )
+
+    rows = [
+        {
+            "id": log.id,
+            "action": log.action or "",
+            "actor": getattr(getattr(log, "user", None), "username", None) or "System",
+            "target": log.target_user or "",
+            "detail": log.detail or "",
+            "created_at": log.created_at.isoformat() if log.created_at else "",
+        }
+        for log in logs
+    ]
+
+    db.session.add(
+        AuditLog(
+            user_id=current_user.id,
+            action="AUDIT_LOGS_EXPORT",
+            detail=f"format={export_format} count={len(rows)} q={q or '-'} action={action_filter or '-'}",
+        )
+    )
+    db.session.commit()
+
+    def _csv_safe(value):
+        text = "" if value is None else str(value)
+        if text and text[0] in ("=", "+", "-", "@", "\t", "\r"):
+            return f"'{text}"
+        return text
+
+    if export_format == "json":
+        return _json_response(
+            {"exported_at": _now_dt().isoformat(), "logs": rows},
+            "audit_logs.json",
+        )
+    safe_csv_rows = [
+        {k: _csv_safe(v) if isinstance(v, str) else v for k, v in row.items()}
+        for row in rows
+    ]
+    return _csv_response(
+        safe_csv_rows,
+        ["id", "action", "actor", "target", "detail", "created_at"],
+        "audit_logs.csv",
     )
 
 
@@ -2408,29 +3032,106 @@ def delete_support_request(req_id):
 @permission_required("manage_users")
 def promo_codes():
     if request.method == "POST":
-        tokens = request.form.get("tokens", type=int, default=1000)
-        # Generate random 8-character code
-        code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
-        
-        new_promo = PromoCode(code=code, tokens_reward=tokens)
-        db.session.add(new_promo)
+        raw_tokens = request.form.get("tokens", type=int, default=1000)
+        tokens = max(1, int(raw_tokens or 1000))
+        quantity = min(20, max(1, int(request.form.get("quantity", type=int, default=1) or 1)))
+        custom_code = re.sub(r"[^A-Z0-9_-]", "", (request.form.get("custom_code") or "").strip().upper())
+
+        if custom_code and quantity == 1:
+            if len(custom_code) < 3 or len(custom_code) > 32:
+                flash("Custom voucher code must be between 3 and 32 characters.", "danger")
+                return redirect(url_for("admin.promo_codes"))
+            if PromoCode.query.filter(func.upper(PromoCode.code) == custom_code).first():
+                flash(f"Voucher code '{custom_code}' already exists.", "warning")
+                return redirect(url_for("admin.promo_codes"))
+            generated_codes = [custom_code]
+        else:
+            alphabet = string.ascii_uppercase + string.digits
+            generated_codes = []
+            while len(generated_codes) < quantity:
+                candidate = "".join(secrets.choice(alphabet) for _ in range(8))
+                if candidate in generated_codes:
+                    continue
+                if not PromoCode.query.filter(func.upper(PromoCode.code) == candidate).first():
+                    generated_codes.append(candidate)
+
+        for code in generated_codes:
+            db.session.add(PromoCode(code=code, tokens_reward=tokens))
+
+        db.session.add(
+            AuditLog(
+                user_id=current_user.id,
+                action="MINT_PROMO_CODE",
+                detail=f"count={len(generated_codes)} tokens={tokens} codes={','.join(generated_codes)}",
+            )
+        )
         db.session.commit()
-        
-        flash(f"Created new reward code: {code}", "success")
+
+        if len(generated_codes) == 1:
+            flash(f"Created new reward code: {generated_codes[0]}", "success")
+        else:
+            flash(f"Minted {len(generated_codes)} reward codes ({tokens:,} credits each).", "success")
         return redirect(url_for("admin.promo_codes"))
-        
-    codes = PromoCode.query.order_by(PromoCode.created_at.desc()).all()
+
+    codes = PromoCode.query.order_by(PromoCode.created_at.desc(), PromoCode.id.desc()).all()
     return render_react_page(
         bootstrap_payload=build_admin_promo_codes_bootstrap(codes=codes),
         title="Promo Codes",
     )
+
 
 @admin_bp.route("/promo-codes/<int:code_id>/delete", methods=["POST"])
 @login_required
 @permission_required("manage_users")
 def delete_promo_code(code_id):
     promo = PromoCode.query.get_or_404(code_id)
+    code_label = promo.code
     db.session.delete(promo)
+    db.session.add(
+        AuditLog(
+            user_id=current_user.id,
+            action="DELETE_PROMO_CODE",
+            target_user=code_label,
+        )
+    )
     db.session.commit()
     flash("Reward code deleted.", "info")
+    return redirect(url_for("admin.promo_codes"))
+
+
+@admin_bp.route("/promo-codes/bulk", methods=["POST"])
+@login_required
+@permission_required("manage_users")
+def promo_codes_bulk():
+    action = (request.form.get("action") or "").strip().lower()
+    if action not in {"delete_selected", "clear_redeemed"}:
+        flash("Select a valid bulk action.", "danger")
+        return redirect(url_for("admin.promo_codes"))
+
+    if action == "clear_redeemed":
+        targets = PromoCode.query.filter_by(is_used=True).all()
+    else:
+        raw_ids = request.form.getlist("code_ids")
+        code_ids = [int(x) for x in raw_ids if str(x).isdigit()]
+        if not code_ids:
+            flash("Select at least one reward code.", "warning")
+            return redirect(url_for("admin.promo_codes"))
+        targets = PromoCode.query.filter(PromoCode.id.in_(code_ids)).all()
+
+    if not targets:
+        flash("No matching reward codes to remove.", "info")
+        return redirect(url_for("admin.promo_codes"))
+
+    deleted_codes = [p.code for p in targets]
+    for item in targets:
+        db.session.delete(item)
+    db.session.add(
+        AuditLog(
+            user_id=current_user.id,
+            action="BULK_DELETE_PROMO_CODES",
+            detail=f"action={action} count={len(deleted_codes)}",
+        )
+    )
+    db.session.commit()
+    flash(f"Removed {len(deleted_codes)} reward code(s).", "info")
     return redirect(url_for("admin.promo_codes"))

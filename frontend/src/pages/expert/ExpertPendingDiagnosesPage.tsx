@@ -1,10 +1,20 @@
 import React, { useMemo, useState } from "react";
-import { ArrowRight, Clock, Search } from "lucide-react";
+import { ArrowRight, CheckCircle2, Clock, Filter, Sprout } from "lucide-react";
 import type { AppBootstrap } from "@/types/app";
 import { WorkspaceShell } from "@/components/layout/WorkspaceShell";
 import { buildNavSections } from "@/lib/navigation";
-import { ExpertHeaderActions, statusBadgeClass } from "@/components/expert/ExpertShared";
-import { AdminEmptyState, AdminSectionCard, AdminStatusBadge } from "@/components/admin/AdminPrimitives";
+import {
+  ExpertHeaderActions,
+  ExpertSearchField,
+  formatShortDateTime,
+  statusBadgeClass,
+} from "@/components/expert/ExpertShared";
+import {
+  AdminEmptyState,
+  AdminKpiCard,
+  AdminSectionCard,
+  AdminStatusBadge,
+} from "@/components/admin/AdminPrimitives";
 import { cn } from "@/lib/utils";
 
 interface PendingDiagnosesData {
@@ -30,19 +40,33 @@ export default function ExpertPendingDiagnosesPage({
   const d = bootstrap.data;
   const ui = bootstrap.ui as Record<string, any>;
   const table = ui.table || {};
+
   const [query, setQuery] = useState("");
+  const [cropFilter, setCropFilter] = useState("all");
+
+  const crops = useMemo(() => {
+    const unique = new Set<string>();
+    for (const item of d.diagnoses) {
+      if (item.cropName && item.cropName !== "-") unique.add(item.cropName);
+    }
+    return Array.from(unique).sort((a, b) => a.localeCompare(b));
+  }, [d.diagnoses]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return d.diagnoses;
-    return d.diagnoses.filter(
-      (item) =>
+    return d.diagnoses.filter((item) => {
+      if (cropFilter !== "all" && item.cropName !== cropFilter) return false;
+      if (!q) return true;
+      return (
         item.cropName.toLowerCase().includes(q) ||
         item.farmerName.toLowerCase().includes(q) ||
         item.symptomsText.toLowerCase().includes(q) ||
-        String(item.id).includes(q),
-    );
-  }, [d.diagnoses, query]);
+        String(item.id).includes(q)
+      );
+    });
+  }, [d.diagnoses, query, cropFilter]);
+
+  const hasFilters = query.trim().length > 0 || cropFilter !== "all";
 
   return (
     <WorkspaceShell
@@ -52,37 +76,113 @@ export default function ExpertPendingDiagnosesPage({
       pageSubtitle={bootstrap.ui.pageSubtitle}
       headerActions={<ExpertHeaderActions bootstrap={bootstrap} />}
     >
-      <div className="space-y-5">
-        <AdminSectionCard delayIndex={0}>
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="relative w-full sm:w-80">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8a94ad]" />
-              <input
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder={
-                  isKhmer
-                    ? "ស្វែងរកកសិករ ដំណាំ ឬរោគសញ្ញា..."
-                    : "Search farmer, crop, or symptom..."
-                }
-                className="ai-input py-2 pl-9 text-xs"
-              />
-            </div>
-            <AdminStatusBadge tone="amber">
-              <Clock className="mr-1 inline h-3 w-3" />
-              {d.pendingCount} {ui.sections?.queue || "Pending"}
-            </AdminStatusBadge>
-          </div>
-        </AdminSectionCard>
+      <div className="space-y-6">
+        <div className="grid gap-4 sm:grid-cols-3">
+          <AdminKpiCard
+            delayIndex={0}
+            label={ui.sections?.queue || (isKhmer ? "ករណីរង់ចាំសរុប" : "Pending Queue")}
+            value={d.pendingCount}
+            hint={isKhmer ? "ករណីរង់ចាំការវាយតម្លៃ" : "Cases awaiting clinical review"}
+            icon={<Clock className="h-5 w-5" />}
+            tone="amber"
+          />
+          <AdminKpiCard
+            delayIndex={1}
+            label={isKhmer ? "ប្រភេទដំណាំ" : "Affected Crops"}
+            value={crops.length}
+            hint={isKhmer ? "ដំណាំខុសៗគ្នាក្នុងជួរ" : "Distinct crops in queue"}
+            icon={<Sprout className="h-5 w-5" />}
+            tone="emerald"
+          />
+          <AdminKpiCard
+            delayIndex={2}
+            label={isKhmer ? "កំពុងបង្ហាញ" : "Filtered Results"}
+            value={filtered.length}
+            hint={hasFilters ? (isKhmer ? "បានច្រោះរួច" : "Active filter applied") : (isKhmer ? "បង្ហាញទាំងអស់" : "All queue items")}
+            icon={<Filter className="h-5 w-5" />}
+            tone="indigo"
+          />
+        </div>
 
         <AdminSectionCard delayIndex={1} noPadding>
+          {/* Integrated Search & Crop Filter Toolbar */}
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#e3e6ed] px-5 py-3.5 dark:border-[#2b3245]">
+            <div className="flex flex-1 flex-wrap items-center gap-2.5">
+              <ExpertSearchField
+                value={query}
+                onChange={setQuery}
+                placeholder={
+                  isKhmer
+                    ? "ស្វែងរកលេខករណី កសិករ ដំណាំ ឬរោគសញ្ញា..."
+                    : "Search case ID, farmer, crop, or symptom..."
+                }
+                className="sm:w-80"
+              />
+              {crops.length > 0 && (
+                <select
+                  value={cropFilter}
+                  onChange={(e) => setCropFilter(e.target.value)}
+                  aria-label={isKhmer ? "ច្រោះតាមដំណាំ" : "Filter by crop"}
+                  className="ai-input h-9 w-auto min-w-[150px] py-1 text-xs"
+                >
+                  <option value="all">{isKhmer ? "ដំណាំទាំងអស់" : "All crops"}</option>
+                  {crops.map((crop) => (
+                    <option key={crop} value={crop}>
+                      {crop}
+                    </option>
+                  ))}
+                </select>
+              )}
+              {hasFilters && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setQuery("");
+                    setCropFilter("all");
+                  }}
+                  className="ai-btn-secondary h-9 px-3 text-xs"
+                >
+                  {isKhmer ? "សម្អាត" : "Clear"}
+                </button>
+              )}
+            </div>
+            <AdminStatusBadge tone="amber" pulse={d.pendingCount > 0}>
+              {filtered.length} / {d.pendingCount}
+            </AdminStatusBadge>
+          </div>
+
           {filtered.length === 0 ? (
             <div className="p-8">
               <AdminEmptyState
-                icon={<Clock className="h-5 w-5" />}
-                title={table.emptyTitle || "No pending diagnoses"}
-                description={table.emptyText}
+                icon={hasFilters ? <Filter className="h-5 w-5" /> : <CheckCircle2 className="h-5 w-5" />}
+                title={
+                  hasFilters
+                    ? isKhmer
+                      ? "មិនមានករណីត្រូវនឹងការច្រោះទេ"
+                      : "No cases match your filters"
+                    : table.emptyTitle || "No pending diagnoses"
+                }
+                description={
+                  hasFilters
+                    ? isKhmer
+                      ? "សូមសាកល្បងសម្អាតពាក្យស្វែងរក ឬជ្រើសរើសដំណាំទាំងអស់។"
+                      : "Try clearing the search query or switching back to all crops."
+                    : table.emptyText
+                }
+                action={
+                  hasFilters ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setQuery("");
+                        setCropFilter("all");
+                      }}
+                      className="ai-btn-secondary h-8 px-3 text-xs"
+                    >
+                      {isKhmer ? "បង្ហាញករណីទាំងអស់" : "Reset filters"}
+                    </button>
+                  ) : undefined
+                }
               />
             </div>
           ) : (
@@ -90,22 +190,22 @@ export default function ExpertPendingDiagnosesPage({
               <table className="w-full text-left text-xs">
                 <thead className="border-b border-[#e3e6ed] bg-[#f5f7fa] text-[11px] uppercase tracking-wider text-[#6e7891] dark:border-[#2b3245] dark:bg-[#0f111a] dark:text-[#8a94ad]">
                   <tr>
-                    <th className="px-4 py-3 font-bold">{table.id || "ID"}</th>
+                    <th className="px-4 py-3 font-bold">{table.id || "Case"}</th>
                     <th className="px-4 py-3 font-bold">{table.crop || "Crop"}</th>
-                    <th className="px-4 py-3 font-bold">{table.symptoms || "Symptoms"}</th>
+                    <th className="px-4 py-3 font-bold">{table.symptoms || "Observed Symptoms"}</th>
                     <th className="px-4 py-3 font-bold">{table.farmer || "Farmer"}</th>
-                    <th className="px-4 py-3 font-bold">{table.date || "Date"}</th>
+                    <th className="px-4 py-3 font-bold">{table.date || "Submitted"}</th>
                     <th className="px-4 py-3 text-right font-bold">{table.action || "Action"}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#e3e6ed] dark:divide-[#2b3245]">
                   {filtered.map((row) => (
                     <tr key={row.id} className="ai-table-row">
-                      <td className="px-4 py-3 font-mono text-[#6e7891] dark:text-[#8a94ad]">
+                      <td className="px-4 py-3.5 font-mono font-semibold text-[#525b75] dark:text-[#9fa6bc]">
                         #{row.id}
                       </td>
-                      <td className="px-4 py-3">
-                        <div className="font-semibold text-[#141824] dark:text-[#eff2f6]">
+                      <td className="px-4 py-3.5">
+                        <div className="font-bold text-[#141824] dark:text-[#eff2f6]">
                           {row.cropName || "-"}
                         </div>
                         <span
@@ -117,18 +217,25 @@ export default function ExpertPendingDiagnosesPage({
                           {row.statusLabel}
                         </span>
                       </td>
-                      <td className="max-w-md px-4 py-3 text-[#525b75] dark:text-[#9fa6bc]">
-                        <p className="line-clamp-2">{row.symptomsText || "-"}</p>
+                      <td className="max-w-md px-4 py-3.5 text-[#525b75] dark:text-[#9fa6bc]">
+                        <p className="line-clamp-2 leading-relaxed">{row.symptomsText || "-"}</p>
                       </td>
-                      <td className="px-4 py-3 font-medium text-[#31374a] dark:text-[#eff2f6]">
-                        {row.farmerName}
+                      <td className="px-4 py-3.5">
+                        <div className="flex items-center gap-2">
+                          <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#e5edff] text-[11px] font-bold text-[#004dff] dark:bg-[#3874ff]/20 dark:text-[#85a9ff]">
+                            {(row.farmerName || "?").slice(0, 1).toUpperCase()}
+                          </span>
+                          <span className="font-semibold text-[#31374a] dark:text-[#eff2f6]">
+                            {row.farmerName}
+                          </span>
+                        </div>
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3 font-mono text-[11px] text-[#6e7891] dark:text-[#8a94ad]">
-                        {row.createdAt ? row.createdAt.slice(0, 16).replace("T", " ") : "-"}
+                      <td className="whitespace-nowrap px-4 py-3.5 font-mono text-[11px] text-[#6e7891] dark:text-[#8a94ad]">
+                        {formatShortDateTime(row.createdAt)}
                       </td>
-                      <td className="px-4 py-3 text-right">
-                        <a href={row.reviewUrl} className="ai-btn-primary h-8 px-3 text-xs">
-                          {table.review || "Review"}
+                      <td className="px-4 py-3.5 text-right">
+                        <a href={row.reviewUrl} className="ai-btn-primary h-8 gap-1.5 px-3 text-xs">
+                          <span>{table.review || "Review"}</span>
                           <ArrowRight className="h-3.5 w-3.5" />
                         </a>
                       </td>

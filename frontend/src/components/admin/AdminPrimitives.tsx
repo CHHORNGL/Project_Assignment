@@ -421,7 +421,7 @@ export function AdminCollapsePanel({
   return (
     <div
       aria-hidden={!open}
-      className={`grid transition-[grid-template-rows,opacity] duration-250 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+      className={`grid transition-[grid-template-rows,opacity] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] ${
         open ? "grid-rows-[1fr] opacity-100" : "pointer-events-none grid-rows-[0fr] opacity-0"
       } ${className}`}
     >

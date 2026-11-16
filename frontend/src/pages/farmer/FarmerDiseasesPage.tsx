@@ -43,7 +43,7 @@ export default function FarmerDiseasesPage({ bootstrap }: { bootstrap: AppBootst
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search disease or crop..."
-              className="ai-input py-2 pl-9 text-xs"
+              className="ai-input py-2 pl-10 text-xs"
             />
           </div>
           <div className="flex flex-wrap gap-1.5">

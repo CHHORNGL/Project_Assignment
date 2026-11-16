@@ -13,11 +13,17 @@ export interface WeatherPayload {
   location?: { latitude?: number; longitude?: number; name?: string };
   current?: {
     temp_c?: number | null;
+    feels_like_c?: number | null;
     condition?: string;
     icon?: string;
-    humidity_pct?: number;
-    wind_kph?: number;
-    rain_mm?: number;
+    humidity_pct?: number | null;
+    wind_kph?: number | null;
+    wind_direction_deg?: number | null;
+    wind_gusts_kph?: number | null;
+    pressure_hpa?: number | null;
+    cloud_cover_pct?: number | null;
+    weather_code?: number;
+    rain_mm?: number | null;
   };
   analytics?: {
     rain_next_24h_mm?: number;
@@ -25,8 +31,23 @@ export interface WeatherPayload {
     avg_temp_next_24h_c?: number;
     weekly_rain_mm?: number;
   };
-  alerts?: Array<{ title?: string; message?: string; recommendation?: string; color?: string }>;
-  forecast?: Array<{ date?: string; icon?: string; temp_max_c?: number; temp_min_c?: number; rain_mm?: number }>;
+  alerts?: Array<{
+    level?: string;
+    title?: string;
+    message?: string;
+    recommendation?: string;
+    color?: string;
+  }>;
+  forecast?: Array<{
+    date?: string;
+    condition?: string;
+    icon?: string;
+    temp_max_c?: number | null;
+    temp_min_c?: number | null;
+    rain_mm?: number | null;
+    wind_kph?: number | null;
+    humidity_pct?: number | null;
+  }>;
   recommendations?: string[];
   meta?: WeatherMeta;
 }

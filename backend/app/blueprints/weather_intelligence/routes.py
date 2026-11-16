@@ -67,9 +67,8 @@ def _get_service() -> WeatherIntelligenceService:
     )
 
 
-@weather_intelligence_bp.get("/api/v1/summary")
-@farmer_required
-def weather_summary():
+def build_weather_summary_response():
+    """Shared handler returning validated weather intelligence summary JSON and HTTP caching headers."""
     latitude = request.args.get("lat", type=float)
     longitude = request.args.get("lon", type=float)
     lang_param = (request.args.get("lang", type=str) or "").strip().lower()
@@ -102,3 +101,9 @@ def weather_summary():
         response.headers["Warning"] = '110 - "Using stale or fallback weather intelligence data"'
         response.headers["Cache-Control"] = "private, no-store"
     return response
+
+
+@weather_intelligence_bp.get("/api/v1/summary")
+@farmer_required
+def weather_summary():
+    return build_weather_summary_response()

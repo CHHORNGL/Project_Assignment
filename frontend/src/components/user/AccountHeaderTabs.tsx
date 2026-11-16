@@ -15,7 +15,8 @@ interface AccountHeaderTabsProps {
 }
 
 /**
- * Shared sub-navigation bar linking Profile & Security, Workspace Preferences, and Device Sessions.
+ * Mobile-platform segmented navigation bar linking Profile & Security,
+ * Preferences, and Devices & Sessions.
  */
 export function AccountHeaderTabs({
   active,
@@ -35,19 +36,19 @@ export function AccountHeaderTabs({
   }> = [
     {
       key: "profile",
-      label: isKhmer ? "ប្រវត្តិរូប និងសុវត្ថិភាព" : "Profile & Security",
+      label: isKhmer ? "ប្រវត្តិរូប" : "Profile",
       href: profileUrl,
       icon: UserCircle,
     },
     {
       key: "settings",
-      label: isKhmer ? "ការកំណត់គណនី" : "Workspace Preferences",
+      label: isKhmer ? "ការកំណត់" : "Preferences",
       href: settingsUrl,
       icon: SlidersHorizontal,
     },
     {
       key: "activity",
-      label: isKhmer ? "ឧបករណ៍ និងសម័យចូល" : "Devices & Sessions",
+      label: isKhmer ? "ឧបករណ៍" : "Devices",
       href: loginActivityUrl,
       icon: MonitorSmartphone,
     },
@@ -56,11 +57,11 @@ export function AccountHeaderTabs({
   return (
     <div
       style={{ ["--stagger" as string]: 0 }}
-      className="ai-stagger mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-[#e3e6ed] pb-4 dark:border-[#2b3245]"
+      className="ai-stagger mx-auto mb-5 flex w-full max-w-2xl flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between"
     >
       <nav
         aria-label={isKhmer ? "ការរុករកគណនី" : "Account sections"}
-        className="inline-flex flex-wrap items-center gap-1 rounded-xl border border-[#cbd0dd]/80 bg-white/80 p-1 shadow-sm dark:border-[#2b3245] dark:bg-[#141824]/90"
+        className="grid flex-1 grid-cols-3 gap-1 rounded-2xl border border-slate-200/80 bg-slate-100/90 p-1 shadow-sm dark:border-slate-800 dark:bg-obsidian-900"
       >
         {tabs.map((tab) => {
           const Icon = tab.icon;
@@ -71,14 +72,14 @@ export function AccountHeaderTabs({
               href={tab.href}
               aria-current={isActive ? "page" : undefined}
               className={cn(
-                "inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-xs font-semibold transition-all duration-150",
+                "flex min-h-[38px] items-center justify-center gap-1.5 rounded-xl px-2.5 py-2 text-xs font-bold transition-all duration-150",
                 isActive
-                  ? "bg-[#3874ff] text-white shadow-sm"
-                  : "text-[#525b75] hover:bg-[#eff2f6] hover:text-[#141824] dark:text-[#9fa6bc] dark:hover:bg-[#1e2436] dark:hover:text-[#eff2f6]",
+                  ? "bg-white text-indigo-600 shadow-sm dark:bg-indigo-600 dark:text-white"
+                  : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100",
               )}
             >
               <Icon className="h-3.5 w-3.5 shrink-0" />
-              <span>{tab.label}</span>
+              <span className="truncate">{tab.label}</span>
             </a>
           );
         })}
@@ -87,21 +88,21 @@ export function AccountHeaderTabs({
       {typeof twoFactorEnabled === "boolean" && (
         <div
           className={cn(
-            "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-semibold",
+            "inline-flex shrink-0 items-center justify-center gap-1.5 self-start rounded-full border px-3 py-1.5 text-[11px] font-bold sm:self-auto",
             twoFactorEnabled
-              ? "border-[#90d67f] bg-[#d9fbd0]/75 text-[#1c6c09] dark:border-[#25b003]/40 dark:bg-[#25b003]/15 dark:text-[#90ee7a]"
-              : "border-[#cbd0dd] bg-[#eff2f6] text-[#525b75] dark:border-[#373e53] dark:bg-[#181d2b] dark:text-[#9fa6bc]",
+              ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+              : "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300",
           )}
         >
-          <ShieldCheck className="h-3.5 w-3.5" />
+          <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
           <span>
             {twoFactorEnabled
               ? isKhmer
-                ? "ការផ្ទៀងផ្ទាត់ ២ ជាន់៖ បើក"
-                : "2FA Protection Active"
+                ? "2FA សកម្ម"
+                : "2FA Active"
               : isKhmer
-                ? "ការផ្ទៀងផ្ទាត់ ២ ជាន់៖ បិទ"
-                : "2FA Not Enabled"}
+                ? "2FA បានបិទ"
+                : "2FA Off"}
           </span>
         </div>
       )}

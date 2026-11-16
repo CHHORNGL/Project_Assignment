@@ -1,29 +1,34 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
-  ArrowRight,
   AtSign,
   BadgeCheck,
   Camera,
   CheckCircle2,
+  ChevronDown,
+  ChevronRight,
   ExternalLink,
   Fingerprint,
   KeyRound,
   Loader2,
+  LogOut,
   Mail,
+  MonitorSmartphone,
   Plus,
   RotateCcw,
   Save,
-  Shield,
   ShieldCheck,
   SlidersHorizontal,
   Trash2,
   User,
-  UserCircle,
 } from "lucide-react";
 import type { AppBootstrap, PasskeyItem } from "@/types/app";
 import { WorkspaceShell } from "@/components/layout/WorkspaceShell";
 import { AccountHeaderTabs, formatAccountTimestamp } from "@/components/user/AccountHeaderTabs";
-import { AccountSectionCard, AccountSwitch } from "@/components/user/AccountPrimitives";
+import {
+  ACCOUNT_TONE_CLASSES,
+  AccountSwitch,
+  MobileSectionLabel,
+} from "@/components/user/AccountPrimitives";
 import { PasswordInput } from "@/components/ui/PasswordInput";
 import { useToast } from "@/context/ToastContext";
 import { performPasskeyRegistration, postJson, requestJson } from "@/lib/api";
@@ -59,6 +64,7 @@ export default function ProfilePage({ bootstrap }: { bootstrap: AppBootstrap<Pro
   const objectUrlRef = useRef<string | null>(null);
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
 
+  const [passwordOpen, setPasswordOpen] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -130,22 +136,29 @@ export default function ProfilePage({ bootstrap }: { bootstrap: AppBootstrap<Pro
     if (!newPassword && !confirmPassword) return;
     if (!currentPassword) {
       e.preventDefault();
+      setPasswordOpen(true);
       pushToast(
         "danger",
-        isKhmer ? "សូមបញ្ចូលពាក្យសម្ងាត់បច្ចុប្បន្នជាមុនសិន។" : "Current password is required to set a new password.",
+        isKhmer
+          ? "សូមបញ្ចូលពាក្យសម្ងាត់បច្ចុប្បន្នជាមុនសិន។"
+          : "Current password is required to set a new password.",
       );
       return;
     }
     if (newPassword.length < 6) {
       e.preventDefault();
+      setPasswordOpen(true);
       pushToast(
         "danger",
-        isKhmer ? "ពាក្យសម្ងាត់ថ្មីត្រូវមានយ៉ាងតិច ៦ តួអក្សរ។" : "New password must be at least 6 characters.",
+        isKhmer
+          ? "ពាក្យសម្ងាត់ថ្មីត្រូវមានយ៉ាងតិច ៦ តួអក្សរ។"
+          : "New password must be at least 6 characters.",
       );
       return;
     }
     if (newPassword !== confirmPassword) {
       e.preventDefault();
+      setPasswordOpen(true);
       pushToast(
         "danger",
         isKhmer ? "ពាក្យសម្ងាត់ថ្មីមិនដូចគ្នាទេ។" : "New password and confirmation do not match.",
@@ -193,7 +206,10 @@ export default function ProfilePage({ bootstrap }: { bootstrap: AppBootstrap<Pro
         csrfToken: bootstrap.csrfToken,
       });
       setPasskeyName("");
-      pushToast("success", isKhmer ? "បានចុះឈ្មោះ Passkey ដោយជោគជ័យ!" : "Passkey registered successfully.");
+      pushToast(
+        "success",
+        isKhmer ? "បានចុះឈ្មោះ Passkey ដោយជោគជ័យ!" : "Passkey registered successfully.",
+      );
       await loadPasskeys();
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Passkey registration failed.";
@@ -222,8 +238,10 @@ export default function ProfilePage({ bootstrap }: { bootstrap: AppBootstrap<Pro
     }
   };
 
-  const passwordsEntered = Boolean(newPassword || confirmPassword);
+  const passwordsEntered = Boolean(currentPassword || newPassword || confirmPassword);
   const passwordsMatch = Boolean(newPassword && confirmPassword && newPassword === confirmPassword);
+  const logoutHref = bootstrap.urls.logout || "/auth/logout";
+  const roles = bootstrap.user.roles.length ? bootstrap.user.roles : ["member"];
 
   return (
     <WorkspaceShell
@@ -234,7 +252,7 @@ export default function ProfilePage({ bootstrap }: { bootstrap: AppBootstrap<Pro
       headerActions={
         <a href={d.settingsUrl} className="ai-btn-secondary h-9 px-3 text-xs">
           <SlidersHorizontal className="h-3.5 w-3.5" />
-          <span>{isKhmer ? "ការកំណត់គណនី" : "Preferences"}</span>
+          <span className="hidden sm:inline">{isKhmer ? "ការកំណត់" : "Preferences"}</span>
         </a>
       }
     >
@@ -247,390 +265,428 @@ export default function ProfilePage({ bootstrap }: { bootstrap: AppBootstrap<Pro
         twoFactorEnabled={twoFactor}
       />
 
-      <div className="grid gap-6 xl:grid-cols-12">
-        {/* Left Column: Identity & Password Form */}
+      <div className="mx-auto w-full max-w-2xl space-y-6 pb-4">
+        {/* Main Profile & Password Form */}
         <form
           method="post"
           action={d.submitUrl}
           encType="multipart/form-data"
           onSubmit={handleProfileSubmit}
-          className="space-y-6 xl:col-span-8"
+          className="space-y-5"
         >
           <input type="hidden" name="csrf_token" value={bootstrap.csrfToken} />
 
-          {/* Identity & Account Information Card */}
-          <AccountSectionCard
-            delayIndex={1}
-            tone="blue"
-            icon={<UserCircle className="h-4 w-4" />}
-            title={isKhmer ? "ព័ត៌មានគណនី និងរូបភាពតំណាង" : "Identity & Account Profile"}
-            subtitle={
-              isKhmer
-                ? "គ្រប់គ្រងឈ្មោះបង្ហាញ រូបភាពតំណាង និងអ៊ីមែលសុវត្ថិភាពរបស់អ្នក។"
-                : "Update your public profile photo, username handle, and recovery email."
-            }
-            action={
-              d.memberCardUrl &&
-              d.repLabel && (
+          {/* Mobile App Profile Hero Card */}
+          <section className="overflow-hidden rounded-3xl border border-slate-200/85 bg-white shadow-sm dark:border-slate-800 dark:bg-obsidian-900">
+            <div className="relative h-20 bg-gradient-to-r from-indigo-600/15 via-sky-500/10 to-emerald-500/15 dark:from-indigo-500/20 dark:via-sky-500/10 dark:to-emerald-500/15">
+              {d.memberCardUrl && d.repLabel && (
                 <a
                   href={d.memberCardUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-[#adc5ff] bg-[#e5edff]/70 px-2.5 py-1 text-xs font-semibold text-[#004dff] transition hover:bg-[#e5edff] dark:border-[#3874ff]/40 dark:bg-[#3874ff]/15 dark:text-[#85a9ff]"
+                  className="absolute right-4 top-3.5 inline-flex items-center gap-1 rounded-full border border-white/70 bg-white/85 px-3 py-1 text-[11px] font-bold text-indigo-600 shadow-sm backdrop-blur transition hover:bg-white dark:border-slate-700 dark:bg-obsidian-900/90 dark:text-indigo-300"
                 >
                   <span>{isKhmer ? "ប័ណ្ណសម្គាល់" : "Member Card"}</span>
                   <ExternalLink className="h-3 w-3" />
                 </a>
-              )
-            }
-          >
-            {/* Avatar & Identity Header Strip */}
-            <div className="mb-6 flex flex-col justify-between gap-4 rounded-xl border border-[#e3e6ed] bg-[#f5f7fa]/75 p-4 dark:border-[#2b3245] dark:bg-[#0f111a]/65 sm:flex-row sm:items-center">
-              <div className="flex items-center gap-4">
-                <div className="group relative shrink-0">
-                  <img
-                    src={avatarPreview}
-                    alt={bootstrap.user.full_name || bootstrap.user.username}
-                    onError={(e) => {
-                      e.currentTarget.src = "/static/img/avatar.png";
-                    }}
-                    className="h-20 w-20 rounded-2xl border border-[#cbd0dd] object-cover shadow-sm dark:border-[#373e53]"
-                  />
-                  <label
-                    htmlFor="avatar-upload"
-                    className="absolute -bottom-1.5 -right-1.5 flex h-8 w-8 cursor-pointer items-center justify-center rounded-xl border border-white bg-[#3874ff] text-white shadow-md transition hover:bg-[#004dff] dark:border-[#141824]"
-                    title={isKhmer ? "ផ្លាស់ប្តូររូបភាព" : "Upload avatar"}
-                  >
-                    <Camera className="h-3.5 w-3.5" />
-                    <input
-                      ref={avatarInputRef}
-                      id="avatar-upload"
-                      type="file"
-                      name="avatar"
-                      accept=".jpg,.jpeg,.png,.webp"
-                      className="hidden"
-                      onChange={handleAvatarChange}
-                    />
-                  </label>
-                </div>
+              )}
+            </div>
 
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="truncate font-display text-base font-bold text-[#141824] dark:text-[#eff2f6]">
-                      {bootstrap.user.full_name || bootstrap.user.username}
-                    </h3>
-                    {d.isPremium && (
-                      <span className="inline-flex items-center gap-1 rounded-md border border-[#ffcc85] bg-[#ffefca] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#bc3803] dark:border-[#e5780b]/40 dark:bg-[#e5780b]/15 dark:text-[#ffbd6b]">
-                        <BadgeCheck className="h-3 w-3" />
-                        PRO
-                      </span>
-                    )}
-                  </div>
-                  <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-                    {(bootstrap.user.roles.length ? bootstrap.user.roles : ["member"]).map((role) => (
-                      <span
-                        key={role}
-                        className="inline-flex items-center rounded-md border border-[#cbd0dd] bg-white px-2 py-0.5 text-[11px] font-semibold capitalize text-[#31374a] dark:border-[#373e53] dark:bg-[#181d2b] dark:text-[#eff2f6]"
-                      >
-                        {role}
-                      </span>
-                    ))}
-                    <span className="inline-flex items-center rounded-md border border-[#cbd0dd] bg-white px-2 py-0.5 text-[11px] font-medium text-[#6e7891] dark:border-[#373e53] dark:bg-[#181d2b] dark:text-[#9fa6bc]">
-                      Auth: <span className="ml-1 font-semibold capitalize">{d.authProvider}</span>
-                    </span>
-                  </div>
-                  <p className="mt-1.5 text-[11px] text-[#6e7891] dark:text-[#8a94ad]">
-                    {selectedAvatarName
-                      ? isKhmer
-                        ? `បានជ្រើសរើស៖ ${selectedAvatarName} (ចុចរក្សាទុកដើម្បីបញ្ជាក់)`
-                        : `Ready to upload: ${selectedAvatarName}`
-                      : isKhmer
-                        ? "គាំទ្រ JPG, PNG ឬ WEBP · ទំហំអតិបរមា 2 MB"
-                        : "Supports JPG, PNG, or WEBP · Max 2 MB"}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex shrink-0 flex-wrap items-center gap-2">
+            <div className="-mt-12 px-5 pb-5 text-center">
+              <div className="relative mx-auto inline-block">
+                <img
+                  src={avatarPreview}
+                  alt={bootstrap.user.full_name || bootstrap.user.username}
+                  onError={(e) => {
+                    e.currentTarget.src = "/static/img/avatar.png";
+                  }}
+                  className="h-24 w-24 rounded-full border-4 border-white object-cover shadow-md dark:border-obsidian-900"
+                />
                 <label
                   htmlFor="avatar-upload"
-                  className="ai-btn-secondary h-8 cursor-pointer px-3 text-xs"
+                  className="absolute bottom-0 right-0 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-2 border-white bg-indigo-600 text-white shadow-md transition hover:bg-indigo-500 dark:border-obsidian-900"
+                  title={isKhmer ? "ផ្លាស់ប្តូររូបភាព" : "Change photo"}
                 >
                   <Camera className="h-3.5 w-3.5" />
-                  <span>{isKhmer ? "ជ្រើសរូបភាព" : "Change Photo"}</span>
+                  <input
+                    ref={avatarInputRef}
+                    id="avatar-upload"
+                    type="file"
+                    name="avatar"
+                    accept=".jpg,.jpeg,.png,.webp"
+                    className="hidden"
+                    onChange={handleAvatarChange}
+                  />
                 </label>
-                {selectedAvatarName && (
+              </div>
+
+              <div className="mt-3 flex flex-wrap items-center justify-center gap-1.5">
+                <h2 className="font-display text-lg font-extrabold tracking-tight text-slate-900 dark:text-white">
+                  {bootstrap.user.full_name || bootstrap.user.username}
+                </h2>
+                {d.isPremium && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-amber-700 dark:text-amber-300">
+                    <BadgeCheck className="h-3 w-3" />
+                    PRO
+                  </span>
+                )}
+              </div>
+
+              <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                @{bootstrap.user.username}
+                {bootstrap.user.email ? ` · ${bootstrap.user.email}` : ""}
+              </p>
+
+              <div className="mt-3 flex flex-wrap items-center justify-center gap-1.5">
+                {roles.map((role) => (
+                  <span
+                    key={role}
+                    className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-[11px] font-bold capitalize text-slate-700 dark:border-slate-700 dark:bg-obsidian-850 dark:text-slate-200"
+                  >
+                    {role}
+                  </span>
+                ))}
+                <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-[11px] font-medium capitalize text-slate-500 dark:border-slate-700 dark:bg-obsidian-850 dark:text-slate-400">
+                  {d.authProvider}
+                </span>
+              </div>
+
+              {selectedAvatarName ? (
+                <div className="mt-3.5 inline-flex flex-wrap items-center justify-center gap-2 rounded-2xl border border-indigo-500/25 bg-indigo-500/10 px-3 py-1.5 text-[11px] font-semibold text-indigo-700 dark:text-indigo-300">
+                  <span className="max-w-[200px] truncate">
+                    {isKhmer ? `ត្រៀមផ្ទុក៖ ${selectedAvatarName}` : `Queued: ${selectedAvatarName}`}
+                  </span>
                   <button
                     type="button"
                     onClick={handleResetAvatar}
-                    className="inline-flex h-8 items-center gap-1 rounded-lg border border-[#cbd0dd] px-2.5 text-xs font-semibold text-[#525b75] transition hover:bg-[#eff2f6] dark:border-[#373e53] dark:text-[#9fa6bc] dark:hover:bg-[#1e2436]"
+                    className="inline-flex items-center gap-1 rounded-lg bg-white/80 px-2 py-0.5 text-[10.5px] font-bold text-slate-700 hover:bg-white dark:bg-obsidian-800 dark:text-slate-200"
                   >
                     <RotateCcw className="h-3 w-3" />
-                    <span>{isKhmer ? "បោះបង់" : "Reset"}</span>
+                    <span>{isKhmer ? "បោះបង់" : "Cancel"}</span>
                   </button>
+                </div>
+              ) : (
+                <p className="mt-3 text-[11px] text-slate-400 dark:text-slate-500">
+                  {isKhmer
+                    ? "ប៉ះរូបកាមេរ៉ាដើម្បីប្តូររូបភាព (JPG, PNG, WEBP · 2 MB)"
+                    : "Tap the camera badge to update your photo (JPG, PNG, WEBP · Max 2 MB)"}
+                </p>
+              )}
+            </div>
+          </section>
+
+          {/* 3-Tile Mobile Security Glance */}
+          <div className="grid grid-cols-3 gap-2.5">
+            <div className="rounded-2xl border border-slate-200/85 bg-white p-3 text-center shadow-sm dark:border-slate-800 dark:bg-obsidian-900">
+              <div
+                className={cn(
+                  "mx-auto mb-1.5 flex h-8 w-8 items-center justify-center rounded-xl border",
+                  twoFactor ? ACCOUNT_TONE_CLASSES.emerald : ACCOUNT_TONE_CLASSES.amber,
                 )}
+              >
+                <ShieldCheck className="h-4 w-4" />
               </div>
+              <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                {isKhmer ? "2FA" : "Two-Factor"}
+              </p>
+              <p
+                className={cn(
+                  "mt-0.5 text-xs font-extrabold",
+                  twoFactor
+                    ? "text-emerald-600 dark:text-emerald-300"
+                    : "text-amber-600 dark:text-amber-300",
+                )}
+              >
+                {twoFactor ? (isKhmer ? "សកម្ម" : "Active") : isKhmer ? "បានបិទ" : "Off"}
+              </p>
             </div>
 
-            {/* Profile Fields */}
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label
-                  htmlFor="profile-username"
-                  className="mb-1.5 block text-xs font-semibold text-[#31374a] dark:text-[#cbd0dd]"
-                >
-                  {isKhmer ? "ឈ្មោះអ្នកប្រើប្រាស់" : "Username"}
-                </label>
-                <div className="relative">
-                  <AtSign className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8a94ad]" />
-                  <input
-                    id="profile-username"
-                    type="text"
-                    name="username"
-                    defaultValue={bootstrap.user.username}
-                    required
-                    className="ai-input pl-9"
-                  />
+            <div className="rounded-2xl border border-slate-200/85 bg-white p-3 text-center shadow-sm dark:border-slate-800 dark:bg-obsidian-900">
+              <div
+                className={cn(
+                  "mx-auto mb-1.5 flex h-8 w-8 items-center justify-center rounded-xl border",
+                  ACCOUNT_TONE_CLASSES.blue,
+                )}
+              >
+                <Fingerprint className="h-4 w-4" />
+              </div>
+              <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                Passkeys
+              </p>
+              <p className="mt-0.5 text-xs font-extrabold tabular-nums text-slate-900 dark:text-white">
+                {loadingPasskeys
+                  ? "…"
+                  : `${passkeys.length} ${isKhmer ? "ឧបករណ៍" : "Added"}`}
+              </p>
+            </div>
+
+            <a
+              href={d.loginActivityUrl}
+              className="group rounded-2xl border border-slate-200/85 bg-white p-3 text-center shadow-sm transition hover:border-indigo-400/50 dark:border-slate-800 dark:bg-obsidian-900"
+            >
+              <div
+                className={cn(
+                  "mx-auto mb-1.5 flex h-8 w-8 items-center justify-center rounded-xl border",
+                  ACCOUNT_TONE_CLASSES.slate,
+                )}
+              >
+                <MonitorSmartphone className="h-4 w-4" />
+              </div>
+              <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                {isKhmer ? "សម័យចូល" : "Sessions"}
+              </p>
+              <p className="mt-0.5 inline-flex items-center gap-0.5 text-xs font-extrabold text-indigo-600 group-hover:underline dark:text-indigo-300">
+                <span>{isKhmer ? "ពិនិត្យ" : "Manage"}</span>
+                <ChevronRight className="h-3 w-3" />
+              </p>
+            </a>
+          </div>
+
+          {/* Grouped Identity Fields */}
+          <div>
+            <MobileSectionLabel>
+              {isKhmer ? "ព័ត៌មានគណនី" : "Account Details"}
+            </MobileSectionLabel>
+            <div className="space-y-4 rounded-3xl border border-slate-200/85 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-obsidian-900 sm:p-5">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label
+                    htmlFor="profile-username"
+                    className="mb-1.5 block text-xs font-semibold text-slate-700 dark:text-slate-300"
+                  >
+                    {isKhmer ? "ឈ្មោះអ្នកប្រើប្រាស់" : "Username"}
+                  </label>
+                  <div className="relative">
+                    <AtSign className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    <input
+                      id="profile-username"
+                      type="text"
+                      name="username"
+                      defaultValue={bootstrap.user.username}
+                      required
+                      className="ai-input h-10 rounded-xl pl-10 text-sm"
+                    />
+                  </div>
                 </div>
-                <p className="mt-1 text-[11px] text-[#6e7891] dark:text-[#8a94ad]">
-                  {isKhmer ? "ប្រើសម្រាប់សម្គាល់គណនីនៅក្នុងប្រព័ន្ធ។" : "Unique identifier used to access your workspace."}
-                </p>
+
+                <div>
+                  <label
+                    htmlFor="profile-full-name"
+                    className="mb-1.5 block text-xs font-semibold text-slate-700 dark:text-slate-300"
+                  >
+                    {isKhmer ? "ឈ្មោះពេញ" : "Full Name"}
+                  </label>
+                  <div className="relative">
+                    <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    <input
+                      id="profile-full-name"
+                      type="text"
+                      name="full_name"
+                      defaultValue={bootstrap.user.full_name}
+                      placeholder={isKhmer ? "បញ្ចូលឈ្មោះពេញ" : "Enter full name"}
+                      className="ai-input h-10 rounded-xl pl-10 text-sm"
+                    />
+                  </div>
+                </div>
               </div>
 
               <div>
-                <label
-                  htmlFor="profile-full-name"
-                  className="mb-1.5 block text-xs font-semibold text-[#31374a] dark:text-[#cbd0dd]"
-                >
-                  {isKhmer ? "ឈ្មោះពេញ" : "Full Name"}
-                </label>
-                <div className="relative">
-                  <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8a94ad]" />
-                  <input
-                    id="profile-full-name"
-                    type="text"
-                    name="full_name"
-                    defaultValue={bootstrap.user.full_name}
-                    placeholder={isKhmer ? "បញ្ចូលឈ្មោះពេញ" : "Enter full name"}
-                    className="ai-input pl-9"
-                  />
-                </div>
-                <p className="mt-1 text-[11px] text-[#6e7891] dark:text-[#8a94ad]">
-                  {isKhmer ? "ឈ្មោះដែលបង្ហាញជូនក្រុមការងារ និងកសិករ។" : "Displayed across chats, reviews, and workspace headers."}
-                </p>
-              </div>
-
-              <div className="sm:col-span-2">
                 <label
                   htmlFor="profile-email"
-                  className="mb-1.5 block text-xs font-semibold text-[#31374a] dark:text-[#cbd0dd]"
+                  className="mb-1.5 block text-xs font-semibold text-slate-700 dark:text-slate-300"
                 >
-                  {isKhmer ? "អាសយដ្ឋានអ៊ីមែល" : "Email Address"}
+                  {isKhmer ? "អាសយដ្ឋានអ៊ីមែល" : "Recovery Email"}
                 </label>
                 <div className="relative">
-                  <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8a94ad]" />
+                  <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                   <input
                     id="profile-email"
                     type="email"
                     name="email"
                     defaultValue={bootstrap.user.email}
                     placeholder="name@company.com"
-                    className="ai-input pl-9"
+                    className="ai-input h-10 rounded-xl pl-10 text-sm"
                   />
                 </div>
-                <p className="mt-1 text-[11px] text-[#6e7891] dark:text-[#8a94ad]">
+                <p className="mt-1.5 text-[11px] text-slate-500 dark:text-slate-400">
                   {isKhmer
-                    ? "ប្រើសម្រាប់ទទួលកូដ OTP ផ្ទៀងផ្ទាត់ ២ ជាន់ និងការស្តារពាក្យសម្ងាត់។"
-                    : "Receives two-factor verification OTP codes, session alerts, and recovery links."}
+                    ? "ប្រើសម្រាប់ទទួលកូដ OTP ផ្ទៀងផ្ទាត់ ២ ជាន់ និងស្តារពាក្យសម្ងាត់។"
+                    : "Used for Email OTP verification codes and password recovery."}
                 </p>
               </div>
             </div>
-          </AccountSectionCard>
+          </div>
 
-          {/* Password Update Card */}
-          <AccountSectionCard
-            delayIndex={2}
-            tone="amber"
-            icon={<KeyRound className="h-4 w-4" />}
-            title={isKhmer ? "ផ្លាស់ប្តូរពាក្យសម្ងាត់" : "Password & Credentials"}
-            subtitle={
-              isKhmer
-                ? "ទុកទទេប្រសិនបើអ្នកមិនចង់ផ្លាស់ប្តូរពាក្យសម្ងាត់បច្ចុប្បន្នទេ។"
-                : "Optional — leave blank to keep your existing sign-in password unchanged."
-            }
-          >
-            <div className="grid gap-4 md:grid-cols-3">
-              <div>
-                <label className="mb-1.5 block text-xs font-semibold text-[#31374a] dark:text-[#cbd0dd]">
-                  {isKhmer ? "ពាក្យសម្ងាត់បច្ចុប្បន្ន" : "Current Password"}
-                </label>
-                <PasswordInput
-                  name="current_password"
-                  autoComplete="current-password"
-                  placeholder="••••••••"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                />
-              </div>
-
-              <div>
-                <label className="mb-1.5 block text-xs font-semibold text-[#31374a] dark:text-[#cbd0dd]">
-                  {isKhmer ? "ពាក្យសម្ងាត់ថ្មី" : "New Password"}
-                </label>
-                <PasswordInput
-                  name="new_password"
-                  autoComplete="new-password"
-                  placeholder={isKhmer ? "យ៉ាងតិច ៦ តួអក្សរ" : "Minimum 6 characters"}
-                  showStrength
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                />
-              </div>
-
-              <div>
-                <label className="mb-1.5 block text-xs font-semibold text-[#31374a] dark:text-[#cbd0dd]">
-                  {isKhmer ? "បញ្ជាក់ពាក្យសម្ងាត់ថ្មី" : "Confirm New Password"}
-                </label>
-                <PasswordInput
-                  name="confirm_password"
-                  autoComplete="new-password"
-                  placeholder={isKhmer ? "វាយបញ្ចូលម្តងទៀត" : "Repeat new password"}
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                />
-              </div>
-            </div>
-
-            {passwordsEntered && (
-              <div className="mt-3 flex flex-wrap items-center gap-3 text-xs">
-                {newPassword.length > 0 && newPassword.length < 6 && (
-                  <span className="text-[#bc3803] dark:text-[#ffbd6b]">
-                    {isKhmer
-                      ? "ពាក្យសម្ងាត់ថ្មីត្រូវមានយ៉ាងតិច ៦ តួអក្សរ។"
-                      : "New password must be at least 6 characters."}
-                  </span>
-                )}
-                {confirmPassword.length > 0 && (
+          {/* Collapsible Mobile Password Drawer */}
+          <div>
+            <MobileSectionLabel>
+              {isKhmer ? "ពាក្យសម្ងាត់" : "Password & Sign-In"}
+            </MobileSectionLabel>
+            <div className="overflow-hidden rounded-3xl border border-slate-200/85 bg-white shadow-sm dark:border-slate-800 dark:bg-obsidian-900">
+              <button
+                type="button"
+                onClick={() => setPasswordOpen((prev) => !prev)}
+                className="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left transition hover:bg-slate-50/75 dark:hover:bg-obsidian-850 sm:px-5"
+              >
+                <div className="flex min-w-0 items-center gap-3">
                   <span
                     className={cn(
-                      "inline-flex items-center gap-1 font-medium",
-                      passwordsMatch
-                        ? "text-[#1c6c09] dark:text-[#7ee864]"
-                        : "text-[#b81800] dark:text-[#ff8f7d]",
+                      "flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border",
+                      ACCOUNT_TONE_CLASSES.amber,
                     )}
                   >
-                    <CheckCircle2 className="h-3.5 w-3.5" />
-                    {passwordsMatch
-                      ? isKhmer
-                        ? "ពាក្យសម្ងាត់ថ្មីត្រូវគ្នា"
-                        : "Passwords match"
-                      : isKhmer
-                        ? "ពាក្យសម្ងាត់ថ្មីមិនត្រូវគ្នាទេ"
-                        : "Passwords do not match"}
+                    <KeyRound className="h-4 w-4" />
                   </span>
-                )}
-              </div>
-            )}
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-slate-900 dark:text-white">
+                      {isKhmer ? "ផ្លាស់ប្តូរពាក្យសម្ងាត់" : "Change Password"}
+                    </p>
+                    <p className="truncate text-xs text-slate-500 dark:text-slate-400">
+                      {passwordsEntered
+                        ? isKhmer
+                          ? "កំពុងកែប្រែពាក្យសម្ងាត់ថ្មី"
+                          : "Editing new password fields"
+                        : isKhmer
+                          ? "ប៉ះដើម្បីបង្ហាញប្រអប់កែប្រែពាក្យសម្ងាត់"
+                          : "Tap to update your login password"}
+                    </p>
+                  </div>
+                </div>
+                <ChevronDown
+                  className={cn(
+                    "h-4 w-4 shrink-0 text-slate-400 transition-transform duration-200",
+                    (passwordOpen || passwordsEntered) && "rotate-180",
+                  )}
+                />
+              </button>
 
-            <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-[#e3e6ed] pt-4 dark:border-[#2b3245]">
-              <p className="text-xs text-[#6e7891] dark:text-[#8a94ad]">
-                {isKhmer
-                  ? "រាល់ការផ្លាស់ប្តូរព័ត៌មានត្រូវរក្សាទុកភ្លាមៗបន្ទាប់ពីបញ្ជូន។"
-                  : "Updates apply immediately across your active sessions."}
-              </p>
-              <div className="flex items-center gap-2.5">
-                <a href={d.settingsUrl} className="ai-btn-secondary h-9 px-3.5 text-xs">
-                  {isKhmer ? "ការកំណត់គណនី" : "Preferences"}
-                </a>
-                <button type="submit" className="ai-btn-primary h-9 px-4 text-xs">
-                  <Save className="h-3.5 w-3.5" />
-                  <span>{isKhmer ? "រក្សាទុកការផ្លាស់ប្តូរ" : "Save Profile"}</span>
-                </button>
-              </div>
+              {(passwordOpen || passwordsEntered) && (
+                <div className="space-y-3.5 border-t border-slate-200/75 p-4 dark:border-slate-800 sm:p-5">
+                  <div>
+                    <label className="mb-1.5 block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                      {isKhmer ? "ពាក្យសម្ងាត់បច្ចុប្បន្ន" : "Current Password"}
+                    </label>
+                    <PasswordInput
+                      name="current_password"
+                      autoComplete="current-password"
+                      placeholder="••••••••"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="grid gap-3.5 sm:grid-cols-2">
+                    <div>
+                      <label className="mb-1.5 block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                        {isKhmer ? "ពាក្យសម្ងាត់ថ្មី" : "New Password"}
+                      </label>
+                      <PasswordInput
+                        name="new_password"
+                        autoComplete="new-password"
+                        placeholder={isKhmer ? "យ៉ាងតិច ៦ តួអក្សរ" : "Minimum 6 characters"}
+                        showStrength
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="mb-1.5 block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                        {isKhmer ? "បញ្ជាក់ពាក្យសម្ងាត់ថ្មី" : "Confirm Password"}
+                      </label>
+                      <PasswordInput
+                        name="confirm_password"
+                        autoComplete="new-password"
+                        placeholder={isKhmer ? "វាយបញ្ចូលម្តងទៀត" : "Repeat new password"}
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  {(newPassword.length > 0 || confirmPassword.length > 0) && (
+                    <div className="flex flex-wrap items-center gap-3 text-xs">
+                      {newPassword.length > 0 && newPassword.length < 6 && (
+                        <span className="font-medium text-amber-600 dark:text-amber-400">
+                          {isKhmer
+                            ? "ត្រូវមានយ៉ាងតិច ៦ តួអក្សរ។"
+                            : "Must be at least 6 characters."}
+                        </span>
+                      )}
+                      {confirmPassword.length > 0 && (
+                        <span
+                          className={cn(
+                            "inline-flex items-center gap-1 font-semibold",
+                            passwordsMatch
+                              ? "text-emerald-600 dark:text-emerald-400"
+                              : "text-rose-600 dark:text-rose-400",
+                          )}
+                        >
+                          <CheckCircle2 className="h-3.5 w-3.5" />
+                          {passwordsMatch
+                            ? isKhmer
+                              ? "ពាក្យសម្ងាត់ត្រូវគ្នា"
+                              : "Passwords match"
+                            : isKhmer
+                              ? "ពាក្យសម្ងាត់មិនត្រូវគ្នា"
+                              : "Passwords do not match"}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
-          </AccountSectionCard>
+          </div>
+
+          <button
+            type="submit"
+            className="ai-btn-primary h-11 w-full rounded-2xl text-sm font-bold shadow-sm"
+          >
+            <Save className="h-4 w-4" />
+            <span>
+              {selectedAvatarName
+                ? isKhmer
+                  ? "រក្សាទុកប្រវត្តិរូប និងរូបភាពថ្មី"
+                  : "Save Profile & New Photo"
+                : isKhmer
+                  ? "រក្សាទុកការផ្លាស់ប្តូរ"
+                  : "Save Profile Changes"}
+            </span>
+          </button>
         </form>
 
-        {/* Right Column: Security Posture, 2FA & Passkeys */}
-        <div className="space-y-6 xl:col-span-4">
-          {/* Security Posture Summary */}
-          <AccountSectionCard
-            delayIndex={2}
-            tone="emerald"
-            icon={<Shield className="h-4 w-4" />}
-            title={isKhmer ? "ស្ថានភាពសុវត្ថិភាពគណនី" : "Security Posture"}
-            subtitle={isKhmer ? "ទិដ្ឋភាពសង្ខេបនៃការការពារគណនី" : "Live overview of your protection controls"}
-          >
-            <dl className="divide-y divide-[#e3e6ed] text-xs dark:divide-[#2b3245]">
-              <div className="flex items-center justify-between py-2.5 first:pt-0">
-                <dt className="text-[#6e7891] dark:text-[#8a94ad]">
-                  {isKhmer ? "វិធីសាស្ត្រចូល" : "Auth Provider"}
-                </dt>
-                <dd className="font-semibold capitalize text-[#141824] dark:text-[#eff2f6]">
-                  {d.authProvider}
-                </dd>
-              </div>
-              <div className="flex items-center justify-between py-2.5">
-                <dt className="text-[#6e7891] dark:text-[#8a94ad]">
-                  {isKhmer ? "ការផ្ទៀងផ្ទាត់ ២ ជាន់" : "Two-Factor (2FA)"}
-                </dt>
-                <dd
-                  className={cn(
-                    "font-semibold",
-                    twoFactor ? "text-[#1c6c09] dark:text-[#7ee864]" : "text-[#6e7891] dark:text-[#9fa6bc]",
-                  )}
-                >
-                  {twoFactor ? (isKhmer ? "សកម្ម" : "Enabled") : isKhmer ? "បានបិទ" : "Disabled"}
-                </dd>
-              </div>
-              <div className="flex items-center justify-between py-2.5 last:pb-0">
-                <dt className="text-[#6e7891] dark:text-[#8a94ad]">
-                  {isKhmer ? "Passkeys បានចុះឈ្មោះ" : "Enrolled Passkeys"}
-                </dt>
-                <dd className="font-semibold tabular-nums text-[#141824] dark:text-[#eff2f6]">
-                  {loadingPasskeys ? "…" : passkeys.length}
-                </dd>
-              </div>
-            </dl>
-          </AccountSectionCard>
-
-          {/* Two-Factor Authentication Card */}
-          <AccountSectionCard
-            delayIndex={3}
-            tone="emerald"
-            icon={<ShieldCheck className="h-4 w-4" />}
-            title={isKhmer ? "ការផ្ទៀងផ្ទាត់ ២ ជាន់ (2FA)" : "Two-Factor Verification"}
-            subtitle={
-              isKhmer ? "ផ្ញើកូដ OTP តាមអ៊ីមែលពេលចូលគណនី" : "Email OTP challenge on unrecognized sign-ins"
-            }
-          >
-            <div className="flex items-center justify-between gap-3 rounded-xl border border-[#e3e6ed] bg-[#f5f7fa]/75 p-3.5 dark:border-[#2b3245] dark:bg-[#0f111a]/65">
-              <div className="min-w-0">
+        {/* Grouped Security Controls List */}
+        <div>
+          <MobileSectionLabel>
+            {isKhmer ? "ការការពារសុវត្ថិភាព" : "Security Controls"}
+          </MobileSectionLabel>
+          <div className="divide-y divide-slate-200/75 overflow-hidden rounded-3xl border border-slate-200/85 bg-white shadow-sm dark:divide-slate-800 dark:border-slate-800 dark:bg-obsidian-900">
+            {/* Two-Factor Switch Row */}
+            <div className="flex items-center justify-between gap-3 px-4 py-3.5 sm:px-5">
+              <div className="flex min-w-0 items-center gap-3">
                 <span
                   className={cn(
-                    "inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
-                    twoFactor
-                      ? "bg-[#d9fbd0] text-[#1c6c09] dark:bg-[#25b003]/20 dark:text-[#90ee7a]"
-                      : "bg-[#e3e6ed] text-[#525b75] dark:bg-[#1e2436] dark:text-[#9fa6bc]",
+                    "flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border",
+                    twoFactor ? ACCOUNT_TONE_CLASSES.emerald : ACCOUNT_TONE_CLASSES.slate,
                   )}
                 >
-                  <span
-                    className={cn(
-                      "h-1.5 w-1.5 rounded-full",
-                      twoFactor ? "bg-[#25b003]" : "bg-[#8a94ad]",
-                    )}
-                  />
-                  {twoFactor ? (isKhmer ? "បានបើក" : "Active") : isKhmer ? "បានបិទ" : "Off"}
+                  <ShieldCheck className="h-4 w-4" />
                 </span>
-                <p className="mt-1 text-xs font-medium text-[#31374a] dark:text-[#cbd0dd]">
-                  {twoFactor
-                    ? isKhmer
-                      ? "កំពុងការពារតាមរយៈ Email OTP"
-                      : "Protected via Email OTP"
-                    : isKhmer
-                      ? "បើកដើម្បីបង្កើនសុវត្ថិភាពគណនី"
-                      : "Enable an extra verification step"}
-                </p>
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-slate-900 dark:text-white">
+                    {isKhmer ? "ការផ្ទៀងផ្ទាត់ ២ ជាន់ (2FA)" : "Two-Factor Verification"}
+                  </p>
+                  <p className="truncate text-xs text-slate-500 dark:text-slate-400">
+                    {twoFactor
+                      ? isKhmer
+                        ? "កំពុងការពារតាម Email OTP"
+                        : "Protected via Email OTP"
+                      : isKhmer
+                        ? "បើកដើម្បីស្នើ OTP ពេលចូលគណនី"
+                        : "Email OTP check on new logins"}
+                  </p>
+                </div>
               </div>
               <AccountSwitch
                 checked={twoFactor}
@@ -639,72 +695,141 @@ export default function ProfilePage({ bootstrap }: { bootstrap: AppBootstrap<Pro
                 onClick={handleToggle2fa}
               />
             </div>
-          </AccountSectionCard>
 
-          {/* Passkeys Management Card */}
-          <AccountSectionCard
-            delayIndex={4}
-            tone="blue"
-            icon={<Fingerprint className="h-4 w-4" />}
-            title={isKhmer ? "Passkeys និងជីវមាត្រ" : "Passkeys & Biometrics"}
-            subtitle="Face ID, Touch ID, Windows Hello"
-          >
-            <form onSubmit={handleRegisterPasskey} className="mb-4 space-y-2">
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={passkeyName}
-                  onChange={(e) => setPasskeyName(e.target.value)}
-                  placeholder={isKhmer ? "ឈ្មោះឧបករណ៍ (ឧ. MacBook Pro)" : "Device label (e.g. MacBook Pro)"}
-                  className="ai-input py-2 text-xs"
-                />
-                <button
-                  type="submit"
-                  disabled={registeringPasskey}
-                  className="ai-btn-primary h-9 shrink-0 px-3 text-xs"
-                >
-                  {registeringPasskey ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  ) : (
-                    <Plus className="h-3.5 w-3.5" />
+            {/* Active Sessions Row */}
+            <a
+              href={d.loginActivityUrl}
+              className="flex items-center justify-between gap-3 px-4 py-3.5 transition hover:bg-slate-50/75 dark:hover:bg-obsidian-850 sm:px-5"
+            >
+              <div className="flex min-w-0 items-center gap-3">
+                <span
+                  className={cn(
+                    "flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border",
+                    ACCOUNT_TONE_CLASSES.blue,
                   )}
-                  <span>{isKhmer ? "បន្ថែម" : "Add"}</span>
-                </button>
+                >
+                  <MonitorSmartphone className="h-4 w-4" />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-slate-900 dark:text-white">
+                    {isKhmer ? "ឧបករណ៍ និងសម័យចូល" : "Devices & Active Sessions"}
+                  </p>
+                  <p className="truncate text-xs text-slate-500 dark:text-slate-400">
+                    {isKhmer
+                      ? "ពិនិត្យ ឬបញ្ឈប់ឧបករណ៍ដែលកំពុងចូលប្រើ"
+                      : "Inspect active logins or sign out devices"}
+                  </p>
+                </div>
               </div>
-              <p className="text-[11px] text-[#6e7891] dark:text-[#8a94ad]">
-                {isKhmer
-                  ? "ចុះឈ្មោះឧបករណ៍នេះដើម្បីចូលប្រើដោយមិនចាំបាច់វាយពាក្យសម្ងាត់។"
-                  : "Sign in faster without typing passwords using hardware biometrics."}
-              </p>
+              <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" />
+            </a>
+
+            {/* Preferences Row */}
+            <a
+              href={d.settingsUrl}
+              className="flex items-center justify-between gap-3 px-4 py-3.5 transition hover:bg-slate-50/75 dark:hover:bg-obsidian-850 sm:px-5"
+            >
+              <div className="flex min-w-0 items-center gap-3">
+                <span
+                  className={cn(
+                    "flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border",
+                    ACCOUNT_TONE_CLASSES.slate,
+                  )}
+                >
+                  <SlidersHorizontal className="h-4 w-4" />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-slate-900 dark:text-white">
+                    {isKhmer ? "រចនាប័ទ្ម និងភាសា" : "Appearance & Language"}
+                  </p>
+                  <p className="truncate text-xs text-slate-500 dark:text-slate-400">
+                    {isKhmer ? "ប្តូរពន្លឺ ងងឹត និងភាសាខ្មែរ/អង់គ្លេស" : "Theme mode and display language"}
+                  </p>
+                </div>
+              </div>
+              <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" />
+            </a>
+          </div>
+        </div>
+
+        {/* Passkeys & Biometrics Card */}
+        <div>
+          <MobileSectionLabel>
+            {isKhmer ? "Passkeys និងជីវមាត្រ" : "Passkeys & Biometrics"}
+          </MobileSectionLabel>
+          <div className="rounded-3xl border border-slate-200/85 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-obsidian-900 sm:p-5">
+            <div className="mb-3.5 flex items-center gap-3">
+              <span
+                className={cn(
+                  "flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border",
+                  ACCOUNT_TONE_CLASSES.blue,
+                )}
+              >
+                <Fingerprint className="h-4 w-4" />
+              </span>
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-slate-900 dark:text-white">
+                  Face ID, Touch ID & Security Keys
+                </p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {isKhmer
+                    ? "ចូលប្រើលឿនដោយប្រើស្នាមម្រាមដៃ ឬស្កេនមុខ"
+                    : "Sign in faster without passwords using device biometrics"}
+                </p>
+              </div>
+            </div>
+
+            <form onSubmit={handleRegisterPasskey} className="mb-4 flex gap-2">
+              <input
+                type="text"
+                value={passkeyName}
+                onChange={(e) => setPasskeyName(e.target.value)}
+                placeholder={isKhmer ? "ឈ្មោះឧបករណ៍ (ឧ. iPhone)" : "Device label (e.g. iPhone 15)"}
+                className="ai-input h-10 rounded-xl px-3.5 text-xs"
+              />
+              <button
+                type="submit"
+                disabled={registeringPasskey}
+                className="ai-btn-primary h-10 shrink-0 rounded-xl px-3.5 text-xs"
+              >
+                {registeringPasskey ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Plus className="h-3.5 w-3.5" />
+                )}
+                <span>{isKhmer ? "បន្ថែម" : "Add"}</span>
+              </button>
             </form>
 
             {loadingPasskeys ? (
-              <div className="flex items-center justify-center rounded-xl border border-[#e3e6ed] py-5 text-xs text-[#6e7891] dark:border-[#2b3245] dark:text-[#8a94ad]">
-                <Loader2 className="mr-2 h-4 w-4 animate-spin text-[#3874ff]" />
+              <div className="flex items-center justify-center rounded-2xl border border-slate-200/75 py-5 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
+                <Loader2 className="mr-2 h-4 w-4 animate-spin text-indigo-500" />
                 <span>{isKhmer ? "កំពុងផ្ទុក Passkeys..." : "Loading passkeys..."}</span>
               </div>
             ) : passkeys.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-[#cbd0dd] bg-[#f5f7fa]/60 px-4 py-5 text-center dark:border-[#373e53] dark:bg-[#0f111a]/50">
-                <Fingerprint className="mx-auto mb-1.5 h-5 w-5 text-[#8a94ad]" />
-                <p className="text-xs font-medium text-[#525b75] dark:text-[#9fa6bc]">
-                  {isKhmer ? "មិនទាន់មាន Passkey ចុះឈ្មោះនៅឡើយទេ។" : "No passkeys registered yet."}
+              <div className="rounded-2xl border border-dashed border-slate-300/80 bg-slate-50/70 px-4 py-5 text-center dark:border-slate-700 dark:bg-obsidian-950/50">
+                <Fingerprint className="mx-auto mb-1.5 h-5 w-5 text-slate-400" />
+                <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                  {isKhmer ? "មិនទាន់មាន Passkey ចុះឈ្មោះនៅឡើយទេ។" : "No passkeys enrolled yet."}
                 </p>
               </div>
             ) : (
-              <ul className="space-y-2">
+              <ul className="divide-y divide-slate-200/75 overflow-hidden rounded-2xl border border-slate-200/80 dark:divide-slate-800 dark:border-slate-800">
                 {passkeys.map((pk) => (
                   <li
                     key={pk.id}
-                    className="flex items-center justify-between gap-2 rounded-xl border border-[#e3e6ed] bg-[#f5f7fa]/60 px-3 py-2.5 text-xs transition hover:border-[#cbd0dd] dark:border-[#2b3245] dark:bg-[#0f111a]/60 dark:hover:border-[#373e53]"
+                    className="flex items-center justify-between gap-3 bg-slate-50/50 px-3.5 py-2.5 text-xs dark:bg-obsidian-950/40"
                   >
                     <div className="flex min-w-0 items-center gap-2.5">
-                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#e5edff] text-[#004dff] dark:bg-[#3874ff]/15 dark:text-[#85a9ff]">
-                        <Fingerprint className="h-3.5 w-3.5" />
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-300">
+                        <Fingerprint className="h-4 w-4" />
                       </span>
                       <div className="min-w-0">
-                        <p className="truncate font-semibold text-[#141824] dark:text-[#eff2f6]">{pk.name}</p>
+                        <p className="truncate font-semibold text-slate-900 dark:text-white">
+                          {pk.name}
+                        </p>
                         {pk.created_at && (
-                          <p className="text-[11px] text-[#6e7891] dark:text-[#8a94ad]">
+                          <p className="text-[11px] text-slate-400">
                             {formatAccountTimestamp(pk.created_at)}
                           </p>
                         )}
@@ -714,7 +839,7 @@ export default function ProfilePage({ bootstrap }: { bootstrap: AppBootstrap<Pro
                       type="button"
                       disabled={deletingId === pk.id}
                       onClick={() => handleDeletePasskey(pk.id)}
-                      className="shrink-0 rounded-lg p-1.5 text-[#8a94ad] transition hover:bg-[#ffe0db] hover:text-[#b81800] dark:hover:bg-[#492226] dark:hover:text-[#ff8f7d]"
+                      className="shrink-0 rounded-xl p-2 text-slate-400 transition hover:bg-rose-500/10 hover:text-rose-600 dark:hover:text-rose-400"
                       title={isKhmer ? "លុប Passkey" : "Remove passkey"}
                     >
                       {deletingId === pk.id ? (
@@ -727,16 +852,36 @@ export default function ProfilePage({ bootstrap }: { bootstrap: AppBootstrap<Pro
                 ))}
               </ul>
             )}
+          </div>
+        </div>
 
-            <a
-              href={d.loginActivityUrl}
-              className="mt-4 flex items-center justify-center gap-1.5 rounded-xl border border-[#cbd0dd] bg-[#f5f7fa] py-2.5 text-xs font-semibold text-[#31374a] transition hover:bg-[#eff2f6] dark:border-[#373e53] dark:bg-[#181d2b] dark:text-[#eff2f6] dark:hover:bg-[#22283a]"
-            >
-              <Shield className="h-3.5 w-3.5 text-[#3874ff]" />
-              <span>{isKhmer ? "ពិនិត្យសកម្មភាពចូលគណនី" : "Inspect Active Sessions"}</span>
-              <ArrowRight className="h-3.5 w-3.5" />
-            </a>
-          </AccountSectionCard>
+        {/* Sign Out Action Row */}
+        <div>
+          <MobileSectionLabel>{isKhmer ? "គណនី" : "Session"}</MobileSectionLabel>
+          <a
+            href={logoutHref}
+            className="flex items-center justify-between gap-3 rounded-3xl border border-rose-200/80 bg-white px-4 py-3.5 shadow-sm transition hover:bg-rose-50/60 dark:border-rose-900/40 dark:bg-obsidian-900 dark:hover:bg-rose-950/25 sm:px-5"
+          >
+            <div className="flex items-center gap-3">
+              <span
+                className={cn(
+                  "flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border",
+                  ACCOUNT_TONE_CLASSES.rose,
+                )}
+              >
+                <LogOut className="h-4 w-4" />
+              </span>
+              <div>
+                <p className="text-sm font-bold text-rose-600 dark:text-rose-400">
+                  {isKhmer ? "ចាកចេញពីគណនី" : "Sign Out"}
+                </p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {isKhmer ? "បញ្ឈប់ការចូលប្រើនៅលើឧបករណ៍នេះ" : "End active session on this device"}
+                </p>
+              </div>
+            </div>
+            <ChevronRight className="h-4 w-4 shrink-0 text-rose-400" />
+          </a>
         </div>
       </div>
     </WorkspaceShell>

@@ -334,11 +334,23 @@ def _normalize_forecast(
 
     current_code = _as_int(current_raw.get("weather_code"), 0)
     current_label, current_icon = _weather_descriptor(current_code, lang)
+
+    def _opt_round(key: str, digits: int = 1) -> float | None:
+        val = current_raw.get(key)
+        if val is None:
+            return None
+        return round(_as_float(val), digits)
+
     current = {
         "temp_c": round(_as_float(current_raw.get("temperature_2m")), 1),
+        "feels_like_c": _opt_round("apparent_temperature", 1),
         "humidity_pct": round(_as_float(current_raw.get("relative_humidity_2m")), 1),
         "rain_mm": round(_as_float(current_raw.get("rain")), 1),
         "wind_kph": round(_as_float(current_raw.get("wind_speed_10m")), 1),
+        "wind_direction_deg": _opt_round("wind_direction_10m", 0),
+        "wind_gusts_kph": _opt_round("wind_gusts_10m", 1),
+        "pressure_hpa": _opt_round("surface_pressure", 1),
+        "cloud_cover_pct": _opt_round("cloud_cover", 0),
         "weather_code": current_code,
         "condition": current_label,
         "icon": current_icon,
@@ -458,9 +470,14 @@ def build_offline_fallback_payload(
         },
         "current": {
             "temp_c": None,
+            "feels_like_c": None,
             "humidity_pct": None,
             "rain_mm": None,
             "wind_kph": None,
+            "wind_direction_deg": None,
+            "wind_gusts_kph": None,
+            "pressure_hpa": None,
+            "cloud_cover_pct": None,
             "weather_code": -1,
             "condition": _t(normalized_lang, "cond_data_unavailable"),
             "icon": "fas fa-question-circle",
