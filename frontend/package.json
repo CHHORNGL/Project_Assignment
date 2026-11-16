@@ -11,12 +11,12 @@
     "@types/three": "^0.187.0",
     "lucide-react": "^1.73.0",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1",
+    "react-dom": "^19.3.1",
     "three": "^0.187.0"
   },
   "devDependencies": {
     "@types/react": "18.3.31",
-    "@types/react-dom": "18.3.7",
+    "@types/react-dom": "19.3.0",
     "@vitejs/plugin-react": "^5.2.0",
     "autoprefixer": "^10.4.20",
     "postcss": "^8.4.49",
