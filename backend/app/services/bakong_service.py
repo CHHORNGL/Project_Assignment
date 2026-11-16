@@ -14,6 +14,19 @@ from app.models.user import User
 
 logger = logging.getLogger(__name__)
 
+KHQR_EXPIRY_SECONDS = 180
+
+
+def compute_khqr_expiry(
+    tx: PaymentTransaction, now_dt: datetime | None = None
+) -> tuple[datetime, int]:
+    """Return UTC naive expiration timestamp and clamped remaining seconds for a KHQR payment."""
+    now = now_dt or datetime.now(timezone.utc).replace(tzinfo=None)
+    created = tx.created_at or now
+    expires_at = created + timedelta(seconds=KHQR_EXPIRY_SECONDS)
+    remaining = max(0, int((expires_at - now).total_seconds()))
+    return expires_at, remaining
+
 
 def get_bakong_config() -> dict[str, str]:
     """
@@ -165,6 +178,14 @@ def create_khqr_payment(
     if not res_md5 and isinstance(res, dict):
         res_md5 = res.get("md5")
 
+    now_dt = datetime.now(timezone.utc).replace(tzinfo=None)
+    stale_cutoff = now_dt - timedelta(seconds=KHQR_EXPIRY_SECONDS)
+    PaymentTransaction.query.filter(
+        PaymentTransaction.user_id == user.id,
+        PaymentTransaction.status == "PENDING",
+        PaymentTransaction.created_at <= stale_cutoff,
+    ).update({PaymentTransaction.status: "EXPIRED"}, synchronize_session=False)
+
     # Persist pending transaction
     tx = PaymentTransaction(
         user_id=user.id,
@@ -179,10 +200,13 @@ def create_khqr_payment(
         status="PENDING",
         coupon_code=coupon_code.strip().upper() if coupon_code else None,
         account_id=config["account_id"],
+        created_at=now_dt,
+        updated_at=now_dt,
     )
     db.session.add(tx)
     db.session.commit()
 
+    expires_at, remaining_seconds = compute_khqr_expiry(tx, now_dt)
     return {
         "success": True,
         "transaction_id": tx.id,
@@ -196,15 +220,20 @@ def create_khqr_payment(
         "merchant_name": config["merchant_name"],
         "account_id": config["account_id"],
         "billing_interval": billing_interval,
+        "expires_in_seconds": KHQR_EXPIRY_SECONDS,
+        "remaining_seconds": remaining_seconds,
+        "expires_at": expires_at.replace(tzinfo=timezone.utc).isoformat(),
     }
 
 
 # Cache to prevent burning NBC daily limits (100 req/day): {md5: (timestamp, status_str, data, err_msg)}
 _MD5_STATUS_CACHE: dict[str, tuple[float, str, dict, str]] = {}
-CACHE_TTL_SECONDS = 8.0
+CACHE_TTL_SECONDS = 3.0
 
 
-def query_bakong_md5_api(token: str, md5: str) -> tuple[str, dict, str]:
+def query_bakong_md5_api(
+    token: str, md5: str, *, bypass_cache: bool = False
+) -> tuple[str, dict, str]:
     """
     Directly query Bakong /check_transaction_by_md5 to parse responseCode, errorCode, and message accurately.
     Returns: (status_str, data_dict, error_message)
@@ -213,7 +242,7 @@ def query_bakong_md5_api(token: str, md5: str) -> tuple[str, dict, str]:
     import json
 
     now = time.time()
-    if md5 in _MD5_STATUS_CACHE:
+    if not bypass_cache and md5 in _MD5_STATUS_CACHE:
         cached_time, cached_status, cached_data, cached_msg = _MD5_STATUS_CACHE[md5]
         if now - cached_time < CACHE_TTL_SECONDS:
             return cached_status, cached_data, cached_msg
@@ -259,9 +288,14 @@ def query_bakong_md5_api(token: str, md5: str) -> tuple[str, dict, str]:
     return status_str, data, err_msg
 
 
-def verify_khqr_payment(md5: str) -> dict[str, Any]:
+def verify_khqr_payment(
+    md5: str,
+    *,
+    enforce_expiry: bool = True,
+    bypass_cache: bool = False,
+) -> dict[str, Any]:
     """
-    Check the transaction status with Bakong NBC and upgrade the user if paid.
+    Check the transaction status with Bakong NBC, enforce 3-minute session expiry, and upgrade user if paid.
     """
     if not md5:
         return {"success": False, "status": "ERROR", "message": "MD5 hash is required."}
@@ -270,6 +304,14 @@ def verify_khqr_payment(md5: str) -> dict[str, Any]:
     if not tx:
         return {"success": False, "status": "NOT_FOUND", "message": "Transaction not found."}
 
+    now_dt = datetime.now(timezone.utc).replace(tzinfo=None)
+    expires_at, remaining_seconds = compute_khqr_expiry(tx, now_dt)
+    expiry_meta = {
+        "expires_in_seconds": KHQR_EXPIRY_SECONDS,
+        "remaining_seconds": remaining_seconds,
+        "expires_at": expires_at.replace(tzinfo=timezone.utc).isoformat(),
+    }
+
     # If already verified
     if tx.status == "PAID":
         return {
@@ -277,11 +319,30 @@ def verify_khqr_payment(md5: str) -> dict[str, Any]:
             "status": "PAID",
             "message": "Payment has already been confirmed.",
             "transaction": tx.to_dict(),
+            **expiry_meta,
+        }
+
+    if enforce_expiry and (tx.status == "EXPIRED" or (tx.status == "PENDING" and remaining_seconds <= 0)):
+        if tx.status != "EXPIRED":
+            tx.status = "EXPIRED"
+            db.session.commit()
+        return {
+            "success": False,
+            "status": "EXPIRED",
+            "message": "Bakong KHQR session expired after 3 minutes. Please generate a new QR code.",
+            "transaction": tx.to_dict(),
+            **expiry_meta,
+            "remaining_seconds": 0,
         }
 
     config = get_bakong_config()
     try:
-        status_str, data, err_msg = query_bakong_md5_api(config["token"], md5)
+        try:
+            status_str, data, err_msg = query_bakong_md5_api(
+                config["token"], md5, bypass_cache=bypass_cache
+            )
+        except TypeError:
+            status_str, data, err_msg = query_bakong_md5_api(config["token"], md5)
     except Exception as e:  # noqa: BLE001
         logger.warning(f"Bakong query error for md5 {md5}: {e}")
         status_str = "UNPAID"
@@ -345,6 +406,7 @@ def verify_khqr_payment(md5: str) -> dict[str, Any]:
             "status": "PAID",
             "message": "Payment verified successfully! Your account has been upgraded.",
             "transaction": tx.to_dict(),
+            **expiry_meta,
         }
 
     if status_str == "RATE_LIMITED":
@@ -353,6 +415,7 @@ def verify_khqr_payment(md5: str) -> dict[str, Any]:
             "status": "RATE_LIMITED",
             "message": "Bakong NBC Developer daily limit reached (100 requests). If you already scanned and sent funds, please notify the administrator to approve your transaction.",
             "transaction": tx.to_dict(),
+            **expiry_meta,
         }
 
     return {
@@ -360,6 +423,7 @@ def verify_khqr_payment(md5: str) -> dict[str, Any]:
         "status": status_str if status_str in ("UNPAID", "PENDING", "EXPIRED") else "UNPAID",
         "message": err_msg or "Payment is waiting for confirmation.",
         "transaction": tx.to_dict(),
+        **expiry_meta,
     }
 
 

@@ -20,3 +20,25 @@ test('mergeSupportMessages deduplicates incoming delta updates and applies read 
   assert.equal(merged[2].id, 3);
   assert.equal(merged[3].optimistic, true);
 });
+
+test('buildFarmerSupportQueryUrl encodes target, optional recipientId, and delta cursor', async () => {
+  const { buildFarmerSupportQueryUrl } = await import('../src/lib/liveSupportHelpers.ts');
+
+  assert.equal(
+    buildFarmerSupportQueryUrl('/farmer/support_chat/messages', {
+      target: 'expert',
+      envelope: true,
+    }),
+    '/farmer/support_chat/messages?envelope=1&target=expert',
+  );
+
+  assert.equal(
+    buildFarmerSupportQueryUrl('/farmer/support_chat/messages', {
+      target: 'admin',
+      recipientId: 12,
+      afterId: 44,
+      envelope: true,
+    }),
+    '/farmer/support_chat/messages?envelope=1&target=admin&recipient_id=12&after_id=44',
+  );
+});

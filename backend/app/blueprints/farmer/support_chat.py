@@ -1,12 +1,21 @@
-from app.utils.input_validation import support_message_fields
-import os
 from datetime import datetime, timedelta
 from flask import request, jsonify, current_app
 from flask_login import current_user, login_required
 from app.extensions import db
 from app.models import User, AdminChatMessage
+from app.services.support_chat_service import (
+    farmer_channel_messages_query,
+    farmer_support_channels_summary,
+    handle_support_attachment_upload,
+    normalize_support_target,
+    resolve_farmer_support_partner,
+)
 from app.utils.decorators import role_required
-from app.utils.support_attachments import save_support_attachment, SupportAttachmentError
+from app.utils.input_validation import support_message_fields
+from app.utils.react_bootstrap import (
+    build_farmer_live_chat_bootstrap,
+    render_react_page,
+)
 from app.utils.support_chat_realtime import (
     clear_typing,
     is_typing,
@@ -17,7 +26,43 @@ from .routes import farmer_bp
 
 
 def _resolve_support_admin() -> User | None:
-    return User.query.filter(User.roles.any(name="admin")).first()
+    _, partner, _ = resolve_farmer_support_partner(
+        getattr(current_user, "id", 0) or 0, target="admin"
+    )
+    return partner
+
+
+def _parse_recipient_id(raw_value) -> int | None:
+    try:
+        parsed = int(raw_value)
+        return parsed if parsed > 0 else None
+    except (TypeError, ValueError):
+        return None
+
+
+@farmer_bp.route("/live-chat", methods=["GET"])
+@farmer_bp.route("/live-chat/", methods=["GET"])
+@login_required
+@role_required("farmer")
+def live_chat():
+    initial_target = normalize_support_target(request.args.get("target"))
+    initial_recipient_id = _parse_recipient_id(request.args.get("recipient_id"))
+    channels = farmer_support_channels_summary(current_user.id)
+    return render_react_page(
+        bootstrap_payload=build_farmer_live_chat_bootstrap(
+            initial_target=initial_target,
+            initial_recipient_id=initial_recipient_id,
+            channels=channels,
+        ),
+        title="Live Chat",
+    )
+
+
+@farmer_bp.route("/support_chat/channels", methods=["GET"])
+@login_required
+@role_required("farmer")
+def get_support_channels():
+    return jsonify({"channels": farmer_support_channels_summary(current_user.id)})
 
 
 @farmer_bp.route("/support_chat/messages", methods=["GET"])
@@ -27,13 +72,15 @@ def get_support_messages():
     cutoff = datetime.utcnow() - timedelta(hours=24)
     after_id = request.args.get("after_id", type=int)
     envelope = (request.args.get("envelope") or "").strip().lower() in {"1", "true", "yes"}
+    target = normalize_support_target(request.args.get("target"))
+    recipient_id = _parse_recipient_id(request.args.get("recipient_id"))
 
-    base_query = AdminChatMessage.query.filter(
-        db.or_(
-            AdminChatMessage.sender_id == current_user.id,
-            AdminChatMessage.receiver_id == current_user.id,
-        ),
-        AdminChatMessage.created_at >= cutoff,
+    normalized_target, partner_user, candidates = resolve_farmer_support_partner(
+        current_user.id, target=target, recipient_id=recipient_id
+    )
+    eligible_ids = {u.id for u in candidates}
+    base_query = farmer_channel_messages_query(
+        current_user.id, eligible_ids, cutoff, recipient_id=recipient_id
     )
 
     unread_incoming_ids = [
@@ -50,6 +97,17 @@ def get_support_messages():
         AdminChatMessage.query.filter(AdminChatMessage.id.in_(unread_incoming_ids)).update(
             {AdminChatMessage.is_read: True}, synchronize_session=False
         )
+        try:
+            from app.models.notification import Notification
+
+            Notification.query.filter(
+                Notification.user_id == current_user.id,
+                Notification.kind == "support_chat",
+                Notification.source_id.in_(list(eligible_ids) + unread_incoming_ids),
+                Notification.read_at.is_(None),
+            ).update({Notification.read_at: datetime.utcnow()}, synchronize_session=False)
+        except Exception:
+            pass
         db.session.commit()
 
     query = base_query
@@ -60,8 +118,12 @@ def get_support_messages():
     serialized = [serialize_chat_message(msg) for msg in messages]
 
     if envelope:
-        admin_user = _resolve_support_admin()
-        partner_typing = is_typing(admin_user.id, current_user.id) if admin_user else False
+        check_ids = (
+            [recipient_id]
+            if (recipient_id and recipient_id in eligible_ids)
+            else [u.id for u in candidates]
+        )
+        partner_typing = any(is_typing(uid, current_user.id) for uid in check_ids)
         read_ids = [
             row[0]
             for row in base_query.with_entities(AdminChatMessage.id)
@@ -76,6 +138,16 @@ def get_support_messages():
                 "messages": serialized,
                 "read_ids": read_ids,
                 "partner_typing": partner_typing,
+                "target": normalized_target,
+                "active_recipient": (
+                    {
+                        "id": partner_user.id,
+                        "name": partner_user.full_name or partner_user.username,
+                        "role": normalized_target,
+                    }
+                    if partner_user
+                    else None
+                ),
             }
         )
 
@@ -86,9 +158,17 @@ def get_support_messages():
 @login_required
 @role_required("farmer")
 def farmer_typing_indicator():
-    admin_user = _resolve_support_admin()
-    if admin_user:
-        set_typing(current_user.id, admin_user.id, ttl_seconds=5)
+    data = request.get_json(silent=True) or {}
+    target = normalize_support_target(data.get("target") or request.args.get("target"))
+    recipient_id = _parse_recipient_id(data.get("recipient_id") or request.args.get("recipient_id"))
+    _, partner, candidates = resolve_farmer_support_partner(
+        current_user.id, target=target, recipient_id=recipient_id
+    )
+    if recipient_id and partner and partner.id == recipient_id:
+        set_typing(current_user.id, partner.id, ttl_seconds=5)
+    else:
+        for staff in candidates:
+            set_typing(current_user.id, staff.id, ttl_seconds=5)
     return jsonify({"ok": True})
 
 CAMBODIA_PROVINCES = [
@@ -291,8 +371,10 @@ def search_support_location():
 @login_required
 @role_required("farmer")
 def send_support_message():
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
     message_text, attachment_url, attachment_type = support_message_fields(data)
+    target = normalize_support_target(data.get("target") or request.args.get("target"))
+    recipient_id = _parse_recipient_id(data.get("recipient_id") or request.args.get("recipient_id"))
 
     if not message_text and not attachment_url:
         return jsonify({"error": "Empty message"}), 400
@@ -305,54 +387,72 @@ def send_support_message():
         except Exception:
             message_text = "📍 Shared location"
 
-    admin = _resolve_support_admin()
-    if not admin:
-        return jsonify({"error": "No admin available"}), 404
+    normalized_target, partner, candidates = resolve_farmer_support_partner(
+        current_user.id, target=target, recipient_id=recipient_id
+    )
+    if not partner:
+        return jsonify(
+            {"error": "No expert available" if normalized_target == "expert" else "No admin available"}
+        ), 404
     
     msg = AdminChatMessage(
         sender_id=current_user.id,
-        receiver_id=admin.id,
+        receiver_id=partner.id,
         message=message_text,
         attachment_url=attachment_url,
         attachment_type=attachment_type
     )
     db.session.add(msg)
-    clear_typing(current_user.id, admin.id)
+    clear_typing(current_user.id, partner.id)
+    for staff in candidates:
+        clear_typing(current_user.id, staff.id)
 
     try:
-        from app.services.notification_service import notify_role, _snippet
+        from app.services.notification_service import notify_role, notify_user, _snippet
         sender_name = current_user.full_name or current_user.username
         detail = message_text or f"Sent an {attachment_type or 'attachment'}"
-        notify_role(
-            role_name="admin",
-            kind="support_chat",
-            title=f"New message from {sender_name}",
-            subtitle=_snippet(detail, 60),
-            url="/admin/support_chats",
-            icon="fas fa-headset",
-            level="info",
-            source_id=current_user.id,
-        )
+        is_expert = normalized_target == "expert"
+        notif_title = f"Live message from {sender_name}" if is_expert else f"New message from {sender_name}"
+        notif_url = "/expert/support_chats" if is_expert else "/admin/support_chats"
+        notif_icon = "fas fa-user-md" if is_expert else "fas fa-headset"
+        if recipient_id and partner.id == recipient_id:
+            notify_user(
+                user_id=partner.id,
+                kind="support_chat",
+                title=notif_title,
+                subtitle=_snippet(detail, 60),
+                url=notif_url,
+                icon=notif_icon,
+                level="info",
+                source_id=current_user.id,
+            )
+        else:
+            notify_role(
+                role_name=normalized_target,
+                kind="support_chat",
+                title=notif_title,
+                subtitle=_snippet(detail, 60),
+                url=notif_url,
+                icon=notif_icon,
+                level="info",
+                source_id=current_user.id,
+            )
     except Exception:
         pass
 
     db.session.commit()
     
-    return jsonify({"success": True, "message": serialize_chat_message(msg)})
+    return jsonify(
+        {
+            "success": True,
+            "target": normalized_target,
+            "message": serialize_chat_message(msg),
+        }
+    )
 
 @farmer_bp.route("/support_chat/upload", methods=["POST"])
 @login_required
 @role_required("farmer")
 def upload_support_attachment():
-    if 'file' not in request.files:
-        return jsonify({'error': 'No file part'}), 400
-    try:
-        upload_dir = os.path.join(current_app.root_path, 'static', 'uploads', 'chats')
-        filename, mime_type = save_support_attachment(request.files['file'], upload_dir)
-    except SupportAttachmentError as error:
-        return jsonify({'error': str(error)}), error.status_code
-    except Exception:
-        current_app.logger.exception("Support attachment upload failed")
-        return jsonify({'error': 'Could not save attachment'}), 500
-    from flask import url_for
-    return jsonify({'url': url_for('static', filename=f'uploads/chats/{filename}'), 'mime_type': mime_type})
+    payload, status = handle_support_attachment_upload()
+    return jsonify(payload), status

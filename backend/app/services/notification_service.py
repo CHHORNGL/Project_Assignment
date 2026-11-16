@@ -63,15 +63,32 @@ def normalize_notification_url(raw_url: str | None) -> str | None:
 
 
 def serialize_notification(notification: Notification) -> dict:
+    normalized_url = normalize_notification_url(notification.url)
+    subtitle = notification.subtitle or ""
+    is_read = notification.read_at is not None
+    created_at = notification.created_at
+    if created_at is not None:
+        created_iso = (
+            created_at.isoformat() + "Z"
+            if created_at.tzinfo is None
+            else created_at.isoformat()
+        )
+    else:
+        created_iso = None
     return {
         "id": notification.id,
+        "kind": notification.kind or "system",
         "title": notification.title,
-        "subtitle": notification.subtitle or "",
-        "url": normalize_notification_url(notification.url),
+        "subtitle": subtitle,
+        "message": subtitle,
+        "url": normalized_url,
+        "link": normalized_url,
         "icon": notification.icon or "fas fa-bell",
         "level": notification.level or "info",
-        "time": format_time_ago(notification.created_at),
-        "unread": notification.read_at is None,
+        "time": format_time_ago(created_at),
+        "created_at": created_iso,
+        "unread": not is_read,
+        "is_read": is_read,
     }
 
 
@@ -151,9 +168,50 @@ def notify_role(
     return len(users)
 
 
+def get_unread_notification_count(user_id: int) -> int:
+    """Return total unread notification count for a user."""
+    return (
+        Notification.query.filter(
+            Notification.user_id == user_id,
+            Notification.read_at.is_(None),
+        ).count()
+    )
+
+
+def mark_notifications_seen(
+    user_id: int,
+    ids: list | tuple | None = None,
+    *,
+    read_at: datetime | None = None,
+) -> tuple[int, int]:
+    """Mark all or selected unread notifications read and return (updated, unread_count)."""
+    query = Notification.query.filter(
+        Notification.user_id == user_id,
+        Notification.read_at.is_(None),
+    )
+    if ids is not None:
+        id_list: list[int] = []
+        if isinstance(ids, (list, tuple)):
+            for val in ids:
+                try:
+                    id_list.append(int(val))
+                except (TypeError, ValueError):
+                    continue
+        if len(ids) > 0 if isinstance(ids, (list, tuple)) else True:
+            if not id_list:
+                return 0, get_unread_notification_count(user_id)
+            query = query.filter(Notification.id.in_(id_list))
+
+    updated = query.update({"read_at": read_at or datetime.utcnow()}, synchronize_session=False)
+    db.session.commit()
+    return updated, get_unread_notification_count(user_id)
+
+
 __all__ = [
     "_snippet",
     "format_time_ago",
+    "get_unread_notification_count",
+    "mark_notifications_seen",
     "serialize_notification",
     "notify_user",
     "notify_role",

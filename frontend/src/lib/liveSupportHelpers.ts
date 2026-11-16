@@ -10,10 +10,59 @@ export interface LiveSupportMsg {
   optimistic?: boolean;
 }
 
+export type SupportTarget = "admin" | "expert";
+
+export interface SupportRecipientOption {
+  id: number;
+  name: string;
+  username: string;
+  role: string;
+  avatarUrl?: string;
+}
+
+export interface SupportChannelSummary {
+  available: boolean;
+  unreadCount: number;
+  defaultRecipientId: number | null;
+  recipients: SupportRecipientOption[];
+  lastMessage: string;
+  lastTime: string | null;
+}
+
+export type SupportChannelsMap = Record<SupportTarget, SupportChannelSummary>;
+
 export interface LiveEnvelopeResponse {
   messages?: LiveSupportMsg[];
   read_ids?: number[];
   partner_typing?: boolean;
+  target?: SupportTarget;
+  active_recipient?: {
+    id: number;
+    name: string;
+    role: SupportTarget;
+  } | null;
+}
+
+export function buildFarmerSupportQueryUrl(
+  baseUrl: string,
+  params: {
+    target: SupportTarget;
+    recipientId?: number | null;
+    afterId?: number | null;
+    envelope?: boolean;
+  },
+): string {
+  const qs = new URLSearchParams();
+  if (params.envelope) qs.set("envelope", "1");
+  qs.set("target", params.target);
+  if (params.recipientId && params.recipientId > 0) {
+    qs.set("recipient_id", String(params.recipientId));
+  }
+  if (params.afterId && params.afterId > 0) {
+    qs.set("after_id", String(params.afterId));
+  }
+  const sep = baseUrl.includes("?") ? "&" : "?";
+  return `${baseUrl}${sep}${qs.toString()}`;
 }
 
 /**

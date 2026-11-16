@@ -7,7 +7,6 @@ import {
   Cpu,
   Layers,
   Loader2,
-  Megaphone,
   Send,
   ShieldCheck,
   Sparkles,
@@ -17,6 +16,10 @@ import {
 import type { AppBootstrap } from "@/types/app";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
+import {
+  AnnouncementMarquee,
+  type MarqueeBannerItem,
+} from "@/components/farmer/AnnouncementMarquee";
 import { postJson } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
@@ -32,7 +35,7 @@ interface GuestLandingData {
   yearlyTotal: string;
   yearlyDiscountPercent: string;
   crops: Array<{ id: number; name: string }>;
-  marquees: Array<{ id: number; text: string }>;
+  marquees: MarqueeBannerItem[];
   supervisor?: { name?: string; role?: string };
   team?: Array<{ name?: string; role?: string }>;
 }
@@ -222,17 +225,11 @@ export default function GuestLandingPage({
 
       <main className="relative z-10 mx-auto max-w-7xl space-y-16 px-4 py-10 sm:px-6 lg:py-14">
         {/* Announcement Marquee if present */}
-        {d.marquees && d.marquees.length > 0 && (
-          <div className="ai-surface flex items-center gap-3 px-4 py-2.5 text-xs">
-            <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-indigo-600 px-2.5 py-0.5 text-[11px] font-bold text-white">
-              <Megaphone className="h-3 w-3" />
-              <span>{isKhmer ? "ព័ត៌មានថ្មី" : "Advisory"}</span>
-            </span>
-            <p className="truncate font-medium text-slate-700 dark:text-slate-200">
-              {d.marquees.map((m) => m.text).join("  ·  ")}
-            </p>
-          </div>
-        )}
+        <AnnouncementMarquee
+          marquees={d.marquees}
+          isKhmer={isKhmer}
+          badgeLabel={isKhmer ? "ព័ត៌មានថ្មី" : "Advisory"}
+        />
 
         {/* Hero Split */}
         <section className="grid items-center gap-10 lg:grid-cols-12">

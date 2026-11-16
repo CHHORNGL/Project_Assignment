@@ -85,6 +85,26 @@ class AiExpertServiceTestCase(unittest.TestCase):
         with patch.dict(os.environ, {"AI_PROVIDER": "openai"}, clear=False):
             self.assertEqual(_setting("AI_PROVIDER"), "own-ai")
 
+    def test_invalid_huggingface_repo_url_in_site_setting_falls_back_to_env_space(self):
+        fake_saved = Mock(value="https://huggingface.co/Maoseavik/agri-expert-adapter")
+        with (
+            patch.dict(
+                os.environ,
+                {
+                    "AI_PROVIDER": "huggingface",
+                    "HF_INFERENCE_URL": "https://maoseavik-agrisystem-agricultural-assistant.hf.space",
+                },
+                clear=False,
+            ),
+            patch("app.models.site_setting.SiteSetting") as site_setting_cls,
+        ):
+            site_setting_cls.query.get.return_value = fake_saved
+            self.assertEqual(
+                _setting("HF_INFERENCE_URL"),
+                "https://maoseavik-agrisystem-agricultural-assistant.hf.space",
+            )
+            self.assertTrue(is_configured())
+
 
 if __name__ == "__main__":
     unittest.main()

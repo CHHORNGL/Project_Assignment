@@ -194,6 +194,47 @@ class GuestLandingTestCase(unittest.TestCase):
         self.assertTrue(login_data.get("success"))
         self.assertEqual(login_data.get("redirect"), "/farmer/dashboard")
 
+    def test_architecture_and_team_detail_bootstrap(self):
+        import json
+        import re
+
+        resp = self.client.get("/farmer/detail")
+        self.assertEqual(resp.status_code, 200)
+        html = resp.get_data(as_text=True)
+
+        match = re.search(
+            r'<script id="app-bootstrap" type="application/json">(.*?)</script>',
+            html,
+            re.DOTALL,
+        )
+        self.assertIsNotNone(match, "Expected #app-bootstrap JSON on /farmer/detail")
+        payload = json.loads(match.group(1))
+        self.assertEqual(payload.get("page", {}).get("id"), "farmer-detail")
+
+        data = payload.get("data", {})
+        supervisor = data.get("supervisor", {})
+        team = data.get("team", [])
+        stats = data.get("stats", {})
+
+        self.assertEqual(supervisor.get("name"), "Sek Socheat")
+        self.assertEqual(supervisor.get("name_kh"), "សេក សុជាតិ")
+        self.assertNotIn("&nbsp;", supervisor.get("name_kh", ""))
+        self.assertTrue(supervisor.get("photoUrl"))
+        self.assertEqual(self.client.get(supervisor["photoUrl"]).status_code, 200)
+
+        self.assertEqual(len(team), 4)
+        for member in team:
+            self.assertTrue(member.get("rank"))
+            self.assertTrue(member.get("task"))
+            self.assertNotIn("&nbsp;", member.get("name_kh", ""))
+            self.assertTrue(member.get("photoUrl"))
+            self.assertEqual(self.client.get(member["photoUrl"]).status_code, 200)
+            self.assertTrue(member.get("telegramUrl", "").startswith("https://t.me/"))
+
+        for key in ("cropsCount", "diseasesCount", "rulesCount", "symptomsCount"):
+            self.assertIn(key, stats)
+            self.assertIsInstance(stats[key], int)
+
 
 if __name__ == "__main__":
     unittest.main()

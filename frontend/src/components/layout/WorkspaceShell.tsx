@@ -5,6 +5,12 @@ import {
 } from "lucide-react";
 import type { AppBootstrap } from "@/types/app";
 import { buildFarmerBottomNav } from "@/lib/navigation";
+import {
+  getNotificationHref,
+  getNotificationMessage,
+  getNotificationTimeLabel,
+  isNotificationRead,
+} from "@/lib/notificationHelpers";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { AiCopilotDrawer } from "./AiCopilotDrawer";
@@ -187,15 +193,22 @@ export function WorkspaceShell({
                 )}
               </button>
               {notifOpen && (
-                <div className="ai-surface animate-slide-down absolute right-0 mt-2 w-80 origin-top-right p-3 shadow-xl">
+                <div className="ai-surface animate-slide-down absolute right-0 mt-2 w-80 max-w-[calc(100vw-2rem)] origin-top-right p-3 shadow-xl">
                   <div className="mb-2 flex items-center justify-between px-1">
-                    <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                      {isKhmer ? "ការជូនដំណឹង" : "Notifications"}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                        {isKhmer ? "ការជូនដំណឹង" : "Notifications"}
+                      </span>
+                      {unreadCount > 0 && (
+                        <span className="rounded-full bg-indigo-500/15 px-1.5 py-0.5 text-[10px] font-bold text-indigo-600 dark:text-indigo-300">
+                          {unreadCount}
+                        </span>
+                      )}
+                    </div>
                     {bootstrap.notifications?.link && (
                       <a
                         href={bootstrap.notifications.link}
-                        className="text-xs font-semibold text-indigo-600 dark:text-indigo-400"
+                        className="text-xs font-semibold text-indigo-600 hover:underline dark:text-indigo-400"
                       >
                         {isKhmer ? "មើលទាំងអស់" : "View all"}
                       </a>
@@ -206,20 +219,42 @@ export function WorkspaceShell({
                       {isKhmer ? "មិនមានការជូនដំណឹងថ្មីទេ។" : "You're all caught up."}
                     </p>
                   ) : (
-                    <ul className="space-y-1.5">
-                      {notifItems.map((n) => (
-                        <li key={n.id}>
-                          <a
-                            href={n.link || bootstrap.notifications?.link || "#"}
-                            className="block rounded-xl p-2 text-xs transition-colors hover:bg-slate-100 dark:hover:bg-obsidian-800"
-                          >
-                            <p className="font-semibold text-slate-800 dark:text-slate-100">{n.title}</p>
-                            <p className="mt-0.5 line-clamp-2 text-slate-500 dark:text-slate-400">
-                              {n.message}
-                            </p>
-                          </a>
-                        </li>
-                      ))}
+                    <ul className="max-h-72 space-y-1.5 overflow-y-auto">
+                      {notifItems.map((n) => {
+                        const msg = getNotificationMessage(n);
+                        const href = getNotificationHref(n) || bootstrap.notifications?.link || "#";
+                        const read = isNotificationRead(n);
+                        const timeLabel = getNotificationTimeLabel(n, isKhmer);
+                        return (
+                          <li key={n.id}>
+                            <a
+                              href={href}
+                              className="block rounded-xl p-2.5 text-xs transition-colors hover:bg-slate-100 dark:hover:bg-obsidian-800"
+                            >
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="flex min-w-0 items-center gap-1.5">
+                                  {!read && (
+                                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-600 dark:bg-indigo-400" />
+                                  )}
+                                  <p className="truncate font-semibold text-slate-800 dark:text-slate-100">
+                                    {n.title}
+                                  </p>
+                                </div>
+                                {timeLabel && (
+                                  <span className="shrink-0 text-[10px] text-slate-400">
+                                    {timeLabel}
+                                  </span>
+                                )}
+                              </div>
+                              {msg && (
+                                <p className="mt-0.5 line-clamp-2 text-slate-500 dark:text-slate-400">
+                                  {msg}
+                                </p>
+                              )}
+                            </a>
+                          </li>
+                        );
+                      })}
                     </ul>
                   )}
                 </div>

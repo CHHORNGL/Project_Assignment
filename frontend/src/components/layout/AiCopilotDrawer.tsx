@@ -14,7 +14,9 @@ import {
   RefreshCw,
   RotateCcw,
   Send,
+  ShieldCheck,
   Sparkles,
+  Stethoscope,
   Trash2,
   X,
 } from "lucide-react";
@@ -26,10 +28,13 @@ import {
   validateAttachmentFile,
 } from "@/lib/supportChatSecurity";
 import {
+  buildFarmerSupportQueryUrl,
   formatChatClock,
   mergeSupportMessages,
   type LiveEnvelopeResponse,
   type LiveSupportMsg,
+  type SupportChannelsMap,
+  type SupportTarget,
 } from "@/lib/liveSupportHelpers";
 import { cn } from "@/lib/utils";
 
@@ -374,7 +379,9 @@ export function AiCopilotDrawer({
   const [aiMessages, setAiMessages] = useState<AiChatMessage[]>([]);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  // Live Support (Farmer <-> Admin) state
+  // Live Support (Farmer <-> Admin / Expert) state
+  const [supportTarget, setSupportTarget] = useState<SupportTarget>("admin");
+  const [supportChannels, setSupportChannels] = useState<SupportChannelsMap | null>(null);
   const [supportMessages, setSupportMessages] = useState<LiveSupportMsg[]>([]);
   const [supportDraft, setSupportDraft] = useState("");
   const [supportLoading, setSupportLoading] = useState(false);
@@ -383,7 +390,12 @@ export function AiCopilotDrawer({
   const [supportError, setSupportError] = useState<string | null>(null);
 
   const lastSupportIdRef = useRef<number>(0);
+  const supportTargetRef = useRef<SupportTarget>(supportTarget);
   const lastTypingEmitRef = useRef<number>(0);
+
+  useEffect(() => {
+    supportTargetRef.current = supportTarget;
+  }, [supportTarget]);
   const supportEndRef = useRef<HTMLDivElement>(null);
   const aiEndRef = useRef<HTMLDivElement>(null);
   const aiTextareaRef = useRef<HTMLTextAreaElement>(null);
@@ -399,21 +411,49 @@ export function AiCopilotDrawer({
     return clean.split(/\s+/)[0];
   }, [userName]);
 
-  const loadSupportHistory = useCallback(async () => {
+  const refreshSupportChannels = useCallback(async () => {
     if (!enableLiveSupport) return;
-    setSupportLoading(true);
-    setSupportError(null);
     try {
-      const resp = await fetch("/farmer/support_chat/messages?envelope=1", {
+      const resp = await fetch("/farmer/support_chat/channels", {
         credentials: "include",
         headers: { Accept: "application/json" },
       });
+      if (!resp.ok) return;
+      const json = (await resp.json()) as { channels?: SupportChannelsMap };
+      if (json.channels) {
+        setSupportChannels(json.channels);
+      }
+    } catch {
+      // Ignore transient channel poll failure
+    }
+  }, [enableLiveSupport]);
+
+  const loadSupportHistory = useCallback(async () => {
+    if (!enableLiveSupport) return;
+    const activeTarget = supportTargetRef.current;
+    setSupportLoading(true);
+    setSupportError(null);
+    setSupportTyping(false);
+    lastSupportIdRef.current = 0;
+    try {
+      const resp = await fetch(
+        buildFarmerSupportQueryUrl("/farmer/support_chat/messages", {
+          target: activeTarget,
+          envelope: true,
+        }),
+        {
+          credentials: "include",
+          headers: { Accept: "application/json" },
+        },
+      );
       if (!resp.ok) throw new Error("Failed");
       const json = (await resp.json()) as LiveEnvelopeResponse;
+      if (supportTargetRef.current !== activeTarget) return;
       const list = json.messages || [];
       lastSupportIdRef.current = list.length ? list[list.length - 1].id : 0;
       setSupportMessages(mergeSupportMessages([], list, json.read_ids || []));
       setSupportTyping(Boolean(json.partner_typing));
+      void refreshSupportChannels();
       window.requestAnimationFrame(() =>
         supportEndRef.current?.scrollIntoView({ behavior: "auto" }),
       );
@@ -424,17 +464,23 @@ export function AiCopilotDrawer({
     } finally {
       setSupportLoading(false);
     }
-  }, [enableLiveSupport, isKhmer]);
+  }, [enableLiveSupport, isKhmer, refreshSupportChannels]);
 
   const pollSupportDelta = useCallback(async () => {
     if (!enableLiveSupport) return;
+    const activeTarget = supportTargetRef.current;
     try {
       const resp = await fetch(
-        `/farmer/support_chat/messages?envelope=1&after_id=${lastSupportIdRef.current}`,
+        buildFarmerSupportQueryUrl("/farmer/support_chat/messages", {
+          target: activeTarget,
+          afterId: lastSupportIdRef.current,
+          envelope: true,
+        }),
         { credentials: "include", headers: { Accept: "application/json" } },
       );
       if (!resp.ok) return;
       const json = (await resp.json()) as LiveEnvelopeResponse;
+      if (supportTargetRef.current !== activeTarget) return;
       const incoming = json.messages || [];
       const readIds = json.read_ids || [];
       setSupportTyping(Boolean(json.partner_typing));
@@ -452,13 +498,15 @@ export function AiCopilotDrawer({
           );
         }
       }
+      void refreshSupportChannels();
     } catch {
       // Ignore transient poll error
     }
-  }, [enableLiveSupport]);
+  }, [enableLiveSupport, refreshSupportChannels]);
 
   useEffect(() => {
     if (open && enableLiveSupport && mode === "support") {
+      setSupportMessages([]);
       void loadSupportHistory();
       const timer = window.setInterval(() => {
         if (document.visibilityState === "visible") {
@@ -468,7 +516,7 @@ export function AiCopilotDrawer({
       return () => window.clearInterval(timer);
     }
     return undefined;
-  }, [open, enableLiveSupport, mode, loadSupportHistory, pollSupportDelta]);
+  }, [open, enableLiveSupport, mode, supportTarget, loadSupportHistory, pollSupportDelta]);
 
   useEffect(() => {
     if (!open) {
@@ -610,7 +658,11 @@ export function AiCopilotDrawer({
     void fetch("/farmer/support_chat/typing", {
       method: "POST",
       credentials: "include",
-      headers: { "X-CSRFToken": csrfToken },
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": csrfToken,
+      },
+      body: JSON.stringify({ target: supportTarget }),
     }).catch(() => {});
   };
 
@@ -620,6 +672,7 @@ export function AiCopilotDrawer({
     attachment_type?: string;
   }) => {
     if (supportSending) return;
+    const activeTarget = supportTarget;
     setSupportError(null);
     setSupportSending(true);
     try {
@@ -627,15 +680,19 @@ export function AiCopilotDrawer({
         "/farmer/support_chat/send",
         "POST",
         csrfToken,
-        payload,
+        {
+          ...payload,
+          target: activeTarget,
+        },
       );
-      if (res.data?.message) {
+      if (res.data?.message && supportTargetRef.current === activeTarget) {
         const saved = res.data.message;
         lastSupportIdRef.current = Math.max(lastSupportIdRef.current, saved.id);
         setSupportMessages((prev) => mergeSupportMessages(prev, [saved]));
       } else {
         await pollSupportDelta();
       }
+      void refreshSupportChannels();
       window.requestAnimationFrame(() =>
         supportEndRef.current?.scrollIntoView({ behavior: "smooth" }),
       );
@@ -733,9 +790,13 @@ export function AiCopilotDrawer({
                   ? isKhmer
                     ? "ជំនួយការ AI កសិកម្ម"
                     : "Agri AI Copilot"
-                  : isKhmer
-                    ? "ជំនួយផ្ទាល់ពីអ្នកជំនាញ"
-                    : "Live Expert Support"}
+                  : supportTarget === "expert"
+                    ? isKhmer
+                      ? "ជជែកផ្ទាល់ជាមួយអ្នកជំនាញ"
+                      : "Live Expert Support"
+                    : isKhmer
+                      ? "ជជែកផ្ទាល់ជាមួយ Admin"
+                      : "Live Admin Support"}
               </h2>
             </div>
             <p className={cn("truncate text-[11px] font-medium", theme.headerSub)}>
@@ -745,11 +806,15 @@ export function AiCopilotDrawer({
                   : "Online · Agronomy & workspace assistant"
                 : supportTyping
                   ? isKhmer
-                    ? "អ្នកជំនាញកំពុងវាយអក្សរ..."
-                    : "Support team is typing..."
-                  : isKhmer
-                    ? "ភ្ជាប់ផ្ទាល់ជាមួយអ្នកជំនាញ"
-                    : "Direct channel with support"}
+                    ? "កំពុងវាយអក្សរ..."
+                    : `${supportTarget === "expert" ? "Expert" : "Admin"} is typing...`
+                  : supportTarget === "expert"
+                    ? isKhmer
+                      ? "ភ្ជាប់ផ្ទាល់ជាមួយអ្នកជំនាញកសិកម្ម"
+                      : "Direct channel with Agricultural Expert"
+                    : isKhmer
+                      ? "ភ្ជាប់ផ្ទាល់ជាមួយអ្នកគ្រប់គ្រងប្រព័ន្ធ"
+                      : "Direct channel with Platform Admin"}
             </p>
           </div>
         </div>
@@ -831,6 +896,47 @@ export function AiCopilotDrawer({
               <span>{isKhmer ? "ជំនួយផ្ទាល់" : "Live Support"}</span>
             </button>
           </div>
+
+          {mode === "support" && (
+            <div className="mt-2 grid grid-cols-2 gap-1.5 rounded-xl border border-slate-200/80 bg-white/75 p-1 dark:border-slate-800 dark:bg-slate-900/60">
+              <button
+                type="button"
+                onClick={() => setSupportTarget("admin")}
+                className={cn(
+                  "flex items-center justify-center gap-1.5 rounded-lg px-2 py-1 text-[11px] font-semibold transition-all",
+                  supportTarget === "admin"
+                    ? "bg-indigo-600 text-white shadow-sm"
+                    : theme.tabInactive,
+                )}
+              >
+                <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
+                <span className="truncate">{isKhmer ? "ផ្ញើទៅ Admin" : "Message Admin"}</span>
+                {(supportChannels?.admin?.unreadCount || 0) > 0 && (
+                  <span className="rounded-full bg-white/25 px-1.5 text-[10px] font-bold">
+                    {supportChannels?.admin?.unreadCount}
+                  </span>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => setSupportTarget("expert")}
+                className={cn(
+                  "flex items-center justify-center gap-1.5 rounded-lg px-2 py-1 text-[11px] font-semibold transition-all",
+                  supportTarget === "expert"
+                    ? "bg-emerald-600 text-white shadow-sm"
+                    : theme.tabInactive,
+                )}
+              >
+                <Stethoscope className="h-3.5 w-3.5 shrink-0" />
+                <span className="truncate">{isKhmer ? "ផ្ញើទៅ Expert" : "Message Expert"}</span>
+                {(supportChannels?.expert?.unreadCount || 0) > 0 && (
+                  <span className="rounded-full bg-white/25 px-1.5 text-[10px] font-bold">
+                    {supportChannels?.expert?.unreadCount}
+                  </span>
+                )}
+              </button>
+            </div>
+          )}
         </div>
       )}
 
@@ -1095,12 +1201,22 @@ export function AiCopilotDrawer({
                   </div>
                   <div>
                     <h3 className={cn("text-sm font-semibold", theme.headerTitle)}>
-                      {isKhmer ? "សន្ទនាផ្ទាល់ជាមួយអ្នកជំនាញ" : "Start a Live Support Chat"}
+                      {supportTarget === "expert"
+                        ? isKhmer
+                          ? "សន្ទនាផ្ទាល់ជាមួយអ្នកជំនាញកសិកម្ម"
+                          : "Message Agricultural Expert"
+                        : isKhmer
+                          ? "សន្ទនាផ្ទាល់ជាមួយអ្នកគ្រប់គ្រង"
+                          : "Message Platform Admin"}
                     </h3>
                     <p className={cn("mt-1 text-xs leading-relaxed", theme.headerSub)}>
-                      {isKhmer
-                        ? "ផ្ញើសារ រូបភាពស្លឹកដំណាំ ឬទីតាំង GPS ដើម្បីទទួលបានជំនួយផ្ទាល់ពីក្រុមការងារ។"
-                        : "Send a message, crop photo, or GPS location to chat directly with our support team."}
+                      {supportTarget === "expert"
+                        ? isKhmer
+                          ? "ផ្ញើសារ រូបភាពស្លឹកដំណាំ ឬទីតាំង GPS ទៅអ្នកជំនាញកសិកម្ម។"
+                          : "Send crop photos, symptoms, or farm GPS location to an Agricultural Expert."
+                        : isKhmer
+                          ? "ផ្ញើសារ រូបភាព ឬសំណួរអំពីគណនីទៅកាន់អ្នកគ្រប់គ្រងប្រព័ន្ធ។"
+                          : "Ask Platform Admin about your account, billing, or technical issues."}
                     </p>
                   </div>
                 </div>
@@ -1233,7 +1349,15 @@ export function AiCopilotDrawer({
                   setSupportDraft(e.target.value);
                   emitFarmerTyping();
                 }}
-                placeholder={isKhmer ? "សរសេរសារទៅអ្នកជំនាញ..." : "Message live support..."}
+                placeholder={
+                  supportTarget === "expert"
+                    ? isKhmer
+                      ? "សរសេរសារទៅអ្នកជំនាញ..."
+                      : "Message Agricultural Expert..."
+                    : isKhmer
+                      ? "សរសេរសារទៅ Admin..."
+                      : "Message Platform Admin..."
+                }
                 className={cn(
                   "min-w-0 flex-1 border-0 bg-transparent px-2 py-1.5 text-[13px] shadow-none focus:outline-none focus:ring-0",
                   theme.textarea,

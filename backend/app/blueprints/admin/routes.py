@@ -369,7 +369,7 @@ def check_bakong_transaction(tx_id):
     if not tx.md5:
         flash(f"Transaction #{tx_id} has no MD5 hash.", "warning")
         return redirect(url_for("admin.premium_settings"))
-    res = verify_khqr_payment(tx.md5)
+    res = verify_khqr_payment(tx.md5, enforce_expiry=False, bypass_cache=True)
     if res.get("status") == "PAID":
         flash(f"Transaction #{tx_id} verified as PAID! VIP activated.", "success")
     elif res.get("status") == "RATE_LIMITED":

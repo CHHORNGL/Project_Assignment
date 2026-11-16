@@ -117,14 +117,19 @@ def _setting(name: str, default: str = "") -> str:
         for key in keys:
             saved = SiteSetting.query.get(key)
             if saved and saved.value and saved.value.strip():
-                return saved.value.strip()
+                val = saved.value.strip()
+                if name == "HF_INFERENCE_URL" and not is_valid_inference_endpoint(val):
+                    continue
+                return val
     except Exception:
         pass
 
     try:
         configured = current_app.config.get(name)
         if configured is not None and str(configured).strip():
-            return str(configured).strip()
+            val = str(configured).strip()
+            if name != "HF_INFERENCE_URL" or is_valid_inference_endpoint(val):
+                return val
     except RuntimeError:
         pass
     configured = os.getenv(name, "").strip()

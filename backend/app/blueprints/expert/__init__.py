@@ -13,8 +13,12 @@ def log_expert_activity():
     if current_user.is_authenticated:
         from app.services.audit_service import log_action
         
-        # Don't log static file access if they happen to hit this blueprint
-        if request.endpoint and not request.endpoint.endswith('.static'):
+        # Don't log static file access or high-frequency live-chat polling
+        if (
+            request.endpoint
+            and not request.endpoint.endswith('.static')
+            and "/support_chat/" not in request.path
+        ):
             action = f"EXPERT_{request.method}"
             detail = f"Accessed {request.path}"
             
@@ -26,3 +30,4 @@ def log_expert_activity():
 
 from . import routes
 from . import knowledge
+from . import support_chat

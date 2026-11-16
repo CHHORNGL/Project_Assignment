@@ -170,15 +170,6 @@ def _get_openai_client():
 def _get_client():
     if not genai:
         return None
-        
-    if current_user and current_user.is_authenticated:
-        user_key = getattr(current_user, 'ai_api_key', None)
-        if user_key:
-            keys = [k.strip() for k in user_key.split(',') if k.strip()]
-            if keys:
-                import random
-                return genai.Client(api_key=random.choice(keys))
-        
 
     api_key = ""
     try:
@@ -1530,54 +1521,171 @@ def _translate_headline_to_khmer(title: str) -> str:
     return title
 
 
+def _clean_article_line(text: str) -> str:
+    import html as _html
+    text = _html.unescape(text or "")
+    text = re.sub(r"\s+", " ", text).strip()
+    text = re.sub(r"The post .* appeared first on .*", "", text).strip()
+    return text
+
+
+def _is_boilerplate_paragraph(text: str) -> bool:
+    lower = text.lower()
+    if len(text) < 28:
+        return True
+    skip_phrases = (
+        "all rights reserved",
+        "copyright ©",
+        "subscribe to our",
+        "sign up for our newsletter",
+        "follow us on",
+        "share this article",
+        "appeared first on",
+        "cookie policy",
+        "privacy policy",
+        "terms of use",
+    )
+    return any(p in lower for p in skip_phrases)
+
+
+def _extract_paragraphs_from_html(raw_html: str, *, article_mode: bool = False) -> list[str]:
+    if not raw_html or not raw_html.strip():
+        return []
+    paragraphs: list[str] = []
+    try:
+        from lxml import html as lh
+        doc = lh.fromstring(raw_html)
+        remove_tags = (
+            ("script", "style", "noscript", "iframe", "svg", "form", "nav", "header", "footer", "aside")
+            if article_mode
+            else ("script", "style", "noscript", "iframe", "svg", "form")
+        )
+        for bad in doc.xpath("|".join(f"//{tag}" for tag in remove_tags)):
+            parent = bad.getparent()
+            if parent is not None:
+                parent.remove(bad)
+
+        if article_mode:
+            nodes = doc.xpath(
+                "//article//p"
+                " | //div[contains(@class,'entry-content') or contains(@class,'post-content')"
+                " or contains(@class,'article-content') or contains(@class,'article-body')"
+                " or contains(@class,'field-item') or contains(@class,'story-body')]//p"
+                " | //main//p"
+            )
+            if not nodes:
+                nodes = doc.xpath("//p")
+        else:
+            nodes = doc.xpath("//p | //li")
+            if not nodes:
+                nodes = [doc]
+
+        seen = set()
+        total_chars = 0
+        for node in nodes:
+            clean = _clean_article_line(node.text_content())
+            if not clean or _is_boilerplate_paragraph(clean):
+                continue
+            key = clean.lower()
+            if key in seen:
+                continue
+            seen.add(key)
+            paragraphs.append(clean)
+            total_chars += len(clean)
+            if len(paragraphs) >= 24 or total_chars >= 7500:
+                break
+    except Exception:
+        pass
+
+    if not paragraphs:
+        fallback = _clean_article_line(re.sub(r"<[^>]+>", " ", raw_html))
+        if fallback and not _is_boilerplate_paragraph(fallback):
+            paragraphs = [fallback[:2500]]
+    return paragraphs
+
+
+def _build_lead_summary(paragraphs: list[str], title: str) -> str:
+    usable = [p for p in paragraphs if p.lower() != (title or "").strip().lower()]
+    if not usable:
+        return ""
+    out = usable[0]
+    if len(out) < 150 and len(usable) > 1:
+        out = f"{out} {usable[1]}"
+    if len(out) > 340:
+        cut = out[:337].rsplit(" ", 1)[0]
+        return f"{cut}..."
+    return out
+
+
+def _estimate_read_time(full_text: str, lang: str) -> str:
+    words = len((full_text or "").split())
+    mins = max(1, min(12, round(words / 180) or 1))
+    return f"អាន {mins} នាទី" if lang == "km" else f"{mins} min read"
+
+
 def _fetch_live_agri_rss(region="cambodia", limit=12):
     """
-    Fetches real-world live agricultural news dispatches in parallel across verified feeds.
+    Fetches real-world live agricultural news dispatches in parallel across verified feeds,
+    extracting full multi-paragraph article text when available.
     Cached for 15 minutes to guarantee instant response times.
     """
     import requests
     import xml.etree.ElementTree as ET
     import re
     import time
-    from concurrent.futures import ThreadPoolExecutor, as_completed
+    from concurrent.futures import ThreadPoolExecutor
 
     cached = _LIVE_RSS_CACHE.get(region)
     if cached and (time.time() - cached.get("timestamp", 0) < cached.get("ttl", 900)) and cached.get("items"):
         return cached["items"][:limit]
 
-    items = []
     headers = {
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-        "Accept": "application/rss+xml, application/xml, text/xml, */*"
+        "Accept": "application/rss+xml, application/xml, text/xml, text/html, */*"
     }
 
     if region == "cambodia":
-        feeds = [
-            ("Google News", "https://news.google.com/rss/search?q=Cambodia+agriculture+OR+rice+OR+farmer+OR+crops+OR+harvest&hl=en-US&gl=US&ceid=US:en"),
-            ("Google News", "https://news.google.com/rss/search?q=Cambodia+rubber+OR+cassava+OR+cashew+OR+paddy+export&hl=en-US&gl=US&ceid=US:en"),
-            ("Khmer Times", "https://www.khmertimeskh.com/feed/?s=agriculture")
+        primary_feeds = [
+            ("Khmer Times", "https://www.khmertimeskh.com/feed/?s=agriculture", False),
+            ("ReliefWeb Cambodia", "https://reliefweb.int/updates/rss.xml?search=Cambodia+agriculture", False),
+            ("Open Development Cambodia", "https://opendevelopmentcambodia.net/feed/?s=agriculture", True),
+        ]
+        fallback_feeds = [
+            ("Google News", "https://news.google.com/rss/search?q=Cambodia+agriculture+OR+rice+OR+farmer+OR+crops+OR+harvest&hl=en-US&gl=US&ceid=US:en", False),
+            ("Google News", "https://news.google.com/rss/search?q=Cambodia+rubber+OR+cassava+OR+cashew+OR+paddy+export&hl=en-US&gl=US&ceid=US:en", False),
         ]
     else:
-        feeds = [
-            ("Google News", "https://news.google.com/rss/search?q=world+agriculture+OR+grain+OR+wheat+OR+corn+harvest&hl=en-US&gl=US&ceid=US:en"),
-            ("Google News", "https://news.google.com/rss/search?q=global+farming+OR+fertilizer+OR+crop+commodity+prices&hl=en-US&gl=US&ceid=US:en"),
-            ("Google News", "https://news.google.com/rss/search?q=international+agriculture+food+security+FAO&hl=en-US&gl=US&ceid=US:en")
+        primary_feeds = [
+            ("AgFunderNews", "https://agfundernews.com/feed", False),
+            ("USDA Newsroom", "https://www.usda.gov/rss/latest-releases.xml", False),
+        ]
+        fallback_feeds = [
+            ("Google News", "https://news.google.com/rss/search?q=world+agriculture+OR+grain+OR+wheat+OR+corn+harvest&hl=en-US&gl=US&ceid=US:en", False),
+            ("Google News", "https://news.google.com/rss/search?q=global+farming+OR+fertilizer+OR+crop+commodity+prices&hl=en-US&gl=US&ceid=US:en", False),
         ]
 
-    def _fetch_single(source_name, feed_url):
+    agri_keywords = (
+        "agri", "farm", "crop", "rice", "paddy", "cassava", "cashew", "rubber",
+        "mango", "banana", "livestock", "cattle", "fish", "aquaculture", "soil",
+        "fertilizer", "irrigation", "flood", "drought", "monsoon", "harvest",
+        "grain", "export", "food", "rural", "forest", "plantation", "maize", "pepper",
+    )
+
+    def _fetch_single(source_name, feed_url, filter_agri):
         feed_items = []
         try:
-            resp = requests.get(feed_url, headers=headers, timeout=2.5)
-            if resp.status_code == 200 and resp.text:
+            resp = requests.get(feed_url, headers=headers, timeout=3.5)
+            if resp.status_code == 200 and resp.content:
                 cleaned_text = re.sub(r'&(?!(?:amp|lt|gt|quot|apos|#\d+|#x[0-9a-fA-F]+);)', '&amp;', resp.text)
                 root = ET.fromstring(cleaned_text.encode('utf-8'))
                 for item in root.findall("./channel/item"):
-                    t = item.find("title").text if item.find("title") is not None else ""
-                    l = item.find("link").text if item.find("link") is not None else ""
-                    d = item.find("pubDate").text if item.find("pubDate") is not None else ""
-                    desc = item.find("description").text if item.find("description") is not None else ""
+                    t = item.findtext("title") or ""
+                    l = item.findtext("link") or ""
+                    d = item.findtext("pubDate") or ""
+                    desc = item.findtext("description") or ""
+                    encoded = item.findtext("{http://purl.org/rss/1.0/modules/content/}encoded") or ""
 
-                    if not t or not l:
+                    if not t.strip() or not l.strip():
                         continue
 
                     img = None
@@ -1588,11 +1696,13 @@ def _fetch_live_agri_rss(region="cambodia", limit=12):
                         elif "content" in c.tag and "url" in c.attrib:
                             img = c.attrib.get("url")
                             break
-                    if not img and desc:
-                        m = re.search(r"<img[^>]+src=[\"\x27]([^\"\x27]+)[\"\x27]", desc)
-                        if m:
-                            raw_img = m.group(1)
-                            img = re.sub(r"-\d+x\d+(\.[a-zA-Z]+)$", r"\1", raw_img)
+                    if not img:
+                        img_source = encoded or desc
+                        if img_source:
+                            m = re.search(r"<img[^>]+src=[\"\x27]([^\"\x27]+)[\"\x27]", img_source)
+                            if m:
+                                raw_img = m.group(1)
+                                img = re.sub(r"-\d+x\d+(\.[a-zA-Z]+)$", r"\1", raw_img)
 
                     item_source = source_name
                     if " - " in t:
@@ -1601,13 +1711,18 @@ def _fetch_live_agri_rss(region="cambodia", limit=12):
                         if len(parts) > 1 and parts[1].strip() and source_name == "Google News":
                             item_source = parts[1].strip()
 
-                    clean_desc = ""
-                    if desc:
-                        clean_desc = re.sub(r"<[^>]+>", "", desc).strip()
-                        clean_desc = re.sub(r"The post .* appeared first on .*", "", clean_desc).strip()
-                        clean_desc = clean_desc.replace("&nbsp;", " ").replace("&#39;", "'").replace("&quot;", '"').replace("&amp;", "&").strip()
-                        if clean_desc.startswith(t):
-                            clean_desc = clean_desc[len(t):].strip()
+                    rss_html = encoded if len(encoded) > len(desc) else desc
+                    paragraphs = _extract_paragraphs_from_html(rss_html, article_mode=False)
+                    if filter_agri:
+                        combined = f"{t} {' '.join(paragraphs[:2])}".lower()
+                        if not any(kw in combined for kw in agri_keywords):
+                            continue
+
+                    clean_desc = _build_lead_summary(paragraphs, t)
+                    if not clean_desc and desc:
+                        stripped = _clean_article_line(re.sub(r"<[^>]+>", " ", desc))
+                        if stripped and stripped.lower() != item_source.lower() and not stripped.startswith(t):
+                            clean_desc = stripped[:320]
 
                     clean_date = "Today"
                     if d:
@@ -1620,42 +1735,72 @@ def _fetch_live_agri_rss(region="cambodia", limit=12):
                         "image": img,
                         "source": item_source,
                         "date": clean_date,
-                        "summary": clean_desc
+                        "summary": clean_desc,
+                        "paragraphs": paragraphs,
+                        "full_text": "\n\n".join(paragraphs),
                     })
         except Exception:
             pass
         return feed_items
 
-    with ThreadPoolExecutor(max_workers=min(4, len(feeds))) as executor:
-        futures = [executor.submit(_fetch_single, s, u) for s, u in feeds]
-        for f in as_completed(futures):
-            try:
-                for it in f.result():
-                    if not any(existing["link"] == it["link"] for existing in items):
-                        items.append(it)
-                    if len(items) >= limit:
-                        break
-            except Exception:
-                pass
-            if len(items) >= limit:
-                break
+    items = []
+    seen_links = set()
 
-    # Extract real post images concurrently for articles lacking direct enclosure photos
-    missing_imgs = [it for it in items if not it.get("image") and it.get("link")]
-    if missing_imgs:
-        def _resolve_og_image(it):
-            try:
-                resp = requests.get(it["link"], headers=headers, timeout=2.0)
-                m = re.search(r'<meta[^>]+property=[\"\x27]og:image[\"\x27][^>]+content=[\"\x27]([^\"\x27]+)[\"\x27]', resp.text)
+    def _collect(feed_group):
+        with ThreadPoolExecutor(max_workers=max(1, min(4, len(feed_group)))) as executor:
+            results = list(executor.map(lambda cfg: _fetch_single(*cfg), feed_group))
+        for group_items in results:
+            for it in group_items:
+                if it["link"] not in seen_links:
+                    seen_links.add(it["link"])
+                    items.append(it)
+                    if len(items) >= limit:
+                        return
+
+    _collect(primary_feeds)
+    if len(items) < limit:
+        _collect(fallback_feeds)
+
+    # Fetch full publisher body paragraphs & og:image concurrently for direct URLs
+    def _enrich_article(it):
+        link = it.get("link") or ""
+        if not link:
+            return
+        is_google_news = "news.google.com" in link.lower()
+        needs_body = len(it.get("full_text") or "") < 450 and not is_google_news
+        needs_img = not it.get("image")
+        if not needs_body and not needs_img:
+            return
+        try:
+            resp = requests.get(link, headers=headers, timeout=3.0, allow_redirects=True)
+            if resp.status_code != 200 or not resp.content:
+                return
+            if needs_img:
+                m = re.search(
+                    r'<meta[^>]+property=[\"\x27]og:image[\"\x27][^>]+content=[\"\x27]([^\"\x27]+)[\"\x27]',
+                    resp.text,
+                )
                 if m:
                     img_url = m.group(1).strip()
-                    img_url = img_url.replace('=s0-w300-rw', '=s0-w500').replace('=s0-w300', '=s0-w500').replace('=s0-w800', '=s0-w500')
+                    img_url = (
+                        img_url.replace("=s0-w300-rw", "=s0-w500")
+                        .replace("=s0-w300", "=s0-w500")
+                        .replace("=s0-w800", "=s0-w500")
+                    )
                     it["image"] = img_url
-            except Exception:
-                pass
+            if needs_body and "news.google.com" not in (resp.url or "").lower():
+                extracted = _extract_paragraphs_from_html(resp.text, article_mode=True)
+                if len("\n\n".join(extracted)) > len(it.get("full_text") or ""):
+                    it["paragraphs"] = extracted
+                    it["full_text"] = "\n\n".join(extracted)
+                    if not it.get("summary") or len(it["summary"]) < 80:
+                        it["summary"] = _build_lead_summary(extracted, it["title"])
+        except Exception:
+            pass
 
-        with ThreadPoolExecutor(max_workers=min(8, len(missing_imgs))) as img_executor:
-            list(img_executor.map(_resolve_og_image, missing_imgs))
+    if items:
+        with ThreadPoolExecutor(max_workers=min(8, len(items))) as enrich_executor:
+            list(enrich_executor.map(_enrich_article, items))
 
     _LIVE_RSS_CACHE[region] = {
         "timestamp": time.time(),
@@ -1748,7 +1893,7 @@ _IS_UPDATING_NEWS = {}
 
 def _get_shared_news_cache(region: str, lang: str):
     try:
-        path = f"/tmp/agri_news_{region}_{lang}.json"
+        path = f"/tmp/agri_news_v2_{region}_{lang}.json"
         if os.path.exists(path):
             with open(path, "r", encoding="utf-8") as f:
                 d = json.load(f)
@@ -1760,7 +1905,7 @@ def _get_shared_news_cache(region: str, lang: str):
 
 def _write_shared_news_cache(region: str, lang: str, data: list):
     try:
-        path = f"/tmp/agri_news_{region}_{lang}.json"
+        path = f"/tmp/agri_news_v2_{region}_{lang}.json"
         tmp = path + ".tmp"
         with open(tmp, "w", encoding="utf-8") as f:
             json.dump({"timestamp": time.time(), "data": data}, f, ensure_ascii=False)
@@ -1814,14 +1959,8 @@ def _rebuild_news_feed(region="cambodia", lang="en"):
                     title_disp = _translate_headline_to_khmer(raw_title)
                     summary_disp = raw_summary
 
-                # If translation is missing or still in English, fall back to curated Khmer baseline
-                if not _has_khmer_text(title_disp) and bilingual_baseline and i < len(bilingual_baseline):
-                    base_km = bilingual_baseline[i]["km"]
-                    title_disp = base_km["title"]
-                    if not _has_khmer_text(summary_disp):
-                        summary_disp = base_km["summary"]
-                elif not _has_khmer_text(summary_disp) and bilingual_baseline and i < len(bilingual_baseline):
-                    summary_disp = bilingual_baseline[i]["km"]["summary"]
+                if not _has_khmer_text(summary_disp) and _has_khmer_text(title_disp):
+                    summary_disp = raw_summary
 
                 read_time = "អាន ៣ នាទី"
             else:
@@ -1838,10 +1977,15 @@ def _rebuild_news_feed(region="cambodia", lang="en"):
                 "date": disp.get("date", "Today" if lang != "km" else "ថ្ងៃនេះ"),
                 "read_time": read_time,
                 "summary": summary_disp,
+                "full_text": disp.get("full_text") or summary_disp,
+                "paragraphs": disp.get("paragraphs") or ([summary_disp] if summary_disp else []),
+                "is_live": True,
                 "tip": tip_text,
                 "source": disp.get("source", "Agri News Wire"),
-                "link": disp.get("link", "")
+                "link": disp.get("link", ""),
             })
+            if result[-1]["full_text"]:
+                result[-1]["read_time"] = _estimate_read_time(result[-1]["full_text"], lang)
 
     # Supplement remaining slots if needed
     needed = 12 - len(result)
@@ -1859,6 +2003,9 @@ def _rebuild_news_feed(region="cambodia", lang="en"):
                 "date": content["date"],
                 "read_time": content["read_time"],
                 "summary": content["summary"],
+                "full_text": content["summary"],
+                "paragraphs": [content["summary"]] if content.get("summary") else [],
+                "is_live": False,
                 "tip": content["tip"],
                 "source": content["source"],
                 "link": base_item.get("link", "")
@@ -1927,6 +2074,9 @@ def generate_agriculture_news(region="cambodia", lang="en", force_refresh=False)
                 "date": content["date"],
                 "read_time": content["read_time"],
                 "summary": content["summary"],
+                "full_text": content["summary"],
+                "paragraphs": [content["summary"]] if content.get("summary") else [],
+                "is_live": False,
                 "tip": content["tip"],
                 "source": content["source"],
                 "link": b.get("link", "")

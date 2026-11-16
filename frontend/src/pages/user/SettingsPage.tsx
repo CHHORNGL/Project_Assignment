@@ -3,16 +3,23 @@ import {
   CheckCircle2,
   ChevronRight,
   Cpu,
+  ExternalLink,
+  Eye,
+  EyeOff,
   Globe2,
+  KeyRound,
   Laptop,
+  Link2,
   MonitorSmartphone,
   Moon,
   Palette,
   Save,
   ShieldCheck,
   Smartphone,
+  Sparkles,
   Sun,
   UserCircle,
+  Volume2,
 } from "lucide-react";
 import type { AppBootstrap, LoginActivityEntry, ThemeMode } from "@/types/app";
 import { WorkspaceShell } from "@/components/layout/WorkspaceShell";
@@ -34,6 +41,14 @@ interface SettingsData {
   theme: ThemeMode;
   twoFactorEnabled: boolean;
   recentActivities: LoginActivityEntry[];
+  googleConnected?: boolean;
+  googleEmail?: string | null;
+  googleOAuthConfigured?: boolean;
+  googleConnectUrl?: string;
+  googleDisconnectUrl?: string;
+  geminiTtsConfigured?: boolean;
+  geminiTtsKeyMasked?: string | null;
+  geminiTtsModel?: string;
 }
 
 function ThemeMiniPreview({ mode }: { mode: ThemeMode }) {
@@ -116,6 +131,9 @@ export default function SettingsPage({ bootstrap }: { bootstrap: AppBootstrap<Se
   const { setTheme } = useTheme();
   const [selectedTheme, setSelectedTheme] = useState<ThemeMode>(d.theme || "system");
   const [twoFactor, setTwoFactor] = useState(d.twoFactorEnabled);
+  const [geminiApiKey, setGeminiApiKey] = useState("");
+  const [showGeminiKey, setShowGeminiKey] = useState(false);
+  const [clearGeminiKey, setClearGeminiKey] = useState(false);
 
   const themeOptions: Array<{
     value: ThemeMode;
@@ -338,6 +356,215 @@ export default function SettingsPage({ bootstrap }: { bootstrap: AppBootstrap<Se
             </div>
           </div>
 
+          {/* Google Account & Personal Gemini 3.8 Flash TTS */}
+          <div>
+            <MobileSectionLabel>
+              {isKhmer ? "សំឡេង Listen និង Google" : "Voice (Listen) & Google"}
+            </MobileSectionLabel>
+            <AccountSectionCard
+              delayIndex={2}
+              tone={d.geminiTtsConfigured ? "emerald" : "blue"}
+              icon={<Volume2 className="h-4 w-4" />}
+              title={
+                isKhmer
+                  ? "សំឡេង Gemini 3.8 Flash TTS"
+                  : "Google Account & Gemini Voice"
+              }
+              subtitle={
+                isKhmer
+                  ? "ប្រើគណនី Google និង Gemini API Key ផ្ទាល់ខ្លួនសម្រាប់ប៊ូតុង Listen"
+                  : "Connect Google and save a personal Gemini API key for natural speech"
+              }
+              action={
+                <span
+                  className={cn(
+                    "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-bold",
+                    d.geminiTtsConfigured
+                      ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
+                      : "bg-slate-100 text-slate-600 dark:bg-obsidian-800 dark:text-slate-300",
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "h-1.5 w-1.5 rounded-full",
+                      d.geminiTtsConfigured ? "bg-emerald-500" : "bg-slate-400",
+                    )}
+                  />
+                  {d.geminiTtsConfigured
+                    ? d.geminiTtsModel || "gemini-3.8-flash-tts"
+                    : isKhmer
+                      ? "ស្តង់ដារ"
+                      : "Standard TTS"}
+                </span>
+              }
+            >
+              <div className="space-y-4">
+                {/* Step 1: Google Account Link */}
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/80 bg-slate-50/75 px-3.5 py-3 dark:border-slate-800 dark:bg-obsidian-950/60">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span
+                      className={cn(
+                        "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border",
+                        d.googleConnected
+                          ? "border-emerald-500/25 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300"
+                          : "border-slate-200 bg-white text-slate-500 dark:border-slate-700 dark:bg-obsidian-900 dark:text-slate-300",
+                      )}
+                    >
+                      <Link2 className="h-4 w-4" />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-slate-900 dark:text-white">
+                        {d.googleConnected
+                          ? isKhmer
+                            ? "បានភ្ជាប់គណនី Google"
+                            : "Google Account Connected"
+                          : isKhmer
+                            ? "ភ្ជាប់គណនី Google"
+                            : "Connect Google Account"}
+                      </p>
+                      <p className="truncate text-[11px] text-slate-500 dark:text-slate-400">
+                        {d.googleConnected
+                          ? d.googleEmail ||
+                            (isKhmer ? "បានផ្ទៀងផ្ទាត់ជាមួយ Google" : "Verified via Google Sign-In")
+                          : d.googleOAuthConfigured
+                            ? isKhmer
+                              ? "ភ្ជាប់គណនី Google របស់អ្នកសម្រាប់ការចូលប្រើរហ័ស"
+                              : "Link your Google account for seamless access"
+                            : isKhmer
+                              ? "ការភ្ជាប់ Google OAuth មិនទាន់បើកនៅលើម៉ាស៊ីនមេទេ"
+                              : "Server Google OAuth is not enabled in .env yet"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {d.googleConnected ? (
+                    <button
+                      type="submit"
+                      form="google-disconnect-form"
+                      className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-xl border border-rose-200 bg-white px-3 text-xs font-bold text-rose-600 transition-colors hover:bg-rose-50 dark:border-rose-500/30 dark:bg-obsidian-900 dark:text-rose-300 dark:hover:bg-rose-950/40"
+                    >
+                      {isKhmer ? "ផ្តាច់ការភ្ជាប់" : "Disconnect"}
+                    </button>
+                  ) : d.googleOAuthConfigured && d.googleConnectUrl ? (
+                    <a
+                      href={d.googleConnectUrl}
+                      className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-xl border border-indigo-200 bg-white px-3 text-xs font-bold text-indigo-600 transition-colors hover:bg-indigo-50 dark:border-indigo-500/30 dark:bg-obsidian-900 dark:text-indigo-300 dark:hover:bg-indigo-950/40"
+                    >
+                      <Link2 className="h-3.5 w-3.5" />
+                      <span>{isKhmer ? "ភ្ជាប់ Google" : "Connect Google"}</span>
+                    </a>
+                  ) : null}
+                </div>
+
+                {/* Google AI Pro / Ultra Guidance */}
+                <div className="rounded-2xl border border-indigo-200/75 bg-indigo-50/70 p-3.5 text-xs dark:border-indigo-500/20 dark:bg-indigo-950/25">
+                  <div className="flex items-start gap-2.5">
+                    <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600 dark:text-indigo-300" />
+                    <div className="min-w-0 flex-1 space-y-1.5">
+                      <p className="font-bold text-slate-900 dark:text-white">
+                        {isKhmer
+                          ? "អ្នកប្រើ Google AI Pro ឬ Ultra?"
+                          : "Using Google AI Pro or Ultra?"}
+                      </p>
+                      <p className="leading-relaxed text-slate-600 dark:text-slate-300">
+                        {isKhmer
+                          ? "សូមបើក Google AI Studio ដើម្បីទទួលក្រេឌីត និងបង្កើត Gemini API Key ផ្ទាល់ខ្លួន រួចបិទភ្ជាប់ខាងក្រោម។ ប៊ូតុង Listen នឹងអានជាភាសាខ្មែរ/អង់គ្លេសដោយប្រើ gemini-3.8-flash-tts ចំណែកចម្លើយ AI នៅតែប្រើគំរូកសិកម្មរបស់ប្រព័ន្ធ។"
+                          : "Claim your developer credits in Google AI Studio to create a Gemini API key and paste it below. Listen will speak Khmer & English answers with gemini-3.8-flash-tts, while chat replies continue using Agri-System AI."}
+                      </p>
+                      <a
+                        href="https://aistudio.google.com/apikey"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 font-bold text-indigo-600 hover:underline dark:text-indigo-300"
+                      >
+                        <span>
+                          {isKhmer ? "បង្កើត API Key ក្នុង Google AI Studio" : "Get API Key in Google AI Studio"}
+                        </span>
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Step 2: Personal Gemini API Key */}
+                <div className="space-y-2">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <label
+                      htmlFor="gemini_api_key_input"
+                      className="text-xs font-bold text-slate-700 dark:text-slate-200"
+                    >
+                      {isKhmer ? "Gemini API Key ផ្ទាល់ខ្លួន (សម្រាប់ Listen)" : "Personal Gemini API Key (Listen TTS)"}
+                    </label>
+                    {d.geminiTtsConfigured && d.geminiTtsKeyMasked && !clearGeminiKey && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-0.5 font-mono text-[11px] font-semibold text-emerald-700 dark:text-emerald-300">
+                        <CheckCircle2 className="h-3 w-3" />
+                        {d.geminiTtsKeyMasked}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="relative">
+                    <KeyRound className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    <input
+                      id="gemini_api_key_input"
+                      name="gemini_api_key"
+                      className="ai-input w-full pl-10 pr-11 font-mono text-xs"
+                      type={showGeminiKey ? "text" : "password"}
+                      value={geminiApiKey}
+                      onChange={(e) => {
+                        setGeminiApiKey(e.target.value);
+                        if (e.target.value.trim()) {
+                          setClearGeminiKey(false);
+                        }
+                      }}
+                      autoComplete="off"
+                      spellCheck={false}
+                      placeholder={
+                        d.geminiTtsConfigured
+                          ? isKhmer
+                            ? "បញ្ចូល Key ថ្មីដើម្បីប្តូរ (ទុកទទេដើម្បីរក្សា Key ចាស់)"
+                            : "Enter a new key to replace (leave blank to keep saved key)"
+                          : "AIza..."
+                      }
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowGeminiKey((v) => !v)}
+                      aria-label={showGeminiKey ? "Hide API key" : "Show API key"}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-obsidian-800 dark:hover:text-slate-200"
+                    >
+                      {showGeminiKey ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
+
+                  {d.geminiTtsConfigured && (
+                    <label className="flex cursor-pointer items-center justify-between gap-3 rounded-2xl border border-slate-200/80 px-3.5 py-2.5 text-xs dark:border-slate-800">
+                      <span className="font-semibold text-slate-600 dark:text-slate-300">
+                        {isKhmer
+                          ? "លុប Gemini API Key ដែលបានរក្សាទុក"
+                          : "Remove saved Gemini API key"}
+                      </span>
+                      <AccountSwitch
+                        name="clear_gemini_api_key"
+                        value="y"
+                        checked={clearGeminiKey}
+                        label={isKhmer ? "លុប Gemini API Key" : "Remove saved Gemini API key"}
+                        onChange={(checked) => {
+                          setClearGeminiKey(checked);
+                          if (checked) setGeminiApiKey("");
+                        }}
+                      />
+                    </label>
+                  )}
+                </div>
+              </div>
+            </AccountSectionCard>
+          </div>
+
           <button
             type="submit"
             className="ai-btn-primary h-11 w-full rounded-2xl text-sm font-bold shadow-sm"
@@ -346,6 +573,17 @@ export default function SettingsPage({ bootstrap }: { bootstrap: AppBootstrap<Se
             <span>{isKhmer ? "រក្សាទុកការកំណត់" : "Save Preferences"}</span>
           </button>
         </form>
+
+        {d.googleConnected && d.googleDisconnectUrl && (
+          <form
+            id="google-disconnect-form"
+            method="post"
+            action={d.googleDisconnectUrl}
+            className="hidden"
+          >
+            <input type="hidden" name="csrf_token" value={bootstrap.csrfToken} />
+          </form>
+        )}
 
         {/* Runtime Summary & Recent Login Devices */}
         <div>
@@ -374,6 +612,26 @@ export default function SettingsPage({ bootstrap }: { bootstrap: AppBootstrap<Se
                   <span>{isKhmer ? "ប្រព័ន្ធ AI" : "AI Engine"}</span>
                 </dt>
                 <dd className="font-bold text-indigo-600 dark:text-indigo-300">Agri-System AI</dd>
+              </div>
+              <div className="flex items-center justify-between py-3">
+                <dt className="inline-flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
+                  <Volume2 className="h-3.5 w-3.5 text-emerald-500" />
+                  <span>{isKhmer ? "សំឡេង (Listen)" : "Voice (Listen)"}</span>
+                </dt>
+                <dd
+                  className={cn(
+                    "font-bold",
+                    d.geminiTtsConfigured
+                      ? "text-emerald-600 dark:text-emerald-300"
+                      : "text-slate-700 dark:text-slate-200",
+                  )}
+                >
+                  {d.geminiTtsConfigured
+                    ? `Personal ${d.geminiTtsModel || "gemini-3.8-flash-tts"}`
+                    : isKhmer
+                      ? "ស្តង់ដារ"
+                      : "Standard TTS"}
+                </dd>
               </div>
             </dl>
 

@@ -17,10 +17,17 @@ export interface UserSummary {
 
 export interface NotificationItem {
   id: number;
+  kind?: string;
   title: string;
-  message: string;
+  message?: string;
+  subtitle?: string;
   link?: string | null;
+  url?: string | null;
+  icon?: string;
+  level?: string;
+  time?: string;
   is_read?: boolean;
+  unread?: boolean;
   created_at?: string | null;
 }
 

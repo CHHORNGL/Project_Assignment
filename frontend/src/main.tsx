@@ -21,6 +21,7 @@ import MemberCardPage from "@/pages/user/MemberCardPage";
 import GuestLandingPage from "@/pages/farmer/GuestLandingPage";
 import FarmerDashboardPage from "@/pages/farmer/FarmerDashboardPage";
 import FarmerChatPage from "@/pages/farmer/FarmerChatPage";
+import FarmerLiveChatPage from "@/pages/farmer/FarmerLiveChatPage";
 import FarmerResultPage from "@/pages/farmer/FarmerResultPage";
 import FarmerDiagnoseClassicPage from "@/pages/farmer/FarmerDiagnoseClassicPage";
 import FarmerHistoryPage from "@/pages/farmer/FarmerHistoryPage";
@@ -120,6 +121,8 @@ function PageRouter({ bootstrap }: { bootstrap: AppBootstrap }) {
       return <FarmerDashboardPage bootstrap={bootstrap as AppBootstrap<any>} />;
     case "farmer-chat":
       return <FarmerChatPage bootstrap={bootstrap as AppBootstrap<any>} />;
+    case "farmer-live-chat":
+      return <FarmerLiveChatPage bootstrap={bootstrap as AppBootstrap<any>} />;
     case "farmer-result":
       return <FarmerResultPage bootstrap={bootstrap as AppBootstrap<any>} />;
     case "farmer-diagnose-classic":
@@ -159,6 +162,8 @@ function PageRouter({ bootstrap }: { bootstrap: AppBootstrap }) {
       return <ExpertReplyChatPage bootstrap={bootstrap as AppBootstrap<any>} />;
     case "expert-support-hub":
       return <ExpertSupportHubPage bootstrap={bootstrap as AppBootstrap<any>} />;
+    case "expert-support-chats":
+      return <AdminSupportChatsPage bootstrap={bootstrap as AppBootstrap<any>} />;
     case "expert-diseases":
       return <ExpertDiseasesPage bootstrap={bootstrap as AppBootstrap<any>} />;
     case "expert-disease-form":

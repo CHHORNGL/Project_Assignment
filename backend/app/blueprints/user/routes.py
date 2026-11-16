@@ -29,7 +29,11 @@ from app.services.login_activity import (
     revoke_all_other_sessions,
     revoke_login_activity,
 )
-from app.services.notification_service import serialize_notification
+from app.services.notification_service import (
+    get_unread_notification_count,
+    mark_notifications_seen,
+    serialize_notification,
+)
 from app.services.theme_manager import resolve_active_runtime
 from app.services.translator import translate_audio_to_khmer, translate_to_khmer
 from app.utils.i18n import get_current_language, set_current_language
@@ -362,11 +366,29 @@ def settings():
         two_factor_enabled = (request.form.get("two_factor_enabled") == "y")
         current_user.two_factor_enabled = two_factor_enabled
         
-        # The application uses the owner's trained agricultural AI only.
-        # Ignore legacy per-user model/key fields and remove any stale
-        # commercial-provider credential when the settings form is saved.
+        # Keep text-chat AI locked to the owner's trained agricultural model,
+        # while allowing a personal Gemini API key strictly for Listen (gemini-3.8-flash-tts).
         current_user.ai_model = "own-ai"
-        current_user.ai_api_key = None
+
+        clear_gemini_key = request.form.get("clear_gemini_api_key") == "y"
+        submitted_gemini_key = (request.form.get("gemini_api_key") or "").strip()
+        if clear_gemini_key:
+            current_user.ai_api_key = None
+        elif submitted_gemini_key:
+            from app.services.gemini_tts_service import (
+                encrypt_user_api_key,
+                validate_gemini_api_key_format,
+            )
+
+            is_valid, err_msg = validate_gemini_api_key_format(submitted_gemini_key)
+            if not is_valid:
+                flash(err_msg or "Invalid Gemini API key.", "danger")
+                return redirect(url_for("user.settings"))
+            try:
+                current_user.ai_api_key = encrypt_user_api_key(submitted_gemini_key)
+            except ValueError as exc:
+                flash(str(exc), "danger")
+                return redirect(url_for("user.settings"))
 
         db.session.commit()
         session["theme"] = theme
@@ -453,6 +475,8 @@ def notifications():
     per_page = request.args.get("per_page", type=int) or 30
 
     query = _notification_query(current_user.id)
+    total = query.count()
+    unread_count = get_unread_notification_count(current_user.id)
     rows, next_page, per_page = _paginate_notifications(query, page, per_page)
 
     return render_react_page(
@@ -462,6 +486,8 @@ def notifications():
             per_page=per_page,
             data_url=url_for("user.notifications_data"),
             seen_url=url_for("user.notifications_seen"),
+            total_count=total,
+            unread_count=unread_count,
         ),
         title="Notifications",
     )
@@ -474,11 +500,16 @@ def notifications_data():
     per_page = request.args.get("per_page", type=int) or 30
 
     query = _notification_query(current_user.id)
+    total = query.count()
+    unread_count = get_unread_notification_count(current_user.id)
     rows, next_page, per_page = _paginate_notifications(query, page, per_page)
     return jsonify({
         "ok": True,
         "items": [serialize_notification(item) for item in rows],
         "next_page": next_page,
+        "per_page": per_page,
+        "total": total,
+        "unread_count": unread_count,
     })
 
 
@@ -487,33 +518,7 @@ def notifications_data():
 def notifications_seen():
     payload = request.get_json(silent=True) or {}
     ids = payload.get("ids") if isinstance(payload, dict) else None
-
-    query = (
-        Notification.query
-        .filter(
-            Notification.user_id == current_user.id,
-            Notification.read_at.is_(None),
-        )
-    )
-    if ids:
-        try:
-            id_list = [int(val) for val in ids]
-        except (TypeError, ValueError):
-            id_list = []
-        if id_list:
-            query = query.filter(Notification.id.in_(id_list))
-
-    updated = query.update({"read_at": datetime.utcnow()}, synchronize_session=False)
-    db.session.commit()
-
-    unread_count = (
-        Notification.query
-        .filter(
-            Notification.user_id == current_user.id,
-            Notification.read_at.is_(None),
-        )
-        .count()
-    )
+    updated, unread_count = mark_notifications_seen(current_user.id, ids)
 
     return jsonify({
         "ok": True,

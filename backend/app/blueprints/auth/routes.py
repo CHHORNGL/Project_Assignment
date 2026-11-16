@@ -875,30 +875,79 @@ def resend_code():
 # ==================================================
 @auth_bp.route("/google")
 def google_login():
-    if current_user.is_authenticated:
+    link_mode = request.args.get("link") == "1"
+    if current_user.is_authenticated and not link_mode:
         return redirect(url_for("main.index"))
+
+    failure_target = (
+        url_for("user.settings")
+        if (link_mode and current_user.is_authenticated)
+        else url_for("auth.login", role="farmer")
+    )
 
     google = _get_google_client()
     if not google:
-        flash("Google login is not configured yet.", "danger")
-        return redirect(url_for("auth.login", role="farmer"))
+        flash(
+            "Google account connection is not configured on this server yet."
+            if link_mode
+            else "Google login is not configured yet.",
+            "danger",
+        )
+        return redirect(failure_target)
+
+    if link_mode and current_user.is_authenticated:
+        session["google_link_user_id"] = current_user.id
+    else:
+        session.pop("google_link_user_id", None)
 
     redirect_uri = url_for("auth.google_callback", _external=True)
     return google.authorize_redirect(redirect_uri)
 
 
+@auth_bp.route("/google/disconnect", methods=["POST"])
+@login_required
+def google_disconnect():
+    if not getattr(current_user, "google_sub", None):
+        flash("No Google account is currently connected.", "info")
+        return redirect(url_for("user.settings"))
+
+    current_user.google_sub = None
+    db.session.commit()
+    audit_log(
+        "GOOGLE_ACCOUNT_DISCONNECTED",
+        target_user=current_user.username,
+        user_id=current_user.id,
+        detail="User disconnected Google account link from preferences",
+    )
+    flash("Google account disconnected.", "info")
+    return redirect(url_for("user.settings"))
+
+
 @auth_bp.route("/google/callback")
 def google_callback():
+    link_user_id = session.pop("google_link_user_id", None)
+    is_linking = bool(
+        link_user_id
+        and current_user.is_authenticated
+        and str(current_user.id) == str(link_user_id)
+    )
+    failure_target = url_for("user.settings") if is_linking else url_for("auth.login", role="farmer")
+
     google = _get_google_client()
     if not google:
         flash("Google login is not configured yet.", "danger")
-        return redirect(url_for("auth.login", role="farmer"))
+        return redirect(failure_target)
 
     try:
         token = google.authorize_access_token()
     except Exception:
-        flash("Google login failed. Please try again.", "danger")
-        return redirect(url_for("auth.login", role="farmer"))
+        flash(
+            "Could not connect your Google account. Please try again."
+            if is_linking
+            else "Google login failed. Please try again.",
+            "danger",
+        )
+        return redirect(failure_target)
 
     user_info = None
     try:
@@ -913,7 +962,7 @@ def google_callback():
 
     if not user_info:
         flash("Unable to read Google profile information.", "danger")
-        return redirect(url_for("auth.login", role="farmer"))
+        return redirect(failure_target)
 
     google_sub = user_info.get("sub")
     email = user_info.get("email")
@@ -921,7 +970,32 @@ def google_callback():
 
     if not google_sub:
         flash("Google login failed. Missing account identifier.", "danger")
-        return redirect(url_for("auth.login", role="farmer"))
+        return redirect(failure_target)
+
+    if is_linking:
+        existing_owner = User.query.filter(
+            User.google_sub == google_sub,
+            User.id != current_user.id,
+        ).first()
+        if existing_owner:
+            flash("This Google account is already linked to another user.", "danger")
+            return redirect(url_for("user.settings"))
+
+        current_user.google_sub = google_sub
+        if not getattr(current_user, "full_name", None) and display_name:
+            current_user.full_name = display_name
+        db.session.commit()
+        audit_log(
+            "GOOGLE_ACCOUNT_LINKED",
+            target_user=current_user.username,
+            user_id=current_user.id,
+            detail="User linked Google account from preferences",
+        )
+        flash(
+            "Google account connected! Add your Gemini API key below to speak answers with gemini-3.8-flash-tts.",
+            "success",
+        )
+        return redirect(url_for("user.settings"))
 
     user = User.query.filter_by(google_sub=google_sub).first()
 

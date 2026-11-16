@@ -4,6 +4,7 @@ import {
   BookOpen,
   ClipboardCheck,
   Compass,
+  Headphones,
   Info,
   LayoutGrid,
   LogOut,
@@ -49,6 +50,9 @@ function resolveAppTileMeta(href: string): {
   if (lower.includes("/notifications")) return { Icon: Bell, tone: "rose", isNotification: true };
   if (lower.includes("/settings")) return { Icon: SlidersHorizontal, tone: "slate" };
   if (lower.includes("/profile")) return { Icon: UserCircle, tone: "indigo" };
+  if (lower.includes("/live-chat") || lower.includes("/support_chat")) {
+    return { Icon: Headphones, tone: "emerald" };
+  }
   if (lower.includes("/chat")) return { Icon: Sparkles, tone: "sky" };
   return { Icon: Compass, tone: "slate" };
 }

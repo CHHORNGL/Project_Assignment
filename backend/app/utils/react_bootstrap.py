@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from flask import get_flashed_messages, render_template, request, url_for
+from flask import current_app, get_flashed_messages, render_template, request, url_for
 from flask_login import current_user
 from flask_wtf.csrf import generate_csrf
 
@@ -538,6 +538,7 @@ def _expert_navigation_sections():
             "items": [
                 {"label": t("expert_dashboard_title"), "href": url_for("expert.dashboard"), "description": t("expert_command_sub")},
                 {"label": _copy("Pending diagnoses", "ករណីរង់ចាំ"), "href": url_for("expert.pending_diagnoses"), "description": _copy("Open review queue", "ជួរពិនិត្យ")},
+                {"label": _copy("Live chat inbox", "ជជែកផ្ទាល់"), "href": _safe_url("expert.support_chats", "/expert/support_chats"), "description": _copy("Direct farmer messages", "សារផ្ទាល់ពីកសិករ")},
                 {"label": _copy("Farmer chats", "សារកសិករ"), "href": url_for("expert.farmer_chats"), "description": _copy("Support conversations", "ការគាំទ្រ")},
             ],
         },
@@ -1970,6 +1971,7 @@ def build_farmer_dashboard_bootstrap(
             "text": _localize_attr(m, "text", getattr(m, "text", "")),
             "textEn": _text(getattr(m, "text", "")),
             "textKm": _text(getattr(m, "text_kh", "") or getattr(m, "text", "")),
+            "createdAt": _iso(getattr(m, "created_at", None)),
         }
         for m in (marquees or [])
     ]
@@ -2094,6 +2096,7 @@ def _farmer_navigation_sections():
                 {"label": t("farmer_dashboard_title"), "href": _safe_url("farmer.dashboard", "/farmer/dashboard")},
                 {"label": t("guided_diagnosis_title"), "href": _safe_url("farmer.diagnose_rule_based", "/farmer/diagnose/rule-based")},
                 {"label": t("ask_expert_title"), "href": _safe_url("farmer.chat", "/farmer/chat")},
+                {"label": _copy("Live Chat", "ជជែកផ្ទាល់"), "href": _safe_url("farmer.live_chat", "/farmer/live-chat")},
             ],
         },
         {
@@ -2171,8 +2174,11 @@ def _confidence_tier_label(value: str | None) -> str:
 def build_farmer_chat_bootstrap(*, sessions, active_session, messages):
     ui = _farmer_shell_ui(
         eyebrow=t("ask_expert"),
-        title=_text(getattr(active_session, "title", None) or t("ask_agri_expert")),
-        subtitle=t("expert_guidance"),
+        title=_copy("Ask Agricultural Expert", "សួរអ្នកជំនាញកសិកម្ម"),
+        subtitle=_copy(
+            "AI agronomy guidance & certified specialist support.",
+            "ដំបូន្មានកសិកម្ម AI និងជំនួយពីអ្នកជំនាញផ្ទាល់។",
+        ),
         actions={
             "newChat": {"label": t("new_chat"), "href": url_for("farmer.new_chat")},
             "diagnose": {"label": t("guided_diagnosis_title"), "href": url_for("farmer.diagnose_rule_based")},
@@ -2768,12 +2774,27 @@ def build_user_profile_bootstrap(*, rep_label: str | None = None, member_card_ur
 
 
 def build_user_settings_bootstrap(*, activities: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+    from app.services.gemini_tts_service import GEMINI_TTS_MODEL, mask_api_key
+
     scope = _user_scope()
     ui = {
         "pageTitle": _copy("Workspace Preferences", "ការកំណត់គណនី"),
         "pageSubtitle": _copy("Personalize appearance, language, and account security settings.", "កំណត់រចនាប័ទ្ម ភាសា និងការការពារគណនីរបស់អ្នក។"),
         "navigation": {"sections": _user_navigation_sections()},
     }
+    google_sub = getattr(current_user, "google_sub", None) if (current_user and current_user.is_authenticated) else None
+    google_connected = bool(google_sub and not str(google_sub).startswith("tg_"))
+    stored_key = getattr(current_user, "ai_api_key", None) if (current_user and current_user.is_authenticated) else None
+    masked_key = mask_api_key(stored_key)
+
+    try:
+        google_oauth_configured = bool(
+            current_app.config.get("GOOGLE_CLIENT_ID")
+            and current_app.config.get("GOOGLE_CLIENT_SECRET")
+        )
+    except RuntimeError:
+        google_oauth_configured = False
+
     data = {
         "submitUrl": _safe_url("user.settings", "/users/settings"),
         "loginActivityUrl": _safe_url("user.login_activity", "/users/login-activity"),
@@ -2781,6 +2802,14 @@ def build_user_settings_bootstrap(*, activities: list[dict[str, Any]] | None = N
         "theme": getattr(current_user, "theme", "system") if current_user and current_user.is_authenticated else "system",
         "twoFactorEnabled": bool(getattr(current_user, "two_factor_enabled", False)),
         "recentActivities": activities or [],
+        "googleConnected": google_connected,
+        "googleEmail": _text(getattr(current_user, "email", "")) if google_connected else None,
+        "googleOAuthConfigured": google_oauth_configured,
+        "googleConnectUrl": _safe_url("auth.google_login", "/auth/google?link=1", link="1"),
+        "googleDisconnectUrl": _safe_url("auth.google_disconnect", "/auth/google/disconnect"),
+        "geminiTtsConfigured": bool(masked_key),
+        "geminiTtsKeyMasked": masked_key,
+        "geminiTtsModel": GEMINI_TTS_MODEL,
     }
     return _base_bootstrap("user-settings", scope, ui, data)
 
@@ -2834,6 +2863,8 @@ def build_user_notifications_bootstrap(
     per_page: int,
     data_url: str,
     seen_url: str,
+    total_count: int | None = None,
+    unread_count: int | None = None,
 ) -> dict[str, Any]:
     scope = _user_scope()
     ui = {
@@ -2841,10 +2872,25 @@ def build_user_notifications_bootstrap(
         "pageSubtitle": _copy("Alerts about diagnoses, expert replies, and system updates.", "ការជូនដំណឹងអំពីការវិនិច្ឆ័យ ការឆ្លើយតបរបស់អ្នកជំនាញ និងបច្ចុប្បន្នភាពប្រព័ន្ធ។"),
         "navigation": {"sections": _user_navigation_sections()},
     }
+    resolved_total = int(total_count) if total_count is not None else len(items)
+    if unread_count is not None:
+        resolved_unread = int(unread_count)
+    else:
+        resolved_unread = sum(
+            1
+            for item in items
+            if (
+                not bool(item.get("is_read"))
+                if "is_read" in item
+                else bool(item.get("unread", True))
+            )
+        )
     data = {
         "items": items,
         "nextPage": next_page,
         "perPage": int(per_page),
+        "totalCount": resolved_total,
+        "unreadCount": resolved_unread,
         "dataUrl": data_url,
         "seenUrl": seen_url,
     }
@@ -2907,7 +2953,13 @@ def build_farmer_guest_landing_bootstrap(
             for c in (crops or [])
         ],
         "marquees": [
-            {"id": m.id, "text": _localize_attr(m, "text", getattr(m, "text", ""))}
+            {
+                "id": m.id,
+                "text": _localize_attr(m, "text", getattr(m, "text", "")),
+                "textEn": _text(getattr(m, "text", "")),
+                "textKm": _text(getattr(m, "text_kh", "") or getattr(m, "text", "")),
+                "createdAt": _iso(getattr(m, "created_at", None)),
+            }
             for m in (marquees or [])
         ],
         "supervisor": supervisor,
@@ -3008,9 +3060,85 @@ def build_farmer_news_bootstrap(*, marquees, initial_news) -> dict[str, Any]:
         "generateUrl": _safe_url("farmer.api_generate_news", "/farmer/api/generate_news"),
         "ttsUrl": _safe_url("farmer.api_tts", "/farmer/api/tts"),
         "marquees": marquees or [],
-        "initialNews": initial_news or {},
+        "initialNews": initial_news or [],
     }
     return _base_bootstrap("farmer-news", "farmer", ui, data)
+
+
+def _clean_detail_text(value: Any) -> str:
+    """Normalize team/supervisor copy while preserving explicit nbsp name spacing."""
+    normalized = _text(str(value or ""))
+    cleaned = normalized.replace("&nbsp;", " ").strip()
+    return " ".join(cleaned.split())
+
+
+def _serialize_detail_member(raw: dict[str, Any] | None) -> dict[str, str]:
+    """Serialize supervisor or team member record with safe asset and contact URLs."""
+    from urllib.parse import quote
+
+    member = dict(raw or {})
+    photo = str(member.get("photo") or "").strip()
+    photo_url = (
+        _safe_url(
+            "static",
+            f"/static/img/image_detail/{quote(photo)}",
+            filename=f"img/image_detail/{photo}",
+        )
+        if photo
+        else ""
+    )
+    telegram = _clean_detail_text(member.get("telegram"))
+    telegram_handle = telegram.lstrip("@").strip()
+    telegram_url = f"https://t.me/{quote(telegram_handle)}" if telegram_handle else ""
+    phone = _clean_detail_text(member.get("phone"))
+    phone_href = f"tel:{''.join(phone.split())}" if phone else ""
+    rank = _clean_detail_text(member.get("rank") or member.get("role"))
+
+    return {
+        "name": _clean_detail_text(member.get("name")),
+        "name_kh": _clean_detail_text(member.get("name_kh")),
+        "rank": rank,
+        "rank_kh": _clean_detail_text(member.get("rank_kh")),
+        "role": rank,
+        "photo": photo,
+        "photoUrl": photo_url,
+        "task": _clean_detail_text(member.get("task")),
+        "task_kh": _clean_detail_text(member.get("task_kh")),
+        "student_id": _clean_detail_text(member.get("student_id")),
+        "department": _clean_detail_text(member.get("department")),
+        "department_kh": _clean_detail_text(member.get("department_kh")),
+        "email": _clean_detail_text(member.get("email")),
+        "phone": phone,
+        "phoneHref": phone_href,
+        "telegram": telegram,
+        "telegramUrl": telegram_url,
+    }
+
+
+def _collect_detail_platform_stats() -> dict[str, int | None]:
+    """Safely query read-only knowledge base metrics for the architecture overview."""
+    stats: dict[str, int | None] = {
+        "cropsCount": None,
+        "diseasesCount": None,
+        "rulesCount": None,
+        "symptomsCount": None,
+        "factsCount": None,
+    }
+    try:
+        from app.models.crop import Crop
+        from app.models.disease import Disease
+        from app.models.mixed_agri_fact import MixedAgriFact
+        from app.models.rule import Rule
+        from app.models.symptom import Symptom
+
+        stats["cropsCount"] = int(Crop.query.count())
+        stats["diseasesCount"] = int(Disease.query.count())
+        stats["rulesCount"] = int(Rule.query.count())
+        stats["symptomsCount"] = int(Symptom.query.count())
+        stats["factsCount"] = int(MixedAgriFact.query.count())
+    except Exception:
+        pass
+    return stats
 
 
 def build_farmer_detail_bootstrap(*, supervisor, team) -> dict[str, Any]:
@@ -3019,11 +3147,16 @@ def build_farmer_detail_bootstrap(*, supervisor, team) -> dict[str, Any]:
         title=_copy("AGRI SYSTEM Architecture & Team", "ស្ថាបត្យកម្មប្រព័ន្ធ និងក្រុមអភិវឌ្ឍន៍"),
         subtitle=_copy("AI-assisted agronomy engineering project overview.", "ទិដ្ឋភាពទូទៅនៃគម្រោងកសិកម្មឆ្លាតវៃ AI។"),
     )
+    serialized_supervisor = _serialize_detail_member(supervisor)
+    serialized_team = [_serialize_detail_member(member) for member in (team or [])]
     data = {
-        "supervisor": supervisor,
-        "team": team,
+        "supervisor": serialized_supervisor,
+        "team": serialized_team,
+        "stats": _collect_detail_platform_stats(),
         "dashboardUrl": _safe_url("farmer.dashboard", "/farmer/dashboard"),
         "diagnoseUrl": _safe_url("farmer.diagnose_rule_based", "/farmer/diagnose/rule-based"),
+        "chatUrl": _safe_url("farmer.chat", "/farmer/chat"),
+        "newsUrl": _safe_url("farmer.news", "/farmer/news"),
     }
     return _base_bootstrap("farmer-detail", "farmer", ui, data)
 
@@ -3801,24 +3934,93 @@ def build_admin_support_requests_bootstrap(*, support_requests, filter_status, q
     return _base_bootstrap("admin-support-requests", "admin", ui, data)
 
 
-def build_admin_support_chats_bootstrap(*, chat_users) -> dict[str, Any]:
-    ui = _admin_shell_ui(
-        eyebrow=_copy("Support Operations", "ប្រតិបត្តិការជំនួយ"),
-        title=_copy("Live Support Inbox", "ប្រអប់សារជំនួយផ្ទាល់"),
-        subtitle=_copy("Chat in real time with farmers and staff members.", "ឆ្លើយតបសារជំនួយភ្លាមៗជាមួយកសិករ និងក្រុមការងារ។"),
+def build_farmer_live_chat_bootstrap(
+    *,
+    initial_target: str,
+    initial_recipient_id: int | None,
+    channels: dict[str, Any],
+) -> dict[str, Any]:
+    ui = _farmer_shell_ui(
+        eyebrow=_copy("Live Support", "ជំនួយផ្ទាល់"),
+        title=_copy("Live Chat with Admin or Expert", "ជជែកផ្ទាល់ជាមួយអ្នកគ្រប់គ្រង ឬអ្នកជំនាញ"),
+        subtitle=_copy(
+            "Choose Platform Admin for account & billing support, or Agricultural Expert for crop care.",
+            "ជ្រើសរើសអ្នកគ្រប់គ្រងសម្រាប់ជំនួយគណនី ឬអ្នកជំនាញកសិកម្មសម្រាប់ដំណាំ។",
+        ),
         actions={
-            "tickets": {"label": _copy("Support Requests", "សំណើសុំជំនួយ"), "href": _safe_url("admin.support_requests", "/admin/support-requests")},
-            "dashboard": {"label": t("dashboard"), "href": _safe_url("admin.dashboard", "/admin/dashboard")},
+            "aiChat": {"label": _copy("Ask AI", "សួរ AI"), "href": _safe_url("farmer.chat", "/farmer/chat")},
+            "dashboard": {"label": t("dashboard"), "href": _safe_url("farmer.dashboard", "/farmer/dashboard")},
+        },
+    )
+    data = {
+        "currentUserId": int(current_user.id) if (current_user and current_user.is_authenticated) else 0,
+        "initialTarget": initial_target if initial_target in ("admin", "expert") else "admin",
+        "initialRecipientId": initial_recipient_id,
+        "channels": channels,
+        "aiChatUrl": _safe_url("farmer.chat", "/farmer/chat"),
+        "endpoints": {
+            "channels": _safe_url("farmer.get_support_channels", "/farmer/support_chat/channels"),
+            "messages": _safe_url("farmer.get_support_messages", "/farmer/support_chat/messages"),
+            "typing": _safe_url("farmer.farmer_typing_indicator", "/farmer/support_chat/typing"),
+            "send": _safe_url("farmer.send_support_message", "/farmer/support_chat/send"),
+            "upload": _safe_url("farmer.upload_support_attachment", "/farmer/support_chat/upload"),
+            "location": _safe_url("farmer.get_real_location", "/farmer/support_chat/location"),
+            "locationSearch": _safe_url("farmer.search_support_location", "/farmer/support_chat/location/search"),
+        },
+    }
+    return _base_bootstrap("farmer-live-chat", "farmer", ui, data)
+
+
+def build_admin_support_chats_bootstrap(*, chat_users, scope: str = "admin") -> dict[str, Any]:
+    is_expert_scope = scope == "expert"
+    shell_builder = _expert_shell_ui if is_expert_scope else _admin_shell_ui
+    ui = shell_builder(
+        eyebrow=_copy("Agronomist Desk", "តុអ្នកជំនាញកសិកម្ម")
+        if is_expert_scope
+        else _copy("Support Operations", "ប្រតិបត្តិការជំនួយ"),
+        title=_copy("Expert Live Chat Inbox", "ប្រអប់សារជជែកផ្ទាល់អ្នកជំនាញ")
+        if is_expert_scope
+        else _copy("Live Support Inbox", "ប្រអប់សារជំនួយផ្ទាល់"),
+        subtitle=_copy(
+            "Respond to farmers requesting live agronomy help in real time.",
+            "ឆ្លើយតបសារផ្ទាល់ពីកសិករអំពីការថែទាំដំណាំភ្លាមៗ។",
+        )
+        if is_expert_scope
+        else _copy("Chat in real time with farmers and staff members.", "ឆ្លើយតបសារជំនួយភ្លាមៗជាមួយកសិករ និងក្រុមការងារ។"),
+        actions={
+            "dashboard": {
+                "label": t("dashboard"),
+                "href": _safe_url("expert.dashboard" if is_expert_scope else "admin.dashboard", "/expert/dashboard" if is_expert_scope else "/admin/dashboard"),
+            },
+            **(
+                {}
+                if is_expert_scope
+                else {
+                    "tickets": {"label": _copy("Support Requests", "សំណើសុំជំនួយ"), "href": _safe_url("admin.support_requests", "/admin/support-requests")},
+                }
+            ),
         },
     )
     data = {
         "currentUserId": int(current_user.id) if (current_user and current_user.is_authenticated) else 0,
         "endpoints": {
-            "conversations": _safe_url("admin.admin_get_conversations", "/admin/support_chat/conversations"),
-            "messagesPrefix": "/admin/support_chat/",
-            "upload": _safe_url("admin.upload_support_attachment", "/admin/support_chat/upload"),
-            "location": _safe_url("admin.admin_get_location", "/admin/support_chat/location"),
-            "locationSearch": _safe_url("admin.admin_search_location", "/admin/support_chat/location/search"),
+            "conversations": _safe_url(
+                "expert.expert_get_conversations" if is_expert_scope else "admin.admin_get_conversations",
+                "/expert/support_chat/conversations" if is_expert_scope else "/admin/support_chat/conversations",
+            ),
+            "messagesPrefix": "/expert/support_chat/" if is_expert_scope else "/admin/support_chat/",
+            "upload": _safe_url(
+                "expert.upload_support_attachment" if is_expert_scope else "admin.upload_support_attachment",
+                "/expert/support_chat/upload" if is_expert_scope else "/admin/support_chat/upload",
+            ),
+            "location": _safe_url(
+                "expert.expert_get_location" if is_expert_scope else "admin.admin_get_location",
+                "/expert/support_chat/location" if is_expert_scope else "/admin/support_chat/location",
+            ),
+            "locationSearch": _safe_url(
+                "expert.expert_search_location" if is_expert_scope else "admin.admin_search_location",
+                "/expert/support_chat/location/search" if is_expert_scope else "/admin/support_chat/location/search",
+            ),
         },
         "users": [
             {
@@ -3835,7 +4037,12 @@ def build_admin_support_chats_bootstrap(*, chat_users) -> dict[str, Any]:
             if not (current_user and current_user.is_authenticated and u.id == current_user.id)
         ],
     }
-    return _base_bootstrap("admin-support-chats", "admin", ui, data)
+    return _base_bootstrap(
+        "expert-support-chats" if is_expert_scope else "admin-support-chats",
+        "expert" if is_expert_scope else "admin",
+        ui,
+        data,
+    )
 
 
 def build_admin_premium_settings_bootstrap(

@@ -40,6 +40,12 @@ import type { ShellNavSection } from "./WorkspaceShell";
 import { AiCopilotDrawer } from "./AiCopilotDrawer";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
+import {
+  getNotificationHref,
+  getNotificationMessage,
+  getNotificationTimeLabel,
+  isNotificationRead,
+} from "@/lib/notificationHelpers";
 import { cn } from "@/lib/utils";
 
 const SIDEBAR_STORAGE_KEY = "agri_phoenix_sidebar_collapsed";
@@ -539,19 +545,41 @@ export function PhoenixWorkspaceShell({
                     </div>
                   ) : (
                     <ul className="max-h-72 space-y-1 overflow-y-auto phoenix-scroll">
-                      {notifItems.map((n) => (
-                        <li key={n.id}>
-                          <a
-                            href={n.link || bootstrap.notifications?.link || "#"}
-                            className="block rounded-lg p-2.5 text-xs transition-colors hover:bg-[#eff2f6] dark:hover:bg-[#1e2436]"
-                          >
-                            <p className="font-semibold text-[#141824] dark:text-[#eff2f6]">{n.title}</p>
-                            <p className="mt-0.5 line-clamp-2 text-[#525b75] dark:text-[#9fa6bc]">
-                              {n.message}
-                            </p>
-                          </a>
-                        </li>
-                      ))}
+                      {notifItems.map((n) => {
+                        const msg = getNotificationMessage(n);
+                        const href = getNotificationHref(n) || bootstrap.notifications?.link || "#";
+                        const read = isNotificationRead(n);
+                        const timeLabel = getNotificationTimeLabel(n, isKhmer);
+                        return (
+                          <li key={n.id}>
+                            <a
+                              href={href}
+                              className="block rounded-lg p-2.5 text-xs transition-colors hover:bg-[#eff2f6] dark:hover:bg-[#1e2436]"
+                            >
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="flex min-w-0 items-center gap-1.5">
+                                  {!read && (
+                                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#3874ff]" />
+                                  )}
+                                  <p className="truncate font-semibold text-[#141824] dark:text-[#eff2f6]">
+                                    {n.title}
+                                  </p>
+                                </div>
+                                {timeLabel && (
+                                  <span className="shrink-0 text-[10px] text-[#8a94ad]">
+                                    {timeLabel}
+                                  </span>
+                                )}
+                              </div>
+                              {msg && (
+                                <p className="mt-0.5 line-clamp-2 text-[#525b75] dark:text-[#9fa6bc]">
+                                  {msg}
+                                </p>
+                              )}
+                            </a>
+                          </li>
+                        );
+                      })}
                     </ul>
                   )}
                 </div>

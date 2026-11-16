@@ -196,6 +196,29 @@ class FarmerAiHistoryTestCase(unittest.TestCase):
         db.session.refresh(session)
         self.assertEqual(session.title, "What pesticide should I spr...")
 
+    def test_post_draft_chat_creates_session_and_returns_ai_reply(self):
+        self._login()
+
+        # Draft landing (GET /farmer/chat?draft=1) renders cleanly with postUrl="/farmer/chat"
+        draft_res = self.client.get("/farmer/chat?draft=1")
+        self.assertEqual(draft_res.status_code, 200)
+
+        # Posting directly to /farmer/chat (without ?draft=1) must create a session instead of 302 redirecting
+        res = self.client.post(
+            "/farmer/chat",
+            data={"message": "My rice leaves have yellow spots"},
+            headers={"X-Requested-With": "XMLHttpRequest"},
+        )
+        self.assertEqual(res.status_code, 200)
+        data = res.get_json()
+        self.assertTrue(data.get("ok"))
+        self.assertTrue(data.get("session_id"))
+        self.assertTrue(data.get("reply"))
+
+        created = db.session.get(ChatSession, data["session_id"])
+        self.assertIsNotNone(created)
+        self.assertEqual(created.farmer_id, self.user.id)
+
 
 if __name__ == "__main__":
     unittest.main()

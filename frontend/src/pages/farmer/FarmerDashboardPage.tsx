@@ -7,7 +7,6 @@ import {
   CheckCircle2,
   ClipboardList,
   Crown,
-  Megaphone,
   MessageSquare,
   Newspaper,
   Sparkles,
@@ -17,6 +16,10 @@ import {
 import type { AppBootstrap } from "@/types/app";
 import { WorkspaceShell } from "@/components/layout/WorkspaceShell";
 import { buildNavSections } from "@/lib/navigation";
+import {
+  AnnouncementMarquee,
+  type MarqueeBannerItem,
+} from "@/components/farmer/AnnouncementMarquee";
 import { WeatherIntelligenceCard } from "@/components/farmer/WeatherIntelligenceCard";
 import { cn } from "@/lib/utils";
 
@@ -41,7 +44,7 @@ interface FarmerDashboardData {
     title: string;
   }>;
   crops: Array<{ id: number; name: string; diagnoseUrl: string }>;
-  marquees: Array<{ id: number; text: string }>;
+  marquees: MarqueeBannerItem[];
   isPremium: boolean;
   aiCredits: number;
   upgradeUrl: string;
@@ -177,17 +180,11 @@ export default function FarmerDashboardPage({
     >
       <div className="space-y-6">
         {/* Announcement Marquee */}
-        {d.marquees && d.marquees.length > 0 && (
-          <div className="ai-surface flex items-center gap-3 px-4 py-2.5 text-xs">
-            <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-indigo-600 px-2.5 py-0.5 text-[11px] font-bold text-white shadow-xs">
-              <Megaphone className="h-3 w-3" />
-              <span>{isKhmer ? "ព័ត៌មានថ្មី" : "Update"}</span>
-            </span>
-            <p className="truncate font-medium text-slate-700 dark:text-slate-200">
-              {d.marquees.map((m) => m.text).join("  ·  ")}
-            </p>
-          </div>
-        )}
+        <AnnouncementMarquee
+          marquees={d.marquees}
+          isKhmer={isKhmer}
+          badgeLabel={isKhmer ? "ព័ត៌មានថ្មី" : "Update"}
+        />
 
         {/* Executive Welcome Hero + Action Launchpad */}
         <section className="grid gap-5 lg:grid-cols-12">

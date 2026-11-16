@@ -64,6 +64,8 @@ from app.services.bakong_service import (
 )
 from app.services.notification_service import (
     _snippet,
+    get_unread_notification_count,
+    mark_notifications_seen,
     notify_role,
     notify_user,
     serialize_notification,
@@ -1548,7 +1550,7 @@ def chat(session_id=None):
         .all()
     )
 
-    if session_id is None and not is_draft:
+    if request.method == "GET" and session_id is None and not is_draft:
         if sessions:
             return redirect(url_for("farmer.chat", session_id=sessions[0].id))
         return redirect(url_for("farmer.new_chat"))
@@ -1561,6 +1563,8 @@ def chat(session_id=None):
             .first()
         )
     if session_id is not None and not session:
+        if request.method == "POST" and request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return jsonify(ok=False, error="Conversation not found."), 404
         if sessions:
             return redirect(url_for("farmer.chat", session_id=sessions[0].id))
         return redirect(url_for("farmer.new_chat"))
@@ -1874,33 +1878,128 @@ def api_generate_news():
     })
 
 _TTS_CACHE = {}
+_KHMER_SCRIPT_RE = re.compile(r"[\u1780-\u17ff]")
+
+
+def _clean_tts_text(raw: str) -> str:
+    """Strip markdown syntax and noise symbols before speech synthesis."""
+    cleaned = re.sub(r"\[([^\]]+)\]\([^\)]+\)", r"\1", raw or "")
+    cleaned = re.sub(r"[*_`#>|]+", " ", cleaned)
+    cleaned = re.sub(r"(?m)^\s*[-•]+\s+", "", cleaned)
+    cleaned = re.sub(r"\s+", " ", cleaned).strip()
+    return cleaned
+
+
+def _resolve_tts_lang(text: str, requested_lang: str) -> str:
+    """Match TTS voice language to actual text script so Khmer/English speak cleanly."""
+    if _KHMER_SCRIPT_RE.search(text):
+        return "km"
+    if re.search(r"[A-Za-z]", text):
+        return "en"
+    norm = (requested_lang or "km").strip().lower()
+    if norm.startswith("en"):
+        return "en"
+    return "km"
+
+
+def _audio_range_response(audio_bytes: bytes, mimetype: str = "audio/mpeg") -> Response:
+    """Serve audio bytes with HTTP 206 byte-range support required by Safari/WebKit <audio>."""
+    total = len(audio_bytes)
+    range_header = (request.headers.get("Range") or "").strip()
+    if range_header.startswith("bytes="):
+        spec = range_header[6:].split(",", 1)[0].strip()
+        start_str, _, end_str = spec.partition("-")
+        try:
+            if start_str == "" and end_str:
+                suffix_len = int(end_str)
+                start = max(0, total - suffix_len)
+                end = total - 1
+            else:
+                start = int(start_str) if start_str else 0
+                end = int(end_str) if end_str else total - 1
+            if start >= total or end < start or start < 0:
+                return Response(
+                    status=416,
+                    headers={"Content-Range": f"bytes */{total}", "Accept-Ranges": "bytes"},
+                )
+            end = min(end, total - 1)
+            sliced = audio_bytes[start : end + 1]
+            return Response(
+                sliced,
+                status=206,
+                mimetype=mimetype,
+                headers={
+                    "Content-Type": mimetype,
+                    "Accept-Ranges": "bytes",
+                    "Content-Range": f"bytes {start}-{end}/{total}",
+                    "Content-Length": str(len(sliced)),
+                    "Cache-Control": "public, max-age=86400",
+                },
+            )
+        except ValueError:
+            pass
+
+    return Response(
+        audio_bytes,
+        status=200,
+        mimetype=mimetype,
+        headers={
+            "Content-Type": mimetype,
+            "Accept-Ranges": "bytes",
+            "Cache-Control": "public, max-age=86400",
+            "Content-Length": str(total),
+        },
+    )
+
+
+def _cache_and_serve_tts(cache_key: str, audio_bytes: bytes, mimetype: str) -> Response:
+    if len(_TTS_CACHE) > 200:
+        _TTS_CACHE.pop(next(iter(_TTS_CACHE)))
+    _TTS_CACHE[cache_key] = (audio_bytes, mimetype)
+    return _audio_range_response(audio_bytes, mimetype)
+
 
 @farmer_bp.route("/api/tts")
 def api_tts():
-    """Provides universal, natural-sounding Khmer and English audio narration for all devices (including MacBook and PC laptops)."""
-    text = request.args.get("text", "").strip()
-    lang = request.args.get("lang", "km").strip().lower()
+    """Provides natural-sounding Khmer/English narration via personal Gemini 3.8 Flash TTS or standard TTS."""
+    raw_text = request.args.get("text", "").strip()
+    text = _clean_tts_text(raw_text)
     if not text:
         return ("No text provided", 400)
 
-    # Normalize language code (e.g. 'km-kh' -> 'km', 'en-us' -> 'en')
-    if lang.startswith("km"):
-        lang = "km"
-    elif lang.startswith("en"):
-        lang = "en"
+    lang = _resolve_tts_lang(text, request.args.get("lang", "km"))
+
+    personal_gemini_key = None
+    if current_user and current_user.is_authenticated:
+        from app.services.gemini_tts_service import decrypt_user_api_key, synthesize_gemini_tts
+
+        personal_gemini_key = decrypt_user_api_key(getattr(current_user, "ai_api_key", None))
+        if personal_gemini_key:
+            key_fp = hashlib.sha256(personal_gemini_key.encode("utf-8")).hexdigest()[:12]
+            gemini_cache_key = hashlib.md5(f"gemini:{key_fp}:{lang}:{text}".encode()).hexdigest()
+            if gemini_cache_key in _TTS_CACHE:
+                cached = _TTS_CACHE[gemini_cache_key]
+                if isinstance(cached, tuple):
+                    return _audio_range_response(cached[0], cached[1])
+                return _audio_range_response(cached, "audio/wav")
+
+            gemini_audio = synthesize_gemini_tts(text, api_key=personal_gemini_key, lang=lang)
+            if gemini_audio:
+                return _cache_and_serve_tts(gemini_cache_key, gemini_audio[0], gemini_audio[1])
 
     cache_key = hashlib.md5(f"{lang}:{text}".encode()).hexdigest()
     if cache_key in _TTS_CACHE:
-        return Response(
-            _TTS_CACHE[cache_key],
-            mimetype="audio/mpeg",
-            headers={
-                "Content-Type": "audio/mpeg",
-                "Accept-Ranges": "bytes",
-                "Cache-Control": "public, max-age=86400",
-                "Content-Length": str(len(_TTS_CACHE[cache_key]))
-            }
-        )
+        cached = _TTS_CACHE[cache_key]
+        if isinstance(cached, tuple):
+            return _audio_range_response(cached[0], cached[1])
+        return _audio_range_response(cached, "audio/mpeg")
+
+    if lang == "km":
+        from app.services.khmer_tts_service import synthesize_khmer_speech
+
+        khmer_audio = synthesize_khmer_speech(text)
+        if khmer_audio:
+            return _cache_and_serve_tts(cache_key, khmer_audio[0], khmer_audio[1])
 
     headers = {
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
@@ -1937,14 +2036,14 @@ def api_tts():
     if not chunks:
         chunks = [text[:125]]
 
-    # Limit to max 5 chunks to keep audio latency sub-second
-    chunks = chunks[:5]
+    # Limit to max 6 chunks to keep audio latency sub-second while covering full replies
+    chunks = chunks[:6]
 
     def _fetch_tts_chunk(chunk_text):
         try:
             encoded = urllib.parse.quote(chunk_text)
             url = f"https://translate.google.com/translate_tts?ie=UTF-8&tl={lang}&client=tw-ob&q={encoded}"
-            resp = requests.get(url, headers=headers, timeout=3.5)
+            resp = requests.get(url, headers=headers, timeout=4.0)
             if resp.status_code == 200 and resp.content:
                 return resp.content
         except Exception as e:  # noqa: BLE001
@@ -1960,21 +2059,7 @@ def api_tts():
             audio_data.extend(res)
 
     if audio_data:
-        audio_bytes = bytes(audio_data)
-        if len(_TTS_CACHE) > 200:
-            _TTS_CACHE.pop(next(iter(_TTS_CACHE)))
-        _TTS_CACHE[cache_key] = audio_bytes
-
-        return Response(
-            audio_bytes,
-            mimetype="audio/mpeg",
-            headers={
-                "Content-Type": "audio/mpeg",
-                "Accept-Ranges": "bytes",
-                "Cache-Control": "public, max-age=86400",
-                "Content-Length": str(len(audio_bytes))
-            }
-        )
+        return _cache_and_serve_tts(cache_key, bytes(audio_data), "audio/mpeg")
 
     return ("Audio narration unavailable", 500)
 
@@ -2149,7 +2234,13 @@ def generate_bakong_qr():
 @farmer_bp.route("/api/bakong/check-status/<md5>", methods=["GET", "POST"])
 @farmer_required
 def check_bakong_status(md5):
-    res = verify_khqr_payment(md5)
+    from app.models.payment_transaction import PaymentTransaction
+
+    tx = PaymentTransaction.query.filter_by(md5=md5).first()
+    if tx and tx.user_id != current_user.id:
+        return jsonify({"success": False, "status": "FORBIDDEN", "message": "Access denied."}), 403
+    force = (request.args.get("force") or "").strip().lower() in {"1", "true", "yes"}
+    res = verify_khqr_payment(md5, enforce_expiry=True, bypass_cache=force)
     if res.get("status") == "PAID":
         flash("Bakong KHQR payment confirmed! Welcome to Agri System Premium.", "success")
         res["redirect_url"] = url_for("farmer.dashboard")
@@ -2255,6 +2346,7 @@ def notifications():
     )
 
     total = query.count()
+    unread_count = get_unread_notification_count(current_user.id)
     rows = query.offset((page - 1) * per_page).limit(per_page).all()
     next_page = page + 1 if (page * per_page) < total else None
 
@@ -2265,6 +2357,8 @@ def notifications():
             per_page=per_page,
             data_url=url_for("farmer.notifications_data"),
             seen_url=url_for("farmer.notifications_seen"),
+            total_count=total,
+            unread_count=unread_count,
         ),
         title="Notifications",
     )
@@ -2281,7 +2375,7 @@ def mobile_help_center():
 @farmer_required
 def notifications_data():
     page = request.args.get("page", type=int) or 1
-    per_page = request.args.get("per_page", 20, type=int)
+    per_page = max(10, min(request.args.get("per_page", 20, type=int) or 20, 50))
 
     query = (
         Notification.query
@@ -2290,6 +2384,7 @@ def notifications_data():
     )
 
     total = query.count()
+    unread_count = get_unread_notification_count(current_user.id)
     rows = query.offset((page - 1) * per_page).limit(per_page).all()
     next_page = page + 1 if (page * per_page) < total else None
 
@@ -2298,6 +2393,8 @@ def notifications_data():
         "items": [serialize_notification(item) for item in rows],
         "next_page": next_page,
         "per_page": per_page,
+        "total": total,
+        "unread_count": unread_count,
     })
 
 
@@ -2307,33 +2404,7 @@ def notifications_data():
 def notifications_seen():
     payload = request.get_json(silent=True) or {}
     ids = payload.get("ids") if isinstance(payload, dict) else None
-
-    query = (
-        Notification.query
-        .filter(
-            Notification.user_id == current_user.id,
-            Notification.read_at.is_(None),
-        )
-    )
-    if ids:
-        try:
-            id_list = [int(val) for val in ids]
-        except (TypeError, ValueError):
-            id_list = []
-        if id_list:
-            query = query.filter(Notification.id.in_(id_list))
-
-    updated = query.update({"read_at": _now_dt()}, synchronize_session=False)
-    db.session.commit()
-
-    unread_count = (
-        Notification.query
-        .filter(
-            Notification.user_id == current_user.id,
-            Notification.read_at.is_(None),
-        )
-        .count()
-    )
+    updated, unread_count = mark_notifications_seen(current_user.id, ids, read_at=_now_dt())
 
     return jsonify({
         "ok": True,
@@ -2351,16 +2422,7 @@ def mark_notification_read(notification_id: int):
         notification.read_at = _now_dt()
         db.session.commit()
 
-    unread_count = (
-        Notification.query
-        .filter(
-            Notification.user_id == current_user.id,
-            Notification.read_at.is_(None),
-        )
-        .count()
-    )
-
     return jsonify({
         "ok": True,
-        "unread_count": unread_count,
+        "unread_count": get_unread_notification_count(current_user.id),
     })

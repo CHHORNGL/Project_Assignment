@@ -72,16 +72,16 @@
   }
 
   .ai-stagger {
-    animation: ai-enter-up 0.44s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: ai-enter-up 0.44s cubic-bezier(0.16, 1, 0.3, 1) backwards;
     animation-delay: calc(var(--stagger, 0) * 55ms);
   }
 
   .ai-enter {
-    animation: ai-enter-up 0.36s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: ai-enter-up 0.36s cubic-bezier(0.16, 1, 0.3, 1) backwards;
   }
 
   .ai-tab-panel {
-    animation: ai-enter-fade 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: ai-enter-fade 0.28s cubic-bezier(0.16, 1, 0.3, 1) backwards;
   }
 
   .ai-table-row {
@@ -235,6 +235,56 @@
   .diag-ghost-button {
     @apply inline-flex items-center justify-center gap-2 rounded-xl px-3.5 py-2 text-xs font-semibold text-slate-600 transition-all duration-150 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-obsidian-850 dark:hover:text-slate-100;
   }
+
+  /* Live farmer advisory marquee ticker */
+  .ai-marquee-viewport {
+    position: relative;
+    flex: 1 1 0%;
+    min-width: 0;
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 3%, #000 97%, transparent);
+    mask-image: linear-gradient(to right, transparent, #000 3%, #000 97%, transparent);
+  }
+
+  .ai-marquee-track {
+    display: inline-flex;
+    width: max-content;
+    align-items: center;
+    white-space: nowrap;
+    will-change: transform;
+    animation: ai-marquee-scroll var(--marquee-duration, 34s) linear infinite;
+  }
+
+  .ai-marquee-shell:hover .ai-marquee-track,
+  .ai-marquee-shell:focus-within .ai-marquee-track,
+  .ai-marquee-track.is-paused {
+    animation-play-state: paused;
+  }
+
+  .ai-beacon-dot {
+    animation: ai-beacon-pulse 1.8s ease-in-out infinite;
+  }
+}
+
+@keyframes ai-marquee-scroll {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@keyframes ai-beacon-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.45);
+    opacity: 0.45;
+  }
 }
 
 @keyframes scanSweep {
@@ -270,6 +320,8 @@
   .ai-stagger,
   .ai-enter,
   .ai-tab-panel,
+  .ai-marquee-track,
+  .ai-beacon-dot,
   .animate-fade-in-up,
   .animate-fade-in,
   .animate-scale-in,

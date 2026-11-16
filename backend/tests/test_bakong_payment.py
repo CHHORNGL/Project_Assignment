@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta, timezone
 import os
 import pathlib as _pathlib
 import sys as _sys
@@ -102,6 +103,9 @@ class TestBakongPayment(unittest.TestCase):
         self.assertIn("qr_string", result)
         self.assertEqual(result["amount"], 20.0)
         self.assertEqual(result["billing_interval"], "monthly")
+        self.assertEqual(result["expires_in_seconds"], 180)
+        self.assertGreater(result["remaining_seconds"], 170)
+        self.assertIn("expires_at", result)
 
         # Verify record in database
         tx = PaymentTransaction.query.filter_by(md5=result["md5"]).first()
@@ -183,6 +187,34 @@ class TestBakongPayment(unittest.TestCase):
         assert farmer is not None
         self.farmer = farmer
         self.assertTrue(self.farmer.is_premium)
+
+    def test_verify_khqr_payment_expires_after_3_minutes_for_farmer_but_allows_admin_check(self):
+        created = create_khqr_payment(
+            user=self.farmer,
+            amount=20.0,
+            billing_interval="monthly",
+        )
+        md5 = created["md5"]
+        tx = PaymentTransaction.query.filter_by(md5=md5).first()
+        assert tx is not None
+        tx.created_at = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(seconds=185)
+        db.session.commit()
+
+        res = verify_khqr_payment(md5)
+        self.assertFalse(res["success"])
+        self.assertEqual(res["status"], "EXPIRED")
+        self.assertEqual(res["remaining_seconds"], 0)
+        db.session.refresh(tx)
+        self.assertEqual(tx.status, "EXPIRED")
+
+        # Admin recovery check can still inspect Bakong directly even after 3-minute checkout timeout.
+        with patch(
+            "app.services.bakong_service.query_bakong_md5_api",
+            return_value=("PAID", {}, ""),
+        ):
+            admin_res = verify_khqr_payment(md5, enforce_expiry=False, bypass_cache=True)
+        self.assertTrue(admin_res["success"])
+        self.assertEqual(admin_res["status"], "PAID")
 
 
 if __name__ == "__main__":
