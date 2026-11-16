@@ -261,7 +261,7 @@ export default function AdminRolesPage({ bootstrap }: { bootstrap: AppBootstrap<
               <input type="hidden" name="csrf_token" value={bootstrap.csrfToken} />
 
               <div className="grid gap-4 md:grid-cols-12">
-                <div className="md:col-span-7">
+                <div className="min-w-0 md:col-span-7">
                   <label className="mb-1.5 block text-xs font-semibold text-[#31374a] dark:text-[#cbd0dd]">
                     {isKhmer ? "ឈ្មោះសម្គាល់តួនាទី *" : "Role Identifier *"}
                   </label>
@@ -289,7 +289,7 @@ export default function AdminRolesPage({ bootstrap }: { bootstrap: AppBootstrap<
                   </div>
                 </div>
 
-                <div className="md:col-span-5">
+                <div className="min-w-0 md:col-span-5">
                   <label className="mb-1.5 block text-xs font-semibold text-[#31374a] dark:text-[#cbd0dd]">
                     {isKhmer ? "ប្រព័ន្ធការងារមូលដ្ឋាន *" : "Base Workspace Portal *"}
                   </label>
@@ -781,7 +781,7 @@ export default function AdminRolesPage({ bootstrap }: { bootstrap: AppBootstrap<
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md rounded-2xl border border-[#e3e6ed] bg-white p-6 shadow-xl dark:border-[#2b3245] dark:bg-[#141824]"
+            className="max-h-[90dvh] w-full max-w-md overflow-y-auto rounded-2xl border border-[#e3e6ed] bg-white p-5 shadow-xl dark:border-[#2b3245] dark:bg-[#141824] sm:p-6"
           >
             <div className="flex items-start gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#ffe0db] text-[#b81800] ring-1 ring-[#fa3b1d]/25 dark:bg-[#fa3b1d]/15 dark:text-[#ff9c8c]">

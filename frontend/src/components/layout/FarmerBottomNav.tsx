@@ -60,7 +60,7 @@ export function FarmerBottomNav({
         className="pointer-events-auto mx-auto flex w-full max-w-[440px] items-center gap-2.5 sm:max-w-[480px] sm:gap-3"
       >
         {/* Left Floating Frosted Pill Dock */}
-        <div className="flex min-w-0 flex-1 items-center gap-1 rounded-full border border-slate-200/80 bg-white/95 p-1.5 shadow-[0_14px_34px_-10px_rgba(15,23,42,0.16),0_2px_10px_-3px_rgba(15,23,42,0.06)] backdrop-blur-2xl dark:border-slate-800/90 dark:bg-obsidian-900/95 dark:shadow-[0_18px_42px_-10px_rgba(0,0,0,0.75)]">
+        <div className="flex min-w-0 flex-1 items-center gap-0.5 rounded-full border border-slate-200/80 bg-white/95 p-1 shadow-[0_14px_34px_-10px_rgba(15,23,42,0.16),0_2px_10px_-3px_rgba(15,23,42,0.06)] backdrop-blur-2xl dark:border-slate-800/90 dark:bg-obsidian-900/95 dark:shadow-[0_18px_42px_-10px_rgba(0,0,0,0.75)] sm:gap-1 sm:p-1.5">
           {dockItems.map((item) => {
             const Icon = TAB_ICON_MAP[item.id];
             return (
@@ -69,7 +69,7 @@ export function FarmerBottomNav({
                 href={item.href}
                 aria-current={item.active ? "page" : undefined}
                 className={cn(
-                  "group relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-full px-2 py-2 transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)]",
+                  "group relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-full px-1.5 py-2 transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] sm:px-2",
                   item.active
                     ? "bg-[#f1f3f5] text-slate-950 shadow-[inset_0_1px_1px_rgba(255,255,255,0.85),0_1px_2px_rgba(15,23,42,0.06)] dark:bg-white/[0.12] dark:text-white dark:ring-1 dark:ring-white/15 dark:shadow-none"
                     : "text-slate-600 hover:bg-slate-100/70 hover:text-slate-950 dark:text-slate-400 dark:hover:bg-white/[0.06] dark:hover:text-slate-100",
@@ -83,7 +83,7 @@ export function FarmerBottomNav({
                 </span>
                 <span
                   className={cn(
-                    "max-w-full truncate text-[10.5px] leading-tight sm:text-[11px]",
+                    "max-w-full truncate text-[10px] leading-tight sm:text-[11px]",
                     item.active ? "font-bold" : "font-medium",
                   )}
                 >

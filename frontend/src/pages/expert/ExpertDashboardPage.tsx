@@ -143,14 +143,14 @@ export default function ExpertDashboardPage({
             hint={metrics.chatsMeta || "Live farmer support"}
             icon={<MessageSquare className="h-5 w-5" />}
             tone="indigo"
-            href="/expert/chats"
+            href={actions.chats?.href || "/expert/farmer-chats"}
           />
         </div>
 
         {/* Analytics & Pipeline Row */}
         <div className="grid gap-6 lg:grid-cols-5">
           <AdminSectionCard
-            className="lg:col-span-3"
+            className="min-w-0 lg:col-span-3"
             delayIndex={1}
             title={sections.outcomeMix || "Case Breakdown"}
             subtitle={sections.reviewSubtitle}
@@ -162,7 +162,7 @@ export default function ExpertDashboardPage({
             }
           >
             <div className="relative pt-2">
-              <div className="grid h-48 grid-cols-3 items-end gap-3 pt-4 sm:grid-cols-7 sm:gap-4">
+              <div className="grid min-h-[11.5rem] grid-cols-2 items-end gap-3 pt-4 min-[380px]:grid-cols-4 sm:h-48 sm:grid-cols-7 sm:gap-4">
                 {(d.chartLabels || []).map((label, idx) => {
                   const val = d.chartValues[idx] || 0;
                   const heightPct = val > 0 ? Math.max(10, Math.round((val / maxChart) * 100)) : 4;
@@ -170,7 +170,7 @@ export default function ExpertDashboardPage({
                   return (
                     <div
                       key={`${label}-${idx}`}
-                      className="group flex h-full flex-col items-center justify-end gap-2"
+                      className="group flex h-40 flex-col items-center justify-end gap-2 sm:h-full"
                     >
                       <span
                         className={cn(
@@ -206,7 +206,7 @@ export default function ExpertDashboardPage({
           </AdminSectionCard>
 
           <AdminSectionCard
-            className="lg:col-span-2"
+            className="min-w-0 lg:col-span-2"
             delayIndex={2}
             title={sections.reviewPipeline || "Review Pipeline"}
             subtitle={sections.reviewSubtitle}
@@ -245,6 +245,7 @@ export default function ExpertDashboardPage({
         {/* Review Queues Row */}
         <div className="grid gap-6 xl:grid-cols-2">
           <AdminSectionCard
+            className="min-w-0"
             delayIndex={3}
             noPadding
             title={sections.pendingQueue || "Pending Diagnosis Queue"}
@@ -272,64 +273,109 @@ export default function ExpertDashboardPage({
                 />
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
-                  <thead className="border-b border-[#e3e6ed] bg-[#f5f7fa] text-[11px] uppercase tracking-wider text-[#6e7891] dark:border-[#2b3245] dark:bg-[#0f111a] dark:text-[#8a94ad]">
-                    <tr>
-                      <th className="px-4 py-3 font-bold">{table.case || "Case"}</th>
-                      <th className="px-4 py-3 font-bold">{table.farmer || "Farmer"}</th>
-                      <th className="px-4 py-3 font-bold">{table.confidence || "Confidence"}</th>
-                      <th className="px-4 py-3 text-right font-bold">{table.open || "Open"}</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#e3e6ed] dark:divide-[#2b3245]">
-                    {d.diagnoses.map((item) => {
-                      const pct = normalizeConfidencePercent(item.confidence) ?? 0;
-                      return (
-                        <tr key={item.id} className="ai-table-row">
-                          <td className="px-4 py-3">
-                            <div className="font-semibold text-[#141824] dark:text-[#eff2f6]">
+              <>
+                <div className="divide-y divide-[#e3e6ed] dark:divide-[#2b3245] sm:hidden">
+                  {d.diagnoses.map((item) => {
+                    const pct = normalizeConfidencePercent(item.confidence) ?? 0;
+                    return (
+                      <div key={item.id} className="space-y-2.5 p-4 text-xs">
+                        <div className="flex flex-wrap items-start justify-between gap-2">
+                          <div className="min-w-0 flex-1">
+                            <div className="font-semibold [overflow-wrap:anywhere] text-[#141824] dark:text-[#eff2f6]">
                               {item.diseaseName || "-"}
                             </div>
                             <div className="mt-0.5 text-[11px] text-[#6e7891] dark:text-[#8a94ad]">
                               <span className="font-mono">#{item.id}</span> · {item.cropName}
                               {item.createdAt ? ` · ${formatShortDateTime(item.createdAt)}` : ""}
                             </div>
-                          </td>
-                          <td className="px-4 py-3">
-                            <div className="flex items-center gap-2">
-                              <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#e5edff] text-[11px] font-bold text-[#004dff] dark:bg-[#3874ff]/20 dark:text-[#85a9ff]">
-                                {getInitial(item.farmerName)}
-                              </span>
-                              <span className="font-medium text-[#31374a] dark:text-[#cbd0dd]">
-                                {item.farmerName || "-"}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="px-4 py-3">
-                            <AdminStatusBadge tone={confidenceTone(pct)}>
-                              {pct}%
-                            </AdminStatusBadge>
-                          </td>
-                          <td className="px-4 py-3 text-right">
-                            <a
-                              href={item.reviewUrl}
-                              className="ai-btn-secondary h-7 gap-1 px-2.5 text-[11px]"
-                            >
-                              <span>{table.review || "Review"}</span>
-                              <ArrowRight className="h-3 w-3" />
-                            </a>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                          </div>
+                          <AdminStatusBadge tone={confidenceTone(pct)}>
+                            {pct}%
+                          </AdminStatusBadge>
+                        </div>
+
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <div className="flex min-w-0 items-center gap-2">
+                            <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#e5edff] text-[11px] font-bold text-[#004dff] dark:bg-[#3874ff]/20 dark:text-[#85a9ff]">
+                              {getInitial(item.farmerName)}
+                            </span>
+                            <span className="truncate font-medium text-[#31374a] dark:text-[#cbd0dd]">
+                              {item.farmerName || "-"}
+                            </span>
+                          </div>
+                          <a
+                            href={item.reviewUrl}
+                            className="ai-btn-secondary h-8 shrink-0 gap-1 px-3 text-[11px]"
+                          >
+                            <span>{table.review || "Review"}</span>
+                            <ArrowRight className="h-3 w-3" />
+                          </a>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="hidden overflow-x-auto sm:block">
+                  <table className="w-full text-left text-xs">
+                    <thead className="border-b border-[#e3e6ed] bg-[#f5f7fa] text-[11px] uppercase tracking-wider text-[#6e7891] dark:border-[#2b3245] dark:bg-[#0f111a] dark:text-[#8a94ad]">
+                      <tr>
+                        <th className="px-4 py-3 font-bold">{table.case || "Case"}</th>
+                        <th className="px-4 py-3 font-bold">{table.farmer || "Farmer"}</th>
+                        <th className="px-4 py-3 font-bold">{table.confidence || "Confidence"}</th>
+                        <th className="px-4 py-3 text-right font-bold">{table.open || "Open"}</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#e3e6ed] dark:divide-[#2b3245]">
+                      {d.diagnoses.map((item) => {
+                        const pct = normalizeConfidencePercent(item.confidence) ?? 0;
+                        return (
+                          <tr key={item.id} className="ai-table-row">
+                            <td className="px-4 py-3">
+                              <div className="font-semibold text-[#141824] dark:text-[#eff2f6]">
+                                {item.diseaseName || "-"}
+                              </div>
+                              <div className="mt-0.5 text-[11px] text-[#6e7891] dark:text-[#8a94ad]">
+                                <span className="font-mono">#{item.id}</span> · {item.cropName}
+                                {item.createdAt ? ` · ${formatShortDateTime(item.createdAt)}` : ""}
+                              </div>
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="flex items-center gap-2">
+                                <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#e5edff] text-[11px] font-bold text-[#004dff] dark:bg-[#3874ff]/20 dark:text-[#85a9ff]">
+                                  {getInitial(item.farmerName)}
+                                </span>
+                                <span className="font-medium text-[#31374a] dark:text-[#cbd0dd]">
+                                  {item.farmerName || "-"}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3">
+                              <AdminStatusBadge tone={confidenceTone(pct)}>
+                                {pct}%
+                              </AdminStatusBadge>
+                            </td>
+                            <td className="px-4 py-3 text-right">
+                              <a
+                                href={item.reviewUrl}
+                                className="ai-btn-secondary h-7 gap-1 px-2.5 text-[11px]"
+                              >
+                                <span>{table.review || "Review"}</span>
+                                <ArrowRight className="h-3 w-3" />
+                              </a>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </>
             )}
           </AdminSectionCard>
 
           <AdminSectionCard
+            className="min-w-0"
             delayIndex={4}
             noPadding
             title={sections.autoCases || "Auto Cases"}
@@ -348,58 +394,100 @@ export default function ExpertDashboardPage({
                 />
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
-                  <thead className="border-b border-[#e3e6ed] bg-[#f5f7fa] text-[11px] uppercase tracking-wider text-[#6e7891] dark:border-[#2b3245] dark:bg-[#0f111a] dark:text-[#8a94ad]">
-                    <tr>
-                      <th className="px-4 py-3 font-bold">{table.suggestion || "Suggestion"}</th>
-                      <th className="px-4 py-3 font-bold">{table.status || "Status"}</th>
-                      <th className="px-4 py-3 font-bold">{table.confidence || "Confidence"}</th>
-                      <th className="px-4 py-3 text-right font-bold">{table.validate || "Validate"}</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#e3e6ed] dark:divide-[#2b3245]">
-                    {d.autoCases.map((item) => {
-                      const pct = normalizeConfidencePercent(item.confidence) ?? 0;
-                      return (
-                        <tr key={item.id} className="ai-table-row">
-                          <td className="px-4 py-3">
-                            <div className="font-semibold text-[#141824] dark:text-[#eff2f6]">
+              <>
+                <div className="divide-y divide-[#e3e6ed] dark:divide-[#2b3245] sm:hidden">
+                  {d.autoCases.map((item) => {
+                    const pct = normalizeConfidencePercent(item.confidence) ?? 0;
+                    return (
+                      <div key={item.id} className="space-y-2.5 p-4 text-xs">
+                        <div className="flex flex-wrap items-start justify-between gap-2">
+                          <div className="min-w-0 flex-1">
+                            <div className="font-semibold [overflow-wrap:anywhere] text-[#141824] dark:text-[#eff2f6]">
                               {item.diseaseName || "-"}
                             </div>
                             <div className="mt-0.5 text-[11px] text-[#6e7891] dark:text-[#8a94ad]">
                               <span className="font-mono">#{item.id}</span> · {item.cropName}
                               {item.createdAt ? ` · ${formatShortDateTime(item.createdAt)}` : ""}
                             </div>
-                          </td>
-                          <td className="px-4 py-3">
-                            <span
-                              className={cn(
-                                "inline-flex rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
-                                statusBadgeClass(item.status),
-                              )}
-                            >
-                              {item.statusLabel}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3">
-                            <AdminStatusBadge tone={confidenceTone(pct)}>{pct}%</AdminStatusBadge>
-                          </td>
-                          <td className="px-4 py-3 text-right">
-                            <a
-                              href={item.reviewUrl}
-                              className="ai-btn-secondary h-7 gap-1 px-2.5 text-[11px]"
-                            >
-                              <span>{table.validate || "Validate"}</span>
-                              <ArrowRight className="h-3 w-3" />
-                            </a>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                          </div>
+                          <AdminStatusBadge tone={confidenceTone(pct)}>{pct}%</AdminStatusBadge>
+                        </div>
+
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <span
+                            className={cn(
+                              "inline-flex rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+                              statusBadgeClass(item.status),
+                            )}
+                          >
+                            {item.statusLabel}
+                          </span>
+                          <a
+                            href={item.reviewUrl}
+                            className="ai-btn-secondary h-8 shrink-0 gap-1 px-3 text-[11px]"
+                          >
+                            <span>{table.validate || "Validate"}</span>
+                            <ArrowRight className="h-3 w-3" />
+                          </a>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="hidden overflow-x-auto sm:block">
+                  <table className="w-full text-left text-xs">
+                    <thead className="border-b border-[#e3e6ed] bg-[#f5f7fa] text-[11px] uppercase tracking-wider text-[#6e7891] dark:border-[#2b3245] dark:bg-[#0f111a] dark:text-[#8a94ad]">
+                      <tr>
+                        <th className="px-4 py-3 font-bold">{table.suggestion || "Suggestion"}</th>
+                        <th className="px-4 py-3 font-bold">{table.status || "Status"}</th>
+                        <th className="px-4 py-3 font-bold">{table.confidence || "Confidence"}</th>
+                        <th className="px-4 py-3 text-right font-bold">{table.validate || "Validate"}</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#e3e6ed] dark:divide-[#2b3245]">
+                      {d.autoCases.map((item) => {
+                        const pct = normalizeConfidencePercent(item.confidence) ?? 0;
+                        return (
+                          <tr key={item.id} className="ai-table-row">
+                            <td className="px-4 py-3">
+                              <div className="font-semibold text-[#141824] dark:text-[#eff2f6]">
+                                {item.diseaseName || "-"}
+                              </div>
+                              <div className="mt-0.5 text-[11px] text-[#6e7891] dark:text-[#8a94ad]">
+                                <span className="font-mono">#{item.id}</span> · {item.cropName}
+                                {item.createdAt ? ` · ${formatShortDateTime(item.createdAt)}` : ""}
+                              </div>
+                            </td>
+                            <td className="px-4 py-3">
+                              <span
+                                className={cn(
+                                  "inline-flex rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+                                  statusBadgeClass(item.status),
+                                )}
+                              >
+                                {item.statusLabel}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3">
+                              <AdminStatusBadge tone={confidenceTone(pct)}>{pct}%</AdminStatusBadge>
+                            </td>
+                            <td className="px-4 py-3 text-right">
+                              <a
+                                href={item.reviewUrl}
+                                className="ai-btn-secondary h-7 gap-1 px-2.5 text-[11px]"
+                              >
+                                <span>{table.validate || "Validate"}</span>
+                                <ArrowRight className="h-3 w-3" />
+                              </a>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </>
             )}
           </AdminSectionCard>
         </div>

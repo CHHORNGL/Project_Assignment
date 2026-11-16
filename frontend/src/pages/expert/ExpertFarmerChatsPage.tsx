@@ -90,7 +90,7 @@ export default function ExpertFarmerChatsPage({
               value={query}
               onChange={setQuery}
               placeholder={labels.search || "Search farmer, topic, or session ID..."}
-              className="sm:w-80"
+              className="min-w-0 sm:w-80"
             />
             <div className="flex items-center gap-2">
               {query.trim() && (
@@ -145,10 +145,10 @@ export default function ExpertFarmerChatsPage({
             {filtered.map((s) => (
               <div
                 key={s.id}
-                className="ai-surface ai-card-hover flex flex-col justify-between p-5"
+                className="ai-surface ai-card-hover flex min-w-0 flex-col justify-between p-4 sm:p-5"
               >
-                <div>
-                  <div className="flex items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
                     <AdminStatusBadge tone="indigo">#{s.id}</AdminStatusBadge>
                     {s.updatedAt && (
                       <span className="inline-flex items-center gap-1 font-mono text-[11px] text-[#8a94ad]">

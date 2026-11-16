@@ -547,7 +547,7 @@ export default function FarmerDetailPage({ bootstrap }: { bootstrap: AppBootstra
           <div
             role="tablist"
             aria-label={isKhmer ? "ផ្នែកទំព័រ" : "Overview sections"}
-            className="inline-flex rounded-2xl border border-slate-200/90 bg-white/90 p-1 shadow-sm dark:border-slate-800 dark:bg-obsidian-900/90"
+            className="flex w-full flex-wrap items-center gap-1 rounded-2xl border border-slate-200/90 bg-white/90 p-1 shadow-sm dark:border-slate-800 dark:bg-obsidian-900/90 sm:inline-flex sm:w-auto"
           >
             {(
               [
@@ -625,7 +625,7 @@ export default function FarmerDetailPage({ bootstrap }: { bootstrap: AppBootstra
                       key={stage.step}
                       className="flex flex-col rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 transition hover:border-indigo-300/70 dark:border-slate-800 dark:bg-obsidian-950/60 dark:hover:border-indigo-500/40"
                     >
-                      <div className="mb-3 flex items-center justify-between">
+                      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                         <div
                           className={cn(
                             "flex h-9 w-9 items-center justify-center rounded-xl",
@@ -713,7 +713,7 @@ export default function FarmerDetailPage({ bootstrap }: { bootstrap: AppBootstra
           <section className="space-y-6">
             {/* Academic Supervisor Spotlight */}
             <div>
-              <div className="mb-3 flex items-center justify-between">
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <GraduationCap className="h-5 w-5 text-indigo-500" />
                   <h3 className="font-display text-base font-bold text-slate-900 dark:text-white sm:text-lg">
@@ -770,7 +770,7 @@ export default function FarmerDetailPage({ bootstrap }: { bootstrap: AppBootstra
 
             {/* Engineering Contributors Grid */}
             <div>
-              <div className="mb-3 flex items-center justify-between">
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <Users className="h-5 w-5 text-emerald-500" />
                   <h3 className="font-display text-base font-bold text-slate-900 dark:text-white sm:text-lg">

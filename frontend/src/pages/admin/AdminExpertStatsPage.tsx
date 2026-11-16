@@ -328,7 +328,7 @@ export default function AdminExpertStatsPage({
 
         {/* Middle Row: Status Pipeline Distribution + Crop/Disease Analytics */}
         <div className="grid gap-6 lg:grid-cols-12">
-          <div className="lg:col-span-7">
+          <div className="min-w-0 lg:col-span-7">
             <AdminSectionCard
               delayIndex={1}
               title={isKhmer ? "លំហូរការងារ និងស្ថានភាពករណី" : "Diagnostic Pipeline & Status Mix"}
@@ -421,7 +421,7 @@ export default function AdminExpertStatsPage({
           </div>
 
           {/* Crop & Disease Volume Card */}
-          <div className="lg:col-span-5">
+          <div className="min-w-0 lg:col-span-5">
             <AdminSectionCard
               delayIndex={2}
               title={isKhmer ? "បរិមាណតាមដំណាំ និងជំងឺ" : "Case Volume & Conditions"}
@@ -541,7 +541,7 @@ export default function AdminExpertStatsPage({
 
         {/* Bottom Row: Specialist Reviewer Leaderboard + Recent Queue Table */}
         <div className="grid gap-6 lg:grid-cols-12">
-          <div className="lg:col-span-4">
+          <div className="min-w-0 lg:col-span-4">
             <AdminSectionCard
               delayIndex={3}
               noPadding
@@ -615,7 +615,7 @@ export default function AdminExpertStatsPage({
             </AdminSectionCard>
           </div>
 
-          <div className="lg:col-span-8">
+          <div className="min-w-0 lg:col-span-8">
             <AdminSectionCard
               delayIndex={4}
               noPadding

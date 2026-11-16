@@ -49,7 +49,7 @@ export default function ExpertCreateSymptomPage({
       headerActions={<ExpertHeaderActions bootstrap={bootstrap} />}
     >
       <div className="grid items-start gap-6 lg:grid-cols-3">
-        <form method="POST" action={d.formAction} className="space-y-5 lg:col-span-2">
+        <form method="POST" action={d.formAction} className="min-w-0 space-y-5 lg:col-span-2">
           <input type="hidden" name="csrf_token" value={bootstrap.csrfToken} />
 
           <AdminSectionCard
@@ -139,6 +139,7 @@ export default function ExpertCreateSymptomPage({
         </form>
 
         <AdminSectionCard
+          className="min-w-0"
           delayIndex={1}
           title={sections.guidance || "Authoring Guidance"}
           subtitle={sections.guidanceSubtitle}

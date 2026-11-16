@@ -63,8 +63,8 @@ export function ThemeToggle({
       title={isDark ? "Switch to light mode" : "Switch to dark mode"}
       className={cn(
         isPhoenix
-          ? "inline-flex h-9 items-center gap-2 rounded-lg border border-[#cbd0dd] bg-[#f5f7fa] px-2.5 text-xs font-semibold text-[#31374a] transition-colors hover:border-[#b3bac9] hover:bg-[#eff2f6] dark:border-[#373e53] dark:bg-[#181d2b] dark:text-[#eff2f6] dark:hover:border-[#4b546f] dark:hover:bg-[#22283a]"
-          : "inline-flex h-9 items-center gap-2 rounded-full border border-slate-200/80 bg-white/85 px-3 text-xs font-semibold text-slate-700 shadow-sm backdrop-blur-md transition-all hover:border-indigo-300 hover:text-indigo-600 dark:border-slate-700/80 dark:bg-obsidian-900/85 dark:text-slate-200 dark:hover:border-indigo-500/60 dark:hover:text-indigo-300",
+          ? "inline-flex h-9 w-9 items-center justify-center gap-2 rounded-lg border border-[#cbd0dd] bg-[#f5f7fa] text-xs font-semibold text-[#31374a] transition-colors hover:border-[#b3bac9] hover:bg-[#eff2f6] dark:border-[#373e53] dark:bg-[#181d2b] dark:text-[#eff2f6] dark:hover:border-[#4b546f] dark:hover:bg-[#22283a] xl:w-auto xl:px-2.5"
+          : "inline-flex h-9 w-9 items-center justify-center gap-2 rounded-full border border-slate-200/80 bg-white/85 text-xs font-semibold text-slate-700 shadow-sm backdrop-blur-md transition-all hover:border-indigo-300 hover:text-indigo-600 dark:border-slate-700/80 dark:bg-obsidian-900/85 dark:text-slate-200 dark:hover:border-indigo-500/60 dark:hover:text-indigo-300 xl:w-auto xl:px-3",
         className,
       )}
     >

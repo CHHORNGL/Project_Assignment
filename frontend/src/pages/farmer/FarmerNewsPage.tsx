@@ -373,7 +373,7 @@ export default function FarmerNewsPage({
       pageTitle={bootstrap.ui.pageTitle}
       pageSubtitle={bootstrap.ui.pageSubtitle}
       headerActions={
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <div className="inline-flex items-center rounded-full border border-slate-200/90 bg-white p-0.5 shadow-sm dark:border-slate-700 dark:bg-obsidian-900">
             <button
               type="button"
@@ -999,7 +999,7 @@ export default function FarmerNewsPage({
                 onClick={() => setActiveArticle(null)}
               >
                 <div
-                  className="flex max-h-[90vh] w-full flex-col overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-2xl dark:border-slate-800 dark:bg-obsidian-900 sm:max-h-[88vh] sm:max-w-3xl"
+                  className="flex max-h-[90dvh] w-full flex-col overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-2xl dark:border-slate-800 dark:bg-obsidian-900 sm:max-h-[88dvh] sm:max-w-3xl"
                   onClick={(e) => e.stopPropagation()}
                 >
                   {/* Fixed Modal Top Bar */}

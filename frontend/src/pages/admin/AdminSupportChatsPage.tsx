@@ -539,11 +539,11 @@ export default function AdminSupportChatsPage({
       pageSubtitle={bootstrap.ui.pageSubtitle}
       headerActions={<ExpertHeaderActions bootstrap={bootstrap} />}
     >
-      <div className="grid h-[calc(100vh-13.5rem)] min-h-[560px] max-h-[780px] gap-5 lg:grid-cols-12">
+      <div className="grid h-[calc(100dvh-11rem)] min-h-[420px] max-h-[780px] gap-4 sm:gap-5 lg:h-[calc(100dvh-13.5rem)] lg:min-h-[560px] lg:grid-cols-12">
         {/* Left Column: Live Conversations Sidebar */}
         <section
           className={cn(
-            "ai-surface flex flex-col overflow-hidden lg:col-span-4",
+            "ai-surface flex min-w-0 flex-col overflow-hidden lg:col-span-4",
             mobileShowThread ? "hidden lg:flex" : "flex",
           )}
         >
@@ -572,7 +572,7 @@ export default function AdminSupportChatsPage({
                 value={inboxQuery}
                 onChange={(e) => setInboxQuery(e.target.value)}
                 placeholder={isKhmer ? "ស្វែងរកឈ្មោះ ឬសារ..." : "Search member or message..."}
-                className="ai-input h-8 py-1 pl-9 pr-8 text-xs [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none"
+                className="ai-input h-9 py-1 pl-9 pr-8 text-xs sm:h-8 [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none"
               />
               {inboxQuery && (
                 <button
@@ -728,7 +728,7 @@ export default function AdminSupportChatsPage({
         {/* Right Column: Active Live Chat Thread */}
         <section
           className={cn(
-            "ai-surface relative flex flex-col overflow-hidden lg:col-span-8",
+            "ai-surface relative flex min-w-0 flex-col overflow-hidden lg:col-span-8",
             mobileShowThread ? "flex" : "hidden lg:flex",
           )}
         >
@@ -1013,7 +1013,7 @@ export default function AdminSupportChatsPage({
           {/* Rich Real-Time Composer */}
           <form
             onSubmit={handleComposerSubmit}
-            className="flex items-end gap-2 border-t border-[#e3e6ed] bg-white p-3.5 dark:border-[#2b3245] dark:bg-[#141824]"
+            className="flex items-end gap-1.5 border-t border-[#e3e6ed] bg-white p-2.5 dark:border-[#2b3245] dark:bg-[#141824] sm:gap-2 sm:p-3.5"
           >
             <label
               className="ai-btn-secondary h-9 cursor-pointer px-2.5 text-xs"
@@ -1083,16 +1083,17 @@ export default function AdminSupportChatsPage({
                   ? "វាយសារឆ្លើយតប... (ចុច Enter ដើម្បីផ្ញើ)"
                   : "Write a message... (Enter to send, Shift+Enter for new line)"
               }
-              className="ai-input max-h-28 min-h-[36px] flex-1 resize-none py-2 text-xs leading-relaxed"
+              className="ai-input max-h-28 min-h-[36px] min-w-0 flex-1 resize-none py-2 text-xs leading-relaxed"
             />
 
             <button
               type="submit"
               disabled={!activeId || sending || (!draft.trim() && !stagedAttachment)}
-              className="ai-btn-primary h-9 shrink-0 px-4 text-xs"
+              aria-label={isKhmer ? "ផ្ញើ" : "Send"}
+              className="ai-btn-primary h-9 shrink-0 px-3 text-xs sm:px-4"
             >
               {sending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
-              <span>{isKhmer ? "ផ្ញើ" : "Send"}</span>
+              <span className="hidden sm:inline">{isKhmer ? "ផ្ញើ" : "Send"}</span>
             </button>
           </form>
         </section>

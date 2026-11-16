@@ -2962,8 +2962,9 @@ def build_farmer_guest_landing_bootstrap(
             }
             for m in (marquees or [])
         ],
-        "supervisor": supervisor,
-        "team": team,
+        "stats": _collect_detail_platform_stats(),
+        "supervisor": _serialize_detail_member(supervisor),
+        "team": [_serialize_detail_member(member) for member in (team or [])],
     }
     return _base_bootstrap("farmer-guest-landing", "farmer", {}, data)
 

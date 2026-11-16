@@ -425,10 +425,10 @@ export default function FarmerCheckoutPage({
         </a>
       }
     >
-      <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 lg:grid-cols-12">
+      <div className="mx-auto grid max-w-5xl grid-cols-1 gap-5 sm:gap-6 lg:grid-cols-12">
         {/* Left Column: Order Summary, Coupon & Card Checkout */}
         <div className="space-y-5 lg:col-span-5">
-          <section className="ai-surface rounded-3xl p-6">
+          <section className="ai-surface rounded-3xl p-4 sm:p-6">
             {/* Plan Header */}
             <div className="flex items-start justify-between gap-3 border-b border-[#e3e6ed] pb-4 dark:border-[#2b3245]">
               <div className="flex items-center gap-3">
@@ -589,7 +589,7 @@ export default function FarmerCheckoutPage({
                     value={couponCode}
                     onChange={(e) => setCouponCode(e.target.value)}
                     placeholder={isKhmer ? "បញ្ចូលកូដ" : "ENTER CODE"}
-                    className="ai-input h-9 flex-1 px-3 font-mono text-xs uppercase tracking-wide"
+                    className="ai-input h-9 min-w-0 flex-1 px-3 font-mono text-xs uppercase tracking-wide"
                   />
                   <button
                     type="submit"
@@ -644,7 +644,7 @@ export default function FarmerCheckoutPage({
         </div>
 
         {/* Right Column: Bakong KHQR Instant Payment with 3-Minute Countdown */}
-        <section className="ai-surface flex flex-col justify-between rounded-3xl p-6 sm:p-8 lg:col-span-7">
+        <section className="ai-surface flex flex-col justify-between rounded-3xl p-4 sm:p-8 lg:col-span-7">
           <div>
             {/* KHQR Header */}
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#e3e6ed] pb-4 dark:border-[#2b3245]">
@@ -741,13 +741,13 @@ export default function FarmerCheckoutPage({
             ) : bakong?.qr_image ? (
               <div className="mt-6 flex flex-col items-center">
                 {/* Clean White Scannable QR Card + Expiry / Loading Overlay */}
-                <div className="relative overflow-hidden rounded-2xl border border-[#e3e6ed] bg-white p-5 shadow-sm">
+                <div className="relative overflow-hidden rounded-2xl border border-[#e3e6ed] bg-white p-4 shadow-sm sm:p-5">
                   <img
                     id="bakong_qr_image"
                     src={bakong.qr_image}
                     alt="Bakong KHQR"
                     className={cn(
-                      "h-60 w-60 object-contain transition-all duration-300",
+                      "h-48 w-48 max-w-full object-contain transition-all duration-300 sm:h-60 sm:w-60",
                       (generatingQr || isExpired) && "scale-[0.98] opacity-25 blur-[2px]",
                     )}
                   />

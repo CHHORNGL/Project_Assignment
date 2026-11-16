@@ -34,7 +34,7 @@ export default function MemberCardPage({ bootstrap }: { bootstrap: AppBootstrap<
   };
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center bg-slate-50 px-4 py-10 text-slate-900 dark:bg-obsidian-950 dark:text-slate-100">
+    <div className="relative flex min-h-dvh flex-col items-center justify-center bg-slate-50 px-4 py-8 text-slate-900 dark:bg-obsidian-950 dark:text-slate-100 sm:py-10">
       <div className="ai-neural-mesh" />
       <div className="relative z-10 w-full max-w-md space-y-4">
         <div className="flex items-center justify-between">
@@ -81,11 +81,11 @@ export default function MemberCardPage({ bootstrap }: { bootstrap: AppBootstrap<
                 <span className="font-mono font-semibold">@{d.member.username}</span>
               </div>
               {d.member.email && (
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-500">Email</span>
-                  <span className="inline-flex items-center gap-1 font-medium">
-                    <Mail className="h-3.5 w-3.5 text-slate-400" />
-                    {d.member.email}
+                <div className="flex items-center justify-between gap-3">
+                  <span className="shrink-0 text-slate-500">Email</span>
+                  <span className="inline-flex min-w-0 items-center gap-1 font-medium">
+                    <Mail className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                    <span className="truncate">{d.member.email}</span>
                   </span>
                 </div>
               )}

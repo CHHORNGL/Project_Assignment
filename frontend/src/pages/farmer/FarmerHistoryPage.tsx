@@ -25,6 +25,7 @@ import type { AppBootstrap } from "@/types/app";
 import { WorkspaceShell } from "@/components/layout/WorkspaceShell";
 import { buildNavSections } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
+import { isCompactMobileViewport } from "@/utils/pwa";
 
 interface HistoryItem {
   id: number;
@@ -309,7 +310,9 @@ export default function FarmerHistoryPage({
   const [statusFilter, setStatusFilter] = useState<StatusFilterKey>("ALL");
   const [cropFilter, setCropFilter] = useState("ALL");
   const [sortOrder, setSortOrder] = useState<SortOrder>("newest");
-  const [viewMode, setViewMode] = useState<ViewMode>("table");
+  const [viewMode, setViewMode] = useState<ViewMode>(() =>
+    isCompactMobileViewport() ? "cards" : "table",
+  );
 
   const isRuleMode = d.mode === "rule-inference";
   const chatHref = d.chatUrl || "/farmer/chat";

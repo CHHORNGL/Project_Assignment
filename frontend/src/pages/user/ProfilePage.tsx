@@ -332,7 +332,7 @@ export default function ProfilePage({ bootstrap }: { bootstrap: AppBootstrap<Pro
                 )}
               </div>
 
-              <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+              <p className="mt-0.5 break-all text-xs text-slate-500 dark:text-slate-400">
                 @{bootstrap.user.username}
                 {bootstrap.user.email ? ` · ${bootstrap.user.email}` : ""}
               </p>

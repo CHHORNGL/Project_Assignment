@@ -145,17 +145,17 @@ export default function ExpertMixedAgriSourcesPage({
         <AdminSectionCard delayIndex={0}>
           <div className="space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <form method="GET" action={d.links.sourcesUrl} className="flex flex-wrap items-center gap-2">
+              <form method="GET" action={d.links.sourcesUrl} className="flex w-full min-w-0 flex-wrap items-center gap-2 lg:w-auto">
                 <ExpertSearchField
                   name="q"
                   defaultValue={d.filters.q}
                   placeholder={labels.searchSourcesPlaceholder || "Search sources..."}
-                  className="sm:w-64"
+                  className="min-w-0 sm:w-64"
                 />
                 <select
                   name="per_page"
                   defaultValue={String(d.filters.perPage)}
-                  className="ai-input h-9 w-20 py-1 text-xs"
+                  className="ai-input h-9 w-full min-w-0 py-1 text-xs min-[360px]:w-20"
                 >
                   {d.options.perPage.map((opt) => (
                     <option key={opt} value={String(opt)}>
@@ -217,7 +217,83 @@ export default function ExpertMixedAgriSourcesPage({
             </div>
           ) : (
             <>
-              <div className="overflow-x-auto">
+              {/* Mobile Sources Cards */}
+              <div className="divide-y divide-[#e3e6ed] dark:divide-[#2b3245] sm:hidden">
+                {d.sources.map((src) => (
+                  <div key={src.id} className="space-y-2.5 p-4 text-xs">
+                    <div className="flex items-start gap-2.5">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.includes(src.id)}
+                        onChange={() => toggleOne(src.id)}
+                        aria-label={`Select ${src.sourceTitle}`}
+                        className="mt-1 h-4 w-4 shrink-0 rounded accent-[#3874ff]"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="font-bold [overflow-wrap:anywhere] text-[#141824] dark:text-[#eff2f6]">
+                          {src.sourceTitle}
+                        </div>
+                        <div className="mt-0.5 font-medium text-[#525b75] dark:text-[#9fa6bc]">
+                          {src.sourceOrg}
+                          {src.publicationYear ? ` · ${src.publicationYear}` : ""}
+                        </div>
+                        {src.sourceUrl && (
+                          <a
+                            href={src.sourceUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-1 inline-flex max-w-full items-center gap-1 break-all text-[11px] text-[#3874ff] hover:text-[#004dff] hover:underline dark:text-[#85a9ff]"
+                          >
+                            <ExternalLink className="h-3 w-3 shrink-0" />
+                            <span className="truncate">{src.sourceUrl}</span>
+                          </a>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="inline-flex rounded border border-[#cbd0dd] bg-[#f5f7fa] px-2 py-0.5 text-[11px] font-medium text-[#525b75] dark:border-[#373e53] dark:bg-[#0f111a] dark:text-[#9fa6bc]">
+                          {src.sourceType || "-"}
+                        </span>
+                        <AdminStatusBadge tone="indigo">
+                          {src.factCount} {labels.facts || "Facts"}
+                        </AdminStatusBadge>
+                      </div>
+
+                      <div className="inline-flex items-center gap-1.5">
+                        <a
+                          href={src.addFactUrl}
+                          className="ai-btn-secondary h-8 gap-1 px-2.5 text-xs"
+                          title={labels.addFact || "Add fact"}
+                          aria-label={`Add fact to ${src.sourceTitle}`}
+                        >
+                          <Plus className="h-3 w-3" />
+                        </a>
+                        <a
+                          href={src.editUrl}
+                          className="ai-btn-secondary h-8 gap-1 px-2.5 text-xs"
+                          title={labels.edit || "Edit"}
+                          aria-label={`Edit ${src.sourceTitle}`}
+                        >
+                          <Pencil className="h-3 w-3" />
+                        </a>
+                        <button
+                          type="button"
+                          onClick={() => openSingleDelete(src)}
+                          aria-label={`Delete ${src.sourceTitle}`}
+                          className="inline-flex h-8 items-center rounded-lg border border-[#f48270] bg-white px-2.5 text-xs text-[#b81800] transition-colors hover:bg-[#ffe0db]/60 dark:border-[#fa3b1d]/40 dark:bg-[#181d2b] dark:text-[#ff9c8c] dark:hover:bg-[#492226]"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop Sources Table */}
+              <div className="hidden overflow-x-auto sm:block">
                 <table className="w-full text-left text-xs">
                   <thead className="border-b border-[#e3e6ed] bg-[#f5f7fa] text-[11px] uppercase tracking-wider text-[#6e7891] dark:border-[#2b3245] dark:bg-[#0f111a] dark:text-[#8a94ad]">
                     <tr>
@@ -312,7 +388,7 @@ export default function ExpertMixedAgriSourcesPage({
                 </table>
               </div>
 
-              <div className="px-5 pb-4">
+              <div className="px-4 pb-4 sm:px-5">
                 <PaginationBar
                   pagination={d.pagination}
                   showingRange={labels.showingRange}

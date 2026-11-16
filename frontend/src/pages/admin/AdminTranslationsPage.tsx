@@ -632,12 +632,12 @@ export default function AdminTranslationsPage({
                       <div
                         key={crop.id}
                         className={cn(
-                          "grid gap-4 p-5 transition-colors lg:grid-cols-12",
+                          "grid gap-4 p-4 transition-colors sm:p-5 lg:grid-cols-12",
                           isDirty && "bg-[#e5edff]/20 dark:bg-[#3874ff]/[0.05]",
                         )}
                       >
                         {/* English Source Reference */}
-                        <div className="space-y-2 lg:col-span-4">
+                        <div className="min-w-0 space-y-2 lg:col-span-4">
                           <div className="flex flex-wrap items-center gap-2">
                             <span className="font-mono text-[11px] text-[#8a94ad]">#{crop.id}</span>
                             <h4 className="text-sm font-bold text-[#141824] dark:text-[#eff2f6]">
@@ -653,7 +653,7 @@ export default function AdminTranslationsPage({
                         </div>
 
                         {/* Khmer Target Inputs */}
-                        <div className="grid gap-3 sm:grid-cols-2 lg:col-span-8">
+                        <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:col-span-8">
                           <div>
                             <div className="mb-1 flex items-center justify-between gap-2">
                               <label className="text-[11px] font-semibold text-[#31374a] dark:text-[#cbd0dd]">
@@ -758,11 +758,11 @@ export default function AdminTranslationsPage({
                       <div
                         key={dis.id}
                         className={cn(
-                          "grid gap-4 p-5 transition-colors lg:grid-cols-12",
+                          "grid gap-4 p-4 transition-colors sm:p-5 lg:grid-cols-12",
                           isDirty && "bg-[#e5edff]/20 dark:bg-[#3874ff]/[0.05]",
                         )}
                       >
-                        <div className="space-y-2 lg:col-span-4">
+                        <div className="min-w-0 space-y-2 lg:col-span-4">
                           <div className="flex flex-wrap items-center gap-2">
                             <span className="font-mono text-[11px] text-[#8a94ad]">#{dis.id}</span>
                             <h4 className="text-sm font-bold text-[#141824] dark:text-[#eff2f6]">
@@ -786,7 +786,7 @@ export default function AdminTranslationsPage({
                           )}
                         </div>
 
-                        <div className="grid gap-3 md:grid-cols-3 lg:col-span-8">
+                        <div className="grid min-w-0 gap-3 md:grid-cols-3 lg:col-span-8">
                           <div>
                             <div className="mb-1 flex items-center justify-between gap-2">
                               <label className="text-[11px] font-semibold text-[#31374a] dark:text-[#cbd0dd]">
@@ -927,11 +927,11 @@ export default function AdminTranslationsPage({
                       <div
                         key={sym.id}
                         className={cn(
-                          "grid gap-4 p-5 transition-colors lg:grid-cols-12",
+                          "grid gap-4 p-4 transition-colors sm:p-5 lg:grid-cols-12",
                           isDirty && "bg-[#e5edff]/20 dark:bg-[#3874ff]/[0.05]",
                         )}
                       >
-                        <div className="space-y-1.5 lg:col-span-4">
+                        <div className="min-w-0 space-y-1.5 lg:col-span-4">
                           <div className="flex flex-wrap items-center gap-2">
                             <span className="font-mono text-[11px] text-[#8a94ad]">#{sym.id}</span>
                             <h4 className="text-sm font-bold text-[#141824] dark:text-[#eff2f6]">
@@ -946,7 +946,7 @@ export default function AdminTranslationsPage({
                           </p>
                         </div>
 
-                        <div className="grid gap-3 sm:grid-cols-2 lg:col-span-8">
+                        <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:col-span-8">
                           <div>
                             <div className="mb-1 flex items-center justify-between gap-2">
                               <label className="text-[11px] font-semibold text-[#31374a] dark:text-[#cbd0dd]">
@@ -1112,7 +1112,7 @@ export default function AdminTranslationsPage({
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-lg rounded-2xl border border-[#e3e6ed] bg-white p-6 shadow-2xl dark:border-[#2b3245] dark:bg-[#141824]"
+            className="max-h-[90dvh] w-full max-w-lg overflow-y-auto rounded-2xl border border-[#e3e6ed] bg-white p-5 shadow-2xl dark:border-[#2b3245] dark:bg-[#141824] sm:p-6"
           >
             <div className="flex items-start justify-between gap-3">
               <div>
@@ -1239,7 +1239,7 @@ export default function AdminTranslationsPage({
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md rounded-2xl border border-[#e3e6ed] bg-white p-6 shadow-xl dark:border-[#2b3245] dark:bg-[#141824]"
+            className="max-h-[90dvh] w-full max-w-md overflow-y-auto rounded-2xl border border-[#e3e6ed] bg-white p-5 shadow-xl dark:border-[#2b3245] dark:bg-[#141824] sm:p-6"
           >
             <h3
               id="discard-translations-title"

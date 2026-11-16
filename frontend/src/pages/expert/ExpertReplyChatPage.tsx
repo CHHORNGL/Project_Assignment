@@ -84,7 +84,7 @@ export default function ExpertReplyChatPage({
       <div className="mx-auto max-w-4xl space-y-5">
         <AdminSectionCard delayIndex={0}>
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center gap-3.5">
+            <div className="flex min-w-0 flex-1 items-center gap-3.5">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#e5edff] font-display text-base font-bold text-[#004dff] ring-1 ring-[#3874ff]/20 dark:bg-[#3874ff]/15 dark:text-[#85a9ff]">
                 {(d.activeSession.farmerName || "?").slice(0, 1).toUpperCase()}
               </div>
@@ -131,7 +131,7 @@ export default function ExpertReplyChatPage({
         </AdminSectionCard>
 
         <AdminSectionCard delayIndex={1} noPadding>
-          <div className="bg-[#f5f7fa]/75 p-5 dark:bg-[#0f111a]/65">
+          <div className="bg-[#f5f7fa]/75 p-3.5 dark:bg-[#0f111a]/65 sm:p-5">
             {d.messages.length === 0 ? (
               <AdminEmptyState
                 icon={<MessageSquare className="h-5 w-5" />}
@@ -139,7 +139,7 @@ export default function ExpertReplyChatPage({
                 description={sections.emptyText}
               />
             ) : (
-              <div className="phoenix-scroll max-h-[480px] space-y-4 overflow-y-auto pr-1">
+              <div className="phoenix-scroll max-h-[55dvh] space-y-4 overflow-y-auto pr-1 sm:max-h-[480px]">
                 {d.messages.map((msg) => {
                   const isExpert = msg.sender === "expert" || msg.sender === "assistant";
                   return (
@@ -164,8 +164,8 @@ export default function ExpertReplyChatPage({
                           <User className="h-3.5 w-3.5" />
                         )}
                       </span>
-                      <div className={cn("flex max-w-[82%] flex-col", isExpert ? "items-end" : "items-start")}>
-                        <div className="mb-1 flex items-center gap-2 px-1 text-[11px] text-[#8a94ad]">
+                      <div className={cn("flex min-w-0 max-w-[85%] flex-col sm:max-w-[82%]", isExpert ? "items-end" : "items-start")}>
+                        <div className="mb-1 flex flex-wrap items-center gap-2 px-1 text-[11px] text-[#8a94ad]">
                           <span className="font-bold text-[#525b75] dark:text-[#cbd0dd]">
                             {msg.authorName}
                           </span>
@@ -173,7 +173,7 @@ export default function ExpertReplyChatPage({
                         </div>
                         <div
                           className={cn(
-                            "whitespace-pre-wrap break-words rounded-2xl px-4 py-2.5 text-xs leading-relaxed shadow-xs",
+                            "whitespace-pre-wrap [overflow-wrap:anywhere] rounded-2xl px-3.5 py-2.5 text-xs leading-relaxed shadow-xs sm:px-4",
                             isExpert
                               ? "rounded-br-sm bg-[#3874ff] text-white"
                               : "rounded-bl-sm border border-[#e3e6ed] bg-white text-[#31374a] dark:border-[#2b3245] dark:bg-[#181d2b] dark:text-[#eff2f6]",
@@ -194,7 +194,7 @@ export default function ExpertReplyChatPage({
             ref={formRef}
             method="POST"
             action={d.activeSession.postUrl}
-            className="border-t border-[#e3e6ed] bg-white p-5 dark:border-[#2b3245] dark:bg-[#141824]"
+            className="border-t border-[#e3e6ed] bg-white p-3.5 dark:border-[#2b3245] dark:bg-[#141824] sm:p-5"
           >
             <input type="hidden" name="csrf_token" value={bootstrap.csrfToken} />
 
@@ -236,7 +236,7 @@ export default function ExpertReplyChatPage({
                   <span className="font-mono">{draft.length}</span>
                 </div>
               </div>
-              <button type="submit" className="ai-btn-primary h-10 shrink-0 gap-1.5 px-5 text-xs sm:mb-5">
+              <button type="submit" className="ai-btn-primary h-10 w-full shrink-0 justify-center gap-1.5 px-5 text-xs sm:mb-5 sm:w-auto">
                 <Send className="h-3.5 w-3.5" />
                 <span>{sections.submit || "Send"}</span>
               </button>

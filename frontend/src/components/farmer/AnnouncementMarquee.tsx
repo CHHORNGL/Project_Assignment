@@ -166,11 +166,11 @@ export function AnnouncementMarquee({
         <button
           type="button"
           onClick={() => openModal(items[0]?.id)}
-          className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-gradient-to-r from-indigo-600 to-blue-600 px-3 py-1 text-[11px] font-bold tracking-wide text-white shadow-sm shadow-indigo-500/25 transition hover:brightness-110"
+          className="inline-flex max-w-[140px] shrink-0 items-center gap-1.5 rounded-full bg-gradient-to-r from-indigo-600 to-blue-600 px-2.5 py-1 text-[11px] font-bold tracking-wide text-white shadow-sm shadow-indigo-500/25 transition hover:brightness-110 sm:max-w-none sm:px-3"
         >
-          <span className="ai-beacon-dot h-1.5 w-1.5 rounded-full bg-emerald-300" />
-          <Megaphone className="h-3 w-3" />
-          <span>{pillText}</span>
+          <span className="ai-beacon-dot h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-300" />
+          <Megaphone className="h-3 w-3 shrink-0" />
+          <span className="truncate">{pillText}</span>
         </button>
 
         {/* Seamless 2-Pass Scrolling Track with Constant ~28px/s Speed */}

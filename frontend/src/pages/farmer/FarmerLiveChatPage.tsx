@@ -622,10 +622,12 @@ export default function FarmerLiveChatPage({
       headerActions={
         <a
           href={d.aiChatUrl}
-          className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-[#e3e6ed] bg-white px-3.5 text-xs font-semibold text-[#141824] shadow-sm transition hover:bg-[#f5f7fa] dark:border-[#2b3245] dark:bg-[#141824] dark:text-[#eff2f6] dark:hover:bg-[#1c2233]"
+          aria-label={isKhmer ? "សួរ AI ភ្លាមៗ" : "Ask AI Assistant"}
+          title={isKhmer ? "សួរ AI ភ្លាមៗ" : "Ask AI Assistant"}
+          className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-[#e3e6ed] bg-white px-2.5 text-xs font-semibold text-[#141824] shadow-sm transition hover:bg-[#f5f7fa] dark:border-[#2b3245] dark:bg-[#141824] dark:text-[#eff2f6] dark:hover:bg-[#1c2233] sm:px-3.5"
         >
-          <Sparkles className="h-3.5 w-3.5 text-sky-500" />
-          <span>{isKhmer ? "សួរ AI ភ្លាមៗ" : "Ask AI Assistant"}</span>
+          <Sparkles className="h-3.5 w-3.5 shrink-0 text-sky-500" />
+          <span className="hidden sm:inline">{isKhmer ? "សួរ AI ភ្លាមៗ" : "Ask AI Assistant"}</span>
         </a>
       }
     >
@@ -736,7 +738,7 @@ export default function FarmerLiveChatPage({
         </div>
 
         {/* Live Chat Workspace Card */}
-        <section className="ai-surface flex h-[calc(100vh-20.5rem)] min-h-[480px] max-h-[700px] flex-col overflow-hidden">
+        <section className="ai-surface flex h-[calc(100dvh-18rem)] min-h-[340px] max-h-[700px] flex-col overflow-hidden sm:h-[calc(100dvh-20.5rem)] sm:min-h-[480px]">
           {/* Active Thread Header + Optional Named Recipient Selector */}
           <div className="border-b border-[#e3e6ed] px-4 py-3 dark:border-[#2b3245] sm:px-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -1238,7 +1240,7 @@ export default function FarmerLiveChatPage({
                     ? "សរសេរសារទៅអ្នកគ្រប់គ្រង..."
                     : "Write a message to Platform Admin..."
               }
-              className="ai-input h-9 flex-1 px-3.5 text-sm"
+              className="ai-input h-9 min-w-0 flex-1 px-3 text-sm sm:px-3.5"
             />
 
             <button
@@ -1246,7 +1248,7 @@ export default function FarmerLiveChatPage({
               disabled={sending || (!draft.trim() && !stagedAttachment)}
               aria-label="Send message"
               className={cn(
-                "inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl px-4 text-xs font-semibold text-white shadow-sm transition disabled:opacity-50",
+                "inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl px-3 text-xs font-semibold text-white shadow-sm transition disabled:opacity-50 sm:px-4",
                 target === "expert"
                   ? "bg-emerald-600 hover:bg-emerald-700"
                   : "bg-indigo-600 hover:bg-indigo-700",

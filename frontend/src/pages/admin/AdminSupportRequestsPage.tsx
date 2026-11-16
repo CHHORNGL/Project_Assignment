@@ -166,7 +166,7 @@ export default function AdminSupportRequestsPage({
         {/* Main 12-Column Triage Layout */}
         <div className="grid gap-6 xl:grid-cols-12">
           {/* Left Column: Create Ticket & Resolution Overview */}
-          <div className="space-y-6 xl:col-span-4">
+          <div className="min-w-0 space-y-6 xl:col-span-4">
             <AdminSectionCard
               delayIndex={2}
               title={isKhmer ? "បង្កើតសំណើជំនួយថ្មី" : "New Support Ticket"}
@@ -293,7 +293,7 @@ export default function AdminSupportRequestsPage({
 
           {/* Right Column: Support Queue & Triage Controls */}
           <AdminSectionCard
-            className="xl:col-span-8"
+            className="min-w-0 xl:col-span-8"
             delayIndex={3}
             title={isKhmer ? "ជួរសំណើសុំជំនួយ" : "Support Queue"}
             subtitle={
@@ -305,7 +305,7 @@ export default function AdminSupportRequestsPage({
             action={
               <nav
                 aria-label="Ticket status filter"
-                className="inline-flex items-center gap-1 rounded-lg border border-[#cbd0dd] bg-[#f5f7fa] p-0.5 dark:border-[#373e53] dark:bg-[#0f111a]"
+                className="inline-flex max-w-full flex-wrap items-center gap-1 rounded-lg border border-[#cbd0dd] bg-[#f5f7fa] p-0.5 dark:border-[#373e53] dark:bg-[#0f111a]"
               >
                 {statusTabs.map((tab) => {
                   const active = d.filterStatus === tab.key;
@@ -342,7 +342,7 @@ export default function AdminSupportRequestsPage({
               {/* Search & Reset Filter Bar */}
               <form method="GET" action={d.links.baseUrl} className="flex flex-wrap items-center gap-2">
                 <input type="hidden" name="status" value={d.filterStatus} />
-                <div className="relative min-w-[220px] flex-1">
+                <div className="relative w-full min-w-0 flex-1 sm:w-auto sm:min-w-[220px]">
                   <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#8a94ad]" />
                   <input
                     type="text"

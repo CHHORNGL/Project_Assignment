@@ -160,7 +160,7 @@ export default function FarmerUpgradePage({
         )}
 
         {/* Executive Overview & Billing Switcher */}
-        <section className="ai-surface rounded-3xl p-6 sm:p-8">
+        <section className="ai-surface rounded-3xl p-5 sm:p-8">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <div className="space-y-2">
               <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-emerald-700 dark:border-emerald-400/25 dark:text-emerald-300">
@@ -227,7 +227,7 @@ export default function FarmerUpgradePage({
         {/* Tier Comparison Grid */}
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-12">
           {/* Standard Plan */}
-          <section className="flex flex-col justify-between rounded-3xl border border-[#e3e6ed] bg-white p-6 dark:border-[#2b3245] dark:bg-[#141824] lg:col-span-5">
+          <section className="flex flex-col justify-between rounded-3xl border border-[#e3e6ed] bg-white p-5 dark:border-[#2b3245] dark:bg-[#141824] sm:p-6 lg:col-span-5">
             <div>
               <div className="flex items-center justify-between gap-2">
                 <h3 className="font-display text-lg font-bold text-[#141824] dark:text-[#eff2f6]">
@@ -277,7 +277,7 @@ export default function FarmerUpgradePage({
           </section>
 
           {/* Pro Plan */}
-          <section className="relative flex flex-col justify-between overflow-hidden rounded-3xl border-2 border-emerald-500/70 bg-white p-6 shadow-sm ring-4 ring-emerald-500/[0.06] dark:border-emerald-500/60 dark:bg-[#141824] sm:p-7 lg:col-span-7">
+          <section className="relative flex flex-col justify-between overflow-hidden rounded-3xl border-2 border-emerald-500/70 bg-white p-5 shadow-sm ring-4 ring-emerald-500/[0.06] dark:border-emerald-500/60 dark:bg-[#141824] sm:p-7 lg:col-span-7">
             <div>
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="flex items-center gap-3">

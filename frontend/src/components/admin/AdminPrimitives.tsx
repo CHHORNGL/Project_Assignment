@@ -108,7 +108,7 @@ export function PhoenixSummaryStrip({
 }) {
   return (
     <div className="ai-stagger">
-      <div className="flex flex-wrap items-center gap-x-10 gap-y-5 py-2">
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-4 py-2 sm:gap-x-10 sm:gap-y-5">
         {items.map((item, idx) => {
           const tone = TONE_MAP[item.tone || "indigo"];
           const content = (
@@ -262,7 +262,7 @@ export function AdminSectionCard({
       className={`ai-surface ai-stagger overflow-hidden ${className}`}
     >
       {hasHeader && (
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#e3e6ed] px-5 py-3.5 dark:border-[#2b3245]">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#e3e6ed] px-4 py-3 dark:border-[#2b3245] sm:px-5 sm:py-3.5">
           <div className="flex min-w-0 items-center gap-3">
             {icon && (
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#e5edff] text-[#004dff] ring-1 ring-[#3874ff]/20 dark:bg-[#3874ff]/15 dark:text-[#85a9ff] dark:ring-[#3874ff]/30">
@@ -280,10 +280,10 @@ export function AdminSectionCard({
               )}
             </div>
           </div>
-          {action && <div className="flex shrink-0 flex-wrap items-center gap-2">{action}</div>}
+          {action && <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2">{action}</div>}
         </div>
       )}
-      <div className={noPadding ? "" : "p-5"}>{children}</div>
+      <div className={noPadding ? "" : "p-4 sm:p-5"}>{children}</div>
     </section>
   );
 }

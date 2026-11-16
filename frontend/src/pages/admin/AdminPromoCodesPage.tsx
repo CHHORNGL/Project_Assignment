@@ -237,7 +237,7 @@ export default function AdminPromoCodesPage({
             </div>
 
             <div className="grid items-end gap-4 sm:grid-cols-2 lg:grid-cols-12">
-              <div className="lg:col-span-4">
+              <div className="min-w-0 lg:col-span-4">
                 <label className="mb-1.5 block text-xs font-semibold text-[#31374a] dark:text-[#cbd0dd]">
                   {isKhmer ? "ចំនួនក្រេឌីត AI *" : "Credit Reward Amount *"}
                 </label>
@@ -255,7 +255,7 @@ export default function AdminPromoCodesPage({
                 </div>
               </div>
 
-              <div className="lg:col-span-2">
+              <div className="min-w-0 lg:col-span-2">
                 <label className="mb-1.5 block text-xs font-semibold text-[#31374a] dark:text-[#cbd0dd]">
                   {isKhmer ? "ចំនួនកូដ (១–២០)" : "Quantity (1–20)"}
                 </label>
@@ -270,7 +270,7 @@ export default function AdminPromoCodesPage({
                 />
               </div>
 
-              <div className="lg:col-span-4">
+              <div className="min-w-0 lg:col-span-4">
                 <label className="mb-1.5 block text-xs font-semibold text-[#31374a] dark:text-[#cbd0dd]">
                   {isKhmer ? "កូដផ្ទាល់ខ្លួន (ជាជម្រើស)" : "Custom Code (Optional)"}
                 </label>
@@ -292,7 +292,7 @@ export default function AdminPromoCodesPage({
                 />
               </div>
 
-              <div className="lg:col-span-2">
+              <div className="min-w-0 lg:col-span-2">
                 <button type="submit" className="ai-btn-primary h-10 w-full justify-center gap-1.5 text-xs">
                   <Plus className="h-3.5 w-3.5" />
                   <span>
@@ -565,7 +565,7 @@ export default function AdminPromoCodesPage({
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md rounded-2xl border border-[#e3e6ed] bg-white p-6 shadow-xl dark:border-[#2b3245] dark:bg-[#141824]"
+            className="max-h-[90dvh] w-full max-w-md overflow-y-auto rounded-2xl border border-[#e3e6ed] bg-white p-5 shadow-xl dark:border-[#2b3245] dark:bg-[#141824] sm:p-6"
           >
             <div className="flex items-start gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#ffe0db] text-[#b81800] ring-1 ring-[#fa3b1d]/25 dark:bg-[#fa3b1d]/15 dark:text-[#ff9c8c]">
@@ -633,7 +633,7 @@ export default function AdminPromoCodesPage({
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md rounded-2xl border border-[#e3e6ed] bg-white p-6 shadow-xl dark:border-[#2b3245] dark:bg-[#141824]"
+            className="max-h-[90dvh] w-full max-w-md overflow-y-auto rounded-2xl border border-[#e3e6ed] bg-white p-5 shadow-xl dark:border-[#2b3245] dark:bg-[#141824] sm:p-6"
           >
             <div className="flex items-start gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#ffe0db] text-[#b81800] ring-1 ring-[#fa3b1d]/25 dark:bg-[#fa3b1d]/15 dark:text-[#ff9c8c]">

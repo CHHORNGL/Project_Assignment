@@ -115,23 +115,25 @@ export function WorkspaceShell({
   const brandHref = bootstrap.user?.id ? "/farmer/dashboard" : bootstrap.urls.home || "/";
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900 dark:bg-obsidian-950 dark:text-slate-100">
+    <div className="flex min-h-dvh flex-col bg-slate-50 text-slate-900 dark:bg-obsidian-950 dark:text-slate-100">
       {/* Compact Full-Width Top Bar */}
       <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/85 backdrop-blur-xl dark:border-slate-800/80 dark:bg-obsidian-950/85">
-        <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between gap-3 px-4 sm:px-6">
-          <div className="flex min-w-0 items-center gap-3">
-            <a href={brandHref} className="flex shrink-0 items-center gap-2.5">
+        <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between gap-2 px-3 sm:gap-3 sm:px-6">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+            <a href={brandHref} className="flex min-w-0 shrink-0 items-center gap-2">
               <img
                 src={bootstrap.urls.logoLight || "/static/img/newlogo.svg"}
                 alt="Agri System"
-                className="h-7 w-7 dark:hidden"
+                className="h-7 w-7 shrink-0 dark:hidden"
               />
               <img
                 src={bootstrap.urls.logoDark || "/static/img/newlogo-dark.svg"}
                 alt="Agri System"
-                className="hidden h-7 w-7 dark:block"
+                className="hidden h-7 w-7 shrink-0 dark:block"
               />
-              <span className="font-display text-sm font-bold tracking-tight">AGRI SYSTEM</span>
+              <span className="hidden truncate font-display text-[13px] font-bold tracking-tight min-[355px]:inline sm:text-sm">
+                AGRI SYSTEM
+              </span>
             </a>
 
             {pageTitle && (
@@ -154,16 +156,18 @@ export function WorkspaceShell({
             )}
           </div>
 
-          <div className="flex shrink-0 items-center gap-2">
-            {headerActions}
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+            {headerActions && (
+              <div className="hidden items-center gap-2 md:flex">{headerActions}</div>
+            )}
 
             <button
               type="button"
               onClick={() => setAiOpen((prev) => !prev)}
-              className="inline-flex h-9 items-center gap-1.5 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3 text-xs font-semibold text-indigo-600 transition-all hover:bg-indigo-500/20 dark:text-indigo-300"
+              className="inline-flex h-9 w-9 items-center justify-center gap-1.5 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-xs font-semibold text-indigo-600 transition-all hover:bg-indigo-500/20 dark:text-indigo-300 sm:w-auto sm:px-3"
               aria-label={isKhmer ? "ជំនួយការ AI" : "AI Copilot"}
             >
-              <Sparkles className="h-3.5 w-3.5" />
+              <Sparkles className="h-3.5 w-3.5 shrink-0" />
               <span className="hidden sm:inline">{isKhmer ? "ជំនួយការ AI" : "AI Copilot"}</span>
             </button>
 
@@ -279,12 +283,19 @@ export function WorkspaceShell({
       </header>
 
       {/* Main Content Area (padded above persistent Bottom Navigation) */}
-      <main className="ai-enter mx-auto w-full max-w-7xl flex-1 px-4 pb-28 pt-5 sm:px-6">
-        {pageTitle && (
-          <div className="mb-4 sm:hidden">
-            <h1 className="font-display text-lg font-bold tracking-tight">{pageTitle}</h1>
-            {pageSubtitle && (
-              <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{pageSubtitle}</p>
+      <main className="ai-enter mx-auto w-full max-w-7xl flex-1 px-4 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-4 sm:px-6 sm:pt-5">
+        {(pageTitle || headerActions) && (
+          <div className="mb-4 flex flex-col gap-2.5 md:hidden">
+            {pageTitle && (
+              <div className="sm:hidden">
+                <h1 className="font-display text-lg font-bold tracking-tight">{pageTitle}</h1>
+                {pageSubtitle && (
+                  <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{pageSubtitle}</p>
+                )}
+              </div>
+            )}
+            {headerActions && (
+              <div className="flex flex-wrap items-center gap-2">{headerActions}</div>
             )}
           </div>
         )}
@@ -307,7 +318,7 @@ export function WorkspaceShell({
         csrfToken={bootstrap.csrfToken}
         scope={bootstrap.page.scope}
         userName={bootstrap.user?.full_name || bootstrap.user?.username}
-        bottomOffsetClass="bottom-24 right-4 sm:bottom-24 sm:right-5"
+        bottomOffsetClass="bottom-[calc(5.75rem+env(safe-area-inset-bottom))] right-3 sm:bottom-24 sm:right-5"
       />
     </div>
   );

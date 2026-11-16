@@ -152,17 +152,17 @@ export default function ExpertMixedAgriFactsPage({
         <AdminSectionCard delayIndex={0}>
           <div className="space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <form method="GET" action={d.links.factsUrl} className="flex flex-wrap items-center gap-2">
+              <form method="GET" action={d.links.factsUrl} className="flex w-full min-w-0 flex-wrap items-center gap-2 lg:w-auto">
                 <ExpertSearchField
                   name="q"
                   defaultValue={d.filters.q}
                   placeholder={labels.searchFactsPlaceholder || "Search facts..."}
-                  className="sm:w-56"
+                  className="min-w-0 sm:w-56"
                 />
                 <select
                   name="source_id"
                   defaultValue={d.filters.sourceId}
-                  className="ai-input h-9 w-48 py-1 text-xs"
+                  className="ai-input h-9 w-full min-w-0 py-1 text-xs sm:w-48"
                 >
                   <option value="">{labels.allSources || "All Sources"}</option>
                   {d.sources.map((s) => (
@@ -174,7 +174,7 @@ export default function ExpertMixedAgriFactsPage({
                 <select
                   name="per_page"
                   defaultValue={String(d.filters.perPage)}
-                  className="ai-input h-9 w-20 py-1 text-xs"
+                  className="ai-input h-9 w-full min-w-0 py-1 text-xs min-[360px]:w-20"
                 >
                   {d.options.perPage.map((opt) => (
                     <option key={opt} value={String(opt)}>
@@ -236,7 +236,78 @@ export default function ExpertMixedAgriFactsPage({
             </div>
           ) : (
             <>
-              <div className="overflow-x-auto">
+              {/* Mobile Facts Cards */}
+              <div className="divide-y divide-[#e3e6ed] dark:divide-[#2b3245] sm:hidden">
+                {d.facts.map((fact) => (
+                  <div key={fact.id} className="space-y-2.5 p-4 text-xs">
+                    <div className="flex items-start gap-2.5">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.includes(fact.id)}
+                        onChange={() => toggleOne(fact.id)}
+                        aria-label={`Select fact #${fact.id}`}
+                        className="mt-1 h-4 w-4 shrink-0 rounded accent-[#3874ff]"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <AdminStatusBadge tone="indigo">{fact.topic}</AdminStatusBadge>
+                          {fact.metricValue && (
+                            <AdminStatusBadge tone="emerald">
+                              {fact.metricValue} {fact.metricUnit}
+                              {fact.metricYear ? ` (${fact.metricYear})` : ""}
+                            </AdminStatusBadge>
+                          )}
+                        </div>
+                        <div className="mt-1 font-semibold [overflow-wrap:anywhere] text-[#141824] dark:text-[#eff2f6]">
+                          {fact.sourceTitle}
+                        </div>
+                        {fact.region && (
+                          <div className="text-[11px] text-[#6e7891] dark:text-[#8a94ad]">
+                            {fact.region}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <p className="line-clamp-3 [overflow-wrap:anywhere] leading-relaxed text-[#31374a] dark:text-[#eff2f6]">
+                      {fact.factText}
+                    </p>
+
+                    <div className="flex justify-end">
+                      <div className="inline-flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => setInspectFact(fact)}
+                          className="ai-btn-secondary h-8 px-2.5 text-xs"
+                          title={isKhmer ? "មើលលម្អិត" : "Quick view"}
+                          aria-label={`Inspect fact #${fact.id}`}
+                        >
+                          <Eye className="h-3.5 w-3.5" />
+                        </button>
+                        <a
+                          href={fact.editUrl}
+                          className="ai-btn-secondary h-8 px-2.5 text-xs"
+                          title={labels.edit || "Edit"}
+                          aria-label={`Edit fact #${fact.id}`}
+                        >
+                          <Pencil className="h-3 w-3" />
+                        </a>
+                        <button
+                          type="button"
+                          onClick={() => openSingleDelete(fact)}
+                          aria-label={`Delete fact #${fact.id}`}
+                          className="inline-flex h-8 items-center rounded-lg border border-[#f48270] bg-white px-2.5 text-xs text-[#b81800] transition-colors hover:bg-[#ffe0db]/60 dark:border-[#fa3b1d]/40 dark:bg-[#181d2b] dark:text-[#ff9c8c] dark:hover:bg-[#492226]"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop Facts Table */}
+              <div className="hidden overflow-x-auto sm:block">
                 <table className="w-full text-left text-xs">
                   <thead className="border-b border-[#e3e6ed] bg-[#f5f7fa] text-[11px] uppercase tracking-wider text-[#6e7891] dark:border-[#2b3245] dark:bg-[#0f111a] dark:text-[#8a94ad]">
                     <tr>
@@ -319,7 +390,7 @@ export default function ExpertMixedAgriFactsPage({
                 </table>
               </div>
 
-              <div className="px-5 pb-4">
+              <div className="px-4 pb-4 sm:px-5">
                 <PaginationBar
                   pagination={d.pagination}
                   showingRange={labels.showingRange}
@@ -347,9 +418,9 @@ export default function ExpertMixedAgriFactsPage({
             if (e.target === e.currentTarget) setInspectFact(null);
           }}
         >
-          <div className="ai-surface animate-fade-in-up w-full max-w-lg overflow-hidden rounded-2xl border border-[#cbd0dd] bg-white shadow-2xl dark:border-[#373e53] dark:bg-[#141824]">
-            <div className="flex items-start justify-between gap-3 border-b border-[#e3e6ed] px-5 py-4 dark:border-[#2b3245]">
-              <div>
+          <div className="ai-surface animate-fade-in-up flex max-h-[90dvh] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-[#cbd0dd] bg-white shadow-2xl dark:border-[#373e53] dark:bg-[#141824]">
+            <div className="flex items-start justify-between gap-3 border-b border-[#e3e6ed] px-4 py-3.5 dark:border-[#2b3245] sm:px-5 sm:py-4">
+              <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <AdminStatusBadge tone="indigo">{inspectFact.topic}</AdminStatusBadge>
                   {inspectFact.metricValue && (
@@ -359,7 +430,7 @@ export default function ExpertMixedAgriFactsPage({
                     </AdminStatusBadge>
                   )}
                 </div>
-                <h3 className="mt-2 font-display text-sm font-bold text-[#141824] dark:text-[#eff2f6]">
+                <h3 className="mt-2 font-display text-sm font-bold [overflow-wrap:anywhere] text-[#141824] dark:text-[#eff2f6]">
                   {inspectFact.sourceTitle}
                 </h3>
                 {inspectFact.region && (
@@ -371,13 +442,13 @@ export default function ExpertMixedAgriFactsPage({
               <button
                 type="button"
                 onClick={() => setInspectFact(null)}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[#8a94ad] hover:bg-[#eff2f6] hover:text-[#141824] dark:hover:bg-[#1e2436] dark:hover:text-[#eff2f6]"
+                className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#8a94ad] hover:bg-[#eff2f6] hover:text-[#141824] dark:hover:bg-[#1e2436] dark:hover:text-[#eff2f6]"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
-            <div className="p-5">
-              <p className="whitespace-pre-wrap text-xs leading-relaxed text-[#31374a] dark:text-[#cbd0dd]">
+            <div className="phoenix-scroll flex-1 overflow-y-auto p-4 sm:p-5">
+              <p className="whitespace-pre-wrap [overflow-wrap:anywhere] text-xs leading-relaxed text-[#31374a] dark:text-[#cbd0dd]">
                 {inspectFact.factText}
               </p>
             </div>

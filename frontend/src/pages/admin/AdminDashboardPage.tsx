@@ -224,7 +224,7 @@ export default function AdminDashboardPage({
         {/* Control Center Main Grid */}
         <div className="grid gap-6 xl:grid-cols-12">
           {/* Left Column: System Health + Location Monitor */}
-          <div className="space-y-6 xl:col-span-5">
+          <div className="min-w-0 space-y-6 xl:col-span-5">
             <AdminSectionCard
               delayIndex={2}
               title={sections.systemHealth || "System Health"}
@@ -376,7 +376,7 @@ export default function AdminDashboardPage({
           </div>
 
           {/* Right Column: Recent Audit Events + Quick Directory */}
-          <div className="space-y-6 xl:col-span-7">
+          <div className="min-w-0 space-y-6 xl:col-span-7">
             <AdminSectionCard
               delayIndex={3}
               noPadding
@@ -402,49 +402,84 @@ export default function AdminDashboardPage({
                   />
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs">
-                    <thead className="border-b border-[#e3e6ed] bg-[#f5f7fa] text-[10.5px] font-bold uppercase tracking-[0.06em] text-[#6e7891] dark:border-[#2b3245] dark:bg-[#0f111a] dark:text-[#8a94ad]">
-                      <tr>
-                        <th className="px-5 py-3">{table.action || "Action"}</th>
-                        <th className="px-5 py-3">{table.detail || "Detail"}</th>
-                        <th className="px-5 py-3 text-right">{table.time || "Time"}</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[#e3e6ed] dark:divide-[#2b3245]">
-                      {d.recentLogs.map((log) => (
-                        <tr key={log.id} className="ai-table-row">
-                          <td className="whitespace-nowrap px-5 py-3">
-                            <span
-                              className={`inline-flex items-center rounded border px-2 py-0.5 font-mono text-[10px] font-bold uppercase ${getAuditBadgeClasses(
-                                log.action,
-                              )}`}
-                            >
-                              {log.action}
-                            </span>
-                          </td>
-                          <td className="px-5 py-3 text-[#525b75] dark:text-[#9fa6bc]">
-                            <div className="line-clamp-2 leading-relaxed">
-                              {log.targetUser ? (
-                                <span className="font-semibold text-[#141824] dark:text-[#eff2f6]">
-                                  {log.targetUser}
-                                  {log.detail || log.actorName ? " · " : ""}
-                                </span>
-                              ) : null}
-                              <span>{log.detail || log.actorName || "—"}</span>
-                            </div>
-                          </td>
-                          <td
-                            className="whitespace-nowrap px-5 py-3 text-right font-mono text-[11px] text-[#8a94ad]"
+                <>
+                  {/* Mobile Audit Event Cards */}
+                  <div className="divide-y divide-[#e3e6ed] dark:divide-[#2b3245] sm:hidden">
+                    {d.recentLogs.map((log) => (
+                      <div key={log.id} className="min-w-0 space-y-1.5 px-4 py-3.5 text-xs">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <span
+                            className={`inline-flex max-w-full items-center break-all rounded border px-2 py-0.5 font-mono text-[10px] font-bold uppercase ${getAuditBadgeClasses(
+                              log.action,
+                            )}`}
+                          >
+                            {log.action}
+                          </span>
+                          <span
+                            className="font-mono text-[11px] text-[#8a94ad]"
                             title={log.createdAt || undefined}
                           >
                             {formatAccountTimestamp(log.createdAt)}
-                          </td>
+                          </span>
+                        </div>
+                        <p className="[overflow-wrap:anywhere] leading-relaxed text-[#525b75] dark:text-[#9fa6bc]">
+                          {log.targetUser ? (
+                            <span className="font-semibold text-[#141824] dark:text-[#eff2f6]">
+                              {log.targetUser}
+                              {log.detail || log.actorName ? " · " : ""}
+                            </span>
+                          ) : null}
+                          <span>{log.detail || log.actorName || "—"}</span>
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Desktop Audit Event Table */}
+                  <div className="hidden overflow-x-auto sm:block">
+                    <table className="w-full text-left text-xs">
+                      <thead className="border-b border-[#e3e6ed] bg-[#f5f7fa] text-[10.5px] font-bold uppercase tracking-[0.06em] text-[#6e7891] dark:border-[#2b3245] dark:bg-[#0f111a] dark:text-[#8a94ad]">
+                        <tr>
+                          <th className="px-5 py-3">{table.action || "Action"}</th>
+                          <th className="px-5 py-3">{table.detail || "Detail"}</th>
+                          <th className="px-5 py-3 text-right">{table.time || "Time"}</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody className="divide-y divide-[#e3e6ed] dark:divide-[#2b3245]">
+                        {d.recentLogs.map((log) => (
+                          <tr key={log.id} className="ai-table-row">
+                            <td className="whitespace-nowrap px-5 py-3">
+                              <span
+                                className={`inline-flex items-center rounded border px-2 py-0.5 font-mono text-[10px] font-bold uppercase ${getAuditBadgeClasses(
+                                  log.action,
+                                )}`}
+                              >
+                                {log.action}
+                              </span>
+                            </td>
+                            <td className="px-5 py-3 text-[#525b75] dark:text-[#9fa6bc]">
+                              <div className="line-clamp-2 leading-relaxed">
+                                {log.targetUser ? (
+                                  <span className="font-semibold text-[#141824] dark:text-[#eff2f6]">
+                                    {log.targetUser}
+                                    {log.detail || log.actorName ? " · " : ""}
+                                  </span>
+                                ) : null}
+                                <span>{log.detail || log.actorName || "—"}</span>
+                              </div>
+                            </td>
+                            <td
+                              className="whitespace-nowrap px-5 py-3 text-right font-mono text-[11px] text-[#8a94ad]"
+                              title={log.createdAt || undefined}
+                            >
+                              {formatAccountTimestamp(log.createdAt)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
               )}
             </AdminSectionCard>
 

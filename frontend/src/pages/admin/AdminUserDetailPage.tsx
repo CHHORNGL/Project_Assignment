@@ -149,14 +149,14 @@ export default function AdminUserDetailPage({
                   <Mail className="h-3.5 w-3.5 text-[#3874ff]" />
                   <span>{isKhmer ? "អាសយដ្ឋានអ៊ីមែល" : "Email Address"}</span>
                 </label>
-                <div className="flex gap-2">
+                <div className="flex flex-col gap-2 sm:flex-row">
                   <input
                     type="email"
                     name="email"
                     defaultValue={user.email}
-                    className="ai-input flex-1 text-xs"
+                    className="ai-input min-w-0 flex-1 text-xs"
                   />
-                  <button type="submit" className="ai-btn-secondary h-9 px-4 text-xs">
+                  <button type="submit" className="ai-btn-secondary h-9 shrink-0 px-4 text-xs">
                     {isKhmer ? "រក្សាទុក" : "Save"}
                   </button>
                 </div>
@@ -168,11 +168,11 @@ export default function AdminUserDetailPage({
                   <UserCheck className="h-3.5 w-3.5 text-[#3874ff]" />
                   <span>{isKhmer ? "ការកំណត់តួនាទី" : "Role Assignment"}</span>
                 </label>
-                <div className="flex gap-2">
+                <div className="flex flex-col gap-2 sm:flex-row">
                   <select
                     name="role"
                     defaultValue={user.primaryRole}
-                    className="ai-input flex-1 text-xs capitalize"
+                    className="ai-input min-w-0 flex-1 text-xs capitalize"
                   >
                     {roles.map((r) => (
                       <option key={r.id} value={r.name}>
@@ -180,7 +180,7 @@ export default function AdminUserDetailPage({
                       </option>
                     ))}
                   </select>
-                  <button type="submit" className="ai-btn-secondary h-9 px-4 text-xs">
+                  <button type="submit" className="ai-btn-secondary h-9 shrink-0 px-4 text-xs">
                     {isKhmer ? "កែប្រែ" : "Update"}
                   </button>
                 </div>
@@ -245,15 +245,15 @@ export default function AdminUserDetailPage({
                   <Coins className="h-3.5 w-3.5 text-[#3874ff]" />
                   <span>{isKhmer ? "សមតុល្យក្រេឌីត AI" : "AI Credits Balance"}</span>
                 </label>
-                <div className="flex gap-2">
+                <div className="flex flex-col gap-2 sm:flex-row">
                   <input
                     type="number"
                     name="ai_credits"
                     min="0"
                     defaultValue={String(user.aiCredits)}
-                    className="ai-input flex-1 font-mono text-xs"
+                    className="ai-input min-w-0 flex-1 font-mono text-xs"
                   />
-                  <button type="submit" className="ai-btn-primary h-9 px-4 text-xs">
+                  <button type="submit" className="ai-btn-primary h-9 shrink-0 px-4 text-xs">
                     {isKhmer ? "រក្សាទុកក្រេឌីត" : "Update Credits"}
                   </button>
                 </div>
@@ -265,20 +265,20 @@ export default function AdminUserDetailPage({
                   <Crown className="h-3.5 w-3.5 text-[#e5780b]" />
                   <span>{isKhmer ? "បន្ថែមរយៈពេល Pro" : "Extend Pro Membership"}</span>
                 </label>
-                <div className="flex gap-2">
+                <div className="grid grid-cols-2 gap-2 sm:flex">
                   <input
                     type="number"
                     name="amount"
                     min="1"
                     defaultValue="30"
-                    className="ai-input w-24 font-mono text-xs"
+                    className="ai-input min-w-0 font-mono text-xs sm:w-24"
                   />
-                  <select name="unit" defaultValue="days" className="ai-input flex-1 text-xs">
+                  <select name="unit" defaultValue="days" className="ai-input min-w-0 flex-1 text-xs">
                     <option value="days">{isKhmer ? "ថ្ងៃ" : "Days"}</option>
                     <option value="months">{isKhmer ? "ខែ" : "Months"}</option>
                     <option value="years">{isKhmer ? "ឆ្នាំ" : "Years"}</option>
                   </select>
-                  <button type="submit" className="ai-btn-primary h-9 px-4 text-xs">
+                  <button type="submit" className="ai-btn-primary col-span-2 h-9 shrink-0 px-4 text-xs sm:col-span-1">
                     {isKhmer ? "បន្ថែម" : "Add Time"}
                   </button>
                 </div>

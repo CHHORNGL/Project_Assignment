@@ -1,0 +1,37 @@
+/* Shared mobile ergonomics across AppShell & Diagnosis Wizard bundles */
+
+html,
+body {
+  overflow-x: clip;
+  overscroll-behavior-y: contain;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+html {
+  min-height: 100%;
+  min-height: 100dvh;
+}
+
+a,
+button,
+[role="button"] {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+input,
+select,
+textarea,
+label {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Prevent iOS Safari automatic page zoom when focusing form controls (< 16px) */
+@media (max-width: 639px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="hidden"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}

@@ -184,7 +184,7 @@ export function PaginationBar({
 }) {
   if (!pagination || pagination.pages <= 1) {
     return showingRange ? (
-      <div className="flex items-center justify-between pt-3 text-xs text-[#6e7891] dark:text-[#8a94ad]">
+      <div className="flex flex-wrap items-center justify-between gap-2 pt-3 text-xs text-[#6e7891] dark:text-[#8a94ad]">
         <span>{showingRange}</span>
         {pageOf && <span>{pageOf}</span>}
       </div>
@@ -356,8 +356,8 @@ export function ExpertFormFooter({
   hint?: string;
 }) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#e3e6ed] bg-white px-5 py-3.5 shadow-xs dark:border-[#2b3245] dark:bg-[#141824]">
-      <div className="flex items-center gap-3">
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#e3e6ed] bg-white px-4 py-3 shadow-xs dark:border-[#2b3245] dark:bg-[#141824] sm:px-5 sm:py-3.5">
+      <div className="flex flex-wrap items-center gap-3">
         <a href={backUrl} className="ai-btn-secondary h-9 gap-1.5 px-3.5 text-xs">
           <ArrowLeft className="h-3.5 w-3.5" />
           <span>{cancelLabel || "Cancel"}</span>
@@ -368,7 +368,7 @@ export function ExpertFormFooter({
           </span>
         )}
       </div>
-      <button type="submit" className="ai-btn-primary h-9 gap-1.5 px-5 text-xs">
+      <button type="submit" className="ai-btn-primary h-9 w-full justify-center gap-1.5 px-5 text-xs sm:w-auto">
         <Save className="h-3.5 w-3.5" />
         <span>{submitLabel}</span>
       </button>
@@ -417,7 +417,7 @@ export function ExpertBulkToolbar({
         value={bulkAction}
         onChange={(e) => onBulkActionChange(e.target.value)}
         aria-label={actionPlaceholder || "Bulk action"}
-        className="ai-input h-8 w-44 py-1 text-xs"
+        className="ai-input h-8 w-full min-w-0 py-1 text-xs sm:w-44"
       >
         <option value="">{actionPlaceholder || "Bulk action..."}</option>
         {options.map((opt) => (
@@ -498,8 +498,8 @@ export function ExpertConfirmModal({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="ai-surface animate-fade-in-up w-full max-w-md overflow-hidden rounded-2xl border border-[#cbd0dd] bg-white shadow-2xl dark:border-[#373e53] dark:bg-[#141824]">
-        <div className="flex items-start gap-3.5 p-5">
+      <div className="ai-surface animate-fade-in-up max-h-[90dvh] w-full max-w-md overflow-y-auto rounded-2xl border border-[#cbd0dd] bg-white shadow-2xl dark:border-[#373e53] dark:bg-[#141824]">
+        <div className="flex items-start gap-3.5 p-4 sm:p-5">
           <div
             className={cn(
               "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
@@ -534,7 +534,7 @@ export function ExpertConfirmModal({
         <form
           method="POST"
           action={config.formAction}
-          className="flex items-center justify-end gap-2.5 border-t border-[#e3e6ed] bg-[#f5f7fa] px-5 py-3.5 dark:border-[#2b3245] dark:bg-[#0f111a]"
+          className="flex flex-wrap items-center justify-end gap-2.5 border-t border-[#e3e6ed] bg-[#f5f7fa] px-4 py-3 dark:border-[#2b3245] dark:bg-[#0f111a] sm:px-5 sm:py-3.5"
         >
           <input type="hidden" name="csrf_token" value={config.csrfToken} />
           {(config.hiddenFields || []).map((f, idx) => (

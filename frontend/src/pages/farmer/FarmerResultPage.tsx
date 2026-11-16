@@ -92,7 +92,7 @@ export default function FarmerResultPage({ bootstrap }: { bootstrap: AppBootstra
       pageTitle={bootstrap.ui.pageTitle}
       pageSubtitle={bootstrap.ui.pageSubtitle}
       headerActions={
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <a href={d.actions.chatUrl} className="ai-btn-secondary h-9 px-3 text-xs">
             <MessageSquare className="h-3.5 w-3.5" /> Ask Expert
           </a>
@@ -104,7 +104,7 @@ export default function FarmerResultPage({ bootstrap }: { bootstrap: AppBootstra
     >
       <div className="space-y-6">
         {/* Result Summary Banner */}
-        <div className="ai-surface grid gap-6 p-6 lg:grid-cols-12">
+        <div className="ai-surface grid gap-5 p-4 sm:gap-6 sm:p-6 lg:grid-cols-12">
           <div className="space-y-3 lg:col-span-8">
             <div className="flex flex-wrap items-center gap-2">
               <span className="rounded-full bg-indigo-500/10 px-3 py-1 text-xs font-bold text-indigo-600 dark:text-indigo-300">
@@ -223,9 +223,15 @@ export default function FarmerResultPage({ bootstrap }: { bootstrap: AppBootstra
               <h3 className="mb-3 font-display text-sm font-bold">{bootstrap.ui.sections?.references || "References"}</h3>
               <ul className="space-y-1.5 text-xs">
                 {diag.references.map((ref, i) => (
-                  <li key={i}>
-                    <a href={ref} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-indigo-600 hover:underline dark:text-indigo-400">
-                      {ref} <ExternalLink className="h-3 w-3" />
+                  <li key={i} className="min-w-0">
+                    <a
+                      href={ref}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex max-w-full items-start gap-1 break-all text-indigo-600 hover:underline dark:text-indigo-400"
+                    >
+                      <span>{ref}</span>
+                      <ExternalLink className="mt-0.5 h-3 w-3 shrink-0" />
                     </a>
                   </li>
                 ))}
@@ -233,22 +239,22 @@ export default function FarmerResultPage({ bootstrap }: { bootstrap: AppBootstra
             </div>
           )}
 
-          <form onSubmit={handleFeedback} className="ai-surface space-y-3 p-6">
+          <form onSubmit={handleFeedback} className="ai-surface space-y-3 p-4 sm:p-6">
             <h3 className="font-display text-sm font-bold">
               {bootstrap.ui.labels?.feedbackQuestion || "Was this diagnosis helpful?"}
             </h3>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <button
                 type="button"
                 onClick={() => setRating("helpful")}
-                className={rating === "helpful" ? "ai-btn-primary h-9 px-4 text-xs" : "ai-btn-secondary h-9 px-4 text-xs"}
+                className={`${rating === "helpful" ? "ai-btn-primary" : "ai-btn-secondary"} h-9 flex-1 justify-center px-4 text-xs sm:flex-initial`}
               >
                 <ThumbsUp className="h-3.5 w-3.5" /> Helpful
               </button>
               <button
                 type="button"
                 onClick={() => setRating("not_helpful")}
-                className={rating === "not_helpful" ? "ai-btn-primary h-9 px-4 text-xs" : "ai-btn-secondary h-9 px-4 text-xs"}
+                className={`${rating === "not_helpful" ? "ai-btn-primary" : "ai-btn-secondary"} h-9 flex-1 justify-center px-4 text-xs sm:flex-initial`}
               >
                 <ThumbsDown className="h-3.5 w-3.5" /> Needs Review
               </button>

@@ -123,7 +123,12 @@ function PhoenixBrandLockup({
       </div>
       <div className="flex flex-col leading-none">
         <div className="flex items-center gap-1.5">
-          <span className="font-display text-[13.5px] font-extrabold tracking-[0.04em] text-[#141824] dark:text-[#eff2f6]">
+          <span
+            className={cn(
+              "font-display text-[13.5px] font-extrabold tracking-[0.04em] text-[#141824] dark:text-[#eff2f6]",
+              !compact && "hidden min-[400px]:inline",
+            )}
+          >
             AGRI SYSTEM
           </span>
           <span
@@ -244,6 +249,7 @@ export function PhoenixWorkspaceShell({
         setMobileSearchOpen(false);
         setNotifOpen(false);
         setProfileOpen(false);
+        setSidebarOpen(false);
         searchInputRef.current?.blur();
       }
     };
@@ -312,10 +318,10 @@ export function PhoenixWorkspaceShell({
   };
 
   return (
-    <div className="phoenix-panel min-h-screen text-[#31374a] dark:text-[#eff2f6]">
+    <div className="phoenix-panel min-h-dvh text-[#31374a] dark:text-[#eff2f6]">
       {/* Fixed Full-Width Top Navigation Bar */}
       <header className="sticky top-0 z-40 border-b border-[#e3e6ed] bg-white/95 backdrop-blur-md transition-colors dark:border-[#2b3245] dark:bg-[#141824]/95">
-        <div className="flex h-16 w-full items-center justify-between gap-3 px-4 sm:px-6">
+        <div className="flex h-16 w-full items-center justify-between gap-2 px-3 sm:gap-3 sm:px-6">
           {/* Left: Sidebar Controls + Brand + Contextual Breadcrumb */}
           <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
             <button
@@ -515,7 +521,7 @@ export function PhoenixWorkspaceShell({
               </button>
 
               {notifOpen && (
-                <div className="animate-slide-down origin-top-right absolute right-0 z-50 mt-2 w-80 overflow-hidden rounded-xl border border-[#cbd0dd] bg-white p-3 shadow-lg dark:border-[#373e53] dark:bg-[#141824]">
+                <div className="animate-slide-down origin-top-right absolute right-0 z-50 mt-2 w-[min(calc(100vw-1.5rem),20rem)] overflow-hidden rounded-xl border border-[#cbd0dd] bg-white p-3 shadow-lg dark:border-[#373e53] dark:bg-[#141824]">
                   <div className="mb-2 flex items-center justify-between border-b border-[#e3e6ed] px-1 pb-2 dark:border-[#2b3245]">
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-bold uppercase tracking-wider text-[#525b75] dark:text-[#9fa6bc]">
@@ -620,7 +626,7 @@ export function PhoenixWorkspaceShell({
               </button>
 
               {profileOpen && (
-                <div className="animate-slide-down origin-top-right absolute right-0 z-50 mt-2 w-64 overflow-hidden rounded-xl border border-[#cbd0dd] bg-white shadow-lg dark:border-[#373e53] dark:bg-[#141824]">
+                <div className="animate-slide-down origin-top-right absolute right-0 z-50 mt-2 w-[min(calc(100vw-1.5rem),16rem)] overflow-hidden rounded-xl border border-[#cbd0dd] bg-white shadow-lg dark:border-[#373e53] dark:bg-[#141824]">
                   <div className="border-b border-[#e3e6ed] px-4 py-3 dark:border-[#2b3245]">
                     <div className="flex items-center justify-between gap-2">
                       <p className="truncate text-sm font-bold text-[#141824] dark:text-[#eff2f6]">
@@ -659,6 +665,7 @@ export function PhoenixWorkspaceShell({
                     <div className="my-1 px-2.5 pt-1 sm:hidden">
                       <LanguageSwitcher
                         variant="phoenix"
+                        alwaysFull
                         lang={bootstrap.lang}
                         enUrl={bootstrap.urls.updateLanguageEn}
                         kmUrl={bootstrap.urls.updateLanguageKm}
@@ -742,7 +749,7 @@ export function PhoenixWorkspaceShell({
       {/* Vertical Left Sidebar */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex flex-col border-r border-[#e3e6ed] bg-white transition-[width,transform] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] dark:border-[#2b3245] dark:bg-[#141824] lg:top-16 lg:z-30 lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 flex flex-col border-r border-[#e3e6ed] bg-white pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] transition-[width,transform] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] dark:border-[#2b3245] dark:bg-[#141824] lg:top-16 lg:z-30 lg:translate-x-0 lg:pt-0 lg:pb-0",
           sidebarOpen ? "translate-x-0 w-sidebar shadow-2xl lg:shadow-none" : "-translate-x-full",
           collapsed ? "lg:w-[4.5rem]" : "lg:w-sidebar",
         )}
@@ -911,14 +918,14 @@ export function PhoenixWorkspaceShell({
       {/* Main Content Area */}
       <div
         className={cn(
-          "flex min-h-[calc(100vh-4rem)] flex-col transition-[padding] duration-200 ease-out",
+          "flex min-h-[calc(100dvh-4rem)] flex-col transition-[padding] duration-200 ease-out",
           collapsed ? "lg:pl-[4.5rem]" : "lg:pl-sidebar",
         )}
       >
-        <main className="ai-enter mx-auto w-full max-w-[1440px] flex-1 px-4 py-6 sm:px-7">
+        <main className="ai-enter mx-auto w-full max-w-[1440px] flex-1 px-3.5 py-5 sm:px-7 sm:py-6">
           {(pageTitle || headerActions) && (
             <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-              <div>
+              <div className="min-w-0">
                 {pageTitle && (
                   <h1 className="font-display text-2xl font-extrabold tracking-tight text-[#141824] dark:text-[#eff2f6] sm:text-[1.7rem]">
                     {pageTitle}

@@ -373,6 +373,14 @@ def create_app():
         resp.mimetype = "application/javascript"
         return resp
 
+    @app.get("/manifest.webmanifest")
+    def webmanifest():
+        # Serve PWA manifest at the origin root for mobile installability.
+        resp = send_from_directory(app.static_folder, "manifest.webmanifest")
+        resp.headers["Cache-Control"] = "public, max-age=3600"
+        resp.mimetype = "application/manifest+json"
+        return resp
+
     @app.post("/client-logs")
     def client_logs():
         # Accept client-side error reports (best effort).
@@ -422,6 +430,8 @@ def create_app():
                 os.path.join(static_root, "img", "logo.svg"),
                 os.path.join(static_root, "img", "logo-dark.svg"),
                 os.path.join(static_root, "img", "logo_icon.svg"),
+                os.path.join(static_root, "img", "pwa", "icon-192.png"),
+                os.path.join(static_root, "manifest.webmanifest"),
                 os.path.join(static_root, "sw.js"),
                 os.path.join(static_root, "js", "support_chat_render.js"),
                 os.path.join(static_root, "js", "support_chat_attachments.js"),

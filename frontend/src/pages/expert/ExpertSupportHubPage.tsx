@@ -200,6 +200,7 @@ export default function ExpertSupportHubPage({
 
         <div className="grid gap-6 xl:grid-cols-2">
           <AdminSectionCard
+            className="min-w-0"
             delayIndex={1}
             title={sections.ruleCases || "Rule Cases"}
             subtitle={sections.ruleCasesSubtitle}
@@ -305,9 +306,9 @@ export default function ExpertSupportHubPage({
                   {d.autoCases.map((c) => (
                     <div
                       key={c.id}
-                      className="ai-table-row flex items-center justify-between gap-3 rounded-lg px-2.5 py-3 text-xs"
+                      className="ai-table-row flex flex-col gap-2.5 rounded-lg px-2.5 py-3 text-xs sm:flex-row sm:items-center sm:justify-between sm:gap-3"
                     >
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
                           <span className="font-mono text-[11px] font-semibold text-[#6e7891] dark:text-[#8a94ad]">
                             #{c.id}
@@ -329,11 +330,11 @@ export default function ExpertSupportHubPage({
                             </span>
                           )}
                         </div>
-                        <p className="mt-1 truncate text-[#6e7891] dark:text-[#8a94ad]">
+                        <p className="mt-1 line-clamp-2 [overflow-wrap:anywhere] text-[#6e7891] dark:text-[#8a94ad] sm:truncate">
                           {c.symptomsText || "-"}
                         </p>
                       </div>
-                      <a href={c.reviewUrl} className="ai-btn-secondary h-8 shrink-0 gap-1 px-2.5 text-xs">
+                      <a href={c.reviewUrl} className="ai-btn-secondary h-8 shrink-0 justify-center gap-1 px-2.5 text-xs sm:w-auto">
                         <span>{labels.review || "Review"}</span>
                         <ArrowRight className="h-3 w-3" />
                       </a>
@@ -345,6 +346,7 @@ export default function ExpertSupportHubPage({
           </AdminSectionCard>
 
           <AdminSectionCard
+            className="min-w-0"
             delayIndex={2}
             title={sections.ruleChatMessages || "Rule Chat Messages"}
             subtitle={sections.ruleChatMessagesSubtitle}
@@ -476,7 +478,7 @@ export default function ExpertSupportHubPage({
                             {formatShortDateTime(msg.createdAt)}
                           </span>
                         </div>
-                        <p className="mt-2 whitespace-pre-wrap leading-relaxed text-[#31374a] dark:text-[#eff2f6]">
+                        <p className="mt-2 whitespace-pre-wrap [overflow-wrap:anywhere] leading-relaxed text-[#31374a] dark:text-[#eff2f6]">
                           {msg.message}
                         </p>
                       </div>

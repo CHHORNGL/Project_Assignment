@@ -148,6 +148,7 @@ export default function ExpertKnowledgeDashboardPage({
 
         <div className="grid gap-4 md:grid-cols-2">
           <AdminSectionCard
+            className="min-w-0"
             delayIndex={1}
             title={sections.workspace || "Knowledge Tools"}
             subtitle={sections.workspaceSubtitle}
@@ -175,6 +176,7 @@ export default function ExpertKnowledgeDashboardPage({
           </AdminSectionCard>
 
           <AdminSectionCard
+            className="min-w-0"
             delayIndex={2}
             title={sections.mixedAgri || "Mixed Agriculture"}
             subtitle={sections.mixedAgriSubtitle}
@@ -214,14 +216,15 @@ export default function ExpertKnowledgeDashboardPage({
             </AdminStatusBadge>
           }
         >
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#e3e6ed] px-5 py-3.5 dark:border-[#2b3245]">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#e3e6ed] px-4 py-3 dark:border-[#2b3245] sm:px-5 sm:py-3.5">
             <ExpertSearchField
               value={query}
               onChange={setQuery}
               placeholder={isKhmer ? "ស្វែងរកច្បាប់ ជំងឺ ឬរោគសញ្ញា..." : "Filter rules, disease, or symptom..."}
+              className="min-w-0"
             />
 
-            <div className="flex flex-wrap items-center gap-1 rounded-xl border border-[#cbd0dd] bg-[#eff2f6] p-1 dark:border-[#373e53] dark:bg-[#0f111a]">
+            <div className="flex max-w-full flex-wrap items-center gap-1 rounded-xl border border-[#cbd0dd] bg-[#eff2f6] p-1 dark:border-[#373e53] dark:bg-[#0f111a]">
               {bandTabs.map((tab) => {
                 const active = band === tab.id;
                 return (
@@ -270,8 +273,61 @@ export default function ExpertKnowledgeDashboardPage({
               />
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
+            <>
+              {/* Mobile Rules Cards */}
+              <div className="divide-y divide-[#e3e6ed] dark:divide-[#2b3245] sm:hidden">
+                {filteredRules.map((rule) => {
+                  const visibleSymptoms = rule.symptomNames.slice(0, 4);
+                  const overflowCount = Math.max(0, rule.symptomNames.length - 4);
+                  return (
+                    <div key={rule.id} className="space-y-2.5 p-4 text-xs">
+                      <div className="flex flex-wrap items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-mono text-[#6e7891] dark:text-[#8a94ad]">
+                              #{rule.id}
+                            </span>
+                            <span className="truncate font-bold text-[#141824] dark:text-[#eff2f6]">
+                              {rule.name}
+                            </span>
+                          </div>
+                          <span className="mt-1 inline-flex rounded-md border border-[#cbd0dd] bg-[#f5f7fa] px-2 py-0.5 text-[11px] font-semibold text-[#31374a] dark:border-[#373e53] dark:bg-[#0f111a] dark:text-[#eff2f6]">
+                            {rule.diseaseName}
+                          </span>
+                        </div>
+                        {rule.confidencePercent !== null && (
+                          <AdminStatusBadge tone={confidenceTone(rule.confidencePercent)}>
+                            {rule.confidencePercent}%
+                          </AdminStatusBadge>
+                        )}
+                      </div>
+
+                      {rule.confidencePercent !== null && (
+                        <AdminProgressBar
+                          value={rule.confidencePercent}
+                          tone={confidenceTone(rule.confidencePercent)}
+                          height="sm"
+                        />
+                      )}
+
+                      <div className="flex flex-wrap gap-1.5">
+                        {visibleSymptoms.map((sym, idx) => (
+                          <AdminStatusBadge key={`${sym}-${idx}`} tone="indigo">
+                            {sym}
+                          </AdminStatusBadge>
+                        ))}
+                        {overflowCount > 0 && (
+                          <AdminStatusBadge tone="slate">+{overflowCount}</AdminStatusBadge>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Desktop Rules Table */}
+              <div className="hidden overflow-x-auto sm:block">
+                <table className="w-full text-left text-xs">
                 <thead className="border-b border-[#e3e6ed] bg-[#f5f7fa] text-[11px] uppercase tracking-wider text-[#6e7891] dark:border-[#2b3245] dark:bg-[#0f111a] dark:text-[#8a94ad]">
                   <tr>
                     <th className="px-4 py-3 font-bold">{labels.id || "ID"}</th>
@@ -333,7 +389,8 @@ export default function ExpertKnowledgeDashboardPage({
                   })}
                 </tbody>
               </table>
-            </div>
+              </div>
+            </>
           )}
         </AdminSectionCard>
       </div>

@@ -333,7 +333,7 @@ export default function AdminPremiumSettingsPage({
         {/* Row 1: Pricing/Quotas + Bakong NBC KHQR Config */}
         <div className="grid gap-6 lg:grid-cols-12">
           {/* Pricing & AI Quotas Card */}
-          <div className="lg:col-span-6">
+          <div className="min-w-0 lg:col-span-6">
             <AdminSectionCard
               delayIndex={1}
               title={isKhmer ? "តម្លៃគម្រោង និងកូតា AI" : "Subscription Pricing & AI Quotas"}
@@ -492,7 +492,7 @@ export default function AdminPremiumSettingsPage({
           </div>
 
           {/* Bakong NBC KHQR Config Card */}
-          <div className="lg:col-span-6">
+          <div className="min-w-0 lg:col-span-6">
             <AdminSectionCard
               delayIndex={2}
               title={isKhmer ? "ការកំណត់ Bakong NBC KHQR" : "Bakong NBC KHQR Gateway"}
@@ -961,7 +961,7 @@ export default function AdminPremiumSettingsPage({
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md rounded-2xl border border-[#e3e6ed] bg-white p-6 shadow-xl dark:border-[#2b3245] dark:bg-[#141824]"
+            className="max-h-[90dvh] w-full max-w-md overflow-y-auto rounded-2xl border border-[#e3e6ed] bg-white p-5 shadow-xl dark:border-[#2b3245] dark:bg-[#141824] sm:p-6"
           >
             <div className="flex items-start gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#ffe0db] text-[#b81800] ring-1 ring-[#fa3b1d]/25 dark:bg-[#fa3b1d]/15 dark:text-[#ff9c8c]">
@@ -1031,7 +1031,7 @@ export default function AdminPremiumSettingsPage({
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md rounded-2xl border border-[#e3e6ed] bg-white p-6 shadow-xl dark:border-[#2b3245] dark:bg-[#141824]"
+            className="max-h-[90dvh] w-full max-w-md overflow-y-auto rounded-2xl border border-[#e3e6ed] bg-white p-5 shadow-xl dark:border-[#2b3245] dark:bg-[#141824] sm:p-6"
           >
             <div className="flex items-start gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#d9fbd0] text-[#1c6c09] ring-1 ring-[#25b003]/25 dark:bg-[#25b003]/15 dark:text-[#90ee7a]">

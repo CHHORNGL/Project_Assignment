@@ -88,7 +88,7 @@ export default function ExpertCreateRulePage({
       headerActions={<ExpertHeaderActions bootstrap={bootstrap} />}
     >
       <div className="grid items-start gap-6 lg:grid-cols-3">
-        <form method="POST" action={d.formAction} className="space-y-5 lg:col-span-2">
+        <form method="POST" action={d.formAction} className="min-w-0 space-y-5 lg:col-span-2">
           <input type="hidden" name="csrf_token" value={bootstrap.csrfToken} />
 
           <AdminSectionCard
@@ -131,12 +131,12 @@ export default function ExpertCreateRulePage({
                     </span>
                     <AdminStatusBadge tone="indigo">{selectedSymptoms.length}</AdminStatusBadge>
                   </div>
-                  <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex w-full min-w-0 flex-wrap items-center gap-2 sm:w-auto">
                     <ExpertSearchField
                       value={symptomQuery}
                       onChange={setSymptomQuery}
                       placeholder={isKhmer ? "ស្វែងរករោគសញ្ញា..." : "Search symptoms..."}
-                      className="sm:w-52"
+                      className="min-w-0 sm:w-52"
                     />
                     {filteredSymptoms.length > 0 && (
                       <button
@@ -219,7 +219,7 @@ export default function ExpertCreateRulePage({
                   </span>
                   <AdminStatusBadge tone={tierTone}>{tierLabel}</AdminStatusBadge>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                   <input
                     type="range"
                     min="0"
@@ -227,7 +227,7 @@ export default function ExpertCreateRulePage({
                     step="0.05"
                     value={confidence}
                     onChange={(e) => setConfidence(e.target.value)}
-                    className="flex-1 accent-[#3874ff]"
+                    className="min-w-[140px] flex-1 accent-[#3874ff]"
                   />
                   <input
                     type="number"
@@ -237,7 +237,7 @@ export default function ExpertCreateRulePage({
                     step="0.01"
                     value={confidence}
                     onChange={(e) => setConfidence(e.target.value)}
-                    className="ai-input h-9 w-24 text-center font-mono text-xs"
+                    className="ai-input h-9 w-20 text-center font-mono text-xs sm:w-24"
                   />
                 </div>
                 {labels.ruleHelp && (
@@ -257,6 +257,7 @@ export default function ExpertCreateRulePage({
         </form>
 
         <AdminSectionCard
+          className="min-w-0"
           delayIndex={1}
           title={sections.summary || "Knowledge Summary"}
           subtitle={sections.summarySubtitle}

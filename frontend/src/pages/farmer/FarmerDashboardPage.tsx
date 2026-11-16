@@ -163,11 +163,13 @@ export default function FarmerDashboardPage({
         !d.isPremium ? (
           <a
             href={d.upgradeUrl}
-            className="inline-flex h-9 items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/12 px-3 text-xs font-bold text-amber-700 transition hover:bg-amber-500/20 dark:text-amber-300"
+            aria-label={`${d.aiCredits} ${isKhmer ? "ក្រេឌីត AI · ដំឡើង Pro" : "AI Credits · Upgrade"}`}
+            className="inline-flex h-9 items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/12 px-2.5 text-xs font-bold text-amber-700 transition hover:bg-amber-500/20 dark:text-amber-300 sm:px-3"
           >
-            <Crown className="h-3.5 w-3.5" />
-            <span>
-              {d.aiCredits} {isKhmer ? "ក្រេឌីត AI · ដំឡើង Pro" : "AI Credits · Upgrade"}
+            <Crown className="h-3.5 w-3.5 shrink-0" />
+            <span>{d.aiCredits}</span>
+            <span className="hidden sm:inline">
+              {isKhmer ? "ក្រេឌីត AI · ដំឡើង Pro" : "AI Credits · Upgrade"}
             </span>
           </a>
         ) : (
@@ -264,7 +266,7 @@ export default function FarmerDashboardPage({
         </section>
 
         {/* KPI Grid */}
-        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <section className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
           {stats.map((st) => {
             const Icon = st.icon;
             const inner = (
@@ -362,7 +364,69 @@ export default function FarmerDashboardPage({
                 </a>
               </div>
             ) : (
-              <div className="overflow-x-auto">
+              <>
+                {/* Mobile Card List */}
+                <div className="divide-y divide-slate-200/70 dark:divide-slate-800/70 sm:hidden">
+                  {d.diagnoses.map((row) => {
+                    const pct = normalizePct(row.confidence || 0);
+                    return (
+                      <div key={row.id} className="space-y-2.5 p-4 text-xs">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <span className="inline-flex items-center rounded-md bg-emerald-500/10 px-2 py-0.5 text-[10.5px] font-bold text-emerald-700 dark:text-emerald-300">
+                              {row.cropName}
+                            </span>
+                            <p className="mt-1.5 font-display text-sm font-bold text-slate-900 dark:text-slate-100">
+                              {row.diseaseName}
+                            </p>
+                            {row.createdAt && (
+                              <p className="mt-0.5 inline-flex items-center gap-1 font-mono text-[10.5px] text-slate-400">
+                                <Calendar className="h-3 w-3" />
+                                {formatDateLabel(row.createdAt)}
+                              </p>
+                            )}
+                          </div>
+                          <span
+                            className={cn(
+                              "shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide",
+                              statusPillClass(row.status),
+                            )}
+                          >
+                            {row.statusLabel}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center justify-between gap-3 pt-1">
+                          <div className="flex min-w-0 flex-1 items-center gap-2">
+                            <div className="h-1.5 max-w-[110px] flex-1 overflow-hidden rounded-full bg-slate-200 dark:bg-obsidian-800">
+                              <div
+                                className={cn(
+                                  "h-full rounded-full",
+                                  pct >= 80
+                                    ? "bg-emerald-500"
+                                    : pct >= 50
+                                      ? "bg-amber-500"
+                                      : "bg-indigo-500",
+                                )}
+                                style={{ width: `${pct}%` }}
+                              />
+                            </div>
+                            <span className="font-mono font-bold tabular-nums text-slate-700 dark:text-slate-200">
+                              {pct}%
+                            </span>
+                          </div>
+                          <a href={row.resultUrl} className="ai-btn-secondary h-8 gap-1 px-3 text-xs">
+                            <span>{table.viewResult || (isKhmer ? "បើក" : "View")}</span>
+                            <ArrowRight className="h-3 w-3" />
+                          </a>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Desktop Table */}
+                <div className="hidden overflow-x-auto sm:block">
                 <table className="w-full text-left text-xs">
                   <thead className="border-b border-slate-200/75 bg-slate-50/80 text-[11px] uppercase tracking-wider text-slate-500 dark:border-slate-800 dark:bg-obsidian-950/60 dark:text-slate-400">
                     <tr>
@@ -436,7 +500,8 @@ export default function FarmerDashboardPage({
                     })}
                   </tbody>
                 </table>
-              </div>
+                </div>
+              </>
             )}
           </div>
 

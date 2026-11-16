@@ -434,7 +434,7 @@ export default function AdminRolePermissionsPage({
         {/* Dual-Column Enterprise Policy Layout */}
         <div className="grid items-start gap-6 lg:grid-cols-12">
           {/* Left Sticky Policy Summary & Diff Inspector */}
-          <aside className="space-y-5 lg:sticky lg:top-20 lg:col-span-4">
+          <aside className="min-w-0 space-y-5 lg:sticky lg:top-20 lg:col-span-4">
             <AdminSectionCard
               delayIndex={0}
               title={formatCodeTitle(d.role.name)}
@@ -649,7 +649,7 @@ export default function AdminRolePermissionsPage({
           </aside>
 
           {/* Right Column: Unified Access Capabilities Matrix */}
-          <div className="lg:col-span-8">
+          <div className="min-w-0 lg:col-span-8">
             <AdminSectionCard
               delayIndex={1}
               noPadding
@@ -1009,7 +1009,7 @@ export default function AdminRolePermissionsPage({
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md rounded-2xl border border-[#e3e6ed] bg-white p-6 shadow-xl dark:border-[#2b3245] dark:bg-[#141824]"
+            className="max-h-[90dvh] w-full max-w-md overflow-y-auto rounded-2xl border border-[#e3e6ed] bg-white p-5 shadow-xl dark:border-[#2b3245] dark:bg-[#141824] sm:p-6"
           >
             <div className="flex items-start gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#ffefca] text-[#bc3803] ring-1 ring-[#e5780b]/25 dark:bg-[#e5780b]/15 dark:text-[#ffbd6b]">

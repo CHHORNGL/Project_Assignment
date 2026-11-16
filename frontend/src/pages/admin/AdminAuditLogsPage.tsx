@@ -390,8 +390,85 @@ export default function AdminAuditLogsPage({
               />
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
+            <>
+              {/* Mobile Audit Cards */}
+              <div className="divide-y divide-[#e3e6ed] dark:divide-[#2b3245] sm:hidden">
+                {filtered.map(({ log, meta, parsed }) => {
+                  const envLabel = [parsed.browser, parsed.os].filter(Boolean).join(" · ");
+                  return (
+                    <div
+                      key={log.id}
+                      onClick={() => setSelectedLog(log)}
+                      className="cursor-pointer space-y-2 p-4 text-xs transition-colors hover:bg-[#f5f7fa]/80 dark:hover:bg-[#1e2436]/50"
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <AdminStatusBadge tone={meta.tone}>
+                          {log.action}
+                        </AdminStatusBadge>
+                        <span
+                          className="font-mono text-[11px] text-[#6e7891] dark:text-[#8a94ad]"
+                          title={log.createdAt || undefined}
+                        >
+                          {formatAccountTimestamp(log.createdAt)}
+                        </span>
+                      </div>
+
+                      <div className="flex min-w-0 flex-wrap items-center gap-1.5 text-[11px]">
+                        <span className="[overflow-wrap:anywhere] font-semibold text-[#141824] dark:text-[#eff2f6]">
+                          {log.actorName}
+                        </span>
+                        {log.targetUser && (
+                          <>
+                            <span className="text-[#8a94ad]">→</span>
+                            <span className="[overflow-wrap:anywhere] rounded border border-[#e3e6ed] bg-[#f5f7fa] px-1.5 py-0.5 font-mono text-[10.5px] text-[#31374a] dark:border-[#2b3245] dark:bg-[#0f111a] dark:text-[#cbd0dd]">
+                              {log.targetUser}
+                            </span>
+                          </>
+                        )}
+                      </div>
+
+                      {parsed.summary && (
+                        <p className="line-clamp-2 [overflow-wrap:anywhere] text-xs text-[#31374a] dark:text-[#cbd0dd]">
+                          {parsed.summary}
+                        </p>
+                      )}
+
+                      <div className="flex flex-wrap items-center justify-between gap-2 pt-0.5">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          {parsed.ip && (
+                            <span className="inline-flex items-center gap-1 rounded border border-[#e3e6ed] bg-[#f5f7fa] px-1.5 py-0.5 font-mono text-[10px] text-[#525b75] dark:border-[#2b3245] dark:bg-[#0f111a] dark:text-[#9fa6bc]">
+                              <Globe className="h-2.5 w-2.5 text-[#3874ff]" />
+                              {parsed.ip}
+                            </span>
+                          )}
+                          {envLabel && (
+                            <span className="inline-flex items-center gap-1 rounded border border-[#e3e6ed] bg-[#f5f7fa] px-1.5 py-0.5 text-[10px] text-[#525b75] dark:border-[#2b3245] dark:bg-[#0f111a] dark:text-[#9fa6bc]">
+                              <Monitor className="h-2.5 w-2.5 text-[#0097eb]" />
+                              {envLabel}
+                            </span>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedLog(log);
+                          }}
+                          aria-label={`Inspect audit event #${log.id}`}
+                          className="ai-btn-secondary h-7 gap-1 px-2.5 text-[11px]"
+                        >
+                          <Eye className="h-3 w-3" />
+                          <span>{isKhmer ? "មើល" : "Inspect"}</span>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Desktop Audit Table */}
+              <div className="hidden overflow-x-auto sm:block">
+                <table className="w-full text-left text-xs">
                 <thead className="border-b border-[#e3e6ed] bg-[#f5f7fa] text-[10.5px] font-bold uppercase tracking-[0.06em] text-[#6e7891] dark:border-[#2b3245] dark:bg-[#0f111a] dark:text-[#8a94ad]">
                   <tr>
                     <th className="px-5 py-3">{isKhmer ? "ព្រឹត្តិការណ៍" : "Event"}</th>
@@ -526,7 +603,8 @@ export default function AdminAuditLogsPage({
                   })}
                 </tbody>
               </table>
-            </div>
+              </div>
+            </>
           )}
         </AdminSectionCard>
       </div>
@@ -545,7 +623,7 @@ export default function AdminAuditLogsPage({
           >
             <div
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-2xl overflow-hidden rounded-2xl border border-[#e3e6ed] bg-white shadow-2xl dark:border-[#2b3245] dark:bg-[#141824]"
+              className="max-h-[90dvh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-[#e3e6ed] bg-white shadow-2xl dark:border-[#2b3245] dark:bg-[#141824]"
             >
               {/* Modal Header */}
               <div className="flex items-start justify-between gap-3 border-b border-[#e3e6ed] bg-[#f5f7fa]/80 px-6 py-4 dark:border-[#2b3245] dark:bg-[#0f111a]/80">

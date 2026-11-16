@@ -115,7 +115,7 @@ export function WeatherIntelligenceCard({ endpoint, lang, fallbackLat, fallbackL
 
   return (
     <div id="weather-intelligence-card" className="ai-surface overflow-hidden">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/70 px-6 py-4 dark:border-slate-800/70">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/70 px-4 py-3.5 dark:border-slate-800/70 sm:px-6 sm:py-4">
         <div>
           <div className="flex items-center gap-2">
             <Compass className="h-4 w-4 text-indigo-500" />
@@ -132,10 +132,10 @@ export function WeatherIntelligenceCard({ endpoint, lang, fallbackLat, fallbackL
         </button>
       </div>
 
-      <div className="grid gap-6 p-6 lg:grid-cols-3">
+      <div className="grid gap-5 p-4 sm:gap-6 sm:p-6 lg:grid-cols-3">
         {/* Current Conditions + Analytics */}
         <div className="space-y-4">
-          <div className="rounded-2xl bg-gradient-to-br from-indigo-600 to-blue-600 p-5 text-white shadow-lg shadow-indigo-500/20">
+          <div className="rounded-2xl bg-gradient-to-br from-indigo-600 to-blue-600 p-4 text-white shadow-lg shadow-indigo-500/20 sm:p-5">
             <div className="flex items-start justify-between">
               <div>
                 <p className="inline-flex items-center gap-1 text-xs font-medium text-indigo-100">
@@ -150,28 +150,28 @@ export function WeatherIntelligenceCard({ endpoint, lang, fallbackLat, fallbackL
               <Thermometer className="h-8 w-8 text-white/75" />
             </div>
 
-            <div className="mt-5 grid grid-cols-3 gap-2 border-t border-white/15 pt-3 text-xs">
-              <div>
-                <span className="flex items-center gap-1 text-indigo-100">
-                  <Droplets className="h-3 w-3" /> {labels.humidity || "Humidity"}
+            <div className="mt-5 grid grid-cols-3 gap-2 border-t border-white/15 pt-3 text-[11px] sm:text-xs">
+              <div className="min-w-0">
+                <span className="flex items-center gap-1 truncate text-indigo-100">
+                  <Droplets className="h-3 w-3 shrink-0" /> {labels.humidity || "Humidity"}
                 </span>
-                <p className="mt-0.5 font-bold">
+                <p className="mt-0.5 truncate font-bold">
                   {current.humidity_pct !== undefined ? `${Number(current.humidity_pct).toFixed(0)}%` : "--"}
                 </p>
               </div>
-              <div>
-                <span className="flex items-center gap-1 text-indigo-100">
-                  <Wind className="h-3 w-3" /> {labels.wind || "Wind"}
+              <div className="min-w-0">
+                <span className="flex items-center gap-1 truncate text-indigo-100">
+                  <Wind className="h-3 w-3 shrink-0" /> {labels.wind || "Wind"}
                 </span>
-                <p className="mt-0.5 font-bold">
+                <p className="mt-0.5 truncate font-bold">
                   {current.wind_kph !== undefined ? `${Number(current.wind_kph).toFixed(1)} km/h` : "--"}
                 </p>
               </div>
-              <div>
-                <span className="flex items-center gap-1 text-indigo-100">
-                  <CloudRain className="h-3 w-3" /> {labels.rain || "Rain"}
+              <div className="min-w-0">
+                <span className="flex items-center gap-1 truncate text-indigo-100">
+                  <CloudRain className="h-3 w-3 shrink-0" /> {labels.rain || "Rain"}
                 </span>
-                <p className="mt-0.5 font-bold">
+                <p className="mt-0.5 truncate font-bold">
                   {current.rain_mm !== undefined ? `${Number(current.rain_mm).toFixed(1)} mm` : "--"}
                 </p>
               </div>

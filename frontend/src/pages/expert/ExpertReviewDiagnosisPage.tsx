@@ -112,7 +112,7 @@ export default function ExpertReviewDiagnosisPage({
       <div className="grid items-start gap-6 lg:grid-cols-5">
         {/* Left Clinical Case Summary */}
         <AdminSectionCard
-          className="lg:col-span-3"
+          className="min-w-0 lg:col-span-3"
           delayIndex={0}
           title={sections.information || "Diagnosis Information"}
           subtitle={
@@ -200,23 +200,23 @@ export default function ExpertReviewDiagnosisPage({
                   {diag.symptomList.map((sym, idx) => (
                     <span
                       key={`${sym}-${idx}`}
-                      className="rounded-lg border border-[#adc5ff] bg-[#e5edff] px-2.5 py-1 text-xs font-semibold text-[#004dff] dark:border-[#3874ff]/40 dark:bg-[#3874ff]/15 dark:text-[#85a9ff]"
+                      className="rounded-lg border border-[#adc5ff] bg-[#e5edff] px-2.5 py-1 text-xs font-semibold [overflow-wrap:anywhere] text-[#004dff] dark:border-[#3874ff]/40 dark:bg-[#3874ff]/15 dark:text-[#85a9ff]"
                     >
                       {sym}
                     </span>
                   ))}
                 </div>
               ) : (
-                <div className="mt-2 rounded-xl border border-[#e3e6ed] bg-[#f5f7fa] p-3.5 text-sm leading-relaxed text-[#31374a] dark:border-[#2b3245] dark:bg-[#0f111a] dark:text-[#eff2f6]">
+                <div className="mt-2 rounded-xl border border-[#e3e6ed] bg-[#f5f7fa] p-3.5 text-sm [overflow-wrap:anywhere] leading-relaxed text-[#31374a] dark:border-[#2b3245] dark:bg-[#0f111a] dark:text-[#eff2f6]">
                   {diag.symptomsText || "-"}
                 </div>
               )}
             </div>
 
             {diag.reasonText && (
-              <div className="rounded-xl border border-[#adc5ff]/70 bg-[#e5edff]/45 p-4 text-xs leading-relaxed text-[#31374a] dark:border-[#3874ff]/30 dark:bg-[#3874ff]/10 dark:text-[#cbd0dd]">
+              <div className="rounded-xl border border-[#adc5ff]/70 bg-[#e5edff]/45 p-4 text-xs leading-relaxed [overflow-wrap:anywhere] text-[#31374a] dark:border-[#3874ff]/30 dark:bg-[#3874ff]/10 dark:text-[#cbd0dd]">
                 <div className="mb-1.5 flex items-center gap-2 font-bold text-[#004dff] dark:text-[#85a9ff]">
-                  <Bot className="h-4 w-4" />
+                  <Bot className="h-4 w-4 shrink-0" />
                   <span>{labels.reason || "System Diagnostic Rationale"}</span>
                 </div>
                 <p>{diag.reasonText}</p>
@@ -227,7 +227,7 @@ export default function ExpertReviewDiagnosisPage({
 
         {/* Right Expert Decision Panel */}
         <AdminSectionCard
-          className="lg:col-span-2 lg:sticky lg:top-20"
+          className="min-w-0 lg:sticky lg:top-20 lg:col-span-2"
           delayIndex={1}
           title={sections.decision || "Expert Decision"}
           subtitle={

@@ -436,7 +436,7 @@ export default function AdminSettingsPage({
         {/* TAB 1: GENERAL & GEO CONFIGURATION */}
         {tab === "general" && (
           <div key="general" className="ai-tab-panel grid gap-6 lg:grid-cols-12">
-            <div className="lg:col-span-7">
+            <div className="min-w-0 lg:col-span-7">
               <AdminSectionCard
                 title={
                   isKhmer
@@ -601,7 +601,7 @@ export default function AdminSettingsPage({
               </AdminSectionCard>
             </div>
 
-            <div className="lg:col-span-5">
+            <div className="min-w-0 lg:col-span-5">
               <AdminSectionCard
                 delayIndex={1}
                 title={isKhmer ? "ទិដ្ឋភាពទីតាំង និងអាកាសធាតុ" : "Live Geo & Telemetry Preview"}
@@ -1115,7 +1115,7 @@ export default function AdminSettingsPage({
         {/* TAB 3: DEPLOYMENT GUIDE */}
         {tab === "guide" && (
           <div key="guide" className="ai-tab-panel grid gap-6 lg:grid-cols-12">
-            <div className="lg:col-span-7">
+            <div className="min-w-0 lg:col-span-7">
               <AdminSectionCard
                 title={
                   isKhmer
@@ -1201,7 +1201,7 @@ export default function AdminSettingsPage({
               </AdminSectionCard>
             </div>
 
-            <div className="lg:col-span-5">
+            <div className="min-w-0 lg:col-span-5">
               <AdminSectionCard
                 delayIndex={1}
                 title={isKhmer ? "បញ្ជីត្រួតពិនិត្យភាពរួចរាល់" : "Live Readiness Checklist"}
@@ -1255,7 +1255,7 @@ export default function AdminSettingsPage({
             }
           }}
         >
-          <div className="w-full max-w-md rounded-2xl border border-[#cbd0dd] bg-white p-6 shadow-2xl dark:border-[#373e53] dark:bg-[#141824]">
+          <div className="max-h-[90dvh] w-full max-w-md overflow-y-auto rounded-2xl border border-[#cbd0dd] bg-white p-5 shadow-2xl dark:border-[#373e53] dark:bg-[#141824] sm:p-6">
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#ffe0db] text-[#b81800] dark:bg-[#fa3b1d]/20 dark:text-[#ff8f7d]">

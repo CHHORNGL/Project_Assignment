@@ -1,6 +1,8 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
 import type { ThemeMode } from "@/types/app";
 import { applyThemeClasses, isThemeDark, readStoredTheme } from "@/lib/theme";
+import { registerServiceWorker } from "@/utils/pwa";
+import "@/styles/mobile.css";
 
 interface ThemeContextValue {
   theme: ThemeMode;
@@ -48,6 +50,10 @@ export function ThemeProvider({
   const toggleDark = useCallback(() => {
     setTheme(isDark ? "light" : "dark");
   }, [isDark, setTheme]);
+
+  useEffect(() => {
+    registerServiceWorker();
+  }, []);
 
   useEffect(() => {
     setIsDark(applyThemeClasses(theme));

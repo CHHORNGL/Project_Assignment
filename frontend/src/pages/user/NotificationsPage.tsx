@@ -398,14 +398,14 @@ export default function NotificationsPage({
     >
       <div className="mx-auto max-w-4xl space-y-5">
         {/* Compact Summary Strip */}
-        <section className="grid grid-cols-3 gap-2.5 sm:gap-3">
+        <section className="grid grid-cols-3 gap-2 sm:gap-3">
           <div
             className={cn(
-              "ai-surface p-3.5 sm:p-4",
+              "ai-surface p-3 sm:p-4",
               unreadCount > 0 && "border-indigo-500/35 bg-indigo-50/40 dark:bg-indigo-500/[0.06]",
             )}
           >
-            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            <p className="truncate text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 sm:text-[11px]">
               {isKhmer ? "មិនទាន់អាន" : "Unread"}
             </p>
             <p

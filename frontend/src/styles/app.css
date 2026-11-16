@@ -10,7 +10,7 @@
   }
 
   html {
-    font-family: "Inter", "Kantumruy Pro", "Noto Sans Khmer", system-ui, -apple-system, sans-serif;
+    font-family: "Geist", "Kantumruy Pro", "Noto Sans Khmer", system-ui, -apple-system, sans-serif;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     font-optical-sizing: auto;
     text-rendering: optimizeLegibility;
@@ -30,7 +30,7 @@
   h2,
   h3,
   .font-display {
-    font-family: "Plus Jakarta Sans", "Inter", "Kantumruy Pro", "Noto Sans Khmer", system-ui, -apple-system, sans-serif;
+    font-family: "Geist", "Kantumruy Pro", "Noto Sans Khmer", system-ui, -apple-system, sans-serif;
     letter-spacing: -0.015em;
   }
 
@@ -39,10 +39,11 @@
   kbd,
   samp,
   .font-mono {
-    font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-family: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
     font-feature-settings: "liga" 0, "calt" 1;
   }
 
+  html[lang^="km"],
   html[lang^="km"] body,
   html[lang^="km"] button,
   html[lang^="km"] input,
@@ -51,8 +52,12 @@
   html[lang^="km"] h1,
   html[lang^="km"] h2,
   html[lang^="km"] h3,
+  html[lang^="km"] h4,
+  html[lang^="km"] h5,
+  html[lang^="km"] h6,
+  html[lang^="km"] .font-sans,
   html[lang^="km"] .font-display {
-    font-family: "Kantumruy Pro", "Noto Sans Khmer", "Inter", system-ui, sans-serif;
+    font-family: "Kantumruy Pro", "Noto Sans Khmer", "Geist", system-ui, sans-serif;
     letter-spacing: 0 !important;
   }
 
@@ -119,7 +124,7 @@
 
   /* Phoenix Tailwind v1.3.0 Vertical Workspace Theme (Admin & Expert Panels) */
   .phoenix-panel {
-    font-family: "Inter", "Kantumruy Pro", "Noto Sans Khmer", system-ui, -apple-system, sans-serif;
+    font-family: "Geist", "Kantumruy Pro", "Noto Sans Khmer", system-ui, -apple-system, sans-serif;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     background-color: #f5f7fa;
     color: #31374a;
@@ -138,7 +143,7 @@
   html[lang^="km"] .phoenix-panel h1,
   html[lang^="km"] .phoenix-panel h2,
   html[lang^="km"] .phoenix-panel h3 {
-    font-family: "Kantumruy Pro", "Noto Sans Khmer", "Inter", system-ui, sans-serif;
+    font-family: "Kantumruy Pro", "Noto Sans Khmer", "Geist", system-ui, sans-serif;
     letter-spacing: 0 !important;
   }
 

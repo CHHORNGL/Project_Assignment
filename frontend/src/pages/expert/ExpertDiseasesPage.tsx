@@ -252,18 +252,19 @@ export default function ExpertDiseasesPage({ bootstrap }: { bootstrap: AppBootst
         <AdminSectionCard delayIndex={1}>
           <div className="space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="flex flex-1 flex-wrap items-center gap-2.5">
+              <div className="flex w-full min-w-0 flex-1 flex-wrap items-center gap-2.5">
                 <ExpertSearchField
                   value={query}
                   onChange={setQuery}
                   placeholder={isKhmer ? "ស្វែងរកជំងឺ ដំណាំ ឬមូលហេតុ..." : "Search diagnosis, crop, or cause..."}
+                  className="min-w-0"
                 />
                 {categories.length > 0 && (
                   <select
                     value={categoryFilter}
                     onChange={(e) => setCategoryFilter(e.target.value)}
                     aria-label={labels.category || "Category"}
-                    className="ai-input h-9 w-auto min-w-[140px] py-1 text-xs"
+                    className="ai-input h-9 w-full min-w-0 py-1 text-xs sm:w-auto sm:min-w-[140px]"
                   >
                     <option value="all">{isKhmer ? "ប្រភេទទាំងអស់" : "All categories"}</option>
                     {categories.map((cat) => (
@@ -275,7 +276,7 @@ export default function ExpertDiseasesPage({ bootstrap }: { bootstrap: AppBootst
                 )}
               </div>
 
-              <div className="flex flex-wrap items-center gap-1 rounded-xl border border-[#cbd0dd] bg-[#eff2f6] p-1 dark:border-[#373e53] dark:bg-[#0f111a]">
+              <div className="flex max-w-full flex-wrap items-center gap-1 rounded-xl border border-[#cbd0dd] bg-[#eff2f6] p-1 dark:border-[#373e53] dark:bg-[#0f111a]">
                 {readinessTabs.map((tab) => {
                   const active = readiness === tab.id;
                   return (
@@ -341,8 +342,102 @@ export default function ExpertDiseasesPage({ bootstrap }: { bootstrap: AppBootst
               />
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
+            <>
+              {/* Mobile Disease Knowledge Cards */}
+              <div className="divide-y divide-[#e3e6ed] dark:divide-[#2b3245] sm:hidden">
+                {filtered.map((item) => (
+                  <div key={item.id} className="space-y-2.5 p-4 text-xs">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex min-w-0 items-start gap-2.5">
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.includes(item.id)}
+                          onChange={() => toggleOne(item.id)}
+                          aria-label={`Select ${item.name}`}
+                          className="mt-1 h-4 w-4 shrink-0 rounded accent-[#3874ff]"
+                        />
+                        <div className="min-w-0">
+                          <div className="font-bold [overflow-wrap:anywhere] text-[#141824] dark:text-[#eff2f6]">
+                            {item.name}
+                          </div>
+                          <div className="mt-1 flex flex-wrap gap-1.5">
+                            <span className="inline-flex rounded-md border border-[#cbd0dd] bg-[#f5f7fa] px-2 py-0.5 text-[10.5px] font-semibold text-[#31374a] dark:border-[#373e53] dark:bg-[#0f111a] dark:text-[#eff2f6]">
+                              {item.cropName}
+                            </span>
+                            {item.severityLabel && (
+                              <AdminStatusBadge tone={severityTone(item.severityLabel)}>
+                                {item.severityLabel}
+                              </AdminStatusBadge>
+                            )}
+                            {item.agricultureCategory && (
+                              <AdminStatusBadge tone="indigo">
+                                {item.agricultureCategory}
+                              </AdminStatusBadge>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <p className="line-clamp-2 [overflow-wrap:anywhere] leading-relaxed text-[#525b75] dark:text-[#9fa6bc]">
+                      {item.causeExplanation || item.treatment || item.preventionTips || labels.notSet || "-"}
+                    </p>
+
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex flex-wrap gap-1.5 text-[11px]">
+                        <span
+                          className={
+                            item.hasReferences
+                              ? "inline-flex items-center gap-1 rounded border border-[#90d67f] bg-[#d9fbd0]/70 px-1.5 py-0.5 font-medium text-[#1c6c09] dark:border-[#25b003]/40 dark:bg-[#25b003]/15 dark:text-[#90ee7a]"
+                              : "inline-flex items-center gap-1 rounded border border-[#cbd0dd] bg-[#f5f7fa] px-1.5 py-0.5 text-[#6e7891] dark:border-[#373e53] dark:bg-[#0f111a] dark:text-[#8a94ad]"
+                          }
+                        >
+                          <Link2 className="h-3 w-3" />
+                          {item.hasReferences ? labels.references || "Refs" : labels.noReferences || "No refs"}
+                        </span>
+                        <span
+                          className={
+                            item.hasImage
+                              ? "inline-flex items-center gap-1 rounded border border-[#adc5ff] bg-[#e5edff]/80 px-1.5 py-0.5 font-medium text-[#004dff] dark:border-[#3874ff]/40 dark:bg-[#3874ff]/15 dark:text-[#85a9ff]"
+                              : "inline-flex items-center gap-1 rounded border border-[#cbd0dd] bg-[#f5f7fa] px-1.5 py-0.5 text-[#6e7891] dark:border-[#373e53] dark:bg-[#0f111a] dark:text-[#8a94ad]"
+                          }
+                        >
+                          <ImageIcon className="h-3 w-3" />
+                          {item.hasImage ? labels.image || "Image" : labels.noImage || "No img"}
+                        </span>
+                      </div>
+
+                      <div className="inline-flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => setInspectItem(item)}
+                          className="ai-btn-secondary h-8 px-2.5 text-xs"
+                          title={isKhmer ? "មើលលម្អិត" : "Quick inspect"}
+                          aria-label={`Inspect ${item.name}`}
+                        >
+                          <Eye className="h-3.5 w-3.5" />
+                        </button>
+                        <a href={item.editUrl} className="ai-btn-secondary h-8 gap-1 px-2.5 text-xs">
+                          <Pencil className="h-3 w-3" />
+                          <span>{labels.manage || "Edit"}</span>
+                        </a>
+                        <button
+                          type="button"
+                          onClick={() => openSingleDeleteConfirm(item)}
+                          aria-label={`Delete ${item.name}`}
+                          className="inline-flex h-8 items-center rounded-lg border border-[#f48270] bg-white px-2.5 text-xs text-[#b81800] transition-colors hover:bg-[#ffe0db]/60 dark:border-[#fa3b1d]/40 dark:bg-[#181d2b] dark:text-[#ff9c8c] dark:hover:bg-[#492226]"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop Disease Knowledge Table */}
+              <div className="hidden overflow-x-auto sm:block">
+                <table className="w-full text-left text-xs">
                 <thead className="border-b border-[#e3e6ed] bg-[#f5f7fa] text-[11px] uppercase tracking-wider text-[#6e7891] dark:border-[#2b3245] dark:bg-[#0f111a] dark:text-[#8a94ad]">
                   <tr>
                     <th className="w-10 px-4 py-3">
@@ -457,7 +552,8 @@ export default function ExpertDiseasesPage({ bootstrap }: { bootstrap: AppBootst
                   ))}
                 </tbody>
               </table>
-            </div>
+              </div>
+            </>
           )}
         </AdminSectionCard>
       </div>
@@ -472,9 +568,9 @@ export default function ExpertDiseasesPage({ bootstrap }: { bootstrap: AppBootst
             if (e.target === e.currentTarget) setInspectItem(null);
           }}
         >
-          <div className="ai-surface animate-fade-in-up flex max-h-[88vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-[#cbd0dd] bg-white shadow-2xl dark:border-[#373e53] dark:bg-[#141824]">
-            <div className="flex items-start justify-between gap-3 border-b border-[#e3e6ed] px-5 py-4 dark:border-[#2b3245]">
-              <div>
+          <div className="ai-surface animate-fade-in-up flex max-h-[90dvh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-[#cbd0dd] bg-white shadow-2xl dark:border-[#373e53] dark:bg-[#141824]">
+            <div className="flex items-start justify-between gap-3 border-b border-[#e3e6ed] px-4 py-3.5 dark:border-[#2b3245] sm:px-5 sm:py-4">
+              <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <AdminStatusBadge tone="indigo">{inspectItem.cropName}</AdminStatusBadge>
                   {inspectItem.severityLabel && (
@@ -507,7 +603,7 @@ export default function ExpertDiseasesPage({ bootstrap }: { bootstrap: AppBootst
               </button>
             </div>
 
-            <div className="phoenix-scroll flex-1 space-y-4 overflow-y-auto p-5 text-xs">
+            <div className="phoenix-scroll flex-1 space-y-4 overflow-y-auto p-4 text-xs sm:p-5">
               <div className="grid gap-3 sm:grid-cols-3">
                 <div className="rounded-xl border border-[#e3e6ed] bg-[#f5f7fa] p-3 dark:border-[#2b3245] dark:bg-[#0f111a]">
                   <div className="flex items-center gap-1.5 font-semibold text-[#6e7891] dark:text-[#8a94ad]">
@@ -585,7 +681,7 @@ export default function ExpertDiseasesPage({ bootstrap }: { bootstrap: AppBootst
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2.5 border-t border-[#e3e6ed] bg-[#f5f7fa] px-5 py-3.5 dark:border-[#2b3245] dark:bg-[#0f111a]">
+            <div className="flex flex-wrap items-center justify-end gap-2.5 border-t border-[#e3e6ed] bg-[#f5f7fa] px-4 py-3 dark:border-[#2b3245] dark:bg-[#0f111a] sm:px-5 sm:py-3.5">
               <button
                 type="button"
                 onClick={() => setInspectItem(null)}

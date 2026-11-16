@@ -120,7 +120,7 @@ export default function AdminDiseaseFormPage({
     >
       <div className="grid items-start gap-6 lg:grid-cols-12">
         {/* Main Clinical Form */}
-        <form method="POST" action={d.formAction} className="space-y-6 lg:col-span-8">
+        <form method="POST" action={d.formAction} className="min-w-0 space-y-6 lg:col-span-8">
           <input type="hidden" name="csrf_token" value={bootstrap.csrfToken} />
           <input type="hidden" name="severity_level" value={severityLevel} />
 
@@ -381,7 +381,7 @@ export default function AdminDiseaseFormPage({
         </form>
 
         {/* Right Sticky Advisory Preview & Completeness Sidebar */}
-        <aside className="space-y-5 lg:sticky lg:top-20 lg:col-span-4">
+        <aside className="min-w-0 space-y-5 lg:sticky lg:top-20 lg:col-span-4">
           <AdminSectionCard
             delayIndex={1}
             title={isKhmer ? "មើលជាមុន" : "Advisory Preview"}

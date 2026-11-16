@@ -235,7 +235,7 @@ export default function AdminWorldPage({ bootstrap }: { bootstrap: AppBootstrap<
         <div className="grid gap-6 xl:grid-cols-12">
           {/* Interactive Meteorological Map Column */}
           <AdminSectionCard
-            className="xl:col-span-8"
+            className="min-w-0 xl:col-span-8"
             delayIndex={0}
             noPadding
             title={stationLabel}
@@ -360,7 +360,7 @@ export default function AdminWorldPage({ bootstrap }: { bootstrap: AppBootstrap<
                 key={`${layer}-${model}-${zoom}-${showPressure}-${lat.toFixed(2)}-${lng.toFixed(2)}`}
                 title="Live Global Meteorological Map"
                 src={embedUrl}
-                className="h-[520px] w-full border-0 sm:h-[580px]"
+                className="h-[360px] w-full border-0 sm:h-[520px] lg:h-[580px]"
                 loading="lazy"
                 allow="geolocation"
               />
@@ -393,7 +393,7 @@ export default function AdminWorldPage({ bootstrap }: { bootstrap: AppBootstrap<
           </AdminSectionCard>
 
           {/* Right Column: Live Station Conditions & Stations Explorer */}
-          <div className="space-y-6 xl:col-span-4">
+          <div className="min-w-0 space-y-6 xl:col-span-4">
             {/* Selected Station Weather Telemetry Card */}
             <AdminSectionCard
               delayIndex={1}

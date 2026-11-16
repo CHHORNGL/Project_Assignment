@@ -749,8 +749,8 @@ export function AiCopilotDrawer({
   };
 
   const drawerWidthHeight = expanded
-    ? "h-[650px] max-h-[calc(100vh-7.5rem)] w-[calc(100vw-2rem)] sm:w-[540px]"
-    : "h-[540px] max-h-[calc(100vh-7.5rem)] w-[calc(100vw-2rem)] sm:w-[420px]";
+    ? "h-[650px] max-h-[calc(100dvh-6.75rem-env(safe-area-inset-bottom))] w-[calc(100vw-1.5rem)] sm:w-[540px]"
+    : "h-[540px] max-h-[calc(100dvh-6.75rem-env(safe-area-inset-bottom))] w-[calc(100vw-1.5rem)] sm:w-[420px]";
 
   return (
     <div

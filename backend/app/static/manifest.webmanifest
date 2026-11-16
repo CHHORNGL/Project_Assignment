@@ -1,0 +1,53 @@
+{
+  "id": "/",
+  "name": "AGRI SYSTEM — AI Crop Health & Diagnostics",
+  "short_name": "AGRI SYSTEM",
+  "description": "Precision AI agronomy workspace for bilingual Khmer & English crop diagnosis, weather tracking, and agricultural expert consultation.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#ffffff",
+  "theme_color": "#0f172a",
+  "categories": ["agriculture", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/static/img/pwa/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/img/pwa/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/img/pwa/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/static/img/logo_icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Start Diagnosis",
+      "short_name": "Diagnose",
+      "url": "/farmer/diagnose",
+      "icons": [{ "src": "/static/img/pwa/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "AI Agronomy Assistant",
+      "short_name": "AI Chat",
+      "url": "/farmer/chat",
+      "icons": [{ "src": "/static/img/pwa/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ]
+}

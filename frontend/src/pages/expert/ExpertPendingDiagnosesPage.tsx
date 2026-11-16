@@ -106,8 +106,8 @@ export default function ExpertPendingDiagnosesPage({
 
         <AdminSectionCard delayIndex={1} noPadding>
           {/* Integrated Search & Crop Filter Toolbar */}
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#e3e6ed] px-5 py-3.5 dark:border-[#2b3245]">
-            <div className="flex flex-1 flex-wrap items-center gap-2.5">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#e3e6ed] px-4 py-3 dark:border-[#2b3245] sm:px-5 sm:py-3.5">
+            <div className="flex w-full min-w-0 flex-1 flex-wrap items-center gap-2.5">
               <ExpertSearchField
                 value={query}
                 onChange={setQuery}
@@ -116,14 +116,14 @@ export default function ExpertPendingDiagnosesPage({
                     ? "ស្វែងរកលេខករណី កសិករ ដំណាំ ឬរោគសញ្ញា..."
                     : "Search case ID, farmer, crop, or symptom..."
                 }
-                className="sm:w-80"
+                className="min-w-0 sm:w-80"
               />
               {crops.length > 0 && (
                 <select
                   value={cropFilter}
                   onChange={(e) => setCropFilter(e.target.value)}
                   aria-label={isKhmer ? "ច្រោះតាមដំណាំ" : "Filter by crop"}
-                  className="ai-input h-9 w-auto min-w-[150px] py-1 text-xs"
+                  className="ai-input h-9 w-full min-w-0 py-1 text-xs sm:w-auto sm:min-w-[150px]"
                 >
                   <option value="all">{isKhmer ? "ដំណាំទាំងអស់" : "All crops"}</option>
                   {crops.map((crop) => (
@@ -186,64 +186,116 @@ export default function ExpertPendingDiagnosesPage({
               />
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="border-b border-[#e3e6ed] bg-[#f5f7fa] text-[11px] uppercase tracking-wider text-[#6e7891] dark:border-[#2b3245] dark:bg-[#0f111a] dark:text-[#8a94ad]">
-                  <tr>
-                    <th className="px-4 py-3 font-bold">{table.id || "Case"}</th>
-                    <th className="px-4 py-3 font-bold">{table.crop || "Crop"}</th>
-                    <th className="px-4 py-3 font-bold">{table.symptoms || "Observed Symptoms"}</th>
-                    <th className="px-4 py-3 font-bold">{table.farmer || "Farmer"}</th>
-                    <th className="px-4 py-3 font-bold">{table.date || "Submitted"}</th>
-                    <th className="px-4 py-3 text-right font-bold">{table.action || "Action"}</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#e3e6ed] dark:divide-[#2b3245]">
-                  {filtered.map((row) => (
-                    <tr key={row.id} className="ai-table-row">
-                      <td className="px-4 py-3.5 font-mono font-semibold text-[#525b75] dark:text-[#9fa6bc]">
-                        #{row.id}
-                      </td>
-                      <td className="px-4 py-3.5">
-                        <div className="font-bold text-[#141824] dark:text-[#eff2f6]">
-                          {row.cropName || "-"}
-                        </div>
-                        <span
-                          className={cn(
-                            "mt-1 inline-flex rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
-                            statusBadgeClass(row.status),
-                          )}
-                        >
-                          {row.statusLabel}
+            <>
+              {/* Mobile Pending Queue Cards */}
+              <div className="divide-y divide-[#e3e6ed] dark:divide-[#2b3245] sm:hidden">
+                {filtered.map((row) => (
+                  <div key={row.id} className="space-y-2.5 p-4 text-xs">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono font-semibold text-[#525b75] dark:text-[#9fa6bc]">
+                          #{row.id}
                         </span>
-                      </td>
-                      <td className="max-w-md px-4 py-3.5 text-[#525b75] dark:text-[#9fa6bc]">
-                        <p className="line-clamp-2 leading-relaxed">{row.symptomsText || "-"}</p>
-                      </td>
-                      <td className="px-4 py-3.5">
-                        <div className="flex items-center gap-2">
-                          <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#e5edff] text-[11px] font-bold text-[#004dff] dark:bg-[#3874ff]/20 dark:text-[#85a9ff]">
-                            {(row.farmerName || "?").slice(0, 1).toUpperCase()}
-                          </span>
-                          <span className="font-semibold text-[#31374a] dark:text-[#eff2f6]">
-                            {row.farmerName}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-3.5 font-mono text-[11px] text-[#6e7891] dark:text-[#8a94ad]">
+                        <span className="font-bold text-[#141824] dark:text-[#eff2f6]">
+                          {row.cropName || "-"}
+                        </span>
+                      </div>
+                      <span
+                        className={cn(
+                          "inline-flex rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+                          statusBadgeClass(row.status),
+                        )}
+                      >
+                        {row.statusLabel}
+                      </span>
+                    </div>
+
+                    <p className="line-clamp-3 [overflow-wrap:anywhere] leading-relaxed text-[#525b75] dark:text-[#9fa6bc]">
+                      {row.symptomsText || "-"}
+                    </p>
+
+                    <div className="flex flex-wrap items-center justify-between gap-2 text-[11px]">
+                      <div className="flex min-w-0 items-center gap-2">
+                        <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#e5edff] text-[11px] font-bold text-[#004dff] dark:bg-[#3874ff]/20 dark:text-[#85a9ff]">
+                          {(row.farmerName || "?").slice(0, 1).toUpperCase()}
+                        </span>
+                        <span className="truncate font-semibold text-[#31374a] dark:text-[#eff2f6]">
+                          {row.farmerName}
+                        </span>
+                      </div>
+                      <span className="font-mono text-[#6e7891] dark:text-[#8a94ad]">
                         {formatShortDateTime(row.createdAt)}
-                      </td>
-                      <td className="px-4 py-3.5 text-right">
-                        <a href={row.reviewUrl} className="ai-btn-primary h-8 gap-1.5 px-3 text-xs">
-                          <span>{table.review || "Review"}</span>
-                          <ArrowRight className="h-3.5 w-3.5" />
-                        </a>
-                      </td>
+                      </span>
+                    </div>
+
+                    <a href={row.reviewUrl} className="ai-btn-primary h-9 w-full justify-center gap-1.5 text-xs">
+                      <span>{table.review || "Review"}</span>
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </a>
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop Queue Table */}
+              <div className="hidden overflow-x-auto sm:block">
+                <table className="w-full text-left text-xs">
+                  <thead className="border-b border-[#e3e6ed] bg-[#f5f7fa] text-[11px] uppercase tracking-wider text-[#6e7891] dark:border-[#2b3245] dark:bg-[#0f111a] dark:text-[#8a94ad]">
+                    <tr>
+                      <th className="px-4 py-3 font-bold">{table.id || "Case"}</th>
+                      <th className="px-4 py-3 font-bold">{table.crop || "Crop"}</th>
+                      <th className="px-4 py-3 font-bold">{table.symptoms || "Observed Symptoms"}</th>
+                      <th className="px-4 py-3 font-bold">{table.farmer || "Farmer"}</th>
+                      <th className="px-4 py-3 font-bold">{table.date || "Submitted"}</th>
+                      <th className="px-4 py-3 text-right font-bold">{table.action || "Action"}</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-[#e3e6ed] dark:divide-[#2b3245]">
+                    {filtered.map((row) => (
+                      <tr key={row.id} className="ai-table-row">
+                        <td className="px-4 py-3.5 font-mono font-semibold text-[#525b75] dark:text-[#9fa6bc]">
+                          #{row.id}
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <div className="font-bold text-[#141824] dark:text-[#eff2f6]">
+                            {row.cropName || "-"}
+                          </div>
+                          <span
+                            className={cn(
+                              "mt-1 inline-flex rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+                              statusBadgeClass(row.status),
+                            )}
+                          >
+                            {row.statusLabel}
+                          </span>
+                        </td>
+                        <td className="max-w-md px-4 py-3.5 text-[#525b75] dark:text-[#9fa6bc]">
+                          <p className="line-clamp-2 leading-relaxed">{row.symptomsText || "-"}</p>
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <div className="flex items-center gap-2">
+                            <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#e5edff] text-[11px] font-bold text-[#004dff] dark:bg-[#3874ff]/20 dark:text-[#85a9ff]">
+                              {(row.farmerName || "?").slice(0, 1).toUpperCase()}
+                            </span>
+                            <span className="font-semibold text-[#31374a] dark:text-[#eff2f6]">
+                              {row.farmerName}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-3.5 font-mono text-[11px] text-[#6e7891] dark:text-[#8a94ad]">
+                          {formatShortDateTime(row.createdAt)}
+                        </td>
+                        <td className="px-4 py-3.5 text-right">
+                          <a href={row.reviewUrl} className="ai-btn-primary h-8 gap-1.5 px-3 text-xs">
+                            <span>{table.review || "Review"}</span>
+                            <ArrowRight className="h-3.5 w-3.5" />
+                          </a>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </AdminSectionCard>
       </div>

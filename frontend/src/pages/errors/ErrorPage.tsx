@@ -32,7 +32,7 @@ export default function ErrorPage({
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-50 p-4 text-slate-900 dark:bg-obsidian-950 dark:text-slate-100 sm:p-6">
+    <div className="relative flex min-h-dvh items-center justify-center overflow-hidden bg-slate-50 p-4 text-slate-900 dark:bg-obsidian-950 dark:text-slate-100 sm:p-6">
       <div className="pointer-events-none fixed inset-0 ai-grid-pattern opacity-80" aria-hidden="true" />
       <div className="fixed right-5 top-5 z-20">
         <ThemeToggle />

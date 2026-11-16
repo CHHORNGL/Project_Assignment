@@ -109,7 +109,7 @@ export default function AdminMarqueeFormPage({
     >
       <div className="grid items-start gap-6 lg:grid-cols-12">
         {/* Main Composer Card */}
-        <div className="lg:col-span-8">
+        <div className="min-w-0 lg:col-span-8">
           <AdminSectionCard
             delayIndex={0}
             title={
@@ -280,7 +280,7 @@ export default function AdminMarqueeFormPage({
         </div>
 
         {/* Right Live Banner Simulator */}
-        <aside className="lg:sticky lg:top-20 lg:col-span-4">
+        <aside className="min-w-0 lg:sticky lg:top-20 lg:col-span-4">
           <AdminSectionCard
             delayIndex={1}
             title={isKhmer ? "មើលជាមុនរបារជូនដំណឹង" : "Banner Preview"}

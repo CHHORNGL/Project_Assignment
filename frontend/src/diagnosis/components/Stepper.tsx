@@ -53,8 +53,8 @@ export default function Stepper({
         />
       </div>
 
-      <div className="p-4 sm:px-6 sm:py-4">
-        <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="p-3.5 sm:px-6 sm:py-4">
+        <div className="grid grid-cols-2 gap-2 sm:gap-2.5 lg:grid-cols-4">
           {steps.map((step, index) => {
             const number = index + 1;
             const state = stepState(number, currentStep);

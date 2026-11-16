@@ -1091,12 +1091,12 @@ export default function DiagnosisWizardPage({ bootstrap }: { bootstrap: Record<s
                                 : `Do you observe any symptoms on the ${currentCat.name_en}?`}
                             </h3>
 
-                            <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
+                            <div className="grid grid-cols-3 gap-2 sm:gap-3">
                               <button
                                 type="button"
                                 onClick={() => handleCategoryAnswer(currentCat.id, "yes")}
                                 className={cn(
-                                  "flex flex-col items-center justify-center rounded-xl border p-3.5 text-xs font-semibold transition-all duration-150 sm:text-sm",
+                                  "flex flex-col items-center justify-center rounded-xl border px-1.5 py-3 text-center text-[11px] font-semibold transition-all duration-150 sm:p-3.5 sm:text-sm",
                                   catAnswer === "yes"
                                     ? "border-indigo-500 bg-indigo-50 text-indigo-800 ring-1 ring-indigo-500/25 dark:border-indigo-400 dark:bg-indigo-500/15 dark:text-indigo-300"
                                     : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 dark:border-slate-800 dark:bg-obsidian-900 dark:text-slate-300",
@@ -1110,7 +1110,7 @@ export default function DiagnosisWizardPage({ bootstrap }: { bootstrap: Record<s
                                 type="button"
                                 onClick={() => handleCategoryAnswer(currentCat.id, "no")}
                                 className={cn(
-                                  "flex flex-col items-center justify-center rounded-xl border p-3.5 text-xs font-semibold transition-all duration-150 sm:text-sm",
+                                  "flex flex-col items-center justify-center rounded-xl border px-1.5 py-3 text-center text-[11px] font-semibold transition-all duration-150 sm:p-3.5 sm:text-sm",
                                   catAnswer === "no"
                                     ? "border-rose-500 bg-rose-50 text-rose-800 ring-1 ring-rose-500/20 dark:border-rose-400 dark:bg-rose-950/30 dark:text-rose-300"
                                     : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 dark:border-slate-800 dark:bg-obsidian-900 dark:text-slate-300",
@@ -1124,7 +1124,7 @@ export default function DiagnosisWizardPage({ bootstrap }: { bootstrap: Record<s
                                 type="button"
                                 onClick={() => handleCategoryAnswer(currentCat.id, "unsure")}
                                 className={cn(
-                                  "flex flex-col items-center justify-center rounded-xl border p-3.5 text-xs font-semibold transition-all duration-150 sm:text-sm",
+                                  "flex flex-col items-center justify-center rounded-xl border px-1.5 py-3 text-center text-[11px] font-semibold transition-all duration-150 sm:p-3.5 sm:text-sm",
                                   catAnswer === "unsure"
                                     ? "border-amber-500 bg-amber-50 text-amber-800 ring-1 ring-amber-500/20 dark:border-amber-400 dark:bg-amber-950/30 dark:text-amber-300"
                                     : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 dark:border-slate-800 dark:bg-obsidian-900 dark:text-slate-300",
@@ -1684,11 +1684,11 @@ export default function DiagnosisWizardPage({ bootstrap }: { bootstrap: Record<s
                 </span>
               </div>
 
-              <div className="flex flex-wrap items-center justify-end gap-2.5">
+              <div className="flex w-full items-center justify-end gap-2.5 sm:w-auto sm:flex-wrap">
                 <button
                   type="button"
                   onClick={goBack}
-                  className="diag-secondary-button h-10 px-4"
+                  className="diag-secondary-button h-10 flex-1 justify-center px-4 sm:flex-initial"
                   disabled={currentStep === 1 || submitting}
                 >
                   <DiagIcon name="fa-arrow-left" className="h-3.5 w-3.5" />
@@ -1696,12 +1696,21 @@ export default function DiagnosisWizardPage({ bootstrap }: { bootstrap: Record<s
                 </button>
 
                 {currentStep < 4 ? (
-                  <button type="button" onClick={goNext} className="diag-primary-button h-10 px-5" disabled={submitting}>
+                  <button
+                    type="button"
+                    onClick={goNext}
+                    className="diag-primary-button h-10 flex-1 justify-center px-5 sm:flex-initial"
+                    disabled={submitting}
+                  >
                     <span>{label("next", "Next")}</span>
                     <DiagIcon name="fa-arrow-right" className="h-3.5 w-3.5" />
                   </button>
                 ) : (
-                  <button type="submit" className="diag-primary-button h-10 px-6" disabled={submitting}>
+                  <button
+                    type="submit"
+                    className="diag-primary-button h-10 flex-1 justify-center px-5 sm:flex-initial sm:px-6"
+                    disabled={submitting}
+                  >
                     <DiagIcon
                       name={submitting ? "fa-circle-notch" : "fa-stethoscope"}
                       className={cn("h-4 w-4", submitting && "animate-spin")}

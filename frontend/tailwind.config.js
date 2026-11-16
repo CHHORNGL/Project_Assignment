@@ -48,11 +48,11 @@ export default {
         glow: "0 0 36px -8px rgba(99, 102, 241, 0.45)",
       },
       fontFamily: {
-        sans: ["Inter", "Kantumruy Pro", "Noto Sans Khmer", "system-ui", "-apple-system", "sans-serif"],
-        body: ["Inter", "Kantumruy Pro", "Noto Sans Khmer", "system-ui", "-apple-system", "sans-serif"],
-        display: ["Plus Jakarta Sans", "Inter", "Kantumruy Pro", "Noto Sans Khmer", "system-ui", "-apple-system", "sans-serif"],
-        mono: ["JetBrains Mono", "ui-monospace", "SFMono-Regular", "Menlo", "monospace"],
-        khmer: ["Kantumruy Pro", "Noto Sans Khmer", "Inter", "sans-serif"],
+        sans: ["Geist", "Kantumruy Pro", "Noto Sans Khmer", "system-ui", "-apple-system", "sans-serif"],
+        body: ["Geist", "Kantumruy Pro", "Noto Sans Khmer", "system-ui", "-apple-system", "sans-serif"],
+        display: ["Geist", "Kantumruy Pro", "Noto Sans Khmer", "system-ui", "-apple-system", "sans-serif"],
+        mono: ["Geist Mono", "ui-monospace", "SFMono-Regular", "Menlo", "monospace"],
+        khmer: ["Kantumruy Pro", "Noto Sans Khmer", "Geist", "sans-serif"],
       },
       keyframes: {
         "fade-in-up": {

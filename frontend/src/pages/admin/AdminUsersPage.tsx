@@ -374,7 +374,7 @@ export default function AdminUsersPage({ bootstrap }: { bootstrap: AppBootstrap<
 
               {/* Status Tabs & Role Selector */}
               <div className="flex flex-wrap items-center gap-2">
-                <div className="inline-flex items-center gap-0.5 rounded-lg border border-[#cbd0dd] bg-white p-0.5 dark:border-[#373e53] dark:bg-[#141824]">
+                <div className="inline-flex max-w-full flex-wrap items-center gap-0.5 rounded-lg border border-[#cbd0dd] bg-white p-0.5 dark:border-[#373e53] dark:bg-[#141824]">
                   {segmentTabs.map((tab) => {
                     const active = segment === tab.key;
                     return (
@@ -400,7 +400,7 @@ export default function AdminUsersPage({ bootstrap }: { bootstrap: AppBootstrap<
                   value={roleFilter}
                   onChange={(e) => setRoleFilter(e.target.value)}
                   aria-label="Filter by role"
-                  className="ai-input h-9 w-36 py-1 text-xs"
+                  className="ai-input h-9 w-full py-1 text-xs sm:w-36"
                 >
                   <option value="all">{isKhmer ? "គ្រប់តួនាទី" : "All Roles"}</option>
                   {d.roles.map((r) => (
@@ -490,8 +490,141 @@ export default function AdminUsersPage({ bootstrap }: { bootstrap: AppBootstrap<
               />
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
+            <>
+              {/* Mobile Member Cards */}
+              <div className="divide-y divide-[#e3e6ed] dark:divide-[#2b3245] sm:hidden">
+                {filteredUsers.map((u) => {
+                  const initial = (u.fullName || u.username || "U").slice(0, 1).toUpperCase();
+                  const isProtectedAdmin =
+                    u.roles.includes("admin") || u.primaryRole === "admin";
+                  return (
+                    <div key={u.id} className="space-y-3 p-4 text-xs">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex min-w-0 items-center gap-2.5">
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.includes(u.id)}
+                            onChange={() => toggleOne(u.id)}
+                            aria-label={`Select ${u.username}`}
+                            className="mt-0.5 h-4 w-4 shrink-0 rounded accent-[#3874ff]"
+                          />
+                          {u.avatarUrl ? (
+                            <img
+                              src={u.avatarUrl}
+                              alt={u.fullName || u.username}
+                              onError={(e) => {
+                                e.currentTarget.style.display = "none";
+                              }}
+                              className="h-9 w-9 shrink-0 rounded-xl border border-[#cbd0dd] object-cover dark:border-[#373e53]"
+                            />
+                          ) : (
+                            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#e5edff] font-display text-xs font-extrabold text-[#004dff] ring-1 ring-[#3874ff]/20 dark:bg-[#3874ff]/15 dark:text-[#85a9ff]">
+                              {initial}
+                            </span>
+                          )}
+                          <div className="min-w-0">
+                            <a
+                              href={u.detailUrl}
+                              className="block truncate font-semibold text-[#141824] hover:text-[#3874ff] dark:text-[#eff2f6]"
+                            >
+                              {u.fullName || u.username}
+                            </a>
+                            <p className="truncate font-mono text-[11px] text-[#6e7891] dark:text-[#8a94ad]">
+                              @{u.username}
+                            </p>
+                          </div>
+                        </div>
+                        <AdminStatusBadge
+                          tone={u.isActive ? "emerald" : "rose"}
+                          pulse={u.isActive}
+                        >
+                          {u.isActive
+                            ? isKhmer
+                              ? "សកម្ម"
+                              : "Active"
+                            : isKhmer
+                              ? "បានផ្អាក"
+                              : "Suspended"}
+                        </AdminStatusBadge>
+                      </div>
+
+                      <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-[#6e7891] dark:text-[#8a94ad]">
+                        <span className="min-w-0 break-all">
+                          {u.email || (isKhmer ? "គ្មានអ៊ីមែល" : "No email")}
+                        </span>
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          {u.isPremium && <AdminStatusBadge tone="amber">PRO</AdminStatusBadge>}
+                          <span className="inline-flex items-center gap-1 rounded-md border border-[#e3e6ed] bg-[#f5f7fa] px-2 py-0.5 font-mono text-[11px] font-semibold text-[#31374a] dark:border-[#2b3245] dark:bg-[#0f111a] dark:text-[#cbd0dd]">
+                            <Coins className="h-3 w-3 text-[#3874ff]" />
+                            {u.aiCredits.toLocaleString()}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-2">
+                        <form
+                          method="POST"
+                          action={u.changeRoleAction}
+                          className="min-w-0 flex-1"
+                        >
+                          <input type="hidden" name="csrf_token" value={bootstrap.csrfToken} />
+                          <select
+                            name="role"
+                            defaultValue={u.primaryRole}
+                            onChange={(e) => e.currentTarget.form?.submit()}
+                            aria-label={`Change role for ${u.username}`}
+                            className="ai-input h-8 w-full py-0.5 text-xs capitalize"
+                          >
+                            {d.roles.map((r) => (
+                              <option key={r.id} value={r.name}>
+                                {r.name}
+                              </option>
+                            ))}
+                          </select>
+                        </form>
+                        {isProtectedAdmin ? (
+                          <span className="inline-flex h-8 shrink-0 items-center gap-1 rounded-lg border border-[#e3e6ed] bg-[#f5f7fa] px-2.5 text-[11px] font-semibold text-[#8a94ad] dark:border-[#2b3245] dark:bg-[#0f111a]">
+                            <Lock className="h-3 w-3" />
+                            <span>{isKhmer ? "ការពារ" : "Protected"}</span>
+                          </span>
+                        ) : (
+                          <form method="POST" action={u.toggleStatusAction}>
+                            <input type="hidden" name="csrf_token" value={bootstrap.csrfToken} />
+                            <button
+                              type="submit"
+                              className={cn(
+                                "inline-flex h-8 items-center gap-1 rounded-lg border px-2.5 text-xs font-semibold transition-colors",
+                                u.isActive
+                                  ? "border-[#cbd0dd] bg-white text-[#b81800] hover:border-[#f48270] hover:bg-[#ffe0db]/60 dark:border-[#373e53] dark:bg-[#181d2b] dark:text-[#ff9c8c] dark:hover:bg-[#492226]"
+                                  : "border-[#90d67f] bg-[#d9fbd0]/70 text-[#1c6c09] hover:bg-[#d9fbd0] dark:border-[#25b003]/40 dark:bg-[#25b003]/20 dark:text-[#90ee7a]",
+                              )}
+                            >
+                              <Ban className="h-3 w-3" />
+                              <span>
+                                {u.isActive
+                                  ? isKhmer
+                                    ? "ផ្អាក"
+                                    : "Ban"
+                                  : isKhmer
+                                    ? "បើកវិញ"
+                                    : "Unban"}
+                              </span>
+                            </button>
+                          </form>
+                        )}
+                        <a href={u.detailUrl} className="ai-btn-primary h-8 gap-1 px-3 text-xs">
+                          <span>{isKhmer ? "គ្រប់គ្រង" : "Manage"}</span>
+                          <ArrowRight className="h-3 w-3" />
+                        </a>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Desktop Member Table */}
+              <div className="hidden overflow-x-auto sm:block">
+                <table className="w-full text-left text-xs">
                 <thead className="border-b border-[#e3e6ed] bg-[#f5f7fa] text-[10.5px] font-bold uppercase tracking-[0.06em] text-[#6e7891] dark:border-[#2b3245] dark:bg-[#0f111a] dark:text-[#8a94ad]">
                   <tr>
                     <th className="w-10 px-5 py-3">
@@ -662,7 +795,8 @@ export default function AdminUsersPage({ bootstrap }: { bootstrap: AppBootstrap<
                   })}
                 </tbody>
               </table>
-            </div>
+              </div>
+            </>
           )}
         </AdminSectionCard>
       </div>

@@ -113,7 +113,7 @@ export default function FarmerDiagnoseClassicPage({ bootstrap }: { bootstrap: Ap
           method="post"
           action={d.postUrl}
           encType="multipart/form-data"
-          className="ai-surface space-y-6 p-6 lg:col-span-2"
+          className="ai-surface space-y-6 p-4 sm:p-6 lg:col-span-2"
         >
           <input type="hidden" name="csrf_token" value={bootstrap.csrfToken} />
           <input type="hidden" name="crop_id" value={cropId} />
