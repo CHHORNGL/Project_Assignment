@@ -59,7 +59,26 @@ test("Farmer mobile shell & routes prevent header overflow and table cramping", 
   assert.equal(dash.includes("hidden overflow-x-auto sm:block"), true);
 
   const detail = fs.readFileSync(path.join(repoRoot, "frontend/src/pages/farmer/FarmerDetailPage.tsx"), "utf8");
-  assert.equal(detail.includes("flex w-full flex-wrap items-center gap-1"), true);
+  assert.equal(detail.includes("grid grid-cols-2 gap-3 sm:grid-cols-4"), true);
+  assert.equal(detail.includes("System Architecture"), false);
+  assert.equal(detail.includes("Core Technology Stack"), false);
+
+  const landing = fs.readFileSync(path.join(repoRoot, "frontend/src/pages/farmer/GuestLandingPage.tsx"), "utf8");
+  assert.equal(landing.includes("System Architecture"), false);
+  assert.equal(landing.includes("Core Technology Stack"), false);
+  assert.equal(landing.includes("Platform Architecture"), false);
+  assert.equal(landing.includes("Agronomist or Administrator?"), false);
+  assert.equal(landing.includes("Staff Portal"), false);
+  assert.equal(landing.includes("InteractiveModelShowcase"), true);
+  assert.equal(fs.existsSync(path.join(repoRoot, "backend/app/static/models/3D.glb")), true);
+
+  const modelShowcase = fs.readFileSync(
+    path.join(repoRoot, "frontend/src/components/farmer/InteractiveModelShowcase.tsx"),
+    "utf8",
+  );
+  assert.equal(modelShowcase.includes("ResizeObserver"), true);
+  assert.equal(modelShowcase.includes("controls.enableZoom = false"), true);
+  assert.equal(modelShowcase.includes("border-neutral"), false);
 
   const result = fs.readFileSync(path.join(repoRoot, "frontend/src/pages/farmer/FarmerResultPage.tsx"), "utf8");
   assert.equal(result.includes("break-all"), true);

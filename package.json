@@ -1,0 +1,10 @@
+{
+  "scripts": {
+    "build": "npm --prefix frontend run build",
+    "typecheck": "npm --prefix frontend run typecheck"
+  },
+  "dependencies": {
+    "@neon/config": "^1.14.1",
+    "@neon/env": "^2.1.4"
+  }
+}

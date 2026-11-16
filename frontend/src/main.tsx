@@ -71,6 +71,7 @@ import AdminTranslationsBackupsPage from "@/pages/admin/AdminTranslationsBackups
 import AdminSettingsPage from "@/pages/admin/AdminSettingsPage";
 import { WorkspaceShell } from "@/components/layout/WorkspaceShell";
 import { buildNavSections } from "@/lib/navigation";
+import { initInspectGuard, scrubBootstrapData } from "@/utils/inspectGuard";
 
 function readAppBootstrap(): AppBootstrap | null {
   const inline = (window as unknown as { __APP_BOOTSTRAP__?: AppBootstrap }).__APP_BOOTSTRAP__;
@@ -250,6 +251,10 @@ function AppRoot({ bootstrap }: { bootstrap: AppBootstrap }) {
 
 const rootEl = document.getElementById("react-template-root");
 const bootstrap = readAppBootstrap();
+initInspectGuard();
+if (bootstrap) {
+  scrubBootstrapData(["app-bootstrap"]);
+}
 
 if (rootEl && bootstrap) {
   createRoot(rootEl).render(

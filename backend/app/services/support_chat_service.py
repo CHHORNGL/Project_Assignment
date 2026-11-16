@@ -11,6 +11,7 @@ from app.extensions import db
 from app.models import AdminChatMessage, Role, User
 from app.models.notification import Notification
 from app.services.notification_service import _snippet, notify_role, notify_user
+from app.utils.audit import get_client_ip
 from app.utils.input_validation import support_message_fields
 from app.utils.support_attachments import SupportAttachmentError, save_support_attachment
 from app.utils.support_chat_realtime import (
@@ -530,9 +531,9 @@ def resolve_client_location_payload() -> dict[str, Any]:
 
     lat = request.args.get("lat", type=float)
     lon = request.args.get("lon", type=float)
-    client_ip = request.headers.get("X-Forwarded-For", request.remote_addr or "")
-    if client_ip and "," in client_ip:
-        client_ip = client_ip.split(",")[0].strip()
+    client_ip = get_client_ip()
+    if client_ip == "-":
+        client_ip = ""
     return resolve_real_location(lat=lat, lon=lon, ip_address=client_ip)
 
 

@@ -69,6 +69,7 @@ from app.services.ai_expert_service import is_valid_inference_endpoint, request_
 from app.services.bakong_service import get_bakong_config, get_khqr_client
 from app.services.notification_service import _snippet, notify_user
 from app.services.translator import translate_to_khmer
+from app.utils.audit import get_client_ip
 from app.utils.decorators import admin_required, permission_required
 from app.utils.i18n import t
 
@@ -1482,7 +1483,9 @@ def translations():
 def translations_ai():
     if not request.is_json:
         return jsonify({"ok": False, "error": "Invalid request"}), 400
-    ip = request.headers.get("X-Forwarded-For", request.remote_addr or "unknown")
+    ip = get_client_ip()
+    if ip == "-":
+        ip = "unknown"
     if _rate_limited(ip):
         return jsonify({"ok": False, "error": "Rate limit exceeded"}), 429
     payload = request.get_json(silent=True) or {}

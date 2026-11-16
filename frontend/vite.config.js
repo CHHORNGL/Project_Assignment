@@ -13,7 +13,11 @@ export default defineConfig({
       "@": path.resolve(__dirname, "src"),
     },
   },
+  esbuild: {
+    legalComments: "none",
+  },
   build: {
+    sourcemap: false,
     outDir: "../backend/app/static/diagnosis-wizard",
     emptyOutDir: true,
     cssCodeSplit: false,

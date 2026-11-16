@@ -10,6 +10,7 @@ from app.services.support_chat_service import (
     normalize_support_target,
     resolve_farmer_support_partner,
 )
+from app.utils.audit import get_client_ip
 from app.utils.decorators import role_required
 from app.utils.input_validation import support_message_fields
 from app.utils.react_bootstrap import (
@@ -309,9 +310,9 @@ def resolve_real_location(lat=None, lon=None, ip_address=None):
 def get_real_location():
     lat = request.args.get("lat", type=float)
     lon = request.args.get("lon", type=float)
-    client_ip = request.headers.get("X-Forwarded-For", request.remote_addr or "")
-    if client_ip and "," in client_ip:
-        client_ip = client_ip.split(",")[0].strip()
+    client_ip = get_client_ip()
+    if client_ip == "-":
+        client_ip = ""
     return jsonify(resolve_real_location(lat=lat, lon=lon, ip_address=client_ip))
 
 

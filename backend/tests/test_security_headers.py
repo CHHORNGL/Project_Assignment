@@ -1,4 +1,4 @@
-# ruff: noqa: E402, I001
+# ruff: noqa: I001
 import pathlib as _pathlib
 import sys as _sys
 
@@ -27,7 +27,7 @@ class SecurityHeaderTests(unittest.TestCase):
         app.add_url_rule('/error', endpoint='/error', view_func=lambda: ('Failure', 500))
         app.add_url_rule('/strict', endpoint='/strict', view_func=lambda: (
             '', 200, {'Content-Security-Policy': "default-src 'none'",
-                      'X-Frame-Options': 'DENY'}))
+                      'X-Frame-Options': 'SAMEORIGIN'}))
         self.client = app.test_client()
 
     def test_headers_cover_html_json_redirects_and_errors(self):
@@ -37,10 +37,15 @@ class SecurityHeaderTests(unittest.TestCase):
                 response = self.client.get(path)
                 self.assertEqual(response.status_code, status)
                 self.assertEqual(response.headers['X-Content-Type-Options'], 'nosniff')
-                self.assertEqual(response.headers['X-Frame-Options'], 'SAMEORIGIN')
+                self.assertEqual(response.headers['X-Frame-Options'], 'DENY')
                 self.assertEqual(response.headers['Referrer-Policy'],
                                  'strict-origin-when-cross-origin')
-                self.assertIn("frame-ancestors 'self'",
+                self.assertEqual(
+                    response.headers['Cross-Origin-Resource-Policy'],
+                    'same-origin',
+                )
+                self.assertIn('noindex', response.headers['X-Robots-Tag'])
+                self.assertIn("frame-ancestors 'none'",
                               response.headers['Content-Security-Policy'])
                 self.assertIn('camera=(self)', response.headers['Permissions-Policy'])
                 self.assertEqual(response.headers['X-XSS-Protection'], '0')
@@ -56,7 +61,7 @@ class SecurityHeaderTests(unittest.TestCase):
     def test_explicit_endpoint_policy_is_preserved(self):
         response = self.client.get('/strict')
         self.assertEqual(response.headers['Content-Security-Policy'], "default-src 'none'")
-        self.assertEqual(response.headers['X-Frame-Options'], 'DENY')
+        self.assertEqual(response.headers['X-Frame-Options'], 'SAMEORIGIN')
 
 
 if __name__ == '__main__':

@@ -1,9 +1,10 @@
 import logging
 from logging.config import fileConfig
 
-from flask import current_app
-
 from alembic import context
+from app.config import get_unpooled_database_url
+from flask import current_app
+from sqlalchemy import create_engine, pool
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -24,12 +25,22 @@ def get_engine():
         return current_app.extensions['migrate'].db.engine
 
 
+def _get_direct_postgres_url(engine):
+    if engine.url.drivername.startswith("postgresql"):
+        return get_unpooled_database_url()
+    return None
+
+
 def get_engine_url():
+    engine = get_engine()
+    direct_url = _get_direct_postgres_url(engine)
+    if direct_url:
+        return direct_url.replace('%', '%%')
     try:
-        return get_engine().url.render_as_string(hide_password=False).replace(
+        return engine.url.render_as_string(hide_password=False).replace(
             '%', '%%')
     except AttributeError:
-        return str(get_engine().url).replace('%', '%%')
+        return str(engine.url).replace('%', '%%')
 
 
 # add your model's MetaData object here
@@ -94,17 +105,27 @@ def run_migrations_online():
     if conf_args.get("process_revision_directives") is None:
         conf_args["process_revision_directives"] = process_revision_directives
 
-    connectable = get_engine()
+    base_engine = get_engine()
+    direct_url = _get_direct_postgres_url(base_engine)
+    connectable = (
+        create_engine(direct_url, poolclass=pool.NullPool)
+        if direct_url
+        else base_engine
+    )
 
-    with connectable.connect() as connection:
-        context.configure(
-            connection=connection,
-            target_metadata=get_metadata(),
-            **conf_args
-        )
+    try:
+        with connectable.connect() as connection:
+            context.configure(
+                connection=connection,
+                target_metadata=get_metadata(),
+                **conf_args
+            )
 
-        with context.begin_transaction():
-            context.run_migrations()
+            with context.begin_transaction():
+                context.run_migrations()
+    finally:
+        if direct_url:
+            connectable.dispose()
 
 
 if context.is_offline_mode():

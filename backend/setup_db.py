@@ -30,15 +30,30 @@ def initialize_database(database, stamp_revision):
 
 
 if __name__ == '__main__':
+    import os
     import sys
     from pathlib import Path
+
+    from dotenv import load_dotenv
+
     BACKEND_DIR = Path(__file__).resolve().parent
+    REPO_ROOT = BACKEND_DIR.parent
     if str(BACKEND_DIR) not in sys.path:
         sys.path.insert(0, str(BACKEND_DIR))
 
-    from flask_migrate import stamp
+    load_dotenv(REPO_ROOT / ".env")
+    load_dotenv(BACKEND_DIR / ".env")
+
+    from app.config import get_unpooled_database_url
+
+    current_db_url = (os.environ.get("DATABASE_URL") or "").strip().lower()
+    direct_db_url = get_unpooled_database_url()
+    if direct_db_url and not current_db_url.startswith("sqlite"):
+        os.environ["DATABASE_URL"] = direct_db_url
+
     from app import create_app
     from app.extensions import db
+    from flask_migrate import stamp
 
     app = create_app()
     with app.app_context():

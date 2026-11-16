@@ -10,7 +10,7 @@ from flask import Flask, jsonify, url_for, request, redirect, g, send_from_direc
 from flask_login import current_user, login_required
 
 from .extensions import db, login_manager, migrate, oauth
-from .config import Config
+from .config import Config, build_sqlalchemy_engine_options, normalize_database_url
 from app.models.notification import Notification
 from app.services.notification_service import serialize_notification
 from app.utils.i18n import t, get_current_language, normalize_display_text
@@ -29,20 +29,31 @@ def create_app():
     if not app.config.get("SECRET_KEY") and os.getenv("SECRET_KEY"):
         app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
     if not app.config.get("SQLALCHEMY_DATABASE_URI") and os.getenv("DATABASE_URL"):
-        db_uri = os.getenv("DATABASE_URL", "")
-        if db_uri.startswith("postgres://"):
-            db_uri = "postgresql://" + db_uri[len("postgres://"):]
-        app.config["SQLALCHEMY_DATABASE_URI"] = db_uri
+        app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
+    normalized_db_uri = normalize_database_url(app.config.get("SQLALCHEMY_DATABASE_URI"))
+    if normalized_db_uri:
+        app.config["SQLALCHEMY_DATABASE_URI"] = normalized_db_uri
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = build_sqlalchemy_engine_options(
+        app.config.get("SQLALCHEMY_DATABASE_URI")
+    )
     trusted_proxies = app.config["TRUSTED_PROXY_COUNT"]
     app.wsgi_app = ProxyFix(
-        app.wsgi_app, x_for=trusted_proxies, x_proto=trusted_proxies,
-        x_host=trusted_proxies, x_prefix=trusted_proxies,
+        app.wsgi_app,
+        x_for=trusted_proxies,
+        x_proto=app.config.get("TRUSTED_PROTO_PROXY_COUNT", 1 if trusted_proxies > 0 else 0),
+        x_host=app.config.get("TRUSTED_HOST_PROXY_COUNT", 1 if trusted_proxies > 0 else 0),
+        x_prefix=app.config.get("TRUSTED_PREFIX_PROXY_COUNT", 1 if trusted_proxies > 0 else 0),
     )
     register_security_headers(app)
     init_server_sessions(app)
-    
-    # 🌍 Enable CORS for all routes, allowing credentials (cookies) to be sent cross-origin
-    CORS(app, supports_credentials=True)
+
+    # Restrict cross-origin credentialed requests to explicitly configured origins.
+    from app.config import get_cors_allowed_origins
+
+    cors_origins = app.config.get("CORS_ALLOWED_ORIGINS")
+    if cors_origins is None:
+        cors_origins = get_cors_allowed_origins()
+    CORS(app, origins=cors_origins, supports_credentials=True)
 
     # ===============================
     # LOGGING
@@ -142,7 +153,10 @@ def create_app():
         return redirect(url_for(login_route))
 
     # 🔑 IMPORTANT: Flask-Migrate
-    migrate.init_app(app, db)
+    migrations_dir = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "..", "migrations")
+    )
+    migrate.init_app(app, db, directory=migrations_dir)
 
     # ===============================
     # OAUTH (GOOGLE)
@@ -362,6 +376,18 @@ def create_app():
     def healthz():
         # Lightweight ping endpoint for offline detection.
         return ("", 204, {"Cache-Control": "no-store"})
+
+    @app.get("/robots.txt")
+    def robots_txt():
+        # Disallow automated indexing and platform scraping across all routes.
+        return (
+            "User-agent: *\nDisallow: /\n",
+            200,
+            {
+                "Content-Type": "text/plain; charset=utf-8",
+                "Cache-Control": "public, max-age=3600",
+            },
+        )
 
     @app.get("/sw.js")
     def sw():

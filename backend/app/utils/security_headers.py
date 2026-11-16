@@ -9,12 +9,13 @@ def register_security_headers(app):
         # Keep an endpoint's explicitly stricter policy when it supplies one.
         headers = {
             "X-Content-Type-Options": "nosniff",
-            "X-Frame-Options": "SAMEORIGIN",
+            "X-Frame-Options": "DENY",
             "Referrer-Policy": "strict-origin-when-cross-origin",
-            # Baseline CSP: script restrictions require migrating inline scripts
-            # and auditing third-party integrations before enforcement.
+            "Cross-Origin-Resource-Policy": "same-origin",
+            "X-Robots-Tag": "noindex, nofollow, noarchive, nosnippet, noimageindex",
+            # Baseline CSP: block third-party embedding and plugin execution.
             "Content-Security-Policy": (
-                "object-src 'none'; base-uri 'self'; frame-ancestors 'self'"
+                "object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
             ),
             # Preserve crop photos, voice chat, weather location, and passkeys.
             "Permissions-Policy": (

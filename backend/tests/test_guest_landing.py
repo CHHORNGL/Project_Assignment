@@ -115,6 +115,23 @@ class GuestLandingTestCase(unittest.TestCase):
         # FAQ Accordion
         self.assertIn("nxFaqAccordion", html)
 
+        # 3D Print Showcase GLB asset
+        self.assertIn("/static/models/3D.glb", html)
+        self.assertIn("noindex, nofollow, noarchive", html)
+        model_resp = self.client.get("/static/models/3D.glb")
+        self.assertEqual(model_resp.status_code, 200)
+        self.assertTrue(model_resp.get_data().startswith(b"glTF"))
+
+    def test_robots_txt_blocks_external_crawlers(self):
+        resp = self.client.get("/robots.txt")
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn("text/plain", resp.content_type)
+        body = resp.get_data(as_text=True)
+        self.assertIn("User-agent: *", body)
+        self.assertIn("Disallow: /", body)
+        self.assertEqual(resp.headers.get("X-Frame-Options"), "DENY")
+        self.assertIn("noindex", resp.headers.get("X-Robots-Tag", ""))
+
     @patch.dict(os.environ, {"HF_INFERENCE_URL": "", "HUGGINGFACE_INFERENCE_URL": ""})
     def test_guest_chat_endpoint_responds_and_enforces_limit(self):
         # 1. Successful inquiry

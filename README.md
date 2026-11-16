@@ -259,5 +259,7 @@ Refer to [`ai/deployment/README.md`](ai/deployment/README.md) for deploying the 
 | [Weather Intelligence](docs/weather_intelligence_module.md) | Forecast caching, thresholds, and fallback architecture |
 | [Session Security](docs/session_security.md) | Server-side Redis sessions, timeouts, and CSRF controls |
 | [Dependency Management](docs/dependency_management.md) | Lockfile pinning and CVE auditing policies |
-| [Railway Migration Guide](docs/railway_migration.md) | Cloud deployment steps for Railway |
+| [Render + Neon Deployment](docs/render_migration.md) | Blueprint deployment guide for Render Web Service, Key Value, Persistent Disk & Neon PostgreSQL |
+| [DigitalOcean + Neon Migration](docs/digitalocean_neon_migration.md) | Cloud deployment guide for DigitalOcean Droplet & Neon PostgreSQL |
+| [Railway Migration Guide](docs/railway_migration.md) | Legacy cloud deployment notes for Railway |
 | [Code Review Agent](.github/agents/code-reviewer.agent.md) | Repository code review guidelines |

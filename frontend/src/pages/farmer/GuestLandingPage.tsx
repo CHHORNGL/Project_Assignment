@@ -6,7 +6,6 @@ import {
   Check,
   CloudSun,
   Cpu,
-  Database,
   Layers,
   Loader2,
   Mail,
@@ -14,9 +13,7 @@ import {
   Phone,
   Plus,
   Send,
-  Server,
   ShieldCheck,
-  Smartphone,
   Sprout,
   Stethoscope,
   Users,
@@ -31,6 +28,7 @@ import {
   AnnouncementMarquee,
   type MarqueeBannerItem,
 } from "@/components/farmer/AnnouncementMarquee";
+import { InteractiveModelShowcase } from "@/components/farmer/InteractiveModelShowcase";
 import { postJson } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
@@ -69,6 +67,7 @@ interface GuestLandingData {
   staffLoginUrl: string;
   diagnoseUrl: string;
   detailUrl: string;
+  showcaseModelUrl?: string;
   premiumPrice: string;
   yearlyMonthly: string;
   yearlyTotal: string;
@@ -319,100 +318,9 @@ export default function GuestLandingPage({
   const navItems = [
     { href: "#features", label: isKhmer ? "លក្ខណៈពិសេស" : "Features" },
     { href: "#nxWorkflow", label: isKhmer ? "ដំណើរការ" : "Workflow" },
-    { href: "#architecture", label: isKhmer ? "ស្ថាបត្យកម្ម" : "Architecture" },
     { href: "#nxProjectDetail", label: isKhmer ? "ក្រុមការងារ" : "Team" },
     { href: "#nxPricing", label: isKhmer ? "តម្លៃ" : "Pricing" },
     { href: "#nxFaqAccordion", label: isKhmer ? "សំណួរ" : "FAQ" },
-  ];
-
-  const statsItems = [
-    {
-      label: isKhmer ? "ដំណាំគាំទ្រ" : "Supported Crops",
-      value: d.stats?.cropsCount ?? d.crops?.length ?? 9,
-    },
-    {
-      label: isKhmer ? "ជំងឺដំណាំ" : "Plant Diseases",
-      value: d.stats?.diseasesCount ?? 126,
-    },
-    {
-      label: isKhmer ? "ក្បួនវិនិច្ឆ័យ" : "Inference Rules",
-      value: d.stats?.rulesCount ?? 126,
-    },
-    {
-      label: isKhmer ? "រោគសញ្ញា" : "Tracked Symptoms",
-      value: d.stats?.symptomsCount ?? 492,
-    },
-  ];
-
-  const architecturePillars = [
-    {
-      Icon: Layers,
-      title: isKhmer ? "ស្រទាប់បទពិសោធន៍ និងភាសា" : "Experience & Localization Layer",
-      summary: isKhmer
-        ? "រចនាសម្ព័ន្ធ React 18 + TypeScript សម្រាប់កសិករ អ្នកជំនាញ និងអ្នកគ្រប់គ្រង។"
-        : "Responsive React 18 & TypeScript workspace engineered for mobile field usability and clarity.",
-      bullets: isKhmer
-        ? [
-            "React 18, TypeScript, Tailwind CSS និង Vite split bundles",
-            "ការគាំទ្រភាសាខ្មែរ (Kantumruy Pro) និងសំឡេង Gemini 3.8 Flash TTS",
-            "ការប្តូរពន្លឺ/ងងឹត (Light & Dark Mode) ដោយស្វ័យប្រវត្តិ",
-          ]
-        : [
-            "React 18, TypeScript, Tailwind CSS & Vite split bundles",
-            "Native EN/KH UI (Geist + Kantumruy Pro) with Gemini TTS voice narration",
-            "Adaptive Light & Dark themes with mobile-ready navigation",
-          ],
-    },
-    {
-      Icon: Server,
-      title: isKhmer ? "ស្រទាប់ Backend និងបញ្ញាសិប្បនិម្មិត" : "Backend & Intelligence Engine",
-      summary: isKhmer
-        ? "ដំណើរការដោយ Flask 3, PostgreSQL 15, Redis 7 និងប្រព័ន្ធវិភាគកូនកាត់។"
-        : "Powered by Flask 3, Gunicorn workers, PostgreSQL 15, Redis 7, and hybrid AI inference.",
-      bullets: isKhmer
-        ? [
-            "Flask 3 + SQLAlchemy + Alembic migrations",
-            "ប្រព័ន្ធវិភាគតាមក្បួនច្បាប់ និង AI Copilot + Leaf Vision",
-            "សេវាព្យាករណ៍អាកាសធាតុ និងព័ត៌មានកសិកម្មផ្ទាល់",
-          ]
-        : [
-            "Flask 3 + Gunicorn + PostgreSQL 15 + Redis 7 state & rate limiting",
-            "Deterministic Rule Engine + Agricultural AI Assistant & Vision",
-            "Weather Intelligence telemetry & live multi-feed Agri News synthesizer",
-          ],
-    },
-    {
-      Icon: Database,
-      title: isKhmer ? "សុវត្ថិភាព និងប្រព័ន្ធអេកូឡូស៊ី" : "Security, Identity & Ecosystem",
-      summary: isKhmer
-        ? "សុវត្ថិភាពគណនីកម្រិតខ្ពស់ និងការតភ្ជាប់ទូទាត់ក្នុងស្រុក និងកម្មវិធីទូរស័ព្ទ។"
-        : "Hardened authentication, auditable RBAC workflows, local KHQR payments, and mobile sync.",
-      bullets: isKhmer
-        ? [
-            "WebAuthn Passkeys, Google OAuth និងលេខកូដ OTP តាមអ៊ីមែល",
-            "ការគ្រប់គ្រងសិទ្ធិ RBAC, CSRF និង Audit Logs",
-            "ការទូទាត់ Bakong KHQR និងកម្មវិធីទូរស័ព្ទ Flutter",
-          ]
-        : [
-            "WebAuthn Passkeys, Google OAuth & Email OTP verification",
-            "Role-Based Access Control (RBAC), CSRF & login activity audits",
-            "Bakong KHQR Pro membership billing & Flutter Mobile companion app",
-          ],
-    },
-  ];
-
-  const techStackBadges = [
-    "React 18",
-    "TypeScript",
-    "Tailwind CSS",
-    "Vite 7",
-    "Flask 3",
-    "PostgreSQL 15",
-    "Redis 7",
-    "WebAuthn",
-    "Bakong KHQR",
-    "Gemini 3.8 Flash TTS",
-    "Flutter",
   ];
 
   const features = [
@@ -427,8 +335,8 @@ export default function GuestLandingPage({
       Icon: Bot,
       title: isKhmer ? "ជំនួយការ AI កសិកម្មផ្ទាល់" : "Trained Agronomy AI",
       desc: isKhmer
-        ? "សួរឆ្លើយរាល់បញ្ហាដំណាំ ការការពារ និងជំហានព្យាបាលជាភាសាខ្មែរ និងអង់គ្លេស។"
-        : "Conversational copilot tuned specifically for regional crop symptoms and field treatments.",
+        ? "គំរូ Qwen2.5-3B LoRA ហ្វឹកហាត់ និងបម្រើសេវាលើ Hugging Face Space សម្រាប់សួរឆ្លើយជំងឺដំណាំជាខ្មែរ និងអង់គ្លេស។"
+        : "Fine-tuned Qwen2.5-3B LoRA copilot trained and served on Hugging Face Space for Khmer & English crop advice.",
     },
     {
       Icon: Volume2,
@@ -597,56 +505,56 @@ export default function GuestLandingPage({
           />
         </div>
 
-        {/* Centered Editorial Hero + Interactive Product Showcase (ChatDeck layout) */}
-        <section className="pb-14 pt-12 sm:pb-20 sm:pt-20">
-          <div className="mx-auto max-w-3xl text-center">
-            <div className="flex justify-center">
-              <span className="nx-badge inline-flex items-center rounded-full border border-neutral-200 bg-white px-4 py-1.5 text-xs font-medium text-neutral-700 shadow-sm dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-300">
+        {/* Split Editorial Hero + Borderless Floating 3D Print + Interactive Product Preview */}
+        <section className="pb-14 pt-10 sm:pb-20 sm:pt-16">
+          <div className="grid items-center gap-8 lg:grid-cols-12 lg:gap-10">
+            <div className="text-center lg:col-span-7 lg:text-left">
+              <div className="flex justify-center lg:justify-start">
+                <span className="nx-badge inline-flex items-center rounded-full border border-neutral-200 bg-white px-4 py-1.5 text-xs font-medium text-neutral-700 shadow-sm dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-300">
+                  {isKhmer
+                    ? "គាំទ្រការវិនិច្ឆ័យដំណាំជាភាសាខ្មែរ និងអង់គ្លេស"
+                    : "Precision AI Agronomy for Modern Farmers"}
+                </span>
+              </div>
+
+              <h1 className="mt-6 text-3xl font-bold tracking-tight text-neutral-900 dark:text-white sm:text-5xl lg:text-6xl lg:leading-[1.08]">
+                {isKhmer ? "ជំនួយការ AI " : "AI Assistant for "}
+                <span className="nx-gradient-text bg-gradient-to-b from-neutral-950 to-neutral-600 bg-clip-text text-transparent dark:from-white dark:to-neutral-400">
+                  {isKhmer ? "វិនិច្ឆ័យជំងឺដំណាំ។" : "Crop Health & Diagnostics."}
+                </span>
+              </h1>
+
+              <p className="mx-auto mt-6 max-w-2xl text-base leading-7 text-neutral-600 dark:text-neutral-400 sm:text-lg lg:mx-0">
                 {isKhmer
-                  ? "គាំទ្រការវិនិច្ឆ័យដំណាំជាភាសាខ្មែរ និងអង់គ្លេស"
-                  : "Precision AI Agronomy for Modern Farmers"}
-              </span>
+                  ? "រួមបញ្ចូលក្បួនវិនិច្ឆ័យវិទ្យាសាស្ត្រ ជំនួយការ AI កសិកម្ម ការព្យាករណ៍អាកាសធាតុ និងការប្រឹក្សាជាមួយអ្នកជំនាញក្នុងកម្មវិធីតែមួយ។"
+                  : "Combine rule-verified agronomy inference, conversational AI copilot guidance, weather risk tracking, and specialist support in one clean workspace."}
+              </p>
+
+              <div className="mt-8 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
+                <a
+                  href={d.diagnoseUrl}
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-neutral-900 px-6 text-sm font-medium text-white shadow-sm transition hover:bg-neutral-800 dark:bg-white dark:text-neutral-950 dark:hover:bg-neutral-200"
+                >
+                  <span>{isKhmer ? "សាកល្បងដោយឥតគិតថ្លៃ" : "Try For Free"}</span>
+                  <ArrowRight className="h-4 w-4" />
+                </a>
+                <a
+                  href={d.registerUrl}
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-neutral-200 bg-white px-6 text-sm font-medium text-neutral-900 transition hover:bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-100 dark:hover:bg-neutral-800"
+                >
+                  <Stethoscope className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
+                  <span>{isKhmer ? "បង្កើតគណនីកសិករ" : "Create Farmer Account"}</span>
+                </a>
+              </div>
             </div>
 
-            <h1 className="mt-7 text-3xl font-bold tracking-tight text-neutral-900 dark:text-white sm:text-5xl lg:text-6xl lg:leading-[1.08]">
-              {isKhmer ? "ជំនួយការ AI " : "AI Assistant for "}
-              <span className="nx-gradient-text bg-gradient-to-b from-neutral-950 to-neutral-600 bg-clip-text text-transparent dark:from-white dark:to-neutral-400">
-                {isKhmer ? "វិនិច្ឆ័យជំងឺដំណាំ។" : "Crop Health & Diagnostics."}
-              </span>
-            </h1>
-
-            <p className="mx-auto mt-6 max-w-2xl text-base leading-7 text-neutral-600 dark:text-neutral-400 sm:text-lg">
-              {isKhmer
-                ? "រួមបញ្ចូលក្បួនវិនិច្ឆ័យវិទ្យាសាស្ត្រ ជំនួយការ AI កសិកម្ម ការព្យាករណ៍អាកាសធាតុ និងការប្រឹក្សាជាមួយអ្នកជំនាញក្នុងកម្មវិធីតែមួយ។"
-                : "Combine rule-verified agronomy inference, conversational AI copilot guidance, weather risk tracking, and specialist support in one clean workspace."}
-            </p>
-
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-              <a
-                href={d.diagnoseUrl}
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-neutral-900 px-6 text-sm font-medium text-white shadow-sm transition hover:bg-neutral-800 dark:bg-white dark:text-neutral-950 dark:hover:bg-neutral-200"
-              >
-                <span>{isKhmer ? "សាកល្បងដោយឥតគិតថ្លៃ" : "Try For Free"}</span>
-                <ArrowRight className="h-4 w-4" />
-              </a>
-              <a
-                href={d.registerUrl}
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-neutral-200 bg-white px-6 text-sm font-medium text-neutral-900 transition hover:bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-100 dark:hover:bg-neutral-800"
-              >
-                <Stethoscope className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
-                <span>{isKhmer ? "បង្កើតគណនីកសិករ" : "Create Farmer Account"}</span>
-              </a>
+            <div className="lg:col-span-5">
+              <InteractiveModelShowcase
+                modelUrl={d.showcaseModelUrl || "/static/models/3D.glb"}
+                isKhmer={isKhmer}
+                className="h-[280px] sm:h-[360px] lg:h-[430px]"
+              />
             </div>
-
-            <p className="mt-4 text-xs text-neutral-500 dark:text-neutral-400">
-              {isKhmer ? "បុគ្គលិក ឬអ្នកជំនាញ?" : "Agronomist or Administrator?"}{" "}
-              <a
-                href={d.staffLoginUrl}
-                className="font-medium text-neutral-900 underline underline-offset-4 hover:text-neutral-600 dark:text-neutral-200 dark:hover:text-white"
-              >
-                {isKhmer ? "ចូលតាមច្រកបុគ្គលិក" : "Staff Portal"}
-              </a>
-            </p>
           </div>
 
           {/* Centered Product Preview Frame (ChatDeck signature hero showcase) */}
@@ -1068,89 +976,6 @@ export default function GuestLandingPage({
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Full System Architecture & Live Knowledge Base Section (integrated directly on landing page) */}
-        <section id="architecture" className="py-14 sm:py-20">
-          <div className="mx-auto mb-12 max-w-3xl text-center">
-            <span className="inline-flex items-center rounded-full border border-neutral-200 bg-white px-3.5 py-1 text-xs font-medium text-neutral-700 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-300">
-              {isKhmer ? "ស្ថាបត្យកម្មប្រព័ន្ធ" : "Platform Architecture"}
-            </span>
-            <h2 className="mt-4 text-3xl font-bold tracking-tight text-neutral-900 dark:text-white sm:text-4xl lg:text-5xl">
-              {isKhmer
-                ? "ស្ថាបត្យកម្មប្រព័ន្ធ និងទិន្នន័យកសិកម្ម"
-                : "System Architecture & Tech Stack"}
-            </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-base text-neutral-600 dark:text-neutral-400 sm:text-lg">
-              {isKhmer
-                ? "វេទិកាបញ្ចូលគ្នារវាងម៉ាស៊ីនវិភាគផ្អែកលើវិធានជំនាញ AI វិភាគរូបភាពស្លឹក ព័ត៌មានអាកាសធាតុ និងប្រព័ន្ធទូទាត់ KHQR។"
-                : "An end-to-end agronomy stack unifying deterministic expert rules, AI inference, live telemetry, and secure billing."}
-            </p>
-          </div>
-
-          {/* Knowledge Base Snapshot Grid */}
-          <div className="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
-            {statsItems.map((stat) => (
-              <div
-                key={stat.label}
-                className="rounded-xl border border-neutral-200 bg-white p-5 text-center dark:border-neutral-800 dark:bg-neutral-900/50"
-              >
-                <p className="text-3xl font-bold tabular-nums tracking-tight text-neutral-900 dark:text-white">
-                  {stat.value}
-                </p>
-                <p className="mt-1 text-xs font-medium text-neutral-500 dark:text-neutral-400">
-                  {stat.label}
-                </p>
-              </div>
-            ))}
-          </div>
-
-          {/* 3 Core Architecture Pillars */}
-          <div className="grid gap-6 lg:grid-cols-3">
-            {architecturePillars.map(({ Icon, title, summary, bullets }) => (
-              <div
-                key={title}
-                className="flex flex-col justify-between rounded-xl border border-neutral-200 bg-white p-6 transition-all duration-300 hover:shadow-md dark:border-neutral-800 dark:bg-neutral-900/50"
-              >
-                <div>
-                  <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg border border-neutral-200 bg-neutral-50 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white">
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white">{title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">
-                    {summary}
-                  </p>
-                </div>
-
-                <ul className="mt-5 space-y-2.5 border-t border-neutral-100 pt-4 text-xs text-neutral-600 dark:border-neutral-800 dark:text-neutral-300">
-                  {bullets.map((bullet) => (
-                    <li key={bullet} className="flex items-start gap-2">
-                      <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-neutral-900 dark:text-white" />
-                      <span className="leading-relaxed">{bullet}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-
-          {/* Verified Tech Stack Strip */}
-          <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-neutral-200 bg-neutral-50/70 px-5 py-4 dark:border-neutral-800 dark:bg-neutral-900/40">
-            <span className="inline-flex items-center gap-2 text-xs font-semibold text-neutral-700 dark:text-neutral-200">
-              <Smartphone className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
-              {isKhmer ? "បច្ចេកវិទ្យាស្នូលក្នុងប្រព័ន្ធ" : "Core Technology Stack"}
-            </span>
-            <div className="flex flex-wrap gap-1.5">
-              {techStackBadges.map((tech) => (
-                <span
-                  key={tech}
-                  className="rounded-md border border-neutral-200 bg-white px-2.5 py-1 font-mono text-[11px] font-medium text-neutral-700 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-300"
-                >
-                  {tech}
-                </span>
-              ))}
             </div>
           </div>
         </section>
@@ -1599,11 +1424,6 @@ export default function GuestLandingPage({
                 </p>
                 <ul className="mt-3 space-y-2.5 text-neutral-600 dark:text-neutral-400">
                   <li>
-                    <a href="#architecture" className="hover:text-neutral-900 dark:hover:text-white">
-                      {isKhmer ? "ស្ថាបត្យកម្ម" : "Architecture"}
-                    </a>
-                  </li>
-                  <li>
                     <a href="#nxProjectDetail" className="hover:text-neutral-900 dark:hover:text-white">
                       {isKhmer ? "ក្រុមការងារ" : "Team"}
                     </a>
@@ -1629,11 +1449,6 @@ export default function GuestLandingPage({
                   <li>
                     <a href={d.registerUrl} className="hover:text-neutral-900 dark:hover:text-white">
                       {isKhmer ? "ចុះឈ្មោះ" : "Create Account"}
-                    </a>
-                  </li>
-                  <li>
-                    <a href={d.staffLoginUrl} className="hover:text-neutral-900 dark:hover:text-white">
-                      {isKhmer ? "ច្រកបុគ្គលិក" : "Staff Portal"}
                     </a>
                   </li>
                 </ul>

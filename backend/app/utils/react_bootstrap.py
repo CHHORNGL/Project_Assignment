@@ -2944,6 +2944,7 @@ def build_farmer_guest_landing_bootstrap(
         "staffLoginUrl": _safe_url("staff.login", "/staff/login"),
         "diagnoseUrl": _safe_url("farmer.diagnose_rule_based", "/farmer/diagnose/rule-based"),
         "detailUrl": _safe_url("farmer.detail", "/farmer/detail"),
+        "showcaseModelUrl": _safe_url("static", "/static/models/3D.glb", filename="models/3D.glb"),
         "premiumPrice": str(premium_price),
         "yearlyMonthly": str(yearly_monthly),
         "yearlyTotal": str(yearly_total),
@@ -3117,7 +3118,7 @@ def _serialize_detail_member(raw: dict[str, Any] | None) -> dict[str, str]:
 
 
 def _collect_detail_platform_stats() -> dict[str, int | None]:
-    """Safely query read-only knowledge base metrics for the architecture overview."""
+    """Safely query read-only knowledge base metrics for the platform overview."""
     stats: dict[str, int | None] = {
         "cropsCount": None,
         "diseasesCount": None,
@@ -3145,7 +3146,7 @@ def _collect_detail_platform_stats() -> dict[str, int | None]:
 def build_farmer_detail_bootstrap(*, supervisor, team) -> dict[str, Any]:
     ui = _farmer_shell_ui(
         eyebrow=_copy("About Platform", "អំពីប្រព័ន្ធ"),
-        title=_copy("AGRI SYSTEM Architecture & Team", "ស្ថាបត្យកម្មប្រព័ន្ធ និងក្រុមអភិវឌ្ឍន៍"),
+        title=_copy("About AGRI SYSTEM & Team", "អំពីប្រព័ន្ធ និងក្រុមអភិវឌ្ឍន៍"),
         subtitle=_copy("AI-assisted agronomy engineering project overview.", "ទិដ្ឋភាពទូទៅនៃគម្រោងកសិកម្មឆ្លាតវៃ AI។"),
     )
     serialized_supervisor = _serialize_detail_member(supervisor)

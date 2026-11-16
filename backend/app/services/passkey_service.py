@@ -72,13 +72,22 @@ def get_webauthn_rp_and_origins(req: Request) -> tuple[str, list[str]]:
     except Exception:
         pass
 
-    # Dynamically accept Origin or Referer header if matching scheme and host
+    # Dynamically accept Origin or Referer header only when its host matches this RP ID
     for header_name in ("Origin", "Referer"):
         candidate = req.headers.get(header_name)
         if candidate:
             try:
                 parsed = urlparse(candidate)
-                if parsed.scheme and parsed.netloc:
+                parsed_host = (parsed.hostname or "").strip().lower()
+                host_matches_rp = bool(
+                    parsed_host
+                    and (
+                        parsed_host == rp_id
+                        or parsed_host.endswith(f".{rp_id}")
+                        or (rp_id == "localhost" and parsed_host in {"localhost", "127.0.0.1"})
+                    )
+                )
+                if parsed.scheme in {"http", "https"} and parsed.netloc and host_matches_rp:
                     origin_str = f"{parsed.scheme}://{parsed.netloc}"
                     if origin_str not in allowed_origins:
                         allowed_origins.append(origin_str)

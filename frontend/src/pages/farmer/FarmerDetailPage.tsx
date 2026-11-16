@@ -4,20 +4,13 @@ import {
   BadgeCheck,
   Building2,
   CheckCircle2,
-  CloudSun,
   Cpu,
-  Database,
   Globe,
   GraduationCap,
   Hash,
-  Languages,
-  Layers,
   Mail,
   Phone,
   Send,
-  Server,
-  ShieldCheck,
-  Smartphone,
   Sparkles,
   Sprout,
   Stethoscope,
@@ -65,8 +58,6 @@ export interface DetailData {
   chatUrl?: string;
   newsUrl?: string;
 }
-
-type SectionTab = "all" | "architecture" | "team";
 
 type RoleTone = "indigo" | "sky" | "emerald" | "amber";
 
@@ -276,7 +267,6 @@ function MemberMetadataFacts({
 export default function FarmerDetailPage({ bootstrap }: { bootstrap: AppBootstrap<DetailData> }) {
   const d = bootstrap.data;
   const isKhmer = bootstrap.lang === "km";
-  const [activeTab, setActiveTab] = useState<SectionTab>("all");
 
   const supervisor = d.supervisor || {
     name: "Sek Socheat",
@@ -334,127 +324,6 @@ export default function FarmerDetailPage({ bootstrap }: { bootstrap: AppBootstra
     ];
   }, [d.stats, isKhmer]);
 
-  const pipelineStages = useMemo(
-    () => [
-      {
-        step: "01",
-        Icon: CloudSun,
-        tone: "bg-sky-500/10 text-sky-600 dark:text-sky-400",
-        title: isKhmer ? "ទិន្នន័យកសិដ្ឋាន និងអាកាសធាតុ" : "Field Intake & Telemetry",
-        desc: isKhmer
-          ? "ប្រមូលរោគសញ្ញាដំណាំ រូបភាពស្លឹក និងទិន្នន័យអាកាសធាតុក្នុងតំបន់ជាក់ស្តែង។"
-          : "Collects crop selections, bilingual symptom observations, leaf photos, and local weather telemetry.",
-      },
-      {
-        step: "02",
-        Icon: Cpu,
-        tone: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400",
-        title: isKhmer ? "ម៉ាស៊ីនវិភាគកូនកាត់ AI + ច្បាប់" : "Hybrid Inference Core",
-        desc: isKhmer
-          ? "ផ្គូផ្គងវិធានជំនាញដំណាំជាមួយគំរូ AI វិភាគរូបភាព និងទិន្នន័យចំណេះដឹងកសិកម្ម។"
-          : "Combines deterministic symptom rule scoring with AI leaf-vision inference and curated agronomy facts.",
-      },
-      {
-        step: "03",
-        Icon: ShieldCheck,
-        tone: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
-        title: isKhmer ? "ការផ្ទៀងផ្ទាត់ដោយអ្នកជំនាញ" : "Agronomist Validation",
-        desc: isKhmer
-          ? "បញ្ជូនករណីស្មុគស្មាញទៅអ្នកជំនាញកសិកម្មដើម្បីពិនិត្យ និងអនុម័តលទ្ធផល។"
-          : "Routes low-confidence cases to certified human agronomists with traceable approval workflows.",
-      },
-      {
-        step: "04",
-        Icon: Languages,
-        tone: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-        title: isKhmer ? "ដំណោះស្រាយពីរភាសា និងព័ត៌មាន" : "Bilingual Advisory & Alerts",
-        desc: isKhmer
-          ? "ផ្តល់វិធីព្យាបាលជាភាសាខ្មែរ-អង់គ្លេស សំឡេង TTS ព័ត៌មានបន្តផ្ទាល់ និង Bakong KHQR។"
-          : "Delivers EN/KM treatment guidance, Khmer TTS audio narration, live agri briefings, and KHQR plans.",
-      },
-    ],
-    [isKhmer],
-  );
-
-  const architectureLayers = useMemo(
-    () => [
-      {
-        Icon: Layers,
-        iconClass: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400",
-        title: isKhmer ? "ស្រទាប់បទពិសោធន៍ និងភាសា" : "Experience & Localization Layer",
-        summary: isKhmer
-          ? "រចនាសម្ព័ន្ធ React + TypeScript សម្រាប់កសិករ អ្នកជំនាញ និងអ្នកគ្រប់គ្រង។"
-          : "Responsive React 18 & TypeScript workspace built for mobile field usability and clarity.",
-        bullets: isKhmer
-          ? [
-              "កម្មវិធី React 18 + Tailwind CSS ជាមួយ Vite bundle",
-              "ការគាំទ្រភាសាខ្មែរ (Kantumruy Pro) និងសំឡេង TTS",
-              "ការប្តូរពន្លឺ/ងងឹត (Light / Obsidian Dark) ដោយស្វ័យប្រវត្តិ",
-            ]
-          : [
-              "React 18, TypeScript, Tailwind CSS & Vite split bundles",
-              "Native EN/KH localization with Khmer TTS voice narration",
-              "Adaptive Light & Obsidian Dark themes with Bottom Navigation",
-            ],
-      },
-      {
-        Icon: Server,
-        iconClass: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-        title: isKhmer ? "ស្រទាប់ Backend និងបញ្ញាសិប្បនិម្មិត" : "Backend & Intelligence Engine",
-        summary: isKhmer
-          ? "ដំណើរការដោយ Flask API, មូលដ្ឋានទិន្នន័យ PostgreSQL និងប្រព័ន្ធច្បាប់ជំនាញ។"
-          : "Powered by Flask 3, Gunicorn workers, PostgreSQL 15, Redis caching, and hybrid inference.",
-        bullets: isKhmer
-          ? [
-              "Flask 3 + SQLAlchemy + Alembic migrations",
-              "ប្រព័ន្ធវិភាគតាមច្បាប់ និង Gradio / AI Leaf Vision",
-              "សេវាព្យាករណ៍អាកាសធាតុ និងព័ត៌មានកសិកម្មផ្ទាល់",
-            ]
-          : [
-              "Flask 3 + Gunicorn + PostgreSQL 15 + Redis 7 state & rate limiting",
-              "Deterministic Rule Engine + AI Assistant & Vision integration",
-              "Weather Intelligence telemetry & live multi-feed Agri News synthesizer",
-            ],
-      },
-      {
-        Icon: Database,
-        iconClass: "bg-sky-500/10 text-sky-600 dark:text-sky-400",
-        title: isKhmer ? "សុវត្ថិភាព និងប្រព័ន្ធអេកូឡូស៊ី" : "Security, Identity & Ecosystem",
-        summary: isKhmer
-          ? "សុវត្ថិភាពគណនីកម្រិតខ្ពស់ និងការតភ្ជាប់ទូទាត់ក្នុងស្រុក និងកម្មវិធីទូរស័ព្ទ។"
-          : "Hardened authentication, auditable RBAC workflows, local KHQR payments, and mobile sync.",
-        bullets: isKhmer
-          ? [
-              "WebAuthn Passkeys, OAuth និងលេខកូដ OTP តាមអ៊ីមែល",
-              "ការគ្រប់គ្រងសិទ្ធិ RBAC, CSRF និង Audit Logs",
-              "ការទូទាត់ Bakong KHQR និងកម្មវិធីទូរស័ព្ទ Flutter",
-            ]
-          : [
-              "WebAuthn Passkeys, OAuth 2.0 (Authlib) & Email OTP verification",
-              "Role-Based Access Control (RBAC), CSRF & login activity audits",
-              "Bakong KHQR Pro membership billing & Flutter Mobile companion app",
-            ],
-      },
-    ],
-    [isKhmer],
-  );
-
-  const techBadges = [
-    "React 18",
-    "TypeScript",
-    "Tailwind CSS",
-    "Vite 7",
-    "Flask 3",
-    "PostgreSQL 15",
-    "Redis 7",
-    "WebAuthn",
-    "Bakong KHQR",
-    "Flutter",
-  ];
-
-  const showArchitecture = activeTab === "all" || activeTab === "architecture";
-  const showTeam = activeTab === "all" || activeTab === "team";
-
   return (
     <WorkspaceShell
       bootstrap={bootstrap}
@@ -485,8 +354,8 @@ export default function FarmerDetailPage({ bootstrap }: { bootstrap: AppBootstra
 
                 <h2 className="font-display text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-3xl">
                   {isKhmer
-                    ? "ស្ថាបត្យកម្មប្រព័ន្ធ AGRI SYSTEM និងក្រុមវិស្វកម្ម"
-                    : "AGRI SYSTEM Architecture & Engineering Team"}
+                    ? "អំពីប្រព័ន្ធ AGRI SYSTEM និងក្រុមវិស្វកម្ម"
+                    : "About AGRI SYSTEM & Engineering Team"}
                 </h2>
                 <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
                   {isKhmer
@@ -542,175 +411,18 @@ export default function FarmerDetailPage({ bootstrap }: { bootstrap: AppBootstra
           </div>
         </section>
 
-        {/* Section Filter Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div
-            role="tablist"
-            aria-label={isKhmer ? "ផ្នែកទំព័រ" : "Overview sections"}
-            className="flex w-full flex-wrap items-center gap-1 rounded-2xl border border-slate-200/90 bg-white/90 p-1 shadow-sm dark:border-slate-800 dark:bg-obsidian-900/90 sm:inline-flex sm:w-auto"
-          >
-            {(
-              [
-                {
-                  id: "all" as const,
-                  label: isKhmer ? "ទិដ្ឋភាពទូទៅ" : "All Overview",
-                },
-                {
-                  id: "architecture" as const,
-                  label: isKhmer ? "ស្ថាបត្យកម្មប្រព័ន្ធ" : "System Architecture",
-                },
-                {
-                  id: "team" as const,
-                  label: isKhmer ? "សាស្ត្រាចារ្យ និងក្រុមការងារ" : "Supervisor & Team",
-                },
-              ] as const
-            ).map((tab) => {
-              const selected = activeTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  role="tab"
-                  type="button"
-                  aria-selected={selected}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={cn(
-                    "rounded-xl px-3.5 py-2 text-xs font-bold transition",
-                    selected
-                      ? "bg-indigo-600 text-white shadow-sm"
-                      : "text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white",
-                  )}
-                >
-                  {tab.label}
-                </button>
-              );
-            })}
-          </div>
-
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200/80 bg-white/80 px-3 py-1.5 text-xs font-semibold text-slate-600 dark:border-slate-800 dark:bg-obsidian-900/80 dark:text-slate-300">
-            <Users className="h-3.5 w-3.5 text-indigo-500" />
-            <span>
-              {isKhmer
-                ? `សាស្ត្រាចារ្យ 1 · សមាជិក ${team.length} នាក់`
-                : `1 Supervisor · ${team.length} Contributors`}
-            </span>
-          </span>
-        </div>
-
-        {/* System Architecture Blueprint */}
-        {showArchitecture && (
-          <section className="space-y-5">
-            {/* 4-Stage End-to-End Pipeline */}
-            <div className="ai-surface p-5 sm:p-6">
-              <div className="mb-5 flex flex-wrap items-center justify-between gap-2">
-                <div>
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
-                    {isKhmer ? "លំហូរដំណើរការប្រព័ន្ធ" : "System Pipeline"}
-                  </span>
-                  <h3 className="mt-0.5 font-display text-lg font-bold text-slate-900 dark:text-white">
-                    {isKhmer
-                      ? "លំហូរវិភាគជំងឺដំណាំពីកសិដ្ឋានដល់ដំណោះស្រាយ"
-                      : "End-to-End Diagnostic & Advisory Pipeline"}
-                  </h3>
-                </div>
-                <span className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold text-slate-600 dark:bg-obsidian-800 dark:text-slate-300">
-                  {isKhmer ? "4 ដំណាក់កាលសំខាន់" : "4 Core Stages"}
-                </span>
-              </div>
-
-              <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
-                {pipelineStages.map((stage) => {
-                  const StageIcon = stage.Icon;
-                  return (
-                    <div
-                      key={stage.step}
-                      className="flex flex-col rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 transition hover:border-indigo-300/70 dark:border-slate-800 dark:bg-obsidian-950/60 dark:hover:border-indigo-500/40"
-                    >
-                      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                        <div
-                          className={cn(
-                            "flex h-9 w-9 items-center justify-center rounded-xl",
-                            stage.tone,
-                          )}
-                        >
-                          <StageIcon className="h-5 w-5" />
-                        </div>
-                        <span className="font-mono text-xs font-bold text-slate-400">
-                          {stage.step}
-                        </span>
-                      </div>
-                      <h4 className="font-display text-sm font-bold text-slate-900 dark:text-white">
-                        {stage.title}
-                      </h4>
-                      <p className="mt-1.5 text-xs leading-relaxed text-slate-600 dark:text-slate-400">
-                        {stage.desc}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* 3 Core Architecture Pillars */}
-            <div className="grid gap-5 lg:grid-cols-3">
-              {architectureLayers.map((layer) => {
-                const LayerIcon = layer.Icon;
-                return (
-                  <div key={layer.title} className="ai-surface ai-card-hover flex flex-col p-5 sm:p-6">
-                    <div className="flex items-start gap-3.5">
-                      <div
-                        className={cn(
-                          "flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl",
-                          layer.iconClass,
-                        )}
-                      >
-                        <LayerIcon className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <h3 className="font-display text-base font-bold text-slate-900 dark:text-white">
-                          {layer.title}
-                        </h3>
-                        <p className="mt-1 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-                          {layer.summary}
-                        </p>
-                      </div>
-                    </div>
-
-                    <ul className="mt-4 space-y-2 border-t border-slate-200/75 pt-4 text-xs text-slate-700 dark:border-slate-800/80 dark:text-slate-300">
-                      {layer.bullets.map((bullet) => (
-                        <li key={bullet} className="flex items-start gap-2">
-                          <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-500" />
-                          <span>{bullet}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Verified Technology Stack Ribbon */}
-            <div className="ai-surface flex flex-wrap items-center justify-between gap-3 px-5 py-4">
-              <div className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-200">
-                <Smartphone className="h-4 w-4 text-indigo-500" />
-                <span>{isKhmer ? "បច្ចេកវិទ្យាប្រើប្រាស់ក្នុងប្រព័ន្ធ" : "Core Technology Stack"}</span>
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {techBadges.map((tech) => (
-                  <span
-                    key={tech}
-                    className="rounded-lg border border-slate-200/90 bg-slate-50 px-2.5 py-1 font-mono text-[11px] font-semibold text-slate-700 dark:border-slate-700/80 dark:bg-obsidian-950 dark:text-slate-300"
-                  >
-                    {tech}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </section>
-        )}
-
         {/* Academic Supervision & Engineering Team */}
-        {showTeam && (
-          <section className="space-y-6">
+        <section className="space-y-6">
+          <div className="flex flex-wrap items-center justify-end gap-3">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200/80 bg-white/80 px-3 py-1.5 text-xs font-semibold text-slate-600 dark:border-slate-800 dark:bg-obsidian-900/80 dark:text-slate-300">
+              <Users className="h-3.5 w-3.5 text-indigo-500" />
+              <span>
+                {isKhmer
+                  ? `សាស្ត្រាចារ្យ 1 · សមាជិក ${team.length} នាក់`
+                  : `1 Supervisor · ${team.length} Contributors`}
+              </span>
+            </span>
+          </div>
             {/* Academic Supervisor Spotlight */}
             <div>
               <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
@@ -859,7 +571,6 @@ export default function FarmerDetailPage({ bootstrap }: { bootstrap: AppBootstra
               </div>
             </div>
           </section>
-        )}
       </div>
     </WorkspaceShell>
   );

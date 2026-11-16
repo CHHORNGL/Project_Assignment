@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 import "./index.css";
 import "./styles/mobile.css";
 import DiagnosisWizardPage from "./diagnosis/DiagnosisWizardPage";
+import { initInspectGuard, scrubBootstrapData } from "./utils/inspectGuard";
 import { registerServiceWorker } from "./utils/pwa";
 
 registerServiceWorker();
@@ -23,6 +24,10 @@ function readBootstrap(): Record<string, any> | null {
 
 const rootNode = document.getElementById("diagnosis-wizard-root");
 const bootstrap = readBootstrap();
+initInspectGuard();
+if (bootstrap) {
+  scrubBootstrapData(["diagnosis-wizard-data"]);
+}
 
 if (rootNode && bootstrap) {
   createRoot(rootNode).render(

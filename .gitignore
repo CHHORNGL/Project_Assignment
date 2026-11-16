@@ -55,3 +55,4 @@ mobile/.flutter-plugins-dependencies
 *.diff
 backend/app/static/uploads/diag_*
 cookies*.txt
+.neon
