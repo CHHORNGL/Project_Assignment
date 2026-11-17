@@ -8,16 +8,26 @@ and support tickets in both English and Khmer.
 from __future__ import annotations
 
 import re
-from typing import Optional
 
 from flask import current_app
 
 from app.utils.i18n import get_current_language
 
-
 PROJECT_CONTEXT = """Integrated Agricultural Expert System (AgriSystem) Platform Knowledge:
 Created and developed under the leadership of Team Leader Mao Seavik.
-Model: AGY V2.0.0.
+Project Supervisor & Academic Advisor: Professor Sek Socheat (សាស្ត្រាចារ្យ សេក សុជាតិ).
+Development Team:
+- Mao Seavik (ម៉ៅ សៀវអ៊ិ) — Team Leader & Backend Lead (Backend APIs, Rule-Based Diagnosis Engine, Custom AI Training & Weather Intelligence)
+- Chea Cheavchhorng (ជា ជៀវឈ័ង្ស) — Frontend & UI/UX Lead (Farmer Web Dashboard, React Diagnosis Wizard, Theme Management & Responsive UI Design)
+- Nov Panha (នៅ បញ្ញា) — Mobile App Developer (Flutter Cross-Platform Mobile App, Mobile API Integration & Offline Caching)
+- Pich Rachana (ពេជ្រ រចនា) — Data & QA Specialist (Crop Disease & Symptom Rule Dataset Curation, Khmer Translation Matrix & System Testing)
+
+System Architecture & Technology Stack:
+- Backend: Python 3.11 + Flask 3.1 REST & SSR architecture, SQLAlchemy ORM, Flask-Login, Flask-WTF CSRF, Flask-Limiter, PyWebAuthn (Passkeys), Authlib (Google OAuth 2.0), Bakong KHQR SDK.
+- Frontend: React 18 + TypeScript + Vite + Tailwind CSS + Three.js 3D visual canvas.
+- Mobile: Flutter / Dart cross-platform iOS & Android app.
+- Database: PostgreSQL (Neon Serverless Postgres in production, SQLite in local dev/testing).
+- AI & Knowledge Engine: Forward-chaining Rule-Based Expert System (diagnosis_engine.py) + Custom Fine-Tuned Agricultural AI (Model AGY V2.0.0 / Maoseavik/agri-qwen3b-lora hosted on Hugging Face Spaces).
 
 Platform Roles & Navigation:
 1. Farmer Portal:
@@ -25,35 +35,31 @@ Platform Roles & Navigation:
    - AI Diagnosis (/farmer/diagnose): Upload photos of crop leaves, stems, or fruits for automated AI disease detection, severity score, and treatment tips.
    - Rule-Based Diagnosis (/farmer/diagnose-rule-based): Step-by-step questionnaire decision tree to deduce crop diseases by answering guided symptom questions without uploading photos.
    - Diagnosis History (/farmer/diagnosis-history): Chronological log of past diagnoses with status, expert verification, and option to export or print PDF medical plant reports.
-   - Ask Expert (/farmer/chat): Real-time chat with human agricultural specialists and agronomists with image attachment support.
+   - Ask Agricultural Expert (/farmer/chat): Dedicated AI agronomy guidance and real-time chat with agricultural specialists.
    - Weather & Soil (/farmer/weather): Live localized weather, 24h rainfall prediction, 7-day forecast, humidity, and agronomic field advice.
    - News (/farmer/news): Agriculture news, market updates, and seasonal planting advice.
-   - Profile (/farmer/profile): Manage farmer name, phone, farm location, and farm area.
-   - Settings & Security (/farmer/settings): Change password, register biometric Passkeys (WebAuthn / TouchID / FaceID) for instant passwordless login.
-   - Language & Theme: Top navbar switcher for Khmer (KM) and English (EN); Sun/Moon button for Light Mode / Dark Mode.
-   - AI Credits & Upgrade (/farmer/upgrade): Free tier has daily quota; Pro and Unlimited plans provide unlimited AI analyses and priority expert reviews.
-   - Contact Admin: Support tab inside this AI Helper widget or via support form to submit issue tickets directly to system administrators.
+   - Profile & Settings (/farmer/profile, /farmer/settings): Manage profile, change password, register biometric Passkeys (WebAuthn / TouchID / FaceID), and view active login devices.
+   - AI Credits & Upgrade (/farmer/upgrade): Free tier has daily quota; Pro plan ($2.99/month via NBC Bakong KHQR) unlocks unlimited AI analyses and priority expert reviews.
 
 2. Expert Portal:
    - Dashboard (/expert/dashboard): Overview of assigned farmer cases.
    - Diagnoses Review (/expert/diagnoses): Verify and confirm farmer diagnosis submissions.
-   - Disease Knowledge Base (/expert/diseases): Manage plant diseases and recommended treatments.
-   - Consultations (/expert/chats): Chat directly with farmers.
+   - Disease Knowledge Base (/expert/diseases, /expert/rules): Manage plant diseases, symptoms, and diagnostic rules.
+   - Consultations (/expert/chats): Chat directly with farmers via Live Support.
 
 3. Admin Portal:
-   - Dashboard (/admin/dashboard): System metrics, active users, server health.
-   - User Management (/admin/users): Manage accounts, activate/deactivate, assign roles.
+   - Dashboard (/admin/dashboard): System metrics, active users, revenue, and server health.
+   - User Management (/admin/users): Manage accounts, activate/deactivate, assign roles (Farmer, Expert, Admin).
    - Diseases & Rules (/admin/diseases, /admin/rules): Configure crop diseases, symptom rules, and decision trees.
    - Translations (/admin/translations): Manage bilingual English and Khmer content.
-   - Audit Logs (/admin/audit-logs): View security and system activity logs.
-   - Support Requests (/admin/support-requests): Review and resolve user support tickets.
+   - Audit Logs (/admin/audit-logs): View security and system activity logs with CSV/JSON export.
+   - Support Requests (/admin/support-requests): Review and resolve user support tickets and live chat.
    - Settings (/admin/settings): AI model configuration and site settings.
 
 Core Policy:
-- Answer only about using and navigating this AgriSystem application.
-- If the user asks for crop disease diagnosis or chemical dosages, politely direct them to AI Diagnosis (/farmer/diagnose), Rule-Based Diagnosis (/farmer/diagnose-rule-based), or Ask Expert (/farmer/chat).
-- Use a natural, friendly, and flexible voice, like a real person.
-- ABSOLUTELY DO NOT use markdown bold signs (**), asterisks (*), hashtags (###), backticks (`), or code syntax. Write clean, natural plain text without markdown formatting symbols.
+- Agri AI Copilot answers questions about the system of the project (features, navigation, architecture, team members, account settings, Passkeys, Bakong payments, and portal workflows).
+- For agricultural questions (crop diseases, symptoms, fertilizers, soil, pest control), politely direct the user to Ask Agricultural Expert (/farmer/chat), AI Diagnosis (/farmer/diagnose), or Rule-Based Diagnosis (/farmer/diagnose-rule-based).
+- ABSOLUTELY DO NOT use markdown bold signs (**), asterisks (*), hashtags (###), backticks (`), or code syntax. Write clean, natural plain text.
 """
 
 CROP_DIAGNOSIS_KEYWORDS = (
@@ -99,7 +105,7 @@ def clean_markdown_symbols(text: str) -> str:
     return text.strip()
 
 
-def _is_khmer(text: str, lang: Optional[str] = None) -> bool:
+def _is_khmer(text: str, lang: str | None = None) -> bool:
     if (lang or "").lower() in {"km", "kh", "khmer"}:
         return True
     return bool(re.search(r"[\u1780-\u17ff]", text or ""))
@@ -314,23 +320,96 @@ def _built_in_support_reply(message: str, is_km: bool, user_role: str = "user", 
             "- Dark Mode / Light Mode: Click the Sun / Moon icon in the top header to toggle between Dark Mode and Light Mode. Your preference is saved automatically."
         )
 
-    # 11. Credits, Tokens & Upgrade
-    if any(k in msg for k in ["credit", "credits", "token", "tokens", "upgrade", "pro", "unlimited", "subscription", "price", "pricing", "plan", "cost", "កម្រៃ", "ដំឡើង", "ទិញ", "តម្លៃ"]):
+    # 11. Credits, Tokens, Bakong KHQR & Upgrade
+    if any(k in msg for k in ["credit", "credits", "token", "tokens", "upgrade", "pro", "unlimited", "subscription", "price", "pricing", "plan", "cost", "bakong", "khqr", "payment", "កម្រៃ", "ដំឡើង", "ទិញ", "តម្លៃ", "បាគង", "បង់ប្រាក់"]):
         if is_km:
             return (
-                "ចំនួន AI Credits និងគម្រោងគណនី (Upgrade)៖\n\n"
-                "- គណនីឥតគិតថ្លៃទទួលបាន Token/Credits ប្រចាំថ្ងៃសម្រាប់ធ្វើរោគវិនិច្ឆ័យ និងជជែកជាមួយ AI។\n"
-                "- អ្នកអាចពិនិត្យសមតុល្យ Credits ដែលនៅសល់នៅលើផ្នែកខាងលើនៃ Dashboard របស់អ្នក។\n"
-                "- ដើម្បីប្រើប្រាស់ដោយគ្មានដែនកំណត់ (Unlimited AI Analyses) និងទទួលបានការពិគ្រោះជាមួយអ្នកជំនាញជាអាទិភាព សូមចូលទៅកាន់ទំព័រ Upgrade (/farmer/upgrade) ដើម្បីដំឡើងគណនី។"
+                "ចំនួន AI Credits និងការដំឡើងគណនី Pro តាមរយៈ Bakong KHQR (/farmer/upgrade)៖\n\n"
+                "- គណនីឥតគិតថ្លៃទទួលបាន Token/Credits ប្រចាំថ្ងៃសម្រាប់ធ្វើរោគវិនិច្ឆ័យ និងសួរអ្នកជំនាញ AI។\n"
+                "- ដើម្បីប្រើប្រាស់ដោយគ្មានដែនកំណត់ (Unlimited AI Analyses) សូមចូលទៅកាន់ទំព័រ Upgrade (/farmer/upgrade)។\n"
+                "- អ្នកអាចស្កេនបង់ប្រាក់ភ្លាមៗតាមរយៈ NBC Bakong KHQR ពីកម្មវិធីធនាគារណាមួយក្នុងប្រទេសកម្ពុជា (ABA, ACLEDA, Wing, Bakong) ហើយប្រព័ន្ធនឹងផ្ទៀងផ្ទាត់ការបង់ប្រាក់ និងបើកដំណើរការគណនី Pro ដោយស្វ័យប្រវត្តិ។"
             )
         return (
-            "AI Credits & Plan Upgrades:\n\n"
-            "- Every free account receives daily AI credits for disease diagnoses and expert chats.\n"
-            "- You can view your remaining credit balance anytime at the top of your Dashboard.\n"
-            "- To unlock Unlimited AI analyses, priority expert reviews, and advanced weather forecasts, visit Upgrade (/farmer/upgrade) and select a premium tier."
+            "AI Credits & Bakong KHQR Pro Upgrade (/farmer/upgrade):\n\n"
+            "- Free accounts receive a daily AI credit quota for disease diagnoses and agricultural consultations.\n"
+            "- To unlock Unlimited AI analyses and priority expert support, visit Upgrade (/farmer/upgrade).\n"
+            "- Scan the generated NBC Bakong KHQR code using any Cambodian mobile banking app (ABA, ACLEDA, Wing, Bakong); the platform automatically verifies the transaction and activates your Pro subscription."
         )
 
-    # 12. Contact Admin / Technical Issues
+    # 12. Project Team, Supervisor & Architecture / Tech Stack
+    if any(
+        k in msg
+        for k in [
+            "team", "member", "developer", "supervisor", "professor", "sek socheat",
+            "cheavchhorng", "panha", "rachana", "architecture", "tech stack", "technology",
+            "database", "flask", "react", "flutter", "about the project", "about project",
+            "ក្រុម", "សមាជិក", "សាស្ត្រាចារ្យ", "សេក សុជាតិ", "ស្ថាបត្យកម្ម", "បច្ចេកវិទ្យា", "អំពីគម្រោង",
+        ]
+    ):
+        if is_km:
+            return (
+                "ព័ត៌មានអំពីគម្រោង AgriSystem សមាជិកក្រុម និងស្ថាបត្យកម្មបច្ចេកទេស៖\n\n"
+                "១. សាស្ត្រាចារ្យដឹកនាំគម្រោង (Project Supervisor)៖\n"
+                "- សាស្ត្រាចារ្យ សេក សុជាតិ (Professor Sek Socheat) — អ្នកគ្រប់គ្រងគម្រោង និងទីប្រឹក្សាសិក្សា។\n\n"
+                "២. សមាជិកក្រុមអភិវឌ្ឍន៍ (Development Team)៖\n"
+                "- ម៉ៅ សៀវអ៊ិ (Mao Seavik) — ប្រធានក្រុម និង Backend Lead (Backend APIs, Rule-Based Diagnosis Engine, AI Model AGY V2.0.0 និង Weather Intelligence)\n"
+                "- ជា ជៀវឈ័ង្ស (Chea Cheavchhorng) — Frontend & UI/UX Lead (Farmer Web Dashboard, React Diagnosis Wizard និង Responsive UI)\n"
+                "- នៅ បញ្ញា (Nov Panha) — Mobile App Developer (Flutter Cross-Platform Mobile App និង Offline Caching)\n"
+                "- ពេជ្រ រចនា (Pich Rachana) — Data & QA Specialist (ទិន្នន័យជំងឺដំណាំ និងរោគសញ្ញា, ការបកប្រែភាសាខ្មែរ និង System Testing)\n\n"
+                "៣. ស្ថាបត្យកម្មបច្ចេកទេស (System Architecture)៖\n"
+                "- Backend៖ Python 3.11 + Flask 3.1, SQLAlchemy, PyWebAuthn (Passkeys), Google OAuth 2.0 និង NBC Bakong KHQR។\n"
+                "- Frontend & Mobile៖ React 18 + TypeScript + Tailwind CSS + Three.js និងកម្មវិធីទូរស័ព្ទ Flutter។\n"
+                "- Database & AI៖ PostgreSQL (Neon) រួមជាមួយប្រព័ន្ធ Rule Engine និងម៉ូឌែល AI កសិកម្ម AGY V2.0.0។"
+            )
+        return (
+            "AgriSystem Project Overview, Team & Technical Architecture:\n\n"
+            "1. Project Supervisor:\n"
+            "- Professor Sek Socheat — Project Supervisor & Academic Advisor.\n\n"
+            "2. Development Team:\n"
+            "- Mao Seavik — Team Leader & Backend Lead (Backend APIs, Rule-Based Diagnosis Engine, Custom AI Model AGY V2.0.0 & Weather Intelligence)\n"
+            "- Chea Cheavchhorng — Frontend & UI/UX Lead (Farmer Web Dashboard, React Diagnosis Wizard, Theme Management & Responsive UI)\n"
+            "- Nov Panha — Mobile App Developer (Flutter Cross-Platform Mobile App & Offline Caching)\n"
+            "- Pich Rachana — Data & QA Specialist (Crop Disease & Symptom Rule Dataset Curation, Khmer Localization & QA Testing)\n\n"
+            "3. System Architecture & Tech Stack:\n"
+            "- Backend: Python 3.11 + Flask 3.1, SQLAlchemy ORM, WebAuthn Passkeys, Google OAuth 2.0, and NBC Bakong KHQR.\n"
+            "- Frontend & Mobile: React 18 + TypeScript + Vite + Tailwind CSS + Three.js, and Flutter mobile app.\n"
+            "- Database & AI: PostgreSQL (Neon) paired with a deterministic Forward-Chaining Rule Engine and custom fine-tuned model AGY V2.0.0."
+        )
+
+    # 13. Admin & Expert Portal Management
+    if any(
+        k in msg
+        for k in [
+            "admin portal", "manage user", "assign role", "audit log", "expert portal",
+            "verify diagnosis", "confirm diagnosis", "manage disease", "configure rule",
+            "គ្រប់គ្រងអ្នកប្រើប្រាស់", "កំណត់តួនាទី", "audit logs", "បន្ថែមជំងឺ", "ត្រួតពិនិត្យរោគវិនិច្ឆ័យ",
+        ]
+    ):
+        if is_km:
+            return (
+                "ការគ្រប់គ្រងក្នុងផ្ទាំង Admin Portal និង Expert Portal៖\n\n"
+                "១. សម្រាប់អ្នកគ្រប់គ្រងប្រព័ន្ធ (Admin Portal)៖\n"
+                "- User Management (/admin/users)៖ គ្រប់គ្រងគណនីអ្នកប្រើប្រាស់ បិទ/បើកគណនី និងកំណត់តួនាទី (Farmer, Expert, Admin)។\n"
+                "- Diseases & Rules (/admin/diseases, /admin/rules)៖ បន្ថែម ឬកែប្រែជំងឺដំណាំ រោគសញ្ញា និងក្បួនវិនិច្ឆ័យក្នុង Rule Engine។\n"
+                "- Audit Logs (/admin/audit-logs)៖ ត្រួតពិនិត្យកំណត់ហេតុសុវត្ថិភាព និងសកម្មភាពប្រព័ន្ធ ព្រមទាំងទាញយកជា CSV/JSON។\n\n"
+                "២. សម្រាប់អ្នកជំនាញកសិកម្ម (Expert Portal)៖\n"
+                "- Diagnoses Review (/expert/diagnoses)៖ ពិនិត្យ និងអនុម័តលទ្ធផលវិនិច្ឆ័យរបស់កសិករ។\n"
+                "- Knowledge Base (/expert/diseases)៖ ធ្វើបច្ចុប្បន្នភាពព័ត៌មានជំងឺ និងវិធីព្យាបាល។\n"
+                "- Consultations (/expert/chats)៖ ឆ្លើយតបសំណួរកសិករតាមរយៈ Live Support។"
+            )
+        return (
+            "Admin Portal & Expert Portal Workflows:\n\n"
+            "1. Admin Portal:\n"
+            "- User Management (/admin/users): Search accounts, activate/deactivate users, and assign Farmer, Expert, or Admin roles.\n"
+            "- Diseases & Rules (/admin/diseases, /admin/rules): Add or edit crop diseases, symptoms, and forward-chaining diagnostic rules.\n"
+            "- Security Audit Logs (/admin/audit-logs): Filter security events, sign-ins, and administrative actions with CSV/JSON export.\n\n"
+            "2. Expert Portal:\n"
+            "- Diagnoses Review (/expert/diagnoses): Inspect, verify, and add specialist notes to farmer diagnosis submissions.\n"
+            "- Disease Knowledge Base (/expert/diseases): Maintain verified disease descriptions, treatments, and prevention tips.\n"
+            "- Consultations (/expert/chats): Respond to farmers in real time via Live Support."
+        )
+
+    # 14. Contact Admin / Technical Issues
     if any(k in msg for k in ["contact admin", "support", "ticket", "issue", "bug", "broken", "help me admin", "error", "problem", "ទាក់ទង admin", "ជំនួយ", "បញ្ហា", "ខូច", "កំហុស"]):
         if is_km:
             return (
@@ -368,7 +447,7 @@ def _try_llm_support_reply(
     user_role: str,
     page: str,
     lang: str,
-) -> Optional[str]:
+) -> str | None:
     """Optionally use general LLM (Gemini or OpenAI/Groq) if configured for flexible natural reply."""
     system_instruction = (
         "You are AgriSystem Support Assistant, the dedicated intelligent platform guide for the AgriSystem (Integrated Agricultural Expert System) web application. "
@@ -384,6 +463,7 @@ def _try_llm_support_reply(
     # 1. Try Gemini Client
     try:
         from app.services.openai_assistant import _get_client
+
         gemini_client = _get_client()
         if gemini_client:
             response = gemini_client.models.generate_content(
@@ -392,12 +472,13 @@ def _try_llm_support_reply(
             )
             if response and response.text:
                 return response.text.strip()
-    except Exception:
+    except Exception:  # noqa: BLE001, S110
         pass
 
     # 2. Try OpenAI / Groq Client
     try:
         from app.services.openai_assistant import _get_openai_client
+
         openai_client = _get_openai_client()
         if openai_client:
             completion = openai_client.chat.completions.create(
@@ -413,7 +494,7 @@ def _try_llm_support_reply(
                 content = completion.choices[0].message.content
                 if content:
                     return content.strip()
-    except Exception:
+    except Exception:  # noqa: BLE001, S110
         pass
 
     return None
@@ -424,7 +505,7 @@ def generate_project_reply(
     *,
     user_role: str,
     page: str = "",
-) -> Optional[str]:
+) -> str | None:
     """Generate system support assistance for the AgriSystem application."""
     if not user_message:
         return None
@@ -447,10 +528,10 @@ def generate_project_reply(
         )
         if llm_reply and len(llm_reply.strip()) > 10:
             return clean_markdown_symbols(llm_reply.strip())
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001
         try:
             current_app.logger.warning("LLM support assistant fallback: %s", exc)
-        except Exception:
+        except Exception:  # noqa: BLE001, S110
             pass
 
     # Fallback to high-quality built-in system support knowledge

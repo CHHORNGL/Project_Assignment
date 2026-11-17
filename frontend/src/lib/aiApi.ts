@@ -2,17 +2,18 @@ export interface AskAgriExpertOptions {
   signal?: AbortSignal;
   endpoint?: string;
   csrfToken?: string;
+  page?: string;
 }
 
 /**
- * Shared web client for the Flask agricultural assistant endpoint.
+ * Shared web client for the Flask assistant endpoints (/api/chat/ask and /assistant/ask).
  *
  * Keep this call same-origin so the browser sends the Flask session cookie;
  * server-side credentials are never exposed to the frontend.
  */
 export async function askAgriExpert(
   message: string,
-  { signal, endpoint = "/api/chat/ask", csrfToken }: AskAgriExpertOptions = {},
+  { signal, endpoint = "/api/chat/ask", csrfToken, page }: AskAgriExpertOptions = {},
 ): Promise<string> {
   const text = String(message || "").trim();
   if (!text) throw new Error("Message is required");
@@ -23,11 +24,14 @@ export async function askAgriExpert(
   };
   if (csrfToken) headers["X-CSRFToken"] = csrfToken;
 
+  const bodyPayload: Record<string, string> = { message: text };
+  if (page) bodyPayload.page = page;
+
   const response = await fetch(endpoint, {
     method: "POST",
     credentials: "include",
     headers,
-    body: JSON.stringify({ message: text }),
+    body: JSON.stringify(bodyPayload),
     signal,
   });
   const payload = (await response.json().catch(() => ({}))) as {

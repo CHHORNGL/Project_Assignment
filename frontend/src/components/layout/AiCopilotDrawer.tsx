@@ -198,34 +198,30 @@ function getQuickPrompts(
     return isKhmer
       ? [
           {
-            label: "សេចក្តីជូនដំណឹងជំងឺរុក្ខជាតិ",
-            prompt:
-              "សូមសរសេរសេចក្តីជូនដំណឹងខ្លីៗដល់កសិករ អំពីវិធីការពារជំងឺផ្សិតក្នុងរដូវភ្លៀងធ្លាក់ខ្លាំង។",
+            label: "ការគ្រប់គ្រងអ្នកប្រើប្រាស់ និងតួនាទី",
+            prompt: "តើខ្ញុំអាចគ្រប់គ្រងគណនីអ្នកប្រើប្រាស់ កំណត់តួនាទី និងពិនិត្យ Audit Logs ក្នុងប្រព័ន្ធដូចម្តេច?",
           },
           {
-            label: "រោគសញ្ញាជំងឺប្លាសលើស្រូវ",
-            prompt: "តើរោគសញ្ញាសំខាន់ៗនៃជំងឺប្លាសលើស្លឹកស្រូវមានអ្វីខ្លះ និងគួរណែនាំដោះស្រាយដូចម្តេច?",
+            label: "ការកំណត់ជំងឺ និងក្បួនវិនិច្ឆ័យ (Rules)",
+            prompt: "តើរបៀបបន្ថែមជំងឺដំណាំថ្មី និងកំណត់ក្បួនរោគសញ្ញា (Rule Engine) ក្នុងផ្ទាំង Admin ធ្វើដូចម្តេច?",
           },
           {
-            label: "ស្តង់ដារត្រួតពិនិត្យករណីធ្ងន់ធ្ងរ",
-            prompt: "តើអ្នកជំនាញគួរពិនិត្យចំណុចអ្វីខ្លះ មុននឹងអនុម័តករណីជំងឺដំណាំកម្រិតធ្ងន់?",
+            label: "ស្ថាបត្យកម្មប្រព័ន្ធ និងសមាជិកក្រុម",
+            prompt: "សូមរៀបរាប់អំពីស្ថាបត្យកម្មបច្ចេកទេសនៃគម្រោង AgriSystem និងសមាជិកក្រុមអភិវឌ្ឍន៍។",
           },
         ]
       : [
           {
-            label: "Draft farmer outbreak alert",
-            prompt:
-              "Draft a concise, clear farmer advisory warning for managing fungal leaf diseases during high humidity.",
+            label: "Manage users, roles & audit logs",
+            prompt: "How do I manage user accounts, assign roles, and inspect security audit logs in the Admin Portal?",
           },
           {
-            label: "Rice blast vs brown spot",
-            prompt:
-              "How do leaf lesions compare between rice blast and brown spot, and what are the first-line control steps?",
+            label: "Configure diseases & rule engine",
+            prompt: "How do I add crop diseases and configure symptom decision rules in the Admin Portal?",
           },
           {
-            label: "Escalation triage checklist",
-            prompt:
-              "Give a practical 4-point triage checklist for verifying severe crop disease cases.",
+            label: "System architecture & project team",
+            prompt: "Tell me about the AgriSystem project architecture, technology stack, and development team.",
           },
         ];
   }
@@ -234,33 +230,30 @@ function getQuickPrompts(
     return isKhmer
       ? [
           {
-            label: "ប្រៀបធៀបជំងឺស្លឹកប៉េងប៉ោះ",
-            prompt: "សូមប្រៀបធៀបរោគសញ្ញារវាងជំងឺ Early blight និង Late blight លើស្លឹកប៉េងប៉ោះ។",
+            label: "ការត្រួតពិនិត្យ និងបញ្ជាក់រោគវិនិច្ឆ័យ",
+            prompt: "តើអ្នកជំនាញត្រូវត្រួតពិនិត្យ និងអនុម័តលទ្ធផលវិនិច្ឆ័យរបស់កសិករនៅក្នុងប្រព័ន្ធដូចម្តេច?",
           },
           {
-            label: "វិធានការ IPM សម្រាប់បាក់តេរី",
-            prompt: "តើវិធានការចម្រុះ (IPM) ល្អបំផុតសម្រាប់ទប់ស្កាត់ជំងឺបាក់តេរីលើដំណាំស្រូវមានអ្វីខ្លះ?",
+            label: "ការគ្រប់គ្រងមូលដ្ឋានទិន្នន័យជំងឺ",
+            prompt: "តើខ្ញុំអាចកែសម្រួលព័ត៌មានជំងឺដំណាំ និងការព្យាបាលនៅក្នុង Expert Portal ដោយរបៀបណា?",
           },
           {
-            label: "ណែនាំការប្រើថ្នាំដោយសុវត្ថិភាព",
-            prompt: "តើត្រូវណែនាំកសិករដូចម្តេច អំពីសុវត្ថិភាពពេលបាញ់ថ្នាំការពារដំណាំ?",
+            label: "ការឆ្លើយតបសារពិគ្រោះជាមួយកសិករ",
+            prompt: "តើមុខងារ Consultations និង Live Support សម្រាប់ជជែកជាមួយកសិករដំណើរការដូចម្តេច?",
           },
         ]
       : [
           {
-            label: "Compare early vs late blight",
-            prompt:
-              "Compare early blight and late blight lesion patterns on tomato leaves and confirm key diagnostic cues.",
+            label: "Review & verify farmer diagnoses",
+            prompt: "How do I review, verify, and confirm farmer diagnosis submissions in the Expert Portal?",
           },
           {
-            label: "IPM for bacterial leaf blight",
-            prompt:
-              "What are the highest-impact Integrated Pest Management (IPM) steps for bacterial leaf blight in rice?",
+            label: "Manage disease knowledge base",
+            prompt: "How do I update plant disease descriptions and treatment guides in the Expert Portal?",
           },
           {
-            label: "Safe spray guidance note",
-            prompt:
-              "Provide a clear field-ready note on safe pesticide timing and dosage precautions for smallholders.",
+            label: "Farmer consultations & live chat",
+            prompt: "How do Expert Consultations and Live Support channels work in AgriSystem?",
           },
         ];
   }
@@ -268,30 +261,30 @@ function getQuickPrompts(
   return isKhmer
     ? [
         {
-          label: "ស្លឹកស្រូវមានស្នាមលឿង",
-          prompt: "ស្លឹកស្រូវរបស់ខ្ញុំមានស្នាមអុជពណ៌លឿងទឹកក្រូច។ តើអាចបណ្តាលមកពីអ្វី និងគួរធ្វើដូចម្តេច?",
+          label: "របៀបប្រើប្រាស់មុខងារពិនិត្យជំងឺ",
+          prompt: "តើរបៀបប្រើប្រាស់ AI Diagnosis និង Rule-Based Diagnosis នៅក្នុងប្រព័ន្ធ AgriSystem ធ្វើដូចម្តេច?",
         },
         {
-          label: "ការពារដំណាំក្នុងរដូវភ្លៀង",
-          prompt: "តើត្រូវការពារជំងឺផ្សិតលើដំណាំក្នុងរដូវភ្លៀងដោយសុវត្ថិភាពដូចម្តេច?",
+          label: "អំពីគម្រោង និងសមាជិកក្រុមអភិវឌ្ឍន៍",
+          prompt: "សូមរៀបរាប់អំពីប្រព័ន្ធគម្រោង AgriSystem សាស្ត្រាចារ្យដឹកនាំ និងសមាជិកក្រុមអភិវឌ្ឍន៍។",
         },
         {
-          label: "គន្លឹះថតរូបស្លឹកឱ្យច្បាស់",
-          prompt: "តើត្រូវថតរូបស្លឹកដំណាំបែបណា ដើម្បីឱ្យ AI ស្កេនវិនិច្ឆ័យបានត្រឹមត្រូវបំផុត?",
+          label: "គណនី សុវត្ថិភាព Passkey និងការដំឡើង Pro",
+          prompt: "តើខ្ញុំអាចកំណត់ Passkey ផ្លាស់ប្តូរភាសា ឬដំឡើងគណនី Pro តាមរយៈ Bakong KHQR ដោយរបៀបណា?",
         },
       ]
     : [
         {
-          label: "Spots on rice leaves",
-          prompt: "My rice leaves have yellow-orange spots. What might cause this and what should I check first?",
+          label: "How to use Diagnosis & platform tools",
+          prompt: "How do I use AI Diagnosis, Rule-Based Diagnosis, and Ask Agricultural Expert in this system?",
         },
         {
-          label: "Rainy season prevention",
-          prompt: "How can I protect vegetable and rice crops from fungal infections during heavy rain?",
+          label: "About the project & development team",
+          prompt: "Tell me about the AgriSystem project architecture, supervisor, and development team.",
         },
         {
-          label: "Tips for accurate scans",
-          prompt: "How should I take a leaf photo so the AI disease scan gives the most accurate result?",
+          label: "Account, Passkeys & Bakong Pro upgrade",
+          prompt: "How do I set up Passkeys, switch language/theme, or upgrade to Pro using Bakong KHQR?",
         },
       ];
 }
@@ -584,7 +577,11 @@ export function AiCopilotDrawer({
     setAiBusy(true);
 
     try {
+      const currentPage =
+        typeof window !== "undefined" ? window.location.pathname : "";
       const reply = await askAgriExpert(q, {
+        endpoint: "/assistant/ask",
+        page: currentPage,
         signal: controller.signal,
         csrfToken: csrfToken || undefined,
       });
@@ -808,8 +805,8 @@ export function AiCopilotDrawer({
             <p className={cn("truncate text-[11px] font-medium", theme.headerSub)}>
               {mode === "ai"
                 ? isKhmer
-                  ? "អនឡាញ · ប្រឹក្សាកសិកម្ម និងប្រព័ន្ធ"
-                  : "Online · Agronomy & workspace assistant"
+                  ? "អនឡាញ · ជំនួយការប្រព័ន្ធ និងគម្រោង"
+                  : "Online · System & project assistant"
                 : supportTyping
                   ? isKhmer
                     ? "កំពុងវាយអក្សរ..."
@@ -972,8 +969,8 @@ export function AiCopilotDrawer({
                       </h3>
                       <p className={cn("mt-1 text-xs leading-relaxed", theme.headerSub)}>
                         {isKhmer
-                          ? "សួរអំពីរោគសញ្ញាជំងឺដំណាំ វិធានការព្យាបាល ការណែនាំកសិករ ឬរបៀបប្រើប្រាស់ប្រព័ន្ធ។"
-                          : "Ask about crop symptoms, field treatment guidelines, farmer advisories, or platform workflows."}
+                          ? "សួរអំពីរបៀបប្រើប្រាស់ប្រព័ន្ធ មុខងារក្នុងគម្រោង សមាជិកក្រុមអភិវឌ្ឍន៍ សុវត្ថិភាពគណនី ឬការដំឡើងគម្រោង Pro។"
+                          : "Ask about system navigation, project architecture, team members, platform features, account security, or Bakong Pro upgrades."}
                       </p>
                     </div>
                   </div>
