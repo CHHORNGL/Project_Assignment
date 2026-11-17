@@ -1,8 +1,9 @@
 """Validate structure and field values; encode untrusted text at output time."""
+
 import re
 from urllib.parse import urlsplit
 
-from email_validator import validate_email, EmailNotValidError
+from email_validator import EmailNotValidError, validate_email
 from flask import jsonify, request
 from werkzeug.exceptions import BadRequest, RequestEntityTooLarge
 
@@ -93,7 +94,7 @@ def register_input_validation(app):
                 status="REJECTED",
                 severity="WARNING",
             )
-        except Exception:
+        except Exception:  # noqa: BLE001, S110
             pass
         return jsonify(error=error.description, message=error.description,
                        code='invalid_input', field=error.field, success=False), 400
@@ -108,7 +109,7 @@ def register_input_validation(app):
                 status="REJECTED",
                 severity="WARNING",
             )
-        except Exception:
+        except Exception:  # noqa: BLE001, S110
             pass
         return jsonify(error='Request body is too large.', code='request_too_large'), 413
 

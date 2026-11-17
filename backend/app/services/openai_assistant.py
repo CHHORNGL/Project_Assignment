@@ -1,22 +1,15 @@
 # app/services/openai_assistant.py
 
+from __future__ import annotations
+
 import base64
 import json
 import os
 import re
-from threading import Lock
-from typing import Optional, Tuple
-
-try:
-    from google import genai
-    from google.genai import types
-except Exception:
-    genai = None
-    types = None
-try:
-    from openai import OpenAI
-except Exception:
-    OpenAI = None
+import time
+from datetime import datetime, timedelta, timezone
+from threading import Lock, Thread
+from typing import Any
 
 from flask import current_app
 from flask_login import current_user
@@ -25,18 +18,37 @@ from sqlalchemy.orm import joinedload
 from app.models.crop import Crop
 from app.models.disease import Disease
 from app.models.rule import Rule
+from app.models.site_setting import SiteSetting
 from app.utils.i18n import get_current_language, normalize_display_text
+
+try:
+    from google import genai
+    from google.genai import types
+except Exception:  # noqa: BLE001
+    genai = None  # type: ignore[assignment]
+    types = None  # type: ignore[assignment]
+try:
+    from openai import OpenAI
+except Exception:  # noqa: BLE001
+    OpenAI = None  # type: ignore[assignment]
 
 
 DEFAULT_MODEL = "gpt-4o-mini"
 
 
-def _get_openai_model():
-    from app.models.site_setting import SiteSetting
+def _utcnow_naive() -> datetime:
+    return datetime.now(timezone.utc).replace(tzinfo=None)
+
+
+def _get_openai_model() -> str:
     try:
         db_provider = SiteSetting.query.get("ACTIVE_PROVIDER")
         db_expert_provider = SiteSetting.query.get("EXPERT_PROVIDER")
-        active_p = db_expert_provider.value.strip() if db_expert_provider and db_expert_provider.value.strip() else (db_provider.value.strip() if db_provider else "groq")
+        active_p = (
+            db_expert_provider.value.strip()
+            if db_expert_provider and db_expert_provider.value.strip()
+            else (db_provider.value.strip() if db_provider else "groq")
+        )
 
         expert_model = SiteSetting.query.get("EXPERT_MODEL")
         if expert_model and expert_model.value.strip():
@@ -52,15 +64,13 @@ def _get_openai_model():
             if db_model and db_model.value.strip() and "gpt-4" not in db_model.value.lower():
                 return db_model.value.strip()
             return "openai/gpt-oss-120b"
-        else:
-            db_model = SiteSetting.query.get("OPENAI_MODEL")
-            if db_model and db_model.value.strip() and not any(x in db_model.value.lower() for x in ["oss", "qwen", "compound"]):
-                return db_model.value.strip()
-            return "gpt-4o-mini"
-    except Exception:
+        db_model = SiteSetting.query.get("OPENAI_MODEL")
+        if db_model and db_model.value.strip() and not any(x in db_model.value.lower() for x in ["oss", "qwen", "compound"]):
+            return db_model.value.strip()
+        return "gpt-4o-mini"
+    except Exception:  # noqa: BLE001, S110
         pass
     return os.getenv("OPENAI_MODEL", DEFAULT_MODEL).strip() or DEFAULT_MODEL
-
 
 
 def _normalize(text: str) -> str:
@@ -84,54 +94,55 @@ def clean_markdown_symbols(text: str) -> str:
     return text.strip()
 
 
-from app.models.site_setting import SiteSetting
-
 class MultiKeyOpenAIChatCompletions:
-    def __init__(self, clients):
+    def __init__(self, clients: list[Any]) -> None:
         self.clients = clients
-    def create(self, **kwargs):
-        last_exception = None
+
+    def create(self, **kwargs: Any) -> Any:
+        last_exception: Exception | None = None
         for client in self.clients:
             try:
                 return client.chat.completions.create(**kwargs)
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 last_exception = e
                 print(f"API key failed, falling back to next: {e}")
         if last_exception:
             raise last_exception
         return None
 
+
 class MultiKeyOpenAIChat:
-    def __init__(self, clients):
+    def __init__(self, clients: list[Any]) -> None:
         self.completions = MultiKeyOpenAIChatCompletions(clients)
 
+
 class MultiKeyOpenAI:
-    def __init__(self, clients):
+    def __init__(self, clients: list[Any]) -> None:
         self.chat = MultiKeyOpenAIChat(clients)
 
-_cached_openai_client = None
+
+_cached_openai_client: MultiKeyOpenAI | None = None
 _cached_openai_key = ""
 
-def _get_openai_client():
+
+def _get_openai_client() -> MultiKeyOpenAI | None:
     global _cached_openai_client, _cached_openai_key
     if OpenAI is None:
         return None
 
-    keys_list = []
-    base_url = None
-    
+    keys_list: list[str] = []
+    base_url: str | None = None
+
     try:
         db_provider = SiteSetting.query.get("ACTIVE_PROVIDER")
         db_expert_provider = SiteSetting.query.get("EXPERT_PROVIDER")
         db_groq = SiteSetting.query.get("API_KEY_GROQ")
         db_openai = SiteSetting.query.get("API_KEY_OPENAI")
-        
-        # Override with expert provider if it is explicitly set
+
         if db_expert_provider and db_expert_provider.value.strip():
             provider = db_expert_provider.value.strip()
         else:
             provider = db_provider.value.strip() if db_provider else "groq"
-
 
         if provider == "groq" and db_groq and db_groq.value.strip():
             keys_list = [k.strip() for k in db_groq.value.split(",") if k.strip()]
@@ -139,15 +150,13 @@ def _get_openai_client():
         elif provider == "openai" and db_openai and db_openai.value.strip():
             keys_list = [k.strip() for k in db_openai.value.split(",") if k.strip()]
             base_url = None
-        else:
-            # Fallback if the chosen provider has no keys, try the other
-            if db_groq and db_groq.value.strip():
-                keys_list = [k.strip() for k in db_groq.value.split(",") if k.strip()]
-                base_url = "https://api.groq.com/openai/v1"
-            elif db_openai and db_openai.value.strip():
-                keys_list = [k.strip() for k in db_openai.value.split(",") if k.strip()]
-                base_url = None
-    except Exception:
+        elif db_groq and db_groq.value.strip():
+            keys_list = [k.strip() for k in db_groq.value.split(",") if k.strip()]
+            base_url = "https://api.groq.com/openai/v1"
+        elif db_openai and db_openai.value.strip():
+            keys_list = [k.strip() for k in db_openai.value.split(",") if k.strip()]
+            base_url = None
+    except Exception:  # noqa: BLE001, S110
         pass
 
     if not keys_list:
@@ -165,37 +174,38 @@ def _get_openai_client():
         clients = [OpenAI(api_key=k, base_url=base_url) for k in keys_list]
         _cached_openai_client = MultiKeyOpenAI(clients)
         _cached_openai_key = cache_key
-        
+
     return _cached_openai_client
 
-def _get_client():
+
+def _get_client() -> Any:
     if not genai:
         return None
 
     api_key = ""
     try:
-        from app.models.site_setting import SiteSetting
         db_gemini = SiteSetting.query.get("API_KEY_GEMINI")
         if db_gemini and db_gemini.value.strip():
             keys = [k.strip() for k in db_gemini.value.split(",") if k.strip()]
             if keys:
                 api_key = keys[0]
-    except Exception:
+    except Exception:  # noqa: BLE001, S110
         pass
 
     if not api_key:
         api_key = os.getenv("GEMINI_API_KEY", "").strip()
-        
+
     if api_key:
         try:
             return genai.Client(api_key=api_key)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             try:
                 current_app.logger.warning("Failed to initialize genai.Client: %s", e)
             except RuntimeError:
                 pass
             return None
     return None
+
 
 def _normalize_gemini_model_name(name: str) -> str:
     m = (name or "").strip()
@@ -207,8 +217,8 @@ def _normalize_gemini_model_name(name: str) -> str:
         return "gemini-3.5-flash-lite"
     return m
 
-def _get_model_name():
-    from app.models.site_setting import SiteSetting
+
+def _get_model_name() -> str:
     try:
         expert_model = SiteSetting.query.get("EXPERT_MODEL")
         if expert_model and expert_model.value.strip() and "gemini" in expert_model.value.lower():
@@ -216,15 +226,15 @@ def _get_model_name():
         gemini_model = SiteSetting.query.get("GEMINI_MODEL")
         if gemini_model and gemini_model.value.strip():
             return _normalize_gemini_model_name(gemini_model.value.strip())
-    except Exception:
+    except Exception:  # noqa: BLE001, S110
         pass
-        
-    if current_user and current_user.is_authenticated and getattr(current_user, 'ai_model', None):
+
+    if current_user and current_user.is_authenticated and getattr(current_user, "ai_model", None):
         return _normalize_gemini_model_name(current_user.ai_model)
     return _normalize_gemini_model_name(os.getenv("GEMINI_MODEL", "gemini-3.5-flash").strip())
 
 
-def _match_crop(message: str) -> Optional[Crop]:
+def _match_crop(message: str) -> Crop | None:
     message_norm = _normalize(message)
     message_raw = (message or "").strip().lower()
     crops = Crop.query.order_by(Crop.name.asc()).all()
@@ -236,8 +246,6 @@ def _match_crop(message: str) -> Optional[Crop]:
             if not candidate:
                 continue
             cand_clean = normalize_display_text(candidate, lang="km").strip()
-            # If candidate contains Khmer characters, use substring check
-            # because Khmer script has no word boundaries (\b fails)
             if any("\u1780" <= ch <= "\u17ff" for ch in cand_clean):
                 if cand_clean.lower() in message_raw or _normalize(cand_clean) in message_norm:
                     return crop
@@ -248,7 +256,7 @@ def _match_crop(message: str) -> Optional[Crop]:
     return None
 
 
-def _extract_json_object(raw_text: str) -> Optional[dict]:
+def _extract_json_object(raw_text: str) -> dict[str, Any] | None:
     text = (raw_text or "").strip()
     if not text:
         return None
@@ -256,7 +264,7 @@ def _extract_json_object(raw_text: str) -> Optional[dict]:
         loaded = json.loads(text)
         if isinstance(loaded, dict):
             return loaded
-    except Exception:
+    except Exception:  # noqa: BLE001, S110
         pass
 
     start = text.find("{")
@@ -265,7 +273,7 @@ def _extract_json_object(raw_text: str) -> Optional[dict]:
         return None
     try:
         loaded = json.loads(text[start : end + 1])
-    except Exception:
+    except Exception:  # noqa: BLE001
         return None
     return loaded if isinstance(loaded, dict) else None
 
@@ -275,232 +283,24 @@ def suggest_symptoms_from_image(
     image_bytes: bytes,
     mime_type: str,
     crop_name: str,
-    symptom_candidates: list[dict],
+    symptom_candidates: list[dict[str, Any]],
     max_suggestions: int = 8,
-    model_choice: Optional[str] = None,
-) -> Optional[dict]:
-    """
-    Use OpenAI vision to suggest visible symptoms.
+    model_choice: str | None = None,
+) -> dict[str, Any] | None:
+    """Return symptom suggestions for an uploaded crop image.
 
-    Parameters
-    ----------
-    image_bytes:
-        Uploaded image binary.
-    mime_type:
-        MIME type of image.
-    crop_name:
-        Crop display name (context for model).
-    symptom_candidates:
-        List of dict rows with keys: id, name, name_kh.
-    max_suggestions:
-        Maximum returned matches.
+    The current self-trained endpoint is text-only; do not silently send crop
+    images to a commercial vision provider.
     """
-    # The current self-trained endpoint is text-only. Do not silently send
-    # crop images to a commercial vision provider; return an explicit empty
-    # result until the owner's own model has a vision adapter.
+    _ = (image_bytes, mime_type, crop_name, symptom_candidates, max_suggestions, model_choice)
     return {
         "matched_symptoms": [],
         "notes": "Image suggestions require the owner's trained vision model.",
         "confidence": None,
     }
 
-    client = _get_client()
-    if not client:
-        return None
-    if not image_bytes or not symptom_candidates:
-        return {"matched_symptoms": [], "notes": ""}
 
-    cleaned_candidates: list[dict] = []
-    alias_map: dict[str, dict] = {}
-    for row in symptom_candidates:
-        if not isinstance(row, dict):
-            continue
-        symptom_id = row.get("id")
-        if symptom_id is None:
-            continue
-        name = str(row.get("name") or "").strip()
-        if not name:
-            continue
-        name_kh = str(row.get("name_kh") or "").strip()
-        prepared = {
-            "id": symptom_id,
-            "name": name,
-            "name_kh": name_kh or None,
-        }
-        cleaned_candidates.append(prepared)
-
-        for alias in (name, name_kh):
-            norm = _normalize(alias or "")
-            if norm and norm not in alias_map:
-                alias_map[norm] = prepared
-
-    if not cleaned_candidates:
-        return {"matched_symptoms": [], "notes": ""}
-
-    candidate_lines = []
-    for item in cleaned_candidates[:220]:
-        line = str(item["name"])
-        if item.get("name_kh"):
-            line = f"{line} | {item['name_kh']}"
-        candidate_lines.append(f"- {line}")
-    candidates_text = "\n".join(candidate_lines)
-
-    model_choice = (model_choice or "").strip().lower()
-    if model_choice not in {"", "auto", "original-ai", "gemini-2.5-flash", "gemini-2.5-pro"}:
-        model_choice = ""
-    try:
-        from app.models.site_setting import SiteSetting
-        expert_provider = SiteSetting.query.get("EXPERT_PROVIDER")
-        active_provider = SiteSetting.query.get("ACTIVE_PROVIDER")
-        provider = (
-            expert_provider.value.strip()
-            if expert_provider and expert_provider.value.strip()
-            else (active_provider.value.strip() if active_provider and active_provider.value.strip() else "groq")
-        ).lower()
-    except Exception:
-        provider = "groq"
-    if model_choice.startswith("gemini-"):
-        provider = "gemini"
-    elif model_choice == "original-ai":
-        provider = "openai"
-
-    model_name = model_choice if model_choice.startswith("gemini-") else _get_model_name()
-    system_prompt = (
-        "You are an agricultural vision assistant. "
-        "From the image, choose only symptoms that are directly visible. "
-        "Use ONLY entries from the provided candidate list."
-    )
-    user_prompt = (
-        f"Crop: {crop_name}\n"
-        f"Return strict JSON object with keys:\n"
-        f"- matched_symptoms: array of symptom names from candidate list\n"
-        f"- notes: one short sentence\n"
-        f"- confidence: one of high|medium|low\n"
-        f"Limit matched_symptoms to at most {max(1, int(max_suggestions))}.\n\n"
-        f"Candidate symptoms:\n{candidates_text}"
-    )
-
-    if provider in {"openai", "groq"}:
-        client = _get_openai_client()
-        if not client:
-            return {"matched_symptoms": [], "notes": ""}
-        model = os.getenv("OPENAI_VISION_MODEL", "").strip() or _get_openai_model()
-        image_data_url = "data:" + (mime_type or "image/jpeg") + ";base64," + base64.b64encode(image_bytes).decode("utf-8")
-        try:
-            response = client.chat.completions.create(
-                model=model,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {
-                        "role": "user",
-                        "content": [
-                            {"type": "text", "text": user_prompt},
-                            {"type": "image_url", "image_url": {"url": image_data_url}},
-                        ],
-                    },
-                ],
-                response_format={"type": "json_object"},
-                temperature=0.1,
-                max_tokens=600,
-            )
-            raw_content = response.choices[0].message.content if response.choices and response.choices[0].message else ""
-        except Exception:
-            try:
-                response = client.chat.completions.create(
-                    model=model,
-                    messages=[
-                        {"role": "system", "content": system_prompt},
-                        {
-                            "role": "user",
-                            "content": [
-                                {"type": "text", "text": user_prompt},
-                                {"type": "image_url", "image_url": {"url": image_data_url}},
-                            ],
-                        },
-                    ],
-                    temperature=0.1,
-                    max_tokens=600,
-                )
-                raw_content = response.choices[0].message.content if response.choices and response.choices[0].message else ""
-            except Exception:
-                return None
-    else:
-        client = _get_client()
-        if not client or not types:
-            return {"matched_symptoms": [], "notes": ""}
-        try:
-            image_part = types.Part.from_bytes(data=image_bytes, mime_type=mime_type or "image/jpeg")
-            gemini_model_choice = _normalize_gemini_model_name(model_name)
-            response = client.models.generate_content(
-                model=gemini_model_choice,
-                contents=[system_prompt, user_prompt, image_part],
-                config=types.GenerateContentConfig(
-                    temperature=0.1,
-                    max_output_tokens=600,
-                    response_mime_type="application/json"
-                )
-            )
-            raw_content = response.text if response else ""
-        except Exception:
-            return None
-    payload = _extract_json_object(raw_content or "")
-    if payload is None:
-        payload = {"matched_symptoms": [], "notes": str(raw_content or "").strip()}
-
-    raw_matches = payload.get("matched_symptoms")
-    if isinstance(raw_matches, str):
-        raw_matches = [chunk.strip() for chunk in raw_matches.split(",") if chunk.strip()]
-    elif not isinstance(raw_matches, list):
-        raw_matches = []
-
-    matched_rows: list[dict] = []
-    seen_ids = set()
-    max_items = max(1, int(max_suggestions))
-
-    normalized_candidates = []
-    for item in cleaned_candidates:
-        normalized_candidates.append((item, _normalize(item.get("name") or ""), _normalize(item.get("name_kh") or "")))
-
-    for item in raw_matches:
-        if isinstance(item, dict):
-            raw_name = str(item.get("name") or item.get("symptom") or "").strip()
-        else:
-            raw_name = str(item or "").strip()
-        if not raw_name:
-            continue
-
-        norm = _normalize(raw_name)
-        if not norm:
-            continue
-
-        picked = alias_map.get(norm)
-        if not picked:
-            for candidate, norm_en, norm_kh in normalized_candidates:
-                if norm and (norm in norm_en or norm_en in norm or (norm_kh and (norm in norm_kh or norm_kh in norm))):
-                    picked = candidate
-                    break
-        if not picked:
-            continue
-
-        symptom_id = picked.get("id")
-        if symptom_id in seen_ids:
-            continue
-        seen_ids.add(symptom_id)
-        matched_rows.append(picked)
-        if len(matched_rows) >= max_items:
-            break
-
-    notes = str(payload.get("notes") or payload.get("reason") or "").strip()
-    confidence = str(payload.get("confidence") or "").strip().lower()
-
-    return {
-        "matched_symptoms": matched_rows,
-        "notes": notes,
-        "confidence": confidence if confidence in {"high", "medium", "low"} else None,
-    }
-
-
-def _build_kb_context(message: str) -> Tuple[str, Optional[Crop]]:
+def _build_kb_context(message: str) -> tuple[str, Crop | None]:
     """
     Build a concise knowledge base context for the assistant.
     Returns (context_text, matched_crop).
@@ -671,39 +471,30 @@ def _build_kb_context(message: str) -> Tuple[str, Optional[Crop]]:
 def get_simple_user_daily_tokens() -> int:
     """Return the configured daily token limit for simple users (default: 13,000)."""
     try:
-        from app.models.site_setting import SiteSetting
         setting = SiteSetting.query.get("SIMPLE_USER_DAILY_TOKENS")
         if setting and setting.value and setting.value.strip():
             return max(100, int(setting.value.strip()))
-    except Exception:
+    except Exception:  # noqa: BLE001, S110
         pass
     return 13000
 
 
-def _uses_farmer_ai_credits(user) -> bool:
+def _uses_farmer_ai_credits(user: Any) -> bool:
     """Return whether this account should pay for Farmer AI usage.
-    
+
     Simple/Free users have their credits and tokens controlled.
     Premium accounts have 100% UNLIMITED access with zero token deductions.
     Admins and Experts also have unlimited access.
     """
     if not user or not getattr(user, "is_authenticated", False):
         return False
-    # Premium account users can use Unlimited AI without any token limits
     if getattr(user, "has_active_premium", False) or getattr(user, "is_premium", False):
-        if getattr(user, "premium_expires_at", None):
-            from datetime import datetime
-            if user.premium_expires_at < datetime.utcnow():
-                # Expired premium reverts to simple user credit control
-                return True
-        return False
-    # Admins and experts also have unlimited access
+        return bool(getattr(user, "premium_expires_at", None) and user.premium_expires_at < _utcnow_naive())
     if getattr(user, "has_role", None) and (user.has_role("admin") or user.has_role("expert")):
         return False
     try:
         return bool(user.has_route_access("farmer"))
     except AttributeError:
-        # Keep compatibility with lightweight user objects used by integrations.
         return bool(user.has_role("farmer"))
 
 
@@ -769,19 +560,25 @@ def _build_expert_system_prompt(language: str = "km", agent_context: str = "") -
     )
 
 
-def _generate_with_gemini(client, contents, preferred_model=None, max_output_tokens=2048, temperature=0.35) -> Optional[str]:
+def _generate_with_gemini(
+    client: Any,
+    contents: Any,
+    preferred_model: str | None = None,
+    max_output_tokens: int = 2048,
+    temperature: float = 0.35,
+) -> str | None:
     """Call Gemini with model fallback to handle 404s/503s."""
     if not client or not types:
         return None
 
-    candidates = []
+    candidates: list[str] = []
     if preferred_model:
         candidates.append(_normalize_gemini_model_name(preferred_model))
     for m in ["gemini-3.5-flash", "gemini-3.6-flash", "gemini-flash-latest"]:
         if m not in candidates:
             candidates.append(m)
 
-    last_error = None
+    last_error: Exception | None = None
     for model in candidates:
         try:
             response = client.models.generate_content(
@@ -794,7 +591,7 @@ def _generate_with_gemini(client, contents, preferred_model=None, max_output_tok
             )
             if response and response.text:
                 return response.text.strip()
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001
             last_error = exc
             try:
                 current_app.logger.warning("Gemini model %s call failed: %s; trying next model", model, exc)
@@ -810,7 +607,14 @@ def _generate_with_gemini(client, contents, preferred_model=None, max_output_tok
     return None
 
 
-def _generate_with_openai_or_groq(client, system_prompt, user_content, model=None, max_tokens=2048, temperature=0.35) -> Optional[str]:
+def _generate_with_openai_or_groq(
+    client: Any,
+    system_prompt: str,
+    user_content: Any,
+    model: str | None = None,
+    max_tokens: int = 2048,
+    temperature: float = 0.35,
+) -> str | None:
     """Call Groq or OpenAI with error handling."""
     if not client:
         return None
@@ -828,7 +632,7 @@ def _generate_with_openai_or_groq(client, system_prompt, user_content, model=Non
         if response and response.choices and response.choices[0].message:
             content = response.choices[0].message.content or ""
             return content.strip()
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001
         try:
             current_app.logger.warning("OpenAI/Groq model %s failed: %s", model_to_use, exc)
         except RuntimeError:
@@ -838,25 +642,26 @@ def _generate_with_openai_or_groq(client, system_prompt, user_content, model=Non
 
 def generate_assistant_reply(
     user_message: str,
-    image_bytes: Optional[bytes] = None,
+    image_bytes: bytes | None = None,
     image_mime_type: str = "image/jpeg",
-    model_choice: Optional[str] = None,
-    conversation: Optional[list[tuple[str, str]]] = None,
-    latitude: Optional[float] = None,
-    longitude: Optional[float] = None,
-) -> Optional[str]:
+    model_choice: str | None = None,
+    conversation: list[tuple[str, str]] | None = None,
+    latitude: float | None = None,
+    longitude: float | None = None,
+) -> str | None:
     from app.extensions import db
+
     charges_farmer_credits = _uses_farmer_ai_credits(current_user)
-    
+
     if charges_farmer_credits:
-        from datetime import datetime, timedelta
         daily_quota = get_simple_user_daily_tokens()
-        if current_user.last_credit_reset and (datetime.utcnow() - current_user.last_credit_reset) >= timedelta(days=1):
+        now_utc = _utcnow_naive()
+        if current_user.last_credit_reset and (now_utc - current_user.last_credit_reset) >= timedelta(days=1):
             current_user.ai_credits = daily_quota
-            current_user.last_credit_reset = datetime.utcnow()
+            current_user.last_credit_reset = now_utc
             try:
                 db.session.commit()
-            except Exception:
+            except Exception:  # noqa: BLE001
                 db.session.rollback()
 
         if (current_user.ai_credits or 0) <= 0:
@@ -865,8 +670,7 @@ def generate_assistant_reply(
                 lang = "km"
             if lang == "km":
                 return "សុំទោស! អ្នកបានអស់ចំនួន Token (Credits) សម្រាប់ប្រើប្រាស់ AI ហើយ។ សូមដំឡើងទៅគណនី Premium ដើម្បីប្រើប្រាស់ដោយគ្មានដែនកំណត់ (Unlimited)។"
-            else:
-                return "Sorry! You have run out of AI Credits (Tokens). Please upgrade to a Premium account for Unlimited AI chat and diagnoses."
+            return "Sorry! You have run out of AI Credits (Tokens). Please upgrade to a Premium account for Unlimited AI chat and diagnoses."
 
     has_khmer = bool(re.search(r"[\u1780-\u17ff]", user_message))
     if has_khmer:
@@ -894,6 +698,7 @@ def generate_assistant_reply(
 
     if agent_plan.intent == "system_help":
         from app.services.project_assistant import generate_project_reply
+
         role_label = getattr(current_user, "role", "farmer") if current_user and current_user.is_authenticated else "farmer"
         reply = generate_project_reply(user_message, user_role=role_label, page="farmer_chat")
         if reply:
@@ -903,7 +708,7 @@ def generate_assistant_reply(
                 current_user.ai_credits = max(0, (current_user.ai_credits or 0) - tokens_used)
                 try:
                     db.session.commit()
-                except Exception:
+                except Exception:  # noqa: BLE001
                     db.session.rollback()
             return reply
 
@@ -930,7 +735,7 @@ def generate_assistant_reply(
             current_user.ai_credits = max(0, (current_user.ai_credits or 0) - tokens_used)
             try:
                 db.session.commit()
-            except Exception:
+            except Exception:  # noqa: BLE001
                 db.session.rollback()
         return clean_markdown_symbols(reply)
 
@@ -960,7 +765,7 @@ def generate_assistant_reply(
             current_user.ai_credits = max(0, (current_user.ai_credits or 0) - tokens_used)
             try:
                 db.session.commit()
-            except Exception:
+            except Exception:  # noqa: BLE001
                 db.session.rollback()
         return clean_markdown_symbols(reply)
 
@@ -1024,22 +829,32 @@ def generate_assistant_reply(
             current_user.ai_credits = max(0, (current_user.ai_credits or 0) - tokens_used)
             try:
                 db.session.commit()
-            except Exception:
+            except Exception:  # noqa: BLE001
                 db.session.rollback()
         return clean_markdown_symbols(reply)
 
-    from app.models.site_setting import SiteSetting
-    from app.services.ai_expert_service import legacy_fallback_enabled, is_huggingface_provider
+    from app.services.ai_expert_service import (
+        _synthesize_local_expert_reply,
+        legacy_fallback_enabled,
+    )
+    from app.services.ai_expert_service import (
+        generate_reply as generate_trained_reply,
+    )
+
     try:
         db_ai_provider = SiteSetting.query.get("AI_PROVIDER")
         db_expert = SiteSetting.query.get("EXPERT_PROVIDER")
         db_provider = SiteSetting.query.get("ACTIVE_PROVIDER")
         configured_provider = (
-            db_ai_provider.value.strip() if db_ai_provider and db_ai_provider.value.strip()
-            else (db_expert.value.strip() if db_expert and db_expert.value.strip()
-            else (db_provider.value.strip() if db_provider and db_provider.value.strip() else "huggingface"))
+            db_ai_provider.value.strip()
+            if db_ai_provider and db_ai_provider.value.strip()
+            else (
+                db_expert.value.strip()
+                if db_expert and db_expert.value.strip()
+                else (db_provider.value.strip() if db_provider and db_provider.value.strip() else "huggingface")
+            )
         ).lower()
-    except Exception:
+    except Exception:  # noqa: BLE001
         configured_provider = "huggingface"
 
     # Allow user composer model override
@@ -1055,8 +870,6 @@ def generate_assistant_reply(
     # Prioritize the user's trained agricultural AI assistant
     if provider in {"huggingface", "hf", "trained-ai", "trained_ai", "own-ai"}:
         try:
-            from app.services.ai_expert_service import generate_reply as generate_trained_reply
-
             trained_reply = generate_trained_reply(
                 user_message,
                 context=agent_context,
@@ -1068,10 +881,10 @@ def generate_assistant_reply(
                     current_user.ai_credits = max(0, (current_user.ai_credits or 0) - tokens_used)
                     try:
                         db.session.commit()
-                    except Exception:
+                    except Exception:  # noqa: BLE001
                         db.session.rollback()
                 return trained_reply
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001
             try:
                 current_app.logger.warning("Trained agricultural AI provider error: %s", exc)
             except RuntimeError:
@@ -1079,18 +892,17 @@ def generate_assistant_reply(
 
         # If commercial LLM fallback is disabled, synthesize from local expert rules (no Gemini/Groq/ChatGPT)
         if not legacy_fallback_enabled():
-            from app.services.ai_expert_service import _synthesize_local_expert_reply
             local_reply = _synthesize_local_expert_reply(user_message, context=agent_context, language=lang)
             if charges_farmer_credits:
                 tokens_used = max(20, (len(agent_context) + len(user_message) + len(local_reply)) // 4)
                 current_user.ai_credits = max(0, (current_user.ai_credits or 0) - tokens_used)
                 try:
                     db.session.commit()
-                except Exception:
+                except Exception:  # noqa: BLE001
                     db.session.rollback()
             return local_reply
 
-    reply_content = None
+    reply_content: str | None = None
 
     # Allow user composer model override
     model_choice_clean = (model_choice or "").strip().lower()
@@ -1106,7 +918,7 @@ def generate_assistant_reply(
     system_prompt = _build_expert_system_prompt(language=lang, agent_context=agent_context)
     user_prompt = user_message
 
-    gemini_contents = [system_prompt, user_prompt]
+    gemini_contents: list[Any] = [system_prompt, user_prompt]
     if image_bytes and types:
         gemini_contents.append(
             types.Part.from_bytes(
@@ -1115,7 +927,7 @@ def generate_assistant_reply(
             )
         )
 
-    openai_user_content = user_prompt
+    openai_user_content: str | list[dict[str, Any]] = user_prompt
     if image_bytes:
         image_data_url = (
             "data:"
@@ -1160,7 +972,6 @@ def generate_assistant_reply(
                     max_tokens=2048,
                     temperature=0.35,
                 )
-                # If image input failed on text-only Groq model, retry with text-only user_prompt
                 if not reply_content and image_bytes:
                     reply_content = _generate_with_openai_or_groq(
                         openai_client,
@@ -1178,50 +989,48 @@ def generate_assistant_reply(
             tokens_used = max(20, (len(system_prompt) + len(user_prompt) + len(reply_content)) // 4)
             current_user.ai_credits = max(0, (current_user.ai_credits or 0) - tokens_used)
             try:
-                from app.extensions import db
                 db.session.commit()
-            except Exception:
+            except Exception:  # noqa: BLE001
                 db.session.rollback()
         return reply_content
 
     return None
 
-def _extract_json_array(text):
+
+def _extract_json_array(text: str) -> list[Any] | None:
     if not text:
         return None
-    import json, re
     s = text.strip()
-    # 1. Try finding complete array inside text
-    match = re.search(r'\[\s*\{.*\}\s*\]', s, re.DOTALL)
+    match = re.search(r"\[\s*\{.*\}\s*\]", s, re.DOTALL)
     if match:
         try:
             parsed = json.loads(match.group(0))
             if isinstance(parsed, list) and len(parsed) > 0:
                 return parsed
-        except Exception:
+        except Exception:  # noqa: BLE001, S110
             pass
-    # 2. Try markdown strip
     cleaned = s
-    if cleaned.startswith("```json"): cleaned = cleaned[7:]
-    elif cleaned.startswith("```"): cleaned = cleaned[3:]
-    if cleaned.endswith("```"): cleaned = cleaned[:-3]
+    if cleaned.startswith("```json"):
+        cleaned = cleaned[7:]
+    elif cleaned.startswith("```"):
+        cleaned = cleaned[3:]
+    cleaned = cleaned.removesuffix("```")
     try:
         parsed = json.loads(cleaned.strip())
         if isinstance(parsed, list) and len(parsed) > 0:
             return parsed
-    except Exception:
+    except Exception:  # noqa: BLE001, S110
         pass
-    # 3. Resilient salvage of truncated arrays (if LLM output cut off at max_tokens)
     if "[" in s:
-        sub = s[s.find("["):]
+        sub = s[s.find("[") :]
         last_brace = sub.rfind("}")
         if last_brace != -1:
             try:
-                salvaged = sub[:last_brace + 1] + "]"
+                salvaged = sub[: last_brace + 1] + "]"
                 parsed = json.loads(salvaged)
                 if isinstance(parsed, list) and len(parsed) > 0:
                     return parsed
-            except Exception:
+            except Exception:  # noqa: BLE001, S110
                 pass
     return None
 
@@ -1367,19 +1176,13 @@ def _match_news_image(text: str, default_index: int = 0) -> str:
     return fallbacks[default_index % len(fallbacks)]
 
 
-_KM_NEWS_CACHE = {}
+_KM_NEWS_CACHE: dict[str, Any] = {}
 
 
-def _batch_translate_to_khmer(items: list) -> dict:
-    """
-    Translates news headlines and summaries into natural, fluent Khmer.
-    Falls back across candidate Groq models (preferred -> qwen3.8-27b -> openai/gpt-oss-120b -> qwen3.6-27b)
-    to guarantee high-availability even during rate limit (429) peaks.
-    """
-    # Use the owner's model only. The legacy provider implementation below is
-    # intentionally unreachable and retained temporarily for source-level
-    # compatibility with older imports.
+def _batch_translate_to_khmer(items: list[Any]) -> dict[str, Any]:
+    """Translate news headlines and summaries into natural, fluent Khmer."""
     from app.services.translator import translate_to_khmer
+
     for item in items or []:
         if isinstance(item, dict):
             title = str(item.get("title") or "").strip()
@@ -1399,145 +1202,30 @@ def _batch_translate_to_khmer(items: list) -> dict:
             }
     return _KM_NEWS_CACHE
 
-    import re
-    import os
-    from concurrent.futures import ThreadPoolExecutor
-
-    if not items:
-        return _KM_NEWS_CACHE
-
-    uncached = []
-    for it in items:
-        if isinstance(it, dict):
-            t = it.get("title", "").strip()
-            s = it.get("summary", "").strip()
-            if t and t not in _KM_NEWS_CACHE:
-                uncached.append({"title": t, "summary": s})
-        elif isinstance(it, str):
-            t = it.strip()
-            if t and t not in _KM_NEWS_CACHE:
-                uncached.append({"title": t, "summary": ""})
-
-    if not uncached:
-        return _KM_NEWS_CACHE
-
-    lines = []
-    for i, u in enumerate(uncached):
-        t = u["title"]
-        s = u["summary"]
-        if s:
-            lines.append(f"{i+1}. [TITLE]: {t} | [SUMMARY]: {s}")
-        else:
-            lines.append(f"{i+1}. [TITLE]: {t}")
-
-    prompt = (
-        "You are an expert Cambodian agricultural translator. Translate each numbered agricultural headline and summary into natural, fluent Khmer for farmers.\n"
-        "Return ONLY the numbered list in this exact format with NO other commentary:\n"
-        "1. [TITLE]: (Khmer title) | [SUMMARY]: (Khmer summary)\n\n"
-        + "\n".join(lines)
-    )
-
-    translated = False
-    try:
-        from app.models.site_setting import SiteSetting
-        db_provider = SiteSetting.query.get("ACTIVE_PROVIDER")
-        provider = db_provider.value.strip().lower() if db_provider and db_provider.value else "groq"
-
-        # 1. Gemini
-        if provider == "gemini":
-            from app.services.openai_assistant import _get_client
-            client = _get_client()
-            if client:
-                model_name = os.getenv("GEMINI_MODEL", "gemini-2.5-flash").strip()
-                resp = client.models.generate_content(model=model_name, contents=prompt)
-                if resp and resp.text:
-                    for line in resp.text.strip().split("\n"):
-                        m = re.match(r"^(\d+)[\.\)]\s*(?:\[TITLE\]:\s*)?(.*?)(?:\s*\|\s*\[SUMMARY\]:\s*(.*))?$", line.strip(), re.IGNORECASE)
-                        if m:
-                            idx = int(m.group(1)) - 1
-                            kh_t = m.group(2).strip() if m.group(2) else ""
-                            kh_s = m.group(3).strip() if m.group(3) else ""
-                            if 0 <= idx < len(uncached) and kh_t:
-                                _KM_NEWS_CACHE[uncached[idx]["title"]] = {"title": kh_t, "summary": kh_s}
-                    translated = True
-
-        # 2. Groq or OpenAI
-        if not translated:
-            from app.services.translator import _get_client
-            client = _get_client()
-            if client:
-                if provider == "openai":
-                    models_to_try = ["gpt-4o-mini"]
-                else:
-                    groq_model_setting = SiteSetting.query.get("GROQ_MODEL")
-                    pref_model = groq_model_setting.value.strip() if groq_model_setting and groq_model_setting.value else "qwen/qwen3.8-27b"
-                    models_to_try = [pref_model, "qwen/qwen3.8-27b", "openai/gpt-oss-120b", "qwen/qwen3.6-27b"]
-                    models_to_try = list(dict.fromkeys(models_to_try))
-
-                for model in models_to_try:
-                    try:
-                        resp = client.chat.completions.create(
-                            model=model,
-                            messages=[
-                                {"role": "system", "content": "You are a professional Cambodian agricultural translator."},
-                                {"role": "user", "content": prompt}
-                            ],
-                            temperature=0.1,
-                            max_tokens=max(1500, len(uncached) * 120)
-                        )
-                        if resp and resp.choices:
-                            content = resp.choices[0].message.content.strip()
-                            content = re.sub(r'<think>.*?</think>', '', content, flags=re.DOTALL).strip()
-                            for line in content.split("\n"):
-                                m = re.match(r"^(\d+)[\.\)]\s*(?:\[TITLE\]:\s*)?(.*?)(?:\s*\|\s*\[SUMMARY\]:\s*(.*))?$", line.strip(), re.IGNORECASE)
-                                if m:
-                                    idx = int(m.group(1)) - 1
-                                    kh_t = m.group(2).strip() if m.group(2) else ""
-                                    kh_s = m.group(3).strip() if m.group(3) else ""
-                                    if 0 <= idx < len(uncached) and kh_t:
-                                        _KM_NEWS_CACHE[uncached[idx]["title"]] = {"title": kh_t, "summary": kh_s}
-                            translated = True
-                            break
-                    except Exception:
-                        continue
-    except Exception as e:
-        print(f"Batch translation error: {e}")
-
-    # Fallback for any items that were not translated in batch
-    missing = [u["title"] for u in uncached if u["title"] not in _KM_NEWS_CACHE]
-    if missing:
-        def _fallback_trans(t):
-            try:
-                from app.services.translator import translate_to_khmer
-                kh = translate_to_khmer(t)
-                if kh and len(kh) > 2 and "error" not in kh.lower():
-                    _KM_NEWS_CACHE[t] = {"title": kh.strip(), "summary": ""}
-            except Exception:
-                pass
-        with ThreadPoolExecutor(max_workers=min(4, len(missing))) as executor:
-            list(executor.map(_fallback_trans, missing))
-
-    return _KM_NEWS_CACHE
-
 
 def _translate_headline_to_khmer(title: str) -> str:
     if not title:
         return ""
     if title in _KM_NEWS_CACHE:
-        return _KM_NEWS_CACHE[title]
+        cached_val = _KM_NEWS_CACHE[title]
+        if isinstance(cached_val, dict):
+            return str(cached_val.get("title") or title)
+        return str(cached_val)
     try:
         from app.services.translator import translate_to_khmer
+
         kh = translate_to_khmer(title)
         if kh and len(kh) > 2 and "error" not in kh.lower():
             _KM_NEWS_CACHE[title] = kh.strip()
-            return _KM_NEWS_CACHE[title]
-    except Exception:
+            return str(_KM_NEWS_CACHE[title])
+    except Exception:  # noqa: BLE001, S110
         pass
     return title
 
 
 def _clean_article_line(text: str) -> str:
     import html as _html
+
     text = _html.unescape(text or "")
     text = re.sub(r"\s+", " ", text).strip()
     text = re.sub(r"The post .* appeared first on .*", "", text).strip()
@@ -1569,6 +1257,7 @@ def _extract_paragraphs_from_html(raw_html: str, *, article_mode: bool = False) 
     paragraphs: list[str] = []
     try:
         from lxml import html as lh
+
         doc = lh.fromstring(raw_html)
         remove_tags = (
             ("script", "style", "noscript", "iframe", "svg", "form", "nav", "header", "footer", "aside")
@@ -1595,7 +1284,7 @@ def _extract_paragraphs_from_html(raw_html: str, *, article_mode: bool = False) 
             if not nodes:
                 nodes = [doc]
 
-        seen = set()
+        seen: set[str] = set()
         total_chars = 0
         for node in nodes:
             clean = _clean_article_line(node.text_content())
@@ -1609,7 +1298,7 @@ def _extract_paragraphs_from_html(raw_html: str, *, article_mode: bool = False) 
             total_chars += len(clean)
             if len(paragraphs) >= 24 or total_chars >= 7500:
                 break
-    except Exception:
+    except Exception:  # noqa: BLE001, S110
         pass
 
     if not paragraphs:
@@ -1638,17 +1327,16 @@ def _estimate_read_time(full_text: str, lang: str) -> str:
     return f"អាន {mins} នាទី" if lang == "km" else f"{mins} min read"
 
 
-def _fetch_live_agri_rss(region="cambodia", limit=12):
+def _fetch_live_agri_rss(region: str = "cambodia", limit: int = 12) -> list[dict[str, Any]]:
     """
     Fetches real-world live agricultural news dispatches in parallel across verified feeds,
     extracting full multi-paragraph article text when available.
     Cached for 15 minutes to guarantee instant response times.
     """
-    import requests
     import xml.etree.ElementTree as ET
-    import re
-    import time
     from concurrent.futures import ThreadPoolExecutor
+
+    import requests
 
     with _NEWS_CACHE_LOCK:
         cached = _LIVE_RSS_CACHE.get(region)
@@ -1657,7 +1345,7 @@ def _fetch_live_agri_rss(region="cambodia", limit=12):
 
     headers = {
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-        "Accept": "application/rss+xml, application/xml, text/xml, text/html, */*"
+        "Accept": "application/rss+xml, application/xml, text/xml, text/html, */*",
     }
 
     if region == "cambodia":
@@ -1687,29 +1375,29 @@ def _fetch_live_agri_rss(region="cambodia", limit=12):
         "grain", "export", "food", "rural", "forest", "plantation", "maize", "pepper",
     )
 
-    def _fetch_single(source_name, feed_url, filter_agri):
-        feed_items = []
+    def _fetch_single(source_name: str, feed_url: str, filter_agri: bool) -> list[dict[str, Any]]:
+        feed_items: list[dict[str, Any]] = []
         try:
             resp = requests.get(feed_url, headers=headers, timeout=3.5)
             if resp.status_code == 200 and resp.content:
-                cleaned_text = re.sub(r'&(?!(?:amp|lt|gt|quot|apos|#\d+|#x[0-9a-fA-F]+);)', '&amp;', resp.text)
-                root = ET.fromstring(cleaned_text.encode('utf-8'))
+                cleaned_text = re.sub(r"&(?!(?:amp|lt|gt|quot|apos|#\d+|#x[0-9a-fA-F]+);)", "&amp;", resp.text)
+                root = ET.fromstring(cleaned_text.encode("utf-8"))
                 for item in root.findall("./channel/item"):
                     t = item.findtext("title") or ""
-                    l = item.findtext("link") or ""
+                    link_val = item.findtext("link") or ""
                     d = item.findtext("pubDate") or ""
                     desc = item.findtext("description") or ""
                     encoded = item.findtext("{http://purl.org/rss/1.0/modules/content/}encoded") or ""
 
-                    if not t.strip() or not l.strip():
+                    if not t.strip() or not link_val.strip():
                         continue
 
                     img = None
                     for c in item:
-                        if "enclosure" in c.tag and "image" in c.attrib.get("type", ""):
-                            img = c.attrib.get("url")
-                            break
-                        elif "content" in c.tag and "url" in c.attrib:
+                        if (
+                            ("enclosure" in c.tag and "image" in c.attrib.get("type", ""))
+                            or ("content" in c.tag and "url" in c.attrib)
+                        ):
                             img = c.attrib.get("url")
                             break
                     if not img:
@@ -1745,24 +1433,26 @@ def _fetch_live_agri_rss(region="cambodia", limit=12):
                         dm = re.search(r"(\d{1,2}\s+[A-Za-z]{3}\s+\d{4})", d)
                         clean_date = dm.group(1) if dm else d[:16].strip()
 
-                    feed_items.append({
-                        "title": t.strip(),
-                        "link": l.strip(),
-                        "image": img,
-                        "source": item_source,
-                        "date": clean_date,
-                        "summary": clean_desc,
-                        "paragraphs": paragraphs,
-                        "full_text": "\n\n".join(paragraphs),
-                    })
-        except Exception:
+                    feed_items.append(
+                        {
+                            "title": t.strip(),
+                            "link": link_val.strip(),
+                            "image": img,
+                            "source": item_source,
+                            "date": clean_date,
+                            "summary": clean_desc,
+                            "paragraphs": paragraphs,
+                            "full_text": "\n\n".join(paragraphs),
+                        }
+                    )
+        except Exception:  # noqa: BLE001, S110
             pass
         return feed_items
 
-    items = []
-    seen_links = set()
+    items: list[dict[str, Any]] = []
+    seen_links: set[str] = set()
 
-    def _collect(feed_group):
+    def _collect(feed_group: list[tuple[str, str, bool]]) -> None:
         with ThreadPoolExecutor(max_workers=max(1, min(4, len(feed_group)))) as executor:
             results = list(executor.map(lambda cfg: _fetch_single(*cfg), feed_group))
         for group_items in results:
@@ -1778,7 +1468,7 @@ def _fetch_live_agri_rss(region="cambodia", limit=12):
         _collect(fallback_feeds)
 
     # Fetch full publisher body paragraphs & og:image concurrently for direct URLs
-    def _enrich_article(it):
+    def _enrich_article(it: dict[str, Any]) -> None:
         link = it.get("link") or ""
         if not link:
             return
@@ -1811,7 +1501,7 @@ def _fetch_live_agri_rss(region="cambodia", limit=12):
                     it["full_text"] = "\n\n".join(extracted)
                     if not it.get("summary") or len(it["summary"]) < 80:
                         it["summary"] = _build_lead_summary(extracted, it["title"])
-        except Exception:
+        except Exception:  # noqa: BLE001, S110
             pass
 
     if items:
@@ -1822,13 +1512,13 @@ def _fetch_live_agri_rss(region="cambodia", limit=12):
         _LIVE_RSS_CACHE[region] = {
             "timestamp": time.time(),
             "ttl": 900 if items else 180,
-            "items": items
+            "items": items,
         }
 
     return items
 
 
-def _get_bilingual_agri_news(region="cambodia"):
+def _get_bilingual_agri_news(region: str = "cambodia") -> list[dict[str, Any]]:
     """
     Returns 12 canonical agricultural articles paired bilingually
     so that Khmer and English feeds are 100% synchronized and identical in content,
@@ -1869,83 +1559,84 @@ def _get_bilingual_agri_news(region="cambodia"):
 
     images_pool = CAMBODIA_IMAGES if region == "cambodia" else WORLD_IMAGES
 
-    bilingual_articles = []
+    bilingual_articles: list[dict[str, Any]] = []
     count = min(len(km_articles), len(en_articles))
     for i in range(count):
         km = km_articles[i]
         en = en_articles[i]
         photo_url = images_pool[i % len(images_pool)]
-        bilingual_articles.append({
-            "id": i + 1,
-            "category": km.get("category") or en.get("category") or "Crops",
-            "impact": km.get("impact") or en.get("impact") or "Moderate",
-            "image": photo_url,
-            "km": {
-                "title": km.get("title", ""),
-                "summary": km.get("summary", ""),
-                "tip": km.get("tip", ""),
-                "source": km.get("source", ""),
-                "date": km.get("date", "ថ្ងៃនេះ"),
-                "read_time": km.get("read_time", "អាន ៣ នាទី"),
-            },
-            "en": {
-                "title": en.get("title", ""),
-                "summary": en.get("summary", ""),
-                "tip": en.get("tip", ""),
-                "source": en.get("source", ""),
-                "date": en.get("date", "Today"),
-                "read_time": en.get("read_time", "3 min read"),
-            },
-            "link": km.get("link") or en.get("link") or ""
-        })
+        bilingual_articles.append(
+            {
+                "id": i + 1,
+                "category": km.get("category") or en.get("category") or "Crops",
+                "impact": km.get("impact") or en.get("impact") or "Moderate",
+                "image": photo_url,
+                "km": {
+                    "title": km.get("title", ""),
+                    "summary": km.get("summary", ""),
+                    "tip": km.get("tip", ""),
+                    "source": km.get("source", ""),
+                    "date": km.get("date", "ថ្ងៃនេះ"),
+                    "read_time": km.get("read_time", "អាន ៣ នាទី"),
+                },
+                "en": {
+                    "title": en.get("title", ""),
+                    "summary": en.get("summary", ""),
+                    "tip": en.get("tip", ""),
+                    "source": en.get("source", ""),
+                    "date": en.get("date", "Today"),
+                    "read_time": en.get("read_time", "3 min read"),
+                },
+                "link": km.get("link") or en.get("link") or "",
+            }
+        )
     return bilingual_articles
 
 
-import json
-import time
-import os
-from threading import Thread
+_IS_UPDATING_NEWS: dict[tuple[str, str], bool] = {}
 
-_IS_UPDATING_NEWS = {}
 
-def _get_shared_news_cache(region: str, lang: str):
+def _get_shared_news_cache(region: str, lang: str) -> dict[str, Any] | None:
     try:
         path = f"/tmp/agri_news_v2_{region}_{lang}.json"
         if os.path.exists(path):
-            with open(path, "r", encoding="utf-8") as f:
+            with open(path, encoding="utf-8") as f:
                 d = json.load(f)
                 if d and isinstance(d.get("data"), list) and len(d["data"]) > 0:
                     return d
-    except Exception:
+    except Exception:  # noqa: BLE001, S110
         pass
     return None
 
-def _write_shared_news_cache(region: str, lang: str, data: list):
+
+def _write_shared_news_cache(region: str, lang: str, data: list[Any]) -> None:
     try:
         path = f"/tmp/agri_news_v2_{region}_{lang}.json"
         tmp = path + ".tmp"
         with open(tmp, "w", encoding="utf-8") as f:
             json.dump({"timestamp": time.time(), "data": data}, f, ensure_ascii=False)
         os.replace(tmp, path)
-    except Exception:
+    except Exception:  # noqa: BLE001, S110
         pass
 
-def _has_khmer_text(text: str) -> bool:
-    import re
-    return bool(re.search(r'[\u1780-\u17FF]', text or ''))
 
-def _is_valid_cache_for_lang(data: list, lang: str) -> bool:
+def _has_khmer_text(text: str) -> bool:
+    return bool(re.search(r"[\u1780-\u17FF]", text or ""))
+
+
+def _is_valid_cache_for_lang(data: list[Any], lang: str) -> bool:
     if not data or not isinstance(data, list) or len(data) == 0:
         return False
     if lang == "km":
         return any(_has_khmer_text(it.get("title", "")) for it in data)
     return True
 
-def _rebuild_news_feed(region="cambodia", lang="en"):
+
+def _rebuild_news_feed(region: str = "cambodia", lang: str = "en") -> list[dict[str, Any]]:
     """Internal builder that queries live RSS, resolves real photos, and translates."""
     live_dispatches = _fetch_live_agri_rss(region=region, limit=12)
     bilingual_baseline = _get_bilingual_agri_news(region=region)
-    result = []
+    result: list[dict[str, Any]] = []
 
     if live_dispatches:
         if lang == "km":
@@ -1985,22 +1676,24 @@ def _rebuild_news_feed(region="cambodia", lang="en"):
                 summary_disp = raw_summary
                 read_time = "3 min read"
 
-            result.append({
-                "id": i + 1,
-                "title": title_disp,
-                "category": cat,
-                "impact": imp,
-                "image": photo,
-                "date": disp.get("date", "Today" if lang != "km" else "ថ្ងៃនេះ"),
-                "read_time": read_time,
-                "summary": summary_disp,
-                "full_text": disp.get("full_text") or summary_disp,
-                "paragraphs": disp.get("paragraphs") or ([summary_disp] if summary_disp else []),
-                "is_live": True,
-                "tip": tip_text,
-                "source": disp.get("source", "Agri News Wire"),
-                "link": disp.get("link", ""),
-            })
+            result.append(
+                {
+                    "id": i + 1,
+                    "title": title_disp,
+                    "category": cat,
+                    "impact": imp,
+                    "image": photo,
+                    "date": disp.get("date", "Today" if lang != "km" else "ថ្ងៃនេះ"),
+                    "read_time": read_time,
+                    "summary": summary_disp,
+                    "full_text": disp.get("full_text") or summary_disp,
+                    "paragraphs": disp.get("paragraphs") or ([summary_disp] if summary_disp else []),
+                    "is_live": True,
+                    "tip": tip_text,
+                    "source": disp.get("source", "Agri News Wire"),
+                    "link": disp.get("link", ""),
+                }
+            )
             if result[-1]["full_text"]:
                 result[-1]["read_time"] = _estimate_read_time(result[-1]["full_text"], lang)
 
@@ -2011,34 +1704,37 @@ def _rebuild_news_feed(region="cambodia", lang="en"):
         for j in range(min(needed, len(bilingual_baseline))):
             base_item = bilingual_baseline[j]
             content = base_item["km"] if lang == "km" else base_item["en"]
-            result.append({
-                "id": base_index_start + j + 1,
-                "title": content["title"],
-                "category": base_item["category"],
-                "impact": base_item["impact"],
-                "image": base_item["image"],
-                "date": content["date"],
-                "read_time": content["read_time"],
-                "summary": content["summary"],
-                "full_text": content["summary"],
-                "paragraphs": [content["summary"]] if content.get("summary") else [],
-                "is_live": False,
-                "tip": content["tip"],
-                "source": content["source"],
-                "link": base_item.get("link", "")
-            })
+            result.append(
+                {
+                    "id": base_index_start + j + 1,
+                    "title": content["title"],
+                    "category": base_item["category"],
+                    "impact": base_item["impact"],
+                    "image": base_item["image"],
+                    "date": content["date"],
+                    "read_time": content["read_time"],
+                    "summary": content["summary"],
+                    "full_text": content["summary"],
+                    "paragraphs": [content["summary"]] if content.get("summary") else [],
+                    "is_live": False,
+                    "tip": content["tip"],
+                    "source": content["source"],
+                    "link": base_item.get("link", ""),
+                }
+            )
 
     if result:
         _write_shared_news_cache(region, lang, result)
         with _NEWS_CACHE_LOCK:
             _NEWS_FEED_CACHE[(region, lang)] = {
                 "timestamp": time.time(),
-                "data": result
+                "data": result,
             }
 
     return result
 
-def generate_agriculture_news(region="cambodia", lang="en", force_refresh=False):
+
+def generate_agriculture_news(region: str = "cambodia", lang: str = "en", force_refresh: bool = False) -> list[dict[str, Any]]:
     """
     Generates real-world, live agricultural news dispatches with sub-millisecond SWR caching.
     Guarantees instant page loads while revalidating feeds in the background.
@@ -2072,12 +1768,13 @@ def generate_agriculture_news(region="cambodia", lang="en", force_refresh=False)
                 _IS_UPDATING_NEWS[cache_key] = True
                 should_spawn = True
         if should_spawn:
-            def _bg_rebuild():
+            def _bg_rebuild() -> None:
                 try:
                     _rebuild_news_feed(region, lang)
                 finally:
                     with _NEWS_CACHE_LOCK:
                         _IS_UPDATING_NEWS[cache_key] = False
+
             Thread(target=_bg_rebuild, daemon=True).start()
 
         return cached_shared["data"]
@@ -2085,19 +1782,20 @@ def generate_agriculture_news(region="cambodia", lang="en", force_refresh=False)
     # 3. Cold cache fallback: build immediately or return instant baseline
     try:
         return _rebuild_news_feed(region, lang)
-    except Exception:
+    except Exception:  # noqa: BLE001
         baseline = _get_bilingual_agri_news(region=region)
-        items = []
+        items: list[dict[str, Any]] = []
         for j, b in enumerate(baseline):
             content = b["km"] if lang == "km" else b["en"]
-            items.append({
-                "id": j + 1,
-                "title": content["title"],
-                "category": b["category"],
-                "impact": b["impact"],
-                "image": b["image"],
-                "date": content["date"],
-                "read_time": content["read_time"],
+            items.append(
+                {
+                    "id": j + 1,
+                    "title": content["title"],
+                    "category": b["category"],
+                    "impact": b["impact"],
+                    "image": b["image"],
+                    "date": content["date"],
+                    "read_time": content["read_time"],
                 "summary": content["summary"],
                 "full_text": content["summary"],
                 "paragraphs": [content["summary"]] if content.get("summary") else [],
