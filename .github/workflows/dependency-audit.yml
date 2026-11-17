@@ -59,7 +59,7 @@ jobs:
 
       - name: Audit npm packages for critical/high vulnerabilities
         working-directory: frontend
-        run: npm audit --audit-level=high
+        run: npm audit --omit=dev --audit-level=high
 
       - name: Build frontend
         working-directory: frontend

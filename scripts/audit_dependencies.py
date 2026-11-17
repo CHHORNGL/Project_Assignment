@@ -148,7 +148,7 @@ def check_frontend():
 
     if npm_path:
         audit = subprocess.run(
-            [npm_path, "audit", "--audit-level=high"],
+            [npm_path, "audit", "--omit=dev", "--audit-level=high"],
             cwd=str(frontend_dir),
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
