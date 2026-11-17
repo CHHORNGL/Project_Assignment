@@ -7,6 +7,7 @@ import random
 import re
 import secrets
 import string
+import threading
 import time
 import zipfile
 from datetime import datetime, timedelta, timezone
@@ -892,6 +893,7 @@ def diseases_bulk():
 # ==================================================
 # TRANSLATION CENTER
 # ==================================================
+_TRANSLATION_RATE_LIMIT_LOCK = threading.Lock()
 _TRANSLATION_RATE_LIMIT = {
     "window_seconds": 60,
     "max_requests": 40,
@@ -901,12 +903,19 @@ _TRANSLATION_RATE_LIMIT = {
 
 def _rate_limited(ip: str) -> bool:
     now = _now_dt().timestamp()
-    bucket = _TRANSLATION_RATE_LIMIT["buckets"].get(ip)
-    if not bucket or now - bucket["start"] > _TRANSLATION_RATE_LIMIT["window_seconds"]:
-        _TRANSLATION_RATE_LIMIT["buckets"][ip] = {"start": now, "count": 1}
-        return False
-    bucket["count"] += 1
-    return bucket["count"] > _TRANSLATION_RATE_LIMIT["max_requests"]
+    window = _TRANSLATION_RATE_LIMIT["window_seconds"]
+    with _TRANSLATION_RATE_LIMIT_LOCK:
+        buckets = _TRANSLATION_RATE_LIMIT["buckets"]
+        if len(buckets) > 2000:
+            expired = [k for k, v in buckets.items() if now - v["start"] > window]
+            for k in expired:
+                buckets.pop(k, None)
+        bucket = buckets.get(ip)
+        if not bucket or now - bucket["start"] > window:
+            buckets[ip] = {"start": now, "count": 1}
+            return False
+        bucket["count"] += 1
+        return bucket["count"] > _TRANSLATION_RATE_LIMIT["max_requests"]
 
 
 def _save_translation_backup(scope: str, payload: dict):

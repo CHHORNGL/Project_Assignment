@@ -9,10 +9,11 @@ import gunicorn.http.wsgi as gunicorn_wsgi
 gunicorn.SERVER = "webserver"
 gunicorn_wsgi.SERVER = "webserver"
 
-# Sized for Render Starter instances while preventing worker memory growth
-# and aligning keepalive/timeout with upstream reverse proxies and HF inference.
+# Sized for Render Starter instances while allowing concurrent I/O across
+# threads and aligning keepalive/timeout with upstream reverse proxies and HF inference.
+worker_class = (os.getenv("GUNICORN_WORKER_CLASS") or "gthread").strip() or "gthread"
 workers = max(1, int(os.getenv("WEB_CONCURRENCY", "2")))
-threads = max(1, int(os.getenv("GUNICORN_THREADS", "1")))
+threads = max(1, int(os.getenv("GUNICORN_THREADS", "6")))
 timeout = max(30, int(os.getenv("GUNICORN_TIMEOUT", "180")))
 graceful_timeout = 30
 keepalive = 65

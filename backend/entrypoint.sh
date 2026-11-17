@@ -61,7 +61,9 @@ echo "🚀 Starting Gunicorn server..."
 exec gunicorn \
   --config gunicorn.conf.py \
   --bind "0.0.0.0:${PORT:-5000}" \
+  --worker-class "${GUNICORN_WORKER_CLASS:-gthread}" \
   --workers "${WEB_CONCURRENCY:-2}" \
+  --threads "${GUNICORN_THREADS:-6}" \
   --timeout "${GUNICORN_TIMEOUT:-180}" \
   --access-logfile - \
   --error-logfile - \

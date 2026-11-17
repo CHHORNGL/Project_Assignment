@@ -4,6 +4,7 @@ import base64
 import json
 import os
 import re
+from threading import Lock
 from typing import Optional, Tuple
 
 try:
@@ -1214,6 +1215,7 @@ def _extract_json_array(text):
                 pass
     return None
 
+_NEWS_CACHE_LOCK = Lock()
 _LIVE_RSS_CACHE = {
     "cambodia": {"timestamp": 0, "items": []},
     "world": {"timestamp": 0, "items": []}
@@ -1374,14 +1376,17 @@ def _batch_translate_to_khmer(items: list) -> dict:
             summary = str(item.get("summary") or "").strip()
         else:
             title, summary = str(item or "").strip(), ""
-        if not title or title in _KM_NEWS_CACHE:
+        with _NEWS_CACHE_LOCK:
+            already_cached = not title or title in _KM_NEWS_CACHE
+        if already_cached:
             continue
         translated_title = translate_to_khmer(title)
         translated_summary = translate_to_khmer(summary) if summary else ""
-        _KM_NEWS_CACHE[title] = {
-            "title": translated_title or title,
-            "summary": translated_summary or summary,
-        }
+        with _NEWS_CACHE_LOCK:
+            _KM_NEWS_CACHE[title] = {
+                "title": translated_title or title,
+                "summary": translated_summary or summary,
+            }
     return _KM_NEWS_CACHE
 
     import re
@@ -1635,7 +1640,8 @@ def _fetch_live_agri_rss(region="cambodia", limit=12):
     import time
     from concurrent.futures import ThreadPoolExecutor
 
-    cached = _LIVE_RSS_CACHE.get(region)
+    with _NEWS_CACHE_LOCK:
+        cached = _LIVE_RSS_CACHE.get(region)
     if cached and (time.time() - cached.get("timestamp", 0) < cached.get("ttl", 900)) and cached.get("items"):
         return cached["items"][:limit]
 
@@ -1802,11 +1808,12 @@ def _fetch_live_agri_rss(region="cambodia", limit=12):
         with ThreadPoolExecutor(max_workers=min(8, len(items))) as enrich_executor:
             list(enrich_executor.map(_enrich_article, items))
 
-    _LIVE_RSS_CACHE[region] = {
-        "timestamp": time.time(),
-        "ttl": 900 if items else 180,
-        "items": items
-    }
+    with _NEWS_CACHE_LOCK:
+        _LIVE_RSS_CACHE[region] = {
+            "timestamp": time.time(),
+            "ttl": 900 if items else 180,
+            "items": items
+        }
 
     return items
 
@@ -2013,10 +2020,11 @@ def _rebuild_news_feed(region="cambodia", lang="en"):
 
     if result:
         _write_shared_news_cache(region, lang, result)
-        _NEWS_FEED_CACHE[(region, lang)] = {
-            "timestamp": time.time(),
-            "data": result
-        }
+        with _NEWS_CACHE_LOCK:
+            _NEWS_FEED_CACHE[(region, lang)] = {
+                "timestamp": time.time(),
+                "data": result
+            }
 
     return result
 
@@ -2029,7 +2037,8 @@ def generate_agriculture_news(region="cambodia", lang="en", force_refresh=False)
     now = time.time()
 
     # 1. Check in-memory cache first
-    cached_mem = _NEWS_FEED_CACHE.get(cache_key)
+    with _NEWS_CACHE_LOCK:
+        cached_mem = _NEWS_FEED_CACHE.get(cache_key)
     if cached_mem and cached_mem.get("data") and _is_valid_cache_for_lang(cached_mem["data"], lang):
         age = now - cached_mem.get("timestamp", 0)
         if not force_refresh and age < 600:
@@ -2038,7 +2047,8 @@ def generate_agriculture_news(region="cambodia", lang="en", force_refresh=False)
     # 2. Check shared disk cache (shared across all Gunicorn workers)
     cached_shared = _get_shared_news_cache(region, lang)
     if cached_shared and cached_shared.get("data") and _is_valid_cache_for_lang(cached_shared["data"], lang):
-        _NEWS_FEED_CACHE[cache_key] = cached_shared
+        with _NEWS_CACHE_LOCK:
+            _NEWS_FEED_CACHE[cache_key] = cached_shared
         age = now - cached_shared.get("timestamp", 0)
 
         # Fresh cache (< 15 min): return immediately
@@ -2046,13 +2056,18 @@ def generate_agriculture_news(region="cambodia", lang="en", force_refresh=False)
             return cached_shared["data"]
 
         # SWR: Return cached data INSTANTLY (< 0.1ms), update silently in background
-        if not _IS_UPDATING_NEWS.get(cache_key):
-            _IS_UPDATING_NEWS[cache_key] = True
+        should_spawn = False
+        with _NEWS_CACHE_LOCK:
+            if not _IS_UPDATING_NEWS.get(cache_key):
+                _IS_UPDATING_NEWS[cache_key] = True
+                should_spawn = True
+        if should_spawn:
             def _bg_rebuild():
                 try:
                     _rebuild_news_feed(region, lang)
                 finally:
-                    _IS_UPDATING_NEWS[cache_key] = False
+                    with _NEWS_CACHE_LOCK:
+                        _IS_UPDATING_NEWS[cache_key] = False
             Thread(target=_bg_rebuild, daemon=True).start()
 
         return cached_shared["data"]

@@ -114,6 +114,7 @@ export default function FarmerLiveChatPage({
 
   const threadScrollRef = useRef<HTMLDivElement | null>(null);
   const lastPersistedIdRef = useRef<number>(0);
+  const pollCountRef = useRef<number>(0);
   const targetRef = useRef<SupportTarget>(target);
   const recipientIdRef = useRef<number | null>(recipientId);
   const typingEmitRef = useRef<number>(0);
@@ -249,7 +250,8 @@ export default function FarmerLiveChatPage({
         setActiveRecipientName(json.active_recipient.name);
       }
 
-      if (incoming.length > 0 || readIds.length > 0) {
+      const hasUpdates = incoming.length > 0 || readIds.length > 0;
+      if (hasUpdates) {
         if (incoming.length > 0) {
           lastPersistedIdRef.current = Math.max(
             lastPersistedIdRef.current,
@@ -272,7 +274,10 @@ export default function FarmerLiveChatPage({
           }
         }
       }
-      void refreshChannels();
+      pollCountRef.current += 1;
+      if (hasUpdates || pollCountRef.current % 4 === 0) {
+        void refreshChannels();
+      }
     } catch {
       // Silent retry on next poll
     }
@@ -294,7 +299,7 @@ export default function FarmerLiveChatPage({
       if (document.visibilityState === "visible") {
         void pollDelta();
       }
-    }, 2200);
+    }, 4500);
 
     return () => {
       document.removeEventListener("visibilitychange", onVisibility);

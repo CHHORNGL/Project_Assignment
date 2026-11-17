@@ -2,6 +2,7 @@
 
 import re
 from datetime import datetime, timezone
+from threading import Lock
 from flask import current_app, has_request_context, request, session
 from flask_login import current_user
 
@@ -10,6 +11,8 @@ from app.models.audit_log import AuditLog
 
 _DETAIL_VALUE = re.compile(r"(?:^|\s)([a-z_]+)=([^\s]+)")
 
+_ACTIVITY_CACHE_LOCK = Lock()
+_ACTIVITY_CACHE_MAX = 10000
 _REVOKED_ACTIVITIES: set[str] = set()
 _KNOWN_VALID_ACTIVITIES: set[str] = set()
 
@@ -37,10 +40,11 @@ def is_activity_revoked(activity_id: str | None, user_id: int | None = None) -> 
     """Check if a session activity_id has been revoked or logged out."""
     if not activity_id:
         return False
-    if activity_id in _REVOKED_ACTIVITIES:
-        return True
-    if activity_id in _KNOWN_VALID_ACTIVITIES:
-        return False
+    with _ACTIVITY_CACHE_LOCK:
+        if activity_id in _REVOKED_ACTIVITIES:
+            return True
+        if activity_id in _KNOWN_VALID_ACTIVITIES:
+            return False
 
     # Check Redis if available
     try:
@@ -48,7 +52,10 @@ def is_activity_revoked(activity_id: str | None, user_id: int | None = None) -> 
             redis_client = current_app.config.get("SESSION_REDIS")
             if redis_client:
                 if redis_client.get(f"agri:revoked_activity:{activity_id}"):
-                    _REVOKED_ACTIVITIES.add(activity_id)
+                    with _ACTIVITY_CACHE_LOCK:
+                        if len(_REVOKED_ACTIVITIES) >= _ACTIVITY_CACHE_MAX:
+                            _REVOKED_ACTIVITIES.clear()
+                        _REVOKED_ACTIVITIES.add(activity_id)
                     return True
     except Exception:
         pass
@@ -63,9 +70,15 @@ def is_activity_revoked(activity_id: str | None, user_id: int | None = None) -> 
             query = query.filter(AuditLog.user_id == user_id)
         match = query.first()
         if match:
-            _REVOKED_ACTIVITIES.add(activity_id)
+            with _ACTIVITY_CACHE_LOCK:
+                if len(_REVOKED_ACTIVITIES) >= _ACTIVITY_CACHE_MAX:
+                    _REVOKED_ACTIVITIES.clear()
+                _REVOKED_ACTIVITIES.add(activity_id)
             return True
-        _KNOWN_VALID_ACTIVITIES.add(activity_id)
+        with _ACTIVITY_CACHE_LOCK:
+            if len(_KNOWN_VALID_ACTIVITIES) >= _ACTIVITY_CACHE_MAX:
+                _KNOWN_VALID_ACTIVITIES.clear()
+            _KNOWN_VALID_ACTIVITIES.add(activity_id)
     except Exception:
         pass
 
@@ -99,8 +112,11 @@ def revoke_login_activity(user_id: int, activity_id: str, *, actor_username: str
     if not row and not is_current:
         return False
 
-    _REVOKED_ACTIVITIES.add(activity_id)
-    _KNOWN_VALID_ACTIVITIES.discard(activity_id)
+    with _ACTIVITY_CACHE_LOCK:
+        if len(_REVOKED_ACTIVITIES) >= _ACTIVITY_CACHE_MAX:
+            _REVOKED_ACTIVITIES.clear()
+        _REVOKED_ACTIVITIES.add(activity_id)
+        _KNOWN_VALID_ACTIVITIES.discard(activity_id)
 
     # Invalidate in Redis
     try:

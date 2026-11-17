@@ -312,12 +312,12 @@ export default function AdminSupportChatsPage({
     if (!tabVisible) return undefined;
     const convTimer = window.setInterval(() => {
       void fetchConversations();
-    }, 4000);
+    }, 6000);
     const threadTimer = window.setInterval(() => {
       if (activeIdRef.current) {
         void pollDeltaMessages(activeIdRef.current);
       }
-    }, 2000);
+    }, 3500);
     return () => {
       window.clearInterval(convTimer);
       window.clearInterval(threadTimer);

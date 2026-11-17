@@ -401,6 +401,7 @@ export function AiCopilotDrawer({
   const aiTextareaRef = useRef<HTMLTextAreaElement>(null);
   const abortRef = useRef<AbortController | null>(null);
   const copyTimerRef = useRef<number | null>(null);
+  const supportPollCountRef = useRef<number>(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const theme = useMemo(() => getDrawerTheme(phoenix), [phoenix]);
@@ -484,7 +485,8 @@ export function AiCopilotDrawer({
       const incoming = json.messages || [];
       const readIds = json.read_ids || [];
       setSupportTyping(Boolean(json.partner_typing));
-      if (incoming.length > 0 || readIds.length > 0) {
+      const hasUpdates = incoming.length > 0 || readIds.length > 0;
+      if (hasUpdates) {
         if (incoming.length > 0) {
           lastSupportIdRef.current = Math.max(
             lastSupportIdRef.current,
@@ -498,7 +500,10 @@ export function AiCopilotDrawer({
           );
         }
       }
-      void refreshSupportChannels();
+      supportPollCountRef.current += 1;
+      if (hasUpdates || supportPollCountRef.current % 4 === 0) {
+        void refreshSupportChannels();
+      }
     } catch {
       // Ignore transient poll error
     }
@@ -512,7 +517,7 @@ export function AiCopilotDrawer({
         if (document.visibilityState === "visible") {
           void pollSupportDelta();
         }
-      }, 2200);
+      }, 4500);
       return () => window.clearInterval(timer);
     }
     return undefined;

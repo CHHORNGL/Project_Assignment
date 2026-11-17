@@ -3,6 +3,7 @@
 import hashlib
 import os
 import re
+import threading
 import urllib.parse
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
@@ -1878,6 +1879,7 @@ def api_generate_news():
     })
 
 _TTS_CACHE = {}
+_TTS_CACHE_LOCK = threading.Lock()
 _KHMER_SCRIPT_RE = re.compile(r"[\u1780-\u17ff]")
 
 
@@ -1953,9 +1955,10 @@ def _audio_range_response(audio_bytes: bytes, mimetype: str = "audio/mpeg") -> R
 
 
 def _cache_and_serve_tts(cache_key: str, audio_bytes: bytes, mimetype: str) -> Response:
-    if len(_TTS_CACHE) > 200:
-        _TTS_CACHE.pop(next(iter(_TTS_CACHE)))
-    _TTS_CACHE[cache_key] = (audio_bytes, mimetype)
+    with _TTS_CACHE_LOCK:
+        if len(_TTS_CACHE) > 200:
+            _TTS_CACHE.pop(next(iter(_TTS_CACHE)))
+        _TTS_CACHE[cache_key] = (audio_bytes, mimetype)
     return _audio_range_response(audio_bytes, mimetype)
 
 
@@ -1977,8 +1980,9 @@ def api_tts():
         if personal_gemini_key:
             key_fp = hashlib.sha256(personal_gemini_key.encode("utf-8")).hexdigest()[:12]
             gemini_cache_key = hashlib.md5(f"gemini:{key_fp}:{lang}:{text}".encode()).hexdigest()
-            if gemini_cache_key in _TTS_CACHE:
-                cached = _TTS_CACHE[gemini_cache_key]
+            with _TTS_CACHE_LOCK:
+                cached = _TTS_CACHE.get(gemini_cache_key)
+            if cached is not None:
                 if isinstance(cached, tuple):
                     return _audio_range_response(cached[0], cached[1])
                 return _audio_range_response(cached, "audio/wav")
@@ -1988,8 +1992,9 @@ def api_tts():
                 return _cache_and_serve_tts(gemini_cache_key, gemini_audio[0], gemini_audio[1])
 
     cache_key = hashlib.md5(f"{lang}:{text}".encode()).hexdigest()
-    if cache_key in _TTS_CACHE:
-        cached = _TTS_CACHE[cache_key]
+    with _TTS_CACHE_LOCK:
+        cached = _TTS_CACHE.get(cache_key)
+    if cached is not None:
         if isinstance(cached, tuple):
             return _audio_range_response(cached[0], cached[1])
         return _audio_range_response(cached, "audio/mpeg")

@@ -25,6 +25,10 @@ services:
         value: "1"
       - key: WEB_CONCURRENCY
         value: "2"
+      - key: GUNICORN_WORKER_CLASS
+        value: gthread
+      - key: GUNICORN_THREADS
+        value: "6"
       - key: GUNICORN_TIMEOUT
         value: "180"
       - key: SEED_ACCOUNTS
