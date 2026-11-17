@@ -14,6 +14,7 @@ import { WorkspaceShell } from "@/components/layout/WorkspaceShell";
 import { AccountHeaderTabs, formatAccountTimestamp } from "@/components/user/AccountHeaderTabs";
 import { ACCOUNT_TONE_CLASSES, MobileSectionLabel } from "@/components/user/AccountPrimitives";
 import { buildNavSections } from "@/lib/navigation";
+import { LoginActivitySkeleton } from "@/components/ui/Skeleton";
 import { useToast } from "@/context/ToastContext";
 import { postJson, requestJson } from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -195,7 +196,12 @@ export default function LoginActivityPage({
             {isKhmer ? "បញ្ជីឧបករណ៍" : "Signed-In Devices"}
           </MobileSectionLabel>
 
-          {activities.length === 0 ? (
+          {refreshing ? (
+            <LoginActivitySkeleton
+              count={Math.max(2, Math.min(activities.length || 3, 4))}
+              label={isKhmer ? "កំពុងផ្ទុកបញ្ជីឧបករណ៍..." : "Refreshing signed-in devices..."}
+            />
+          ) : activities.length === 0 ? (
             <div className="rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-10 text-center text-xs text-slate-500 dark:border-slate-700 dark:bg-obsidian-900 dark:text-slate-400">
               {isKhmer ? "មិនទាន់មានទិន្នន័យសម័យចូលទេ។" : "No login activity recorded yet."}
             </div>

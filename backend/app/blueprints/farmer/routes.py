@@ -61,6 +61,7 @@ from app.utils.react_bootstrap import (
 from app.services.bakong_service import (
     create_khqr_payment,
     get_bakong_config,
+    reconcile_recent_user_khqr_payments,
     verify_khqr_payment,
 )
 from app.services.notification_service import (
@@ -2171,12 +2172,21 @@ def premium_checkout():
     paypal_client_id = os.getenv("PAYPAL_CLIENT_ID", "YOUR_PAYPAL_CLIENT_ID")
     bakong_config = get_bakong_config()
 
+    try:
+        reconciled = reconcile_recent_user_khqr_payments(current_user)
+        if reconciled and reconciled.get("status") == "PAID":
+            flash("Bakong KHQR payment confirmed! Welcome to Agri System Premium.", "success")
+            return redirect(url_for("farmer.dashboard"))
+    except Exception as e:  # noqa: BLE001
+        current_app.logger.debug(f"Bakong checkout reconciliation note: {e}")
+
     initial_bakong = None
     try:
         initial_bakong = create_khqr_payment(
             user=current_user,
             amount=float(display_checkout_price),
             billing_interval=billing_interval,
+            reuse_pending=True,
         )
     except Exception as e:  # noqa: BLE001
         current_app.logger.warning(f"Initial Bakong QR generation note: {e}")
@@ -2201,6 +2211,25 @@ def premium_checkout():
 @farmer_bp.route("/api/bakong/generate-qr", methods=["POST"])
 @farmer_required
 def generate_bakong_qr():
+    if getattr(current_user, "is_premium", False):
+        return jsonify({
+            "success": True,
+            "status": "PAID",
+            "already_paid": True,
+            "redirect_url": url_for("farmer.dashboard"),
+            "message": "Payment has already been confirmed.",
+        })
+
+    try:
+        reconciled = reconcile_recent_user_khqr_payments(current_user)
+        if reconciled and reconciled.get("status") == "PAID":
+            flash("Bakong KHQR payment confirmed! Welcome to Agri System Premium.", "success")
+            reconciled["already_paid"] = True
+            reconciled["redirect_url"] = url_for("farmer.dashboard")
+            return jsonify(reconciled)
+    except Exception as e:  # noqa: BLE001
+        current_app.logger.debug(f"Bakong pre-generate reconciliation note: {e}")
+
     data = request.get_json(silent=True) or {}
     billing_interval = data.get("billing_interval", "monthly").strip().lower()
     coupon_code = data.get("coupon_code", "").strip().upper()
@@ -2246,6 +2275,13 @@ def check_bakong_status(md5):
         return jsonify({"success": False, "status": "FORBIDDEN", "message": "Access denied."}), 403
     force = (request.args.get("force") or "").strip().lower() in {"1", "true", "yes"}
     res = verify_khqr_payment(md5, enforce_expiry=True, bypass_cache=force)
+    if res.get("status") != "PAID" and force:
+        try:
+            reconciled = reconcile_recent_user_khqr_payments(current_user)
+            if reconciled and reconciled.get("status") == "PAID":
+                res = reconciled
+        except Exception as e:  # noqa: BLE001
+            current_app.logger.debug(f"Bakong force-check reconciliation note: {e}")
     if res.get("status") == "PAID":
         flash("Bakong KHQR payment confirmed! Welcome to Agri System Premium.", "success")
         res["redirect_url"] = url_for("farmer.dashboard")

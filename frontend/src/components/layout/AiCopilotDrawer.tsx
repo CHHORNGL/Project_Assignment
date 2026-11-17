@@ -37,6 +37,7 @@ import {
   type SupportTarget,
 } from "@/lib/liveSupportHelpers";
 import { cn } from "@/lib/utils";
+import { AiThinkingSkeleton, ChatThreadSkeleton } from "@/components/ui/Skeleton";
 
 export interface AiCopilotDrawerProps {
   open: boolean;
@@ -1098,21 +1099,11 @@ export function AiCopilotDrawer({
                     >
                       <Bot className="h-3.5 w-3.5" />
                     </div>
-                    <div
-                      className={cn(
-                        "inline-flex items-center gap-2 rounded-2xl rounded-bl-sm px-3.5 py-2.5 text-xs",
-                        theme.assistantBubble,
-                      )}
-                    >
-                      <span className="inline-flex items-center gap-1" aria-hidden="true">
-                        <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-current opacity-60 [animation-delay:0ms]" />
-                        <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-current opacity-60 [animation-delay:150ms]" />
-                        <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-current opacity-60 [animation-delay:300ms]" />
-                      </span>
-                      <span className={theme.headerSub}>
-                        {isKhmer ? "កំពុងវិភាគ..." : "Thinking..."}
-                      </span>
-                    </div>
+                    <AiThinkingSkeleton
+                      compact
+                      label={isKhmer ? "កំពុងវិភាគ..." : "Thinking..."}
+                      bubbleClassName={theme.assistantBubble}
+                    />
                   </div>
                 )}
                 <div ref={aiEndRef} />
@@ -1192,12 +1183,12 @@ export function AiCopilotDrawer({
             )}
 
             {supportLoading && supportMessages.length === 0 ? (
-              <div className="flex h-full flex-col items-center justify-center gap-2 text-xs">
-                <Loader2 className={cn("h-5 w-5 animate-spin", theme.headerSub)} />
-                <span className={theme.headerSub}>
-                  {isKhmer ? "កំពុងភ្ជាប់ជំនួយផ្ទាល់..." : "Connecting to live support..."}
-                </span>
-              </div>
+              <ChatThreadSkeleton
+                compact
+                phoenix={phoenix}
+                count={4}
+                label={isKhmer ? "កំពុងភ្ជាប់ជំនួយផ្ទាល់..." : "Connecting to live support..."}
+              />
             ) : supportMessages.length === 0 ? (
               <div className={cn("rounded-2xl p-4", theme.emptyCard)}>
                 <div className="flex items-start gap-3">

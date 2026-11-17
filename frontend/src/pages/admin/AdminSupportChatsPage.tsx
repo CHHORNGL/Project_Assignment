@@ -41,6 +41,7 @@ import {
 } from "@/lib/liveSupportHelpers";
 import { cn } from "@/lib/utils";
 import { AdminEmptyState, AdminStatusBadge } from "@/components/admin/AdminPrimitives";
+import { ChatThreadSkeleton } from "@/components/ui/Skeleton";
 
 interface SupportUser {
   id: number;
@@ -821,10 +822,11 @@ export default function AdminSupportChatsPage({
               className="phoenix-scroll flex-1 space-y-3 overflow-y-auto bg-[#f5f7fa]/45 p-5 dark:bg-[#0f111a]/45"
             >
             {loading ? (
-              <div className="flex h-full items-center justify-center text-xs text-[#6e7891] dark:text-[#8a94ad]">
-                <Loader2 className="mr-2 h-4 w-4 animate-spin text-[#3874ff]" />
-                <span>{isKhmer ? "កំពុងផ្ទុកសារ..." : "Syncing conversation..."}</span>
-              </div>
+              <ChatThreadSkeleton
+                phoenix
+                count={5}
+                label={isKhmer ? "កំពុងផ្ទុកសារ..." : "Syncing conversation..."}
+              />
             ) : messages.length === 0 ? (
               <div className="flex h-full items-center justify-center">
                 <AdminEmptyState

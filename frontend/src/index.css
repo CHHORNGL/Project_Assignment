@@ -81,6 +81,40 @@
   .diag-ghost-button {
     @apply inline-flex items-center justify-center gap-2 rounded-xl px-3.5 py-2 text-xs font-semibold text-slate-600 transition-all duration-150 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-obsidian-850 dark:hover:text-slate-100;
   }
+
+  .sk-shimmer {
+    position: relative;
+    overflow: hidden;
+    background-color: rgba(226, 232, 240, 0.85);
+  }
+
+  .dark-mode .sk-shimmer {
+    background-color: rgba(30, 41, 59, 0.82);
+  }
+
+  .sk-shimmer::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.62) 50%,
+      transparent 100%
+    );
+    animation: sk-shimmer-slide 1.55s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    pointer-events: none;
+  }
+
+  .dark-mode .sk-shimmer::after {
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.08) 50%,
+      transparent 100%
+    );
+  }
 }
 
 /* Scan sweep animation for AI image analysis overlay */
@@ -89,4 +123,16 @@
   10%  { opacity: 1; }
   90%  { opacity: 1; }
   100% { top: 90%; opacity: 0; }
+}
+
+@keyframes sk-shimmer-slide {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sk-shimmer::after {
+    animation: none !important;
+    display: none;
+  }
 }

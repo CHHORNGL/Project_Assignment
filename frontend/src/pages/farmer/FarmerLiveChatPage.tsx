@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import type { AppBootstrap } from "@/types/app";
 import { WorkspaceShell } from "@/components/layout/WorkspaceShell";
+import { ChatThreadSkeleton } from "@/components/ui/Skeleton";
 import { buildNavSections } from "@/lib/navigation";
 import { requestJson } from "@/lib/api";
 import { useToast } from "@/context/ToastContext";
@@ -899,10 +900,11 @@ export default function FarmerLiveChatPage({
               className="phoenix-scroll flex-1 space-y-3 overflow-y-auto bg-[#f5f7fa]/55 p-4 dark:bg-[#0f111a]/45 sm:p-5"
             >
               {loading ? (
-                <div className="flex h-full items-center justify-center gap-2 text-xs text-[#6e7891] dark:text-[#8a94ad]">
-                  <Loader2 className="h-4 w-4 animate-spin text-emerald-500" />
-                  <span>{isKhmer ? "កំពុងភ្ជាប់សារផ្ទាល់..." : "Loading conversation..."}</span>
-                </div>
+                <ChatThreadSkeleton
+                  phoenix
+                  count={5}
+                  label={isKhmer ? "កំពុងភ្ជាប់សារផ្ទាល់..." : "Loading conversation..."}
+                />
               ) : messages.length === 0 ? (
                 <div className="mx-auto flex h-full max-w-md flex-col items-center justify-center text-center">
                   <div

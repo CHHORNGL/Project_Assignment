@@ -119,19 +119,117 @@ def generate_clean_khqr_image(qr_string: str, currency: str = "USD") -> str | No
         return None
 
 
+def serialize_khqr_transaction(
+    tx: PaymentTransaction,
+    now_dt: datetime | None = None,
+    *,
+    config: dict[str, str] | None = None,
+) -> dict[str, Any]:
+    """Build the checkout KHQR response payload from an existing PaymentTransaction."""
+    cfg = config or get_bakong_config()
+    final_currency = (tx.currency or cfg["currency"]).upper()
+    qr_str = tx.qr_string or ""
+    qr_image_data_uri = generate_clean_khqr_image(qr_str, currency=final_currency) if qr_str else None
+    if not qr_image_data_uri and qr_str:
+        try:
+            qr_image_data_uri = get_khqr_client().qr_image(qr_str, format="base64_uri")
+        except Exception as e:  # noqa: BLE001
+            logger.warning(f"Failed to generate fallback QR image: {e}")
+            qr_image_data_uri = None
+
+    expires_at, remaining_seconds = compute_khqr_expiry(tx, now_dt)
+    return {
+        "success": True,
+        "transaction_id": tx.id,
+        "md5": tx.md5,
+        "qr_image": qr_image_data_uri,
+        "qr_string": qr_str,
+        "deeplink": tx.deeplink,
+        "amount": round(float(tx.amount or 0.0), 2),
+        "currency": final_currency,
+        "bill_number": tx.bill_number,
+        "merchant_name": cfg["merchant_name"],
+        "account_id": tx.account_id or cfg["account_id"],
+        "billing_interval": tx.billing_interval,
+        "expires_in_seconds": KHQR_EXPIRY_SECONDS,
+        "remaining_seconds": remaining_seconds,
+        "expires_at": expires_at.replace(tzinfo=timezone.utc).isoformat(),
+    }
+
+
+def reconcile_recent_user_khqr_payments(
+    user: User,
+    *,
+    lookback_minutes: int = 30,
+) -> dict[str, Any] | None:
+    """
+    Check the user's recent PENDING or EXPIRED KHQR transactions against Bakong NBC.
+    Prevents mobile users returning from their banking app from losing a completed payment
+    if the browser tab reloaded or the 3-minute countdown elapsed while in the bank app.
+    """
+    if not user or not getattr(user, "id", None):
+        return None
+
+    now_dt = datetime.now(timezone.utc).replace(tzinfo=None)
+    cutoff = now_dt - timedelta(minutes=max(1, lookback_minutes))
+    recent_txs = (
+        PaymentTransaction.query.filter(
+            PaymentTransaction.user_id == user.id,
+            PaymentTransaction.payment_method == "BAKONG_KHQR",
+            PaymentTransaction.status.in_(("PENDING", "EXPIRED")),
+            PaymentTransaction.created_at >= cutoff,
+        )
+        .order_by(PaymentTransaction.created_at.desc())
+        .limit(3)
+        .all()
+    )
+
+    for tx in recent_txs:
+        if not tx.md5:
+            continue
+        res = verify_khqr_payment(tx.md5, enforce_expiry=False, bypass_cache=True)
+        if res.get("status") == "PAID":
+            return res
+    return None
+
+
 def create_khqr_payment(
     user: User,
     amount: float,
     billing_interval: str = "monthly",
     coupon_code: str | None = None,
     currency: str | None = None,
+    *,
+    reuse_pending: bool = False,
 ) -> dict[str, Any]:
     """
     Generate a compliant Bakong KHQR code and record the pending transaction.
+    When reuse_pending=True, reuses an active matching PENDING transaction so mobile
+    browser tab reloads while switching to/from a banking app do not overwrite the QR.
     """
     config = get_bakong_config()
     final_currency = (currency or config["currency"]).upper()
     amount_float = round(float(amount), 2)
+    normalized_coupon = coupon_code.strip().upper() if coupon_code else None
+    now_dt = datetime.now(timezone.utc).replace(tzinfo=None)
+
+    if reuse_pending and user and getattr(user, "id", None):
+        active_cutoff = now_dt - timedelta(seconds=KHQR_EXPIRY_SECONDS - 30)
+        existing_tx = (
+            PaymentTransaction.query.filter(
+                PaymentTransaction.user_id == user.id,
+                PaymentTransaction.payment_method == "BAKONG_KHQR",
+                PaymentTransaction.status == "PENDING",
+                PaymentTransaction.billing_interval == billing_interval,
+                PaymentTransaction.currency == final_currency,
+                PaymentTransaction.coupon_code == normalized_coupon,
+                PaymentTransaction.created_at > active_cutoff,
+            )
+            .order_by(PaymentTransaction.created_at.desc())
+            .first()
+        )
+        if existing_tx and round(float(existing_tx.amount or 0.0), 2) == amount_float and existing_tx.qr_string:
+            return serialize_khqr_transaction(existing_tx, now_dt, config=config)
 
     bill_number = f"BILL{user.id}{int(time.time())}"[-25:]
 
@@ -322,7 +420,7 @@ def verify_khqr_payment(
             **expiry_meta,
         }
 
-    if enforce_expiry and (tx.status == "EXPIRED" or (tx.status == "PENDING" and remaining_seconds <= 0)):
+    if enforce_expiry and not bypass_cache and (tx.status == "EXPIRED" or (tx.status == "PENDING" and remaining_seconds <= 0)):
         if tx.status != "EXPIRED":
             tx.status = "EXPIRED"
             db.session.commit()
@@ -347,6 +445,19 @@ def verify_khqr_payment(
         logger.warning(f"Bakong query error for md5 {md5}: {e}")
         status_str = "UNPAID"
         err_msg = str(e)
+
+    if status_str != "PAID" and enforce_expiry and (tx.status == "EXPIRED" or (tx.status == "PENDING" and remaining_seconds <= 0)):
+        if tx.status != "EXPIRED":
+            tx.status = "EXPIRED"
+            db.session.commit()
+        return {
+            "success": False,
+            "status": "EXPIRED",
+            "message": "Bakong KHQR session expired after 3 minutes. Please generate a new QR code.",
+            "transaction": tx.to_dict(),
+            **expiry_meta,
+            "remaining_seconds": 0,
+        }
 
     if status_str == "PAID":
         now_dt = datetime.now(timezone.utc).replace(tzinfo=None)

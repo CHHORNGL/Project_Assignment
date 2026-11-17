@@ -30,6 +30,7 @@ import { useToast } from "@/context/ToastContext";
 import { useSpeechPlayback } from "@/hooks/useSpeechPlayback";
 import { requestJson } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { NewsFeedSkeleton, SkeletonImage } from "@/components/ui/Skeleton";
 
 interface NewsArticle {
   id?: number | string;
@@ -212,12 +213,13 @@ function ArticleCover({
   }
 
   return (
-    <img
+    <SkeletonImage
       src={src}
       alt={alt}
       loading="lazy"
       onError={() => setFailed(true)}
-      className={cn("w-full object-cover", heightClass)}
+      wrapperClassName={cn("w-full", heightClass)}
+      className="h-full w-full object-cover"
     />
   );
 }
@@ -657,14 +659,11 @@ export default function FarmerNewsPage({
           </div>
         </div>
 
-        {/* Feed Loading State on Cold Feed */}
-        {loading && allArticles.length === 0 ? (
-          <div className="ai-surface flex flex-col items-center justify-center py-14 text-center">
-            <Loader2 className="h-7 w-7 animate-spin text-indigo-500" />
-            <p className="mt-3 text-xs font-medium text-slate-500 dark:text-slate-400">
-              {isKhmer ? "កំពុងប្រមូលព័ត៌មានកសិកម្មថ្មីៗ..." : "Loading latest agronomy briefings..."}
-            </p>
-          </div>
+        {/* Feed Loading State on Cold Feed or Region Refresh */}
+        {loading ? (
+          <NewsFeedSkeleton
+            label={isKhmer ? "កំពុងប្រមូលព័ត៌មានកសិកម្មថ្មីៗ..." : "Loading latest agronomy briefings..."}
+          />
         ) : filteredArticles.length === 0 ? (
           <div className="ai-surface px-6 py-12 text-center">
             <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 dark:bg-obsidian-800">

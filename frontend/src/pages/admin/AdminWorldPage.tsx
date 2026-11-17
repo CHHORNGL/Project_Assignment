@@ -39,6 +39,7 @@ import {
   AdminStatusBadge,
 } from "@/components/admin/AdminPrimitives";
 import { cn } from "@/lib/utils";
+import { StationTelemetrySkeleton } from "@/components/ui/Skeleton";
 
 interface ScanPoint {
   id: string | number;
@@ -419,6 +420,11 @@ export default function AdminWorldPage({ bootstrap }: { bootstrap: AppBootstrap<
                 </div>
               }
             >
+              {loadingWeather && !weather ? (
+                <StationTelemetrySkeleton
+                  label={isKhmer ? "កំពុងទាញយកទិន្នន័យអាកាសធាតុ..." : "Loading station telemetry..."}
+                />
+              ) : (
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-2.5">
                   {/* Temperature */}
@@ -582,6 +588,7 @@ export default function AdminWorldPage({ bootstrap }: { bootstrap: AppBootstrap<
                   </div>
                 )}
               </div>
+              )}
             </AdminSectionCard>
 
             {/* Coordinates & Weather Station Explorer */}

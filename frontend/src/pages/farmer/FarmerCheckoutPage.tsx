@@ -22,10 +22,11 @@ import { buildNavSections } from "@/lib/navigation";
 import { useToast } from "@/context/ToastContext";
 import { postJson, requestJson } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { QrCodeSkeleton } from "@/components/ui/Skeleton";
 
 const KHQR_DEFAULT_EXPIRY_SECONDS = 180;
 
-interface BakongInfo {
+  interface BakongInfo {
   md5?: string;
   qr_image?: string;
   qr_string?: string;
@@ -36,6 +37,9 @@ interface BakongInfo {
   expires_in_seconds?: number;
   remaining_seconds?: number;
   expires_at?: string;
+  status?: string;
+  already_paid?: boolean;
+  redirect_url?: string;
 }
 
 interface CheckoutData {
@@ -105,7 +109,28 @@ export default function FarmerCheckoutPage({
   const copyTimerRef = useRef<number | null>(null);
   const deadlineMsRef = useRef<number>(0);
   const checkingRef = useRef(false);
+  const pendingForceCheckRef = useRef(false);
   const expiredSyncMd5Ref = useRef<string | null>(null);
+
+  const handlePaymentConfirmed = useCallback(
+    (redirectUrl?: string) => {
+      setStatusNotice(null);
+      setExpiredOnServer(false);
+      setPaidMessage(
+        isKhmer
+          ? "ការទូទាត់បានជោគជ័យ! កំពុងបើកដំណើរការសមាជិកភាព Pro..."
+          : "Payment confirmed! Activating your Pro membership...",
+      );
+      pushToast(
+        "success",
+        isKhmer ? "ការទូទាត់ Bakong KHQR បានជោគជ័យ!" : "Bakong KHQR payment confirmed!",
+      );
+      window.setTimeout(() => {
+        window.location.href = redirectUrl || "/farmer/dashboard";
+      }, 1200);
+    },
+    [isKhmer, pushToast],
+  );
 
   useEffect(() => {
     return () => {
@@ -176,6 +201,10 @@ export default function FarmerCheckoutPage({
           bootstrap.csrfToken,
         );
         if (res.ok) {
+          if (res.data?.status === "PAID" || res.data?.already_paid) {
+            handlePaymentConfirmed(res.data.redirect_url);
+            return;
+          }
           setBakong(res.data);
           setExpiredOnServer(false);
           if (res.data?.amount !== undefined && res.data?.amount !== null) {
@@ -189,7 +218,7 @@ export default function FarmerCheckoutPage({
         setGeneratingQr(false);
       }
     },
-    [bootstrap.csrfToken, d.generateQrUrl],
+    [bootstrap.csrfToken, d.generateQrUrl, handlePaymentConfirmed],
   );
 
   const handleBillingChange = async (nextBilling: "monthly" | "yearly") => {
@@ -277,7 +306,13 @@ export default function FarmerCheckoutPage({
   const checkStatus = useCallback(
     async (manual = false) => {
       const activeMd5 = bakong?.md5;
-      if (!activeMd5 || checkingRef.current || paidMessage) return;
+      if (!activeMd5 || paidMessage) return;
+      if (checkingRef.current) {
+        if (manual) {
+          pendingForceCheckRef.current = true;
+        }
+        return;
+      }
       if (!manual && expiredOnServer) return;
 
       checkingRef.current = true;
@@ -299,19 +334,7 @@ export default function FarmerCheckoutPage({
         }
 
         if (res.data.status === "PAID") {
-          setStatusNotice(null);
-          setPaidMessage(
-            isKhmer
-              ? "ការទូទាត់បានជោគជ័យ! កំពុងបើកដំណើរការសមាជិកភាព Pro..."
-              : "Payment confirmed! Activating your Pro membership...",
-          );
-          pushToast(
-            "success",
-            isKhmer ? "ការទូទាត់ Bakong KHQR បានជោគជ័យ!" : "Bakong KHQR payment confirmed!",
-          );
-          window.setTimeout(() => {
-            window.location.href = res.data.redirect_url || "/farmer/dashboard";
-          }, 1200);
+          handlePaymentConfirmed(res.data.redirect_url);
           return;
         }
 
@@ -334,43 +357,61 @@ export default function FarmerCheckoutPage({
       } finally {
         checkingRef.current = false;
         setCheckingStatus(false);
+        if (pendingForceCheckRef.current && !paidMessage) {
+          pendingForceCheckRef.current = false;
+          void checkStatus(true);
+        }
       }
     },
-    [bakong?.md5, d.checkStatusPrefix, expiredOnServer, isKhmer, paidMessage, pushToast],
+    [bakong?.md5, d.checkStatusPrefix, expiredOnServer, handlePaymentConfirmed, isKhmer, paidMessage],
   );
 
-  // Automatic verification every 4s + immediate check when returning from banking app.
+  // Automatic verification every 4s + immediate burst check when returning from mobile banking app.
   useEffect(() => {
-    if (!bakong?.md5 || paidMessage || isExpired) return undefined;
+    if (!bakong?.md5 || paidMessage) return undefined;
+
+    const retryTimers: number[] = [];
+    const clearRetryTimers = () => {
+      while (retryTimers.length > 0) {
+        const id = retryTimers.pop();
+        if (id !== undefined) window.clearTimeout(id);
+      }
+    };
 
     const timer = window.setInterval(() => {
-      if (document.visibilityState === "visible") {
+      if (document.visibilityState === "visible" && !isExpired) {
         void checkStatus(false);
       }
     }, 4000);
 
-    const onReturnFocus = () => {
-      if (document.visibilityState === "visible") {
-        void checkStatus(true);
-      }
+    const onReturnFromBankApp = () => {
+      if (document.visibilityState !== "visible") return;
+      clearRetryTimers();
+      void checkStatus(true);
+      retryTimers.push(window.setTimeout(() => void checkStatus(true), 1600));
+      retryTimers.push(window.setTimeout(() => void checkStatus(true), 3800));
     };
-    window.addEventListener("focus", onReturnFocus);
-    document.addEventListener("visibilitychange", onReturnFocus);
+
+    window.addEventListener("focus", onReturnFromBankApp);
+    window.addEventListener("pageshow", onReturnFromBankApp);
+    document.addEventListener("visibilitychange", onReturnFromBankApp);
 
     return () => {
       window.clearInterval(timer);
-      window.removeEventListener("focus", onReturnFocus);
-      document.removeEventListener("visibilitychange", onReturnFocus);
+      clearRetryTimers();
+      window.removeEventListener("focus", onReturnFromBankApp);
+      window.removeEventListener("pageshow", onReturnFromBankApp);
+      document.removeEventListener("visibilitychange", onReturnFromBankApp);
     };
   }, [bakong?.md5, checkStatus, isExpired, paidMessage]);
 
-  // Sync terminal EXPIRED status to backend once when the 3-minute timer hits 00:00.
+  // Perform a forced Bakong check when the 3-minute countdown reaches 00:00 before marking expired.
   useEffect(() => {
     const activeMd5 = bakong?.md5;
     if (!activeMd5 || paidMessage || expiredOnServer || remainingSeconds > 0) return;
     if (expiredSyncMd5Ref.current === activeMd5) return;
     expiredSyncMd5Ref.current = activeMd5;
-    void checkStatus(false);
+    void checkStatus(true);
   }, [bakong?.md5, checkStatus, expiredOnServer, paidMessage, remainingSeconds]);
 
   const handleCopyBill = async () => {
@@ -753,9 +794,12 @@ export default function FarmerCheckoutPage({
                   />
 
                   {generatingQr ? (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-white/80 text-xs font-semibold text-[#141824]">
-                      <Loader2 className="h-5 w-5 animate-spin text-emerald-600" />
-                      <span>{isKhmer ? "កំពុងបង្កើត QR ថ្មី..." : "Updating QR..."}</span>
+                    <div className="absolute inset-0 flex items-center justify-center bg-white/95">
+                      <QrCodeSkeleton label={isKhmer ? "កំពុងបង្កើត QR ថ្មី..." : "Updating QR..."} />
+                    </div>
+                  ) : isExpired && checkingStatus ? (
+                    <div className="absolute inset-0 flex items-center justify-center bg-white/95">
+                      <QrCodeSkeleton label={isKhmer ? "កំពុងផ្ទៀងផ្ទាត់ការទូទាត់..." : "Verifying payment..."} />
                     </div>
                   ) : (
                     isExpired && (
@@ -768,17 +812,28 @@ export default function FarmerCheckoutPage({
                         </p>
                         <p className="mt-1 text-[11px] leading-snug text-[#525b75]">
                           {isKhmer
-                            ? "សូមចុចបង្កើតកូដ QR ថ្មីដើម្បីបន្តបង់ប្រាក់។"
-                            : "Generate a fresh QR code to complete payment."}
+                            ? "បើអ្នកបានបង់ប្រាក់រួចហើយ សូមចុចផ្ទៀងផ្ទាត់ ឬបង្កើតកូដ QR ថ្មី។"
+                            : "Already paid in your bank app? Tap Verify Now, or generate a fresh QR."}
                         </p>
-                        <button
-                          type="button"
-                          onClick={() => void refreshQr(billing, appliedCoupon)}
-                          className="mt-3 inline-flex h-9 items-center gap-1.5 rounded-xl bg-emerald-600 px-4 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-700"
-                        >
-                          <RefreshCw className="h-3.5 w-3.5" />
-                          <span>{isKhmer ? "បង្កើត QR ថ្មី" : "Generate New KHQR"}</span>
-                        </button>
+                        <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+                          <button
+                            type="button"
+                            disabled={checkingStatus}
+                            onClick={() => void checkStatus(true)}
+                            className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-50"
+                          >
+                            <RefreshCw className="h-3.5 w-3.5" />
+                            <span>{isKhmer ? "ផ្ទៀងផ្ទាត់ឥឡូវ" : "Verify Now"}</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => void refreshQr(billing, appliedCoupon)}
+                            className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-[#cbd0dd] bg-white px-3.5 text-xs font-bold text-[#141824] shadow-sm transition hover:bg-[#f5f7fa]"
+                          >
+                            <QrCode className="h-3.5 w-3.5" />
+                            <span>{isKhmer ? "បង្កើត QR ថ្មី" : "New QR"}</span>
+                          </button>
+                        </div>
                       </div>
                     )
                   )}
@@ -854,6 +909,12 @@ export default function FarmerCheckoutPage({
                     <QrCode className="h-3.5 w-3.5 shrink-0" />
                     <span>{isKhmer ? "បង្កើត QR ថ្មី" : "New QR"}</span>
                   </button>
+                </div>
+              </div>
+            ) : generatingQr ? (
+              <div className="mt-6 flex flex-col items-center">
+                <div className="overflow-hidden rounded-2xl border border-[#e3e6ed] bg-white p-4 shadow-sm sm:p-5">
+                  <QrCodeSkeleton label={isKhmer ? "កំពុងបង្កើត KHQR..." : "Generating KHQR..."} />
                 </div>
               </div>
             ) : (

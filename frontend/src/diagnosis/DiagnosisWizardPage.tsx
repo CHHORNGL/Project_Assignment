@@ -6,6 +6,7 @@ import StepCard from "./components/StepCard";
 import Stepper from "./components/Stepper";
 import SymptomCard from "./components/SymptomCard";
 import { DiagIcon } from "./components/DiagIcon";
+import { LiveSuspectsSkeleton } from "../components/ui/Skeleton";
 
 interface WizardCrop {
   id: string | number;
@@ -1388,7 +1389,11 @@ export default function DiagnosisWizardPage({ bootstrap }: { bootstrap: Record<s
                   )}
                 </div>
 
-                {liveSuspects.length > 0 ? (
+                {evaluatingLive && liveSuspects.length === 0 ? (
+                  <LiveSuspectsSkeleton
+                    label={isKhmer ? "កំពុងវិភាគរោគសញ្ញា..." : "Analyzing live suspects..."}
+                  />
+                ) : liveSuspects.length > 0 ? (
                   <div className="space-y-3.5">
                     {liveBestMatch && (
                       <div className="rounded-xl border border-indigo-200/80 bg-indigo-50/75 p-3.5 text-xs text-indigo-900 dark:border-indigo-500/30 dark:bg-indigo-500/15 dark:text-indigo-200">

@@ -11,6 +11,7 @@ import {
   Wind,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { WeatherIntelligenceSkeleton } from "@/components/ui/Skeleton";
 import {
   buildOfflineWeatherPayload,
   loadCachedWeatherPayload,
@@ -132,7 +133,10 @@ export function WeatherIntelligenceCard({ endpoint, lang, fallbackLat, fallbackL
         </button>
       </div>
 
-      <div className="grid gap-5 p-4 sm:gap-6 sm:p-6 lg:grid-cols-3">
+      {loading && !payload ? (
+        <WeatherIntelligenceSkeleton label={statusText} />
+      ) : (
+        <div className="grid gap-5 p-4 sm:gap-6 sm:p-6 lg:grid-cols-3">
         {/* Current Conditions + Analytics */}
         <div className="min-w-0 space-y-4">
           <div className="rounded-2xl bg-gradient-to-br from-indigo-600 to-blue-600 p-4 text-white shadow-lg shadow-indigo-500/20 sm:p-5">
@@ -281,6 +285,7 @@ export function WeatherIntelligenceCard({ endpoint, lang, fallbackLat, fallbackL
           )}
         </div>
       </div>
+      )}
       {attribution && (
         <div className="border-t border-slate-200/70 px-4 py-3 text-[11px] text-slate-400 dark:border-slate-800/70 sm:px-6">
           {attribution.prefix}{" "}

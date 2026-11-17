@@ -287,6 +287,48 @@
     animation: scanSweep 4.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
     will-change: top, opacity;
   }
+
+  .sk-shimmer {
+    position: relative;
+    overflow: hidden;
+    background-color: rgba(226, 232, 240, 0.85);
+  }
+
+  .dark-mode .sk-shimmer {
+    background-color: rgba(30, 41, 59, 0.82);
+  }
+
+  .sk-phoenix {
+    background-color: rgba(227, 230, 237, 0.9);
+  }
+
+  .dark-mode .sk-phoenix {
+    background-color: rgba(30, 36, 54, 0.92);
+  }
+
+  .sk-shimmer::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.62) 50%,
+      transparent 100%
+    );
+    animation: sk-shimmer-slide 1.55s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    pointer-events: none;
+  }
+
+  .dark-mode .sk-shimmer::after {
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.08) 50%,
+      transparent 100%
+    );
+  }
 }
 
 @keyframes ai-marquee-scroll {
@@ -315,6 +357,15 @@
   10%  { opacity: 1; }
   90%  { opacity: 1; }
   100% { top: 90%; opacity: 0; }
+}
+
+@keyframes sk-shimmer-slide {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 @keyframes ai-enter-up {
@@ -356,5 +407,10 @@
   .animate-pulse-ring {
     animation: none !important;
     transition: none !important;
+  }
+
+  .sk-shimmer::after {
+    animation: none !important;
+    display: none;
   }
 }

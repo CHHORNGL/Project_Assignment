@@ -34,6 +34,139 @@
 {% endfor %}
 
 {% include "partials/theme_head.html" %}
+{% if not react_ssr_html %}
+<style>
+  :root {
+    --sk-page-bg: #f8fafc;
+    --sk-surface: #ffffff;
+    --sk-border: rgba(203, 213, 225, 0.72);
+    --sk-fill: rgba(226, 232, 240, 0.88);
+    --sk-sheen: rgba(255, 255, 255, 0.65);
+  }
+  html.dark-mode {
+    --sk-page-bg: #020617;
+    --sk-surface: #0f172a;
+    --sk-border: rgba(51, 65, 85, 0.58);
+    --sk-fill: rgba(30, 41, 59, 0.88);
+    --sk-sheen: rgba(255, 255, 255, 0.07);
+  }
+  .agri-sk-root {
+    min-height: 100vh;
+    min-height: 100dvh;
+    background: var(--sk-page-bg);
+    display: flex;
+    flex-direction: column;
+  }
+  .agri-sk-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+  .agri-sk-bar {
+    position: relative;
+    overflow: hidden;
+    background: var(--sk-fill);
+    border-radius: 0.75rem;
+  }
+  .agri-sk-bar::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent 0%, var(--sk-sheen) 50%, transparent 100%);
+    animation: agri-sk-sweep 1.55s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  }
+  @keyframes agri-sk-sweep {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+  .agri-sk-topbar {
+    height: 4rem;
+    border-bottom: 1px solid var(--sk-border);
+    background: var(--sk-surface);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1.25rem;
+    gap: 1rem;
+  }
+  .agri-sk-layout {
+    flex: 1;
+    display: flex;
+    width: 100%;
+    max-width: 80rem;
+    margin: 0 auto;
+    padding: 1.5rem 1.25rem;
+    gap: 1.5rem;
+    box-sizing: border-box;
+  }
+  .agri-sk-sidebar {
+    display: none;
+  }
+  .agri-sk-main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+  .agri-sk-card {
+    background: var(--sk-surface);
+    border: 1px solid var(--sk-border);
+    border-radius: 1.25rem;
+    padding: 1.25rem;
+  }
+  .agri-sk-kpis {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.875rem;
+  }
+  .agri-sk-panels {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.25rem;
+  }
+  .agri-sk-auth {
+    min-height: 100vh;
+    min-height: 100dvh;
+    background: var(--sk-page-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    box-sizing: border-box;
+  }
+  @media (min-width: 768px) {
+    .agri-sk-sidebar-on {
+      display: flex;
+      width: 240px;
+      flex-shrink: 0;
+      flex-direction: column;
+      gap: 0.75rem;
+      padding: 1rem;
+      background: var(--sk-surface);
+      border: 1px solid var(--sk-border);
+      border-radius: 1.25rem;
+      height: fit-content;
+    }
+    .agri-sk-kpis {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+    .agri-sk-panels {
+      grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .agri-sk-bar::after { animation: none !important; display: none; }
+  }
+</style>
+{% endif %}
 {% block head %}{% endblock %}
 </head>
 <body class="app-shell react-template-shell {{ react_body_class or body_class|default('') }} {{ theme_body_class }}">
@@ -47,10 +180,104 @@ window.__APP_BOOTSTRAP__ = {{ bootstrap_payload | tojson }};
 {% block content %}
 {% if react_ssr_html %}
 {{ react_ssr_html | safe }}
-{% endif %}
-<div class="flex min-h-screen items-center justify-center p-6 text-sm text-slate-500 dark:text-slate-400">
-    {{ react_loading_message or "Loading workspace..." }}
+{% else %}
+{% set _sk_scope = bootstrap_payload.page.scope if (bootstrap_payload is defined and bootstrap_payload.page is defined) else '' %}
+{% set _sk_page_id = (bootstrap_payload.page.id if (bootstrap_payload is defined and bootstrap_payload.page is defined) else '') or '' %}
+{% if _sk_scope in ('auth', 'error') or _sk_page_id.startswith('auth-') or _sk_page_id in ('staff-login', 'error-page') %}
+<div class="agri-sk-auth" role="status" aria-busy="true">
+    <span class="agri-sk-sr-only">{{ react_loading_message or "Loading workspace..." }}</span>
+    <div class="agri-sk-card" style="width:100%;max-width:440px;padding:1.75rem;display:flex;flex-direction:column;gap:1.15rem;">
+        <div style="display:flex;align-items:center;gap:0.75rem;">
+            <div class="agri-sk-bar" style="width:2.5rem;height:2.5rem;border-radius:0.875rem;"></div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:0.5rem;">
+                <div class="agri-sk-bar" style="height:0.95rem;width:55%;border-radius:999px;"></div>
+                <div class="agri-sk-bar" style="height:0.65rem;width:38%;border-radius:999px;"></div>
+            </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:0.75rem;padding-top:0.25rem;">
+            <div class="agri-sk-bar" style="height:2.75rem;width:100%;border-radius:0.875rem;"></div>
+            <div class="agri-sk-bar" style="height:2.75rem;width:100%;border-radius:0.875rem;"></div>
+        </div>
+        <div class="agri-sk-bar" style="height:2.75rem;width:100%;border-radius:0.875rem;"></div>
+    </div>
 </div>
+{% else %}
+<div class="agri-sk-root" role="status" aria-busy="true">
+    <span class="agri-sk-sr-only">{{ react_loading_message or "Loading workspace..." }}</span>
+    <div class="agri-sk-topbar">
+        <div style="display:flex;align-items:center;gap:0.75rem;">
+            <div class="agri-sk-bar" style="width:2rem;height:2rem;border-radius:0.625rem;"></div>
+            <div class="agri-sk-bar" style="width:7.5rem;height:0.9rem;border-radius:999px;"></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:0.5rem;">
+            <div class="agri-sk-bar" style="width:5.5rem;height:2.1rem;border-radius:999px;"></div>
+            <div class="agri-sk-bar" style="width:2.1rem;height:2.1rem;border-radius:999px;"></div>
+            <div class="agri-sk-bar" style="width:2.1rem;height:2.1rem;border-radius:999px;"></div>
+            <div class="agri-sk-bar" style="width:2.1rem;height:2.1rem;border-radius:999px;"></div>
+        </div>
+    </div>
+    <div class="agri-sk-layout">
+        {% if _sk_scope in ('admin', 'expert') %}
+        <aside class="agri-sk-sidebar agri-sk-sidebar-on" aria-hidden="true">
+            <div class="agri-sk-bar" style="height:0.7rem;width:48%;margin-bottom:0.25rem;border-radius:999px;"></div>
+            <div class="agri-sk-bar" style="height:2.15rem;width:100%;border-radius:0.75rem;"></div>
+            <div class="agri-sk-bar" style="height:2.15rem;width:92%;border-radius:0.75rem;"></div>
+            <div class="agri-sk-bar" style="height:2.15rem;width:85%;border-radius:0.75rem;"></div>
+            <div class="agri-sk-bar" style="height:0.7rem;width:40%;margin-top:0.5rem;border-radius:999px;"></div>
+            <div class="agri-sk-bar" style="height:2.15rem;width:96%;border-radius:0.75rem;"></div>
+            <div class="agri-sk-bar" style="height:2.15rem;width:82%;border-radius:0.75rem;"></div>
+        </aside>
+        {% endif %}
+        <main class="agri-sk-main" aria-hidden="true">
+            <div class="agri-sk-card" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:1rem;">
+                <div style="flex:1;min-width:200px;display:flex;flex-direction:column;gap:0.625rem;">
+                    <div class="agri-sk-bar" style="height:0.7rem;width:6.5rem;border-radius:999px;"></div>
+                    <div class="agri-sk-bar" style="height:1.5rem;width:62%;max-width:18rem;border-radius:0.625rem;"></div>
+                    <div class="agri-sk-bar" style="height:0.8rem;width:82%;max-width:26rem;border-radius:999px;"></div>
+                </div>
+                <div class="agri-sk-bar" style="height:2.5rem;width:8.5rem;border-radius:0.875rem;"></div>
+            </div>
+            <div class="agri-sk-kpis">
+                <div class="agri-sk-card" style="display:flex;flex-direction:column;gap:0.65rem;">
+                    <div class="agri-sk-bar" style="height:0.75rem;width:55%;border-radius:999px;"></div>
+                    <div class="agri-sk-bar" style="height:1.75rem;width:45%;border-radius:0.5rem;"></div>
+                    <div class="agri-sk-bar" style="height:0.65rem;width:70%;border-radius:999px;"></div>
+                </div>
+                <div class="agri-sk-card" style="display:flex;flex-direction:column;gap:0.65rem;">
+                    <div class="agri-sk-bar" style="height:0.75rem;width:60%;border-radius:999px;"></div>
+                    <div class="agri-sk-bar" style="height:1.75rem;width:40%;border-radius:0.5rem;"></div>
+                    <div class="agri-sk-bar" style="height:0.65rem;width:68%;border-radius:999px;"></div>
+                </div>
+                <div class="agri-sk-card" style="display:flex;flex-direction:column;gap:0.65rem;">
+                    <div class="agri-sk-bar" style="height:0.75rem;width:52%;border-radius:999px;"></div>
+                    <div class="agri-sk-bar" style="height:1.75rem;width:48%;border-radius:0.5rem;"></div>
+                    <div class="agri-sk-bar" style="height:0.65rem;width:72%;border-radius:999px;"></div>
+                </div>
+                <div class="agri-sk-card" style="display:flex;flex-direction:column;gap:0.65rem;">
+                    <div class="agri-sk-bar" style="height:0.75rem;width:58%;border-radius:999px;"></div>
+                    <div class="agri-sk-bar" style="height:1.75rem;width:42%;border-radius:0.5rem;"></div>
+                    <div class="agri-sk-bar" style="height:0.65rem;width:64%;border-radius:999px;"></div>
+                </div>
+            </div>
+            <div class="agri-sk-panels">
+                <div class="agri-sk-card" style="display:flex;flex-direction:column;gap:0.875rem;min-height:14rem;">
+                    <div class="agri-sk-bar" style="height:1rem;width:42%;border-radius:999px;"></div>
+                    <div class="agri-sk-bar" style="height:3.25rem;width:100%;border-radius:0.875rem;"></div>
+                    <div class="agri-sk-bar" style="height:3.25rem;width:100%;border-radius:0.875rem;"></div>
+                    <div class="agri-sk-bar" style="height:3.25rem;width:100%;border-radius:0.875rem;"></div>
+                </div>
+                <div class="agri-sk-card" style="display:flex;flex-direction:column;gap:0.875rem;min-height:14rem;">
+                    <div class="agri-sk-bar" style="height:1rem;width:48%;border-radius:999px;"></div>
+                    <div class="agri-sk-bar" style="height:6rem;width:100%;border-radius:0.875rem;"></div>
+                    <div class="agri-sk-bar" style="height:0.8rem;width:86%;border-radius:999px;"></div>
+                    <div class="agri-sk-bar" style="height:0.8rem;width:64%;border-radius:999px;"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+{% endif %}
+{% endif %}
 {% endblock %}
 </div>
 

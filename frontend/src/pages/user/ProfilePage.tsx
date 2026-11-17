@@ -32,6 +32,7 @@ import {
   MobileSectionLabel,
 } from "@/components/user/AccountPrimitives";
 import { PasswordInput } from "@/components/ui/PasswordInput";
+import { PasskeyListSkeleton } from "@/components/ui/Skeleton";
 import { useToast } from "@/context/ToastContext";
 import { performPasskeyRegistration, postJson, requestJson } from "@/lib/api";
 import { buildNavSections } from "@/lib/navigation";
@@ -853,10 +854,10 @@ export default function ProfilePage({ bootstrap }: { bootstrap: AppBootstrap<Pro
             </form>
 
             {loadingPasskeys ? (
-              <div className="flex items-center justify-center rounded-2xl border border-slate-200/75 py-5 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
-                <Loader2 className="mr-2 h-4 w-4 animate-spin text-indigo-500" />
-                <span>{isKhmer ? "កំពុងផ្ទុក Passkeys..." : "Loading passkeys..."}</span>
-              </div>
+              <PasskeyListSkeleton
+                count={2}
+                label={isKhmer ? "កំពុងផ្ទុក Passkeys..." : "Loading passkeys..."}
+              />
             ) : passkeys.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-slate-300/80 bg-slate-50/70 px-4 py-5 text-center dark:border-slate-700 dark:bg-obsidian-950/50">
                 <Fingerprint className="mx-auto mb-1.5 h-5 w-5 text-slate-400" />

@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import type { AppBootstrap } from "@/types/app";
 import { WorkspaceShell } from "@/components/layout/WorkspaceShell";
+import { AiThinkingSkeleton } from "@/components/ui/Skeleton";
 import { buildNavSections } from "@/lib/navigation";
 import { useToast } from "@/context/ToastContext";
 import { useSpeechPlayback } from "@/hooks/useSpeechPlayback";
@@ -1163,16 +1164,9 @@ export default function FarmerChatPage({
                     <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-indigo-600 dark:border-slate-700 dark:bg-obsidian-900 dark:text-indigo-300">
                       <Bot className="h-4 w-4" />
                     </span>
-                    <div className="inline-flex items-center gap-2.5 rounded-2xl rounded-bl-sm border border-slate-200/90 bg-white px-4 py-2.5 text-xs shadow-sm dark:border-slate-800 dark:bg-obsidian-900">
-                      <span className="inline-flex items-center gap-1" aria-hidden="true">
-                        <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-indigo-500 [animation-delay:0ms]" />
-                        <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-indigo-500 [animation-delay:150ms]" />
-                        <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-indigo-500 [animation-delay:300ms]" />
-                      </span>
-                      <span className="font-medium text-slate-500 dark:text-slate-400">
-                        {isKhmer ? "កំពុងវិភាគចម្លើយ..." : "AGRI AI is thinking..."}
-                      </span>
-                    </div>
+                    <AiThinkingSkeleton
+                      label={isKhmer ? "កំពុងវិភាគចម្លើយ..." : "AGRI AI is thinking..."}
+                    />
                   </div>
                 )}
                 <div ref={feedEndRef} />

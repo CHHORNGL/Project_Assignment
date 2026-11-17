@@ -134,7 +134,7 @@ Project_Assignment/
 │   │   └── config.py            # Environment configuration & Neon/Redis builders
 │   ├── migrations/              # Alembic database schema revisions
 │   ├── seeds/                   # Roles, permissions, sample accounts, and crop disease knowledge seeders
-│   ├── tests/                   # Python unittest suite (224 tests)
+│   ├── tests/                   # Python unittest suite (227 tests)
 │   ├── entrypoint.sh            # Container startup (wait-for-DB, migrations, seeds, upload seeding, Gunicorn)
 │   └── gunicorn.conf.py         # Gunicorn gthread worker tuning & server header masking
 ├── frontend/                    # React + TypeScript + Vite monorepo UI
@@ -143,7 +143,7 @@ Project_Assignment/
 │   │   ├── diagnosis/           # Standalone 4-step Guided Diagnosis Wizard
 │   │   ├── pages/               # Farmer, Expert, Admin, Auth, Error, and User Account portals
 │   │   └── styles/              # Tailwind CSS + mobile safe-area / PWA stylesheets
-│   └── tests/                   # Node.js regression & contract test suite (54 tests)
+│   └── tests/                   # Node.js regression & contract test suite (58 tests)
 ├── mobile/                      # Flutter client (Android, iOS, macOS, Windows, Linux)
 ├── ai/                          # Curated datasets, LoRA fine-tuning scripts, HF Space app, inference server
 ├── docs/                        # Architecture, security policies, API specs, and cloud migration guides
@@ -263,10 +263,10 @@ All settings are documented in [`.env.example`](.env.example). Essential variabl
 CI executes dependency integrity checks, lockfile verification, npm security audits, production builds, and regression tests via [`.github/workflows/dependency-audit.yml`](.github/workflows/dependency-audit.yml).
 
 ```bash
-# Backend unit & integration tests (224 tests)
+# Backend unit & integration tests (227 tests)
 .venv/bin/python -m unittest discover -s backend/tests -v
 
-# Frontend typecheck, build & Node regression suite (54 tests)
+# Frontend typecheck, build & Node regression suite (58 tests)
 cd frontend && npm run build && cd ..
 node --test frontend/tests/*.cjs frontend/tests/*.mjs
 

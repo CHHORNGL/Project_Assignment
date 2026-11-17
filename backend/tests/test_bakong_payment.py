@@ -27,6 +27,7 @@ from app.services.bakong_service import (  # noqa: E402
     approve_khqr_transaction_manually,
     create_khqr_payment,
     get_bakong_config,
+    reconcile_recent_user_khqr_payments,
     verify_khqr_payment,
 )
 
@@ -215,6 +216,67 @@ class TestBakongPayment(unittest.TestCase):
             admin_res = verify_khqr_payment(md5, enforce_expiry=False, bypass_cache=True)
         self.assertTrue(admin_res["success"])
         self.assertEqual(admin_res["status"], "PAID")
+
+    def test_reuse_pending_khqr_on_mobile_checkout_reload(self):
+        first = create_khqr_payment(
+            user=self.farmer,
+            amount=20.0,
+            billing_interval="monthly",
+            reuse_pending=True,
+        )
+        second = create_khqr_payment(
+            user=self.farmer,
+            amount=20.0,
+            billing_interval="monthly",
+            reuse_pending=True,
+        )
+        self.assertEqual(first["md5"], second["md5"])
+        self.assertEqual(first["bill_number"], second["bill_number"])
+        self.assertEqual(first["transaction_id"], second["transaction_id"])
+
+    def test_return_from_bank_app_reconciles_paid_qr_instead_of_generating_new_qr(self):
+        created = create_khqr_payment(
+            user=self.farmer,
+            amount=20.0,
+            billing_interval="monthly",
+        )
+        md5 = created["md5"]
+        tx = PaymentTransaction.query.filter_by(md5=md5).first()
+        assert tx is not None
+        # Simulate user taking > 3 minutes inside the mobile banking app before returning
+        tx.created_at = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(seconds=210)
+        db.session.commit()
+
+        with patch(
+            "app.services.bakong_service.query_bakong_md5_api",
+            return_value=("PAID", {}, ""),
+        ):
+            # Force check on return from bank app honours PAID even after 3-minute timer elapsed
+            forced_res = verify_khqr_payment(md5, enforce_expiry=True, bypass_cache=True)
+            self.assertTrue(forced_res["success"])
+            self.assertEqual(forced_res["status"], "PAID")
+
+        farmer = db.session.get(User, self.farmer.id)
+        assert farmer is not None
+        self.assertTrue(farmer.is_premium)
+
+    def test_reconcile_recent_user_khqr_payments_detects_paid_transaction(self):
+        created = create_khqr_payment(
+            user=self.farmer,
+            amount=20.0,
+            billing_interval="monthly",
+        )
+        with patch(
+            "app.services.bakong_service.query_bakong_md5_api",
+            return_value=("PAID", {}, ""),
+        ):
+            reconciled = reconcile_recent_user_khqr_payments(self.farmer)
+        self.assertIsNotNone(reconciled)
+        assert reconciled is not None
+        self.assertEqual(reconciled["status"], "PAID")
+        farmer = db.session.get(User, self.farmer.id)
+        assert farmer is not None
+        self.assertTrue(farmer.is_premium)
 
 
 if __name__ == "__main__":
