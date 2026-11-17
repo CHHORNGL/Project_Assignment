@@ -47,10 +47,13 @@ mkdir -p /app/app/static/uploads /app/app/static/uploads/banners /app/app/static
 
 # Seed bundled static uploads onto the mounted Persistent Disk without overwriting existing files
 if [ -d "/app/_bundled_uploads" ]; then
-  cp -rn /app/_bundled_uploads/. /app/app/static/uploads/ 2>/dev/null || true
+  cp -rn /app/_bundled_uploads/banners/. /app/app/static/uploads/banners/ 2>/dev/null || true
+  cp -rn /app/_bundled_uploads/chats/. /app/app/static/uploads/chats/ 2>/dev/null || true
+  cp -rn /app/_bundled_uploads/theme_animations/. /app/app/static/uploads/theme_animations/ 2>/dev/null || true
 fi
 if [ -d "/app/uploads" ]; then
-  cp -rn /app/uploads/. /app/app/static/uploads/ 2>/dev/null || true
+  cp -rn /app/uploads/banners/. /app/app/static/uploads/banners/ 2>/dev/null || true
+  cp -rn /app/uploads/chats/. /app/app/static/uploads/chats/ 2>/dev/null || true
 fi
 
 # Start the Gunicorn production server
