@@ -190,6 +190,38 @@ def revoke_all_other_sessions(user_id: int, current_activity_id: str | None = No
     return revoked_count
 
 
+def _format_device_name(device_name_raw: str | None, device_type: str, browser: str, platform: str) -> str:
+    clean = (device_name_raw or "").replace("_", " ").strip()
+    if clean and clean != "-":
+        return clean
+    low_type = (device_type or "").lower()
+    low_os = (platform or "").lower()
+    if low_os == "ios":
+        return "iPad" if "tablet" in low_type else "iPhone"
+    if low_os == "macos":
+        return "Mac / MacBook"
+    if low_os == "windows":
+        return "Windows PC"
+    if low_os == "linux":
+        return "Linux PC"
+    if low_os == "android":
+        return "Android Tablet" if "tablet" in low_type else "Android Phone"
+    if low_os == "flutter":
+        return "Mobile App"
+    return device_type or "Web Device"
+
+
+def _format_location(location_raw: str | None, resolved_geo: str | None, ip_address: str) -> str:
+    clean = (location_raw or "").replace("_", " ").strip()
+    if clean and clean != "-":
+        return clean
+    if resolved_geo:
+        return resolved_geo
+    if ip_address and ip_address != "-":
+        return "Unknown Location"
+    return "Unknown Location"
+
+
 def list_login_activity(
     user_id: int,
     *,
@@ -198,6 +230,8 @@ def list_login_activity(
     include_revoked: bool = False,
 ) -> list[dict]:
     """Return active login sessions for one user, hiding logged-out/revoked devices."""
+    from app.services.ip_geolocation import resolve_ip_locations_batch
+
     limit = max(1, min(int(limit or 50), 100))
     rows = (
         AuditLog.query
@@ -226,18 +260,15 @@ def list_login_activity(
         if aid:
             revoked_ids.add(aid)
 
-    raw_items = []
+    parsed_rows = []
     seen_activity_ids = set()
+    ips_to_resolve = []
     for row in rows:
         values = _detail_values(row.detail)
         activity_id = values.get("activity_id")
         if not activity_id or activity_id in seen_activity_ids:
             continue
         seen_activity_ids.add(activity_id)
-
-        device_type = _format_device_type(values.get("device", ""), values.get("os", ""))
-        browser = values.get("browser", "Unknown").replace("_", " ")
-        platform = values.get("os", "Unknown").replace("_", " ")
 
         is_current = bool(activity_id and activity_id == current_activity_id)
         is_rev = bool(not is_current and (activity_id in revoked_ids or is_activity_revoked(activity_id, user_id=user_id)))
@@ -246,20 +277,43 @@ def list_login_activity(
         if not include_revoked and is_rev:
             continue
 
+        ip_address = values.get("ip", "-")
+        if not (values.get("location") or "").strip():
+            ips_to_resolve.append(ip_address)
+        parsed_rows.append((row, values, activity_id, is_current, is_rev, ip_address))
+
+    geo_map = resolve_ip_locations_batch(ips_to_resolve) if ips_to_resolve else {}
+
+    raw_items = []
+    for row, values, activity_id, is_current, is_rev, ip_address in parsed_rows:
+        device_type = _format_device_type(values.get("device", ""), values.get("os", ""))
+        browser = values.get("browser", "Unknown").replace("_", " ")
+        platform = values.get("os", "Unknown").replace("_", " ")
+        device_name = _format_device_name(values.get("device_name"), device_type, browser, platform)
+        login_route = values.get("login_route", "-")
+        location = _format_location(values.get("location"), geo_map.get(ip_address), ip_address)
+        created_iso = row.created_at.isoformat() + "Z" if row.created_at else None
+
         raw_items.append({
             "id": row.id,
             "activity_id": activity_id,
             "device_type": device_type,
+            "device_name": device_name,
+            "device_label": f"{device_name} · {browser}" if browser != "Unknown" else device_name,
             "browser": browser,
             "platform": platform,
-            "route": values.get("login_route", "-"),
-            "ip_address": values.get("ip", "-"),
-            "created_at": row.created_at.isoformat() + "Z" if row.created_at else None,
+            "os": platform,
+            "route": login_route,
+            "login_route": login_route,
+            "ip_address": ip_address,
+            "location": location,
+            "created_at": created_iso,
+            "is_current": is_current,
             "current": is_current,
             "revoked": is_rev,
         })
 
-    # Deduplicate active devices by (device_type, browser, platform) so multiple
+    # Deduplicate active devices by (device_name, browser, platform) so multiple
     # historical logins from the same device don't clutter the active list.
     activities = []
     seen_signatures = set()
@@ -267,14 +321,14 @@ def list_login_activity(
     # Prioritize current device first
     current_item = next((item for item in raw_items if item.get("current")), None)
     if current_item:
-        sig = (current_item["device_type"], current_item["browser"], current_item["platform"])
+        sig = (current_item["device_name"], current_item["browser"], current_item["platform"])
         seen_signatures.add(sig)
         activities.append(current_item)
 
     for item in raw_items:
         if item.get("current"):
             continue
-        sig = (item["device_type"], item["browser"], item["platform"])
+        sig = (item["device_name"], item["browser"], item["platform"])
         if sig not in seen_signatures:
             seen_signatures.add(sig)
             activities.append(item)
@@ -288,6 +342,7 @@ def list_login_activity(
                 and getattr(current_user, "is_authenticated", False)
                 and getattr(current_user, "id", None) == user_id
             ):
+                from app.utils.audit import get_client_ip
                 from app.utils.session_security import _login_device_metadata
 
                 meta = _login_device_metadata()
@@ -295,10 +350,15 @@ def list_login_activity(
                 session["_login_activity_id"] = cur_id
                 sid = getattr(session, "sid", None)
                 sid_str = f" sid={sid}" if sid else ""
+                cur_ip = get_client_ip()
+                cur_loc = meta.get("location") or resolve_ip_locations_batch([cur_ip]).get(cur_ip) or _format_location(None, None, cur_ip)
+                loc_str = f" location={cur_loc.replace(' ', '_')}" if cur_loc else ""
+                dev_name_str = f" device_name={meta['device_name'].replace(' ', '_')}" if meta.get("device_name") else ""
 
                 existing = next((a for a in activities if a.get("activity_id") == cur_id), None)
                 if existing:
                     existing["current"] = True
+                    existing["is_current"] = True
                     existing["revoked"] = False
                 else:
                     try:
@@ -315,25 +375,36 @@ def list_login_activity(
                                 f"browser={meta['browser'].replace(' ', '_')} "
                                 f"os={meta['os'].replace(' ', '_')} "
                                 f"login_route={meta['login_route']}"
+                                f"{dev_name_str}{loc_str}"
                             ),
                         )
                     except Exception:
                         pass
 
+                    cur_type = _format_device_type(meta.get("device", ""), meta.get("os", ""))
+                    cur_browser = meta["browser"].replace("_", " ")
+                    cur_os = meta["os"].replace("_", " ")
+                    cur_name = meta.get("device_name") or _format_device_name(None, cur_type, cur_browser, cur_os)
                     new_current = {
                         "id": 0,
                         "activity_id": cur_id,
-                        "device_type": _format_device_type(meta.get("device", ""), meta.get("os", "")),
-                        "browser": meta["browser"].replace("_", " "),
-                        "platform": meta["os"].replace("_", " "),
+                        "device_type": cur_type,
+                        "device_name": cur_name,
+                        "device_label": f"{cur_name} · {cur_browser}" if cur_browser != "Unknown" else cur_name,
+                        "browser": cur_browser,
+                        "platform": cur_os,
+                        "os": cur_os,
                         "route": meta["login_route"],
-                        "ip_address": getattr(request, "remote_addr", "-") or "-",
+                        "login_route": meta["login_route"],
+                        "ip_address": cur_ip,
+                        "location": cur_loc,
                         "created_at": datetime.now(timezone.utc).isoformat() + "Z",
+                        "is_current": True,
                         "current": True,
                         "revoked": False,
                     }
-                    cur_sig = (new_current["device_type"], new_current["browser"], new_current["platform"])
-                    activities = [a for a in activities if (a["device_type"], a["browser"], a["platform"]) != cur_sig]
+                    cur_sig = (new_current["device_name"], new_current["browser"], new_current["platform"])
+                    activities = [a for a in activities if (a["device_name"], a["browser"], a["platform"]) != cur_sig]
                     activities.insert(0, new_current)
         except Exception:
             pass

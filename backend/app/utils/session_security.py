@@ -13,9 +13,89 @@ from flask_session import Session
 from redis import Redis
 
 
+def _humanize_device_model(model_raw: str) -> str:
+    clean = re.sub(r"\s+", " ", (model_raw or "").strip().strip('"\'')).strip()
+    clean = re.sub(r"\s+Build/[^\s;)]*$", "", clean, flags=re.IGNORECASE).strip()
+    if not clean or clean.upper() == "K" or len(clean) < 2:
+        return ""
+    upper = clean.upper()
+    if upper.startswith("SM-"):
+        if upper.startswith("SM-S928"):
+            return "Samsung Galaxy S24 Ultra"
+        if upper.startswith("SM-S926"):
+            return "Samsung Galaxy S24+"
+        if upper.startswith("SM-S921"):
+            return "Samsung Galaxy S24"
+        if upper.startswith("SM-S918"):
+            return "Samsung Galaxy S23 Ultra"
+        return f"Samsung {clean}"
+    if upper.startswith("PIXEL"):
+        return f"Google {clean}"
+    if upper.startswith("CPH"):
+        return f"OPPO {clean}"
+    if upper.startswith("RMX"):
+        return f"realme {clean}"
+    if upper.startswith("V2") and len(clean) >= 5 and clean[2:].isalnum():
+        return f"vivo {clean}"
+    if re.match(r"^(?:M2|22|23|24)[0-9]{2}[A-Z0-9]+$", upper):
+        return f"Xiaomi {clean}"
+    return clean
+
+
+def _detect_device_name(raw_ua: str, headers, device: str, os_name: str) -> str:
+    header_model = (
+        headers.get("X-Device-Name")
+        or headers.get("X-Device-Model")
+        or headers.get("Sec-CH-UA-Model")
+        or ""
+    )
+    human_header = _humanize_device_model(header_model)
+    if human_header:
+        return re.sub(r"[^a-zA-Z0-9 _().+-]", "", human_header).strip()[:64]
+
+    ua_lower = (raw_ua or "").lower()
+    if os_name == "Flutter":
+        if "iphone" in ua_lower:
+            name = "iPhone App"
+        elif "ipad" in ua_lower:
+            name = "iPad App"
+        elif "android" in ua_lower:
+            name = "Android App"
+        else:
+            name = "Mobile App"
+    elif "iphone" in ua_lower:
+        name = "iPhone"
+    elif "ipad" in ua_lower:
+        name = "iPad"
+    elif os_name == "macOS" or "macintosh" in ua_lower or "mac os" in ua_lower:
+        name = "Mac / MacBook"
+    elif os_name == "Windows" or "windows nt" in ua_lower:
+        name = "Windows PC"
+    elif "cros" in ua_lower:
+        name = "Chromebook"
+    elif os_name == "Android" or "android" in ua_lower:
+        match = re.search(r"Android[^;)]*;\s*([^;)]+)", raw_ua or "", flags=re.IGNORECASE)
+        parsed = _humanize_device_model(match.group(1)) if match else ""
+        if parsed and parsed.lower() not in {"u", "wv", "mobile", "linux", "android"}:
+            name = parsed
+        else:
+            name = "Android Tablet" if device == "tablet" else "Android Phone"
+    elif os_name == "Linux" or "linux" in ua_lower:
+        name = "Linux PC"
+    elif device == "tablet":
+        name = "Tablet"
+    elif device == "mobile_phone":
+        name = "Mobile Phone"
+    else:
+        name = "Desktop / Laptop"
+
+    return re.sub(r"[^a-zA-Z0-9 _().+/-]", "", name).strip()[:64] or "Web Device"
+
+
 def _login_device_metadata() -> dict[str, str]:
     """Classify the client without storing the full user-agent string."""
-    user_agent = (request.headers.get("User-Agent") or "").lower()
+    raw_ua = request.headers.get("User-Agent") or ""
+    user_agent = raw_ua.lower()
     client_platform = (request.headers.get("X-Client-Platform") or "").lower()
     route = request.path or "-"
 
@@ -58,11 +138,21 @@ def _login_device_metadata() -> dict[str, str]:
     else:
         platform = "Unknown"
 
+    device_name = _detect_device_name(raw_ua, request.headers, device, platform)
+    from app.services.ip_geolocation import resolve_header_location, resolve_ip_location
+    from app.utils.audit import get_client_ip
+
+    location = resolve_header_location(request.headers) or resolve_ip_location(
+        get_client_ip(), allow_network=False
+    ) or ""
+
     return {
         "activity_id": uuid4().hex,
         "device": device,
+        "device_name": device_name,
         "browser": browser,
         "os": platform,
+        "location": location,
         "login_route": re.sub(r"[^a-zA-Z0-9_./-]", "", route)[:80] or "-",
     }
 
@@ -111,6 +201,16 @@ def register_session_security(app):
         app.session_interface.regenerate(session)
         sid = getattr(session, 'sid', None)
         sid_str = f" sid={sid}" if sid else ""
+        dev_name_str = (
+            f" device_name={device_metadata['device_name'].replace(' ', '_')}"
+            if device_metadata.get('device_name')
+            else ""
+        )
+        loc_str = (
+            f" location={device_metadata['location'].replace(' ', '_')}"
+            if device_metadata.get('location')
+            else ""
+        )
         try:
             from app.utils.audit import audit_log
             audit_log(
@@ -125,6 +225,7 @@ def register_session_security(app):
                     f"browser={device_metadata['browser'].replace(' ', '_')} "
                     f"os={device_metadata['os'].replace(' ', '_')} "
                     f"login_route={device_metadata['login_route']}"
+                    f"{dev_name_str}{loc_str}"
                 ),
             )
         except Exception:
@@ -134,8 +235,9 @@ def register_session_security(app):
         act_id = session.get('_login_activity_id')
         if act_id:
             try:
-                from app.services.login_activity import _REVOKED_ACTIVITIES
-                _REVOKED_ACTIVITIES.add(act_id)
+                from app.services.login_activity import _ACTIVITY_CACHE_LOCK, _REVOKED_ACTIVITIES
+                with _ACTIVITY_CACHE_LOCK:
+                    _REVOKED_ACTIVITIES.add(act_id)
             except Exception:
                 pass
         # regenerate() only acts on nonempty sessions; revoke the old SID first.

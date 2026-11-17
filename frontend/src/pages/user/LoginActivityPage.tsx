@@ -3,6 +3,7 @@ import {
   Laptop,
   Loader2,
   LogOut,
+  MapPin,
   MonitorSmartphone,
   RefreshCw,
   ShieldAlert,
@@ -101,7 +102,7 @@ export default function LoginActivityPage({
     }
   };
 
-  const activeCount = activities.filter((a) => !a.revoked_at).length;
+  const activeCount = activities.filter((a) => !a.revoked_at && !a.revoked).length;
 
   return (
     <WorkspaceShell
@@ -195,7 +196,14 @@ export default function LoginActivityPage({
                   : act.device_type
                     ? Laptop
                     : MonitorSmartphone;
-                const timeLabel = act.revoked_at
+                const isCurrent = Boolean(act.is_current ?? act.current);
+                const isRevoked = Boolean(act.revoked_at || act.revoked);
+                const deviceName = act.device_name || act.device_type || "Unknown Device";
+                const osName = act.os || act.platform || "Unknown OS";
+                const routeLabel = act.login_route || act.route || "-";
+                const locationLabel =
+                  act.location || (isKhmer ? "មិនស្គាល់ទីតាំង" : "Unknown Location");
+                const timeLabel = isRevoked
                   ? isKhmer
                     ? "បានបញ្ឈប់"
                     : "Revoked"
@@ -210,9 +218,9 @@ export default function LoginActivityPage({
                       <div
                         className={cn(
                           "flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border",
-                          act.is_current
+                          isCurrent
                             ? ACCOUNT_TONE_CLASSES.emerald
-                            : act.revoked_at
+                            : isRevoked
                               ? ACCOUNT_TONE_CLASSES.slate
                               : ACCOUNT_TONE_CLASSES.blue,
                         )}
@@ -221,19 +229,26 @@ export default function LoginActivityPage({
                       </div>
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
-                          <h3 className="font-display text-sm font-bold text-slate-900 dark:text-white">
-                            {act.browser || "Unknown Browser"} · {act.os || "Unknown OS"}
+                          <h3 className="break-words font-display text-sm font-bold text-slate-900 dark:text-white">
+                            {deviceName}
                           </h3>
-                          {act.is_current && (
+                          {isCurrent && (
                             <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:text-emerald-300">
                               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                               {isKhmer ? "ឧបករណ៍នេះ" : "This Device"}
                             </span>
                           )}
                         </div>
-                        <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-                          IP: <span className="font-mono">{act.ip_address || "-"}</span> ·{" "}
-                          <span className="font-mono">{act.login_route || "-"}</span>
+                        <p className="mt-0.5 text-xs text-slate-600 dark:text-slate-300">
+                          {act.browser || "Unknown Browser"} · {osName}
+                        </p>
+                        <p className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                          <span className="inline-flex items-center gap-1 font-medium text-slate-700 dark:text-slate-200">
+                            <MapPin className="h-3.5 w-3.5 shrink-0 text-indigo-500" />
+                            <span>{locationLabel}</span>
+                          </span>
+                          <span aria-hidden="true">·</span>
+                          <span className="font-mono text-[11px]">{routeLabel}</span>
                         </p>
                         <p className="mt-1 text-[11px] text-slate-400">
                           {timeLabel}
@@ -242,7 +257,7 @@ export default function LoginActivityPage({
                     </div>
 
                     <div className="flex shrink-0 items-center justify-end gap-2">
-                      {!act.revoked_at ? (
+                      {!isRevoked ? (
                         <button
                           type="button"
                           disabled={busyId === act.activity_id}

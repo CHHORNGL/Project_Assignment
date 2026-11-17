@@ -23,6 +23,8 @@ def register_security_headers(app):
                 "publickey-credentials-get=(self), publickey-credentials-create=(self), "
                 "accelerometer=(), gyroscope=(), magnetometer=(), usb=()"
             ),
+            # Request Chromium Client Hints so device model names resolve cleanly.
+            "Accept-CH": "Sec-CH-UA-Model, Sec-CH-UA-Platform",
             # Disable the obsolete browser XSS auditor; use CSP and escaping.
             "X-XSS-Protection": "0",
         }

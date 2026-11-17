@@ -10,6 +10,7 @@ import {
   KeyRound,
   Laptop,
   Link2,
+  MapPin,
   MonitorSmartphone,
   Moon,
   Palette,
@@ -662,6 +663,11 @@ export default function SettingsPage({ bootstrap }: { bootstrap: AppBootstrap<Se
                       : act.device_type
                         ? Laptop
                         : MonitorSmartphone;
+                    const isCurrent = Boolean(act.is_current ?? act.current);
+                    const deviceName = act.device_name || act.device_type || "Device";
+                    const osName = act.os || act.platform || "OS";
+                    const locationLabel =
+                      act.location || (isKhmer ? "មិនស្គាល់ទីតាំង" : "Unknown Location");
                     return (
                       <li
                         key={act.activity_id}
@@ -673,16 +679,21 @@ export default function SettingsPage({ bootstrap }: { bootstrap: AppBootstrap<Se
                           </span>
                           <div className="min-w-0">
                             <p className="truncate font-bold text-slate-900 dark:text-white">
-                              {act.browser || "Browser"} · {act.os || "OS"}
+                              {deviceName}
                             </p>
                             <p className="truncate text-[11px] text-slate-500 dark:text-slate-400">
-                              <span className="font-mono">{act.ip_address || "—"}</span>
+                              <span>{act.browser || "Browser"} · {osName}</span>
+                              {" · "}
+                              <span className="inline-flex items-center gap-0.5 font-medium text-slate-600 dark:text-slate-300">
+                                <MapPin className="inline h-3 w-3 text-indigo-500" />
+                                {locationLabel}
+                              </span>
                               {(act.last_seen_at || act.created_at) &&
                                 ` · ${formatAccountTimestamp(act.last_seen_at || act.created_at)}`}
                             </p>
                           </div>
                         </div>
-                        {act.is_current && (
+                        {isCurrent && (
                           <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:text-emerald-300">
                             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                             {isKhmer ? "បច្ចុប្បន្ន" : "Current"}

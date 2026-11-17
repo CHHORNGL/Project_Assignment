@@ -120,15 +120,21 @@ export interface AppBootstrap<TData = Record<string, any>> {
 export interface LoginActivityEntry {
   activity_id: string;
   ip_address?: string;
+  location?: string;
   browser?: string;
   os?: string;
+  platform?: string;
   device_type?: string;
+  device_name?: string;
   device_label?: string;
   login_route?: string;
+  route?: string;
   created_at?: string;
   last_seen_at?: string;
   is_current?: boolean;
+  current?: boolean;
   is_active?: boolean;
+  revoked?: boolean;
   revoked_at?: string | null;
 }
 

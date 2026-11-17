@@ -6,6 +6,7 @@ import {
   CheckCircle2,
   ChevronDown,
   ChevronRight,
+  Crop,
   ExternalLink,
   Fingerprint,
   KeyRound,
@@ -24,6 +25,7 @@ import {
 import type { AppBootstrap, PasskeyItem } from "@/types/app";
 import { WorkspaceShell } from "@/components/layout/WorkspaceShell";
 import { AccountHeaderTabs, formatAccountTimestamp } from "@/components/user/AccountHeaderTabs";
+import { AvatarCropModal } from "@/components/user/AvatarCropModal";
 import {
   ACCOUNT_TONE_CLASSES,
   AccountSwitch,
@@ -52,6 +54,7 @@ interface ProfileData {
 }
 
 const MAX_AVATAR_BYTES = 2 * 1024 * 1024;
+const MAX_RAW_AVATAR_BYTES = 15 * 1024 * 1024;
 
 export default function ProfilePage({ bootstrap }: { bootstrap: AppBootstrap<ProfileData> }) {
   const isKhmer = bootstrap.lang === "km";
@@ -61,6 +64,8 @@ export default function ProfilePage({ bootstrap }: { bootstrap: AppBootstrap<Pro
   const initialAvatar = bootstrap.user.avatar_url || "/static/img/avatar.png";
   const [avatarPreview, setAvatarPreview] = useState(initialAvatar);
   const [selectedAvatarName, setSelectedAvatarName] = useState<string | null>(null);
+  const [cropSource, setCropSource] = useState<{ url: string; name: string } | null>(null);
+  const [cropModalOpen, setCropModalOpen] = useState(false);
   const objectUrlRef = useRef<string | null>(null);
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -108,10 +113,10 @@ export default function ProfilePage({ bootstrap }: { bootstrap: AppBootstrap<Pro
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > MAX_AVATAR_BYTES) {
+    if (file.size > MAX_RAW_AVATAR_BYTES) {
       pushToast(
         "warning",
-        isKhmer ? "រូបភាពមានទំហំធំពេក (អតិបរមា 2 MB)។" : "Avatar file exceeds the 2 MB limit.",
+        isKhmer ? "រូបភាពដើមធំពេក (អតិបរមា 15 MB)។" : "Image file is too large to process (max 15 MB).",
       );
       e.target.value = "";
       return;
@@ -119,12 +124,41 @@ export default function ProfilePage({ bootstrap }: { bootstrap: AppBootstrap<Pro
     revokePreviewUrl();
     const url = URL.createObjectURL(file);
     objectUrlRef.current = url;
-    setAvatarPreview(url);
-    setSelectedAvatarName(file.name);
+    setCropSource({ url, name: file.name });
+    setCropModalOpen(true);
+    e.target.value = "";
+  };
+
+  const handleApplyCrop = (croppedFile: File, previewDataUrl: string) => {
+    if (croppedFile.size > MAX_AVATAR_BYTES) {
+      pushToast(
+        "warning",
+        isKhmer ? "រូបភាពដែលបានកាត់ធំជាង 2 MB។" : "Cropped image exceeds the 2 MB limit.",
+      );
+      return;
+    }
+    if (avatarInputRef.current && typeof DataTransfer !== "undefined") {
+      const dt = new DataTransfer();
+      dt.items.add(croppedFile);
+      avatarInputRef.current.files = dt.files;
+    }
+    setAvatarPreview(previewDataUrl);
+    setSelectedAvatarName(croppedFile.name);
+    setCropModalOpen(false);
+  };
+
+  const handleCancelCropModal = () => {
+    setCropModalOpen(false);
+    if (!selectedAvatarName) {
+      revokePreviewUrl();
+      setCropSource(null);
+    }
   };
 
   const handleResetAvatar = () => {
     revokePreviewUrl();
+    setCropSource(null);
+    setCropModalOpen(false);
     setAvatarPreview(initialAvatar);
     setSelectedAvatarName(null);
     if (avatarInputRef.current) {
@@ -353,13 +387,30 @@ export default function ProfilePage({ bootstrap }: { bootstrap: AppBootstrap<Pro
 
               {selectedAvatarName ? (
                 <div className="mt-3.5 inline-flex flex-wrap items-center justify-center gap-2 rounded-2xl border border-indigo-500/25 bg-indigo-500/10 px-3 py-1.5 text-[11px] font-semibold text-indigo-700 dark:text-indigo-300">
-                  <span className="max-w-[200px] truncate">
-                    {isKhmer ? `ត្រៀមផ្ទុក៖ ${selectedAvatarName}` : `Queued: ${selectedAvatarName}`}
+                  <span className="max-w-[160px] truncate">
+                    {isKhmer ? `ត្រៀមផ្ទុក៖ ${selectedAvatarName}` : `Ready: ${selectedAvatarName}`}
                   </span>
+                  <button
+                    type="submit"
+                    className="inline-flex items-center gap-1 rounded-lg bg-indigo-600 px-2.5 py-1 text-[10.5px] font-bold text-white shadow-sm hover:bg-indigo-500"
+                  >
+                    <Save className="h-3 w-3" />
+                    <span>{isKhmer ? "រក្សាទុក" : "Save Photo"}</span>
+                  </button>
+                  {cropSource && (
+                    <button
+                      type="button"
+                      onClick={() => setCropModalOpen(true)}
+                      className="inline-flex items-center gap-1 rounded-lg bg-white/85 px-2 py-1 text-[10.5px] font-bold text-indigo-700 hover:bg-white dark:bg-obsidian-800 dark:text-indigo-300"
+                    >
+                      <Crop className="h-3 w-3" />
+                      <span>{isKhmer ? "កាត់ម្តងទៀត" : "Adjust"}</span>
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={handleResetAvatar}
-                    className="inline-flex items-center gap-1 rounded-lg bg-white/80 px-2 py-0.5 text-[10.5px] font-bold text-slate-700 hover:bg-white dark:bg-obsidian-800 dark:text-slate-200"
+                    className="inline-flex items-center gap-1 rounded-lg bg-white/80 px-2 py-1 text-[10.5px] font-bold text-slate-700 hover:bg-white dark:bg-obsidian-800 dark:text-slate-200"
                   >
                     <RotateCcw className="h-3 w-3" />
                     <span>{isKhmer ? "បោះបង់" : "Cancel"}</span>
@@ -368,8 +419,8 @@ export default function ProfilePage({ bootstrap }: { bootstrap: AppBootstrap<Pro
               ) : (
                 <p className="mt-3 text-[11px] text-slate-400 dark:text-slate-500">
                   {isKhmer
-                    ? "ប៉ះរូបកាមេរ៉ាដើម្បីប្តូររូបភាព (JPG, PNG, WEBP · 2 MB)"
-                    : "Tap the camera badge to update your photo (JPG, PNG, WEBP · Max 2 MB)"}
+                    ? "ប៉ះរូបកាមេរ៉ាដើម្បីជ្រើសរើស និងកាត់រូបភាព (JPG, PNG, WEBP)"
+                    : "Tap the camera badge to choose & crop your photo (JPG, PNG, WEBP)"}
                 </p>
               )}
             </div>
@@ -884,6 +935,15 @@ export default function ProfilePage({ bootstrap }: { bootstrap: AppBootstrap<Pro
           </a>
         </div>
       </div>
+
+      <AvatarCropModal
+        open={cropModalOpen}
+        imageUrl={cropSource?.url || null}
+        fileName={cropSource?.name}
+        isKhmer={isKhmer}
+        onCancel={handleCancelCropModal}
+        onConfirm={handleApplyCrop}
+      />
     </WorkspaceShell>
   );
 }
