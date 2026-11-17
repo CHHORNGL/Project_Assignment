@@ -26,6 +26,11 @@ RUN pip install --no-cache-dir -r requirements.lock
 COPY backend/ ./
 COPY scripts/ ./scripts/
 
+# Preserve bundled static uploads so they can be seeded onto a mounted Persistent Disk (e.g. Render) at startup
+RUN mkdir -p /app/_bundled_uploads && \
+    cp -rn /app/app/static/uploads/. /app/_bundled_uploads/ 2>/dev/null || true && \
+    cp -rn /app/uploads/. /app/_bundled_uploads/ 2>/dev/null || true
+
 # Copy the built React assets from the node stage
 COPY --from=frontend-builder /workspace/backend/app/static/app /app/app/static/app
 COPY --from=frontend-builder /workspace/backend/app/static/diagnosis-wizard /app/app/static/diagnosis-wizard

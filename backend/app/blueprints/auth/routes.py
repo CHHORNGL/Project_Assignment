@@ -13,6 +13,7 @@ from email.utils import formatdate, make_msgid
 
 from flask import (
     Blueprint,
+    current_app,
     flash,
     jsonify,
     make_response,
@@ -940,7 +941,16 @@ def google_callback():
 
     try:
         token = google.authorize_access_token()
-    except Exception:
+    except Exception as exc:
+        current_app.logger.error(
+            "Google OAuth callback token exchange failed (host=%s, url=%s, state=%s, error_param=%s): %s",
+            request.host,
+            request.base_url,
+            request.args.get("state"),
+            request.args.get("error"),
+            exc,
+            exc_info=True,
+        )
         flash(
             "Could not connect your Google account. Please try again."
             if is_linking
@@ -949,11 +959,12 @@ def google_callback():
         )
         return redirect(failure_target)
 
-    user_info = None
-    try:
-        user_info = google.parse_id_token(token)
-    except Exception:
-        user_info = None
+    user_info = token.get("userinfo") if isinstance(token, dict) else None
+    if not user_info:
+        try:
+            user_info = google.parse_id_token(token, nonce=None)
+        except Exception:
+            user_info = None
 
     if not user_info:
         resp = google.get("https://www.googleapis.com/oauth2/v3/userinfo")

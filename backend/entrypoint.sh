@@ -43,7 +43,15 @@ if [ -n "${RUNTIME_DATABASE_URL:-}" ]; then
 fi
 
 # Ensure writable upload & log directories exist on mounted disks (e.g. Render Persistent Disk)
-mkdir -p /app/app/static/uploads /app/app/static/uploads/chats /app/app/static/uploads/theme_animations /app/instance/logs
+mkdir -p /app/app/static/uploads /app/app/static/uploads/banners /app/app/static/uploads/chats /app/app/static/uploads/theme_animations /app/instance/logs
+
+# Seed bundled static uploads onto the mounted Persistent Disk without overwriting existing files
+if [ -d "/app/_bundled_uploads" ]; then
+  cp -rn /app/_bundled_uploads/. /app/app/static/uploads/ 2>/dev/null || true
+fi
+if [ -d "/app/uploads" ]; then
+  cp -rn /app/uploads/. /app/app/static/uploads/ 2>/dev/null || true
+fi
 
 # Start the Gunicorn production server
 echo "🚀 Starting Gunicorn server..."
