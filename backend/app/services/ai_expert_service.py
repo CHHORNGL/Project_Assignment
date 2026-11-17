@@ -9,10 +9,13 @@ requiring external LLMs (Gemini, Groq, ChatGPT).
 
 from __future__ import annotations
 
+import importlib.util
 import json
 import os
 import re
+import time
 from collections import Counter
+from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
 
@@ -23,6 +26,9 @@ DEFAULT_TIMEOUT_SECONDS = 30.0
 DEFAULT_SPACE_ENDPOINT = "https://maoseavik-agrisystem-agricultural-assistant.hf.space"
 MAX_CONTEXT_CHARS = 8_000
 MAX_MESSAGE_CHARS = 4_000
+_SPACE_COOLDOWN_SECONDS = 120.0
+_SPACE_COOLDOWN_UNTIL: dict[str, float] = {}
+_TRAINED_DATASET_CACHE: list[dict[str, Any]] | None = None
 
 EMOJI_PATTERN = re.compile(
     r"["
@@ -317,11 +323,25 @@ def _is_valid_khmer_text(text: str) -> bool:
     return not (len(text) > 40 and len(found) < 3)
 
 
+def _is_generic_space_fallback(text: str) -> bool:
+    """Return True if the remote Space returned its generic 3-bullet clarification prompt."""
+    if not text:
+        return True
+    generic_markers = (
+        "ខ្ញុំបានកត់ត្រាសំណួររបស់អ្នករួចហើយ។ ដើម្បីជួយវិភាគឱ្យកាន់តែចំគោលដៅ",
+        "ខ្ញុំបានទទួលសំណួររបស់អ្នកហើយ។ ដើម្បីឱ្យខ្ញុំអាចវិភាគបញ្ហា",
+        "To provide you with the most accurate diagnosis and treatment plan, could you please specify:",
+    )
+    return any(marker in text for marker in generic_markers)
+
+
 def _is_valid_reply(reply: str, user_message: str = "", language: str | None = None) -> bool:
     """Validate that the model response is coherent, sufficiently long, and not a repetition loop."""
     if not reply or len(reply.strip()) < 10:
         return False
     cleaned = reply.strip()
+    if _is_generic_space_fallback(cleaned):
+        return False
 
     is_km = _is_khmer(language, user_message)
     if is_km:
@@ -660,9 +680,369 @@ def _normalize_query(text: str) -> str:
     return t
 
 
+_BOILERPLATE_KM: list[str] = [
+    "តើធ្វើដូចម្តេចដើម្បី",
+    "តើខ្ញុំគួរ",
+    "តើអ្វីជាព័ត៌មានសំខាន់អំពី",
+    "តើអ្វីជា",
+    "ហេតុអ្វីបានជា",
+    "សូមរៀបរាប់ព័ត៌មានលម្អិតអំពី",
+    "សូមផ្តល់ការណែនាំបច្ចេកទេសពេញលេញអំពី",
+    "តើមានថ្នាំ ឬវិធីណាសម្រាប់",
+    "វិធានការបង្ការ និងការពារកុំឱ្យកើត",
+    "មានរោគសញ្ញាអ្វីខ្លះ",
+    "ដែលតែងតែកើតមាន",
+    "មានជំងឺអ្វីខ្លះ",
+    "ជំងឺអ្វីខ្លះ",
+    "គឺជាអ្វី និងមានលក្ខណៈដាំដុះយ៉ាងដូចម្តេច",
+    "មានលក្ខណៈដាំដុះយ៉ាងដូចម្តេច",
+    "ដូចម្តេច",
+    "យ៉ាងដូចម្តេច",
+    "គឺជាអ្វី",
+    "របៀបដាំដុះ",
+    "របៀបដាំ",
+    "បច្ចេកទេសដាំ",
+    "លើដំណាំ",
+    "ដំណាំ",
+    "របស់ខ្ញុំ",
+    "តើគួរពិនិត្យចំណុចណាខ្លះ",
+    "ដោយរបៀបណា",
+    "តើ",
+]
+
+_BOILERPLATE_EN: set[str] = {
+    "what", "should", "i", "know", "about", "are", "all", "the", "common",
+    "is", "best", "way", "to", "how", "do", "can", "why", "did", "my",
+    "preventive", "measures", "protect", "please", "give", "me", "a", "an",
+    "complete", "overview", "of", "need", "agronomic", "advice", "for",
+    "managing", "which", "agricultural", "condition", "may", "match", "these",
+    "affecting", "in", "on", "from", "when", "does", "with", "and", "or",
+    "growing", "grow", "plant", "diseases", "disease", "symptoms", "symptom",
+    "causes", "cause", "prevent", "treat", "cure",
+}
+
+
+def _clean_query_tokens(text: str) -> str:
+    t = _normalize_query(text)
+    t = re.sub(r"[?!.,;:\"()\[\]។៕៖ៗ]", " ", t)
+    return re.sub(r"\s+", " ", t).strip()
+
+
+def _detect_query_intent(q_norm: str) -> str:
+    if any(w in q_norm for w in ["ការពារ", "បង្ការ", "prevent", "protect"]):
+        return "prevent"
+    if any(w in q_norm for w in ["ព្យាបាល", "ថ្នាំ", "កម្ចាត់", "treat", "cure", "control"]):
+        return "treat"
+    if any(w in q_norm for w in ["មូលហេតុ", "បណ្តាល", "ហេតុអ្វី", "កើតមាន", "cause", "why did"]):
+        return "cause"
+    if any(
+        w in q_norm
+        for w in [
+            "មានជំងឺអ្វីខ្លះ", "ជំងឺអ្វីខ្លះ", "រាយនាមជំងឺ", "បញ្ជីជំងឺ",
+            "common diseases", "all the common diseases", "what diseases",
+            "diseases of", "diseases can affect", "list all diseases",
+        ]
+    ):
+        return "all_diseases"
+    if any(w in q_norm for w in ["រោគសញ្ញា", "សញ្ញា", "symptom", "sign"]):
+        return "symptom"
+    if any(
+        w in q_norm
+        for w in [
+            "ព័ត៌មានសំខាន់អំពីដំណាំ", "លក្ខណៈដាំដុះ", "ដាំដុះ", "របៀបដាំ",
+            "បច្ចេកទេសដាំ", "growing", "how to grow", "how to plant", "cultivat",
+        ]
+    ):
+        return "grow"
+    return "general"
+
+
+def _extract_core_subject(q_norm: str, is_km: bool) -> str:
+    c = q_norm
+    if is_km:
+        for b in _BOILERPLATE_KM:
+            c = c.replace(b, " ")
+        if len(q_norm) > 12:
+            for pron in ("ខ្ញុំ", "លោកអ្នក", "បងប្អូន"):
+                c = c.replace(pron, " ")
+    else:
+        words = [w for w in c.split() if w not in _BOILERPLATE_EN]
+        c = " ".join(words)
+    return re.sub(r"\s+", " ", c).strip()
+
+
+def _char_ngrams(text: str, n: int = 3) -> set[str]:
+    compact = text.replace(" ", "")
+    if not compact:
+        return set()
+    if len(compact) < n:
+        return {compact}
+    return {compact[i : i + n] for i in range(len(compact) - n + 1)}
+
+
+def _candidate_repo_roots() -> list[Path]:
+    here = Path(__file__).resolve()
+    roots: list[Path] = []
+    for parent_idx in (2, 3):
+        if len(here.parents) > parent_idx:
+            roots.append(here.parents[parent_idx])
+    return roots
+
+
+def _load_trained_dataset_entries() -> list[dict[str, Any]]:
+    """Load and cache the user's trained Q&A dataset, conversational pairs, and crop catalog."""
+    global _TRAINED_DATASET_CACHE
+    if _TRAINED_DATASET_CACHE is not None:
+        return _TRAINED_DATASET_CACHE
+
+    raw_pairs: list[dict[str, str]] = []
+    roots = _candidate_repo_roots()
+
+    # 1. Load conversational & practical problem-solving dataset
+    for root in roots:
+        conv_path = root / "scripts" / "conversational_data.py"
+        if conv_path.exists():
+            try:
+                spec = importlib.util.spec_from_file_location("_conv_data_loader", conv_path)
+                if spec and spec.loader:
+                    mod = importlib.util.module_from_spec(spec)
+                    spec.loader.exec_module(mod)
+                    for attr in (
+                        "EMPATHY_KM",
+                        "EMPATHY_EN",
+                        "PRACTICAL_PROBLEM_SOLVING_KM",
+                        "PRACTICAL_PROBLEM_SOLVING_EN",
+                    ):
+                        items = getattr(mod, attr, [])
+                        for tup in items:
+                            if isinstance(tup, tuple) and len(tup) >= 2:
+                                raw_pairs.append({"instruction": str(tup[0]), "output": str(tup[1])})
+                break
+            except Exception:  # noqa: BLE001, S110
+                pass
+
+    # 2. Load ai/datasets/train.json (5,156 trained instruction-output rows)
+    for root in roots:
+        train_path = root / "ai" / "datasets" / "train.json"
+        if train_path.exists():
+            try:
+                loaded = json.loads(train_path.read_text(encoding="utf-8"))
+                if isinstance(loaded, list):
+                    for row in loaded:
+                        if isinstance(row, dict) and row.get("instruction") and row.get("output"):
+                            raw_pairs.append(
+                                {
+                                    "instruction": str(row["instruction"]),
+                                    "output": str(row["output"]),
+                                }
+                            )
+                break
+            except Exception:  # noqa: BLE001, S110
+                pass
+
+    # 3. Load ai/huggingface-space/crop_catalog.py (all 19 crops & indexed diseases)
+    for root in roots:
+        cat_path = root / "ai" / "huggingface-space" / "crop_catalog.py"
+        if cat_path.exists():
+            try:
+                spec = importlib.util.spec_from_file_location("_crop_catalog_loader", cat_path)
+                if spec and spec.loader:
+                    mod = importlib.util.module_from_spec(spec)
+                    spec.loader.exec_module(mod)
+                    catalog = getattr(mod, "CROP_DISEASES_CATALOG", [])
+                    for c_item in catalog:
+                        if not isinstance(c_item, dict):
+                            continue
+                        c_en = str(c_item.get("crop_en") or "").strip()
+                        c_km = str(c_item.get("crop_km") or "").strip()
+                        t_en = str(c_item.get("title_en") or "").strip()
+                        t_km = str(c_item.get("title_km") or "").strip()
+                        s_en = str(c_item.get("symptoms_en") or "").strip()
+                        s_km = str(c_item.get("symptoms_km") or "").strip()
+                        if not c_en or not c_km:
+                            continue
+                        ans_en = (
+                            f"{t_en}:\n\n"
+                            f"Greetings! The AgriSystem trained knowledge base includes the following key diseases and conditions affecting {c_en}:\n\n"
+                            f"{s_en}\n\n"
+                            f"Agronomic Advice: If your {c_en} is showing specific symptoms, please describe what you observe on the leaves, stems, or fruits so I can provide an exact diagnosis and tailored treatment plan."
+                        )
+                        ans_km = (
+                            f"{t_km}៖\n\n"
+                            f"ជំរាបសួរលោកអ្នក ឬបងប្អូនកសិករជាទីគោរព! ខាងក្រោមនេះជាជំងឺ និងបញ្ហាប្រឈមចម្បងៗដែលកើតឡើងលើដំណាំ {c_km} នៅក្នុងប្រព័ន្ធបណ្តុះបណ្តាល AgriSystem៖\n\n"
+                            f"{s_km}\n\n"
+                            f"ដំបូន្មានបច្ចេកទេស៖ ប្រសិនបើដំណាំ {c_km} របស់អ្នកកំពុងមានរោគសញ្ញាជាក់លាក់ណាមួយ សូមរៀបរាប់អំពីរោគសញ្ញាលើស្លឹក ដើម ឬផ្លែ ដើម្បីឱ្យខ្ញុំជួយធ្វើរោគវិនិច្ឆ័យលម្អិត និងផ្តល់រូបមន្តព្យាបាលឱ្យចំគោលដៅបំផុត។"
+                        )
+                        raw_pairs.append({"instruction": f"What are all the common diseases of {c_en}?", "output": ans_en})
+                        raw_pairs.append({"instruction": f"តើដំណាំ {c_km} មានជំងឺអ្វីខ្លះ?", "output": ans_km})
+                        grow_en = (
+                            f"Key Technical Information for Growing {c_en}:\n\n"
+                            f"1. Site Selection & Soil Preparation:\n"
+                            f"- Plant {c_en} in well-draining, fertile loam soil rich in organic matter (optimal pH 5.5 - 6.8). Incorporate well-decomposed compost inoculated with Trichoderma before planting.\n\n"
+                            f"2. Planting & Water Management:\n"
+                            f"- Select certified disease-resistant varieties suited for Cambodian climate conditions. Provide consistent irrigation during early establishment, flowering, and fruit/grain set while avoiding root waterlogging.\n\n"
+                            f"3. Balanced Nutrition & Integrated Pest Management (IPM):\n"
+                            f"- Apply split doses of balanced NPK during vegetative growth and increase potassium/phosphorus during flowering and fruiting. Scout fields weekly to prevent key diseases of {c_en}."
+                        )
+                        grow_km = (
+                            f"ព័ត៌មានបច្ចេកទេស និងការដាំដុះដំណាំ {c_km}៖\n\n"
+                            f"១. ការជ្រើសរើសទីតាំង និងការរៀបចំដី៖\n"
+                            f"- ដាំដំណាំ {c_km} លើដីធូរ មានជីជាតិ និងប្រព័ន្ធបង្ហូរទឹកល្អ (កម្រិត pH ៥.៥ ដល់ ៦.៨)។ ភ្ជួររាស់ហាលដី និងទ្រាប់បាតដោយជីកំប៉ុសសរីរាង្គលាយផ្សិតទ្រីកូឌែរម៉ា (Trichoderma) មុនពេលដាំដុះ។\n\n"
+                            f"២. ការជ្រើសរើសពូជ និងការគ្រប់គ្រងទឹក៖\n"
+                            f"- ជ្រើសរើសពូជសុទ្ធល្អដែលធន់នឹងជំងឺ និងសមស្របតាមអាកាសធាតុក្នុងតំបន់។ ផ្គត់ផ្គង់ទឹកឱ្យបានគ្រប់គ្រាន់នៅវគ្គលូតលាស់ វគ្គចេញផ្កា និងកាន់ផ្លែ ដោយជៀសវាងការដក់ទឹកជាំគល់។\n\n"
+                            f"៣. ការផ្តល់ជីបំប៉ន និងការការពារជំងឺចម្រុះ (IPM)៖\n"
+                            f"- បំបែកការដាក់ជី NPK តាមដំណាក់កាលលូតលាស់ និងបង្កើនជីប៉ូតាស្យូមនៅវគ្គចេញផ្កា-ផ្លែ ព្រមទាំងចុះពិនិត្យចម្ការប្រចាំសប្តាហ៍ដើម្បីទប់ស្កាត់ជំងឺ និងសត្វល្អិតទាន់ពេលវេលា។"
+                        )
+                        raw_pairs.append({"instruction": f"What should I know about growing {c_en}?", "output": grow_en})
+                        raw_pairs.append({"instruction": f"តើអ្វីជាព័ត៌មានសំខាន់អំពីដំណាំ {c_km}?", "output": grow_km})
+
+                        # Also index individual numbered diseases inside each crop catalog entry
+                        km_blocks = s_km.split("\n\n")
+                        en_blocks = s_en.split("\n\n")
+                        for b_km, b_en in zip(km_blocks, en_blocks, strict=False):
+                            lines_km = [ln.strip() for ln in b_km.split("\n") if ln.strip()]
+                            lines_en = [ln.strip() for ln in b_en.split("\n") if ln.strip()]
+                            if len(lines_km) < 3 or len(lines_en) < 3:
+                                continue
+                            header_km = re.sub(r"^\d+\.\s*", "", lines_km[0]).strip()
+                            m_hdr = re.match(r"^(.+?)\s*\((.+?)\)$", header_km)
+                            if not m_hdr:
+                                continue
+                            d_km_name = m_hdr.group(1).strip()
+                            d_en_name = m_hdr.group(2).strip()
+                            sym_km_txt = re.sub(r"^-\s*រោគសញ្ញាសម្គាល់៖\s*", "", lines_km[1]).strip()
+                            trt_km_txt = re.sub(r"^-\s*ការព្យាបាល៖\s*-\s*", "", lines_km[2]).strip()
+                            sym_en_txt = re.sub(r"^-\s*Symptoms:\s*", "", lines_en[1]).strip()
+                            trt_en_txt = re.sub(r"^-\s*Management:\s*-\s*", "", lines_en[2]).strip()
+                            d_full_km = (
+                                f"សេចក្តីណែនាំបច្ចេកទេសអំពី{d_km_name} ({d_en_name}) លើដំណាំ {c_km}៖\n\n"
+                                f"១. រោគសញ្ញាសម្គាល់៖ {sym_km_txt}\n\n"
+                                f"២. វិធានការព្យាបាល៖ {trt_km_txt}\n\n"
+                                f"៣. ការបង្ការ និងថែទាំ៖ សម្អាតស្លឹកឬមែកដែលឆ្លងជំងឺចេញពីចម្ការ រក្សាគម្លាតដាំដុះឱ្យមានខ្យល់ចេញចូលល្អ និងប្រើប្រាស់ជីសរីរាង្គលាយផ្សិត Trichoderma ដើម្បីពង្រឹងប្រព័ន្ធឫស។"
+                            )
+                            d_full_en = (
+                                f"Comprehensive Guide: {d_en_name} ({d_km_name}) in {c_en}:\n\n"
+                                f"1. Observable Symptoms: {sym_en_txt}\n\n"
+                                f"2. Recommended Treatment: {trt_en_txt}\n\n"
+                                f"3. Prevention & Field Care: Remove infected plant debris promptly, maintain proper canopy ventilation, and apply balanced nutrition with Trichoderma bio-fungicide."
+                            )
+                            raw_pairs.append({"instruction": f"សូមរៀបរាប់ព័ត៌មានលម្អិតអំពី{d_km_name}លើដំណាំ {c_km}។", "output": d_full_km})
+                            raw_pairs.append({"instruction": f"តើខ្ញុំគួរព្យាបាល{d_km_name}លើដំណាំ {c_km} ដូចម្តេច?", "output": d_full_km})
+                            raw_pairs.append({"instruction": f"Please give me a complete overview of {d_en_name} in {c_en}.", "output": d_full_en})
+                            raw_pairs.append({"instruction": f"How do I treat {d_en_name} in {c_en}?", "output": d_full_en})
+                break
+            except Exception:  # noqa: BLE001, S110
+                pass
+
+    entries: list[dict[str, Any]] = []
+    seen_q: set[str] = set()
+    for item in raw_pairs:
+        ins = item["instruction"].strip()
+        out = item["output"].strip()
+        q_n = _clean_query_tokens(ins)
+        if not q_n or q_n in seen_q:
+            continue
+        seen_q.add(q_n)
+        km = bool(re.search(r"[\u1780-\u17ff]", ins))
+        core = _extract_core_subject(q_n, km)
+        entries.append(
+            {
+                "q_norm": q_n,
+                "is_km": km,
+                "intent": _detect_query_intent(q_n),
+                "core": core,
+                "core_words": set(core.split()) if not km else set(),
+                "ngrams": _char_ngrams(core or q_n, 3),
+                "output": out,
+            }
+        )
+
+    _TRAINED_DATASET_CACHE = entries
+    return entries
+
+
+def _match_trained_dataset(
+    user_message: str,
+    *,
+    is_khmer: bool | None = None,
+    min_score: float = 0.44,
+) -> str | None:
+    """Match a user question against the owner's trained dataset & catalog."""
+    if not user_message or not user_message.strip():
+        return None
+    entries = _load_trained_dataset_entries()
+    if not entries:
+        return None
+
+    km = _is_khmer(None, user_message) if is_khmer is None else is_khmer
+    q_n = _clean_query_tokens(user_message)
+    if not q_n:
+        return None
+
+    for entry in entries:
+        if entry["q_norm"] == q_n:
+            return clean_professional_text(str(entry["output"]))
+
+    q_intent = _detect_query_intent(q_n)
+    q_core = _extract_core_subject(q_n, km)
+    q_ngrams = _char_ngrams(q_core or q_n, 3)
+    q_words = set(q_core.split()) if not km else set()
+
+    best_score = 0.0
+    best_output: str | None = None
+
+    for entry in entries:
+        if bool(entry["is_km"]) != km:
+            continue
+        e_ngrams: set[str] = entry["ngrams"]
+        if not q_ngrams or not e_ngrams:
+            continue
+        inter = len(q_ngrams & e_ngrams)
+        if inter == 0:
+            continue
+        union = len(q_ngrams | e_ngrams)
+        jacc = inter / union if union else 0.0
+        cont = inter / min(len(q_ngrams), len(e_ngrams))
+        score = 0.55 * jacc + 0.45 * cont
+
+        if not km and q_words and entry["core_words"]:
+            e_words: set[str] = entry["core_words"]
+            w_inter = len(q_words & e_words)
+            w_score = w_inter / max(1, min(len(q_words), len(e_words)))
+            score = 0.5 * score + 0.5 * w_score
+
+        e_core = str(entry["core"])
+        if q_core and e_core:
+            if q_core == e_core:
+                score += 0.35
+            elif (q_core in e_core or e_core in q_core) and len(min(q_core, e_core, key=len)) >= 4:
+                score += 0.20
+
+        e_intent = str(entry["intent"])
+        if q_intent == e_intent and q_intent != "general":
+            score += 0.25
+        elif q_intent != "general" and e_intent != "general" and q_intent != e_intent:
+            score -= 0.40
+        elif (q_intent == "general") != (e_intent == "general"):
+            score -= 0.20
+
+        if score > best_score:
+            best_score = score
+            best_output = str(entry["output"])
+
+    if best_output and best_score >= min_score:
+        return clean_professional_text(best_output)
+    return None
+
+
 def _synthesize_local_expert_reply(user_message: str, context: str = "", language: str | None = None) -> str:
-    """Offline, deterministic agronomic synthesizer prioritizing crop matching and local database records."""
+    """Offline, deterministic agronomic synthesizer prioritizing the owner's trained dataset, crop catalog, and local DB."""
     is_khmer = _is_khmer(language, user_message)
+
+    # 0. Check high-confidence match in the user's trained dataset (train.json, conversational_data.py, crop_catalog.py)
+    high_conf_trained = _match_trained_dataset(user_message, is_khmer=is_khmer, min_score=0.58)
+    if high_conf_trained:
+        return high_conf_trained
 
     matched_crop: Any = None
     matched_disease: Any = None
@@ -929,8 +1309,9 @@ def _synthesize_local_expert_reply(user_message: str, context: str = "", languag
                 f"Safety Reminder: Always wear personal protective equipment (PPE) when applying crop protection chemicals and strictly observe pre-harvest intervals (PHI)."
             )
 
-    # Response from Database Match
+    # Response from Database Disease Match
     if matched_disease:
+        q_intent = _detect_query_intent(q_norm)
         if is_khmer:
             d_name = matched_disease.name_kh or matched_disease.name
             c_name = (matched_disease.crop.name_kh or matched_disease.crop.name) if matched_disease.crop else "ដំណាំ"
@@ -938,6 +1319,20 @@ def _synthesize_local_expert_reply(user_message: str, context: str = "", languag
             cause = matched_disease.cause_explanation_kh or matched_disease.cause_explanation or "កើតឡើងដោយសារមេរោគផ្សិត ឬបាក់តេរីក្នុងលក្ខខណ្ឌសំណើមខ្ពស់។"
             treat = matched_disease.treatment_kh or matched_disease.treatment or "កាត់ក្រីមែកដែលខូចចោល និងប្រើប្រាស់ថ្នាំកសិកម្មការពារផ្សិតសមស្របតាមកម្រិតណែនាំ។"
             prev = matched_disease.prevention_tips_kh or matched_disease.prevention_tips or "ជ្រើសរើសពូជធន់ ដាំលើដីមានប្រព័ន្ធបង្ហូរទឹកល្អ និងកែតម្រូវដីដោយកំបោរកសិកម្ម។"
+            if q_intent == "cause":
+                return clean_professional_text(
+                    f"មូលហេតុចម្បងដែលបង្កឱ្យកើតមាន {d_name} លើដំណាំ {c_name}៖\n\n"
+                    f"១. មូលហេតុ និងភ្នាក់ងារបង្កជំងឺ៖\n- {cause}\n\n"
+                    f"២. រោគសញ្ញាសម្គាល់៖\n- {desc}\n\n"
+                    f"៣. វិធានការបង្ការ និងព្យាបាល៖\n- ការព្យាបាល៖ {treat}\n- ការបង្ការ៖ {prev}"
+                )
+            if q_intent == "prevent":
+                return clean_professional_text(
+                    f"វិធានការបង្ការ និងការពារ {d_name} លើដំណាំ {c_name}៖\n\n"
+                    f"១. វិធានការបង្ការជាមុន (Prevention)៖\n- {prev}\n\n"
+                    f"២. មូលហេតុដែលគួរប្រុងប្រយ័ត្ន៖\n- {cause}\n\n"
+                    f"៣. វិធានការព្យាបាលនៅពេលចាប់ផ្តើមមានរោគសញ្ញា៖\n- {treat}"
+                )
             return clean_professional_text(
                 f"ការណែនាំបច្ចេកទេស៖ {d_name} លើដំណាំ {c_name}\n\n"
                 f"ជំរាបសួរលោកអ្នក ឬបងប្អូនកសិករជាទីគោរព! ខាងក្រោមនេះជាវិធានការដោះស្រាយ និងការព្យាបាលប្រកបដោយវិជ្ជាជីវៈ៖\n\n"
@@ -957,6 +1352,20 @@ def _synthesize_local_expert_reply(user_message: str, context: str = "", languag
             cause = matched_disease.cause_explanation or "Pathogen proliferation favored by excessive humidity or poor soil drainage."
             treat = matched_disease.treatment or "Apply registered fungicides at recommended label rates and prune heavily infected plant parts."
             prev = matched_disease.prevention_tips or "Maintain good field drainage, ensure balanced fertilization, and apply preventative bio-controls."
+            if q_intent == "cause":
+                return clean_professional_text(
+                    f"Primary Causes of {d_name} in {c_name}:\n\n"
+                    f"1. Pathogen & Root Cause:\n- {cause}\n\n"
+                    f"2. Observable Symptoms:\n- {desc}\n\n"
+                    f"3. Prevention & Management:\n- Treatment: {treat}\n- Prevention: {prev}"
+                )
+            if q_intent == "prevent":
+                return clean_professional_text(
+                    f"Preventative Management for {d_name} in {c_name}:\n\n"
+                    f"1. Prevention Strategy:\n- {prev}\n\n"
+                    f"2. Underlying Cause to Avoid:\n- {cause}\n\n"
+                    f"3. Early Intervention Treatment:\n- {treat}"
+                )
             return clean_professional_text(
                 f"Technical Guidance: {d_name} on {c_name}\n\n"
                 f"Greetings! Here is the structured agronomic recommendation for your farm:\n\n"
@@ -969,6 +1378,50 @@ def _synthesize_local_expert_reply(user_message: str, context: str = "", languag
                 f"- {prev}\n\n"
                 f"Safety Reminder: Always wear personal protective equipment (PPE) when applying crop protection chemicals and strictly observe pre-harvest intervals (PHI)."
             )
+
+    # Response from Database Crop Match (e.g. growing / cultivation / overview of a crop)
+    if matched_crop:
+        c_desc_km = getattr(matched_crop, "description_kh", None) or getattr(matched_crop, "description", None)
+        c_desc_en = getattr(matched_crop, "description", None)
+        if is_khmer:
+            c_title = getattr(matched_crop, "name_kh", None) or getattr(matched_crop, "name", "ដំណាំ")
+            desc_body = c_desc_km or f"ដំណាំ {c_title} ជាដំណាំកសិកម្មដ៏សំខាន់ដែលទាមទារការរៀបចំដី ការគ្រប់គ្រងទឹក និងការការពារជំងឺឱ្យបានត្រឹមត្រូវ។"
+            return clean_professional_text(
+                f"ព័ត៌មានបច្ចេកទេស និងការដាំដុះដំណាំ {c_title}៖\n\n"
+                f"ការពិពណ៌នា៖ {desc_body}\n\n"
+                f"ដំបូន្មានបច្ចេកទេស៖ ដើម្បីឱ្យដំណាំ {c_title} លូតលាស់បានល្អ និងផ្តល់ទិន្នផលខ្ពស់ "
+                f"សូមជ្រើសរើសពូជសុទ្ធល្អដែលធន់នឹងជំងឺ រៀបចំដីឱ្យមានប្រព័ន្ធបង្ហូរទឹកល្អ ផ្តល់ជីសរីរាង្គលាយផ្សិត Trichoderma "
+                f"និងចុះពិនិត្យតាមដានសត្វល្អិត និងជំងឺជាប្រចាំ។"
+            )
+        c_title_en = getattr(matched_crop, "name", "Crop")
+        desc_body_en = c_desc_en or f"{c_title_en} is an important agricultural crop requiring balanced soil fertility, drainage, and proactive pest scouting."
+        return clean_professional_text(
+            f"Key Technical Information for Growing {c_title_en}:\n\n"
+            f"Description: {desc_body_en}\n\n"
+            f"Agronomic Best Practices: To achieve healthy growth and maximum yield with {c_title_en}, "
+            f"select certified disease-resistant varieties, ensure well-draining soil enriched with organic compost, "
+            f"maintain balanced irrigation, and regularly inspect fields for early pest or disease signs."
+        )
+
+    # Check relaxed match in the trained dataset (practical problem solving, insights, empathy)
+    trained_match = _match_trained_dataset(user_message, is_khmer=is_khmer, min_score=0.44)
+    if trained_match:
+        return trained_match
+
+    # Check MixedAgriFact in database if available
+    try:
+        from app.models.mixed_agri_fact import MixedAgriFact
+
+        facts = MixedAgriFact.query.all()
+        for fact in facts:
+            topic_txt = _normalize_query(str(getattr(fact, "topic", "") or ""))
+            crop_txt = _normalize_query(str(getattr(fact, "crop_type", "") or ""))
+            if (topic_txt and topic_txt in q_norm) or (crop_txt and crop_txt in q_norm):
+                fact_body = getattr(fact, "fact_text", "") or ""
+                if fact_body:
+                    return clean_professional_text(str(fact_body))
+    except Exception:  # noqa: BLE001, S110
+        pass
 
     if is_khmer:
         return clean_professional_text(
@@ -1171,22 +1624,27 @@ def generate_reply(
     prompt = _build_prompt(user_message, context, language)
     raw_reply = ""
 
-    try:
-        max_tokens = 768
-        raw_reply = request_endpoint(
-            endpoint,
-            token,
-            prompt,
-            timeout=_timeout(),
-            max_new_tokens=max_tokens,
-            question=user_message,
-            context=context,
-        )
-    except Exception as exc:  # noqa: BLE001
+    cooldown_until = _SPACE_COOLDOWN_UNTIL.get(endpoint, 0.0)
+    if time.monotonic() >= cooldown_until:
         try:
-            current_app.logger.warning("Remote agricultural AI request failed: %s", exc)
-        except RuntimeError:
-            pass
+            max_tokens = 768
+            raw_reply = request_endpoint(
+                endpoint,
+                token,
+                prompt,
+                timeout=_timeout(),
+                max_new_tokens=max_tokens,
+                question=user_message,
+                context=context,
+            )
+            _SPACE_COOLDOWN_UNTIL.pop(endpoint, None)
+        except Exception as exc:  # noqa: BLE001
+            if is_gradio_endpoint(endpoint):
+                _SPACE_COOLDOWN_UNTIL[endpoint] = time.monotonic() + _SPACE_COOLDOWN_SECONDS
+            try:
+                current_app.logger.warning("Remote agricultural AI request failed: %s", exc)
+            except RuntimeError:
+                pass
 
     cleaned_reply = _clean_model_output(raw_reply, user_message, language)
 

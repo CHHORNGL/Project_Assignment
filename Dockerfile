@@ -22,9 +22,11 @@ WORKDIR /app
 COPY backend/requirements.txt backend/requirements.lock ./
 RUN pip install --no-cache-dir -r requirements.lock
 
-# Copy backend application code and operational scripts
+# Copy backend application code, operational scripts, and trained AI datasets/catalog
 COPY backend/ ./
 COPY scripts/ ./scripts/
+COPY ai/datasets/train.json ./ai/datasets/train.json
+COPY ai/huggingface-space/crop_catalog.py ./ai/huggingface-space/crop_catalog.py
 
 # Preserve bundled static uploads so they can be seeded onto a mounted Persistent Disk (e.g. Render) at startup
 RUN mkdir -p /app/_bundled_uploads && \

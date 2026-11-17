@@ -756,7 +756,7 @@ def answer(
                 "Reminder: Always irrigate thoroughly after granular fertilizer application to prevent osmotic root shock."
             )
 
-    # For Khmer questions, directly return smooth, human-like expert responses to guarantee zero broken words
+    # For Khmer questions, return curated knowledge base match first, then try fine-tuned LoRA model
     if is_khmer:
         if matched_kb:
             return _format_smooth_human_reply(matched_kb, is_khmer=True)
@@ -764,6 +764,21 @@ def answer(
             return _format_smooth_human_reply(matched_catalog_crop, is_khmer=True)
         if is_ipm_query:
             return _format_smooth_human_reply(AGRI_KNOWLEDGE_BASE[8], is_khmer=True)
+        try:
+            km_messages = [
+                {"role": "system", "content": SYSTEM_PROMPT_KH},
+                {"role": "user", "content": question},
+            ]
+            km_raw = _generate_with_gpu(
+                km_messages,
+                max(32, min(int(max_new_tokens), 1024)),
+                max(0.05, min(float(temperature), 0.8)),
+            )
+            km_cleaned = _clean_text(km_raw)
+            if _is_valid_output(km_cleaned, is_khmer=True):
+                return clean_professional_text(km_cleaned)
+        except Exception as exc:  # noqa: BLE001
+            print(f"Khmer generation error: {exc}")
         return clean_professional_text(
             "ជំរាបសួរលោកអ្នក ឬបងប្អូនកសិករជាទីគោរព!\n\n"
             "ខ្ញុំបានទទួលសំណួររបស់អ្នកហើយ។ ដើម្បីឱ្យខ្ញុំអាចវិភាគបញ្ហា និងផ្តល់រូបមន្តព្យាបាលឱ្យចំគោលដៅបំផុត សូមមេត្តាជួយប្រាប់បន្ថែមអំពី៖\n\n"

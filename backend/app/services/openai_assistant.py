@@ -908,7 +908,12 @@ def generate_assistant_reply(
             return reply
 
     if agent_plan.intent == "agent_identity":
-        if lang == "km":
+        from app.services.ai_expert_service import _match_trained_dataset
+
+        trained_id_reply = _match_trained_dataset(user_message, is_khmer=(lang == "km"), min_score=0.55)
+        if trained_id_reply:
+            reply = trained_id_reply
+        elif lang == "km":
             reply = (
                 "ជំរាបសួរលោកអ្នក! ខ្ញុំគឺជា AgriSystem AI (ម៉ូឌែលឈ្មោះ AGY V2.0.0) ដែលត្រូវបានបង្កើត និងអភិវឌ្ឍឡើងដោយប្រធានក្រុម ម៉ៅ សៀវអ៊ិ (Team Leader Mao Seavik)។ "
                 "ខ្ញុំជាជំនួយការប្រព័ន្ធ និងកសិកម្មឆ្លាតវៃ ត្រៀមខ្លួនជានិច្ចក្នុងការជួយណែនាំការប្រើប្រាស់ប្រព័ន្ធ ពិនិត្យជំងឺដំណាំ វិភាគរោគសញ្ញា និងចែករំលែកវិធីសាស្រ្តការពារ និងការព្យាបាលដំណាំប្រកបដោយសុវត្ថិភាព។ "
@@ -960,8 +965,13 @@ def generate_assistant_reply(
         return clean_markdown_symbols(reply)
 
     if agent_plan.intent == "casual_conversation":
+        from app.services.ai_expert_service import _match_trained_dataset
+
+        trained_casual_reply = _match_trained_dataset(user_message, is_khmer=(lang == "km"), min_score=0.48)
         msg_clean = user_message.lower().strip()
-        if lang == "km":
+        if trained_casual_reply:
+            reply = trained_casual_reply
+        elif lang == "km":
             if any(term in user_message for term in ["អរគុណ", "អរគុណច្រើន", "អរគុណបង"]):
                 reply = (
                     "មិនអីទេបាទ/ចាស! ខ្ញុំរីករាយណាស់ដែលបានជួយលោកអ្នក។ "

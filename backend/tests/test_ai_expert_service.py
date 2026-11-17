@@ -115,6 +115,58 @@ class AiExpertServiceTestCase(unittest.TestCase):
         expired_oauth = f"hf_oauth_header.{expired_payload}.sig"
         self.assertIsNone(valid_hf_token(expired_oauth))
 
+    def test_trained_dataset_answers_diverse_khmer_and_english_queries(self):
+        synth = _SERVICE._synthesize_local_expert_reply
+
+        # 1. Crop growing guide (English & Khmer, including catalog crops like Mango)
+        ans_grow_en = synth("How to grow mango?", language="en")
+        self.assertIn("Growing Mango", ans_grow_en)
+        ans_grow_km = synth("របៀបដាំដុះដំណាំស្វាយ", language="km")
+        self.assertIn("ស្វាយ", ans_grow_km)
+        self.assertNotIn("ខ្ញុំបានកត់ត្រាសំណួររបស់អ្នករួចហើយ", ans_grow_km)
+
+        # 2. Specific disease cause & prevention from train.json
+        ans_cause_km = synth("តើអ្វីជាមូលហេតុនៃជំងឺអុចខ្មៅស៊ីហ្គាតូកាចេក?", language="km")
+        self.assertIn("មូលហេតុ", ans_cause_km)
+        self.assertIn("ចេក", ans_cause_km)
+
+        ans_cause_en = synth("What causes Corn Smut in Corn?", language="en")
+        self.assertIn("Corn Smut", ans_cause_en)
+
+        # 3. Practical problem solving from conversational_data.py / train.json
+        ans_scale_km = synth("ខ្ញុំគ្មានជញ្ជីងថ្លឹងជីគីមីទេ តើអាចវាស់កម្រិតជីដោយរបៀបណា?", language="km")
+        self.assertIn("ស្លាបព្រាបាយ", ans_scale_km)
+
+        ans_compost_en = synth("How do I make organic liquid compost fertilizer at home from kitchen scraps?", language="en")
+        self.assertIn("molasses", ans_compost_en)
+
+        # 4. Emotional support / crop distress
+        ans_empathy_en = synth("My crops are dying from a sudden disease outbreak, I feel heartbroken", language="en")
+        self.assertIn("heartbreaking", ans_empathy_en)
+
+    @patch.dict(
+        os.environ,
+        {
+            "AI_PROVIDER": "huggingface",
+            "HF_INFERENCE_URL": "https://maoseavik-agrisystem-agricultural-assistant.hf.space",
+            "HF_TOKEN": "hf_validPersonalAccessToken123",
+        },
+        clear=False,
+    )
+    def test_generic_space_fallback_triggers_local_trained_dataset_reply(self):
+        _SERVICE._SPACE_COOLDOWN_UNTIL.clear()
+        with patch.object(
+            _SERVICE,
+            "request_endpoint",
+            return_value=(
+                "ជំរាបសួរលោកអ្នក ឬបងប្អូនកសិករជាទីគោរព!\n\n"
+                "ខ្ញុំបានទទួលសំណួររបស់អ្នកហើយ។ ដើម្បីឱ្យខ្ញុំអាចវិភាគបញ្ហា និងផ្តល់រូបមន្តព្យាបាលឱ្យចំគោលដៅបំផុត សូមមេត្តាជួយប្រាប់បន្ថែមអំពី៖"
+            ),
+        ):
+            reply = generate_reply("ខ្ញុំគ្មានជញ្ជីងថ្លឹងជីគីមីទេ តើអាចវាស់កម្រិតជីដោយរបៀបណា?", language="km")
+            self.assertIsNotNone(reply)
+            self.assertIn("ស្លាបព្រាបាយ", reply or "")
+
 
 if __name__ == "__main__":
     unittest.main()
