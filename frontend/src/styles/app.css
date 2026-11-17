@@ -269,6 +269,24 @@
   .ai-beacon-dot {
     animation: ai-beacon-pulse 1.8s ease-in-out infinite;
   }
+
+  .nx-spatial-grid {
+    background-image:
+      linear-gradient(to right, rgba(15, 23, 42, 0.045) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(15, 23, 42, 0.045) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+
+  .dark-mode .nx-spatial-grid {
+    background-image:
+      linear-gradient(to right, rgba(148, 163, 184, 0.075) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(148, 163, 184, 0.075) 1px, transparent 1px);
+  }
+
+  .nx-scan-laser {
+    animation: scanSweep 4.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    will-change: top, opacity;
+  }
 }
 
 @keyframes ai-marquee-scroll {
@@ -327,6 +345,7 @@
   .ai-tab-panel,
   .ai-marquee-track,
   .ai-beacon-dot,
+  .nx-scan-laser,
   .animate-fade-in-up,
   .animate-fade-in,
   .animate-scale-in,

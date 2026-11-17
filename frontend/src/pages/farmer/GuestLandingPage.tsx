@@ -22,6 +22,7 @@ import {
   Zap,
 } from "lucide-react";
 import type { AppBootstrap } from "@/types/app";
+import { useTheme } from "@/context/ThemeContext";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import {
@@ -222,6 +223,7 @@ export default function GuestLandingPage({
 }) {
   const isKhmer = bootstrap.lang === "km";
   const d = bootstrap.data;
+  const { isDark } = useTheme();
 
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [chatInput, setChatInput] = useState("");
@@ -236,6 +238,8 @@ export default function GuestLandingPage({
   ]);
 
   const [sampleCrop, setSampleCrop] = useState<"rice" | "cassava">("rice");
+  const [pipelineStep, setPipelineStep] = useState<0 | 1 | 2>(1);
+  const [sceneTilt, setSceneTilt] = useState<{ rx: number; ry: number }>({ rx: 0, ry: 0 });
   const [yearlyBilling, setYearlyBilling] = useState(true);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
 
@@ -284,6 +288,46 @@ export default function GuestLandingPage({
     : ["Signs of Rice Blast?", "Rainy season fungal tips"];
 
   const report = SAMPLE_REPORTS[sampleCrop];
+  const pipelineStages = [
+    {
+      stepLabel: isKhmer ? "១. ជ្រើសរើសដំណាំ" : "01 Select Crop",
+      leftTitle: isKhmer ? "ពូជដំណាំសកម្ម" : "Active Crop Profile",
+      leftValue: isKhmer ? report.cropKm : report.crop,
+      rightTitle: isKhmer ? "ក្រាហ្វក្បួនច្បាប់" : "Rule Graph Scope",
+      rightValue:
+        sampleCrop === "rice"
+          ? isKhmer
+            ? "ស្លឹក · កួរ · សំណើមដី"
+            : "Foliar · Panicle · Field RH"
+          : isKhmer
+            ? "ត្រួយខ្ចី · ស្លឹក · សត្វល្អិត"
+            : "Apical Shoot · Mosaic · Vectors",
+    },
+    {
+      stepLabel: isKhmer ? "២. ផ្ទៀងផ្ទាត់រោគសញ្ញា" : "02 Match Signals",
+      leftTitle: isKhmer ? "ក្រាហ្វរោគសញ្ញា" : "Symptom Signals",
+      leftValue:
+        sampleCrop === "rice"
+          ? isKhmer
+            ? "ស្លឹកលឿង · ស្នាមអុជពេជ្រ · សំណើម 84%"
+            : "Diamond Lesions · Chlorosis · 84% RH"
+          : isKhmer
+            ? "ពណ៌លឿងបៃតង · ស្លឹករួញ · សត្វល្អិត"
+            : "Chlorotic Mosaic · Blade Twist · Vectors",
+      rightTitle: isKhmer ? "កម្រិតភាពជឿជាក់" : "Verified Match",
+      rightValue: isKhmer
+        ? `${report.confidence} ផ្ទៀងផ្ទាត់ដោយក្បួន + AI`
+        : `${report.confidence} Agronomic Confidence`,
+    },
+    {
+      stepLabel: isKhmer ? "៣. ផែនការព្យាបាល" : "03 Action Plan",
+      leftTitle: isKhmer ? "ការវិនិច្ឆ័យគោលដៅ" : "Primary Finding",
+      leftValue: isKhmer ? report.diseaseKm : report.disease,
+      rightTitle: isKhmer ? "ជំហានអនុវត្តភ្លាម" : "Field Protocol",
+      rightValue: isKhmer ? report.treatmentKm[0] : report.treatment[0],
+    },
+  ];
+  const activePipelineStage = pipelineStages[pipelineStep] || pipelineStages[1];
   const supervisor = d.supervisor || {};
   const supervisorName =
     (isKhmer ? supervisor.name_kh : supervisor.name) || supervisor.name || "Sek Socheat";
@@ -391,11 +435,14 @@ export default function GuestLandingPage({
 
   return (
     <div className="nx-landing-wrap relative min-h-dvh bg-white text-neutral-900 antialiased dark:bg-neutral-950 dark:text-neutral-50">
-      {/* Subtle monochrome top ambience (zero harsh saturation) */}
+      {/* Harmonized ambient studio backdrop & subtle spatial coordinate field */}
       <div
         aria-hidden="true"
-        className="nx-aurora-1 pointer-events-none absolute inset-x-0 top-0 h-[420px] bg-[radial-gradient(ellipse_at_top,_rgba(23,23,23,0.045),_transparent_70%)] dark:bg-[radial-gradient(ellipse_at_top,_rgba(255,255,255,0.05),_transparent_70%)]"
-      />
+        className="nx-aurora-1 pointer-events-none absolute inset-x-0 top-0 h-[560px] overflow-hidden"
+      >
+        <div className="nx-spatial-grid absolute inset-0 [mask-image:radial-gradient(ellipse_75%_65%_at_65%_28%,#000_20%,transparent_80%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(14,165,233,0.065),_rgba(23,23,23,0.025)_42%,_transparent_72%)] dark:bg-[radial-gradient(ellipse_at_top,_rgba(56,189,248,0.085),_rgba(255,255,255,0.025)_42%,_transparent_72%)]" />
+      </div>
 
       {/* Sticky Monochrome Header matching ChatDeck */}
       <header className="sticky top-0 z-30 border-b border-neutral-200/80 bg-white/85 backdrop-blur-md dark:border-neutral-800/80 dark:bg-neutral-950/85">
@@ -548,11 +595,12 @@ export default function GuestLandingPage({
               </div>
             </div>
 
-            <div className="lg:col-span-5">
+            <div className="flex items-center justify-center lg:col-span-5">
               <InteractiveModelShowcase
                 modelUrl={d.showcaseModelUrl || "/static/models/3D.glb"}
                 isKhmer={isKhmer}
-                className="h-[280px] sm:h-[360px] lg:h-[430px]"
+                isDark={isDark}
+                className="h-[340px] sm:h-[410px] lg:h-[470px]"
               />
             </div>
           </div>
@@ -806,57 +854,93 @@ export default function GuestLandingPage({
 
                 <div
                   id="nx3dCanvas"
-                  className="rounded-xl border border-neutral-800 bg-neutral-950 p-5 text-neutral-100 dark:bg-black"
+                  onPointerMove={(e) => {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    if (rect.width <= 0 || rect.height <= 0) return;
+                    const nx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+                    const ny = ((e.clientY - rect.top) / rect.height) * 2 - 1;
+                    setSceneTilt({
+                      rx: Number((-ny * 4.5).toFixed(2)),
+                      ry: Number((nx * 5.5).toFixed(2)),
+                    });
+                  }}
+                  onPointerLeave={() => setSceneTilt({ rx: 0, ry: 0 })}
+                  className="relative overflow-hidden rounded-xl border border-neutral-200/90 bg-gradient-to-b from-neutral-50 via-white to-neutral-100/80 p-5 text-neutral-900 dark:border-neutral-800 dark:from-neutral-950 dark:via-neutral-950 dark:to-black dark:text-neutral-100"
                 >
-                  <div id="nx3dViewport" className="space-y-4">
+                  <div
+                    aria-hidden="true"
+                    className="nx-spatial-grid pointer-events-none absolute inset-0 opacity-70 [mask-image:radial-gradient(ellipse_at_center,#000_25%,transparent_80%)]"
+                  />
+                  <div
+                    id="nx3dViewport"
+                    style={{ perspective: "960px" }}
+                    className="relative z-10 space-y-4"
+                  >
                     <div
                       id="nx3dScene"
-                      className="relative overflow-hidden rounded-lg border border-neutral-800 bg-neutral-900/70 p-4"
+                      style={{
+                        transform: `rotateX(${sceneTilt.rx}deg) rotateY(${sceneTilt.ry}deg)`,
+                        transformStyle: "preserve-3d",
+                      }}
+                      className="relative overflow-hidden rounded-xl border border-neutral-200/90 bg-white/85 p-4 shadow-sm backdrop-blur-sm transition-transform duration-200 ease-out dark:border-neutral-800/90 dark:bg-neutral-900/75"
                     >
                       <div
-                        id="nx3dLaser"
-                        className="mb-3 h-px w-full bg-gradient-to-r from-transparent via-white/50 to-transparent"
+                        aria-hidden="true"
+                        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,_rgba(14,165,233,0.08),_transparent_65%)] dark:bg-[radial-gradient(circle_at_50%_0%,_rgba(56,189,248,0.12),_transparent_65%)]"
                       />
-                      <div className="grid gap-3 sm:grid-cols-2">
+                      <div
+                        id="nx3dLaser"
+                        className="nx-scan-laser pointer-events-none absolute inset-x-0 z-10 h-px bg-gradient-to-r from-transparent via-sky-500/70 to-transparent shadow-[0_0_12px_rgba(14,165,233,0.45)] dark:via-sky-400/75"
+                      />
+                      <div
+                        style={{ transform: "translateZ(14px)" }}
+                        className="relative z-10 grid gap-3 sm:grid-cols-2"
+                      >
                         <div
                           id="nx3dCardLeft"
-                          className="rounded-lg border border-neutral-800 bg-neutral-950/90 p-3.5 text-xs"
+                          className="rounded-lg border border-neutral-200/90 bg-neutral-50/90 p-3.5 text-xs shadow-sm dark:border-neutral-800 dark:bg-neutral-950/90"
                         >
-                          <p className="text-[10px] font-medium uppercase tracking-wider text-neutral-400">
-                            {isKhmer ? "ក្រាហ្វរោគសញ្ញា" : "Symptom Signals"}
+                          <p className="text-[10px] font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                            {activePipelineStage.leftTitle}
                           </p>
-                          <p className="mt-1.5 font-semibold text-white">
-                            {isKhmer
-                              ? "ស្លឹកលឿង · ស្នាមអុជ · សំណើម 84%"
-                              : "Chlorosis · Leaf Lesions · 84% RH"}
+                          <p className="mt-1.5 font-semibold text-neutral-900 dark:text-white">
+                            {activePipelineStage.leftValue}
                           </p>
                         </div>
                         <div
                           id="nx3dCardRight"
-                          className="rounded-lg border border-neutral-800 bg-neutral-950/90 p-3.5 text-xs"
+                          className="rounded-lg border border-neutral-200/90 bg-neutral-50/90 p-3.5 text-xs shadow-sm dark:border-neutral-800 dark:bg-neutral-950/90"
                         >
-                          <p className="text-[10px] font-medium uppercase tracking-wider text-neutral-400">
-                            {isKhmer ? "កម្រិតភាពជឿជាក់" : "Verified Match"}
+                          <p className="text-[10px] font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                            {activePipelineStage.rightTitle}
                           </p>
-                          <p className="mt-1.5 font-semibold text-white">
-                            {isKhmer
-                              ? "94.2% ផ្ទៀងផ្ទាត់ដោយក្បួន + AI"
-                              : "94.2% Agronomic Confidence"}
+                          <p className="mt-1.5 font-semibold text-neutral-900 dark:text-white">
+                            {activePipelineStage.rightValue}
                           </p>
                         </div>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 gap-2 text-center text-[11px] font-medium text-neutral-300 min-[420px]:grid-cols-3">
-                      <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 px-2 py-2.5">
-                        {isKhmer ? "១. ជ្រើសរើសដំណាំ" : "01 Select Crop"}
-                      </div>
-                      <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 px-2 py-2.5">
-                        {isKhmer ? "២. ផ្ទៀងផ្ទាត់រោគសញ្ញា" : "02 Match Signals"}
-                      </div>
-                      <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 px-2 py-2.5">
-                        {isKhmer ? "៣. ផែនការព្យាបាល" : "03 Action Plan"}
-                      </div>
+                    <div className="grid grid-cols-1 gap-2 text-center text-[11px] font-medium min-[420px]:grid-cols-3">
+                      {pipelineStages.map((stage, idx) => {
+                        const isActiveStage = pipelineStep === idx;
+                        return (
+                          <button
+                            key={stage.stepLabel}
+                            type="button"
+                            aria-pressed={isActiveStage}
+                            onClick={() => setPipelineStep(idx as 0 | 1 | 2)}
+                            className={cn(
+                              "rounded-lg border px-2 py-2.5 transition-all duration-150",
+                              isActiveStage
+                                ? "border-neutral-900 bg-neutral-900 text-white shadow-sm dark:border-white dark:bg-white dark:text-neutral-950"
+                                : "border-neutral-200/90 bg-white/80 text-neutral-600 hover:border-neutral-300 hover:text-neutral-900 dark:border-neutral-800 dark:bg-neutral-900/50 dark:text-neutral-400 dark:hover:border-neutral-700 dark:hover:text-neutral-200",
+                            )}
+                          >
+                            {stage.stepLabel}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
