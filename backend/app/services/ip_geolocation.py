@@ -5,9 +5,9 @@ from __future__ import annotations
 import ipaddress
 import json
 import urllib.request
+from collections.abc import Iterable, Mapping
 from concurrent.futures import ThreadPoolExecutor
 from threading import Lock
-from typing import Iterable, Mapping
 
 from flask import current_app, has_app_context
 
@@ -116,7 +116,7 @@ def _lookup_ip_geolocation(ip_address: str) -> str | None:
             )
             if loc:
                 return loc
-    except Exception:
+    except Exception:  # noqa: BLE001, S110
         pass
 
     try:
@@ -132,7 +132,7 @@ def _lookup_ip_geolocation(ip_address: str) -> str | None:
             )
             if loc:
                 return loc
-    except Exception:
+    except Exception:  # noqa: BLE001, S110
         pass
 
     return None
@@ -167,7 +167,7 @@ def resolve_ip_location(ip_address: str | None, *, allow_network: bool = True) -
                         _IP_GEO_CACHE.clear()
                     _IP_GEO_CACHE[clean] = val
                 return val
-        except Exception:
+        except Exception:  # noqa: BLE001, S110
             pass
 
     if not allow_network:
@@ -189,7 +189,7 @@ def resolve_ip_location(ip_address: str | None, *, allow_network: bool = True) -
                 resolved if resolved else _NEGATIVE_SENTINEL,
                 ex=_POSITIVE_TTL_SECONDS if resolved else _NEGATIVE_TTL_SECONDS,
             )
-        except Exception:
+        except Exception:  # noqa: BLE001, S110
             pass
 
     return resolved
@@ -218,9 +218,11 @@ def resolve_ip_locations_batch(
         else:
             with _IP_GEO_LOCK:
                 already_negative = ip in _IP_GEO_CACHE and _IP_GEO_CACHE[ip] is None
-            if already_negative or not allow_network:
-                results[ip] = None
-            elif has_app_context() and current_app.config.get("TESTING"):
+            if (
+                already_negative
+                or not allow_network
+                or (has_app_context() and current_app.config.get("TESTING"))
+            ):
                 results[ip] = None
             else:
                 uncached.append(ip)
@@ -249,7 +251,7 @@ def resolve_ip_locations_batch(
                                 resolved if resolved else _NEGATIVE_SENTINEL,
                                 ex=_POSITIVE_TTL_SECONDS if resolved else _NEGATIVE_TTL_SECONDS,
                             )
-                        except Exception:
+                        except Exception:  # noqa: BLE001, S110
                             pass
 
     return results

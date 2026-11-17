@@ -355,7 +355,7 @@ def _is_valid_reply(reply: str, user_message: str = "", language: str | None = N
     return True
 
 
-CAMBODIAN_AGRI_KB = [
+CAMBODIAN_AGRI_KB: list[dict[str, Any]] = [
     {
         "keywords": ["ជំងឺទុរេន", "ទុរេនមានជំងឺអ្វី", "ជំងឺលើទុរេន", "ជំងឺដំណាំទុរេន", "ទុរេនមានជំងឺ", "durian disease", "durian diseases", "diseases of durian", "diseases affect durian", "diseases affecting durian", "disease in durian", "diseases in durian"],
         "title_km": "បញ្ជីជំងឺសំខាន់ៗលើដំណាំទុរេន (Key Durian Diseases)",
@@ -664,9 +664,9 @@ def _synthesize_local_expert_reply(user_message: str, context: str = "", languag
     """Offline, deterministic agronomic synthesizer prioritizing crop matching and local database records."""
     is_khmer = _is_khmer(language, user_message)
 
-    matched_crop = None
-    matched_disease = None
-    matched_kb_item = None
+    matched_crop: Any = None
+    matched_disease: Any = None
+    matched_kb_item: dict[str, Any] | None = None
     is_fertilizer_query = False
     is_listing_all_crop_diseases = False
 
@@ -778,7 +778,7 @@ def _synthesize_local_expert_reply(user_message: str, context: str = "", languag
 
     # 4. If still not matched, search Cambodian agronomic dictionary (Durian, Pepper, Lime, etc.)
     if not matched_disease and not matched_crop:
-        cambodian_kb_combos = [
+        cambodian_kb_combos: list[dict[str, Any]] = [
             {"item_idx": 2, "require_crop": ["ទុរេន", "ធូរេន", "durian"], "require_symptom": ["រលួយ", "ជ័រ", "ស្អុយ", "rot", "canker", "phytophthora", "ooz"]},
             {"item_idx": 3, "require_crop": ["ស្រូវ", "rice", "paddy"], "require_symptom": ["ប្លាស់", "blast", "magnaporthe", "កួរ"]},
             {"item_idx": 4, "require_crop": ["ដំឡូងមី", "cassava"], "require_symptom": ["ម៉ូសេក", "mosaic", "រួញ", "curl", "មមាចស", "whitefl", "cmd"]},
@@ -794,15 +794,15 @@ def _synthesize_local_expert_reply(user_message: str, context: str = "", languag
             {"item_idx": 14, "direct_terms": ["ipm", "គ្រប់គ្រងសត្វល្អិត", "កម្រិតសេដ្ឋកិច្ច", "integrated pest management", "economic threshold"]},
         ]
         for combo in cambodian_kb_combos:
-            idx = combo["item_idx"]
+            idx = int(combo["item_idx"])
             if idx < len(CAMBODIAN_AGRI_KB):
                 item = CAMBODIAN_AGRI_KB[idx]
-                direct = combo.get("direct_terms")
+                direct: list[str] | None = combo.get("direct_terms")
                 if direct and any(dt in q_norm for dt in direct):
                     matched_kb_item = item
                     break
-                req_c = combo.get("require_crop")
-                req_s = combo.get("require_symptom")
+                req_c: list[str] | None = combo.get("require_crop")
+                req_s: list[str] | None = combo.get("require_symptom")
                 if req_c and req_s:
                     has_crop = any(c in q_norm for c in req_c)
                     has_sym = any(s in q_norm for s in req_s)
@@ -812,7 +812,8 @@ def _synthesize_local_expert_reply(user_message: str, context: str = "", languag
 
         if not matched_kb_item:
             for item in CAMBODIAN_AGRI_KB:
-                if any(_normalize_query(k) in q_norm for k in item["keywords"]):
+                keywords: list[str] = item.get("keywords", [])
+                if any(_normalize_query(k) in q_norm for k in keywords):
                     matched_kb_item = item
                     break
 

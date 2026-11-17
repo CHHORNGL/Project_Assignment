@@ -4,6 +4,7 @@
 import os
 import re
 from collections import Counter
+from typing import Any
 
 import gradio as gr
 import spaces  # type: ignore[import-not-found]
@@ -101,7 +102,7 @@ CASUAL_THANKS_EN = {"thank you", "thanks", "appreciate", "helpful", "great job",
 CASUAL_EMPATHY_KM = {"ហត់", "នឿយ", "បារម្ភ", "តានតឹង", "លាហើយ", "ជម្រាបលា", "ចូលគេង", "និយាយលេង"}
 CASUAL_EMPATHY_EN = {"tired", "exhausted", "worried", "stress", "stressed", "bye", "goodbye", "see you", "sleep", "chat"}
 
-AGRI_KNOWLEDGE_BASE = [
+AGRI_KNOWLEDGE_BASE: list[dict[str, Any]] = [
     {
         "keywords": ["durian root rot", "durian stem canker", "phytophthora palmivora", "រលួយឬសទុរេន", "រលួយដើមទុរេន", "ទុរេនរលួយឬស", "ទុរេនហៀរជ័រ"],
         "title_km": "ជំងឺរលួយឬស និងដើមលើទុរេន (Phytophthora palmivora)",
@@ -378,9 +379,9 @@ def _index_catalog_diseases(catalog: list[dict]) -> list[dict]:
     return indexed
 
 
-INDEXED_CATALOG_DISEASES = _index_catalog_diseases(CROP_DISEASES_CATALOG)
+INDEXED_CATALOG_DISEASES: list[dict[str, Any]] = _index_catalog_diseases(CROP_DISEASES_CATALOG)
 
-KB_COMBINATIONS = [
+KB_COMBINATIONS: list[dict[str, Any]] = [
     {
         "item_idx": 0,  # Durian root rot & stem canker
         "require_crop": ["ទុរេន", "ធូរេន", "durian"],
