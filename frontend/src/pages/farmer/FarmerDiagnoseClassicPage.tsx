@@ -108,12 +108,12 @@ export default function FarmerDiagnoseClassicPage({ bootstrap }: { bootstrap: Ap
         </a>
       }
     >
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid min-w-0 gap-5 sm:gap-6 lg:grid-cols-3">
         <form
           method="post"
           action={d.postUrl}
           encType="multipart/form-data"
-          className="ai-surface space-y-6 p-4 sm:p-6 lg:col-span-2"
+          className="ai-surface min-w-0 space-y-6 p-4 sm:p-6 lg:col-span-2"
         >
           <input type="hidden" name="csrf_token" value={bootstrap.csrfToken} />
           <input type="hidden" name="crop_id" value={cropId} />
@@ -177,13 +177,13 @@ export default function FarmerDiagnoseClassicPage({ bootstrap }: { bootstrap: Ap
                       type="button"
                       onClick={() => toggleSymptom(sym.key)}
                       className={cn(
-                        "flex items-center justify-between rounded-xl border px-3 py-2.5 text-left text-xs transition",
+                        "flex min-w-0 items-center justify-between gap-2 rounded-xl border px-3 py-2.5 text-left text-xs transition",
                         checked
                           ? "border-indigo-500 bg-indigo-500/10 font-semibold text-indigo-700 dark:text-indigo-200"
                           : "border-slate-200/80 hover:border-slate-300 dark:border-slate-800",
                       )}
                     >
-                      <span>{sym.label}</span>
+                      <span className="min-w-0 break-words">{sym.label}</span>
                       {checked && <Check className="h-3.5 w-3.5 shrink-0 text-indigo-500" />}
                     </button>
                   );
@@ -197,7 +197,7 @@ export default function FarmerDiagnoseClassicPage({ bootstrap }: { bootstrap: Ap
               3. {isKhmer ? "ភ្ជាប់រូបភាពស្លឹក (ជាជម្រើស)" : "Field Leaf Photos (Optional)"}
             </label>
             <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-dashed border-slate-300 p-4 text-xs hover:border-indigo-500 dark:border-slate-700">
-              <ImagePlus className="h-5 w-5 text-indigo-500" />
+              <ImagePlus className="h-5 w-5 shrink-0 text-indigo-500" />
               <span className="text-slate-600 dark:text-slate-300">Upload JPG/PNG leaf photos</span>
               <input type="file" name="diagnosis_image" accept=".jpg,.jpeg,.png,.webp,.gif" multiple className="hidden" />
             </label>
@@ -209,13 +209,13 @@ export default function FarmerDiagnoseClassicPage({ bootstrap }: { bootstrap: Ap
           </button>
         </form>
 
-        <div className="space-y-5">
-          <div className="ai-surface p-5">
+        <div className="min-w-0 space-y-5">
+          <div className="ai-surface min-w-0 p-4 sm:p-5">
             <h3 className="font-display text-sm font-bold">Live Signal Match</h3>
             {livePreview?.top_disease ? (
               <div className="mt-3 rounded-xl bg-indigo-500/10 p-4">
                 <p className="text-xs text-indigo-600 dark:text-indigo-300">Top Candidate</p>
-                <p className="mt-1 font-display text-base font-bold">{livePreview.top_disease}</p>
+                <p className="mt-1 break-words font-display text-base font-bold">{livePreview.top_disease}</p>
                 {livePreview.confidence !== undefined && (
                   <p className="mt-1 font-mono text-xs text-slate-600 dark:text-slate-300">
                     Confidence: {Number(livePreview.confidence).toFixed(1)}%
@@ -229,20 +229,20 @@ export default function FarmerDiagnoseClassicPage({ bootstrap }: { bootstrap: Ap
             )}
           </div>
 
-          <div className="ai-surface p-5">
+          <div className="ai-surface min-w-0 p-4 sm:p-5">
             <h3 className="mb-3 font-display text-sm font-bold">Recent Diagnoses</h3>
             <ul className="space-y-2 text-xs">
               {d.recentDiagnoses.map((item) => (
                 <li key={item.id}>
                   <a
                     href={item.resultUrl}
-                    className="flex items-center justify-between rounded-xl border border-slate-200/80 p-2.5 hover:border-indigo-500/40 dark:border-slate-800"
+                    className="flex min-w-0 items-center justify-between gap-2 rounded-xl border border-slate-200/80 p-2.5 hover:border-indigo-500/40 dark:border-slate-800"
                   >
-                    <div>
-                      <p className="font-semibold">{item.diseaseName}</p>
-                      <p className="text-[11px] text-slate-400">{item.cropName}</p>
+                    <div className="min-w-0">
+                      <p className="break-words font-semibold">{item.diseaseName}</p>
+                      <p className="truncate text-[11px] text-slate-400">{item.cropName}</p>
                     </div>
-                    <ArrowRight className="h-3.5 w-3.5 text-slate-400" />
+                    <ArrowRight className="h-3.5 w-3.5 shrink-0 text-slate-400" />
                   </a>
                 </li>
               ))}

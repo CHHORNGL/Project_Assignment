@@ -118,7 +118,7 @@ export function WorkspaceShell({
     <div className="flex min-h-dvh flex-col bg-slate-50 text-slate-900 dark:bg-obsidian-950 dark:text-slate-100">
       {/* Compact Full-Width Top Bar */}
       <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/85 backdrop-blur-xl dark:border-slate-800/80 dark:bg-obsidian-950/85">
-        <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between gap-2 px-3 sm:gap-3 sm:px-6">
+        <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between gap-1.5 px-3 sm:gap-3 sm:px-6">
           <div className="flex min-w-0 items-center gap-2 sm:gap-3">
             <a href={brandHref} className="flex min-w-0 shrink-0 items-center gap-2">
               <img
@@ -131,7 +131,7 @@ export function WorkspaceShell({
                 alt="Agri System"
                 className="hidden h-7 w-7 shrink-0 dark:block"
               />
-              <span className="hidden truncate font-display text-[13px] font-bold tracking-tight min-[355px]:inline sm:text-sm">
+              <span className="hidden truncate font-display text-[13px] font-bold tracking-tight min-[375px]:inline sm:text-sm">
                 AGRI SYSTEM
               </span>
             </a>
@@ -156,7 +156,7 @@ export function WorkspaceShell({
             )}
           </div>
 
-          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+          <div className="flex shrink-0 items-center gap-1 sm:gap-2">
             {headerActions && (
               <div className="hidden items-center gap-2 md:flex">{headerActions}</div>
             )}
@@ -197,7 +197,7 @@ export function WorkspaceShell({
                 )}
               </button>
               {notifOpen && (
-                <div className="ai-surface animate-slide-down absolute right-0 mt-2 w-80 max-w-[calc(100vw-2rem)] origin-top-right p-3 shadow-xl">
+                <div className="ai-surface animate-slide-down fixed inset-x-3 top-[4.25rem] z-50 origin-top p-3 shadow-xl sm:absolute sm:inset-x-auto sm:right-0 sm:top-auto sm:mt-2 sm:w-80 sm:max-w-[calc(100vw-2rem)] sm:origin-top-right">
                   <div className="mb-2 flex items-center justify-between px-1">
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
@@ -283,12 +283,12 @@ export function WorkspaceShell({
       </header>
 
       {/* Main Content Area (padded above persistent Bottom Navigation) */}
-      <main className="ai-enter mx-auto w-full max-w-7xl flex-1 px-4 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-4 sm:px-6 sm:pt-5">
+      <main className="ai-enter mx-auto w-full max-w-7xl min-w-0 flex-1 px-3.5 pb-[calc(6.5rem+env(safe-area-inset-bottom))] pt-4 sm:px-6 sm:pb-[calc(7rem+env(safe-area-inset-bottom))] sm:pt-5">
         {(pageTitle || headerActions) && (
-          <div className="mb-4 flex flex-col gap-2.5 md:hidden">
+          <div className="mb-4 flex min-w-0 flex-col gap-2.5 md:hidden">
             {pageTitle && (
-              <div className="sm:hidden">
-                <h1 className="font-display text-lg font-bold tracking-tight">{pageTitle}</h1>
+              <div className="min-w-0 sm:hidden">
+                <h1 className="break-words font-display text-lg font-bold tracking-tight">{pageTitle}</h1>
                 {pageSubtitle && (
                   <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{pageSubtitle}</p>
                 )}

@@ -105,7 +105,7 @@ export default function FarmerResultPage({ bootstrap }: { bootstrap: AppBootstra
       <div className="space-y-6">
         {/* Result Summary Banner */}
         <div className="ai-surface grid gap-5 p-4 sm:gap-6 sm:p-6 lg:grid-cols-12">
-          <div className="space-y-3 lg:col-span-8">
+          <div className="min-w-0 space-y-3 lg:col-span-8">
             <div className="flex flex-wrap items-center gap-2">
               <span className="rounded-full bg-indigo-500/10 px-3 py-1 text-xs font-bold text-indigo-600 dark:text-indigo-300">
                 {diag.cropLabel}
@@ -117,27 +117,28 @@ export default function FarmerResultPage({ bootstrap }: { bootstrap: AppBootstra
                 {diag.categoryLabel}
               </span>
             </div>
-            <h2 className="font-display text-2xl font-extrabold">{diag.diseaseLabel}</h2>
-            <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">{diag.causeText}</p>
+            <h2 className="break-words font-display text-xl font-extrabold sm:text-2xl">{diag.diseaseLabel}</h2>
+            <p className="break-words text-sm leading-relaxed text-slate-600 dark:text-slate-300">{diag.causeText}</p>
             {diag.confirmedSymptoms.length > 0 && (
               <div className="flex flex-wrap gap-1.5 pt-2">
                 {diag.confirmedSymptoms.map((sym) => (
                   <span
                     key={sym}
-                    className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1 text-xs font-medium dark:border-slate-800"
+                    className="inline-flex max-w-full items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1 text-xs font-medium dark:border-slate-800"
                   >
-                    <CheckCircle2 className="h-3 w-3 text-emerald-500" /> {sym}
+                    <CheckCircle2 className="h-3 w-3 shrink-0 text-emerald-500" />
+                    <span className="break-words">{sym}</span>
                   </span>
                 ))}
               </div>
             )}
           </div>
 
-          <div className="flex flex-col justify-center rounded-2xl bg-gradient-to-br from-indigo-600 to-blue-600 p-5 text-white lg:col-span-4">
+          <div className="flex min-w-0 flex-col justify-center rounded-2xl bg-gradient-to-br from-indigo-600 to-blue-600 p-4 text-white sm:p-5 lg:col-span-4">
             <p className="text-xs font-semibold uppercase tracking-wider text-indigo-100">
               {bootstrap.ui.sections?.confidence || "Confidence"}
             </p>
-            <p className="mt-1 font-display text-4xl font-extrabold">
+            <p className="mt-1 font-display text-3xl font-extrabold sm:text-4xl">
               {diag.confidencePercent !== null ? `${diag.confidencePercent}%` : "--"}
             </p>
             <p className="mt-1 text-xs font-medium text-indigo-100">{diag.confidenceLevelLabel}</p>
@@ -152,10 +153,10 @@ export default function FarmerResultPage({ bootstrap }: { bootstrap: AppBootstra
         </div>
 
         {/* Treatment & Prevention */}
-        <div className="grid gap-6 md:grid-cols-2">
-          <div className="ai-surface p-6">
+        <div className="grid gap-5 sm:gap-6 md:grid-cols-2">
+          <div className="ai-surface min-w-0 p-4 sm:p-6">
             <h3 className="mb-3 flex items-center gap-2 font-display text-base font-bold">
-              <ListChecks className="h-4 w-4 text-emerald-500" />
+              <ListChecks className="h-4 w-4 shrink-0 text-emerald-500" />
               {bootstrap.ui.sections?.treatment || "Treatment Steps"}
             </h3>
             {diag.treatmentSteps.length === 0 ? (
@@ -163,20 +164,20 @@ export default function FarmerResultPage({ bootstrap }: { bootstrap: AppBootstra
             ) : (
               <ol className="space-y-2.5 text-sm text-slate-700 dark:text-slate-300">
                 {diag.treatmentSteps.map((step, i) => (
-                  <li key={i} className="flex gap-3">
+                  <li key={i} className="flex min-w-0 gap-3">
                     <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-500/10 text-xs font-bold text-indigo-600 dark:text-indigo-300">
                       {i + 1}
                     </span>
-                    <span>{step}</span>
+                    <span className="min-w-0 break-words">{step}</span>
                   </li>
                 ))}
               </ol>
             )}
           </div>
 
-          <div className="ai-surface p-6">
+          <div className="ai-surface min-w-0 p-4 sm:p-6">
             <h3 className="mb-3 flex items-center gap-2 font-display text-base font-bold">
-              <ShieldAlert className="h-4 w-4 text-amber-500" />
+              <ShieldAlert className="h-4 w-4 shrink-0 text-amber-500" />
               {bootstrap.ui.sections?.prevention || "Prevention Tips"}
             </h3>
             {diag.preventionTips.length === 0 ? (
@@ -184,9 +185,9 @@ export default function FarmerResultPage({ bootstrap }: { bootstrap: AppBootstra
             ) : (
               <ul className="space-y-2 text-sm text-slate-700 dark:text-slate-300">
                 {diag.preventionTips.map((tip, i) => (
-                  <li key={i} className="flex items-start gap-2">
+                  <li key={i} className="flex min-w-0 items-start gap-2">
                     <Sparkles className="mt-1 h-3.5 w-3.5 shrink-0 text-amber-500" />
-                    <span>{tip}</span>
+                    <span className="min-w-0 break-words">{tip}</span>
                   </li>
                 ))}
               </ul>
@@ -196,20 +197,20 @@ export default function FarmerResultPage({ bootstrap }: { bootstrap: AppBootstra
 
         {/* Ranked Candidates */}
         {d.rankedCandidates.length > 0 && (
-          <div className="ai-surface p-6">
+          <div className="ai-surface min-w-0 p-4 sm:p-6">
             <h3 className="mb-4 font-display text-base font-bold">
               {bootstrap.ui.sections?.ranking || "Differential Match Ranking"}
             </h3>
             <div className="space-y-3">
               {d.rankedCandidates.map((cand, idx) => (
-                <div key={idx} className="rounded-xl border border-slate-200/80 p-4 dark:border-slate-800">
+                <div key={idx} className="min-w-0 rounded-xl border border-slate-200/80 p-3.5 dark:border-slate-800 sm:p-4">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="font-display text-sm font-bold">#{idx + 1} {cand.diseaseName}</span>
-                    <span className="rounded-full bg-indigo-500/10 px-2.5 py-0.5 font-mono text-xs font-bold text-indigo-600 dark:text-indigo-300">
+                    <span className="min-w-0 break-words font-display text-sm font-bold">#{idx + 1} {cand.diseaseName}</span>
+                    <span className="shrink-0 rounded-full bg-indigo-500/10 px-2.5 py-0.5 font-mono text-xs font-bold text-indigo-600 dark:text-indigo-300">
                       {cand.matchPercent}% · {cand.tierLabel}
                     </span>
                   </div>
-                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{cand.treatment}</p>
+                  <p className="mt-1 break-words text-xs text-slate-500 dark:text-slate-400">{cand.treatment}</p>
                 </div>
               ))}
             </div>
@@ -217,9 +218,9 @@ export default function FarmerResultPage({ bootstrap }: { bootstrap: AppBootstra
         )}
 
         {/* References + Feedback */}
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid gap-5 sm:gap-6 md:grid-cols-2">
           {diag.references.length > 0 && (
-            <div className="ai-surface p-6">
+            <div className="ai-surface min-w-0 p-4 sm:p-6">
               <h3 className="mb-3 font-display text-sm font-bold">{bootstrap.ui.sections?.references || "References"}</h3>
               <ul className="space-y-1.5 text-xs">
                 {diag.references.map((ref, i) => (
@@ -239,7 +240,7 @@ export default function FarmerResultPage({ bootstrap }: { bootstrap: AppBootstra
             </div>
           )}
 
-          <form onSubmit={handleFeedback} className="ai-surface space-y-3 p-4 sm:p-6">
+          <form onSubmit={handleFeedback} className="ai-surface min-w-0 space-y-3 p-4 sm:p-6">
             <h3 className="font-display text-sm font-bold">
               {bootstrap.ui.labels?.feedbackQuestion || "Was this diagnosis helpful?"}
             </h3>

@@ -126,7 +126,7 @@ export function AppsGridMenu({
       {open && (
         <div
           role="menu"
-          className="animate-slide-down absolute right-0 z-50 mt-2.5 w-[min(calc(100vw-1.5rem),21.5rem)] origin-top-right overflow-hidden rounded-3xl border border-slate-200/90 bg-white/95 p-3 shadow-2xl backdrop-blur-xl dark:border-slate-800 dark:bg-obsidian-900/95"
+          className="animate-slide-down fixed inset-x-3 top-[4.25rem] z-50 origin-top overflow-hidden rounded-3xl border border-slate-200/90 bg-white/95 p-3 shadow-2xl backdrop-blur-xl dark:border-slate-800 dark:bg-obsidian-900/95 sm:absolute sm:inset-x-auto sm:right-0 sm:top-auto sm:mt-2.5 sm:w-[min(calc(100vw-1.5rem),21.5rem)] sm:origin-top-right"
         >
           {/* User Identity Strip */}
           {bootstrap.user?.id && (
@@ -176,7 +176,7 @@ export function AppsGridMenu({
 
           {/* 3-Column Visual App Grid */}
           {flattenedApps.length > 0 && (
-            <div className="grid max-h-[20rem] grid-cols-3 gap-2 overflow-y-auto py-0.5">
+            <div className="grid max-h-[calc(100dvh-13.5rem)] grid-cols-3 gap-2 overflow-y-auto py-0.5 sm:max-h-[20rem]">
               {flattenedApps.map((item) => {
                 const { Icon, tone, isNotification } = resolveAppTileMeta(item.href);
                 const showUnread = Boolean(isNotification && unreadCount > 0);

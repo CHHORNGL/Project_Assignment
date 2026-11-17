@@ -134,7 +134,7 @@ export function WeatherIntelligenceCard({ endpoint, lang, fallbackLat, fallbackL
 
       <div className="grid gap-5 p-4 sm:gap-6 sm:p-6 lg:grid-cols-3">
         {/* Current Conditions + Analytics */}
-        <div className="space-y-4">
+        <div className="min-w-0 space-y-4">
           <div className="rounded-2xl bg-gradient-to-br from-indigo-600 to-blue-600 p-4 text-white shadow-lg shadow-indigo-500/20 sm:p-5">
             <div className="flex items-start justify-between">
               <div>
@@ -195,7 +195,7 @@ export function WeatherIntelligenceCard({ endpoint, lang, fallbackLat, fallbackL
         </div>
 
         {/* Smart Alerts + Recommendations */}
-        <div className="space-y-4">
+        <div className="min-w-0 space-y-4">
           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
             {labels.alertsTitle || "Smart Alerts"}
           </h3>
@@ -248,7 +248,7 @@ export function WeatherIntelligenceCard({ endpoint, lang, fallbackLat, fallbackL
         </div>
 
         {/* 7-Day Forecast */}
-        <div className="space-y-3">
+        <div className="min-w-0 space-y-3">
           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
             {labels.forecastTitle || "7-Day Outlook"}
           </h3>
@@ -259,8 +259,8 @@ export function WeatherIntelligenceCard({ endpoint, lang, fallbackLat, fallbackL
           ) : (
             <div className="divide-y divide-slate-200/70 rounded-xl border border-slate-200/80 dark:divide-slate-800/70 dark:border-slate-800">
               {forecast.slice(0, 7).map((day, idx) => (
-                <div key={idx} className="flex items-center justify-between px-3.5 py-2 text-xs">
-                  <span className="font-medium text-slate-700 dark:text-slate-300">
+                <div key={idx} className="flex items-center justify-between gap-2 px-3 py-2 text-xs sm:px-3.5">
+                  <span className="min-w-0 truncate font-medium text-slate-700 dark:text-slate-300">
                     {day.date
                       ? new Date(`${day.date}T00:00:00`).toLocaleDateString(isKhmer ? "km-KH" : "en-US", {
                           weekday: "short",
@@ -269,10 +269,10 @@ export function WeatherIntelligenceCard({ endpoint, lang, fallbackLat, fallbackL
                         })
                       : `Day ${idx + 1}`}
                   </span>
-                  <span className="text-slate-400">
+                  <span className="shrink-0 tabular-nums text-slate-400">
                     {day.rain_mm !== undefined ? `${day.rain_mm}mm` : "--"}
                   </span>
-                  <span className="font-mono font-bold">
+                  <span className="shrink-0 font-mono font-bold tabular-nums">
                     {day.temp_max_c ?? "--"}° / {day.temp_min_c ?? "--"}°
                   </span>
                 </div>
@@ -282,7 +282,7 @@ export function WeatherIntelligenceCard({ endpoint, lang, fallbackLat, fallbackL
         </div>
       </div>
       {attribution && (
-        <div className="border-t border-slate-200/70 px-6 py-3 text-[11px] text-slate-400 dark:border-slate-800/70">
+        <div className="border-t border-slate-200/70 px-4 py-3 text-[11px] text-slate-400 dark:border-slate-800/70 sm:px-6">
           {attribution.prefix}{" "}
           <a href={attribution.providerUrl} target="_blank" rel="noopener noreferrer" className="underline hover:text-indigo-500">
             {attribution.providerName}

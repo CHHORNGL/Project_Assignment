@@ -190,7 +190,7 @@ export default function FarmerDashboardPage({
 
         {/* Executive Welcome Hero + Action Launchpad */}
         <section className="grid gap-5 lg:grid-cols-12">
-          <div className="relative flex flex-col justify-between overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-600 via-blue-600 to-indigo-700 p-6 text-white shadow-xl shadow-indigo-500/20 lg:col-span-5">
+          <div className="relative flex min-w-0 flex-col justify-between overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-600 via-blue-600 to-indigo-700 p-5 text-white shadow-xl shadow-indigo-500/20 sm:p-6 lg:col-span-5">
             <div
               aria-hidden="true"
               className="pointer-events-none absolute -right-12 -top-12 h-44 w-44 rounded-full bg-white/10 blur-2xl"
@@ -213,23 +213,23 @@ export default function FarmerDashboardPage({
             <div className="relative mt-6 flex flex-wrap items-center gap-2.5">
               <a
                 href={primaryAction.href}
-                className="inline-flex h-10 items-center gap-2 rounded-xl bg-white px-4 text-xs font-bold text-indigo-700 shadow-sm transition hover:bg-indigo-50"
+                className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-white px-4 text-xs font-bold text-indigo-700 shadow-sm transition hover:bg-indigo-50 sm:flex-initial"
               >
-                <Stethoscope className="h-4 w-4" />
-                <span>{primaryAction.title}</span>
-                <ArrowRight className="h-3.5 w-3.5" />
+                <Stethoscope className="h-4 w-4 shrink-0" />
+                <span className="truncate">{primaryAction.title}</span>
+                <ArrowRight className="h-3.5 w-3.5 shrink-0" />
               </a>
               <a
                 href="/farmer/chat"
-                className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-white/25 bg-white/10 px-4 text-xs font-semibold text-white backdrop-blur-sm transition hover:bg-white/20"
+                className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border border-white/25 bg-white/10 px-4 text-xs font-semibold text-white backdrop-blur-sm transition hover:bg-white/20"
               >
-                <MessageSquare className="h-3.5 w-3.5" />
+                <MessageSquare className="h-3.5 w-3.5 shrink-0" />
                 <span>{isKhmer ? "សួរ AI" : "Ask AI"}</span>
               </a>
             </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-3 lg:col-span-7">
+          <div className="grid min-w-0 gap-3.5 sm:grid-cols-3 sm:gap-4 lg:col-span-7">
             {entryCards.map((card, i) => {
               const Icon = i === 0 ? Stethoscope : i === 1 ? ClipboardList : MessageSquare;
               const badgeTone =
@@ -242,10 +242,10 @@ export default function FarmerDashboardPage({
                 <a
                   key={card.href}
                   href={card.href}
-                  className="ai-surface ai-card-hover group flex flex-col justify-between p-5"
+                  className="ai-surface ai-card-hover group flex min-w-0 flex-col justify-between p-4 sm:p-5"
                 >
                   <div>
-                    <div className={cn("mb-3.5 flex h-11 w-11 items-center justify-center rounded-2xl", badgeTone)}>
+                    <div className={cn("mb-3 flex h-10 w-10 items-center justify-center rounded-2xl sm:mb-3.5 sm:h-11 sm:w-11", badgeTone)}>
                       <Icon className="h-5 w-5" />
                     </div>
                     <h3 className="font-display text-sm font-bold text-slate-900 group-hover:text-indigo-600 dark:text-slate-100 dark:group-hover:text-indigo-300">
@@ -270,21 +270,21 @@ export default function FarmerDashboardPage({
           {stats.map((st) => {
             const Icon = st.icon;
             const inner = (
-              <div className="ai-surface ai-card-hover flex h-full flex-col justify-between p-4.5 sm:p-5">
-                <div className="flex items-start justify-between gap-3">
+              <div className="ai-surface ai-card-hover flex h-full min-w-0 flex-col justify-between p-3.5 sm:p-5">
+                <div className="flex items-start justify-between gap-2 sm:gap-3">
                   <div className="min-w-0">
-                    <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                    <p className="line-clamp-2 text-[10.5px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 sm:text-[11px]">
                       {st.label}
                     </p>
-                    <p className="mt-1.5 font-display text-2xl font-extrabold tabular-nums text-slate-900 dark:text-slate-50">
+                    <p className="mt-1.5 font-display text-xl font-extrabold tabular-nums text-slate-900 dark:text-slate-50 sm:text-2xl">
                       {st.value}
                     </p>
                     <p className="mt-1 truncate text-[11px] text-slate-500 dark:text-slate-400">
                       {st.meta}
                     </p>
                   </div>
-                  <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-xl", st.color)}>
-                    <Icon className="h-5 w-5" />
+                  <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-xl sm:h-10 sm:w-10", st.color)}>
+                    <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
                   </div>
                 </div>
                 {typeof st.progress === "number" && (
@@ -306,11 +306,11 @@ export default function FarmerDashboardPage({
             );
 
             return st.href ? (
-              <a key={st.label} href={st.href} className="block focus:outline-none">
+              <a key={st.label} href={st.href} className="block min-w-0 focus:outline-none">
                 {inner}
               </a>
             ) : (
-              <div key={st.label}>{inner}</div>
+              <div key={st.label} className="min-w-0">{inner}</div>
             );
           })}
         </section>
@@ -326,8 +326,8 @@ export default function FarmerDashboardPage({
 
         {/* Recent Diagnoses & AI Questions */}
         <section className="grid gap-6 lg:grid-cols-3">
-          <div className="ai-surface overflow-hidden lg:col-span-2">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/75 px-5 py-4 dark:border-slate-800/80">
+          <div className="ai-surface min-w-0 overflow-hidden lg:col-span-2">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/75 px-4 py-3.5 dark:border-slate-800/80 sm:px-5 sm:py-4">
               <div>
                 <h2 className="font-display text-base font-bold text-slate-900 dark:text-slate-100">
                   {sections.diagnosisHistory || "Recent Diagnoses"}
@@ -376,7 +376,7 @@ export default function FarmerDashboardPage({
                             <span className="inline-flex items-center rounded-md bg-emerald-500/10 px-2 py-0.5 text-[10.5px] font-bold text-emerald-700 dark:text-emerald-300">
                               {row.cropName}
                             </span>
-                            <p className="mt-1.5 font-display text-sm font-bold text-slate-900 dark:text-slate-100">
+                            <p className="mt-1.5 break-words font-display text-sm font-bold text-slate-900 dark:text-slate-100">
                               {row.diseaseName}
                             </p>
                             {row.createdAt && (
@@ -505,8 +505,8 @@ export default function FarmerDashboardPage({
             )}
           </div>
 
-          <div className="space-y-6">
-            <div className="ai-surface p-5">
+          <div className="min-w-0 space-y-6">
+            <div className="ai-surface min-w-0 p-4 sm:p-5">
               <div className="mb-3.5 flex items-center justify-between gap-2">
                 <h2 className="font-display text-base font-bold text-slate-900 dark:text-slate-100">
                   {sections.aiQuestions || "Recent AI Questions"}

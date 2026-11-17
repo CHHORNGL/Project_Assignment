@@ -626,9 +626,9 @@ export default function GuestLandingPage({
                 </span>
               </div>
 
-              <div id="nxInteractiveChat" className="grid divide-y divide-neutral-200 dark:divide-neutral-800 lg:grid-cols-12 lg:divide-x lg:divide-y-0">
+              <div id="nxInteractiveChat" className="grid min-w-0 divide-y divide-neutral-200 dark:divide-neutral-800 lg:grid-cols-12 lg:divide-x lg:divide-y-0">
                 {/* Left quick-guide column inside frame */}
-                <div className="flex flex-col justify-between bg-neutral-50/50 p-5 dark:bg-neutral-950/40 lg:col-span-4">
+                <div className="flex min-w-0 flex-col justify-between bg-neutral-50/50 p-4 dark:bg-neutral-950/40 sm:p-5 lg:col-span-4">
                   <div className="space-y-4">
                     <div>
                       <p className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
@@ -658,7 +658,7 @@ export default function GuestLandingPage({
                 </div>
 
                 {/* Right live conversation panel inside frame */}
-                <div className="p-5 sm:p-6 lg:col-span-8">
+                <div className="min-w-0 p-4 sm:p-6 lg:col-span-8">
                   <div
                     id="nxChatBody"
                     className="mb-4 h-60 space-y-3 overflow-y-auto pr-1 text-xs sm:text-[13px]"
@@ -667,7 +667,7 @@ export default function GuestLandingPage({
                       <div
                         key={idx}
                         className={cn(
-                          "rounded-2xl px-4 py-3 leading-relaxed",
+                          "min-w-0 rounded-2xl px-4 py-3 leading-relaxed",
                           m.role === "user"
                             ? "ml-auto max-w-[85%] bg-neutral-900 text-white dark:bg-white dark:text-neutral-950"
                             : "mr-auto max-w-[92%] border border-neutral-200 bg-neutral-50 text-neutral-800 dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-200",
@@ -677,7 +677,7 @@ export default function GuestLandingPage({
                           {m.role === "assistant" && <Bot className="h-3 w-3" />}
                           {m.role === "user" ? (isKhmer ? "កសិករ" : "You") : "AGRI AI"}
                         </span>
-                        <p className="whitespace-pre-wrap">{m.text}</p>
+                        <p className="whitespace-pre-wrap break-words">{m.text}</p>
                       </div>
                     ))}
                   </div>
@@ -834,12 +834,12 @@ export default function GuestLandingPage({
         </section>
 
         {/* Workflow Pipeline + Interactive Sample Report */}
-        <section id="nxWorkflow" className="py-12">
-          <div className="grid gap-6 lg:grid-cols-2">
+        <section id="nxWorkflow" className="py-10 sm:py-12">
+          <div className="grid min-w-0 gap-5 sm:gap-6 lg:grid-cols-2">
             {/* Pipeline Card */}
             <div
               id="nx3DShowcase"
-              className="flex flex-col justify-between rounded-2xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900/60 sm:p-7"
+              className="flex min-w-0 flex-col justify-between rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900/60 sm:p-7"
             >
               <div>
                 <div className="mb-4 flex items-center justify-between gap-2">
@@ -965,7 +965,7 @@ export default function GuestLandingPage({
             {/* Interactive Sample Report */}
             <div
               id="nxSampleReport"
-              className="flex flex-col justify-between rounded-2xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900/60 sm:p-7"
+              className="flex min-w-0 flex-col justify-between rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900/60 sm:p-7"
             >
               <div>
                 <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
@@ -1253,16 +1253,16 @@ export default function GuestLandingPage({
         {/* Pricing Section (ChatDeck bg-muted/40 rounded-xl aesthetic) */}
         <section
           id="nxPricing"
-          className="rounded-2xl border border-neutral-200 bg-neutral-50/80 px-6 py-14 dark:border-neutral-800 dark:bg-neutral-900/40 sm:px-10 sm:py-20"
+          className="rounded-2xl border border-neutral-200 bg-neutral-50/80 px-4 py-10 dark:border-neutral-800 dark:bg-neutral-900/40 sm:px-10 sm:py-20"
         >
           <div className="mx-auto max-w-2xl text-center">
             <span className="inline-flex items-center rounded-full border border-neutral-200 bg-white px-3.5 py-1 text-xs font-medium text-neutral-700 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-300">
               {isKhmer ? "គម្រោងសមាជិកភាព" : "Pricing Plans"}
             </span>
-            <h2 className="mt-4 text-3xl font-bold tracking-tight text-neutral-900 dark:text-white sm:text-4xl">
+            <h2 className="mt-4 text-2xl font-bold tracking-tight text-neutral-900 dark:text-white sm:text-4xl">
               {isKhmer ? "ជ្រើសរើសគម្រោងរបស់អ្នក" : "Choose your plan"}
             </h2>
-            <p className="mt-3 text-base text-neutral-600 dark:text-neutral-400">
+            <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-400 sm:text-base">
               {isKhmer
                 ? "ចាប់ផ្តើមដោយឥតគិតថ្លៃ ឬដំឡើងទៅ Pro តាមរយៈ Bakong KHQR ភ្លាមៗ"
                 : "Start free to diagnose crops, or upgrade to Pro for unlimited AI guidance and priority expert review."}
@@ -1274,11 +1274,11 @@ export default function GuestLandingPage({
                 type="button"
                 aria-pressed={yearlyBilling}
                 onClick={() => setYearlyBilling((v) => !v)}
-                className="inline-flex items-center gap-1 rounded-full bg-neutral-200/80 p-1 text-xs font-medium dark:bg-neutral-800"
+                className="inline-flex max-w-full items-center gap-1 rounded-full bg-neutral-200/80 p-1 text-xs font-medium dark:bg-neutral-800"
               >
                 <span
                   className={cn(
-                    "rounded-full px-4 py-1.5 transition",
+                    "rounded-full px-3.5 py-1.5 transition sm:px-4",
                     !yearlyBilling
                       ? "bg-white text-neutral-900 shadow-sm dark:bg-neutral-950 dark:text-white"
                       : "text-neutral-600 dark:text-neutral-400",
@@ -1288,7 +1288,7 @@ export default function GuestLandingPage({
                 </span>
                 <span
                   className={cn(
-                    "inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 transition",
+                    "inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 transition sm:px-4",
                     yearlyBilling
                       ? "bg-white text-neutral-900 shadow-sm dark:bg-neutral-950 dark:text-white"
                       : "text-neutral-600 dark:text-neutral-400",
@@ -1303,9 +1303,9 @@ export default function GuestLandingPage({
             </div>
           </div>
 
-          <div className="mx-auto mt-10 grid max-w-4xl gap-6 md:grid-cols-2">
+          <div className="mx-auto mt-8 grid max-w-4xl gap-5 sm:mt-10 sm:gap-6 md:grid-cols-2">
             {/* Free Tier */}
-            <div className="flex flex-col justify-between rounded-2xl border border-neutral-200 bg-white p-7 dark:border-neutral-800 dark:bg-neutral-950">
+            <div className="flex min-w-0 flex-col justify-between rounded-2xl border border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-950 sm:p-7">
               <div>
                 <h3 className="text-lg font-bold text-neutral-900 dark:text-white">
                   {isKhmer ? "គណនីឥតគិតថ្លៃ" : "Free"}
@@ -1350,7 +1350,7 @@ export default function GuestLandingPage({
             </div>
 
             {/* Pro Tier */}
-            <div className="flex flex-col justify-between rounded-2xl border-2 border-neutral-900 bg-white p-7 shadow-lg dark:border-white dark:bg-neutral-950">
+            <div className="flex min-w-0 flex-col justify-between rounded-2xl border-2 border-neutral-900 bg-white p-5 shadow-lg dark:border-white dark:bg-neutral-950 sm:p-7">
               <div>
                 <div className="flex items-center justify-between gap-2">
                   <h3 className="text-lg font-bold text-neutral-900 dark:text-white">Pro</h3>

@@ -493,18 +493,18 @@ export default function FarmerNewsPage({
 
         {/* Optional Executive Summary Header if backend provides object summary */}
         {optionalHeader && (
-          <div className="ai-surface flex items-start justify-between gap-4 p-5">
-            <div>
+          <div className="ai-surface flex flex-col items-start justify-between gap-3 p-4 sm:flex-row sm:gap-4 sm:p-5">
+            <div className="min-w-0">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-500/10 px-2.5 py-0.5 text-[11px] font-bold text-indigo-600 dark:text-indigo-300">
-                <Globe className="h-3 w-3" /> {region.toUpperCase()} BRIEFING
+                <Globe className="h-3 w-3 shrink-0" /> {region.toUpperCase()} BRIEFING
               </span>
               {optionalHeader.headline && (
-                <h2 className="mt-2 font-display text-lg font-bold text-slate-900 dark:text-white">
+                <h2 className="mt-2 break-words font-display text-lg font-bold text-slate-900 dark:text-white">
                   {optionalHeader.headline}
                 </h2>
               )}
               {optionalHeader.summary && (
-                <p className="mt-1.5 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
+                <p className="mt-1.5 break-words text-xs leading-relaxed text-slate-600 dark:text-slate-300">
                   {optionalHeader.summary}
                 </p>
               )}
@@ -582,13 +582,13 @@ export default function FarmerNewsPage({
             )}
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-200/70 pt-3 dark:border-slate-800">
-            <div className="flex flex-wrap items-center gap-1.5">
+          <div className="flex flex-col gap-2 border-t border-slate-200/70 pt-3 dark:border-slate-800 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+            <div className="flex flex-nowrap items-center gap-1.5 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0">
               <button
                 type="button"
                 onClick={() => setCategoryFilter("ALL")}
                 className={cn(
-                  "inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-xs font-bold transition",
+                  "inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-xs font-bold transition",
                   categoryFilter === "ALL"
                     ? "border-indigo-600 bg-indigo-600 text-white shadow-sm"
                     : "border-slate-200 bg-white text-slate-600 hover:border-indigo-300 hover:text-indigo-600 dark:border-slate-800 dark:bg-obsidian-950 dark:text-slate-300",
@@ -615,7 +615,7 @@ export default function FarmerNewsPage({
                     type="button"
                     onClick={() => setCategoryFilter(cat.key)}
                     className={cn(
-                      "inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-xs font-bold transition",
+                      "inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-xs font-bold transition",
                       active
                         ? "border-indigo-600 bg-indigo-600 text-white shadow-sm"
                         : "border-slate-200 bg-white text-slate-600 hover:border-indigo-300 hover:text-indigo-600 dark:border-slate-800 dark:bg-obsidian-950 dark:text-slate-300",
@@ -699,8 +699,8 @@ export default function FarmerNewsPage({
               const CatIcon = catMeta.Icon;
               const speaking = speakingKey === artKey;
               return (
-                <article className="ai-surface grid overflow-hidden lg:grid-cols-12">
-                  <div className="relative lg:col-span-5">
+                <article className="ai-surface grid min-w-0 overflow-hidden lg:grid-cols-12">
+                  <div className="relative min-w-0 lg:col-span-5">
                     <ArticleCover
                       src={featuredArticle.image}
                       alt={featuredArticle.title || "Featured dispatch"}
@@ -723,7 +723,7 @@ export default function FarmerNewsPage({
                     </div>
                   </div>
 
-                  <div className="flex flex-col justify-between p-5 sm:p-6 lg:col-span-7">
+                  <div className="flex min-w-0 flex-col justify-between p-4 sm:p-6 lg:col-span-7">
                     <div>
                       <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500 dark:text-slate-400">
                         <div className="flex flex-wrap items-center gap-2">
@@ -850,9 +850,9 @@ export default function FarmerNewsPage({
                   return (
                     <article
                       key={artKey}
-                      className="ai-surface group flex flex-col justify-between overflow-hidden transition hover:-translate-y-0.5 hover:border-indigo-400/50 hover:shadow-md dark:hover:border-indigo-500/40"
+                      className="ai-surface group flex min-w-0 flex-col justify-between overflow-hidden transition hover:-translate-y-0.5 hover:border-indigo-400/50 hover:shadow-md dark:hover:border-indigo-500/40"
                     >
-                      <div>
+                      <div className="min-w-0">
                         <div className="relative overflow-hidden">
                           <ArticleCover
                             src={art.image}
@@ -882,7 +882,7 @@ export default function FarmerNewsPage({
                           </div>
                         </div>
 
-                        <div className="p-4 sm:p-5">
+                        <div className="min-w-0 p-4 sm:p-5">
                           <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-slate-400">
                             {art.is_live && (
                               <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:text-emerald-300">
@@ -891,7 +891,7 @@ export default function FarmerNewsPage({
                               </span>
                             )}
                             {art.source && (
-                              <span className="truncate font-semibold text-slate-600 dark:text-slate-300">
+                              <span className="max-w-full truncate font-semibold text-slate-600 dark:text-slate-300">
                                 {art.source}
                               </span>
                             )}
@@ -899,7 +899,7 @@ export default function FarmerNewsPage({
                             {art.read_time && <span>· {art.read_time}</span>}
                           </div>
 
-                          <h3 className="mt-2 font-display text-base font-bold leading-snug text-slate-900 group-hover:text-indigo-600 dark:text-white dark:group-hover:text-indigo-300">
+                          <h3 className="mt-2 break-words font-display text-base font-bold leading-snug text-slate-900 group-hover:text-indigo-600 dark:text-white dark:group-hover:text-indigo-300">
                             <button
                               type="button"
                               onClick={() => setActiveArticle(art)}
@@ -910,7 +910,7 @@ export default function FarmerNewsPage({
                           </h3>
 
                           {art.summary && (
-                            <p className="mt-2 line-clamp-3 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
+                            <p className="mt-2 line-clamp-3 break-words text-xs leading-relaxed text-slate-600 dark:text-slate-300">
                               {art.summary}
                             </p>
                           )}
@@ -918,13 +918,13 @@ export default function FarmerNewsPage({
                           {art.tip && (
                             <div className="mt-3 flex items-start gap-2 rounded-xl border border-slate-200/80 bg-slate-50/85 px-3 py-2 text-[11.5px] text-slate-600 dark:border-slate-800 dark:bg-obsidian-950/60 dark:text-slate-300">
                               <Lightbulb className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-500" />
-                              <span className="line-clamp-2">{art.tip}</span>
+                              <span className="line-clamp-2 break-words">{art.tip}</span>
                             </div>
                           )}
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between gap-2 border-t border-slate-200/75 px-4 py-3 dark:border-slate-800 sm:px-5">
+                      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-200/75 px-4 py-3 dark:border-slate-800 sm:px-5">
                         <div className="flex items-center gap-2">
                           <button
                             type="button"
@@ -1003,8 +1003,8 @@ export default function FarmerNewsPage({
                   onClick={(e) => e.stopPropagation()}
                 >
                   {/* Fixed Modal Top Bar */}
-                  <div className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-200/75 px-4 py-3 dark:border-slate-800 sm:px-6">
-                    <div className="flex flex-wrap items-center gap-1.5">
+                  <div className="flex shrink-0 items-center justify-between gap-2 border-b border-slate-200/75 px-4 py-3 dark:border-slate-800 sm:gap-3 sm:px-6">
+                    <div className="flex min-w-0 flex-wrap items-center gap-1.5">
                       {activeArticle.is_live && (
                         <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-[10.5px] font-bold text-emerald-700 dark:text-emerald-300">
                           <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />

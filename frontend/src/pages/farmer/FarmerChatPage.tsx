@@ -139,7 +139,7 @@ function renderInlineSegments(line: string): React.ReactNode {
 function formatAiMessage(text: string): React.ReactNode {
   const lines = text.replace(/\r\n/g, "\n").split("\n");
   return (
-    <div className="space-y-1.5">
+    <div className="min-w-0 space-y-1.5 break-words [&_a]:break-all [&_code]:break-all [&_pre]:max-w-full [&_pre]:overflow-x-auto">
       {lines.map((rawLine, idx) => {
         const line = rawLine.trim();
         if (!line) return <div key={idx} className="h-1" />;
@@ -718,7 +718,7 @@ export default function FarmerChatPage({
             type="button"
             onClick={() => void handlePin(s)}
             title={s.isPinned ? (isKhmer ? "ដកខ្ទាស់" : "Unpin") : isKhmer ? "ខ្ទាស់" : "Pin"}
-            className="inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-400 transition hover:bg-white hover:text-amber-600 dark:hover:bg-obsidian-900 dark:hover:text-amber-400"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-400 transition hover:bg-white hover:text-amber-600 dark:hover:bg-obsidian-900 dark:hover:text-amber-400 sm:h-7 sm:w-7"
           >
             <Pin className="h-3.5 w-3.5 sm:h-3 sm:w-3" />
           </button>
@@ -730,7 +730,7 @@ export default function FarmerChatPage({
               setConfirmDeleteId(null);
             }}
             title={isKhmer ? "ប្តូរឈ្មោះ" : "Rename"}
-            className="inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-400 transition hover:bg-white hover:text-indigo-600 dark:hover:bg-obsidian-900 dark:hover:text-indigo-300"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-400 transition hover:bg-white hover:text-indigo-600 dark:hover:bg-obsidian-900 dark:hover:text-indigo-300 sm:h-7 sm:w-7"
           >
             <Pencil className="h-3.5 w-3.5 sm:h-3 sm:w-3" />
           </button>
@@ -741,9 +741,9 @@ export default function FarmerChatPage({
               setEditingId(null);
             }}
             title={isKhmer ? "លុប" : "Delete"}
-            className="inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-400 transition hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/60 dark:hover:text-rose-400"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-400 transition hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/60 dark:hover:text-rose-400 sm:h-7 sm:w-7"
           >
-            <Trash2 className="h-3 w-3" />
+            <Trash2 className="h-3.5 w-3.5 sm:h-3 sm:w-3" />
           </button>
         </div>
       </div>
@@ -874,17 +874,17 @@ export default function FarmerChatPage({
         </div>
       }
     >
-      <div className="grid gap-4 lg:grid-cols-12">
+      <div className="grid min-w-0 gap-4 lg:grid-cols-12">
         {/* Desktop Conversations Rail */}
-        <aside className="ai-surface hidden h-[calc(100dvh-11.25rem)] min-h-[460px] max-h-[820px] flex-col overflow-hidden lg:col-span-4 lg:flex xl:col-span-3">
+        <aside className="ai-surface hidden h-[calc(100dvh-11.25rem)] min-h-[460px] max-h-[820px] min-w-0 flex-col overflow-hidden lg:col-span-4 lg:flex xl:col-span-3">
           {renderSidebarContent()}
         </aside>
 
         {/* Main Conversation Studio */}
-        <section className="ai-surface flex h-[calc(100dvh-13.5rem)] min-h-[340px] max-h-[820px] flex-col overflow-hidden sm:h-[calc(100dvh-11.25rem)] sm:min-h-[400px] lg:col-span-8 xl:col-span-9">
+        <section className="ai-surface flex h-[calc(100dvh-14.5rem-env(safe-area-inset-bottom))] min-h-[320px] max-h-[820px] min-w-0 flex-col overflow-hidden sm:h-[calc(100dvh-11.25rem)] sm:min-h-[400px] lg:col-span-8 xl:col-span-9">
           {/* Clean Active Thread Header */}
-          <div className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-200/75 bg-white/95 px-3.5 py-2.5 dark:border-slate-800/80 dark:bg-obsidian-900/95 sm:px-5 sm:py-3">
-            <div className="flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3">
+          <div className="flex shrink-0 items-center justify-between gap-2 border-b border-slate-200/75 bg-white/95 px-3 py-2.5 dark:border-slate-800/80 dark:bg-obsidian-900/95 sm:gap-3 sm:px-5 sm:py-3">
+            <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
               <button
                 type="button"
                 onClick={() => setMobileDrawerOpen(true)}
@@ -1063,11 +1063,11 @@ export default function FarmerChatPage({
 
                       <div
                         className={cn(
-                          "flex max-w-[88%] flex-col sm:max-w-[80%]",
+                          "flex min-w-0 max-w-[88%] flex-col sm:max-w-[80%]",
                           isFarmer ? "items-end" : "items-start",
                         )}
                       >
-                        <div className="mb-1 flex items-center gap-2 px-1 text-[10.5px] text-slate-400">
+                        <div className="mb-1 flex max-w-full flex-wrap items-center gap-x-2 gap-y-0.5 px-1 text-[10.5px] text-slate-400">
                           <span className="font-semibold text-slate-600 dark:text-slate-300">
                             {m.authorName}
                           </span>
@@ -1083,7 +1083,7 @@ export default function FarmerChatPage({
 
                         <div
                           className={cn(
-                            "rounded-2xl px-4 py-3 text-[13.5px] leading-relaxed shadow-sm",
+                            "max-w-full min-w-0 break-words rounded-2xl px-3.5 py-2.5 text-[13.5px] leading-relaxed shadow-sm sm:px-4 sm:py-3",
                             isFarmer
                               ? "rounded-br-sm bg-indigo-600 text-white"
                               : isHumanExpert
@@ -1194,7 +1194,7 @@ export default function FarmerChatPage({
                     className="h-11 w-11 rounded-xl object-cover"
                   />
                   <div className="min-w-0">
-                    <p className="max-w-[180px] truncate font-semibold text-slate-700 dark:text-slate-200">
+                    <p className="max-w-[42vw] truncate font-semibold text-slate-700 dark:text-slate-200 sm:max-w-[180px]">
                       {file?.name}
                     </p>
                     {file && (
@@ -1324,7 +1324,7 @@ export default function FarmerChatPage({
               if (e.target === e.currentTarget) setMobileDrawerOpen(false);
             }}
           >
-            <div className="h-full w-[86vw] max-w-[320px] border-r border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-obsidian-900">
+            <div className="h-full w-[86vw] max-w-[320px] border-r border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] shadow-2xl dark:border-slate-800 dark:bg-obsidian-900">
               {renderSidebarContent(() => setMobileDrawerOpen(false))}
             </div>
           </div>,

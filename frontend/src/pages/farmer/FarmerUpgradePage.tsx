@@ -180,18 +180,18 @@ export default function FarmerUpgradePage({
             </div>
 
             {/* Segmented Monthly / Yearly Toggle */}
-            <div className="shrink-0">
+            <div className="w-full shrink-0 sm:w-auto">
               <div
                 role="group"
                 aria-label={isKhmer ? "ជម្រើសការទូទាត់" : "Billing cycle"}
-                className="inline-flex rounded-2xl border border-[#e3e6ed] bg-[#f5f7fa] p-1 dark:border-[#2b3245] dark:bg-[#0f111a]"
+                className="grid w-full grid-cols-2 rounded-2xl border border-[#e3e6ed] bg-[#f5f7fa] p-1 dark:border-[#2b3245] dark:bg-[#0f111a] sm:inline-flex sm:w-auto"
               >
                 <button
                   type="button"
                   onClick={() => setYearly(false)}
                   aria-pressed={!yearly}
                   className={cn(
-                    "rounded-xl px-4 py-2 text-xs font-semibold transition-all",
+                    "rounded-xl px-3 py-2 text-xs font-semibold transition-all sm:px-4",
                     !yearly
                       ? "bg-white text-[#141824] shadow-sm dark:bg-[#1c2233] dark:text-white"
                       : "text-[#525b75] hover:text-[#141824] dark:text-[#8a94ad] dark:hover:text-white",
@@ -204,7 +204,7 @@ export default function FarmerUpgradePage({
                   onClick={() => setYearly(true)}
                   aria-pressed={yearly}
                   className={cn(
-                    "inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold transition-all",
+                    "inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition-all sm:gap-2 sm:px-4",
                     yearly
                       ? "bg-white text-[#141824] shadow-sm dark:bg-[#1c2233] dark:text-white"
                       : "text-[#525b75] hover:text-[#141824] dark:text-[#8a94ad] dark:hover:text-white",
@@ -212,7 +212,7 @@ export default function FarmerUpgradePage({
                 >
                   <span>{isKhmer ? "ប្រចាំឆ្នាំ" : "Yearly"}</span>
                   {pricing.yearlyDiscountPct > 0 && (
-                    <span className="rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-bold text-white">
+                    <span className="rounded-full bg-emerald-600 px-1.5 py-0.5 text-[10px] font-bold text-white sm:px-2">
                       {isKhmer
                         ? `សន្សំ ${Math.round(pricing.yearlyDiscountPct)}%`
                         : `Save ${Math.round(pricing.yearlyDiscountPct)}%`}
@@ -227,9 +227,9 @@ export default function FarmerUpgradePage({
         {/* Tier Comparison Grid */}
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-12">
           {/* Standard Plan */}
-          <section className="flex flex-col justify-between rounded-3xl border border-[#e3e6ed] bg-white p-5 dark:border-[#2b3245] dark:bg-[#141824] sm:p-6 lg:col-span-5">
-            <div>
-              <div className="flex items-center justify-between gap-2">
+          <section className="order-2 flex min-w-0 flex-col justify-between rounded-3xl border border-[#e3e6ed] bg-white p-5 dark:border-[#2b3245] dark:bg-[#141824] sm:p-6 lg:order-1 lg:col-span-5">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <h3 className="font-display text-lg font-bold text-[#141824] dark:text-[#eff2f6]">
                   {isKhmer ? "គណនីស្តង់ដារ" : "Standard Farmer"}
                 </h3>
@@ -277,7 +277,7 @@ export default function FarmerUpgradePage({
           </section>
 
           {/* Pro Plan */}
-          <section className="relative flex flex-col justify-between overflow-hidden rounded-3xl border-2 border-emerald-500/70 bg-white p-5 shadow-sm ring-4 ring-emerald-500/[0.06] dark:border-emerald-500/60 dark:bg-[#141824] sm:p-7 lg:col-span-7">
+          <section className="order-1 relative flex min-w-0 flex-col justify-between overflow-hidden rounded-3xl border-2 border-emerald-500/70 bg-white p-5 shadow-sm ring-4 ring-emerald-500/[0.06] dark:border-emerald-500/60 dark:bg-[#141824] sm:p-7 lg:order-2 lg:col-span-7">
             <div>
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="flex items-center gap-3">

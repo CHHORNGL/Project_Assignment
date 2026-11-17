@@ -633,7 +633,7 @@ export default function FarmerLiveChatPage({
     >
       <div className="space-y-4">
         {/* Recipient Role Selector: Message Admin vs Message Expert */}
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="grid min-w-0 grid-cols-2 gap-2 sm:gap-3">
           {(
             [
               {
@@ -676,7 +676,7 @@ export default function FarmerLiveChatPage({
                 onClick={() => handleSelectChannel(card.key, null)}
                 aria-pressed={isSelected}
                 className={cn(
-                  "group relative flex items-start gap-3.5 rounded-2xl border p-4 text-left transition-all",
+                  "group relative flex min-w-0 items-center gap-2 rounded-2xl border p-2.5 text-left transition-all sm:items-start sm:gap-3.5 sm:p-4",
                   isSelected
                     ? card.accentActive
                     : "border-[#e3e6ed] bg-white hover:border-[#cbd0dd] hover:bg-[#fafbfc] dark:border-[#2b3245] dark:bg-[#141824] dark:hover:border-[#3b445e] dark:hover:bg-[#181d2b]",
@@ -684,23 +684,23 @@ export default function FarmerLiveChatPage({
               >
                 <div
                   className={cn(
-                    "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition-colors",
+                    "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-colors sm:h-11 sm:w-11",
                     isSelected ? card.iconActive : card.iconIdle,
                   )}
                 >
-                  <CardIcon className="h-5 w-5" />
+                  <CardIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                 </div>
 
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-sm font-bold text-[#141824] dark:text-[#eff2f6]">
+                  <div className="flex items-start justify-between gap-1.5 sm:items-center sm:gap-2">
+                    <span className="line-clamp-2 text-[11.5px] font-bold leading-snug text-[#141824] dark:text-[#eff2f6] sm:line-clamp-none sm:text-sm">
                       {card.title}
                     </span>
-                    <div className="flex shrink-0 items-center gap-1.5">
+                    <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
                       {(summary?.unreadCount || 0) > 0 && (
                         <span
                           className={cn(
-                            "rounded-full px-2 py-0.5 text-[10px] font-bold tabular-nums",
+                            "rounded-full px-1.5 py-0.5 text-[9.5px] font-bold tabular-nums sm:px-2 sm:text-[10px]",
                             card.badgeBg,
                           )}
                         >
@@ -712,8 +712,10 @@ export default function FarmerLiveChatPage({
                       )}
                     </div>
                   </div>
-                  <p className="mt-0.5 text-xs text-[#6e7891] dark:text-[#8a94ad]">{card.desc}</p>
-                  <div className="mt-2 flex items-center justify-between gap-2 text-[11px] text-[#525b75] dark:text-[#9fa6bc]">
+                  <p className="mt-0.5 hidden text-xs text-[#6e7891] dark:text-[#8a94ad] sm:block">
+                    {card.desc}
+                  </p>
+                  <div className="mt-1 flex items-center justify-between gap-1.5 text-[10.5px] text-[#525b75] dark:text-[#9fa6bc] sm:mt-2 sm:gap-2 sm:text-[11px]">
                     <span className="truncate">
                       {summary?.lastMessage
                         ? summary.lastMessage
@@ -726,7 +728,7 @@ export default function FarmerLiveChatPage({
                             : "No staff available"}
                     </span>
                     {summary?.lastTime && (
-                      <span className="shrink-0 text-[10px] text-[#8a94ad]">
+                      <span className="hidden shrink-0 text-[10px] text-[#8a94ad] sm:inline">
                         {formatChatShortDate(summary.lastTime)}
                       </span>
                     )}
@@ -738,11 +740,11 @@ export default function FarmerLiveChatPage({
         </div>
 
         {/* Live Chat Workspace Card */}
-        <section className="ai-surface flex h-[calc(100dvh-18rem)] min-h-[340px] max-h-[700px] flex-col overflow-hidden sm:h-[calc(100dvh-20.5rem)] sm:min-h-[480px]">
+        <section className="ai-surface flex h-[calc(100dvh-18.5rem-env(safe-area-inset-bottom))] min-h-[300px] max-h-[700px] min-w-0 flex-col overflow-hidden sm:h-[calc(100dvh-20.5rem)] sm:min-h-[480px]">
           {/* Active Thread Header + Optional Named Recipient Selector */}
-          <div className="border-b border-[#e3e6ed] px-4 py-3 dark:border-[#2b3245] sm:px-5">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="flex min-w-0 items-center gap-3">
+          <div className="border-b border-[#e3e6ed] px-3.5 py-2.5 dark:border-[#2b3245] sm:px-5 sm:py-3">
+            <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
+              <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
                 <div
                   className={cn(
                     "relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
@@ -826,16 +828,16 @@ export default function FarmerLiveChatPage({
 
             {/* Specific Staff Member Selector Pills */}
             {activeChannel?.recipients && activeChannel.recipients.length > 0 && (
-              <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
-                <span className="inline-flex items-center gap-1 text-[11px] font-medium text-[#6e7891] dark:text-[#8a94ad]">
-                  <Users className="h-3.5 w-3.5" />
+              <div className="mt-2.5 flex flex-nowrap items-center gap-1.5 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0">
+                <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap text-[11px] font-medium text-[#6e7891] dark:text-[#8a94ad]">
+                  <Users className="h-3.5 w-3.5 shrink-0" />
                   <span>{isKhmer ? "ផ្ញើទៅ៖" : "Recipient:"}</span>
                 </span>
                 <button
                   type="button"
                   onClick={() => handleSelectChannel(target, null)}
                   className={cn(
-                    "rounded-full px-2.5 py-1 text-[11px] font-semibold transition",
+                    "shrink-0 whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-semibold transition",
                     recipientId === null
                       ? target === "expert"
                         ? "bg-emerald-600 text-white shadow-sm"
@@ -859,7 +861,7 @@ export default function FarmerLiveChatPage({
                       type="button"
                       onClick={() => handleSelectChannel(target, person.id)}
                       className={cn(
-                        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold transition",
+                        "inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-semibold transition",
                         activePerson
                           ? target === "expert"
                             ? "bg-emerald-600 text-white shadow-sm"
@@ -958,10 +960,10 @@ export default function FarmerLiveChatPage({
                         </div>
                       )}
 
-                      <div className={cn("flex flex-col", mine ? "items-end" : "items-start")}>
+                      <div className={cn("flex min-w-0 flex-col", mine ? "items-end" : "items-start")}>
                         <div
                           className={cn(
-                            "max-w-[82%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-[13px] leading-relaxed shadow-sm",
+                            "max-w-[88%] min-w-0 break-words whitespace-pre-wrap rounded-2xl px-3.5 py-2.5 text-[13px] leading-relaxed shadow-sm sm:max-w-[82%] sm:px-4",
                             mine
                               ? target === "expert"
                                 ? "rounded-br-md bg-emerald-600 text-white"
@@ -974,12 +976,12 @@ export default function FarmerLiveChatPage({
                             <button
                               type="button"
                               onClick={() => setLightboxUrl(safe.url!)}
-                              className="mb-2 block overflow-hidden rounded-lg focus:outline-none"
+                              className="mb-2 block max-w-full overflow-hidden rounded-lg focus:outline-none"
                             >
                               <img
                                 src={safe.url}
                                 alt="Chat attachment"
-                                className="max-h-56 rounded-lg object-cover transition hover:opacity-95"
+                                className="max-h-56 w-full rounded-lg object-cover transition hover:opacity-95"
                               />
                             </button>
                           )}
@@ -994,14 +996,14 @@ export default function FarmerLiveChatPage({
                               target="_blank"
                               rel="noopener noreferrer"
                               className={cn(
-                                "mb-1.5 inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium underline underline-offset-2",
+                                "mb-1.5 inline-flex max-w-full items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium underline underline-offset-2",
                                 mine
                                   ? "bg-white/15 text-white hover:bg-white/25"
                                   : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-300",
                               )}
                             >
                               <MapPin className="h-3.5 w-3.5 shrink-0" />
-                              <span>{safe.location.label}</span>
+                              <span className="min-w-0 break-words">{safe.location.label}</span>
                             </a>
                           )}
 
@@ -1053,9 +1055,9 @@ export default function FarmerLiveChatPage({
 
           {/* Location Picker Drawer */}
           {locationOpen && (
-            <div className="border-t border-[#e3e6ed] bg-[#f9fafc] px-4 py-3 dark:border-[#2b3245] dark:bg-[#111521]">
+            <div className="border-t border-[#e3e6ed] bg-[#f9fafc] px-3.5 py-2.5 dark:border-[#2b3245] dark:bg-[#111521] sm:px-4 sm:py-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="relative flex-1 min-w-[200px]">
+                <div className="relative min-w-0 flex-1 basis-full sm:basis-auto sm:min-w-[200px]">
                   <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#8a94ad]" />
                   <input
                     type="search"
@@ -1064,10 +1066,10 @@ export default function FarmerLiveChatPage({
                     placeholder={
                       isKhmer ? "ស្វែងរកខេត្ត ឬទីតាំង..." : "Search Cambodia province or commune..."
                     }
-                    className="ai-input h-8 pl-10 pr-3 text-xs"
+                    className="ai-input h-8 w-full pl-10 pr-3 text-xs"
                   />
                 </div>
-                <div className="flex items-center gap-1.5">
+                <div className="flex w-full items-center justify-end gap-1.5 sm:w-auto sm:justify-start">
                   <button
                     type="button"
                     disabled={locationBusy || sending}
@@ -1092,7 +1094,7 @@ export default function FarmerLiveChatPage({
                 </div>
               </div>
               {locationResults.length > 0 && (
-                <div className="mt-2 flex flex-wrap gap-1.5">
+                <div className="mt-2 flex max-h-24 flex-wrap gap-1.5 overflow-y-auto">
                   {locationResults.map((item) => (
                     <button
                       key={`${item.name}-${item.latitude}-${item.longitude}`}
@@ -1160,7 +1162,7 @@ export default function FarmerLiveChatPage({
           {/* Composer */}
           <form
             onSubmit={handleComposerSubmit}
-            className="flex items-center gap-2 border-t border-[#e3e6ed] bg-white px-3.5 py-3 dark:border-[#2b3245] dark:bg-[#141824] sm:px-4"
+            className="flex flex-wrap items-center gap-2 border-t border-[#e3e6ed] bg-white px-3 py-2.5 dark:border-[#2b3245] dark:bg-[#141824] sm:flex-nowrap sm:px-4 sm:py-3"
           >
             <input
               ref={fileInputRef}
@@ -1180,7 +1182,7 @@ export default function FarmerLiveChatPage({
               disabled={sending || recording}
               title={isKhmer ? "ភ្ជាប់រូបភាព" : "Attach photo"}
               aria-label="Attach photo"
-              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#e3e6ed] bg-[#f5f7fa] text-[#525b75] transition hover:bg-[#eff2f6] disabled:opacity-50 dark:border-[#2b3245] dark:bg-[#181d2b] dark:text-[#9fa6bc]"
+              className="order-2 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#e3e6ed] bg-[#f5f7fa] text-[#525b75] transition hover:bg-[#eff2f6] disabled:opacity-50 dark:border-[#2b3245] dark:bg-[#181d2b] dark:text-[#9fa6bc] sm:order-none"
             >
               <Paperclip className="h-4 w-4" />
             </button>
@@ -1192,7 +1194,7 @@ export default function FarmerLiveChatPage({
               title={recording ? (isKhmer ? "បញ្ឈប់ការថត" : "Stop recording") : isKhmer ? "ថតសំឡេង" : "Voice message"}
               aria-label={recording ? "Stop recording" : "Record voice message"}
               className={cn(
-                "inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-xl border px-2.5 text-xs font-semibold transition disabled:opacity-50",
+                "order-2 inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-xl border px-2.5 text-xs font-semibold transition disabled:opacity-50 sm:order-none",
                 recording
                   ? "border-rose-300 bg-rose-50 text-rose-600 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300"
                   : "border-[#e3e6ed] bg-[#f5f7fa] text-[#525b75] hover:bg-[#eff2f6] dark:border-[#2b3245] dark:bg-[#181d2b] dark:text-[#9fa6bc]",
@@ -1215,7 +1217,7 @@ export default function FarmerLiveChatPage({
               title={isKhmer ? "ចែករំលែកទីតាំង" : "Share location"}
               aria-label="Share location"
               className={cn(
-                "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border transition disabled:opacity-50",
+                "order-2 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border transition disabled:opacity-50 sm:order-none",
                 locationOpen
                   ? "border-emerald-400 bg-emerald-50 text-emerald-700 dark:border-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
                   : "border-[#e3e6ed] bg-[#f5f7fa] text-[#525b75] hover:bg-[#eff2f6] dark:border-[#2b3245] dark:bg-[#181d2b] dark:text-[#9fa6bc]",
@@ -1240,7 +1242,7 @@ export default function FarmerLiveChatPage({
                     ? "សរសេរសារទៅអ្នកគ្រប់គ្រង..."
                     : "Write a message to Platform Admin..."
               }
-              className="ai-input h-9 min-w-0 flex-1 px-3 text-sm sm:px-3.5"
+              className="ai-input order-1 h-9 w-full min-w-0 flex-none px-3 text-sm sm:order-none sm:w-auto sm:flex-1 sm:px-3.5"
             />
 
             <button
@@ -1248,14 +1250,14 @@ export default function FarmerLiveChatPage({
               disabled={sending || (!draft.trim() && !stagedAttachment)}
               aria-label="Send message"
               className={cn(
-                "inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl px-3 text-xs font-semibold text-white shadow-sm transition disabled:opacity-50 sm:px-4",
+                "order-2 ml-auto inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl px-3.5 text-xs font-semibold text-white shadow-sm transition disabled:opacity-50 sm:order-none sm:ml-0 sm:px-4",
                 target === "expert"
                   ? "bg-emerald-600 hover:bg-emerald-700"
                   : "bg-indigo-600 hover:bg-indigo-700",
               )}
             >
               {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-              <span className="hidden sm:inline">{isKhmer ? "ផ្ញើ" : "Send"}</span>
+              <span>{isKhmer ? "ផ្ញើ" : "Send"}</span>
             </button>
           </form>
         </section>

@@ -205,13 +205,13 @@ function HistoryRecordCard({
   const { date, time } = formatRecordDate(item.createdAt);
 
   return (
-    <article className="ai-surface group flex flex-col justify-between p-4 transition hover:-translate-y-0.5 hover:border-indigo-400/50 hover:shadow-md dark:hover:border-indigo-500/40 sm:p-5">
-      <div>
+    <article className="ai-surface group flex min-w-0 flex-col justify-between p-4 transition hover:-translate-y-0.5 hover:border-indigo-400/50 hover:shadow-md dark:hover:border-indigo-500/40 sm:p-5">
+      <div className="min-w-0">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex flex-wrap items-center gap-1.5">
-            <span className="inline-flex items-center gap-1 rounded-lg bg-emerald-500/10 px-2.5 py-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-300">
-              <Sprout className="h-3 w-3" />
-              <span>{item.cropName}</span>
+          <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+            <span className="inline-flex max-w-full items-center gap-1 rounded-lg bg-emerald-500/10 px-2.5 py-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-300">
+              <Sprout className="h-3 w-3 shrink-0" />
+              <span className="truncate">{item.cropName}</span>
             </span>
             {item.categoryLabel && (
               <span className="rounded-lg bg-slate-100 px-2 py-1 text-[11px] font-semibold text-slate-600 dark:bg-obsidian-800 dark:text-slate-300">
@@ -225,7 +225,7 @@ function HistoryRecordCard({
           <StatusBadge status={item.status} label={item.statusLabel} isKhmer={isKhmer} />
         </div>
 
-        <h3 className="mt-3 font-display text-base font-bold leading-snug text-slate-900 group-hover:text-indigo-600 dark:text-white dark:group-hover:text-indigo-300">
+        <h3 className="mt-3 break-words font-display text-base font-bold leading-snug text-slate-900 group-hover:text-indigo-600 dark:text-white dark:group-hover:text-indigo-300">
           {item.diseaseName}
         </h3>
 
@@ -431,56 +431,56 @@ export default function FarmerHistoryPage({
       <div className="space-y-5">
         {/* Mode Switcher */}
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="inline-flex flex-wrap items-center gap-1.5 rounded-2xl border border-slate-200/80 bg-white p-1 shadow-sm dark:border-slate-800 dark:bg-obsidian-900">
+          <div className="inline-flex max-w-full items-center gap-1.5 overflow-x-auto rounded-2xl border border-slate-200/80 bg-white p-1 shadow-sm dark:border-slate-800 dark:bg-obsidian-900 sm:flex-wrap">
             <a
               href={allHistoryHref}
               className={cn(
-                "inline-flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-bold transition",
+                "inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-1.5 text-xs font-bold transition sm:px-3.5",
                 !isRuleMode
                   ? "bg-indigo-600 text-white shadow-sm"
                   : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-obsidian-800",
               )}
             >
-              <ClipboardList className="h-3.5 w-3.5" />
+              <ClipboardList className="h-3.5 w-3.5 shrink-0" />
               <span>{isKhmer ? "ប្រវត្តិទាំងអស់" : "All Diagnoses"}</span>
             </a>
             <a
               href={ruleHistoryHref}
               className={cn(
-                "inline-flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-bold transition",
+                "inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-1.5 text-xs font-bold transition sm:px-3.5",
                 isRuleMode
                   ? "bg-indigo-600 text-white shadow-sm"
                   : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-obsidian-800",
               )}
             >
-              <Sparkles className="h-3.5 w-3.5" />
+              <Sparkles className="h-3.5 w-3.5 shrink-0" />
               <span>{isKhmer ? "ប្រវត្តិវិភាគតាមច្បាប់" : "Rule Engine Logs"}</span>
             </a>
             <a
               href={chatHref}
-              className="inline-flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-obsidian-800"
+              className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-obsidian-800 sm:px-3.5"
             >
-              <Bot className="h-3.5 w-3.5" />
+              <Bot className="h-3.5 w-3.5 shrink-0" />
               <span>{isKhmer ? "ប្រវត្តិសួរ AI" : "AI Chats"}</span>
             </a>
           </div>
         </div>
 
         {/* KPI Summary Strip */}
-        <div className="grid grid-cols-2 gap-3.5 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:gap-3.5 lg:grid-cols-4">
           <button
             type="button"
             onClick={() => setStatusFilter("ALL")}
             className={cn(
-              "ai-surface p-4 text-left transition hover:border-indigo-400/50",
+              "ai-surface min-w-0 p-3.5 text-left transition hover:border-indigo-400/50 sm:p-4",
               statusFilter === "ALL" && "ring-2 ring-indigo-500/20",
             )}
           >
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+            <div className="flex items-center justify-between gap-2">
+              <span className="min-w-0 truncate text-[11px] font-bold uppercase tracking-wider text-slate-400">
                 {isKhmer ? "កំណត់ត្រាសរុប" : "Total Records"}
               </span>
-              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-300">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-300">
                 <Activity className="h-4 w-4" />
               </span>
             </div>
@@ -496,15 +496,15 @@ export default function FarmerHistoryPage({
             type="button"
             onClick={() => setStatusFilter("APPROVED")}
             className={cn(
-              "ai-surface p-4 text-left transition hover:border-emerald-400/50",
+              "ai-surface min-w-0 p-3.5 text-left transition hover:border-emerald-400/50 sm:p-4",
               statusFilter === "APPROVED" && "ring-2 ring-emerald-500/25",
             )}
           >
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+            <div className="flex items-center justify-between gap-2">
+              <span className="min-w-0 truncate text-[11px] font-bold uppercase tracking-wider text-slate-400">
                 {isKhmer ? "បានបញ្ជាក់" : "Verified & Auto"}
               </span>
-              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-300">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-300">
                 <CheckCircle2 className="h-4 w-4" />
               </span>
             </div>
@@ -522,15 +522,15 @@ export default function FarmerHistoryPage({
             type="button"
             onClick={() => setStatusFilter("PENDING")}
             className={cn(
-              "ai-surface p-4 text-left transition hover:border-amber-400/50",
+              "ai-surface min-w-0 p-3.5 text-left transition hover:border-amber-400/50 sm:p-4",
               statusFilter === "PENDING" && "ring-2 ring-amber-500/25",
             )}
           >
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+            <div className="flex items-center justify-between gap-2">
+              <span className="min-w-0 truncate text-[11px] font-bold uppercase tracking-wider text-slate-400">
                 {isKhmer ? "រង់ចាំពិនិត្យ" : "Pending Review"}
               </span>
-              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-300">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-300">
                 <Clock3 className="h-4 w-4" />
               </span>
             </div>
@@ -542,12 +542,12 @@ export default function FarmerHistoryPage({
             </p>
           </button>
 
-          <div className="ai-surface p-4">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+          <div className="ai-surface min-w-0 p-3.5 sm:p-4">
+            <div className="flex items-center justify-between gap-2">
+              <span className="min-w-0 truncate text-[11px] font-bold uppercase tracking-wider text-slate-400">
                 {isKhmer ? "ភាពជឿជាក់មធ្យម" : "Avg Confidence"}
               </span>
-              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-300">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-300">
                 <Gauge className="h-4 w-4" />
               </span>
             </div>
@@ -591,12 +591,12 @@ export default function FarmerHistoryPage({
               )}
             </div>
 
-            <div className="flex flex-wrap items-center gap-2.5">
+            <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center sm:gap-2.5">
               <select
                 value={cropFilter}
                 onChange={(e) => setCropFilter(e.target.value)}
                 aria-label={isKhmer ? "តម្រងតាមដំណាំ" : "Filter by crop"}
-                className="ai-input h-9 w-full py-1 text-xs sm:w-44"
+                className="ai-input h-9 w-full min-w-0 py-1 text-xs sm:w-44"
               >
                 <option value="ALL">{isKhmer ? "ដំណាំទាំងអស់" : "All Crops"}</option>
                 {cropOptions.map((crop) => (
@@ -610,7 +610,7 @@ export default function FarmerHistoryPage({
                 value={sortOrder}
                 onChange={(e) => setSortOrder(e.target.value as SortOrder)}
                 aria-label={isKhmer ? "តម្រៀបតាម" : "Sort records"}
-                className="ai-input h-9 w-full py-1 text-xs sm:w-44"
+                className="ai-input h-9 w-full min-w-0 py-1 text-xs sm:w-44"
               >
                 <option value="newest">{isKhmer ? "ថ្មីបំផុតមុន" : "Newest first"}</option>
                 <option value="oldest">{isKhmer ? "ចាស់បំផុតមុន" : "Oldest first"}</option>
@@ -652,8 +652,8 @@ export default function FarmerHistoryPage({
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-200/70 pt-3 dark:border-slate-800">
-            <div className="flex flex-wrap items-center gap-1.5">
+          <div className="flex flex-col gap-2 border-t border-slate-200/70 pt-3 dark:border-slate-800 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+            <div className="flex flex-nowrap items-center gap-1.5 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0">
               {statusTabs.map((tab) => {
                 const active = statusFilter === tab.key;
                 return (
@@ -662,7 +662,7 @@ export default function FarmerHistoryPage({
                     type="button"
                     onClick={() => setStatusFilter(tab.key)}
                     className={cn(
-                      "inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-xs font-bold transition",
+                      "inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-xs font-bold transition",
                       active
                         ? "border-indigo-600 bg-indigo-600 text-white shadow-sm"
                         : "border-slate-200 bg-white text-slate-600 hover:border-indigo-300 hover:text-indigo-600 dark:border-slate-800 dark:bg-obsidian-950 dark:text-slate-300",

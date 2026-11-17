@@ -211,11 +211,11 @@ function MemberMetadataFacts({
   return (
     <div className="mt-4 space-y-2.5 border-t border-slate-200/80 pt-3.5 dark:border-slate-800/80">
       {(department || studentId) && (
-        <div className="flex flex-wrap items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
+        <div className="flex min-w-0 flex-wrap items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
           {department && (
-            <span className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100/90 px-2.5 py-1 font-medium dark:bg-obsidian-800/90">
+            <span className="inline-flex max-w-full min-w-0 items-center gap-1.5 rounded-lg bg-slate-100/90 px-2.5 py-1 font-medium dark:bg-obsidian-800/90">
               <Building2 className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-              <span>{department}</span>
+              <span className="min-w-0 break-words">{department}</span>
             </span>
           )}
           {studentId && (
@@ -228,20 +228,20 @@ function MemberMetadataFacts({
       )}
 
       {(email || phone || telegram) && (
-        <div className={cn("flex flex-wrap gap-2", compact ? "text-[11px]" : "text-xs")}>
+        <div className={cn("flex min-w-0 flex-wrap gap-2", compact ? "text-[11px]" : "text-xs")}>
           {email && (
             <a
               href={`mailto:${email}`}
-              className="inline-flex max-w-full items-center gap-1.5 rounded-xl border border-slate-200/90 bg-white/90 px-2.5 py-1.5 font-medium text-slate-700 transition hover:border-indigo-400 hover:text-indigo-600 dark:border-slate-700/80 dark:bg-obsidian-950/80 dark:text-slate-200 dark:hover:border-indigo-500 dark:hover:text-indigo-300"
+              className="inline-flex max-w-full min-w-0 items-center gap-1.5 rounded-xl border border-slate-200/90 bg-white/90 px-2.5 py-1.5 font-medium text-slate-700 transition hover:border-indigo-400 hover:text-indigo-600 dark:border-slate-700/80 dark:bg-obsidian-950/80 dark:text-slate-200 dark:hover:border-indigo-500 dark:hover:text-indigo-300"
             >
               <Mail className="h-3.5 w-3.5 shrink-0 text-indigo-500" />
-              <span className="truncate">{email}</span>
+              <span className="min-w-0 break-all">{email}</span>
             </a>
           )}
           {phone && (
             <a
               href={phoneHref}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200/90 bg-white/90 px-2.5 py-1.5 font-medium text-slate-700 transition hover:border-emerald-400 hover:text-emerald-600 dark:border-slate-700/80 dark:bg-obsidian-950/80 dark:text-slate-200 dark:hover:border-emerald-500 dark:hover:text-emerald-300"
+              className="inline-flex max-w-full items-center gap-1.5 rounded-xl border border-slate-200/90 bg-white/90 px-2.5 py-1.5 font-medium text-slate-700 transition hover:border-emerald-400 hover:text-emerald-600 dark:border-slate-700/80 dark:bg-obsidian-950/80 dark:text-slate-200 dark:hover:border-emerald-500 dark:hover:text-emerald-300"
             >
               <Phone className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
               <span className="whitespace-nowrap">{phone}</span>
@@ -252,10 +252,10 @@ function MemberMetadataFacts({
               href={telegramUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-xl border border-sky-200/90 bg-sky-50/70 px-2.5 py-1.5 font-semibold text-sky-700 transition hover:border-sky-400 hover:bg-sky-100/80 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-300 dark:hover:bg-sky-500/20"
+              className="inline-flex max-w-full min-w-0 items-center gap-1.5 rounded-xl border border-sky-200/90 bg-sky-50/70 px-2.5 py-1.5 font-semibold text-sky-700 transition hover:border-sky-400 hover:bg-sky-100/80 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-300 dark:hover:bg-sky-500/20"
             >
               <Send className="h-3.5 w-3.5 shrink-0" />
-              <span>{telegram}</span>
+              <span className="truncate">{telegram}</span>
             </a>
           )}
         </div>
@@ -386,15 +386,15 @@ export default function FarmerDetailPage({ bootstrap }: { bootstrap: AppBootstra
                 return (
                   <div
                     key={stat.label}
-                    className="flex items-center gap-3 rounded-2xl border border-slate-200/80 bg-white/80 p-3.5 backdrop-blur-sm dark:border-slate-800/80 dark:bg-obsidian-950/60"
+                    className="flex min-w-0 items-center gap-2.5 rounded-2xl border border-slate-200/80 bg-white/80 p-3 backdrop-blur-sm dark:border-slate-800/80 dark:bg-obsidian-950/60 sm:gap-3 sm:p-3.5"
                   >
                     <div
                       className={cn(
-                        "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
+                        "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl sm:h-10 sm:w-10",
                         stat.toneClass,
                       )}
                     >
-                      <StatIcon className="h-5 w-5" />
+                      <StatIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                     </div>
                     <div className="min-w-0">
                       <p className="font-display text-lg font-extrabold leading-none text-slate-900 dark:text-white">
@@ -437,12 +437,12 @@ export default function FarmerDetailPage({ bootstrap }: { bootstrap: AppBootstra
                 </span>
               </div>
 
-              <article className="ai-surface ai-card-hover relative overflow-hidden p-5 sm:p-6">
+              <article className="ai-surface ai-card-hover relative overflow-hidden p-4 sm:p-6">
                 <div
                   aria-hidden="true"
                   className="pointer-events-none absolute inset-y-0 right-0 w-1/3 bg-gradient-to-l from-indigo-500/[0.04] to-transparent"
                 />
-                <div className="relative flex flex-col gap-5 sm:flex-row sm:items-start">
+                <div className="relative flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-5">
                   <MemberAvatar
                     src={resolveMemberPhotoUrl(supervisor)}
                     alt={supervisorName}
@@ -494,7 +494,7 @@ export default function FarmerDetailPage({ bootstrap }: { bootstrap: AppBootstra
                 </span>
               </div>
 
-              <div className="grid gap-5 md:grid-cols-2">
+              <div className="grid min-w-0 gap-4 sm:gap-5 md:grid-cols-2">
                 {team.map((member, index) => {
                   const toneKey = TEAM_TONE_ORDER[index % TEAM_TONE_ORDER.length];
                   const tone = ROLE_TONES[toneKey];
@@ -513,7 +513,7 @@ export default function FarmerDetailPage({ bootstrap }: { bootstrap: AppBootstra
                   return (
                     <article
                       key={`${cleanText(member.name) || index}-${cleanText(member.student_id)}`}
-                      className="ai-surface ai-card-hover flex flex-col justify-between p-5"
+                      className="ai-surface ai-card-hover flex min-w-0 flex-col justify-between p-4 sm:p-5"
                     >
                       <div>
                         <div className="flex items-start gap-4">

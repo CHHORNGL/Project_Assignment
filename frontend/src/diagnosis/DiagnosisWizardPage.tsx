@@ -998,9 +998,9 @@ export default function DiagnosisWizardPage({ bootstrap }: { bootstrap: Record<s
           ) : null}
 
           {currentStep === 3 ? (
-            <div className="grid items-start gap-6 lg:grid-cols-[1fr_340px]">
+            <div className="grid min-w-0 items-start gap-5 sm:gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
               {/* Questionnaire / Checklist Panel */}
-              <div className="space-y-5">
+              <div className="min-w-0 space-y-5">
                 {questionnaireActive && currentSymptoms.length > 0 ? (
                   /* Guided Questionnaire Mode */
                   (() => {
@@ -1189,11 +1189,11 @@ export default function DiagnosisWizardPage({ bootstrap }: { bootstrap: Record<s
                           )}
 
                           {/* Questionnaire Navigation Footer */}
-                          <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4 dark:border-slate-800/80">
+                          <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-4 dark:border-slate-800/80">
                             <button
                               type="button"
                               onClick={() => setCurrentCategoryIndex((prev) => Math.max(0, prev - 1))}
-                              className="diag-secondary-button h-9 px-3.5"
+                              className="diag-secondary-button h-9 px-3 sm:px-3.5"
                               disabled={currentCategoryIndex === 0}
                             >
                               <DiagIcon name="fa-chevron-left" className="h-3.5 w-3.5" />
@@ -1215,7 +1215,7 @@ export default function DiagnosisWizardPage({ bootstrap }: { bootstrap: Record<s
                                   goNext();
                                 }
                               }}
-                              className="diag-primary-button h-9 px-4"
+                              className="diag-primary-button h-9 px-3.5 sm:px-4"
                               disabled={!catAnswer}
                             >
                               <span>
@@ -1253,9 +1253,9 @@ export default function DiagnosisWizardPage({ bootstrap }: { bootstrap: Record<s
                       ) : undefined
                     }
                   >
-                    <div className="space-y-4">
-                      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
-                        <div className="rounded-2xl border border-slate-200/85 bg-slate-50/75 p-4 dark:border-slate-800 dark:bg-obsidian-950/60">
+                    <div className="min-w-0 space-y-4">
+                      <div className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
+                        <div className="min-w-0 rounded-2xl border border-slate-200/85 bg-slate-50/75 p-4 dark:border-slate-800 dark:bg-obsidian-950/60">
                           <label htmlFor="symptom-search" className="text-xs font-bold text-slate-900 dark:text-white">
                             {label("searchSymptom", "Search symptom")}
                           </label>
@@ -1369,9 +1369,9 @@ export default function DiagnosisWizardPage({ bootstrap }: { bootstrap: Record<s
               </div>
 
               {/* Sticky Live Suspects Feedback Panel */}
-              <div className="diag-panel p-5 lg:sticky lg:top-20">
-                <div className="mb-4 flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800/80">
-                  <div>
+              <div className="diag-panel min-w-0 p-4 sm:p-5 lg:sticky lg:top-20">
+                <div className="mb-4 flex items-center justify-between gap-2 border-b border-slate-100 pb-3 dark:border-slate-800/80">
+                  <div className="min-w-0">
                     <h3 className="text-sm font-bold text-slate-900 dark:text-white">
                       {isKhmer ? "ការវិនិច្ឆ័យផ្ទាល់" : "Live suspects analysis"}
                     </h3>
@@ -1478,13 +1478,14 @@ export default function DiagnosisWizardPage({ bootstrap }: { bootstrap: Record<s
           ) : null}
 
           {currentStep === 4 ? (
-            <div className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(360px,0.9fr)]">
+            <div className="grid min-w-0 gap-5 sm:gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(360px,0.9fr)]">
+              <div className="min-w-0">
               <StepCard
                 eyebrow={label("step4", "Step 4")}
                 title={label("stepReviewLabel", "Review + Submit")}
                 description={label("stepReviewDesc", "Review the diagnosis context, confirm the symptoms, and send the case for rule-based analysis.")}
               >
-                <div className="space-y-5">
+                <div className="min-w-0 space-y-5">
                   <ReviewList
                     title={label("selection", "Selection")}
                     icon="fa-seedling"
@@ -1512,11 +1513,11 @@ export default function DiagnosisWizardPage({ bootstrap }: { bootstrap: Record<s
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 ring-1 ring-emerald-500/20 dark:text-emerald-300">
                         <DiagIcon name="fa-robot" className="h-4 w-4" />
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                           {label("diagnosisMode", "Diagnosis Engine")}
                         </p>
-                        <h3 className="font-display text-base font-bold text-slate-900 dark:text-white">
+                        <h3 className="break-words font-display text-base font-bold text-slate-900 dark:text-white">
                           {label("ruleBasedAnalysis", "Rule-based expert analysis")}
                         </h3>
                       </div>
@@ -1529,8 +1530,9 @@ export default function DiagnosisWizardPage({ bootstrap }: { bootstrap: Record<s
                   </div>
                 </div>
               </StepCard>
+              </div>
 
-              <div className="space-y-6">
+              <div className="min-w-0 space-y-5 sm:space-y-6">
                 <StepCard
                   eyebrow={label("step4", "Step 4 · Context")}
                   title={label("freeTextNotes", "Additional Notes")}
@@ -1597,13 +1599,7 @@ export default function DiagnosisWizardPage({ bootstrap }: { bootstrap: Record<s
                           <img
                             src={fieldImagePreview}
                             alt="Field preview"
-                            style={{
-                              display: "block",
-                              width: "100%",
-                              objectFit: "cover",
-                              maxHeight: "60vw",
-                              minHeight: "180px",
-                            }}
+                            className="block max-h-[320px] min-h-[180px] w-full object-cover"
                           />
                           <button
                             type="button"
