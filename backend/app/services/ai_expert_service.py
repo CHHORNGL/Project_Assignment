@@ -9,16 +9,15 @@ requiring external LLMs (Gemini, Groq, ChatGPT).
 
 from __future__ import annotations
 
-import os
 import json
+import os
 import re
 from collections import Counter
-from typing import Any, Optional
+from typing import Any
 from urllib.parse import urlparse
 
 import requests
 from flask import current_app
-
 
 DEFAULT_TIMEOUT_SECONDS = 30.0
 DEFAULT_SPACE_ENDPOINT = "https://maoseavik-agrisystem-agricultural-assistant.hf.space"
@@ -40,6 +39,7 @@ def clean_professional_text(text: str) -> str:
     """Normalize text into clean, readable language with flexible formatting."""
     if not text:
         return ""
+    text = EMOJI_PATTERN.sub("", text)
     # Clean up double spaces within lines while preserving natural paragraphs
     lines = [re.sub(r"[ \t]+", " ", line).strip() for line in text.split("\n")]
     text = "\n".join(lines)
@@ -69,7 +69,7 @@ def _active_model_profile() -> dict[str, str] | None:
             if isinstance(profile, dict) and profile.get("active"):
                 return profile
         return next((p for p in profiles if isinstance(p, dict)), None)
-    except Exception:
+    except Exception:  # noqa: BLE001
         return None
 
 
@@ -101,7 +101,7 @@ def _setting(name: str, default: str = "") -> str:
                     token_setting = SiteSetting.query.get(token_key) if token_key else None
                     if token_setting and token_setting.value and token_setting.value.strip():
                         return token_setting.value.strip()
-                except Exception:
+                except Exception:  # noqa: BLE001, S110
                     pass
 
     try:
@@ -121,7 +121,7 @@ def _setting(name: str, default: str = "") -> str:
                 if name == "HF_INFERENCE_URL" and not is_valid_inference_endpoint(val):
                     continue
                 return val
-    except Exception:
+    except Exception:  # noqa: BLE001, S110
         pass
 
     try:
@@ -195,17 +195,17 @@ def _timeout() -> float:
         return DEFAULT_TIMEOUT_SECONDS
 
 
-def _is_khmer(language: Optional[str], text: str = "") -> bool:
+def _is_khmer(language: str | None, text: str = "") -> bool:
     if (language or "").lower() in {"km", "kh", "khmer"}:
         return True
     return bool(re.search(r"[\u1780-\u17ff]", text))
 
 
-def _language_name(language: Optional[str]) -> str:
+def _language_name(language: str | None) -> str:
     return "Khmer" if (language or "").lower() in {"km", "kh", "khmer"} else "English"
 
 
-def _build_prompt(message: str, context: str, language: Optional[str]) -> str:
+def _build_prompt(message: str, context: str, language: str | None) -> str:
     bounded_message = message.strip()[:MAX_MESSAGE_CHARS]
     if _is_khmer(language, message):
         bounded_context = (context or "រកមិនឃើញព័ត៌មាននៅក្នុងមូលដ្ឋានចំណេះដឹងទេ។").strip()[:MAX_CONTEXT_CHARS]
@@ -256,7 +256,7 @@ def _extract_text(payload: Any) -> str:
     return ""
 
 
-def _clean_model_output(reply: str, user_message: str = "", language: Optional[str] = None) -> str:
+def _clean_model_output(reply: str, user_message: str = "", language: str | None = None) -> str:
     """Sanitize, normalize, and remove artifacts from raw model generations."""
     if not reply:
         return ""
@@ -314,12 +314,10 @@ def _is_valid_khmer_text(text: str) -> bool:
         return False
     # Check vocabulary density for longer texts
     found = [w for w in COMMON_KHMER_WORDS if w in text]
-    if len(text) > 40 and len(found) < 3:
-        return False
-    return True
+    return not (len(text) > 40 and len(found) < 3)
 
 
-def _is_valid_reply(reply: str, user_message: str = "", language: Optional[str] = None) -> bool:
+def _is_valid_reply(reply: str, user_message: str = "", language: str | None = None) -> bool:
     """Validate that the model response is coherent, sufficiently long, and not a repetition loop."""
     if not reply or len(reply.strip()) < 10:
         return False
@@ -607,7 +605,7 @@ def _format_crop_all_diseases_reply_km(crop: Any, diseases: list[Any]) -> str:
         desc_short = d_desc.split("។")[0].strip() + "។" if "។" in d_desc else d_desc[:120].strip()
         treat_short = d_treat.split("។")[0].strip() + "។" if "។" in d_treat else d_treat[:120].strip()
 
-        d_disp = d_name_km if (d_name_km.startswith("ជំងឺ") or d_name_km.startswith("ការ") or d_name_km.startswith("មេរោគ") or d_name_km.startswith("កង្វះ")) else f"ជំងឺ{d_name_km}"
+        d_disp = d_name_km if d_name_km.startswith(("ជំងឺ", "ការ", "មេរោគ", "កង្វះ")) else f"ជំងឺ{d_name_km}"
         items.append(
             f"{i}. {d_disp} ({d_name_en})\n"
             f"- រោគសញ្ញាសម្គាល់៖ {desc_short}\n"
@@ -662,7 +660,7 @@ def _normalize_query(text: str) -> str:
     return t
 
 
-def _synthesize_local_expert_reply(user_message: str, context: str = "", language: Optional[str] = None) -> str:
+def _synthesize_local_expert_reply(user_message: str, context: str = "", language: str | None = None) -> str:
     """Offline, deterministic agronomic synthesizer prioritizing crop matching and local database records."""
     is_khmer = _is_khmer(language, user_message)
 
@@ -709,8 +707,8 @@ def _synthesize_local_expert_reply(user_message: str, context: str = "", languag
     is_fertilizer_query = any(k in q_norm for k in fertilizer_keywords)
 
     try:
-        from app.models.disease import Disease
         from app.models.crop import Crop
+        from app.models.disease import Disease
 
         # 1. Match Crop from Database
         all_crops = Crop.query.all()
@@ -774,7 +772,7 @@ def _synthesize_local_expert_reply(user_message: str, context: str = "", languag
                 if (name_en and name_en in q_norm) or (name_km and name_km in q_norm):
                     matched_disease = d
                     break
-    except Exception:
+    except Exception:  # noqa: BLE001
         matched_disease = None
         matched_crop = None
 
@@ -990,7 +988,7 @@ def _synthesize_local_expert_reply(user_message: str, context: str = "", languag
     )
 
 
-def _valid_hf_token(token: str) -> Optional[str]:
+def _valid_hf_token(token: str) -> str | None:
     """Return a usable Hugging Face token, filtering out expired hf_oauth_ JWT tokens."""
     tok = (token or "").strip()
     if not tok or not tok.startswith("hf_"):
@@ -1006,12 +1004,12 @@ def _valid_hf_token(token: str) -> Optional[str]:
             exp = float(claims.get("exp") or 0)
             if exp and exp <= _time.time():
                 return None
-        except Exception:
+        except Exception:  # noqa: BLE001
             return None
     return tok
 
 
-def _gradio_client_reply(endpoint: str, token: str, question: str, context: str, timeout: float, max_new_tokens: int) -> Optional[str]:
+def _gradio_client_reply(endpoint: str, token: str, question: str, context: str, timeout: float, max_new_tokens: int) -> str | None:
     """Call the Hugging Face Space using the official gradio_client library."""
     try:
         from gradio_client import Client
@@ -1032,7 +1030,7 @@ def _gradio_client_reply(endpoint: str, token: str, question: str, context: str,
                 return result.strip()
         except AppError as app_exc:
             raise RuntimeError(str(app_exc)) from app_exc
-        except Exception as call_exc:
+        except Exception as call_exc:  # noqa: BLE001
             try:
                 current_app.logger.warning(
                     "gradio_client /answer failed on %s: %s", clean_ep, call_exc
@@ -1041,7 +1039,7 @@ def _gradio_client_reply(endpoint: str, token: str, question: str, context: str,
                 pass
     except RuntimeError:
         raise
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001
         try:
             current_app.logger.warning("gradio_client request failed: %s", exc)
         except RuntimeError:
@@ -1073,7 +1071,7 @@ def _gradio_sse_reply(endpoint: str, token: str, prompt: str, timeout: float, ma
     payload = {"data": [prompt, 0.5, max(32, min(int(max_new_tokens), 1024))]}
 
     call_urls = _gradio_call_urls(endpoint)
-    last_response = None
+    last_response: requests.Response | None = None
     call_url = call_urls[-1]
     for candidate in call_urls:
         response = requests.post(candidate, json=payload, headers=headers, timeout=timeout)
@@ -1084,7 +1082,11 @@ def _gradio_sse_reply(endpoint: str, token: str, prompt: str, timeout: float, ma
         response.raise_for_status()
         break
     else:
-        last_response.raise_for_status()
+        if last_response is not None:
+            last_response.raise_for_status()
+
+    if last_response is None:
+        raise RuntimeError("Gradio endpoint did not return a response")
 
     event_id = (last_response.json() or {}).get("event_id")
     if not event_id:
@@ -1157,8 +1159,8 @@ def generate_reply(
     user_message: str,
     *,
     context: str = "",
-    language: Optional[str] = None,
-) -> Optional[str]:
+    language: str | None = None,
+) -> str | None:
     """Generate a reply using the user's trained AI assistant."""
     if not user_message or not is_configured():
         return None
@@ -1179,7 +1181,7 @@ def generate_reply(
             question=user_message,
             context=context,
         )
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001
         try:
             current_app.logger.warning("Remote agricultural AI request failed: %s", exc)
         except RuntimeError:

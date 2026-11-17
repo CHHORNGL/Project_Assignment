@@ -4,11 +4,15 @@
 import os
 import re
 from collections import Counter
-import spaces
-import torch
+
 import gradio as gr
-from peft import PeftModel
-from transformers import AutoModelForCausalLM, AutoTokenizer
+import spaces  # type: ignore[import-not-found]
+import torch  # type: ignore[import-not-found]
+from peft import PeftModel  # type: ignore[import-not-found]
+from transformers import (  # type: ignore[import-not-found]
+    AutoModelForCausalLM,
+    AutoTokenizer,
+)
 
 try:
     from crop_catalog import CROP_DISEASES_CATALOG
@@ -34,6 +38,7 @@ def clean_professional_text(text: str) -> str:
     """Normalize text into clean, readable language with flexible formatting."""
     if not text:
         return ""
+    text = EMOJI_PATTERN.sub("", text)
     # Clean up double spaces within lines while preserving natural paragraphs
     lines = [re.sub(r"[ \t]+", " ", line).strip() for line in text.split("\n")]
     text = "\n".join(lines)
@@ -273,9 +278,7 @@ def _is_valid_khmer_text(text: str) -> bool:
         return False
     # Check vocabulary density for longer texts
     found = [w for w in COMMON_KHMER_WORDS if w in text]
-    if len(text) > 40 and len(found) < 3:
-        return False
-    return True
+    return not (len(text) > 40 and len(found) < 3)
 
 
 def _is_valid_output(text: str, is_khmer: bool) -> bool:
@@ -804,7 +807,7 @@ def answer(
     raw_output = ""
     try:
         raw_output = _generate_with_gpu(messages, max_new_tokens, temperature)
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001
         print(f"Generation error: {exc}")
         raw_output = ""
 

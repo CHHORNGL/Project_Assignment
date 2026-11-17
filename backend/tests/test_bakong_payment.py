@@ -1,9 +1,9 @@
-from datetime import datetime, timedelta, timezone
 import os
 import pathlib as _pathlib
 import sys as _sys
 import tempfile
 import unittest
+from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 
 for _p in (
@@ -17,13 +17,13 @@ _test_db_fd, _test_db_path = tempfile.mkstemp(suffix=".db")
 os.environ["DATABASE_URL"] = f"sqlite:///{_test_db_path}"
 os.environ.setdefault("SECRET_KEY", "test-secret-key-for-ci")
 
-from app import create_app  # noqa: E402
-from app.config import Config  # noqa: E402
-from app.extensions import db  # noqa: E402
-from app.models.payment_transaction import PaymentTransaction  # noqa: E402
-from app.models.role import Role  # noqa: E402
-from app.models.user import User  # noqa: E402
-from app.services.bakong_service import (  # noqa: E402
+from app import create_app
+from app.config import Config
+from app.extensions import db
+from app.models.payment_transaction import PaymentTransaction
+from app.models.role import Role
+from app.models.user import User
+from app.services.bakong_service import (
     approve_khqr_transaction_manually,
     create_khqr_payment,
     get_bakong_config,
@@ -261,7 +261,7 @@ class TestBakongPayment(unittest.TestCase):
         self.assertTrue(farmer.is_premium)
 
     def test_reconcile_recent_user_khqr_payments_detects_paid_transaction(self):
-        created = create_khqr_payment(
+        create_khqr_payment(
             user=self.farmer,
             amount=20.0,
             billing_interval="monthly",

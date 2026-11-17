@@ -69,8 +69,9 @@ def generate_clean_khqr_image(qr_string: str, currency: str = "USD") -> str | No
         import base64
         import io
         from importlib import resources
-        from PIL import Image, ImageDraw
+
         import qrcode
+        from PIL import Image, ImageDraw
 
         qr = qrcode.QRCode(
             version=None,
@@ -86,7 +87,7 @@ def generate_clean_khqr_image(qr_string: str, currency: str = "USD") -> str | No
         try:
             icon_bytes = resources.files("bakong_khqr.sdk.assets").joinpath(asset_name).read_bytes()
             icon = Image.open(io.BytesIO(icon_bytes)).convert("RGBA")
-        except Exception:
+        except Exception:  # noqa: BLE001
             icon_bytes = resources.files("bakong_khqr.sdk.assets").joinpath("khqr.png").read_bytes()
             icon = Image.open(io.BytesIO(icon_bytes)).convert("RGBA")
 
@@ -114,7 +115,7 @@ def generate_clean_khqr_image(qr_string: str, currency: str = "USD") -> str | No
         buf = io.BytesIO()
         img.save(buf, format="PNG", optimize=True)
         return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode("utf-8")
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         logger.warning(f"Failed to generate clean KHQR image: {e}")
         return None
 
@@ -363,7 +364,7 @@ def query_bakong_md5_api(
             res_json = json.loads(resp_data)
         except json.JSONDecodeError:
             res_json = {"responseCode": 1, "responseMessage": f"Invalid JSON: {resp_data}"}
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         res_json = {"responseCode": 1, "responseMessage": f"Network error: {e}"}
     finally:
         conn.close()
@@ -436,11 +437,11 @@ def verify_khqr_payment(
     config = get_bakong_config()
     try:
         try:
-            status_str, data, err_msg = query_bakong_md5_api(
+            status_str, _data, err_msg = query_bakong_md5_api(
                 config["token"], md5, bypass_cache=bypass_cache
             )
         except TypeError:
-            status_str, data, err_msg = query_bakong_md5_api(config["token"], md5)
+            status_str, _data, err_msg = query_bakong_md5_api(config["token"], md5)
     except Exception as e:  # noqa: BLE001
         logger.warning(f"Bakong query error for md5 {md5}: {e}")
         status_str = "UNPAID"
