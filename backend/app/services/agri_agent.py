@@ -9,9 +9,9 @@ photo it cannot receive.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import re
-from typing import Iterable, Optional
+from collections.abc import Iterable
+from dataclasses import dataclass
 
 
 @dataclass(frozen=True)
@@ -33,8 +33,8 @@ def plan_request(
     *,
     language: str = "en",
     has_image: bool = False,
-    latitude: Optional[float] = None,
-    longitude: Optional[float] = None,
+    latitude: float | None = None,
+    longitude: float | None = None,
 ) -> AgentPlan:
     """Choose trusted tools using English and Khmer intent signals.
 
@@ -90,17 +90,20 @@ def plan_request(
         "ទិន្នផល", "កម្រិតសេដ្ឋកិច្ច", "ការស្រោចស្រពដំណក់ទឹក", "ការវិភាគដី",
     )
 
+    agri_context_terms = (
+        "crop", "plant", "rice", "corn", "cassava", "durian", "mango", "pepper", "chili",
+        "tomato", "cucumber", "banana", "coconut", "cashew", "coffee", "soil", "fertilizer",
+        "urea", "npk", "compost", "seed", "water", "irrigat", "harvest", "farm", "field",
+        "ដំណាំ", "ស្រូវ", "ពោត", "ដំឡូង", "ទុរេន", "ស្វាយ", "ម្រេច", "ម្ទេស", "ប៉េងប៉ោះ",
+        "ត្រសក់", "ចេក", "ដូង", "ស្វាយចន្ទី", "កាហ្វេ", "ដី", "ជី", "ពូជ", "ទឹក", "ស្រោច",
+        "ប្រមូលផល", "ស្រែ", "ចម្ការ", "កសិកម្ម", "កសិករ", "ដាំ",
+    )
+
     system_help_terms = (
-        "system", "website", "platform", "dashboard",
-        "how to use", "navigation", "feature", "menu", "page",
-        "password", "passkey", "account", "profile", "settings", "dark mode",
-        "light mode", "language", "khmer", "english", "upgrade", "credit", "credits",
-        "token", "tokens", "subscription", "price", "pricing", "subscription plan",
-        "how to diagnose", "upload photo", "rule based", "history", "report",
-        "contact admin", "support", "ticket", "this app", "the app", "mobile app", "web app",
-        "ប្រព័ន្ធ", "គេហទំព័រ", "កម្មវិធី", "របៀបប្រើ", "មុខងារ", "ម៉ឺនុយ",
-        "លេខសម្ងាត់", "គណនី", "ការកំណត់", "ភាសា", "ប្តូរភាសា", "ម៉ូតងងឹត", "តម្លើង",
-        "របៀបពិនិត្យ", "បញ្ចូលរូប", "ប្រវត្តិ", "ទាក់ទង", "ជំនួយ", "របាយការណ៍",
+        "forgot password", "reset password", "change password", "passkey", "two-factor",
+        "dark mode", "light mode", "bakong", "khqr", "subscription plan",
+        "how to login", "how to sign in", "delete account", "profile picture",
+        "ភ្លេចលេខសម្ងាត់", "ប្តូរលេខសម្ងាត់", "ម៉ូតងងឹត", "បាគង",
     )
 
     clean_text = re.sub(r"[!?,.។៕\s]+", " ", text).strip()
@@ -131,7 +134,7 @@ def plan_request(
     elif _has_any(text, action_terms):
         intent = "action_request"
         tools = ("knowledge_base", "confirmation_gate")
-    elif _has_any(text, system_help_terms):
+    elif _has_any(text, system_help_terms) and not _has_any(text, agri_context_terms):
         intent = "system_help"
         tools = ()
     else:
@@ -184,7 +187,7 @@ def _weather_tool(latitude: float, longitude: float, language: str) -> str:
             lang="km" if language == "km" else "en",
         )
         return _format_weather(payload, source, language)
-    except Exception:
+    except Exception:  # noqa: BLE001
         # Weather is helpful but never allowed to break agricultural chat.
         return "Weather tool unavailable; do not invent current weather data."
 
@@ -193,10 +196,10 @@ def build_agent_context(
     message: str,
     *,
     language: str = "en",
-    conversation: Optional[Iterable[tuple[str, str]]] = None,
+    conversation: Iterable[tuple[str, str]] | None = None,
     has_image: bool = False,
-    latitude: Optional[float] = None,
-    longitude: Optional[float] = None,
+    latitude: float | None = None,
+    longitude: float | None = None,
 ) -> tuple[str, AgentPlan]:
     """Run trusted tools and return bounded context for the model."""
 
@@ -226,7 +229,7 @@ def build_agent_context(
                 if crop:
                     crop_title = getattr(crop, "name_kh", None) or crop.name
                     sections.append(f"ដំណាំដែលត្រូវគ្នា៖ {crop_title}")
-            except Exception:
+            except Exception:  # noqa: BLE001
                 sections.append("ចំណាំ៖ មិនមានទិន្នន័យជំងឺក្នុងស្រុកដែលត្រូវគ្នានឹងសំណួរនេះទេ។ សូមប្រើប្រាស់ចំណេះដឹងជំនាញកសិកម្មរបស់អ្នកដើម្បីផ្តល់ដំបូន្មានបច្ចេកទេសដាំដុះ និងការថែទាំដំណាំយ៉ាងពេញលេញជូនកសិករ។")
 
         if plan.intent == "greeting":
@@ -295,7 +298,7 @@ def build_agent_context(
                 sections.append(knowledge_context or "No matching knowledge-base context was found.")
                 if crop:
                     sections.append(f"Matched crop record: {crop.name}")
-            except Exception:
+            except Exception:  # noqa: BLE001
                 sections.append("Note: No specific local database records matched; provide complete agronomic guidance using your expert knowledge base.")
 
         if plan.intent == "greeting":

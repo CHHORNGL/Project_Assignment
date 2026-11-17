@@ -697,20 +697,26 @@ def generate_assistant_reply(
     )
 
     if agent_plan.intent == "system_help":
-        from app.services.project_assistant import generate_project_reply
-
-        role_label = getattr(current_user, "role", "farmer") if current_user and current_user.is_authenticated else "farmer"
-        reply = generate_project_reply(user_message, user_role=role_label, page="farmer_chat")
-        if reply:
-            reply = clean_markdown_symbols(reply)
-            if charges_farmer_credits:
-                tokens_used = max(15, (len(user_message) + len(reply)) // 4)
-                current_user.ai_credits = max(0, (current_user.ai_credits or 0) - tokens_used)
-                try:
-                    db.session.commit()
-                except Exception:  # noqa: BLE001
-                    db.session.rollback()
-            return reply
+        if lang == "km":
+            reply = (
+                "សូមអភ័យទោស! ខ្ញុំគឺជាអ្នកជំនាញកសិកម្មឆ្លាតវៃ AgriSystem AI (ម៉ូឌែល AGY V2.0.0) "
+                "ដែលផ្តោតសំខាន់លើការផ្តល់ប្រឹក្សាបច្ចេកទេសកសិកម្ម ការធ្វើរោគវិនិច្ឆ័យជំងឺដំណាំ ការគ្រប់គ្រងដី ជី ទឹក និងការព្យាបាលដំណាំប៉ុណ្ណោះ មិនមែនសម្រាប់ឆ្លើយសំណួរអំពីគម្រោង ឬប្រព័ន្ធគេហទំព័រឡើយ។ "
+                "តើលោកអ្នកមានចម្ងល់អំពីដំណាំ រោគសញ្ញាជំងឺ ឬបច្ចេកទេសដាំដុះអ្វីដែលខ្ញុំអាចជួយបាននៅថ្ងៃនេះទេ?"
+            )
+        else:
+            reply = (
+                "I am the AgriSystem AI Agricultural Expert (model AGY V2.0.0), dedicated exclusively to "
+                "agronomy guidance, crop disease diagnosis, soil & fertilizer management, and farming support rather than website or system project questions. "
+                "What crop health, pest management, or farming question can I help you with today?"
+            )
+        if charges_farmer_credits:
+            tokens_used = max(15, (len(user_message) + len(reply)) // 4)
+            current_user.ai_credits = max(0, (current_user.ai_credits or 0) - tokens_used)
+            try:
+                db.session.commit()
+            except Exception:  # noqa: BLE001
+                db.session.rollback()
+        return clean_markdown_symbols(reply)
 
     if agent_plan.intent == "agent_identity":
         from app.services.ai_expert_service import _match_trained_dataset
@@ -721,14 +727,14 @@ def generate_assistant_reply(
         elif lang == "km":
             reply = (
                 "ជំរាបសួរលោកអ្នក! ខ្ញុំគឺជា AgriSystem AI (ម៉ូឌែលឈ្មោះ AGY V2.0.0) ដែលត្រូវបានបង្កើត និងអភិវឌ្ឍឡើងដោយប្រធានក្រុម ម៉ៅ សៀវអ៊ិ (Team Leader Mao Seavik)។ "
-                "ខ្ញុំជាជំនួយការប្រព័ន្ធ និងកសិកម្មឆ្លាតវៃ ត្រៀមខ្លួនជានិច្ចក្នុងការជួយណែនាំការប្រើប្រាស់ប្រព័ន្ធ ពិនិត្យជំងឺដំណាំ វិភាគរោគសញ្ញា និងចែករំលែកវិធីសាស្រ្តការពារ និងការព្យាបាលដំណាំប្រកបដោយសុវត្ថិភាព។ "
-                "តើថ្ងៃនេះខ្ញុំអាចជួយអ្វីដល់លោកអ្នកបានខ្លះដែរ?"
+                "ខ្ញុំជាជំនួយការកសិកម្មឆ្លាតវៃ ត្រៀមខ្លួនជានិច្ចក្នុងការជួយពិនិត្យជំងឺដំណាំ វិភាគរោគសញ្ញា ផ្តល់បច្ចេកទេសដាំដុះ និងចែករំលែកវិធីសាស្រ្តការពារ និងការព្យាបាលដំណាំប្រកបដោយសុវត្ថិភាព។ "
+                "តើថ្ងៃនេះខ្ញុំអាចជួយអ្វីដល់ការងារដាំដុះ ឬដំណាំរបស់លោកអ្នកបានខ្លះដែរ?"
             )
         else:
             reply = (
                 "Hello! I am AgriSystem AI (model name: AGY V2.0.0), created and developed under the leadership of Team Leader Mao Seavik. "
-                "I am your intelligent AgriSystem assistant dedicated to supporting you with platform features, system navigation, and safe agricultural guidance. "
-                "How can I help you today?"
+                "I am your intelligent agricultural expert dedicated to helping farmers diagnose plant diseases, optimize soil and fertilizer management, and adopt safe, sustainable farming practices. "
+                "How can I help you and your crops today?"
             )
         if charges_farmer_credits:
             tokens_used = max(15, (len(user_message) + len(reply)) // 4)
@@ -744,21 +750,21 @@ def generate_assistant_reply(
         if "hello in khmer" in msg_clean:
             reply = (
                 "សួស្តីបាទ/ចាស! ជាភាសាខ្មែរយើងប្រើពាក្យ 'សួស្តី' (សម្រាប់ភាពស្និទ្ធស្នាល ឬទូទៅ) ឬ 'ជំរាបសួរ' (ប្រកបដោយការគួរសម និងការគោរព)។ "
-                "តើខ្ញុំអាចជួយសម្រួលការប្រើប្រាស់ប្រព័ន្ធ ឬជួយដោះស្រាយបញ្ហាអ្វីជូនលោកអ្នកបានខ្លះដែរ?"
+                "តើថ្ងៃនេះដំណាំរបស់អ្នកមានសុខភាពល្អធម្មតា ឬត្រូវការជំនួយបច្ចេកទេសកសិកម្មអ្វីដែរទេ?"
             )
         elif "hello in english" in msg_clean:
             reply = (
                 "Hi there! In English, we greet with 'Hello' or 'Hi'! "
-                "How can I assist you with the AgriSystem platform or your questions today?"
+                "How are your crops doing today, and what agricultural questions can I help you with?"
             )
         elif lang == "km":
             reply = (
                 "សួស្តីបាទ/ចាស! ខ្ញុំរីករាយណាស់ដែលបានជួយលោកអ្នកនៅថ្ងៃនេះ។ "
-                "តើខ្ញុំអាចជួយសម្រួលការប្រើប្រាស់ប្រព័ន្ធ ឬជួយដោះស្រាយបញ្ហាអ្វីជូនលោកអ្នកបានខ្លះដែរ?"
+                "តើដំណាំ ឬការងារកសិកម្មរបស់អ្នកដំណើរការយ៉ាងណាដែរ? តើមានបញ្ហាជំងឺដំណាំ ដី ជី ឬការដាំដុះអ្វីដែលខ្ញុំអាចជួយផ្តល់ដំបូន្មានជូនបានដែរទេ?"
             )
         else:
             reply = (
-                "Hello! Warm greetings to you! It's a pleasure to assist you. How can I help you with the system or your questions today?"
+                "Hello! Warm greetings to you! It's a pleasure to assist you. How are your crops doing today, and how can I help you with your farming needs?"
             )
         if charges_farmer_credits:
             tokens_used = max(15, (len(user_message) + len(reply)) // 4)

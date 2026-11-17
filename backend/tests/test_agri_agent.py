@@ -1,4 +1,3 @@
-# ruff: noqa: E402, I001
 import pathlib as _pathlib
 import sys as _sys
 
@@ -68,6 +67,16 @@ class AgriAgentPlanningTestCase(unittest.TestCase):
         plan_en = plan_request("How can I use soil test data to optimize fertilizer application?", language="en")
         self.assertEqual(plan_en.intent, "agricultural_insights")
         self.assertIn("knowledge_base", plan_en.tools)
+
+    def test_agricultural_queries_with_system_or_usage_words_stay_agricultural(self):
+        plan_irrig_km = plan_request("តើរៀបចំប្រព័ន្ធទឹកសម្រាប់ដំណាំទុរេនដូចម្តេច?", language="km")
+        self.assertEqual(plan_irrig_km.intent, "agricultural_advice")
+
+        plan_fert_km = plan_request("របៀបប្រើជីកំប៉ុសលើដំណាំបន្លែ", language="km")
+        self.assertEqual(plan_fert_km.intent, "agricultural_advice")
+
+        plan_fert_en = plan_request("How to use NPK fertilizer on rice?", language="en")
+        self.assertEqual(plan_fert_en.intent, "agricultural_advice")
 
 
 if __name__ == "__main__":
