@@ -29,6 +29,7 @@ test("LoginActivityPage and SettingsPage show real device names and location ins
 
   assert.ok(activity.includes("act.device_name"));
   assert.ok(activity.includes("act.location"));
+  assert.ok(activity.includes("formatLoginMethod"));
   assert.ok(!activity.includes("act.ip_address"));
 
   assert.ok(settings.includes("act.device_name"));

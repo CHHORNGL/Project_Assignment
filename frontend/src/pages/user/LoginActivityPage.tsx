@@ -27,6 +27,18 @@ interface LoginActivityData {
   loginUrl: string;
 }
 
+function formatLoginMethod(route: string | undefined, isKhmer: boolean): string {
+  const clean = (route || "").toLowerCase();
+  if (clean.includes("google")) return isKhmer ? "ចូលតាម Google" : "Google Sign-In";
+  if (clean.includes("passkey")) return "Passkey";
+  if (clean.includes("telegram")) return isKhmer ? "ចូលតាម Telegram" : "Telegram Sign-In";
+  if (clean.includes("verify")) return isKhmer ? "ផ្ទៀងផ្ទាត់ OTP" : "Email OTP";
+  if (clean.includes("staff/login")) return isKhmer ? "គណនីបុគ្គលិក" : "Staff Sign-In";
+  if (clean.includes("api/login")) return isKhmer ? "កម្មវិធីទូរស័ព្ទ" : "Mobile App";
+  if (clean.includes("login")) return isKhmer ? "អ៊ីមែល និងពាក្យសម្ងាត់" : "Email & Password";
+  return isKhmer ? "សម័យគេហទំព័រ" : "Web Session";
+}
+
 export default function LoginActivityPage({
   bootstrap,
 }: {
@@ -200,7 +212,7 @@ export default function LoginActivityPage({
                 const isRevoked = Boolean(act.revoked_at || act.revoked);
                 const deviceName = act.device_name || act.device_type || "Unknown Device";
                 const osName = act.os || act.platform || "Unknown OS";
-                const routeLabel = act.login_route || act.route || "-";
+                const routeLabel = formatLoginMethod(act.login_route || act.route, isKhmer);
                 const locationLabel =
                   act.location || (isKhmer ? "មិនស្គាល់ទីតាំង" : "Unknown Location");
                 const timeLabel = isRevoked
@@ -248,7 +260,9 @@ export default function LoginActivityPage({
                             <span>{locationLabel}</span>
                           </span>
                           <span aria-hidden="true">·</span>
-                          <span className="font-mono text-[11px]">{routeLabel}</span>
+                          <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                            {routeLabel}
+                          </span>
                         </p>
                         <p className="mt-1 text-[11px] text-slate-400">
                           {timeLabel}
