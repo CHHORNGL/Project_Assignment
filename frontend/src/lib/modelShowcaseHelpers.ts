@@ -1,6 +1,6 @@
 export const HERO_AZIMUTH = 0.44;
 export const HERO_ELEVATION = 0.12;
-export const TARGET_Y_OFFSET = -0.06;
+export const TARGET_Y_OFFSET = 0.0;
 
 export interface StudioLightingPreset {
   toneMappingExposure: number;

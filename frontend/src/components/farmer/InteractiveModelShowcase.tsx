@@ -1,5 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Move3d, Pause, Play, RotateCcw } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import {
   TARGET_Y_OFFSET,
@@ -112,7 +111,6 @@ export function InteractiveModelShowcase({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mountRef = useRef<HTMLDivElement | null>(null);
   const rigRef = useRef<StudioSceneRig | null>(null);
-  const resetHandlerRef = useRef<(() => void) | null>(null);
 
   const [docDark, setDocDark] = useState<boolean>(() => detectDocumentDark());
   const resolvedDark = isDarkProp ?? docDark;
@@ -122,20 +120,11 @@ export function InteractiveModelShowcase({
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
   const [loadProgress, setLoadProgress] = useState<number>(8);
-  const [userInteracted, setUserInteracted] = useState(false);
   const [reducedMotion, setReducedMotion] = useState<boolean>(() =>
     typeof window !== "undefined"
       ? window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false
       : false,
   );
-  const [autoRotating, setAutoRotating] = useState<boolean>(() =>
-    typeof window !== "undefined"
-      ? !(window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false)
-      : true,
-  );
-
-  const autoRotateRef = useRef(autoRotating);
-  autoRotateRef.current = autoRotating;
 
   useEffect(() => {
     if (isDarkProp !== undefined || typeof document === "undefined") return;
@@ -160,7 +149,6 @@ export function InteractiveModelShowcase({
     const mql = window.matchMedia("(prefers-reduced-motion: reduce)");
     const onChange = () => {
       setReducedMotion(mql.matches);
-      if (mql.matches) setAutoRotating(false);
     };
     onChange();
     mql.addEventListener("change", onChange);
@@ -317,7 +305,6 @@ export function InteractiveModelShowcase({
         let loadedRoot: import("three").Object3D | null = null;
         let loadReadyTime = 0;
         let isDragging = false;
-        let resetLerpRemaining = 0;
         let contextLost = false;
         let isViewportVisible = true;
         let isTabVisible =
@@ -374,16 +361,7 @@ export function InteractiveModelShowcase({
               modelPivot.rotation.x = pointerCurrent.y * 0.06;
             }
 
-            if (resetLerpRemaining > 0) {
-              resetLerpRemaining = Math.max(0, resetLerpRemaining - dt);
-              const [hx, hy, hz] = computeHeroCameraCoords(heroDistance, TARGET_Y_OFFSET);
-              const desiredPos = new THREE.Vector3(hx, hy, hz);
-              const lerpAlpha = 1 - Math.exp(-7.5 * dt);
-              camera.position.lerp(desiredPos, lerpAlpha);
-              controls.target.lerp(heroTarget, lerpAlpha);
-            }
-
-            controls.autoRotate = Boolean(loadedRoot && autoRotateRef.current && !isDragging);
+            controls.autoRotate = Boolean(loadedRoot && !reducedMotion && !isDragging);
             controls.update();
             renderer.render(scene, camera);
           };
@@ -396,12 +374,6 @@ export function InteractiveModelShowcase({
             window.cancelAnimationFrame(rafId);
             rafId = 0;
           }
-        };
-
-        resetHandlerRef.current = () => {
-          resetLerpRemaining = 0.75;
-          pointerTarget.x = 0;
-          pointerTarget.y = 0;
         };
 
         const maxAnisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy() || 1);
@@ -498,8 +470,6 @@ export function InteractiveModelShowcase({
 
         const onControlsStart = () => {
           isDragging = true;
-          resetLerpRemaining = 0;
-          setUserInteracted(true);
         };
         const onControlsEnd = () => {
           isDragging = false;
@@ -583,7 +553,6 @@ export function InteractiveModelShowcase({
 
         cleanupFn = () => {
           stopRenderLoop();
-          resetHandlerRef.current = null;
           rigRef.current = null;
           resizeObserver.disconnect();
           intersectionObserver.disconnect();
@@ -639,14 +608,6 @@ export function InteractiveModelShowcase({
       if (cleanupFn) cleanupFn();
     };
   }, [modelUrl, isKhmer, reducedMotion]);
-
-  const handleResetView = useCallback(() => {
-    resetHandlerRef.current?.();
-    if (!reducedMotion) {
-      setAutoRotating(true);
-    }
-    setUserInteracted(false);
-  }, [reducedMotion]);
 
   return (
     <div
@@ -717,61 +678,6 @@ export function InteractiveModelShowcase({
           ready ? "opacity-100" : "opacity-0",
         )}
       />
-
-      {/* Minimalist Floating Studio Controls Pill (no hard box borders) */}
-      {ready && (
-        <div className="pointer-events-none absolute inset-x-0 bottom-2 z-20 flex justify-center px-3">
-          <div className="pointer-events-auto inline-flex items-center gap-1.5 rounded-full bg-white/80 px-2.5 py-1 text-[11px] font-medium text-neutral-600 shadow-sm ring-1 ring-black/[0.08] backdrop-blur-md transition-opacity duration-300 dark:bg-neutral-900/80 dark:text-neutral-300 dark:ring-white/[0.1]">
-            <span className="inline-flex items-center gap-1.5 px-1">
-              <Move3d className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400" />
-              <span>
-                {userInteracted
-                  ? isKhmer
-                    ? "ទិដ្ឋភាព 3D"
-                    : "3D View"
-                  : isKhmer
-                    ? "អូសដើម្បីបង្វិល 3D"
-                    : "Drag to orbit"}
-              </span>
-            </span>
-
-            <span className="h-3 w-px bg-black/10 dark:bg-white/10" aria-hidden="true" />
-
-            <button
-              type="button"
-              onClick={() => setAutoRotating((v) => !v)}
-              title={
-                autoRotating
-                  ? isKhmer
-                    ? "ផ្អាកការបង្វិល"
-                    : "Pause auto-orbit"
-                  : isKhmer
-                    ? "បន្តការបង្វិល"
-                    : "Resume auto-orbit"
-              }
-              aria-label={autoRotating ? "Pause 3D orbit" : "Play 3D orbit"}
-              aria-pressed={autoRotating}
-              className="inline-flex h-6 w-6 items-center justify-center rounded-full text-neutral-600 transition hover:bg-black/5 hover:text-neutral-900 dark:text-neutral-300 dark:hover:bg-white/10 dark:hover:text-white"
-            >
-              {autoRotating ? (
-                <Pause className="h-3 w-3" />
-              ) : (
-                <Play className="h-3 w-3" />
-              )}
-            </button>
-
-            <button
-              type="button"
-              onClick={handleResetView}
-              title={isKhmer ? "កំណត់មុំដើមឡើងវិញ" : "Reset camera pose"}
-              aria-label="Reset 3D camera pose"
-              className="inline-flex h-6 w-6 items-center justify-center rounded-full text-neutral-600 transition hover:bg-black/5 hover:text-neutral-900 dark:text-neutral-300 dark:hover:bg-white/10 dark:hover:text-white"
-            >
-              <RotateCcw className="h-3 w-3" />
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
