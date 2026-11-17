@@ -105,6 +105,16 @@ class AiExpertServiceTestCase(unittest.TestCase):
             )
             self.assertTrue(is_configured())
 
+    def test_valid_hf_token_filters_expired_oauth_jwt(self):
+        import base64
+        import json
+
+        valid_hf_token = _SERVICE._valid_hf_token
+        self.assertEqual(valid_hf_token("hf_validPersonalAccessToken123"), "hf_validPersonalAccessToken123")
+        expired_payload = base64.urlsafe_b64encode(json.dumps({"exp": 1700000000}).encode("utf-8")).decode("utf-8").rstrip("=")
+        expired_oauth = f"hf_oauth_header.{expired_payload}.sig"
+        self.assertIsNone(valid_hf_token(expired_oauth))
+
 
 if __name__ == "__main__":
     unittest.main()

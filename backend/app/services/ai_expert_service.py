@@ -990,14 +990,36 @@ def _synthesize_local_expert_reply(user_message: str, context: str = "", languag
     )
 
 
+def _valid_hf_token(token: str) -> Optional[str]:
+    """Return a usable Hugging Face token, filtering out expired hf_oauth_ JWT tokens."""
+    tok = (token or "").strip()
+    if not tok or not tok.startswith("hf_"):
+        return None
+    if tok.startswith("hf_oauth_") and tok.count(".") >= 2:
+        try:
+            import base64
+            import time as _time
+
+            payload_b64 = tok.split(".")[1]
+            payload_b64 += "=" * (-len(payload_b64) % 4)
+            claims = json.loads(base64.urlsafe_b64decode(payload_b64).decode("utf-8"))
+            exp = float(claims.get("exp") or 0)
+            if exp and exp <= _time.time():
+                return None
+        except Exception:
+            return None
+    return tok
+
+
 def _gradio_client_reply(endpoint: str, token: str, question: str, context: str, timeout: float, max_new_tokens: int) -> Optional[str]:
     """Call the Hugging Face Space using the official gradio_client library."""
     try:
         from gradio_client import Client
+        from gradio_client.exceptions import AppError
 
         clean_ep = endpoint.rstrip("/")
-        auth_token = token if (token and token.startswith("hf_")) else None
-        client = Client(clean_ep, token=auth_token)
+        auth_token = _valid_hf_token(token)
+        client = Client(clean_ep, token=auth_token if auth_token else False)
         try:
             job = client.submit(
                 question=question,
@@ -1008,8 +1030,17 @@ def _gradio_client_reply(endpoint: str, token: str, question: str, context: str,
             result = job.result(timeout=timeout)
             if isinstance(result, str) and result.strip():
                 return result.strip()
-        except Exception:
-            pass
+        except AppError as app_exc:
+            raise RuntimeError(str(app_exc)) from app_exc
+        except Exception as call_exc:
+            try:
+                current_app.logger.warning(
+                    "gradio_client /answer failed on %s: %s", clean_ep, call_exc
+                )
+            except RuntimeError:
+                pass
+    except RuntimeError:
+        raise
     except Exception as exc:
         try:
             current_app.logger.warning("gradio_client request failed: %s", exc)
@@ -1036,8 +1067,9 @@ def _gradio_sse_reply(endpoint: str, token: str, prompt: str, timeout: float, ma
     """Direct HTTP SSE fallback for Gradio Spaces."""
     headers = {"Content-Type": "application/json"}
     hostname = (urlparse(endpoint).hostname or "").lower()
-    if token and (not hostname.endswith(".hf.space") or token.startswith("hf_")):
-        headers["Authorization"] = f"Bearer {token}"
+    valid_tok = _valid_hf_token(token) if hostname.endswith(".hf.space") else (token or "").strip()
+    if valid_tok:
+        headers["Authorization"] = f"Bearer {valid_tok}"
     payload = {"data": [prompt, 0.5, max(32, min(int(max_new_tokens), 1024))]}
 
     call_urls = _gradio_call_urls(endpoint)

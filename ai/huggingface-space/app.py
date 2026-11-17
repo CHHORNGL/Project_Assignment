@@ -569,7 +569,35 @@ def _format_smooth_human_reply(matched_kb: dict, is_khmer: bool) -> str:
     )
 
 
-@spaces.GPU(duration=180)
+@spaces.GPU(duration=60)
+def _generate_with_gpu(
+    messages: list[dict[str, str]],
+    max_new_tokens: int,
+    temperature: float,
+) -> str:
+    """Run LoRA generation on ZeroGPU within the 60s free-tier duration cap."""
+    prompt = tokenizer.apply_chat_template(
+        messages, tokenize=False, add_generation_prompt=True
+    )
+    encoded = tokenizer(prompt, return_tensors="pt")
+    device = next(model.parameters()).device
+    encoded = {key: value.to(device) for key, value in encoded.items()}
+
+    with torch.inference_mode():
+        generated = model.generate(
+            **encoded,
+            max_new_tokens=max_new_tokens,
+            temperature=temperature,
+            top_p=0.9,
+            do_sample=temperature > 0.05,
+            repetition_penalty=1.15,
+            no_repeat_ngram_size=4,
+            pad_token_id=tokenizer.eos_token_id,
+        )
+    new_tokens = generated[0][encoded["input_ids"].shape[-1]:]
+    return tokenizer.decode(new_tokens, skip_special_tokens=True).strip()
+
+
 def answer(
     question: str,
     temperature: float = 0.5,
@@ -772,28 +800,10 @@ def answer(
         {"role": "system", "content": sys_prompt},
         {"role": "user", "content": question},
     ]
-    prompt = tokenizer.apply_chat_template(
-        messages, tokenize=False, add_generation_prompt=True
-    )
-    encoded = tokenizer(prompt, return_tensors="pt")
-    device = next(model.parameters()).device
-    encoded = {key: value.to(device) for key, value in encoded.items()}
 
     raw_output = ""
     try:
-        with torch.inference_mode():
-            generated = model.generate(
-                **encoded,
-                max_new_tokens=max_new_tokens,
-                temperature=temperature,
-                top_p=0.9,
-                do_sample=temperature > 0.05,
-                repetition_penalty=1.15,
-                no_repeat_ngram_size=4,
-                pad_token_id=tokenizer.eos_token_id,
-            )
-        new_tokens = generated[0][encoded["input_ids"].shape[-1]:]
-        raw_output = tokenizer.decode(new_tokens, skip_special_tokens=True).strip()
+        raw_output = _generate_with_gpu(messages, max_new_tokens, temperature)
     except Exception as exc:
         print(f"Generation error: {exc}")
         raw_output = ""
