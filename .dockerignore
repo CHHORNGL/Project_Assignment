@@ -19,7 +19,13 @@ backend/instance/sessions/
 *.log
 *.diff
 mobile/
-ai/
+ai/*
+!ai/datasets/
+ai/datasets/*
+!ai/datasets/train.json
+!ai/huggingface-space/
+ai/huggingface-space/*
+!ai/huggingface-space/crop_catalog.py
 docs/
 docker-compose.yml
 Dockerfile
