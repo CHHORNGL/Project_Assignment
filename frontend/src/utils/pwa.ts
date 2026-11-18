@@ -49,6 +49,13 @@ export function registerServiceWorker(swPath = "/sw.js"): void {
   const doRegister = () => {
     navigator.serviceWorker
       .register(swPath, { scope: "/" })
+      .then((reg) => {
+        try {
+          void reg?.update?.();
+        } catch {
+          // Ignore update errors.
+        }
+      })
       .catch(() => {
         // Ignore registration errors in restricted webviews or private tabs.
       });

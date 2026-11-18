@@ -330,7 +330,10 @@ def create_app():
         rid = getattr(g, "request_id", None)
         if rid:
             response.headers.setdefault("X-Request-ID", rid)
-        if request.endpoint not in {"static", "healthz"} and not (request.path or "").startswith("/static/"):
+        req_path = request.path or ""
+        if req_path.startswith("/static/app/") or req_path.startswith("/static/diagnosis-wizard/"):
+            response.headers["Cache-Control"] = "public, max-age=0, must-revalidate"
+        if request.endpoint not in {"static", "healthz"} and not req_path.startswith("/static/"):
             duration = (time.time() - getattr(g, "start_time", time.time())) * 1000
             app.logger.info(f"Completed {response.status_code} in {duration:.1f}ms")
         try:
@@ -434,6 +437,24 @@ def create_app():
     # ===============================
     # GLOBAL NOTIFICATIONS (TOPBAR)
     # ===============================
+    _bundle_hash_cache: dict[str, tuple[float, str]] = {}
+
+    def _file_version(rel_path: str, fallback_ver: int | str) -> str:
+        try:
+            full_path = os.path.join(app.root_path, "static", rel_path)
+            mtime = os.path.getmtime(full_path)
+            cached = _bundle_hash_cache.get(rel_path)
+            if cached and cached[0] == mtime:
+                return cached[1]
+            import hashlib
+            with open(full_path, "rb") as fh:
+                digest = hashlib.sha256(fh.read()).hexdigest()[:12]
+            ver = f"{int(mtime)}-{digest}"
+            _bundle_hash_cache[rel_path] = (mtime, ver)
+            return ver
+        except OSError:
+            return str(fallback_ver)
+
     def _static_version():
         try:
             static_root = os.path.join(app.root_path, "static")
@@ -512,12 +533,12 @@ def create_app():
         def react_bundle(entry="src/main.tsx"):
             if "diagnosis" in str(entry):
                 return {
-                    "css": [url_for("static", filename="diagnosis-wizard/diagnosis-wizard.css", v=sv)],
-                    "js": [url_for("static", filename="diagnosis-wizard/diagnosis-wizard.js", v=sv)],
+                    "css": [url_for("static", filename="diagnosis-wizard/diagnosis-wizard.css", v=_file_version("diagnosis-wizard/diagnosis-wizard.css", sv))],
+                    "js": [url_for("static", filename="diagnosis-wizard/diagnosis-wizard.js", v=_file_version("diagnosis-wizard/diagnosis-wizard.js", sv))],
                 }
             return {
-                "css": [url_for("static", filename="app/app.css", v=sv)],
-                "js": [url_for("static", filename="app/app.js", v=sv)],
+                "css": [url_for("static", filename="app/app.css", v=_file_version("app/app.css", sv))],
+                "js": [url_for("static", filename="app/app.js", v=_file_version("app/app.js", sv))],
             }
 
         return {
