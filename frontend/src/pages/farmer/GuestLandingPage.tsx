@@ -1332,7 +1332,7 @@ export default function GuestLandingPage({
                   </li>
                   <li className="flex items-center gap-2.5">
                     <Check className="h-4 w-4 shrink-0 text-neutral-900 dark:text-white" />
-                    <span>{isKhmer ? "ក្រេឌីតសាកល្បង AI Copilot" : "Starter AI Copilot consultations"}</span>
+                    <span>{isKhmer ? "ក្រេឌីតសាកល្បងសួរ AI កសិកម្ម" : "Starter AI Agricultural Expert consultations"}</span>
                   </li>
                   <li className="flex items-center gap-2.5">
                     <Check className="h-4 w-4 shrink-0 text-neutral-900 dark:text-white" />
@@ -1384,7 +1384,7 @@ export default function GuestLandingPage({
                 <ul className="mt-6 space-y-3 text-sm text-neutral-700 dark:text-neutral-200">
                   <li className="flex items-center gap-2.5">
                     <Check className="h-4 w-4 shrink-0 text-neutral-900 dark:text-white" />
-                    <span>{isKhmer ? "ប្រឹក្សា AI Copilot & ស្កេនរូបភាពគ្មានដែនកំណត់" : "Unlimited AI Agronomy Chat & crop leaf scans"}</span>
+                    <span>{isKhmer ? "ប្រឹក្សាអ្នកជំនាញ AI កសិកម្ម & វិនិច្ឆ័យរោគសញ្ញាគ្មានដែនកំណត់" : "Unlimited AI Agricultural Expert chat & symptom diagnosis"}</span>
                   </li>
                   <li className="flex items-center gap-2.5">
                     <Check className="h-4 w-4 shrink-0 text-neutral-900 dark:text-white" />

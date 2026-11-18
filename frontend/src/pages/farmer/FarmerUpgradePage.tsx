@@ -84,15 +84,15 @@ export default function FarmerUpgradePage({
 
   const proItems = isKhmer
     ? [
-        "ស្កេនរូបភាពស្លឹកដំណាំដោយ AI គ្មានដែនកំណត់",
-        "ពិគ្រោះជាមួយ AI កសិកម្មជាភាសាខ្មែរ និងអង់គ្លេសគ្មានដែនកំណត់",
+        "វិនិច្ឆ័យរោគសញ្ញាដំណាំតាមច្បាប់ និង AI គ្មានដែនកំណត់",
+        "ពិគ្រោះជាមួយអ្នកជំនាញ AI កសិកម្មជាភាសាខ្មែរ និងអង់គ្លេសគ្មានដែនកំណត់",
         "បញ្ជូនបន្តអាទិភាពទៅអ្នកជំនាញកសិកម្មផ្ទាល់",
         "ការព្រមានអាកាសធាតុ ភ្លៀង ខ្យល់ និងហានិភ័យសត្វល្អិតកម្រិតខ្ពស់",
         "សំឡេងអានលទ្ធផលវិនិច្ឆ័យជាភាសាខ្មែរ និងអង់គ្លេស",
       ]
     : [
-        "Unlimited AI crop leaf image scans & instant diagnosis",
-        "Unlimited bilingual AI Agronomist consultations",
+        "Unlimited rule-based symptom & AI crop diagnosis",
+        "Unlimited bilingual AI Agricultural Expert consultations",
         "Priority escalation & review by human specialists",
         "Advanced weekly rain, wind & pest risk advisories",
         "Spoken Khmer & English audio diagnosis narration",
@@ -112,7 +112,7 @@ export default function FarmerUpgradePage({
       title: isKhmer ? "អាទិភាពអ្នកជំនាញ" : "Expert Priority",
       desc: isKhmer
         ? "សំណួរចម្ការរបស់អ្នកត្រូវបានដាក់ជួរមុខសម្រាប់អ្នកជំនាញកសិកម្ម។"
-        : "Field cases and urgent crop photos move straight to the specialist queue.",
+        : "Field cases and urgent symptom diagnoses move straight to the specialist queue.",
       tone: "text-sky-600 bg-sky-500/10 dark:text-sky-400",
     },
     {
@@ -174,8 +174,8 @@ export default function FarmerUpgradePage({
               </h2>
               <p className="max-w-2xl text-sm leading-relaxed text-[#525b75] dark:text-[#9fa6bc]">
                 {isKhmer
-                  ? "ទទួលបានការវិភាគរូបភាពស្លឹកដំណាំគ្មានដែនកំណត់ ការប្រឹក្សា AI ពីរភាសា និងអាទិភាពពិនិត្យពីអ្នកជំនាញ។"
-                  : "Unlock unlimited crop photo diagnostics, bilingual AI agronomy guidance, and priority review from our field specialists."}
+                  ? "ទទួលបានការវិនិច្ឆ័យរោគសញ្ញាដំណាំគ្មានដែនកំណត់ ការប្រឹក្សា AI កសិកម្មពីរភាសា និងអាទិភាពពិនិត្យពីអ្នកជំនាញ។"
+                  : "Unlock unlimited symptom-based crop diagnostics, bilingual AI agronomy consultations, and priority review from our field specialists."}
               </p>
             </div>
 

@@ -32,8 +32,8 @@ System Architecture & Technology Stack:
 Platform Roles & Navigation:
 1. Farmer Portal:
    - Dashboard (/farmer/dashboard): Quick overview of farm stats, recent diagnoses, weather widget, remaining AI credits.
-   - AI Diagnosis (/farmer/diagnose): Upload photos of crop leaves, stems, or fruits for automated AI disease detection, severity score, and treatment tips.
-   - Rule-Based Diagnosis (/farmer/diagnose-rule-based): Step-by-step questionnaire decision tree to deduce crop diseases by answering guided symptom questions without uploading photos.
+   - Crop Diagnosis (/farmer/diagnose): Select your crop and observed symptoms for instant rule-based & AI-assisted disease detection, confidence scoring, and treatment tips.
+   - Rule-Based Diagnosis (/farmer/diagnose-rule-based): Step-by-step questionnaire decision tree to deduce crop diseases by answering guided symptom questions.
    - Diagnosis History (/farmer/diagnosis-history): Chronological log of past diagnoses with status, expert verification, and option to export or print PDF medical plant reports.
    - Ask Agricultural Expert (/farmer/chat): Dedicated AI agronomy guidance and real-time chat with agricultural specialists.
    - Weather & Soil (/farmer/weather): Live localized weather, 24h rainfall prediction, 7-day forecast, humidity, and agronomic field advice.
@@ -127,17 +127,15 @@ def _built_in_support_reply(message: str, is_km: bool, user_role: str = "user", 
         if is_km:
             return (
                 "ខ្ញុំជាជំនួយការប្រព័ន្ធ AgriSystem! ដើម្បីពិនិត្យជំងឺដំណាំ និងទទួលបានវិធីព្យាបាលយ៉ាងច្បាស់លាស់ សូមប្រើប្រាស់ឧបករណ៍លើប្រព័ន្ធដូចខាងក្រោម៖\n\n"
-                "១. AI Diagnosis (ពិនិត្យតាមរូបថត)៖ ចូលទៅកាន់ម៉ឺនុយ Diagnosis រួចបញ្ចូលរូបថតស្លឹក ឬផ្លែ ហើយចុច Analyze ដើម្បីឱ្យ AI វិភាគជំងឺ និងកម្រិតភាគរយភ្លាមៗ។\n"
-                "២. Rule-Based Diagnosis (ពិនិត្យតាមច្បាប់)៖ ចូលទៅកាន់ Rule-Based Diagnosis ដើម្បីឆ្លើយសំណួរអំពីរោគសញ្ញាជាជំហានៗ ដោយមិនចាំបាច់មានរូបថតឡើយ។\n"
-                "៣. Ask Expert (សួរអ្នកជំនាញ)៖ ចូលទៅកាន់ Ask Expert ដើម្បីជជែកពិគ្រោះផ្ទាល់ជាមួយអ្នកជំនាញកសិកម្ម។\n\n"
+                "១. Ask Agricultural Expert (/farmer/chat)៖ សួរឆ្លើយផ្ទាល់ជាមួយ AI កសិកម្ម (ម៉ូឌែល AGY V2.0.0) អំពីដំណាំ ជំងឺ ជី និងការព្យាបាល។\n"
+                "២. Crop Diagnosis (/farmer/diagnose & /farmer/diagnose-rule-based)៖ ជ្រើសរើសប្រភេទដំណាំ និងរោគសញ្ញាដែលឃើញជាក់ស្តែង ដើម្បីវិភាគរកជំងឺតាមច្បាប់កសិកម្ម។\n\n"
                 "តើខ្ញុំអាចជួយណែនាំពីរបៀបប្រើប្រាស់មុខងារណាមួយនៃប្រព័ន្ធ ឬបញ្ហាគណនីផ្សេងទៀតបានទេបាទ/ចាស?"
             )
         return (
-            "I am your AgriSystem Platform Support Assistant! To diagnose plant diseases and receive treatment advice, please use our dedicated tools:\n\n"
-            "1. AI Image Diagnosis (Photo Upload): Go to Diagnosis in your menu, upload clear photos of affected leaves or fruits, and click Analyze for instant AI detection.\n"
-            "2. Rule-Based Diagnosis (Questionnaire): Open Rule-Based Diagnosis to answer guided symptom questions without needing a photo.\n"
-            "3. Ask Expert: Open Ask Expert to consult directly with human agronomists.\n\n"
-            "Can I help you navigate to any of these tools or explain how they work?"
+            "I am your AgriSystem Platform Support Assistant! To diagnose plant diseases and receive agronomy advice, please use our dedicated tools:\n\n"
+            "1. Ask Agricultural Expert (/farmer/chat): Chat with our trained AI Agricultural Expert (AGY V2.0.0) about crops, symptoms, fertilizers, and treatments.\n"
+            "2. Crop Diagnosis (/farmer/diagnose & /farmer/diagnose-rule-based): Select your crop and observed symptoms to run rule-based disease diagnosis.\n\n"
+            "Can I help you navigate to any of these tools or explain how the platform works?"
         )
 
     # 2. Greetings
@@ -150,10 +148,10 @@ def _built_in_support_reply(message: str, is_km: bool, user_role: str = "user", 
             return (
                 "សួស្តីបាទ/ចាស! ខ្ញុំជាជំនួយការប្រព័ន្ធ AgriSystem (Model AGY V2.0.0) ដែលត្រូវបានបង្កើតឡើងក្រោមការដឹកនាំរបស់ប្រធានក្រុម ម៉ៅ សៀវអ៊ិ (Team Leader Mao Seavik)។\n\n"
                 "ខ្ញុំនៅទីនេះដើម្បីជួយសម្រួលដល់ការប្រើប្រាស់ប្រព័ន្ធ AgriSystem របស់អ្នក។ អ្នកអាចសួរខ្ញុំអំពី៖\n"
-                "- 🔍 របៀបប្រើប្រាស់ AI Diagnosis (ពិនិត្យតាមរូបថត)\n"
+                "- 🔍 របៀបប្រើប្រាស់មុខងារវិនិច្ឆ័យជំងឺដំណាំតាមរោគសញ្ញា (Diagnosis)\n"
                 "- 📋 របៀបប្រើប្រាស់ Rule-Based Diagnosis (ពិនិត្យតាមច្បាប់)\n"
                 "- 📜 របៀបមើល និងទាញយកប្រវត្តិពិនិត្យ (History & PDF)\n"
-                "- 💬 របៀបជជែកជាមួយអ្នកជំនាញកសិកម្ម (Ask Expert)\n"
+                "- 💬 របៀបសួរអ្នកជំនាញ AI កសិកម្ម និងអ្នកជំនាញផ្ទាល់ (Ask Agricultural Expert)\n"
                 "- 🌦️ ការពិនិត្យអាកាសធាតុ និងដំបូន្មានកសិកម្ម (Weather)\n"
                 "- ⚙️ ការគ្រប់គ្រងគណនី, Passkey, ការប្តូរភាសា និងម៉ូតងងឹត (Settings)\n"
                 "- 💎 ការពិនិត្យ Credits និងការ Upgrade គណនី\n"
@@ -163,10 +161,10 @@ def _built_in_support_reply(message: str, is_km: bool, user_role: str = "user", 
         return (
             "Hello! I am your AgriSystem Support Assistant (Model AGY V2.0.0), created under the leadership of Team Leader Mao Seavik.\n\n"
             "I'm here to help you navigate and get the most out of the AgriSystem platform. You can ask me about:\n"
-            "- 🔍 How to use AI Diagnosis (photo upload)\n"
-            "- 📋 How Rule-Based Diagnosis works\n"
+            "- 🔍 How to use Symptom & Rule-Based Crop Diagnosis\n"
+            "- 📋 How the Rule-Based Decision Tree works\n"
             "- 📜 Viewing and downloading Diagnosis History & PDF reports\n"
-            "- 💬 How to chat with specialists in Ask Expert\n"
+            "- 💬 How to use Ask Agricultural Expert (AI & human specialists)\n"
             "- 🌦️ Using Weather & Soil advisory\n"
             "- ⚙️ Account profile, Passkeys, Language, and Dark Mode\n"
             "- 💎 Checking credits and upgrading your subscription\n"
@@ -191,29 +189,29 @@ def _built_in_support_reply(message: str, is_km: bool, user_role: str = "user", 
             )
         return (
             "I am the AgriSystem Support Assistant (Model AGY V2.0.0), created and developed under the leadership of Team Leader Mao Seavik.\n\n"
-            "My role is to guide farmers, experts, and administrators in using the AgriSystem platform, explaining tools like AI Diagnosis, Rule-Based Diagnosis, History, Weather, account security, and technical support."
+            "My role is to guide farmers, experts, and administrators in using the AgriSystem platform, explaining tools like Symptom Diagnosis, Rule-Based Diagnosis, Ask Agricultural Expert, History, Weather, account security, and technical support."
         )
 
-    # 4. AI Diagnosis (Photo Upload)
-    if any(k in msg for k in ["how to diagnose", "upload photo", "upload", "take photo", "photo", "image", "picture", "ពិនិត្យជំងឺ", "របៀបពិនិត្យ", "ដាក់រូប", "បញ្ចូលរូប"]):
+    # 4. Crop Diagnosis (Symptom & Rule Engine)
+    if any(k in msg for k in ["how to diagnose", "upload photo", "upload", "take photo", "photo", "image", "picture", "scan", "ពិនិត្យជំងឺ", "របៀបពិនិត្យ", "ដាក់រូប", "បញ្ចូលរូប", "ស្កេន"]):
         if is_km:
             return (
-                "របៀបប្រើប្រាស់ AI Image Diagnosis (ពិនិត្យជំងឺតាមរូបភាព)៖\n\n"
-                "១. ចុចលើម៉ឺនុយ Diagnosis នៅលើរបារចំហៀង (/farmer/diagnose)។\n"
-                "២. ជ្រើសរើសប្រភេទដំណាំរបស់អ្នក (ដូចជា ស្រូវ, ប៉េងប៉ោះ, ដំឡូងបារាំង, ពោត, ម្ទេស)។\n"
-                "៣. ចុចលើប្រអប់ Upload Photo ឬអូសទម្លាក់រូបថតស្លឹក ឬផ្លែដែលសង្ស័យថាមានជំងឺ។ (សូមជ្រើសរើសរូបថតដែលច្បាស់ និងផ្តោតលើរោគសញ្ញាផ្ទាល់)។\n"
-                "៤. ចុចប៊ូតុង Analyze Diagnosis (វិភាគ)។\n"
-                "៥. ប្រព័ន្ធ AI នឹងបង្ហាញឈ្មោះជំងឺ កម្រិតភាគរយជឿជាក់ ព្រមទាំងរោគសញ្ញា វិធីព្យាបាល និងវិធានការការពារ។\n"
-                "៦. អ្នកអាចមើលលទ្ធផលចាស់ៗឡើងវិញបានគ្រប់ពេលក្នុងទំព័រ Diagnosis History។"
+                "របៀបប្រើប្រាស់មុខងារវិនិច្ឆ័យជំងឺដំណាំ (Crop Diagnosis)៖\n\n"
+                "ចំណាំ៖ ប្រព័ន្ធ AI របស់យើងធ្វើការវិភាគតាមរយៈរោគសញ្ញា និងការសន្ទនាអត្ថបទ (មិនមែនស្កេនរូបថតស្លឹកដំណាំនោះទេ)។\n"
+                "១. ចុចលើម៉ឺនុយ Diagnosis (/farmer/diagnose) ឬ Rule-Based Diagnosis (/farmer/diagnose-rule-based)។\n"
+                "២. ជ្រើសរើសប្រភេទដំណាំរបស់អ្នក (ដូចជា ស្រូវ, ប៉េងប៉ោះ, ដំឡូងមី, ពោត, ម្ទេស)។\n"
+                "៣. ជ្រើសរើសរោគសញ្ញាដែលអ្នកសង្កេតឃើញលើដំណាំ (ដូចជា ស្លឹកលឿង, ស្នាមអុជពណ៌ត្នោត, ស្លឹករួញ ឬស្រពោន)។\n"
+                "៤. ចុចប៊ូតុង Diagnose ដើម្បីឱ្យប្រព័ន្ធផ្គូផ្គងច្បាប់កសិកម្ម និងបង្ហាញឈ្មោះជំងឺ កម្រិតភាគរយជឿជាក់ ព្រមទាំងវិធីព្យាបាល។\n"
+                "៥. អ្នកក៏អាចចូលទៅកាន់ Ask Agricultural Expert (/farmer/chat) ដើម្បីសួរសំណួរកសិកម្មផ្ទាល់ជាមួយ AI ឬផ្ញើរូបភាពទៅអ្នកជំនាញកសិកម្ម (Live Support) បានផងដែរ។"
             )
         return (
-            "How to use AI Image Diagnosis:\n\n"
-            "1. Click on Diagnosis in your sidebar or navigation menu (/farmer/diagnose).\n"
-            "2. Select your crop (e.g. Rice, Tomato, Potato, Corn, Pepper).\n"
-            "3. Click Upload Photo or drag & drop a clear photo of the infected leaf, stem, or fruit.\n"
-            "4. Click Analyze Diagnosis.\n"
-            "5. The AI will detect the disease, provide a confidence percentage, and list symptoms, chemical treatments, and prevention tips.\n"
-            "6. You can review all previous diagnoses anytime in Diagnosis History."
+            "How to use Crop Diagnosis in AgriSystem:\n\n"
+            "Note: Our AI and diagnostic engine analyze observed crop symptoms and text descriptions rather than scanning leaf photos.\n"
+            "1. Click on Diagnosis (/farmer/diagnose) or Rule-Based Diagnosis (/farmer/diagnose-rule-based) in your sidebar.\n"
+            "2. Select your crop (e.g. Rice, Tomato, Cassava, Corn, Pepper).\n"
+            "3. Check the symptoms you observe on your plant (such as yellow leaves, brown spots, leaf curling, or wilting).\n"
+            "4. Click Diagnose to run the rule-based agricultural engine and view the matched disease, confidence score, and treatment steps.\n"
+            "5. You can also open Ask Agricultural Expert (/farmer/chat) to describe symptoms to our trained AI Agricultural Expert or share field photos with a human specialist via Live Support."
         )
 
     # 5. Rule-Based Diagnosis
