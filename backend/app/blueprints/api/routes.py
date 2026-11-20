@@ -6,12 +6,9 @@ import random
 import re
 import secrets
 import string
+import time
 
 import requests
-from flask import Blueprint, jsonify, request, session
-from flask_login import current_user, login_required, login_user, logout_user
-from sqlalchemy import or_
-
 from app.blueprints.auth.routes import _send_verification_email, reset_password_api
 from app.extensions import db
 from app.models.crop import Crop
@@ -43,6 +40,9 @@ from app.utils.input_validation import (
     string_list,
     text_field,
 )
+from flask import Blueprint, jsonify, request, session
+from flask_login import current_user, login_required, login_user, logout_user
+from sqlalchemy import or_
 
 api_bp = Blueprint("api", __name__, url_prefix="/api")
 
@@ -786,3 +786,90 @@ def api_create_bakong_payment():
 def api_verify_bakong_payment(md5):
     res = verify_khqr_payment(md5)
     return jsonify(res)
+
+
+@api_bp.route("/payment/khqrpay/create", methods=["POST"])
+@login_required
+def api_create_khqrpay_payment():
+    """Create a KHQRPay payment for the authenticated user's order and return checkout_url / qr_string / expires_at."""
+    from app.services.khqrpay_service import KHQRPayAPIError, create_khqrpay_payment
+
+    data = request.get_json(silent=True) or {}
+    billing_interval = str(data.get("billing_interval") or "monthly").strip().lower()
+    if billing_interval not in {"monthly", "yearly"}:
+        billing_interval = "monthly"
+    coupon_code = str(data.get("coupon_code") or "").strip().upper()
+    currency = str(data.get("currency") or "USD").strip().upper()
+    attempt = data.get("attempt")
+
+    price_setting = db.session.get(SiteSetting, "premium_price")
+    discount_setting = db.session.get(SiteSetting, "premium_discount_percent")
+    yearly_discount_setting = db.session.get(SiteSetting, "premium_yearly_discount_percent")
+
+    original_price = float(price_setting.value) if price_setting and price_setting.value else 20.0
+    discount_percent = float(discount_setting.value) if discount_setting and discount_setting.value else 0.0
+    yearly_discount_percent = (
+        float(yearly_discount_setting.value)
+        if yearly_discount_setting and yearly_discount_setting.value
+        else 20.0
+    )
+
+    savings = round(original_price * (discount_percent / 100.0), 2) if discount_percent > 0 else 0.0
+    base_price = max(0.0, original_price - savings)
+    if billing_interval == "yearly":
+        price = round(base_price * (1.0 - yearly_discount_percent / 100.0) * 12, 2)
+    else:
+        price = base_price
+
+    applied_coupon = None
+    if coupon_code:
+        coupon = PremiumCoupon.query.filter_by(code=coupon_code).first()
+        if coupon and coupon.is_valid()[0]:
+            _, price = coupon.calculate_discount(price)
+            applied_coupon = coupon.code
+
+    amount_input = data.get("amount", price)
+    reference_id = data.get("reference_id") or f"INV-{current_user.id}-{int(time.time())}"
+    metadata = data.get("metadata") if isinstance(data.get("metadata"), dict) else {
+        "user_id": str(current_user.id),
+        "billing_interval": billing_interval,
+    }
+
+    try:
+        result = create_khqrpay_payment(
+            amount=amount_input,
+            currency=currency,
+            reference_id=reference_id,
+            metadata=metadata,
+            attempt=attempt,
+            idempotency_key=request.headers.get("Idempotency-Key"),
+            user=current_user,
+            billing_interval=billing_interval,
+            coupon_code=applied_coupon,
+        )
+        return jsonify(result), (200 if result.get("replayed") else 201)
+    except KHQRPayAPIError as err:
+        return jsonify({"error": err.error_code, "message": err.message}), err.status_code
+
+
+@api_bp.route("/webhooks/khqrpay", methods=["POST"])
+def khqrpay_webhook():
+    """KHQRPay webhook receiver meeting Requirements 1 to 8.
+
+    Reads the raw request body bytes and verifies X-KHQRPay-Signature before
+    any JSON parser touches the body.
+    """
+    from app.services.khqrpay_service import process_khqrpay_webhook
+
+    raw_body = request.get_data(cache=False, as_text=False)
+    sig_header = request.headers.get("X-KHQRPay-Signature")
+    event_header = request.headers.get("X-KHQRPay-Event")
+    delivery_header = request.headers.get("X-KHQRPay-Delivery")
+
+    status_code, payload = process_khqrpay_webhook(
+        raw_body,
+        sig_header,
+        event_header=event_header,
+        delivery_header=delivery_header,
+    )
+    return jsonify(payload), status_code

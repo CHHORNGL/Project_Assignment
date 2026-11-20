@@ -229,3 +229,8 @@ class Config:
     REMEMBER_COOKIE_SECURE = SESSION_COOKIE_SECURE
     REMEMBER_COOKIE_SAMESITE = SESSION_COOKIE_SAMESITE
     REMEMBER_COOKIE_REFRESH_EACH_REQUEST = False
+
+    # KHQRPay server-only configuration (never exposed to browser or mobile clients).
+    KHQRPAY_BASE_URL = (os.getenv("KHQRPAY_BASE_URL", "https://khqrpay.dev") or "https://khqrpay.dev").strip().rstrip("/")
+    KHQRPAY_SECRET_KEY = (os.getenv("KHQRPAY_SECRET_KEY", "") or "").strip()
+    KHQRPAY_WEBHOOK_SECRET = (os.getenv("KHQRPAY_WEBHOOK_SECRET", "") or "").strip()

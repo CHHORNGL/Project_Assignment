@@ -115,6 +115,10 @@ def register_input_validation(app):
 
     @app.before_request
     def validate_json_envelope():
+        # KHQRPay webhooks must read the untouched raw request body and verify
+        # X-KHQRPay-Signature before any JSON parser touches it (Requirement 1).
+        if request.endpoint in {"api.khqrpay_webhook"} or (request.path or "").rstrip("/").endswith("/webhooks/khqrpay"):
+            return
         if request.is_json:
             if request.content_length == 0:
                 return

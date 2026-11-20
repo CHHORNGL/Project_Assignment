@@ -75,7 +75,7 @@ def generate_clean_khqr_image(qr_string: str, currency: str = "USD") -> str | No
 
         qr = qrcode.QRCode(
             version=None,
-            error_correction=qrcode.constants.ERROR_CORRECT_M,
+            error_correction=qrcode.constants.ERROR_CORRECT_H,
             box_size=12,
             border=2,
         )
