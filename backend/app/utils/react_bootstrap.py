@@ -3207,7 +3207,7 @@ def build_farmer_checkout_bootstrap(
     ui = _farmer_shell_ui(
         eyebrow=_copy("Checkout", "ការទូទាត់"),
         title=_copy("Activate Pro Membership", "បើកដំណើរការសមាជិកភាព Pro"),
-        subtitle=_copy("Instant activation via Bakong KHQR or card/PayPal.", "បង់ប្រាក់រហ័សតាមរយៈ Bakong KHQR ឬ PayPal។"),
+        subtitle=_copy("Instant activation via KHQR (ABA, Bakong & Cambodian Banks) or Card/PayPal.", "បង់ប្រាក់រហ័សតាមរយៈ KHQR (ABA, Bakong និងធនាគារកម្ពុជា) ឬ Card/PayPal។"),
     )
     data = {
         "submitUrl": _safe_url("farmer.premium_checkout", "/farmer/premium/checkout"),

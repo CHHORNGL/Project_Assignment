@@ -173,12 +173,23 @@ def serialize_khqr_transaction(
     created_dt = tx.created_at or (now_dt or datetime.now(timezone.utc).replace(tzinfo=None))
     total_expiry_seconds = max(KHQR_EXPIRY_SECONDS, int((expires_at - created_dt).total_seconds()))
     qr_svg_url = None
+    qr_png_url = None
     if qr_str and (tx.payment_method == "KHQRPAY" or _use_khqrpay()):
-        from app.services.khqrpay_service import build_khqr_svg_url
+        from app.services.khqrpay_service import build_khqr_png_url, build_khqr_svg_url
 
         qr_svg_url = build_khqr_svg_url(qr_str)
+        qr_png_url = build_khqr_png_url(qr_str)
         if not qr_image_data_uri:
             qr_image_data_uri = qr_svg_url
+
+    tx_meta: dict[str, Any] = {}
+    if tx.metadata_json:
+        try:
+            parsed_meta = json.loads(tx.metadata_json)
+            if isinstance(parsed_meta, dict):
+                tx_meta = parsed_meta
+        except ValueError:
+            tx_meta = {}
 
     return {
         "success": True,
@@ -187,12 +198,19 @@ def serialize_khqr_transaction(
         "md5": tx.md5,
         "qr_image": qr_image_data_uri,
         "qr_svg_url": qr_svg_url,
+        "qr_png_url": qr_png_url,
         "qr_string": qr_str,
         "deeplink": tx.deeplink,
         "checkout_url": tx.deeplink if tx.payment_method == "KHQRPAY" else None,
         "payment_link": cfg.get("payment_link"),
         "amount": round(float(tx.amount or 0.0), 2),
         "currency": final_currency,
+        "requested_amount": tx_meta.get("requested_amount"),
+        "requested_currency": tx_meta.get("requested_currency"),
+        "settlement_amount": tx_meta.get("settlement_amount"),
+        "settlement_currency": tx_meta.get("settlement_currency"),
+        "conversion_rate": tx_meta.get("conversion_rate"),
+        "khqrpay_status": tx_meta.get("status", "pending"),
         "bill_number": tx.bill_number,
         "merchant_name": cfg["merchant_name"],
         "account_id": tx.account_id or cfg["account_id"],
@@ -645,6 +663,7 @@ def verify_khqr_payment(
         return {
             "success": True,
             "status": "UNPAID",
+            "khqrpay_status": remote_status if "remote_status" in locals() else "pending",
             "message": err_msg or "Payment is waiting for confirmation.",
             "transaction": tx.to_dict(),
             **expiry_meta,

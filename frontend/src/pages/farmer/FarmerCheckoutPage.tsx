@@ -7,11 +7,14 @@ import {
   Copy,
   CreditCard,
   Crown,
+  Download,
   ExternalLink,
   Loader2,
+  Lock,
   QrCode,
   RefreshCw,
   ShieldCheck,
+  Smartphone,
   Sparkles,
   Tag,
   X,
@@ -26,14 +29,25 @@ import { QrCodeSkeleton } from "@/components/ui/Skeleton";
 
 const KHQR_DEFAULT_EXPIRY_SECONDS = 180;
 
-  interface BakongInfo {
+interface BakongInfo {
+  provider?: string;
   md5?: string;
   qr_image?: string;
+  qr_svg_url?: string;
+  qr_png_url?: string;
   qr_string?: string;
   bill_number?: string;
   deeplink?: string;
+  checkout_url?: string;
+  merchant_name?: string;
   amount?: number | string;
   currency?: string;
+  requested_amount?: string | null;
+  requested_currency?: string | null;
+  settlement_amount?: string | null;
+  settlement_currency?: string | null;
+  conversion_rate?: number | null;
+  khqrpay_status?: string;
   expires_in_seconds?: number;
   remaining_seconds?: number;
   expires_at?: string;
@@ -69,6 +83,18 @@ function formatCountdown(totalSeconds: number): string {
   return `${mins}:${secs}`;
 }
 
+function formatMoneyDisplay(amount: number | string | null | undefined, currency?: string | null): string {
+  const curr = (currency || "USD").toUpperCase();
+  const num = Number(amount ?? 0);
+  if (!Number.isFinite(num)) {
+    return curr === "KHR" ? "0 ៛" : "$0.00";
+  }
+  if (curr === "KHR") {
+    return `${Math.round(num).toLocaleString("en-US")} ៛`;
+  }
+  return `$${num.toFixed(2)}`;
+}
+
 export default function FarmerCheckoutPage({
   bootstrap,
 }: {
@@ -91,6 +117,7 @@ export default function FarmerCheckoutPage({
   const [checkingStatus, setCheckingStatus] = useState(false);
   const [paidMessage, setPaidMessage] = useState("");
   const [statusNotice, setStatusNotice] = useState<string | null>(null);
+  const [qrScanned, setQrScanned] = useState(d.initialBakong?.khqrpay_status === "scanned");
   const [expiredOnServer, setExpiredOnServer] = useState(false);
 
   const totalExpirySeconds = Math.max(
@@ -116,6 +143,7 @@ export default function FarmerCheckoutPage({
     (redirectUrl?: string) => {
       setStatusNotice(null);
       setExpiredOnServer(false);
+      setQrScanned(false);
       setPaidMessage(
         isKhmer
           ? "ការទូទាត់បានជោគជ័យ! កំពុងបើកដំណើរការសមាជិកភាព Pro..."
@@ -123,7 +151,7 @@ export default function FarmerCheckoutPage({
       );
       pushToast(
         "success",
-        isKhmer ? "ការទូទាត់ Bakong KHQR បានជោគជ័យ!" : "Bakong KHQR payment confirmed!",
+        isKhmer ? "ការទូទាត់ KHQR បានជោគជ័យ!" : "KHQR payment confirmed!",
       );
       window.setTimeout(() => {
         window.location.href = redirectUrl || "/farmer/dashboard";
@@ -138,12 +166,13 @@ export default function FarmerCheckoutPage({
     };
   }, []);
 
-  // Reset the local countdown deadline whenever a new QR session arrives.
+  // Reset local countdown deadline whenever a new QR session arrives.
   useEffect(() => {
     if (!bakong?.md5) {
       deadlineMsRef.current = 0;
       setRemainingSeconds(0);
       setExpiredOnServer(false);
+      setQrScanned(false);
       return undefined;
     }
 
@@ -154,6 +183,7 @@ export default function FarmerCheckoutPage({
     deadlineMsRef.current = Date.now() + initialLeft * 1000;
     setRemainingSeconds(initialLeft);
     setExpiredOnServer(initialLeft <= 0);
+    setQrScanned(bakong.khqrpay_status === "scanned");
     setStatusNotice(null);
 
     const timer = window.setInterval(() => {
@@ -162,7 +192,13 @@ export default function FarmerCheckoutPage({
     }, 1000);
 
     return () => window.clearInterval(timer);
-  }, [bakong?.md5, bakong?.bill_number, bakong?.remaining_seconds, bakong?.expires_in_seconds]);
+  }, [
+    bakong?.md5,
+    bakong?.bill_number,
+    bakong?.remaining_seconds,
+    bakong?.expires_in_seconds,
+    bakong?.khqrpay_status,
+  ]);
 
   const isExpired = Boolean(bakong?.md5) && (expiredOnServer || remainingSeconds <= 0);
 
@@ -194,6 +230,8 @@ export default function FarmerCheckoutPage({
     async (nextBilling: "monthly" | "yearly", code: string) => {
       setGeneratingQr(true);
       setStatusNotice(null);
+      setQrScanned(false);
+      expiredSyncMd5Ref.current = null;
       try {
         const res = await postJson<BakongInfo>(
           d.generateQrUrl,
@@ -321,6 +359,7 @@ export default function FarmerCheckoutPage({
         const suffix = manual ? "?force=1" : "";
         const res = await requestJson<{
           status?: string;
+          khqrpay_status?: string;
           message?: string;
           remaining_seconds?: number;
           redirect_url?: string;
@@ -338,13 +377,21 @@ export default function FarmerCheckoutPage({
           return;
         }
 
+        if (res.data.khqrpay_status === "scanned") {
+          setQrScanned(true);
+          setExpiredOnServer(false);
+          setStatusNotice(null);
+          return;
+        }
+
         if (res.data.status === "EXPIRED") {
           setExpiredOnServer(true);
+          setQrScanned(false);
           setRemainingSeconds(0);
           setStatusNotice(
             isKhmer
-              ? "កូដ KHQR នេះផុតកំណត់ ៣ នាទីហើយ។ សូមបង្កើតកូដថ្មីដើម្បីបង់ប្រាក់។"
-              : "This KHQR code expired after 3 minutes. Generate a new QR code to continue.",
+              ? "កូដ KHQR នេះផុតកំណត់ហើយ។ សូមបង្កើតកូដថ្មី ឬចុចផ្ទៀងផ្ទាត់ប្រសិនបើបានបង់រួច។"
+              : "This KHQR code has expired. Generate a fresh code or verify if you already paid.",
           );
           return;
         }
@@ -405,7 +452,7 @@ export default function FarmerCheckoutPage({
     };
   }, [bakong?.md5, checkStatus, isExpired, paidMessage]);
 
-  // Perform a forced Bakong check when the 3-minute countdown reaches 00:00 before marking expired.
+  // Perform a forced verification when the countdown reaches 00:00 before locking expired state.
   useEffect(() => {
     const activeMd5 = bakong?.md5;
     if (!activeMd5 || paidMessage || expiredOnServer || remainingSeconds > 0) return;
@@ -438,17 +485,27 @@ export default function FarmerCheckoutPage({
         ? "amber"
         : "emerald";
 
-  const scanSteps = isKhmer
-    ? [
-        "បើកកម្មវិធី Bakong ឬធនាគារ (ABA, ACLEDA, Wing...)",
-        "ស្កេនកូដ QR ក្នុងរយៈពេល ៣ នាទីមុនផុតកំណត់",
-        "ប្រព័ន្ធនឹងផ្ទៀងផ្ទាត់ និងបើក Pro ដោយស្វ័យប្រវត្តិ",
-      ]
-    : [
-        "Open Bakong or any Cambodian bank app (ABA, ACLEDA, Wing)",
-        "Scan the KHQR within the 3-minute countdown window",
-        "Auto-verification activates Pro immediately after payment",
-      ];
+  const settlementCurrency = (
+    bakong?.settlement_currency ||
+    bakong?.currency ||
+    "USD"
+  ).toUpperCase();
+  const settlementAmount =
+    bakong?.settlement_amount ?? bakong?.amount ?? finalPrice ?? 0;
+  const requestedCurrency = (
+    bakong?.requested_currency ||
+    bakong?.currency ||
+    "USD"
+  ).toUpperCase();
+  const requestedAmount = bakong?.requested_amount ?? finalPrice ?? 0;
+  const hasConversion =
+    Boolean(bakong?.conversion_rate) && settlementCurrency !== requestedCurrency;
+  const merchantLabel = bakong?.merchant_name || d.bakongMerchantName || "AGRI SYSTEM";
+  const checkoutLink = bakong?.checkout_url || bakong?.deeplink || "";
+  const qrDownloadHref = bakong?.qr_png_url || bakong?.qr_image || "";
+  const isHostedKhqrpay = checkoutLink.includes("khqrpay.dev");
+
+  const supportedBanks = ["ABA Mobile", "ACLEDA", "Wing", "Bakong", "Canadia"];
 
   return (
     <WorkspaceShell
@@ -466,12 +523,12 @@ export default function FarmerCheckoutPage({
         </a>
       }
     >
-      <div className="mx-auto grid max-w-5xl grid-cols-1 gap-5 sm:gap-6 lg:grid-cols-12">
-        {/* Left Column: Order Summary, Coupon & Card Checkout */}
+      <div className="mx-auto grid max-w-5xl grid-cols-1 items-start gap-6 lg:grid-cols-12">
+        {/* Left Column: Clean Order Summary, Billing Switcher & Coupon */}
         <div className="min-w-0 space-y-5 lg:col-span-5">
-          <section className="ai-surface rounded-3xl p-4 sm:p-6">
+          <section className="ai-surface rounded-3xl p-5 sm:p-6">
             {/* Plan Header */}
-            <div className="flex items-start justify-between gap-3 border-b border-[#e3e6ed] pb-4 dark:border-[#2b3245]">
+            <div className="flex items-center justify-between gap-3 border-b border-[#e3e6ed] pb-4 dark:border-[#2b3245]">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-sm">
                   <Crown className="h-5 w-5" />
@@ -595,7 +652,7 @@ export default function FarmerCheckoutPage({
                 </div>
               )}
 
-              <div className="flex items-baseline justify-between border-t border-dashed border-[#e3e6ed] pt-3 dark:border-[#2b3245]">
+              <div className="flex items-baseline justify-between border-t border-dashed border-[#e3e6ed] pt-3.5 dark:border-[#2b3245]">
                 <div>
                   <span className="text-xs font-bold text-[#141824] dark:text-[#eff2f6]">
                     {isKhmer ? "ទឹកប្រាក់ត្រូវបង់សរុប" : "Total Due Now"}
@@ -649,11 +706,11 @@ export default function FarmerCheckoutPage({
               </form>
             )}
 
-            {/* PayPal / Card Fallback Form */}
+            {/* PayPal / Card Alternative */}
             <form
               method="post"
               action={d.submitUrl}
-              className="mt-5 space-y-2 border-t border-[#e3e6ed] pt-4 dark:border-[#2b3245]"
+              className="mt-5 space-y-2.5 border-t border-[#e3e6ed] pt-4 dark:border-[#2b3245]"
             >
               <input type="hidden" name="csrf_token" value={bootstrap.csrfToken} />
               <input type="hidden" name="applied_coupon_code" value={appliedCoupon} />
@@ -672,63 +729,82 @@ export default function FarmerCheckoutPage({
                     : "Complete Card / PayPal Checkout"}
                 </span>
               </button>
-              <p className="flex items-center justify-center gap-1.5 pt-1 text-[11px] text-[#6e7891] dark:text-[#8a94ad]">
-                <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+              <p className="flex items-center justify-center gap-1.5 pt-0.5 text-[11px] text-[#6e7891] dark:text-[#8a94ad]">
+                <Lock className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
                 <span>
                   {isKhmer
-                    ? "សមាជិកភាពបើកដំណើរការដោយសុវត្ថិភាព"
-                    : "Encrypted verification & instant activation"}
+                    ? "ការទូទាត់មានសុវត្ថិភាព និងបើកដំណើរការភ្លាមៗ"
+                    : "Direct bank-to-bank settlement · Instant activation"}
                 </span>
               </p>
             </form>
           </section>
         </div>
 
-        {/* Right Column: Bakong KHQR Instant Payment with 3-Minute Countdown */}
-        <section className="ai-surface flex min-w-0 flex-col justify-between rounded-3xl p-4 sm:p-8 lg:col-span-7">
+        {/* Right Column: Clean Fintech KHQR Payment Card */}
+        <section className="ai-surface flex min-w-0 flex-col justify-between rounded-3xl p-5 sm:p-7 lg:col-span-7">
           <div className="min-w-0">
-            {/* KHQR Header */}
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#e3e6ed] pb-4 dark:border-[#2b3245]">
-              <div className="flex min-w-0 items-center gap-2.5">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-rose-500/10 text-rose-600 dark:bg-rose-500/15 dark:text-rose-400">
-                  <QrCode className="h-4 w-4" />
+            {/* Minimal Header + Status & Timer */}
+            <div className="flex flex-wrap items-center justify-between gap-3 pb-4">
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#E1232E]/10 text-[#E1232E] dark:bg-[#E1232E]/20 dark:text-rose-400">
+                  <QrCode className="h-5 w-5" />
                 </div>
                 <div className="min-w-0">
-                  <h2 className="font-display text-base font-bold text-[#141824] dark:text-[#eff2f6]">
-                    {isKhmer ? "ទូទាត់ភ្លាមៗតាម Bakong KHQR" : "Bakong KHQR Instant Payment"}
+                  <h2 className="font-display text-base font-bold tracking-tight text-[#141824] dark:text-[#eff2f6]">
+                    {isKhmer ? "ទូទាត់តាម KHQR" : "Scan to Pay with KHQR"}
                   </h2>
                   <p className="text-xs text-[#6e7891] dark:text-[#8a94ad]">
-                    {d.bakongMerchantName} · USD
+                    {isKhmer
+                      ? "គាំទ្រ ABA Mobile, Bakong និងគ្រប់ធនាគារកម្ពុជា"
+                      : "Works with ABA Mobile, Bakong & all Cambodian bank apps"}
                   </p>
                 </div>
               </div>
 
               {!paidMessage && bakong?.md5 && (
-                <div className="flex flex-wrap items-center gap-2">
-                  {/* Live Auto-Verify Badge */}
+                <div className="flex items-center gap-2">
+                  {/* Live Status Indicator */}
                   {!isExpired && (
-                    <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300">
+                    <span
+                      className={cn(
+                        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold",
+                        qrScanned
+                          ? "border-sky-300/70 bg-sky-50 text-sky-700 dark:border-sky-500/35 dark:bg-sky-950/40 dark:text-sky-300"
+                          : "border-emerald-500/25 bg-emerald-500/10 text-emerald-700 dark:border-emerald-400/25 dark:text-emerald-300",
+                      )}
+                    >
                       {checkingStatus ? (
                         <Loader2 className="h-3 w-3 animate-spin" />
                       ) : (
                         <span className="relative flex h-2 w-2">
-                          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-75" />
-                          <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-600" />
+                          <span
+                            className={cn(
+                              "absolute inline-flex h-full w-full animate-ping rounded-full opacity-75",
+                              qrScanned ? "bg-sky-500" : "bg-emerald-500",
+                            )}
+                          />
+                          <span
+                            className={cn(
+                              "relative inline-flex h-2 w-2 rounded-full",
+                              qrScanned ? "bg-sky-600" : "bg-emerald-600",
+                            )}
+                          />
                         </span>
                       )}
                       <span>
-                        {checkingStatus
+                        {qrScanned
                           ? isKhmer
-                            ? "កំពុងផ្ទៀងផ្ទាត់..."
-                            : "Checking..."
+                            ? "បានស្កេន · រង់ចាំបញ្ជាក់"
+                            : "Scanned · Confirm in app"
                           : isKhmer
-                            ? "ផ្ទៀងផ្ទាត់ស្វ័យប្រវត្តិ"
-                            : "Auto-verifying"}
+                            ? "រង់ចាំការបង់ប្រាក់"
+                            : "Awaiting payment"}
                       </span>
                     </span>
                   )}
 
-                  {/* 3-Minute Countdown Badge */}
+                  {/* Countdown Pill */}
                   <span
                     className={cn(
                       "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 font-mono text-xs font-bold tabular-nums",
@@ -746,27 +822,25 @@ export default function FarmerCheckoutPage({
               )}
             </div>
 
-            {/* Subtle Countdown Progress Bar */}
+            {/* Hairline Countdown Progress Track */}
             {!paidMessage && bakong?.md5 && (
-              <div className="mt-3">
-                <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#eff2f6] dark:bg-[#1e2436]">
-                  <div
-                    className={cn(
-                      "h-full rounded-full transition-all duration-700",
-                      timerUrgencyTone === "rose"
-                        ? "bg-rose-500"
-                        : timerUrgencyTone === "amber"
-                          ? "bg-amber-500"
-                          : "bg-emerald-500",
-                    )}
-                    style={{ width: `${progressPercent}%` }}
-                  />
-                </div>
+              <div className="h-1 w-full overflow-hidden rounded-full bg-[#eff2f6] dark:bg-[#1e2436]">
+                <div
+                  className={cn(
+                    "h-full rounded-full transition-all duration-700",
+                    timerUrgencyTone === "rose"
+                      ? "bg-rose-500"
+                      : timerUrgencyTone === "amber"
+                        ? "bg-amber-500"
+                        : "bg-emerald-500",
+                  )}
+                  style={{ width: `${progressPercent}%` }}
+                />
               </div>
             )}
 
             {paidMessage ? (
-              <div className="flex flex-col items-center justify-center py-14 text-center">
+              <div className="flex flex-col items-center justify-center py-16 text-center">
                 <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
                   <CheckCircle2 className="h-9 w-9" />
                 </div>
@@ -781,118 +855,172 @@ export default function FarmerCheckoutPage({
               </div>
             ) : bakong?.qr_image ? (
               <div className="mt-6 flex flex-col items-center">
-                {/* Clean White Scannable QR Card + Expiry / Loading Overlay */}
-                <div className="relative overflow-hidden rounded-2xl border border-[#e3e6ed] bg-white p-4 shadow-sm sm:p-5">
-                  <img
-                    id="bakong_qr_image"
-                    src={bakong.qr_image}
-                    alt="Bakong KHQR"
-                    className={cn(
-                      "h-48 w-48 max-w-full object-contain transition-all duration-300 sm:h-60 sm:w-60",
-                      (generatingQr || isExpired) && "scale-[0.98] opacity-25 blur-[2px]",
-                    )}
-                  />
-
-                  {generatingQr ? (
-                    <div className="absolute inset-0 flex items-center justify-center bg-white/95">
-                      <QrCodeSkeleton label={isKhmer ? "កំពុងបង្កើត QR ថ្មី..." : "Updating QR..."} />
+                {/* Signature KHQR Payment Card */}
+                <div className="w-full max-w-[308px] overflow-hidden rounded-[22px] border border-slate-200/90 bg-white shadow-[0_14px_38px_-12px_rgba(15,23,42,0.12)] dark:border-slate-700/70 dark:shadow-[0_18px_42px_-12px_rgba(0,0,0,0.55)]">
+                  {/* Official KHQR Red Header */}
+                  <div className="relative flex items-center justify-between bg-[#E1232E] px-5 py-3.5 text-white">
+                    <div className="flex items-center gap-2">
+                      <span className="font-display text-[17px] font-black tracking-[0.14em]">
+                        KHQR
+                      </span>
                     </div>
-                  ) : isExpired && checkingStatus ? (
-                    <div className="absolute inset-0 flex items-center justify-center bg-white/95">
-                      <QrCodeSkeleton label={isKhmer ? "កំពុងផ្ទៀងផ្ទាត់ការទូទាត់..." : "Verifying payment..."} />
-                    </div>
-                  ) : (
-                    isExpired && (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/90 px-5 text-center">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-rose-500/15 text-rose-600">
-                          <Clock className="h-5 w-5" />
-                        </div>
-                        <p className="mt-2.5 text-sm font-bold text-[#141824]">
-                          {isKhmer ? "កូដ KHQR ផុតកំណត់ហើយ" : "KHQR Expired (3:00)"}
-                        </p>
-                        <p className="mt-1 text-[11px] leading-snug text-[#525b75]">
-                          {isKhmer
-                            ? "បើអ្នកបានបង់ប្រាក់រួចហើយ សូមចុចផ្ទៀងផ្ទាត់ ឬបង្កើតកូដ QR ថ្មី។"
-                            : "Already paid in your bank app? Tap Verify Now, or generate a fresh QR."}
-                        </p>
-                        <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
-                          <button
-                            type="button"
-                            disabled={checkingStatus}
-                            onClick={() => void checkStatus(true)}
-                            className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-50"
-                          >
-                            <RefreshCw className="h-3.5 w-3.5" />
-                            <span>{isKhmer ? "ផ្ទៀងផ្ទាត់ឥឡូវ" : "Verify Now"}</span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => void refreshQr(billing, appliedCoupon)}
-                            className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-[#cbd0dd] bg-white px-3.5 text-xs font-bold text-[#141824] shadow-sm transition hover:bg-[#f5f7fa]"
-                          >
-                            <QrCode className="h-3.5 w-3.5" />
-                            <span>{isKhmer ? "បង្កើត QR ថ្មី" : "New QR"}</span>
-                          </button>
-                        </div>
-                      </div>
-                    )
-                  )}
-                </div>
-
-                {/* Amount + Reference Pill */}
-                <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-xs">
-                  <span className="rounded-full border border-[#e3e6ed] bg-[#f5f7fa] px-3 py-1 font-bold tabular-nums text-[#141824] dark:border-[#2b3245] dark:bg-[#181d2b] dark:text-white">
-                    ${Number(bakong.amount ?? finalPrice ?? 0).toFixed(2)}{" "}
-                    {bakong.currency || "USD"}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => void handleCopyBill()}
-                    className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-[#e3e6ed] bg-white px-3 py-1 font-mono text-[11px] font-medium text-[#525b75] transition hover:bg-[#f5f7fa] dark:border-[#2b3245] dark:bg-[#141824] dark:text-[#9fa6bc]"
-                    title={isKhmer ? "ចម្លងលេខយោង" : "Copy reference number"}
-                  >
-                    <span className="shrink-0">Ref:</span>
-                    <span
-                      id="khqr_bill_number"
-                      className="min-w-0 truncate font-semibold text-[#141824] dark:text-white"
-                    >
-                      {bakong.bill_number || "BILL-REF"}
+                    <span className="rounded-full bg-white/15 px-2.5 py-0.5 text-[10px] font-semibold tracking-wide text-white/95 backdrop-blur-sm">
+                      {settlementCurrency}
                     </span>
-                    {copiedBill ? (
-                      <Check className="h-3 w-3 shrink-0 text-emerald-600" />
-                    ) : (
-                      <Copy className="h-3 w-3 shrink-0 opacity-70" />
+                    {/* Subtle authentic corner triangle fold */}
+                    <span
+                      aria-hidden="true"
+                      className="pointer-events-none absolute -bottom-2.5 right-0 h-5 w-5 rotate-45 bg-white"
+                    />
+                  </div>
+
+                  {/* Merchant & Amount Tear-Off Header */}
+                  <div className="border-b border-dashed border-slate-200 bg-white px-5 pb-3.5 pt-4 text-left">
+                    <p className="truncate text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                      {merchantLabel}
+                    </p>
+                    <div className="mt-0.5 flex items-baseline gap-1.5">
+                      <span className="font-display text-2xl font-extrabold tracking-tight tabular-nums text-slate-900">
+                        {formatMoneyDisplay(settlementAmount, settlementCurrency)}
+                      </span>
+                      <span className="text-xs font-semibold text-slate-400">
+                        {settlementCurrency}
+                      </span>
+                    </div>
+                    {hasConversion && (
+                      <p className="mt-0.5 text-[11px] text-slate-500">
+                        {formatMoneyDisplay(requestedAmount, requestedCurrency)} {requestedCurrency} · 1 USD ={" "}
+                        {Number(bakong.conversion_rate).toLocaleString("en-US")} KHR
+                      </p>
                     )}
-                  </button>
+                  </div>
+
+                  {/* Centered High-Contrast QR Code Stage */}
+                  <div className="relative flex items-center justify-center bg-white px-5 py-5">
+                    <img
+                      id="bakong_qr_image"
+                      src={bakong.qr_image}
+                      alt="KHQR Payment Code"
+                      className={cn(
+                        "h-48 w-48 max-w-full object-contain transition-all duration-300 sm:h-56 sm:w-56",
+                        (generatingQr || isExpired) && "scale-[0.97] opacity-20 blur-[3px]",
+                      )}
+                    />
+
+                    {generatingQr ? (
+                      <div className="absolute inset-0 flex items-center justify-center bg-white/95">
+                        <QrCodeSkeleton label={isKhmer ? "កំពុងបង្កើត QR ថ្មី..." : "Generating QR..."} />
+                      </div>
+                    ) : isExpired && checkingStatus ? (
+                      <div className="absolute inset-0 flex items-center justify-center bg-white/95">
+                        <QrCodeSkeleton label={isKhmer ? "កំពុងផ្ទៀងផ្ទាត់ការទូទាត់..." : "Checking payment..."} />
+                      </div>
+                    ) : (
+                      isExpired && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/92 px-5 text-center backdrop-blur-[2px]">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-rose-500/12 text-rose-600">
+                            <Clock className="h-5 w-5" />
+                          </div>
+                          <p className="mt-2.5 text-sm font-bold text-slate-900">
+                            {isKhmer ? "កូដ KHQR ផុតកំណត់ហើយ" : "QR Code Expired"}
+                          </p>
+                          <p className="mt-1 text-[11px] leading-snug text-slate-500">
+                            {isKhmer
+                              ? "បើអ្នកបានបង់រួច សូមចុចផ្ទៀងផ្ទាត់ ឬបង្កើតកូដថ្មី។"
+                              : "Already paid? Verify now, or generate a fresh QR."}
+                          </p>
+                          <div className="mt-3.5 flex flex-wrap items-center justify-center gap-2">
+                            <button
+                              type="button"
+                              disabled={checkingStatus}
+                              onClick={() => void checkStatus(true)}
+                              className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-emerald-600 px-3 text-[11px] font-bold text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-50"
+                            >
+                              <RefreshCw className="h-3 w-3" />
+                              <span>{isKhmer ? "ផ្ទៀងផ្ទាត់" : "Verify"}</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => void refreshQr(billing, appliedCoupon)}
+                              className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 text-[11px] font-bold text-slate-800 shadow-sm transition hover:bg-slate-50"
+                            >
+                              <QrCode className="h-3 w-3" />
+                              <span>{isKhmer ? "បង្កើតថ្មី" : "New QR"}</span>
+                            </button>
+                          </div>
+                        </div>
+                      )
+                    )}
+                  </div>
+
+                  {/* Minimal Reference & Save Strip */}
+                  <div className="flex items-center justify-between gap-2 border-t border-slate-100 bg-slate-50/90 px-4 py-2.5">
+                    <button
+                      type="button"
+                      onClick={() => void handleCopyBill()}
+                      className="inline-flex min-w-0 items-center gap-1.5 text-left font-mono text-[11px] text-slate-600 transition hover:text-slate-900"
+                      title={isKhmer ? "ចម្លងលេខយោង" : "Copy reference ID"}
+                    >
+                      <span className="shrink-0 text-slate-400">Ref</span>
+                      <span
+                        id="khqr_bill_number"
+                        className="truncate font-semibold text-slate-800"
+                      >
+                        {bakong.bill_number || "BILL-REF"}
+                      </span>
+                      {copiedBill ? (
+                        <Check className="h-3 w-3 shrink-0 text-emerald-600" />
+                      ) : (
+                        <Copy className="h-3 w-3 shrink-0 text-slate-400" />
+                      )}
+                    </button>
+
+                    {qrDownloadHref && !isExpired && (
+                      <a
+                        href={qrDownloadHref}
+                        download={`${bakong.bill_number || "khqr"}.png`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-700 transition hover:bg-slate-100"
+                        title={isKhmer ? "រក្សាទុករូប QR" : "Save QR image"}
+                      >
+                        <Download className="h-3 w-3" />
+                        <span>{isKhmer ? "រក្សាទុក" : "Save QR"}</span>
+                      </a>
+                    )}
+                  </div>
                 </div>
 
+                {/* Scanned or Rate-Limit Notice */}
                 {statusNotice && (
-                  <p className="mt-3 rounded-xl border border-amber-300/70 bg-amber-50/80 px-3.5 py-2 text-center text-xs font-medium text-amber-800 dark:border-amber-500/30 dark:bg-amber-950/35 dark:text-amber-200">
+                  <p className="mt-4 max-w-md rounded-xl border border-amber-300/70 bg-amber-50/80 px-3.5 py-2 text-center text-xs font-medium text-amber-800 dark:border-amber-500/30 dark:bg-amber-950/35 dark:text-amber-200">
                     {statusNotice}
                   </p>
                 )}
 
-                {/* Action Controls */}
-                <div className="mt-5 flex flex-col items-stretch justify-center gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2.5">
-                  {bakong.deeplink && !isExpired && (
+                {/* Clean Action Row */}
+                <div className="mt-5 flex w-full max-w-md flex-col items-stretch justify-center gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2.5">
+                  {checkoutLink && !isExpired && (
                     <a
-                      href={bakong.deeplink}
+                      href={checkoutLink}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-xl bg-rose-600 px-4 text-xs font-bold text-white shadow-sm transition hover:bg-rose-700 sm:w-auto"
+                      className="inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-xl bg-[#E1232E] px-4 text-xs font-bold text-white shadow-sm transition hover:bg-[#c81d27] sm:w-auto"
                     >
+                      <Smartphone className="h-3.5 w-3.5 shrink-0" />
                       <span>
-                        {bakong.deeplink.includes("khqrpay.dev")
+                        {isHostedKhqrpay
                           ? isKhmer
                             ? "បើកទំព័រទូទាត់ KHQRPay"
                             : "Open KHQRPay Checkout"
                           : isKhmer
-                            ? "បើកក្នុងកម្មវិធី Bakong"
-                            : "Open in Bakong App"}
+                            ? "បើកក្នុងកម្មវិធីធនាគារ"
+                            : "Open Bank App"}
                       </span>
-                      <ExternalLink className="h-3.5 w-3.5 shrink-0" />
+                      <ExternalLink className="h-3 w-3 shrink-0 opacity-85" />
                     </a>
                   )}
+
                   {!isExpired && (
                     <button
                       type="button"
@@ -905,9 +1033,10 @@ export default function FarmerCheckoutPage({
                       ) : (
                         <RefreshCw className="h-3.5 w-3.5 shrink-0" />
                       )}
-                      <span>{isKhmer ? "ផ្ទៀងផ្ទាត់ឥឡូវ" : "Verify Now"}</span>
+                      <span>{isKhmer ? "ផ្ទៀងផ្ទាត់ឥឡូវ" : "Verify Payment"}</span>
                     </button>
                   )}
+
                   <button
                     type="button"
                     disabled={generatingQr}
@@ -915,13 +1044,13 @@ export default function FarmerCheckoutPage({
                     className="inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-xl border border-[#e3e6ed] bg-white px-3.5 text-xs font-semibold text-[#525b75] transition hover:bg-[#f5f7fa] disabled:opacity-50 dark:border-[#2b3245] dark:bg-[#181d2b] dark:text-[#9fa6bc] sm:w-auto"
                   >
                     <QrCode className="h-3.5 w-3.5 shrink-0" />
-                    <span>{isKhmer ? "បង្កើត QR ថ្មី" : "New QR"}</span>
+                    <span>{isKhmer ? "QR ថ្មី" : "New QR"}</span>
                   </button>
                 </div>
               </div>
             ) : generatingQr ? (
-              <div className="mt-6 flex flex-col items-center">
-                <div className="overflow-hidden rounded-2xl border border-[#e3e6ed] bg-white p-4 shadow-sm sm:p-5">
+              <div className="mt-8 flex flex-col items-center">
+                <div className="overflow-hidden rounded-2xl border border-[#e3e6ed] bg-white p-5 shadow-sm">
                   <QrCodeSkeleton label={isKhmer ? "កំពុងបង្កើត KHQR..." : "Generating KHQR..."} />
                 </div>
               </div>
@@ -933,18 +1062,18 @@ export default function FarmerCheckoutPage({
                 <p className="mt-3 text-sm font-semibold text-[#141824] dark:text-[#eff2f6]">
                   {isKhmer
                     ? "មិនទាន់មានកូដ KHQR នៅឡើយទេ"
-                    : "KHQR preview unavailable right now."}
+                    : "Ready to generate your KHQR code"}
                 </p>
                 <p className="mt-1 text-xs text-[#6e7891] dark:text-[#8a94ad]">
                   {isKhmer
-                    ? "ចុចប៊ូតុងខាងក្រោមដើម្បីបង្កើតកូដស្កេនថ្មី ឬប្រើ Card / PayPal។"
-                    : "Click below to generate a fresh QR code or complete via Card / PayPal."}
+                    ? "ចុចប៊ូតុងខាងក្រោមដើម្បីបង្កើតកូដស្កេនភ្លាមៗ។"
+                    : "Click below to generate a fresh scannable KHQR code."}
                 </p>
                 <button
                   type="button"
                   disabled={generatingQr}
                   onClick={() => void refreshQr(billing, appliedCoupon)}
-                  className="mt-4 inline-flex h-10 items-center gap-2 rounded-xl bg-emerald-600 px-5 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-50"
+                  className="mt-4 inline-flex h-10 items-center gap-2 rounded-xl bg-[#E1232E] px-5 text-xs font-bold text-white shadow-sm transition hover:bg-[#c81d27] disabled:opacity-50"
                 >
                   {generatingQr && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                   <span>{isKhmer ? "បង្កើត KHQR" : "Generate KHQR"}</span>
@@ -953,21 +1082,26 @@ export default function FarmerCheckoutPage({
             )}
           </div>
 
-          {/* 3-Step Payment Guide */}
-          <div className="mt-6 grid grid-cols-1 gap-2.5 border-t border-[#e3e6ed] pt-5 sm:grid-cols-3 dark:border-[#2b3245]">
-            {scanSteps.map((stepText, idx) => (
-              <div
-                key={stepText}
-                className="flex items-start gap-2.5 rounded-2xl border border-[#e3e6ed] bg-[#f9fafc] p-3 text-left dark:border-[#2b3245] dark:bg-[#101420]"
-              >
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-[10px] font-bold text-white">
-                  {idx + 1}
+          {/* Clean Supported Banks & Verification Footer */}
+          <div className="mt-6 flex flex-col items-center justify-between gap-2.5 border-t border-[#e3e6ed] pt-4 text-[11px] text-[#6e7891] dark:border-[#2b3245] dark:text-[#8a94ad] sm:flex-row">
+            <div className="flex items-center gap-1.5">
+              <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+              <span>
+                {isKhmer
+                  ? "ផ្ទៀងផ្ទាត់ស្វ័យប្រវត្តិក្រោយស្កេន"
+                  : "Auto-verifies seconds after scan"}
+              </span>
+            </div>
+            <div className="flex flex-wrap items-center justify-center gap-1.5">
+              {supportedBanks.map((bank) => (
+                <span
+                  key={bank}
+                  className="rounded-md border border-[#e3e6ed] bg-[#f9fafc] px-2 py-0.5 text-[10px] font-medium text-[#525b75] dark:border-[#2b3245] dark:bg-[#101420] dark:text-[#9fa6bc]"
+                >
+                  {bank}
                 </span>
-                <span className="text-[11px] leading-snug text-[#525b75] dark:text-[#9fa6bc]">
-                  {stepText}
-                </span>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </section>
       </div>
