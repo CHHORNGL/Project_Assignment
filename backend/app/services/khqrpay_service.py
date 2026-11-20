@@ -247,6 +247,15 @@ def build_khqr_svg_url(qr_string: str | None, *, base_url: str | None = None) ->
     return f"{base}/api/render/khqr/{encoded_qr}.svg"
 
 
+def build_khqr_png_url(qr_string: str | None, *, base_url: str | None = None) -> str | None:
+    """Build the public ~800x800 PNG QR URL for mobile bank apps' 'scan from photo' pickers."""
+    if not qr_string:
+        return None
+    base = (base_url or _get_base_url()).rstrip("/")
+    encoded_qr = quote(qr_string, safe="")
+    return f"{base}/api/render/khqr/{encoded_qr}.png"
+
+
 def parse_iso_datetime(value: str | None) -> datetime | None:
     """Parse an ISO-8601 timestamp string into a UTC naive datetime."""
     if not value or not isinstance(value, str):
@@ -487,9 +496,10 @@ def _request_with_retries(
     max_retries: int = 2,
     allow_sleep: bool = False,
     sleep_fn=time.sleep,
-    http_fn=_execute_khqrpay_http,
+    http_fn=None,
 ) -> tuple[int, dict[str, Any], dict[str, str], str | None]:
     """Execute a KHQRPay request with Requirement 9 & 10 rate-limit and retry semantics."""
+    active_http_fn = http_fn or _execute_khqrpay_http
     current_key = idempotency_key
     used_new_key_for_read_budget = False
     attempts = 0
@@ -500,7 +510,7 @@ def _request_with_retries(
             req_headers["Idempotency-Key"] = current_key
 
         try:
-            status_code, data, resp_headers = http_fn(
+            status_code, data, resp_headers = active_http_fn(
                 method,
                 path,
                 api_key=api_key,
@@ -577,7 +587,7 @@ def create_khqrpay_payment(
     allow_sleep: bool = False,
     max_retries: int = 2,
     sleep_fn=time.sleep,
-    http_fn=_execute_khqrpay_http,
+    http_fn=None,
 ) -> dict[str, Any]:
     """Create a KHQRPay payment for an order and return checkout_url, qr_string, and expires_at.
 
@@ -632,6 +642,7 @@ def create_khqrpay_payment(
     checkout_url = payment.get("checkout_url")
     expires_at = payment.get("expires_at")
     qr_svg_url = build_khqr_svg_url(qr_string, base_url=base_url)
+    qr_png_url = build_khqr_png_url(qr_string, base_url=base_url)
 
     tx_id: int | None = None
     if has_app_context() and user is not None and getattr(user, "id", None) and payment_id:
@@ -702,6 +713,7 @@ def create_khqrpay_payment(
         "checkout_url": checkout_url,
         "qr_string": qr_string,
         "qr_svg_url": qr_svg_url,
+        "qr_png_url": qr_png_url,
         "expires_at": expires_at,
         "created_at": payment.get("created_at"),
         "payment": payment,
@@ -713,7 +725,7 @@ def retrieve_khqrpay_payment(
     *,
     api_key: str | None = None,
     base_url: str | None = None,
-    http_fn=_execute_khqrpay_http,
+    http_fn=None,
 ) -> dict[str, Any]:
     """Retrieve a single payment (`GET /v1/payments/:id`)."""
     pid = (payment_id or "").strip()

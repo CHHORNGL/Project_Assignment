@@ -7,7 +7,7 @@ import sys as _sys
 import tempfile
 import time
 import unittest
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 
 for _p in (
@@ -544,6 +544,77 @@ class TestKHQRPayIntegration(unittest.TestCase):
         self.assertEqual(captured["method"], "POST")
         self.assertEqual(captured["path"], "/v1/test/payments/pay_test_99/simulate")
         self.assertEqual(sim_res["status"], "paid")
+
+    def test_bakong_service_delegates_to_khqrpay_when_enabled(self):
+        """Verify create_khqr_payment and verify_khqr_payment in bakong_service delegate to KHQRPay."""
+        from app.services.bakong_service import create_khqr_payment, verify_khqr_payment
+
+        future_exp = (datetime.now(timezone.utc) + timedelta(minutes=3)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        extended_exp = (datetime.now(timezone.utc) + timedelta(minutes=5)).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+        def fake_http(method, path, *, api_key, payload=None, headers=None, base_url=None, timeout=15.0):
+            if method == "POST" and path == "/v1/payments":
+                return (
+                    201,
+                    {
+                        "id": "pay_test_checkout_01",
+                        "object": "payment",
+                        "livemode": False,
+                        "status": "pending",
+                        "amount": "20.00",
+                        "currency": "USD",
+                        "requested_amount": "20.00",
+                        "requested_currency": "USD",
+                        "settlement_amount": "20.00",
+                        "settlement_currency": "USD",
+                        "conversion_rate": None,
+                        "reference_id": payload["reference_id"],
+                        "metadata": payload.get("metadata"),
+                        "qr_string": "00020101021229210017khqrpay_test@test520459995303840540520.005802KH5913AgriSystemPro6010Phnom Penh6304ABCD",
+                        "checkout_url": "https://khqrpay.dev/checkout/pay_test_checkout_01",
+                        "created_at": "2026-11-20T12:00:00Z",
+                        "expires_at": future_exp,
+                    },
+                    {},
+                )
+            if method == "GET" and path == "/v1/payments/pay_test_checkout_01":
+                return (
+                    200,
+                    {
+                        "id": "pay_test_checkout_01",
+                        "object": "payment",
+                        "livemode": False,
+                        "status": "paid",
+                        "amount": "20.00",
+                        "currency": "USD",
+                        "requested_amount": "20.00",
+                        "requested_currency": "USD",
+                        "settlement_amount": "20.00",
+                        "settlement_currency": "USD",
+                        "reference_id": "BILL-TEST",
+                        "expires_at": extended_exp,
+                        "approved_at": "2026-11-20T12:01:00Z",
+                    },
+                    {},
+                )
+            raise AssertionError(f"Unexpected call: {method} {path}")
+
+        with patch.dict(self.app.config, {"KHQRPAY_ENABLED_IN_TESTS": True}), patch(
+            "app.services.khqrpay_service._execute_khqrpay_http",
+            side_effect=fake_http,
+        ):
+            created = create_khqr_payment(user=self.farmer, amount=20.0, billing_interval="monthly")
+            self.assertTrue(created["success"])
+            self.assertEqual(created["provider"], "khqrpay")
+            self.assertEqual(created["md5"], "pay_test_checkout_01")
+            self.assertEqual(created["deeplink"], "https://khqrpay.dev/checkout/pay_test_checkout_01")
+            self.assertGreater(created["remaining_seconds"], 120)
+
+            verified = verify_khqr_payment("pay_test_checkout_01", bypass_cache=True)
+            self.assertTrue(verified["success"])
+            self.assertEqual(verified["status"], "PAID")
+            db.session.refresh(self.farmer)
+            self.assertTrue(self.farmer.is_premium)
 
 
 if __name__ == "__main__":

@@ -3,7 +3,6 @@
 import csv
 import json
 import os
-import random
 import re
 import secrets
 import string
@@ -13,41 +12,6 @@ import zipfile
 from datetime import datetime, timedelta, timezone
 from functools import wraps
 from io import BytesIO, StringIO
-
-from flask import (
-    Blueprint,
-    Response,
-    abort,
-    current_app,
-    flash,
-    jsonify,
-    redirect,
-    request,
-    url_for,
-)
-from app.utils.react_bootstrap import (
-    build_admin_audit_logs_bootstrap,
-    build_admin_dashboard_bootstrap,
-    build_admin_disease_form_bootstrap,
-    build_admin_diseases_bootstrap,
-    build_admin_expert_stats_bootstrap,
-    build_admin_premium_settings_bootstrap,
-    build_admin_promo_codes_bootstrap,
-    build_admin_role_permissions_bootstrap,
-    build_admin_roles_bootstrap,
-    build_admin_settings_bootstrap,
-    build_admin_settings_ssr_html,
-    build_admin_support_requests_bootstrap,
-    build_admin_translations_backups_bootstrap,
-    build_admin_translations_bootstrap,
-    build_admin_user_detail_bootstrap,
-    build_admin_users_bootstrap,
-    build_admin_world_bootstrap,
-    render_react_page,
-)
-from flask_login import current_user, login_required
-from sqlalchemy import case, func, or_
-from sqlalchemy.exc import IntegrityError
 
 from app.extensions import db
 from app.models.associations import user_roles
@@ -73,6 +37,40 @@ from app.services.translator import translate_to_khmer
 from app.utils.audit import get_client_ip
 from app.utils.decorators import admin_required, permission_required
 from app.utils.i18n import t
+from app.utils.react_bootstrap import (
+    build_admin_audit_logs_bootstrap,
+    build_admin_dashboard_bootstrap,
+    build_admin_disease_form_bootstrap,
+    build_admin_diseases_bootstrap,
+    build_admin_expert_stats_bootstrap,
+    build_admin_premium_settings_bootstrap,
+    build_admin_promo_codes_bootstrap,
+    build_admin_role_permissions_bootstrap,
+    build_admin_roles_bootstrap,
+    build_admin_settings_bootstrap,
+    build_admin_settings_ssr_html,
+    build_admin_support_requests_bootstrap,
+    build_admin_translations_backups_bootstrap,
+    build_admin_translations_bootstrap,
+    build_admin_user_detail_bootstrap,
+    build_admin_users_bootstrap,
+    build_admin_world_bootstrap,
+    render_react_page,
+)
+from flask import (
+    Blueprint,
+    Response,
+    abort,
+    current_app,
+    flash,
+    jsonify,
+    redirect,
+    request,
+    url_for,
+)
+from flask_login import current_user, login_required
+from sqlalchemy import case, func, or_
+from sqlalchemy.exc import IntegrityError
 
 
 def _now_dt() -> datetime:
@@ -326,7 +324,24 @@ def premium_settings():
 @admin_required
 def test_bakong_connection():
     try:
+        from app.services.bakong_service import _use_khqrpay
+
         cfg = get_bakong_config()
+        if _use_khqrpay():
+            from app.services.khqrpay_service import get_khqrpay_usage
+
+            usage = get_khqrpay_usage()
+            plan = usage.get("plan", "free")
+            rem = usage.get("remaining", 0)
+            lim = usage.get("limit", 0)
+            link_url = cfg.get("payment_link", "https://khqrpay.dev/l/hhybpkw5vd")
+            return jsonify({
+                "success": True,
+                "provider": "khqrpay",
+                "usage": usage,
+                "message": f"Connected to KHQRPay ({plan} plan)! Quota remaining: {rem}/{lim} | Payment link: {link_url}",
+            })
+
         client = get_khqr_client()
         test_res = client.create_qr(
             amount=1.00,
@@ -345,7 +360,7 @@ def test_bakong_connection():
     except Exception as e:  # noqa: BLE001
         return jsonify({
             "success": False,
-            "message": f"Bakong test failed: {e!s}"
+            "message": f"KHQR connection test failed: {e!s}"
         }), 400
 
 
@@ -503,7 +518,9 @@ def world():
 @admin_bp.route("/world/weather", methods=["GET"])
 @admin_required
 def world_weather():
-    from app.blueprints.weather_intelligence.routes import build_weather_summary_response
+    from app.blueprints.weather_intelligence.routes import (
+        build_weather_summary_response,
+    )
 
     return build_weather_summary_response()
 

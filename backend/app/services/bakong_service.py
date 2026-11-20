@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import time
@@ -5,6 +6,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from bakong_khqr import KHQR
+from flask import current_app, has_app_context
 
 from app.extensions import db
 from app.models.payment_transaction import PaymentTransaction
@@ -17,20 +19,47 @@ logger = logging.getLogger(__name__)
 KHQR_EXPIRY_SECONDS = 180
 
 
+def _use_khqrpay() -> bool:
+    """Return True when KHQRPay (https://khqrpay.dev) is configured and active."""
+    key = ""
+    if has_app_context():
+        if current_app.config.get("TESTING") and not current_app.config.get("KHQRPAY_ENABLED_IN_TESTS"):
+            return False
+        key = str(current_app.config.get("KHQRPAY_SECRET_KEY") or "").strip()
+    if not key:
+        key = os.getenv("KHQRPAY_SECRET_KEY", "").strip()
+    return bool(key)
+
+
 def compute_khqr_expiry(
     tx: PaymentTransaction, now_dt: datetime | None = None
 ) -> tuple[datetime, int]:
-    """Return UTC naive expiration timestamp and clamped remaining seconds for a KHQR payment."""
+    """Return UTC naive expiration timestamp and clamped remaining seconds for a KHQR payment.
+
+    When the transaction was created via KHQRPay, re-reads `expires_at` from `metadata_json`
+    (which KHQRPay updates dynamically when scanned) instead of hard-coding a duration.
+    """
     now = now_dt or datetime.now(timezone.utc).replace(tzinfo=None)
     created = tx.created_at or now
-    expires_at = created + timedelta(seconds=KHQR_EXPIRY_SECONDS)
+    expires_at: datetime | None = None
+    if tx.metadata_json:
+        try:
+            from app.services.khqrpay_service import parse_iso_datetime
+
+            meta = json.loads(tx.metadata_json)
+            if isinstance(meta, dict) and meta.get("expires_at"):
+                expires_at = parse_iso_datetime(str(meta["expires_at"]))
+        except (ValueError, TypeError):
+            expires_at = None
+    if expires_at is None:
+        expires_at = created + timedelta(seconds=KHQR_EXPIRY_SECONDS)
     remaining = max(0, int((expires_at - now).total_seconds()))
     return expires_at, remaining
 
 
 def get_bakong_config() -> dict[str, str]:
     """
-    Retrieve Bakong KHQR settings from SiteSetting database or fall back to environment variables.
+    Retrieve KHQRPay / Bakong KHQR settings from SiteSetting database or fall back to environment variables.
     """
     def _val(key: str, env_key: str, default: str = "") -> str:
         s = db.session.get(SiteSetting, key)
@@ -39,6 +68,8 @@ def get_bakong_config() -> dict[str, str]:
         return os.getenv(env_key, default).strip()
 
     return {
+        "provider": "khqrpay" if _use_khqrpay() else "bakong",
+        "payment_link": _val("khqrpay_payment_link", "KHQRPAY_PAYMENT_LINK", "https://khqrpay.dev/l/hhybpkw5vd"),
         "token": _val(
             "bakong_token",
             "BAKONG_TOKEN",
@@ -139,20 +170,34 @@ def serialize_khqr_transaction(
             qr_image_data_uri = None
 
     expires_at, remaining_seconds = compute_khqr_expiry(tx, now_dt)
+    created_dt = tx.created_at or (now_dt or datetime.now(timezone.utc).replace(tzinfo=None))
+    total_expiry_seconds = max(KHQR_EXPIRY_SECONDS, int((expires_at - created_dt).total_seconds()))
+    qr_svg_url = None
+    if qr_str and (tx.payment_method == "KHQRPAY" or _use_khqrpay()):
+        from app.services.khqrpay_service import build_khqr_svg_url
+
+        qr_svg_url = build_khqr_svg_url(qr_str)
+        if not qr_image_data_uri:
+            qr_image_data_uri = qr_svg_url
+
     return {
         "success": True,
+        "provider": "khqrpay" if tx.payment_method == "KHQRPAY" else cfg.get("provider", "bakong"),
         "transaction_id": tx.id,
         "md5": tx.md5,
         "qr_image": qr_image_data_uri,
+        "qr_svg_url": qr_svg_url,
         "qr_string": qr_str,
         "deeplink": tx.deeplink,
+        "checkout_url": tx.deeplink if tx.payment_method == "KHQRPAY" else None,
+        "payment_link": cfg.get("payment_link"),
         "amount": round(float(tx.amount or 0.0), 2),
         "currency": final_currency,
         "bill_number": tx.bill_number,
         "merchant_name": cfg["merchant_name"],
         "account_id": tx.account_id or cfg["account_id"],
         "billing_interval": tx.billing_interval,
-        "expires_in_seconds": KHQR_EXPIRY_SECONDS,
+        "expires_in_seconds": total_expiry_seconds,
         "remaining_seconds": remaining_seconds,
         "expires_at": expires_at.replace(tzinfo=timezone.utc).isoformat(),
     }
@@ -164,7 +209,7 @@ def reconcile_recent_user_khqr_payments(
     lookback_minutes: int = 30,
 ) -> dict[str, Any] | None:
     """
-    Check the user's recent PENDING or EXPIRED KHQR transactions against Bakong NBC.
+    Check the user's recent PENDING or EXPIRED KHQRPay / Bakong transactions.
     Prevents mobile users returning from their banking app from losing a completed payment
     if the browser tab reloaded or the 3-minute countdown elapsed while in the bank app.
     """
@@ -176,8 +221,8 @@ def reconcile_recent_user_khqr_payments(
     recent_txs = (
         PaymentTransaction.query.filter(
             PaymentTransaction.user_id == user.id,
-            PaymentTransaction.payment_method == "BAKONG_KHQR",
-            PaymentTransaction.status.in_(("PENDING", "EXPIRED")),
+            PaymentTransaction.payment_method.in_(("KHQRPAY", "BAKONG_KHQR")),
+            PaymentTransaction.status.in_(("PENDING", "EXPIRED", "PAID")),
             PaymentTransaction.created_at >= cutoff,
         )
         .order_by(PaymentTransaction.created_at.desc())
@@ -188,6 +233,8 @@ def reconcile_recent_user_khqr_payments(
     for tx in recent_txs:
         if not tx.md5:
             continue
+        if tx.status == "PAID":
+            return verify_khqr_payment(tx.md5, enforce_expiry=False, bypass_cache=False)
         res = verify_khqr_payment(tx.md5, enforce_expiry=False, bypass_cache=True)
         if res.get("status") == "PAID":
             return res
@@ -204,7 +251,8 @@ def create_khqr_payment(
     reuse_pending: bool = False,
 ) -> dict[str, Any]:
     """
-    Generate a compliant Bakong KHQR code and record the pending transaction.
+    Create a KHQR payment (via KHQRPay https://khqrpay.dev when configured, or local Bakong SDK)
+    and record the pending transaction.
     When reuse_pending=True, reuses an active matching PENDING transaction so mobile
     browser tab reloads while switching to/from a banking app do not overwrite the QR.
     """
@@ -213,13 +261,14 @@ def create_khqr_payment(
     amount_float = round(float(amount), 2)
     normalized_coupon = coupon_code.strip().upper() if coupon_code else None
     now_dt = datetime.now(timezone.utc).replace(tzinfo=None)
+    use_khqrpay = _use_khqrpay()
 
     if reuse_pending and user and getattr(user, "id", None):
         active_cutoff = now_dt - timedelta(seconds=KHQR_EXPIRY_SECONDS - 30)
         existing_tx = (
             PaymentTransaction.query.filter(
                 PaymentTransaction.user_id == user.id,
-                PaymentTransaction.payment_method == "BAKONG_KHQR",
+                PaymentTransaction.payment_method.in_(("KHQRPAY", "BAKONG_KHQR")),
                 PaymentTransaction.status == "PENDING",
                 PaymentTransaction.billing_interval == billing_interval,
                 PaymentTransaction.currency == final_currency,
@@ -230,9 +279,59 @@ def create_khqr_payment(
             .first()
         )
         if existing_tx and round(float(existing_tx.amount or 0.0), 2) == amount_float and existing_tx.qr_string:
-            return serialize_khqr_transaction(existing_tx, now_dt, config=config)
+            _exp, rem_sec = compute_khqr_expiry(existing_tx, now_dt)
+            if rem_sec > 30:
+                return serialize_khqr_transaction(existing_tx, now_dt, config=config)
 
     bill_number = f"BILL{user.id}{int(time.time())}"[-25:]
+
+    if use_khqrpay:
+        from app.services.khqrpay_service import KHQRPayAPIError, create_khqrpay_payment
+
+        stale_cutoff = now_dt - timedelta(seconds=KHQR_EXPIRY_SECONDS)
+        PaymentTransaction.query.filter(
+            PaymentTransaction.user_id == user.id,
+            PaymentTransaction.status == "PENDING",
+            PaymentTransaction.created_at <= stale_cutoff,
+        ).update({PaymentTransaction.status: "EXPIRED"}, synchronize_session=False)
+
+        try:
+            khqrpay_res = create_khqrpay_payment(
+                amount=amount_float,
+                currency=final_currency,
+                reference_id=bill_number,
+                attempt=1,
+                metadata={
+                    "user_id": str(user.id),
+                    "username": str(user.username or ""),
+                    "billing_interval": billing_interval,
+                    "coupon_code": normalized_coupon or "",
+                },
+                user=user,
+                billing_interval=billing_interval,
+                coupon_code=normalized_coupon,
+            )
+        except KHQRPayAPIError as err:
+            logger.error("Failed to create KHQRPay payment (%s): %s", err.error_code, err.message)
+            return {
+                "success": False,
+                "error": err.error_code,
+                "message": f"Unable to create KHQRPay payment ({err.error_code}): {err.message}",
+            }
+
+        tx_obj = db.session.get(PaymentTransaction, khqrpay_res["transaction_id"]) if khqrpay_res.get("transaction_id") else None
+        if tx_obj is not None:
+            serialized = serialize_khqr_transaction(tx_obj, now_dt, config=config)
+            serialized.update({
+                "checkout_url": khqrpay_res.get("checkout_url"),
+                "qr_svg_url": khqrpay_res.get("qr_svg_url"),
+                "requested_amount": khqrpay_res.get("requested_amount"),
+                "requested_currency": khqrpay_res.get("requested_currency"),
+                "settlement_amount": khqrpay_res.get("settlement_amount"),
+                "settlement_currency": khqrpay_res.get("settlement_currency"),
+                "conversion_rate": khqrpay_res.get("conversion_rate"),
+            })
+            return serialized
 
     client = get_khqr_client()
     try:
@@ -411,12 +510,142 @@ def verify_khqr_payment(
         "expires_at": expires_at.replace(tzinfo=timezone.utc).isoformat(),
     }
 
-    # If already verified
+    # If already verified (e.g. fulfilled by POST /api/webhooks/khqrpay)
     if tx.status == "PAID":
         return {
             "success": True,
             "status": "PAID",
             "message": "Payment has already been confirmed.",
+            "transaction": tx.to_dict(),
+            **expiry_meta,
+        }
+
+    # KHQRPay transaction status verification (`GET https://khqrpay.dev/v1/payments/:id`)
+    if tx.payment_method == "KHQRPAY" or (_use_khqrpay() and str(md5).startswith("pay_")):
+        from app.services.khqrpay_service import (
+            KHQRPayAPIError,
+            _fulfil_completed_payment,
+            _get_secret_key,
+            retrieve_khqrpay_payment,
+        )
+
+        now_ts = time.time()
+        if not bypass_cache and md5 in _MD5_STATUS_CACHE:
+            cached_time, cached_status, _cached_data, cached_msg = _MD5_STATUS_CACHE[md5]
+            if now_ts - cached_time < 4.0 and cached_status != "PAID":
+                if enforce_expiry and remaining_seconds <= 0:
+                    if tx.status != "EXPIRED":
+                        tx.status = "EXPIRED"
+                        db.session.commit()
+                    return {
+                        "success": False,
+                        "status": "EXPIRED",
+                        "message": "KHQR session expired. Please generate a new QR code.",
+                        "transaction": tx.to_dict(),
+                        **expiry_meta,
+                        "remaining_seconds": 0,
+                    }
+                return {
+                    "success": cached_status != "RATE_LIMITED",
+                    "status": cached_status,
+                    "message": cached_msg or "Payment is waiting for confirmation.",
+                    "transaction": tx.to_dict(),
+                    **expiry_meta,
+                }
+
+        try:
+            payment_obj = retrieve_khqrpay_payment(md5)
+            remote_status = str(payment_obj.get("status") or "pending").lower()
+
+            # Re-read expires_at and monitoring_gap from KHQRPay (a scan extends expires_at by >= 2 minutes)
+            try:
+                meta = json.loads(tx.metadata_json) if tx.metadata_json else {}
+            except json.JSONDecodeError:
+                meta = {}
+            if payment_obj.get("expires_at"):
+                meta["expires_at"] = payment_obj["expires_at"]
+            if payment_obj.get("monitoring_gap") is not None:
+                meta["monitoring_gap"] = bool(payment_obj.get("monitoring_gap"))
+            meta["status"] = remote_status
+            tx.metadata_json = json.dumps(meta)
+            db.session.commit()
+
+            expires_at, remaining_seconds = compute_khqr_expiry(tx, now_dt)
+            created_dt = tx.created_at or now_dt
+            expiry_meta = {
+                "expires_in_seconds": max(KHQR_EXPIRY_SECONDS, int((expires_at - created_dt).total_seconds())),
+                "remaining_seconds": remaining_seconds,
+                "expires_at": expires_at.replace(tzinfo=timezone.utc).isoformat(),
+            }
+
+            if remote_status == "paid":
+                secret_key = _get_secret_key()
+                is_live_payment = bool(payment_obj.get("livemode"))
+                if is_live_payment or secret_key.startswith("kp_test_"):
+                    fulfilled, reason = _fulfil_completed_payment(tx, payment_obj)
+                    if fulfilled or tx.status == "PAID":
+                        _MD5_STATUS_CACHE[md5] = (now_ts, "PAID", payment_obj, "Payment confirmed.")
+                        return {
+                            "success": True,
+                            "status": "PAID",
+                            "message": "Payment verified successfully! Your account has been upgraded.",
+                            "transaction": tx.to_dict(),
+                            **expiry_meta,
+                        }
+                    err_msg = f"Payment verification rejected ({reason})."
+                else:
+                    err_msg = "Test payment ignored in live mode."
+                status_str = "UNPAID"
+            elif remote_status in {"expired", "failed"}:
+                tx.status = "EXPIRED" if remote_status == "expired" else "FAILED"
+                db.session.commit()
+                _MD5_STATUS_CACHE[md5] = (now_ts, "EXPIRED", payment_obj, "KHQR expired.")
+                return {
+                    "success": False,
+                    "status": "EXPIRED",
+                    "message": "KHQR session expired. Please generate a new QR code.",
+                    "transaction": tx.to_dict(),
+                    **expiry_meta,
+                    "remaining_seconds": 0,
+                }
+            elif remote_status == "scanned":
+                status_str = "UNPAID"
+                err_msg = "QR code scanned in bank app — waiting for payment confirmation."
+            else:
+                status_str = "UNPAID"
+                err_msg = "Payment is waiting for confirmation."
+
+            _MD5_STATUS_CACHE[md5] = (now_ts, status_str, payment_obj, err_msg)
+        except KHQRPayAPIError as err:
+            if err.error_code == "rate_limited" or err.status_code == 429:
+                return {
+                    "success": False,
+                    "status": "RATE_LIMITED",
+                    "message": "KHQRPay read limit reached. Automatic webhook verification remains active — your account will upgrade automatically once paid.",
+                    "transaction": tx.to_dict(),
+                    **expiry_meta,
+                }
+            logger.warning("KHQRPay retrieve error for %s (%s): %s", md5, err.error_code, err.message)
+            status_str = "UNPAID"
+            err_msg = err.message
+
+        if status_str != "PAID" and enforce_expiry and remaining_seconds <= 0:
+            if tx.status != "EXPIRED":
+                tx.status = "EXPIRED"
+                db.session.commit()
+            return {
+                "success": False,
+                "status": "EXPIRED",
+                "message": "KHQR session expired. Please generate a new QR code.",
+                "transaction": tx.to_dict(),
+                **expiry_meta,
+                "remaining_seconds": 0,
+            }
+
+        return {
+            "success": True,
+            "status": "UNPAID",
+            "message": err_msg or "Payment is waiting for confirmation.",
             "transaction": tx.to_dict(),
             **expiry_meta,
         }

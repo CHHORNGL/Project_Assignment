@@ -881,7 +881,15 @@ export default function FarmerCheckoutPage({
                       rel="noreferrer"
                       className="inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-xl bg-rose-600 px-4 text-xs font-bold text-white shadow-sm transition hover:bg-rose-700 sm:w-auto"
                     >
-                      <span>{isKhmer ? "បើកក្នុងកម្មវិធី Bakong" : "Open in Bakong App"}</span>
+                      <span>
+                        {bakong.deeplink.includes("khqrpay.dev")
+                          ? isKhmer
+                            ? "បើកទំព័រទូទាត់ KHQRPay"
+                            : "Open KHQRPay Checkout"
+                          : isKhmer
+                            ? "បើកក្នុងកម្មវិធី Bakong"
+                            : "Open in Bakong App"}
+                      </span>
                       <ExternalLink className="h-3.5 w-3.5 shrink-0" />
                     </a>
                   )}
