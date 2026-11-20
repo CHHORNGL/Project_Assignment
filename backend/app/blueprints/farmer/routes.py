@@ -2173,10 +2173,33 @@ def premium_checkout():
     paypal_client_id = os.getenv("PAYPAL_CLIENT_ID", "YOUR_PAYPAL_CLIENT_ID")
     bakong_config = get_bakong_config()
 
+    # If redirected back from KHQRPay hosted checkout (?payment_id=...), always verify
+    # server-side via GET /v1/payments/:id (never trust the redirect query string alone).
+    returned_payment_id = (request.args.get("payment_id") or "").strip()
+    if returned_payment_id:
+        try:
+            from app.models.payment_transaction import PaymentTransaction
+
+            returned_tx = PaymentTransaction.query.filter_by(
+                md5=returned_payment_id,
+                user_id=current_user.id,
+            ).first()
+            if returned_tx:
+                verified_ret = verify_khqr_payment(
+                    returned_payment_id,
+                    enforce_expiry=False,
+                    bypass_cache=True,
+                )
+                if verified_ret.get("status") == "PAID":
+                    flash("KHQRPay payment confirmed! Welcome to Agri System Premium.", "success")
+                    return redirect(url_for("farmer.dashboard"))
+        except Exception as e:  # noqa: BLE001
+            current_app.logger.debug(f"KHQRPay redirect verification note: {e}")
+
     try:
         reconciled = reconcile_recent_user_khqr_payments(current_user)
         if reconciled and reconciled.get("status") == "PAID":
-            flash("Bakong KHQR payment confirmed! Welcome to Agri System Premium.", "success")
+            flash("KHQRPay payment confirmed! Welcome to Agri System Premium.", "success")
             return redirect(url_for("farmer.dashboard"))
     except Exception as e:  # noqa: BLE001
         current_app.logger.debug(f"Bakong checkout reconciliation note: {e}")

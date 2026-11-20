@@ -206,7 +206,7 @@ def serialize_khqr_transaction(
 def reconcile_recent_user_khqr_payments(
     user: User,
     *,
-    lookback_minutes: int = 30,
+    lookback_minutes: int = 60,
 ) -> dict[str, Any] | None:
     """
     Check the user's recent PENDING or EXPIRED KHQRPay / Bakong transactions.
@@ -532,7 +532,7 @@ def verify_khqr_payment(
         now_ts = time.time()
         if not bypass_cache and md5 in _MD5_STATUS_CACHE:
             cached_time, cached_status, _cached_data, cached_msg = _MD5_STATUS_CACHE[md5]
-            if now_ts - cached_time < 4.0 and cached_status != "PAID":
+            if now_ts - cached_time < CACHE_TTL_SECONDS and cached_status != "PAID":
                 if enforce_expiry and remaining_seconds <= 0:
                     if tx.status != "EXPIRED":
                         tx.status = "EXPIRED"
@@ -621,7 +621,7 @@ def verify_khqr_payment(
                 return {
                     "success": False,
                     "status": "RATE_LIMITED",
-                    "message": "KHQRPay read limit reached. Automatic webhook verification remains active — your account will upgrade automatically once paid.",
+                    "message": "KHQRPay API rate limit reached. Please wait a moment and tap Verify Now, or contact support if you already paid.",
                     "transaction": tx.to_dict(),
                     **expiry_meta,
                 }
